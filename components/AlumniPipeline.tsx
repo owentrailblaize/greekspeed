@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Users, SlidersHorizontal } from "lucide-react";
+import { Search, Users, SlidersHorizontal, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -83,6 +83,7 @@ export function AlumniPipeline() {
               />
             </div>
             <div className="flex items-center space-x-3">
+              <Filter className="h-4 w-4 text-gray-500" />
               <SlidersHorizontal className="h-4 w-4 text-gray-500" />
               <Select value={selectedYear} onValueChange={setSelectedYear}>
                 <SelectTrigger className="w-40 bg-white border-gray-300">

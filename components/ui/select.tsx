@@ -5,13 +5,13 @@ export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElemen
   onValueChange?: (value: string) => void;
 }
 
-interface DivSelectProps extends React.HTMLAttributes<HTMLDivElement> {
+export type DivSelectProps = React.HTMLAttributes<HTMLDivElement> & {
   value?: string;
   onValueChange?: (v: string) => void;
-}
+};
 
 export const Select = React.forwardRef<HTMLDivElement, DivSelectProps>(
-  ({ className, children, value, onValueChange, ...rest }, ref) => (
+  ({ className, children, value: _value, onValueChange: _onValueChange, ...rest }, ref) => (
     <div
       ref={ref}
       className={cn(

@@ -223,6 +223,7 @@ export function AlumniPipelinePage() {
             </div>
 
             <div className="flex items-center space-x-3">
+              <Filter className="h-4 w-4 text-gray-500" />
               <SlidersHorizontal className="h-4 w-4 text-gray-500" />
 
               <Select
