@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom global styles can go here */
+
+html {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+} 
