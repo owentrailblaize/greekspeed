@@ -102,7 +102,7 @@ export function LandingPage() {
             {/* Logo */}
             <motion.div className="flex items-center space-x-3" whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
               <div className="w-10 h-10 relative">
-                <img src="/logo.svg" alt="Trailblaize" className="w-full h-full object-contain" />
+                <img src="/logo.jpeg" alt="Trailblaize logo" className="w-full h-full object-contain" />
               </div>
               <span className="font-semibold text-xl text-gray-900">Trailblaize</span>
             </motion.div>
@@ -439,7 +439,7 @@ export function LandingPage() {
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="flex items-center space-x-3 mb-4 md:mb-0">
               <div className="w-8 h-8 relative">
-                <img src="/logo.svg" alt="Trailblaize" className="w-full h-full object-contain brightness-0 invert" />
+                <img src="/logo.jpeg" alt="Trailblaize logo" className="w-full h-full object-contain" />
               </div>
               <span className="font-semibold text-lg">Trailblaize</span>
             </div>
