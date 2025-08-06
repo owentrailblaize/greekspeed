@@ -4,7 +4,6 @@ export const dynamic = "force-dynamic";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Crown, UserCheck, Calculator, PartyPopper } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PresidentDashboard } from "./executive/PresidentDashboard";
 import { VicePresidentDashboard } from "./executive/VicePresidentDashboard";

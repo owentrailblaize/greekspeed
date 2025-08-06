@@ -37,7 +37,6 @@ const links = [
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b border-gray-200 bg-white/80 backdrop-blur">

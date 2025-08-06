@@ -1,7 +1,7 @@
 'use client';
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { DollarSign, TrendingUp, Users, AlertTriangle, CheckCircle, Clock, Download, Mail } from "lucide-react";
+import { DollarSign, TrendingUp, Users, AlertTriangle, CheckCircle, Download, Mail } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

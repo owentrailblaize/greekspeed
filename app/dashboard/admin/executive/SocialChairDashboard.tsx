@@ -1,7 +1,7 @@
 'use client';
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Users, DollarSign, BookOpen, MapPin, Clock, Plus, Edit, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, Users, DollarSign, BookOpen, Clock, Plus, Edit, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -73,7 +73,6 @@ export function SocialChairDashboard() {
   const [selectedTab, setSelectedTab] = useState("overview");
   const [newLoreEntry, setNewLoreEntry] = useState({ title: "", content: "" });
   const [calendarDate, setCalendarDate] = useState(currentDate);
-  const [selectedBudgetCategory, setSelectedBudgetCategory] = useState<string | null>(null);
 
   const getDaysInMonth = (date: Date): number => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
