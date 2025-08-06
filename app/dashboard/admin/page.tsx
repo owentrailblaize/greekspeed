@@ -53,7 +53,7 @@ const executiveRoles = [
   }
 ];
 
-export function ExecAdminPage() {
+function ExecAdminPage() {
   const [selectedRole, setSelectedRole] = useState("president");
   
   const currentRole = executiveRoles.find(role => role.value === selectedRole);
