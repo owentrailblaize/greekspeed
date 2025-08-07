@@ -161,9 +161,9 @@ export function MyChapterPage() {
             <div className="flex items-center space-x-2">
               <Filter className="h-4 w-4 text-gray-500" />
               
-              <Select>
+              <Select placeholder="Year">
                 <SelectTrigger className="w-32 bg-white border-gray-300">
-                  <SelectValue placeholder="Year" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="freshman">Freshman</SelectItem>
@@ -173,9 +173,9 @@ export function MyChapterPage() {
                 </SelectContent>
               </Select>
               
-              <Select>
+              <Select placeholder="Major">
                 <SelectTrigger className="w-40 bg-white border-gray-300">
-                  <SelectValue placeholder="Major" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="business">Business</SelectItem>
