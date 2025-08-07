@@ -27,20 +27,20 @@ export function AlumniHeader() {
           </div>
           <div className="flex items-center space-x-2">
             <Filter className="h-4 w-4 text-gray-500" />
-            <Select>
-              <SelectTrigger className="w-40 bg-white border-gray-300"><SelectValue placeholder="Graduation Year" /></SelectTrigger>
+            <Select placeholder="Graduation Year">
+              <SelectTrigger className="w-40 bg-white border-gray-300"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {["2024","2023","2022","2021","2020","older"].map(y=> <SelectItem key={y} value={y}>{y}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select>
-              <SelectTrigger className="w-40 bg-white border-gray-300"><SelectValue placeholder="Industry" /></SelectTrigger>
+            <Select placeholder="Industry">
+              <SelectTrigger className="w-40 bg-white border-gray-300"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {["tech","finance","consulting","healthcare","education","other"].map(v=> <SelectItem key={v} value={v}>{v}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select>
-              <SelectTrigger className="w-40 bg-white border-gray-300"><SelectValue placeholder="Location" /></SelectTrigger>
+            <Select placeholder="Location">
+              <SelectTrigger className="w-40 bg-white border-gray-300"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {["ny","sf","la","chicago","boston","remote"].map(v=> <SelectItem key={v} value={v}>{v}</SelectItem>)}
               </SelectContent>

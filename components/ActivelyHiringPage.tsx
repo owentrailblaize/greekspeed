@@ -41,8 +41,10 @@ export function ActivelyHiringPage() {
             <div className="flex items-center space-x-2">
               <Filter className="h-4 w-4 text-gray-500" />
               {/* Company size select */}
-              <Select>
-                <SelectTrigger className="w-40 bg-white border-gray-300"><SelectValue placeholder="Company Size" /></SelectTrigger>
+              <Select placeholder="Company Size">
+                <SelectTrigger className="w-40 bg-white border-gray-300">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="startup">Startup (1-50)</SelectItem>
                   <SelectItem value="small">Small (51-200)</SelectItem>
@@ -51,15 +53,15 @@ export function ActivelyHiringPage() {
                 </SelectContent>
               </Select>
               {/* Job function select */}
-              <Select>
-                <SelectTrigger className="w-40 bg-white border-gray-300"><SelectValue placeholder="Job Function" /></SelectTrigger>
+              <Select placeholder="Job Function" >
+                <SelectTrigger className="w-40 bg-white border-gray-300"><SelectValue/></SelectTrigger>
                 <SelectContent>
                   {['engineering','product','sales','marketing','consulting','finance'].map(v=> <SelectItem key={v} value={v}>{v.charAt(0).toUpperCase()+v.slice(1)}</SelectItem>)}
                 </SelectContent>
               </Select>
               {/* Remote select */}
-              <Select>
-                <SelectTrigger className="w-40 bg-white border-gray-300"><SelectValue placeholder="Remote/On-site" /></SelectTrigger>
+              <Select placeholder="Remote/On-site">
+                <SelectTrigger className="w-40 bg-white border-gray-300"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="remote">Remote</SelectItem>
                   <SelectItem value="hybrid">Hybrid</SelectItem>

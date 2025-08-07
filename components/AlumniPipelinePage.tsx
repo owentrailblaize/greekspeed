@@ -229,9 +229,10 @@ export function AlumniPipelinePage() {
               <Select
                 value={selectedYear}
                 onValueChange={setSelectedYear}
+                placeholder="Graduation Year"
               >
                 <SelectTrigger className="w-40 bg-white border-gray-300">
-                  <SelectValue placeholder="Graduation Year" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="2024">2024</SelectItem>
@@ -248,9 +249,10 @@ export function AlumniPipelinePage() {
               <Select
                 value={selectedIndustry}
                 onValueChange={setSelectedIndustry}
+                placeholder="Industry"
               >
                 <SelectTrigger className="w-40 bg-white border-gray-300">
-                  <SelectValue placeholder="Industry" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="tech">
@@ -275,9 +277,10 @@ export function AlumniPipelinePage() {
               <Select
                 value={selectedLocation}
                 onValueChange={setSelectedLocation}
+                placeholder="Location"
               >
                 <SelectTrigger className="w-40 bg-white border-gray-300">
-                  <SelectValue placeholder="Location" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="jackson">

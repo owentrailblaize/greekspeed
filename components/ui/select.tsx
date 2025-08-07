@@ -1,53 +1,115 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+"use client";
+
 import * as React from "react";
+import { ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+export interface SelectProps {
+  value?: string;
   onValueChange?: (value: string) => void;
+  placeholder?: string;
+  children: React.ReactNode;
+  className?: string;
 }
 
-export type DivSelectProps = React.HTMLAttributes<HTMLDivElement> & {
-  value?: string;
-  onValueChange?: (v: string) => void;
-};
+export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
+  ({ value, onValueChange, placeholder, children, className, ...props }, ref) => {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const [selectedValue, setSelectedValue] = React.useState(value || "");
+    const [selectedLabel, setSelectedLabel] = React.useState<string>("");
+    const selectRef = React.useRef<HTMLDivElement>(null);
 
-export const Select = React.forwardRef<HTMLDivElement, DivSelectProps>(
-  ({ className, children, value: _value, onValueChange: _onValueChange, ...rest }, ref) => (
-    <div
-      ref={ref}
-      className={cn(
-        "h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-navy-500 focus:outline-none",
-        className
-      )}
-      {...rest}
-    >
-      {children}
-    </div>
-  )
+    React.useEffect(() => {
+      setSelectedValue(value || "");
+    }, [value]);
+
+    React.useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
+          setIsOpen(false);
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleSelect = (value: string, label: string) => {
+      setSelectedValue(value);
+      setSelectedLabel(label);
+      onValueChange?.(value);
+      setIsOpen(false);
+    };
+
+    return (
+      <div ref={selectRef} className={cn("relative", className)} {...props}>
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className={cn(
+            "flex h-9 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm",
+            "focus:border-navy-500 focus:outline-none focus:ring-1 focus:ring-navy-500",
+            "hover:border-gray-400 transition-colors"
+          )}
+        >
+          <span className={selectedValue ? "text-gray-900" : "text-gray-500"}>
+            {selectedLabel || placeholder}
+          </span>
+          <ChevronDown className={cn("h-4 w-4 text-gray-400 transition-transform", isOpen && "rotate-180")} />
+        </button>
+
+        {isOpen && (
+          <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
+            {React.Children.map(children, (child) => {
+              if (React.isValidElement(child) && child.type === SelectItem) {
+                return React.cloneElement(child as React.ReactElement<SelectItemProps>, {
+                  onSelect: handleSelect,
+                  isSelected: (child as React.ReactElement<SelectItemProps>).props.value === selectedValue,
+                });
+              }
+              return child;
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
 );
 Select.displayName = "Select";
 
-// Trigger and Value are no-ops to retain API compatibility without rendering nested selects
-export const SelectTrigger = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, children, ...props }, ref) => (
-    <div ref={ref} className={cn(className)} {...props}>
-      {children}
-    </div>
-  )
+export interface SelectItemProps {
+  value: string;
+  children: React.ReactNode;
+  onSelect?: (value: string, label: string) => void;
+  isSelected?: boolean;
+}
+
+export const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
+  ({ value, children, onSelect, isSelected, ...props }, ref) => {
+    const handleClick = () => {
+      onSelect?.(value, children as string);
+    };
+
+    return (
+      <div
+        ref={ref}
+        onClick={handleClick}
+        className={cn(
+          "flex cursor-pointer items-center justify-between px-3 py-2 text-sm",
+          "hover:bg-gray-50 transition-colors",
+          isSelected && "bg-navy-50 text-navy-900"
+        )}
+        {...props}
+      >
+        <span>{children}</span>
+        {isSelected && <Check className="h-4 w-4 text-navy-600" />}
+      </div>
+    );
+  }
 );
-SelectTrigger.displayName = "SelectTrigger";
+SelectItem.displayName = "SelectItem";
 
-export const SelectValue: React.FC<{ placeholder?: string }> = () => null;
-
-export const SelectContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, children, ...props }, ref) => (
-    <div ref={ref} className={cn(className)} {...props}>
-      {children}
-    </div>
-  )
-);
-SelectContent.displayName = "SelectContent";
-
-export const SelectItem: React.FC<{ value: string; children: React.ReactNode }> = ({ value, children }) => (
-  <option value={value}>{children}</option>
-); 
+// Legacy components for compatibility
+export const SelectTrigger = Select;
+export const SelectValue = () => null;
+export const SelectContent = ({ children }: { children: React.ReactNode }) => <>{children}</>; 

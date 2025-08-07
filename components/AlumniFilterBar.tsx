@@ -1,15 +1,9 @@
 import { useState } from "react";
-import { Search, X, SlidersHorizontal } from "lucide-react";
+import { Search, X, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectItem } from "@/components/ui/select";
 import { graduationYears, industries, chapters, locations } from "@/lib/mockAlumni";
 import { motion } from "framer-motion";
 
@@ -28,8 +22,6 @@ interface AlumniFilterBarProps {
 }
 
 export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters }: AlumniFilterBarProps) {
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-
   const handleFilterChange = (key: keyof FilterState, value: string) => {
     onFiltersChange({
       ...filters,
@@ -38,13 +30,16 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters }: Al
   };
 
   const hasActiveFilters = Object.values(filters).some(value => value !== "");
+  const activeFilterCount = Object.values(filters).filter(v => v !== "").length;
 
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="max-w-7xl mx-auto">
-        {/* Main Search Bar */}
+        {/* Main Search and Filter Row */}
         <div className="flex items-center space-x-4 mb-4">
+          {/* Search Input */}
           <div className="flex-1 relative">
+
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               placeholder="Search alumni by name, company, or job title..."
@@ -54,28 +49,76 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters }: Al
             />
           </div>
           
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className="flex items-center space-x-2"
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-              <span>Filters</span>
-              {hasActiveFilters && (
-                <Badge className="bg-navy-600 text-white text-xs">
-                  {Object.values(filters).filter(v => v !== "").length}
-                </Badge>
-              )}
-            </Button>
-            
+          {/* Filter Dropdowns */}
+          <div className="flex items-center space-x-3">
+            {/* Graduation Year Filter */}
+            <div className="relative">
+              <Select 
+                value={filters.graduationYear} 
+                onValueChange={(value) => handleFilterChange('graduationYear', value)}
+                placeholder="Grad. Year"
+                className="w-32"
+              >
+                <SelectItem value="">All Years</SelectItem>
+                {graduationYears.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                ))}
+                <SelectItem value="older">2019 & Earlier</SelectItem>
+              </Select>
+            </div>
+
+            {/* Industry Filter */}
+            <div className="relative">
+              <Select 
+                value={filters.industry} 
+                onValueChange={(value) => handleFilterChange('industry', value)}
+                placeholder="All Industries"
+                className="w-36"
+              >
+                <SelectItem value="">All Industries</SelectItem>
+                {industries.map((industry) => (
+                  <SelectItem key={industry} value={industry}>{industry}</SelectItem>
+                ))}
+              </Select>
+            </div>
+
+            {/* Chapter Filter */}
+            <div className="relative">
+              <Select 
+                value={filters.chapter} 
+                onValueChange={(value) => handleFilterChange('chapter', value)}
+                placeholder="All Chapters"
+                className="w-40"
+              >
+                <SelectItem value="">All Chapters</SelectItem>
+                {chapters.map((chapter) => (
+                  <SelectItem key={chapter} value={chapter}>{chapter}</SelectItem>
+                ))}
+              </Select>
+            </div>
+
+            {/* Location Filter */}
+            <div className="relative">
+              <Select 
+                value={filters.location} 
+                onValueChange={(value) => handleFilterChange('location', value)}
+                placeholder="All Locations"
+                className="w-36"
+              >
+                <SelectItem value="">All Locations</SelectItem>
+                {locations.map((location) => (
+                  <SelectItem key={location} value={location}>{location}</SelectItem>
+                ))}
+              </Select>
+            </div>
+
+            {/* Clear Filters Button */}
             {hasActiveFilters && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onClearFilters}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 h-9"
               >
                 <X className="h-4 w-4 mr-1" />
                 Clear
@@ -84,105 +127,53 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters }: Al
           </div>
         </div>
 
-        {/* Advanced Filters */}
-        {showAdvancedFilters && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-gray-200"
-          >
-            <Select value={filters.graduationYear} onValueChange={(value) => handleFilterChange('graduationYear', value)}>
-              <SelectTrigger className="bg-white border-gray-300">
-                <SelectValue placeholder="Graduation Year" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Years</SelectItem>
-                {graduationYears.map((year) => (
-                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                ))}
-                <SelectItem value="older">2019 & Earlier</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={filters.industry} onValueChange={(value) => handleFilterChange('industry', value)}>
-              <SelectTrigger className="bg-white border-gray-300">
-                <SelectValue placeholder="Industry" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Industries</SelectItem>
-                {industries.map((industry) => (
-                  <SelectItem key={industry} value={industry}>{industry}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={filters.chapter} onValueChange={(value) => handleFilterChange('chapter', value)}>
-              <SelectTrigger className="bg-white border-gray-300">
-                <SelectValue placeholder="Chapter" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Chapters</SelectItem>
-                {chapters.map((chapter) => (
-                  <SelectItem key={chapter} value={chapter}>{chapter}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={filters.location} onValueChange={(value) => handleFilterChange('location', value)}>
-              <SelectTrigger className="bg-white border-gray-300">
-                <SelectValue placeholder="Location" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Locations</SelectItem>
-                {locations.map((location) => (
-                  <SelectItem key={location} value={location}>{location}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </motion.div>
-        )}
-
         {/* Active Filter Tags */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap gap-2 mt-4">
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-wrap gap-2 pt-2 border-t border-gray-100"
+          >
+            <span className="text-xs text-gray-500 mr-2">
+              Active filters ({activeFilterCount}):
+            </span>
             {filters.graduationYear && (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
                 Year: {filters.graduationYear}
                 <X 
-                  className="h-3 w-3 ml-1 cursor-pointer" 
+                  className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
                   onClick={() => handleFilterChange('graduationYear', '')}
                 />
               </Badge>
             )}
             {filters.industry && (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
                 Industry: {filters.industry}
                 <X 
-                  className="h-3 w-3 ml-1 cursor-pointer" 
+                  className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
                   onClick={() => handleFilterChange('industry', '')}
                 />
               </Badge>
             )}
             {filters.chapter && (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
                 Chapter: {filters.chapter}
                 <X 
-                  className="h-3 w-3 ml-1 cursor-pointer" 
+                  className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
                   onClick={() => handleFilterChange('chapter', '')}
                 />
               </Badge>
             )}
             {filters.location && (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
                 Location: {filters.location}
                 <X 
-                  className="h-3 w-3 ml-1 cursor-pointer" 
+                  className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
                   onClick={() => handleFilterChange('location', '')}
                 />
               </Badge>
             )}
-          </div>
+          </motion.div>
         )}
       </div>
     </div>
