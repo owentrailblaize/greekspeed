@@ -62,9 +62,9 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
           <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
             {React.Children.map(children, (child) => {
               if (React.isValidElement(child) && child.type === SelectItem) {
-                return React.cloneElement(child, {
+                return React.cloneElement(child as React.ReactElement<SelectItemProps>, {
                   onSelect: handleSelect,
-                  isSelected: child.props.value === selectedValue,
+                  isSelected: (child as React.ReactElement<SelectItemProps>).props.value === selectedValue,
                 });
               }
               return child;
