@@ -4,6 +4,40 @@ import * as React from "react";
 import { ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+export interface SelectItemProps {
+  value: string;
+  children: React.ReactNode;
+  onSelect?: (value: string, label: string) => void;
+  isSelected?: boolean;
+}
+
+export const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
+  ({ value, children, onSelect, isSelected, ...props }, ref) => {
+    const handleClick = () => {
+      // Convert children to string for the label
+      const label = typeof children === 'string' ? children : React.Children.toArray(children).join('');
+      onSelect?.(value, label);
+    };
+
+    return (
+      <div
+        ref={ref}
+        onClick={handleClick}
+        className={cn(
+          "flex cursor-pointer items-center justify-between px-3 py-2 text-sm",
+          "hover:bg-gray-50 transition-colors",
+          isSelected && "bg-navy-50 text-navy-900"
+        )}
+        {...props}
+      >
+        <span>{children}</span>
+        {isSelected && <Check className="h-4 w-4 text-navy-600" />}
+      </div>
+    );
+  }
+);
+SelectItem.displayName = "SelectItem";
+
 export interface SelectProps {
   value?: string;
   onValueChange?: (value: string) => void;
@@ -61,10 +95,11 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
         {isOpen && (
           <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
             {React.Children.map(children, (child) => {
-              if (React.isValidElement(child) && child.type === SelectItem) {
+              if (React.isValidElement(child) && child.type && (child.type as any).displayName === "SelectItem") {
+                const childProps = child.props as SelectItemProps;
                 return React.cloneElement(child as React.ReactElement<SelectItemProps>, {
                   onSelect: handleSelect,
-                  isSelected: (child as React.ReactElement<SelectItemProps>).props.value === selectedValue,
+                  isSelected: childProps.value === selectedValue,
                 });
               }
               return child;
@@ -77,39 +112,7 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
 );
 Select.displayName = "Select";
 
-export interface SelectItemProps {
-  value: string;
-  children: React.ReactNode;
-  onSelect?: (value: string, label: string) => void;
-  isSelected?: boolean;
-}
-
-export const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
-  ({ value, children, onSelect, isSelected, ...props }, ref) => {
-    const handleClick = () => {
-      onSelect?.(value, children as string);
-    };
-
-    return (
-      <div
-        ref={ref}
-        onClick={handleClick}
-        className={cn(
-          "flex cursor-pointer items-center justify-between px-3 py-2 text-sm",
-          "hover:bg-gray-50 transition-colors",
-          isSelected && "bg-navy-50 text-navy-900"
-        )}
-        {...props}
-      >
-        <span>{children}</span>
-        {isSelected && <Check className="h-4 w-4 text-navy-600" />}
-      </div>
-    );
-  }
-);
-SelectItem.displayName = "SelectItem";
-
 // Legacy components for compatibility
 export const SelectTrigger = Select;
 export const SelectValue = () => null;
-export const SelectContent = ({ children }: { children: React.ReactNode }) => <>{children}</>; 
+export const SelectContent = ({ children }: { children: React.ReactNode }) => <>{children}</>;

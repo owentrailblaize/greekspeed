@@ -9,11 +9,6 @@ export async function GET(request: NextRequest) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     
-    console.log('Environment check:', {
-      hasUrl: !!supabaseUrl,
-      hasServiceKey: !!supabaseServiceKey
-    })
-    
     if (!supabaseUrl || !supabaseServiceKey) {
       console.error('Missing environment variables')
       return NextResponse.json({ 
@@ -21,14 +16,7 @@ export async function GET(request: NextRequest) {
         details: {
           hasUrl: !!supabaseUrl,
           hasServiceKey: !!supabaseServiceKey
-        },
-        instructions: [
-          'Create a .env.local file in your project root',
-          'Add your Supabase credentials:',
-          'NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co',
-          'SUPABASE_SERVICE_ROLE_KEY=your-service-role-key',
-          'Restart your development server after adding the file'
-        ]
+        }
       }, { status: 500 })
     }
     
@@ -38,16 +26,17 @@ export async function GET(request: NextRequest) {
     // Get query parameters
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const limit = parseInt(searchParams.get('limit') || '25')
     const search = searchParams.get('search') || ''
     const industry = searchParams.get('industry') || ''
     const chapter = searchParams.get('chapter') || ''
     const location = searchParams.get('location') || ''
     const graduationYear = searchParams.get('graduationYear') || ''
+    const state = searchParams.get('state') || ''
 
-    console.log('Query params:', { search, industry, chapter, location, graduationYear })
+    console.log('Query params:', { search, industry, chapter, location, graduationYear, state })
 
-    // Build the query - start simple
+    // Build the query
     let query = supabase
       .from('alumni')
       .select('*')
@@ -57,20 +46,29 @@ export async function GET(request: NextRequest) {
       query = query.or(`full_name.ilike.%${search}%,company.ilike.%${search}%,job_title.ilike.%${search}%`)
     }
     
-    if (industry) {
+    if (industry && industry !== 'All Industries') {
       query = query.eq('industry', industry)
     }
     
-    if (chapter) {
+    if (chapter && chapter !== 'All Chapters') {
       query = query.eq('chapter', chapter)
     }
     
-    if (location) {
+    if (location && location !== 'All Locations') {
       query = query.eq('location', location)
     }
     
-    if (graduationYear) {
-      query = query.eq('graduation_year', parseInt(graduationYear))
+    if (graduationYear && graduationYear !== 'All Years') {
+      if (graduationYear === 'older') {
+        query = query.lte('graduation_year', 2019)
+      } else {
+        query = query.eq('graduation_year', parseInt(graduationYear))
+      }
+    }
+
+    if (state && state !== 'All States') {
+      // Assuming you have a state column or can extract state from location
+      query = query.ilike('location', `%${state}%`)
     }
 
     // Apply pagination
@@ -88,13 +86,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ 
         error: 'Database query failed',
         details: error.message,
-        code: error.code,
-        suggestions: [
-          'Check if your alumni table exists in Supabase',
-          'Verify your table has the correct column names',
-          'Check if RLS policies are blocking access',
-          'Try running: ALTER TABLE alumni DISABLE ROW LEVEL SECURITY; in Supabase SQL editor'
-        ]
+        code: error.code
       }, { status: 500 })
     }
 
@@ -115,12 +107,8 @@ export async function GET(request: NextRequest) {
       phone: alumni.phone,
       location: alumni.location,
       description: alumni.description || `Experienced professional in ${alumni.industry}.`,
-      mutualConnections: alumni.mutual_connections || [
-        { name: "Luke", avatar: null },
-        { name: "Sarah", avatar: null },
-        { name: "Mike", avatar: null }
-      ],
-      mutualConnectionsCount: alumni.mutual_connections?.length || 3,
+      mutualConnections: alumni.mutual_connections || [],
+      mutualConnectionsCount: alumni.mutual_connections?.length || 0,
       avatar: alumni.avatar_url,
       verified: alumni.verified,
       isActivelyHiring: alumni.is_actively_hiring,

@@ -4,10 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectItem } from "@/components/ui/select";
-import { graduationYears, industries, chapters, locations } from "@/lib/mockAlumni";
 import { US_STATES, getStateNameByCode } from "@/lib/usStates";
 import { motion } from "framer-motion";
-// import { STATE_CODES } from 'us-state-codes';
 
 interface FilterState {
   searchTerm: string;
@@ -18,6 +16,13 @@ interface FilterState {
   state: string;
 }
 
+interface FilterOptions {
+  industries: string[];
+  chapters: string[];
+  locations: string[];
+  graduationYears: number[];
+}
+
 interface AlumniFilterBarProps {
   filters: FilterState;
   onFiltersChange: (filters: FilterState) => void;
@@ -26,6 +31,44 @@ interface AlumniFilterBarProps {
 }
 
 export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSidebar = false }: AlumniFilterBarProps) {
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
+    industries: [],
+    chapters: [],
+    locations: [],
+    graduationYears: []
+  });
+  const [loading, setLoading] = useState(true);
+
+  // Fetch filter options from API
+  useEffect(() => {
+    const fetchFilterOptions = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/alumni/filters');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch filter options');
+        }
+        
+        const data = await response.json();
+        setFilterOptions(data);
+      } catch (error) {
+        console.error('Error fetching filter options:', error);
+        // Fallback to empty arrays if API fails
+        setFilterOptions({
+          industries: [],
+          chapters: [],
+          locations: [],
+          graduationYears: []
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFilterOptions();
+  }, []);
+
   const handleFilterChange = (key: keyof FilterState, value: string) => {
     onFiltersChange({
       ...filters,
@@ -62,10 +105,16 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
             onValueChange={(value) => handleFilterChange('graduationYear', value)}
           >
             <SelectItem value="">All Years</SelectItem>
-            {graduationYears.map((year) => (
-              <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-            ))}
-            <SelectItem value="older">2019 & Earlier</SelectItem>
+            {loading ? (
+              <SelectItem value="">Loading...</SelectItem>
+            ) : (
+              <>
+                {filterOptions.graduationYears.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                ))}
+                <SelectItem value="older">2019 & Earlier</SelectItem>
+              </>
+            )}
           </Select>
         </div>
 
@@ -77,9 +126,13 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
             onValueChange={(value) => handleFilterChange('industry', value)}
           >
             <SelectItem value="">All Industries</SelectItem>
-            {industries.map((industry) => (
-              <SelectItem key={industry} value={industry}>{industry}</SelectItem>
-            ))}
+            {loading ? (
+              <SelectItem value="">Loading...</SelectItem>
+            ) : (
+              filterOptions.industries.map((industry) => (
+                <SelectItem key={industry} value={industry}>{industry}</SelectItem>
+              ))
+            )}
           </Select>
         </div>
 
@@ -91,9 +144,13 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
             onValueChange={(value) => handleFilterChange('chapter', value)}
           >
             <SelectItem value="">All Chapters</SelectItem>
-            {chapters.map((chapter) => (
-              <SelectItem key={chapter} value={chapter}>{chapter}</SelectItem>
-            ))}
+            {loading ? (
+              <SelectItem value="">Loading...</SelectItem>
+            ) : (
+              filterOptions.chapters.map((chapter) => (
+                <SelectItem key={chapter} value={chapter}>{chapter}</SelectItem>
+              ))
+            )}
           </Select>
         </div>
 
@@ -121,9 +178,13 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
             onValueChange={(value) => handleFilterChange('location', value)}
           >
             <SelectItem value="">All Locations</SelectItem>
-            {locations.map((location) => (
-              <SelectItem key={location} value={location}>{location}</SelectItem>
-            ))}
+            {loading ? (
+              <SelectItem value="">Loading...</SelectItem>
+            ) : (
+              filterOptions.locations.map((location) => (
+                <SelectItem key={location} value={location}>{location}</SelectItem>
+              ))
+            )}
           </Select>
         </div>
 
@@ -247,10 +308,16 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                 className="w-32"
               >
                 <SelectItem value="">All Years</SelectItem>
-                {graduationYears.map((year) => (
-                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                ))}
-                <SelectItem value="older">2019 & Earlier</SelectItem>
+                {loading ? (
+                  <SelectItem value="">Loading...</SelectItem>
+                ) : (
+                  <>
+                    {filterOptions.graduationYears.map((year) => (
+                      <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                    ))}
+                    <SelectItem value="older">2019 & Earlier</SelectItem>
+                  </>
+                )}
               </Select>
             </div>
 
@@ -263,9 +330,13 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                 className="w-36"
               >
                 <SelectItem value="">All Industries</SelectItem>
-                {industries.map((industry) => (
-                  <SelectItem key={industry} value={industry}>{industry}</SelectItem>
-                ))}
+                {loading ? (
+                  <SelectItem value="">Loading...</SelectItem>
+                ) : (
+                  filterOptions.industries.map((industry) => (
+                    <SelectItem key={industry} value={industry}>{industry}</SelectItem>
+                  ))
+                )}
               </Select>
             </div>
 
@@ -278,9 +349,13 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                 className="w-40"
               >
                 <SelectItem value="">All Chapters</SelectItem>
-                {chapters.map((chapter) => (
-                  <SelectItem key={chapter} value={chapter}>{chapter}</SelectItem>
-                ))}
+                {loading ? (
+                  <SelectItem value="">Loading...</SelectItem>
+                ) : (
+                  filterOptions.chapters.map((chapter) => (
+                    <SelectItem key={chapter} value={chapter}>{chapter}</SelectItem>
+                  ))
+                )}
               </Select>
             </div>
 
@@ -293,9 +368,13 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                 className="w-36"
               >
                 <SelectItem value="">All Locations</SelectItem>
-                {locations.map((location) => (
-                  <SelectItem key={location} value={location}>{location}</SelectItem>
-                ))}
+                {loading ? (
+                  <SelectItem value="">Loading...</SelectItem>
+                ) : (
+                  filterOptions.locations.map((location) => (
+                    <SelectItem key={location} value={location}>{location}</SelectItem>
+                  ))
+                )}
               </Select>
             </div>
 
