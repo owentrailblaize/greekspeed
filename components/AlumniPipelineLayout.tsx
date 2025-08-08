@@ -18,7 +18,7 @@ interface FilterState {
   industry: string;
   chapter: string;
   location: string;
-  state: string; // Add state field
+  state: string;
 }
 
 interface AlumniPipelineLayoutProps {
@@ -47,7 +47,7 @@ export function AlumniPipelineLayout({
     industry: "",
     chapter: "",
     location: "",
-    state: "", // Add state field
+    state: "",
   });
   const [selectedAlumniDetail, setSelectedAlumniDetail] = useState<Alumni | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
@@ -61,7 +61,7 @@ export function AlumniPipelineLayout({
       industry: "",
       chapter: "",
       location: "",
-      state: "", // Add state field
+      state: "",
     });
   };
 
@@ -71,17 +71,14 @@ export function AlumniPipelineLayout({
 
   const handleBulkAction = (action: string) => {
     console.log(`Bulk action: ${action} for ${selectedAlumni.length} alumni`);
-    // TODO: Implement bulk actions
   };
 
   const handleSaveSearch = () => {
     console.log('Saving search with filters:', filters);
-    // TODO: Implement save search functionality
   };
 
   const handleExport = () => {
     console.log('Exporting alumni data');
-    // TODO: Implement export functionality
   };
 
   const handleAlumniClick = (alumni: Alumni) => {
@@ -107,7 +104,7 @@ export function AlumniPipelineLayout({
   const paginatedAlumni = alumni.slice(startIndex, endIndex);
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Original Sidebar with AlumniFilterBar */}
       <AnimatePresence>
         {sidebarOpen && (
@@ -116,7 +113,7 @@ export function AlumniPipelineLayout({
             animate={{ width: 320, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="bg-white border-r border-gray-200 shadow-sm overflow-hidden"
+            className="bg-white border-r border-gray-200 shadow-sm overflow-hidden flex-shrink-0"
           >
             <div className="h-full flex flex-col">
               {/* Header */}
@@ -152,9 +149,9 @@ export function AlumniPipelineLayout({
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Enhanced Top Bar */}
-        <div className="bg-white border-b border-gray-200 px-6 py-3">
+        <div className="bg-white border-b border-gray-200 px-6 py-3 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               {!sidebarOpen && (
@@ -201,7 +198,7 @@ export function AlumniPipelineLayout({
         />
 
         {/* Content Area */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
