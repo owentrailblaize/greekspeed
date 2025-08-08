@@ -26,6 +26,14 @@ interface DropdownMenuItemProps {
   disabled?: boolean;
 }
 
+// Define a proper type for the child element that can accept onClick
+interface ClickableElementProps {
+  onClick?: (e: React.MouseEvent) => void;
+  ref?: React.Ref<HTMLElement>;
+  className?: string;
+  [key: string]: unknown;
+}
+
 const DropdownMenuContext = React.createContext<{
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
@@ -79,13 +87,13 @@ export const DropdownMenuTrigger = React.forwardRef<HTMLButtonElement, DropdownM
       throw new Error("DropdownMenuTrigger must be used within a DropdownMenu");
     }
 
-    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleClick = (e: React.MouseEvent<Element>) => {
       e.stopPropagation();
       context.setIsOpen(!context.isOpen);
     };
 
     if (asChild) {
-      return React.cloneElement(children as React.ReactElement<any>, {
+      return React.cloneElement(children as React.ReactElement<ClickableElementProps>, {
         onClick: handleClick,
         ref,
         ...props,
