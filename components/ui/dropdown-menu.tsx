@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +24,14 @@ interface DropdownMenuItemProps {
   className?: string;
   onClick?: () => void;
   disabled?: boolean;
+}
+
+// Define a proper type for the child element that can accept onClick
+interface ClickableElementProps {
+  onClick?: (e: React.MouseEvent) => void;
+  ref?: React.Ref<HTMLElement>;
+  className?: string;
+  [key: string]: unknown;
 }
 
 const DropdownMenuContext = React.createContext<{
@@ -77,13 +87,13 @@ export const DropdownMenuTrigger = React.forwardRef<HTMLButtonElement, DropdownM
       throw new Error("DropdownMenuTrigger must be used within a DropdownMenu");
     }
 
-    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleClick = (e: React.MouseEvent<Element>) => {
       e.stopPropagation();
       context.setIsOpen(!context.isOpen);
     };
 
     if (asChild) {
-      return React.cloneElement(children as React.ReactElement, {
+      return React.cloneElement(children as React.ReactElement<ClickableElementProps>, {
         onClick: handleClick,
         ref,
         ...props,
@@ -172,4 +182,4 @@ export const DropdownMenuItem = React.forwardRef<HTMLDivElement, DropdownMenuIte
   }
 );
 
-DropdownMenuItem.displayName = "DropdownMenuItem"; 
+DropdownMenuItem.displayName = "DropdownMenuItem";

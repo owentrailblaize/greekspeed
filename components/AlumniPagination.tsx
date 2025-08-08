@@ -42,13 +42,12 @@ export function AlumniPagination({
           size="sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="border-gray-300 hover:bg-gray-50"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
 
         <Select value={currentPage.toString()} onValueChange={(value) => onPageChange(parseInt(value))}>
-          <SelectTrigger className="w-20 border-gray-300">
+          <SelectTrigger className="w-20">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -67,7 +66,6 @@ export function AlumniPagination({
           size="sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="border-gray-300 hover:bg-gray-50"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
