@@ -7,6 +7,8 @@ export default function ImageWithFallback({ src, alt, className, ...rest }: Imag
     <Image
       src={src || fallback}
       alt={alt}
+      width={64}
+      height={64}
       className={cn(className)}
       onError={(e) => {
         const target = e.currentTarget as HTMLImageElement;

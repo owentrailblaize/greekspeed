@@ -4,8 +4,24 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent } from "@/components/ui/card";
-import { ChevronDown, ChevronUp, Mail, Phone, UserPlus, MoreHorizontal } from "lucide-react";
+import { 
+  ChevronDown, 
+  ChevronUp, 
+  Mail, 
+  Phone, 
+  UserPlus, 
+  MoreHorizontal, 
+  ExternalLink, 
+  Send, 
+  Plus, 
+  ArrowUpDown,
+  Building2,
+  MapPin,
+  GraduationCap,
+  Calendar,
+  Tag,
+  Users
+} from "lucide-react";
 import { Alumni } from "@/lib/mockAlumni";
 
 interface AlumniTableViewProps {
@@ -14,7 +30,7 @@ interface AlumniTableViewProps {
   onSelectionChange: (selectedIds: string[]) => void;
 }
 
-type SortField = 'name' | 'company' | 'industry' | 'graduationYear' | 'location';
+type SortField = 'name' | 'company' | 'industry' | 'graduationYear' | 'location' | 'jobTitle' | 'chapter' | 'lastContact';
 type SortDirection = 'asc' | 'desc';
 
 export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: AlumniTableViewProps) {
@@ -70,6 +86,18 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
         aValue = a.location;
         bValue = b.location;
         break;
+      case 'jobTitle':
+        aValue = a.jobTitle;
+        bValue = b.jobTitle;
+        break;
+      case 'chapter':
+        aValue = a.chapter;
+        bValue = b.chapter;
+        break;
+      case 'lastContact':
+        aValue = a.lastContact || '';
+        bValue = b.lastContact || '';
+        break;
       default:
         return 0;
     }
@@ -86,145 +114,248 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
     return sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />;
   };
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString();
+  };
+
   return (
-    <Card className="bg-white">
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead className="w-12">
-                <Checkbox
-                  checked={selectedAlumni.length === alumni.length && alumni.length > 0}
-                  onCheckedChange={handleSelectAll}
-                />
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('name')}
-              >
-                <div className="flex items-center space-x-1">
-                  <span>Name</span>
-                  <SortIcon field="name" />
-                </div>
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('company')}
-              >
-                <div className="flex items-center space-x-1">
-                  <span>Company</span>
-                  <SortIcon field="company" />
-                </div>
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('industry')}
-              >
-                <div className="flex items-center space-x-1">
-                  <span>Industry</span>
-                  <SortIcon field="industry" />
-                </div>
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('graduationYear')}
-              >
-                <div className="flex items-center space-x-1">
-                  <span>Graduation Year</span>
-                  <SortIcon field="graduationYear" />
-                </div>
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('location')}
-              >
-                <div className="flex items-center space-x-1">
-                  <span>Location</span>
-                  <SortIcon field="location" />
-                </div>
-              </TableHead>
-              <TableHead>Contact</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedAlumni.map((alumni) => (
-              <motion.tr
-                key={alumni.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="hover:bg-gray-50 transition-colors"
-              >
-                <TableCell>
-                  <Checkbox
-                    checked={selectedAlumni.includes(alumni.id)}
-                    onCheckedChange={(checked) => handleSelectAlumni(alumni.id, checked as boolean)}
-                  />
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
-                      <span className="text-white text-sm font-medium">
-                        {alumni.firstName[0]}{alumni.lastName[0]}
+    <div className="w-full h-full bg-white flex flex-col">
+      {/* Table container with horizontal scroll ONLY for the table */}
+      <div className="flex-1 overflow-auto">
+        <div className="min-w-[1400px] h-full">
+          <Table className="w-full h-full">
+            <TableHeader>
+              <TableRow className="bg-gray-50 border-b border-gray-200 hover:bg-gray-50">
+                <TableHead className="sticky left-0 z-20 bg-gray-50 border-r border-gray-200 w-12">
+                  <div className="flex justify-center items-center h-full">
+                    <Checkbox
+                      checked={selectedAlumni.length === alumni.length && alumni.length > 0}
+                      onCheckedChange={handleSelectAll}
+                      className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
+                    />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="sticky left-12 z-20 bg-gray-50 border-r border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors min-w-[200px]"
+                  onClick={() => handleSort('name')}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-900 font-medium">NAME</span>
+                    <SortIcon field="name" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="bg-gray-50 text-gray-900 font-medium cursor-pointer hover:bg-gray-100 transition-colors min-w-[150px]"
+                  onClick={() => handleSort('jobTitle')}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span>JOB TITLE</span>
+                    <SortIcon field="jobTitle" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="bg-gray-50 text-gray-900 font-medium cursor-pointer hover:bg-gray-100 transition-colors min-w-[150px]"
+                  onClick={() => handleSort('company')}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span>COMPANY</span>
+                    <SortIcon field="company" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="bg-gray-50 text-gray-900 font-medium cursor-pointer hover:bg-gray-100 transition-colors min-w-[120px]"
+                  onClick={() => handleSort('industry')}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span>INDUSTRY</span>
+                    <SortIcon field="industry" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="bg-gray-50 text-gray-900 font-medium cursor-pointer hover:bg-gray-100 transition-colors min-w-[120px]"
+                  onClick={() => handleSort('chapter')}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span>CHAPTER</span>
+                    <SortIcon field="chapter" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="bg-gray-50 text-gray-900 font-medium cursor-pointer hover:bg-gray-100 transition-colors min-w-[100px]"
+                  onClick={() => handleSort('graduationYear')}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span>GRAD YEAR</span>
+                    <SortIcon field="graduationYear" />
+                  </div>
+                </TableHead>
+                <TableHead className="bg-gray-50 text-gray-900 font-medium min-w-[120px]">
+                  <div className="flex items-center space-x-2">
+                    <span>EMAILS</span>
+                  </div>
+                </TableHead>
+                <TableHead className="bg-gray-50 text-gray-900 font-medium min-w-[140px]">
+                  <div className="flex items-center space-x-2">
+                    <span>PHONE NUMBERS</span>
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="bg-gray-50 text-gray-900 font-medium cursor-pointer hover:bg-gray-100 transition-colors min-w-[120px]"
+                  onClick={() => handleSort('location')}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span>LOCATION</span>
+                    <SortIcon field="location" />
+                  </div>
+                </TableHead>
+                <TableHead className="bg-gray-50 text-gray-900 font-medium min-w-[120px]">
+                  <div className="flex items-center space-x-2">
+                    <span>MUTUAL CONNECTIONS</span>
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="bg-gray-50 text-gray-900 font-medium cursor-pointer hover:bg-gray-100 transition-colors min-w-[120px]"
+                  onClick={() => handleSort('lastContact')}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span>LAST CONTACT</span>
+                    <SortIcon field="lastContact" />
+                  </div>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sortedAlumni.map((alumni) => (
+                <motion.tr
+                  key={alumni.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                >
+                  {/* Sticky Name Column */}
+                  <TableCell className="sticky left-0 z-10 bg-white border-r border-gray-200 w-12">
+                    <div className="flex justify-center items-center h-full">
+                      <Checkbox
+                        checked={selectedAlumni.includes(alumni.id)}
+                        onCheckedChange={(checked) => handleSelectAlumni(alumni.id, checked as boolean)}
+                        className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell className="sticky left-12 z-10 bg-white border-r border-gray-200">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
+                        <span className="text-white text-sm font-medium">
+                          {alumni.firstName?.[0] || ''}{alumni.lastName?.[0] || ''}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium text-gray-900 underline cursor-pointer hover:text-navy-600 transition-colors">
+                            {alumni.fullName}
+                          </span>
+                          {alumni.verified && (
+                            <Badge className="bg-navy-600 text-white text-xs px-1">✓</Badge>
+                          )}
+                          {alumni.isActivelyHiring && (
+                            <Badge className="bg-green-500 text-white text-xs px-1">Hiring</Badge>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-500">{alumni.jobTitle}</div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  
+                  {/* Job Title Column */}
+                  <TableCell className="bg-white">
+                    <span className="text-gray-900 text-sm">{alumni.jobTitle || 'N/A'}</span>
+                  </TableCell>
+                  
+                  {/* Company Column */}
+                  <TableCell className="bg-white">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-gray-900 text-sm">{alumni.company || 'N/A'}</span>
+                    </div>
+                  </TableCell>
+                  
+                  {/* Industry Column */}
+                  <TableCell className="bg-white">
+                    <Badge variant="outline" className="text-xs">
+                      {alumni.industry || 'N/A'}
+                    </Badge>
+                  </TableCell>
+                  
+                  {/* Chapter Column */}
+                  <TableCell className="bg-white">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-gray-900 text-sm">{alumni.chapter || 'N/A'}</span>
+                    </div>
+                  </TableCell>
+                  
+                  {/* Graduation Year Column */}
+                  <TableCell className="bg-white">
+                    <div className="flex items-center space-x-2">
+                      <GraduationCap className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-900 text-sm">{alumni.graduationYear || 'N/A'}</span>
+                    </div>
+                  </TableCell>
+                  
+                  {/* Emails Column */}
+                  <TableCell className="bg-white">
+                    <Button 
+                      size="sm" 
+                      className="h-8 bg-navy-600 hover:bg-navy-700 text-white border-navy-600 text-xs whitespace-nowrap"
+                      disabled={!alumni.email}
+                    >
+                      <Mail className="h-3 w-3 mr-1" />
+                      {alumni.email ? 'Access email' : 'No email'}
+                    </Button>
+                  </TableCell>
+                  
+                  {/* Phone Numbers Column */}
+                  <TableCell className="bg-white">
+                    <Button 
+                      size="sm" 
+                      className="h-8 bg-navy-600 hover:bg-navy-700 text-white border-navy-600 text-xs whitespace-nowrap"
+                      disabled={!alumni.phone}
+                    >
+                      <Phone className="h-3 w-3 mr-1" />
+                      {alumni.phone ? 'Access Mobile' : 'No phone'}
+                    </Button>
+                  </TableCell>
+                  
+                  {/* Location Column */}
+                  <TableCell className="bg-white">
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-900 text-sm">{alumni.location || 'N/A'}</span>
+                    </div>
+                  </TableCell>
+                  
+                  {/* Mutual Connections Column */}
+                  <TableCell className="bg-white">
+                    <div className="flex items-center space-x-2">
+                      <Users className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-900 text-sm">
+                        {alumni.mutualConnectionsCount || alumni.mutualConnections?.length || 0}
                       </span>
                     </div>
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium text-gray-900">{alumni.fullName}</span>
-                        {alumni.verified && (
-                          <Badge className="bg-blue-500 text-white text-xs">✓</Badge>
-                        )}
-                        {alumni.isActivelyHiring && (
-                          <Badge className="bg-green-500 text-white text-xs">Hiring</Badge>
-                        )}
-                      </div>
-                      <div className="text-sm text-gray-500">{alumni.jobTitle}</div>
+                  </TableCell>
+                  
+                  {/* Last Contact Column */}
+                  <TableCell className="bg-white">
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-900 text-sm">{formatDate(alumni.lastContact)}</span>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div>
-                    <div className="font-medium text-gray-900">{alumni.company}</div>
-                    <div className="text-sm text-gray-500">{alumni.chapter}</div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="text-xs">
-                    {alumni.industry}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm text-gray-600">{alumni.graduationYear}</span>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm text-gray-600">{alumni.location}</span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                      <Mail className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                      <Phone className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <Button size="sm" variant="outline" className="h-8">
-                      <UserPlus className="h-4 w-4 mr-1" />
-                      Connect
-                    </Button>
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </motion.tr>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+                  </TableCell>
+                </motion.tr>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </div>
   );
 } 
