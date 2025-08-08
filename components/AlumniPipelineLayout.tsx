@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { AlumniFilterBar } from "@/components/AlumniFilterBar";
 import { AlumniTableView } from "@/components/AlumniTableView";
 import { LinkedInStyleAlumniCard } from "@/components/LinkedInStyleAlumniCard";
+import { AlumniToolbar } from "@/components/AlumniToolbar";
+import { AlumniDetailSheet } from "@/components/AlumniDetailSheet";
+import { AlumniPagination } from "@/components/AlumniPagination";
 import { Alumni } from "@/lib/mockAlumni";
 
 interface FilterState {
@@ -46,6 +49,10 @@ export function AlumniPipelineLayout({
     location: "",
     state: "", // Add state field
   });
+  const [selectedAlumniDetail, setSelectedAlumniDetail] = useState<Alumni | null>(null);
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
 
   const handleClearFilters = () => {
     setFilters({
@@ -62,14 +69,46 @@ export function AlumniPipelineLayout({
     setFilters(newFilters);
   };
 
+  const handleBulkAction = (action: string) => {
+    console.log(`Bulk action: ${action} for ${selectedAlumni.length} alumni`);
+    // TODO: Implement bulk actions
+  };
+
+  const handleSaveSearch = () => {
+    console.log('Saving search with filters:', filters);
+    // TODO: Implement save search functionality
+  };
+
+  const handleExport = () => {
+    console.log('Exporting alumni data');
+    // TODO: Implement export functionality
+  };
+
+  const handleAlumniClick = (alumni: Alumni) => {
+    setSelectedAlumniDetail(alumni);
+    setDetailSheetOpen(true);
+  };
+
   // Calculate stats
   const totalAlumni = alumni.length;
   const connectedAlumni = alumni.filter(a => a.verified).length;
   const hiringAlumni = alumni.filter(a => a.isActivelyHiring).length;
+  const newAlumni = alumni.filter(a => {
+    const lastContact = a.lastContact ? new Date(a.lastContact) : null;
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return !lastContact || lastContact > thirtyDaysAgo;
+  }).length;
+
+  // Calculate pagination
+  const totalPages = Math.ceil(totalAlumni / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedAlumni = alumni.slice(startIndex, endIndex);
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
+      {/* Original Sidebar with AlumniFilterBar */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
@@ -80,7 +119,7 @@ export function AlumniPipelineLayout({
             className="bg-white border-r border-gray-200 shadow-sm overflow-hidden"
           >
             <div className="h-full flex flex-col">
-              {/* Sidebar Header */}
+              {/* Header */}
               <div className="p-4 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
@@ -98,34 +137,7 @@ export function AlumniPipelineLayout({
                 </div>
               </div>
 
-              {/* Stats Section */}
-              <div className="p-4 border-b border-gray-200">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Users className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">Total Alumni</span>
-                    </div>
-                    <span className="font-semibold text-gray-900">{totalAlumni}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <UserCheck className="h-4 w-4 text-green-500" />
-                      <span className="text-sm text-gray-600">Connected</span>
-                    </div>
-                    <span className="font-semibold text-green-600">{connectedAlumni}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Briefcase className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm text-gray-600">Actively Hiring</span>
-                    </div>
-                    <span className="font-semibold text-blue-600">{hiringAlumni}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Filters Section */}
+              {/* Filters */}
               <div className="flex-1 overflow-y-auto p-4">
                 <AlumniFilterBar
                   filters={filters}
@@ -141,7 +153,7 @@ export function AlumniPipelineLayout({
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Top Bar */}
+        {/* Enhanced Top Bar */}
         <div className="bg-white border-b border-gray-200 px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -179,6 +191,15 @@ export function AlumniPipelineLayout({
           </div>
         </div>
 
+        {/* Enhanced Toolbar */}
+        <AlumniToolbar
+          selectedCount={selectedAlumni.length}
+          totalCount={totalAlumni}
+          onBulkAction={handleBulkAction}
+          onSaveSearch={handleSaveSearch}
+          onExport={handleExport}
+        />
+
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
           {loading ? (
@@ -205,7 +226,7 @@ export function AlumniPipelineLayout({
               </div>
             </div>
           ) : (
-            <div className="p-6">
+            <div className={viewMode === 'table' ? 'h-full' : 'p-6'}>
               {alumni.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -218,19 +239,36 @@ export function AlumniPipelineLayout({
                   </Button>
                 </div>
               ) : viewMode === 'table' ? (
-                <AlumniTableView 
-                  alumni={alumni}
-                  selectedAlumni={selectedAlumni}
-                  onSelectionChange={onSelectionChange}
-                />
+                <div className="h-full flex flex-col">
+                  <div className="flex-1 min-h-0">
+                    <AlumniTableView 
+                      alumni={paginatedAlumni}
+                      selectedAlumni={selectedAlumni}
+                      onSelectionChange={onSelectionChange}
+                    />
+                  </div>
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <AlumniPagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      totalItems={totalAlumni}
+                      itemsPerPage={itemsPerPage}
+                      onPageChange={setCurrentPage}
+                      onItemsPerPageChange={setItemsPerPage}
+                    />
+                  )}
+                </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {alumni.map((alumniItem, index) => (
+                  {paginatedAlumni.map((alumniItem, index) => (
                     <motion.div
                       key={alumniItem.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.05 }}
+                      onClick={() => handleAlumniClick(alumniItem)}
+                      className="cursor-pointer"
                     >
                       <LinkedInStyleAlumniCard
                         name={alumniItem.fullName}
@@ -248,6 +286,16 @@ export function AlumniPipelineLayout({
           )}
         </div>
       </div>
+
+      {/* Alumni Detail Sheet */}
+      <AlumniDetailSheet
+        alumni={selectedAlumniDetail}
+        isOpen={detailSheetOpen}
+        onClose={() => {
+          setDetailSheetOpen(false);
+          setSelectedAlumniDetail(null);
+        }}
+      />
     </div>
   );
 } 

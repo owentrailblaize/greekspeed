@@ -4,8 +4,21 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent } from "@/components/ui/card";
-import { ChevronDown, ChevronUp, Mail, Phone, UserPlus, MoreHorizontal } from "lucide-react";
+import { 
+  ChevronDown, 
+  ChevronUp, 
+  Mail, 
+  Phone, 
+  UserPlus, 
+  MoreHorizontal, 
+  ExternalLink, 
+  Send, 
+  Plus, 
+  ArrowUpDown,
+  Building2,
+  MapPin,
+  GraduationCap
+} from "lucide-react";
 import { Alumni } from "@/lib/mockAlumni";
 
 interface AlumniTableViewProps {
@@ -14,7 +27,7 @@ interface AlumniTableViewProps {
   onSelectionChange: (selectedIds: string[]) => void;
 }
 
-type SortField = 'name' | 'company' | 'industry' | 'graduationYear' | 'location';
+type SortField = 'name' | 'company' | 'industry' | 'graduationYear' | 'location' | 'jobTitle';
 type SortDirection = 'asc' | 'desc';
 
 export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: AlumniTableViewProps) {
@@ -70,6 +83,10 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
         aValue = a.location;
         bValue = b.location;
         break;
+      case 'jobTitle':
+        aValue = a.jobTitle;
+        bValue = b.jobTitle;
+        break;
       default:
         return 0;
     }
@@ -87,64 +104,65 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
   };
 
   return (
-    <Card className="bg-white">
-      <CardContent className="p-0">
-        <Table>
+    <div className="w-full h-full bg-white flex flex-col">
+      {/* Horizontal scrollable container */}
+      <div className="flex-1 overflow-auto">
+        <Table className="w-full min-w-[1200px]">
           <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead className="w-12">
-                <Checkbox
-                  checked={selectedAlumni.length === alumni.length && alumni.length > 0}
-                  onCheckedChange={handleSelectAll}
-                />
+            <TableRow className="bg-gray-50 border-b border-gray-200 hover:bg-gray-50">
+              <TableHead className="sticky left-0 z-20 bg-gray-50 border-r border-gray-200 w-12">
+                <div className="flex justify-center items-center h-full">
+                  <Checkbox
+                    checked={selectedAlumni.length === alumni.length && alumni.length > 0}
+                    onCheckedChange={handleSelectAll}
+                    className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
+                  />
+                </div>
               </TableHead>
               <TableHead 
-                className="cursor-pointer hover:bg-gray-100"
+                className="sticky left-12 z-20 bg-gray-50 border-r border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors min-w-[200px]"
                 onClick={() => handleSort('name')}
               >
-                <div className="flex items-center space-x-1">
-                  <span>Name</span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-gray-900 font-medium">NAME</span>
                   <SortIcon field="name" />
                 </div>
               </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('company')}
-              >
-                <div className="flex items-center space-x-1">
-                  <span>Company</span>
-                  <SortIcon field="company" />
+              <TableHead className="bg-gray-50 text-gray-900 font-medium min-w-[150px]">
+                <div className="flex items-center space-x-2">
+                  <span>JOB TITLE</span>
+                </div>
+              </TableHead>
+              <TableHead className="bg-gray-50 text-gray-900 font-medium min-w-[150px]">
+                <div className="flex items-center space-x-2">
+                  <span>COMPANY</span>
+                </div>
+              </TableHead>
+              <TableHead className="bg-gray-50 text-gray-900 font-medium min-w-[120px]">
+                <div className="flex items-center space-x-2">
+                  <span>EMAILS</span>
+                </div>
+              </TableHead>
+              <TableHead className="bg-gray-50 text-gray-900 font-medium min-w-[140px]">
+                <div className="flex items-center space-x-2">
+                  <span>PHONE NUMBERS</span>
                 </div>
               </TableHead>
               <TableHead 
-                className="cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('industry')}
-              >
-                <div className="flex items-center space-x-1">
-                  <span>Industry</span>
-                  <SortIcon field="industry" />
-                </div>
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('graduationYear')}
-              >
-                <div className="flex items-center space-x-1">
-                  <span>Graduation Year</span>
-                  <SortIcon field="graduationYear" />
-                </div>
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-gray-100"
+                className="bg-gray-50 text-gray-900 font-medium cursor-pointer hover:bg-gray-100 transition-colors min-w-[120px]"
                 onClick={() => handleSort('location')}
               >
-                <div className="flex items-center space-x-1">
-                  <span>Location</span>
+                <div className="flex items-center space-x-2">
+                  <span>LOCATION</span>
                   <SortIcon field="location" />
                 </div>
               </TableHead>
-              <TableHead>Contact</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead className="bg-gray-50 text-gray-900 font-medium min-w-[150px]">
+                <div className="flex flex-col">
+                  <span>COMPANY -</span>
+                  <span>NUMBER OF EMPLOYEES</span>
+                </div>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -153,15 +171,19 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                 key={alumni.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="hover:bg-gray-50 transition-colors"
+                className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
               >
-                <TableCell>
-                  <Checkbox
-                    checked={selectedAlumni.includes(alumni.id)}
-                    onCheckedChange={(checked) => handleSelectAlumni(alumni.id, checked as boolean)}
-                  />
+                {/* Sticky Name Column */}
+                <TableCell className="sticky left-0 z-10 bg-white border-r border-gray-200 w-12">
+                  <div className="flex justify-center items-center h-full">
+                    <Checkbox
+                      checked={selectedAlumni.includes(alumni.id)}
+                      onCheckedChange={(checked) => handleSelectAlumni(alumni.id, checked as boolean)}
+                      className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
+                    />
+                  </div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="sticky left-12 z-10 bg-white border-r border-gray-200">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
                       <span className="text-white text-sm font-medium">
@@ -170,61 +192,77 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                     </div>
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="font-medium text-gray-900">{alumni.fullName}</span>
+                        <span className="font-medium text-gray-900 underline cursor-pointer hover:text-navy-600 transition-colors">
+                          {alumni.fullName}
+                        </span>
                         {alumni.verified && (
-                          <Badge className="bg-blue-500 text-white text-xs">✓</Badge>
+                          <Badge className="bg-navy-600 text-white text-xs px-1">✓</Badge>
                         )}
                         {alumni.isActivelyHiring && (
-                          <Badge className="bg-green-500 text-white text-xs">Hiring</Badge>
+                          <Badge className="bg-green-500 text-white text-xs px-1">Hiring</Badge>
                         )}
                       </div>
                       <div className="text-sm text-gray-500">{alumni.jobTitle}</div>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>
-                  <div>
-                    <div className="font-medium text-gray-900">{alumni.company}</div>
-                    <div className="text-sm text-gray-500">{alumni.chapter}</div>
-                  </div>
+                
+                {/* Job Title Column */}
+                <TableCell className="bg-white">
+                  <span className="text-gray-900 text-sm">{alumni.jobTitle}</span>
                 </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="text-xs">
-                    {alumni.industry}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm text-gray-600">{alumni.graduationYear}</span>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm text-gray-600">{alumni.location}</span>
-                </TableCell>
-                <TableCell>
+                
+                {/* Company Column */}
+                <TableCell className="bg-white">
                   <div className="flex items-center space-x-2">
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                      <Mail className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                      <Phone className="h-4 w-4" />
-                    </Button>
+                    <Building2 className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-900 text-sm">{alumni.company}</span>
                   </div>
                 </TableCell>
-                <TableCell>
+                
+                {/* Emails Column */}
+                <TableCell className="bg-white">
+                  <Button 
+                    size="sm" 
+                    className="h-8 bg-navy-600 hover:bg-navy-700 text-white border-navy-600 text-xs whitespace-nowrap"
+                  >
+                    <Mail className="h-3 w-3 mr-1" />
+                    Access email
+                  </Button>
+                </TableCell>
+                
+                {/* Phone Numbers Column */}
+                <TableCell className="bg-white">
+                  <Button 
+                    size="sm" 
+                    className="h-8 bg-navy-600 hover:bg-navy-700 text-white border-navy-600 text-xs whitespace-nowrap"
+                  >
+                    <Phone className="h-3 w-3 mr-1" />
+                    Access Mobile
+                  </Button>
+                </TableCell>
+                
+                {/* Location Column */}
+                <TableCell className="bg-white">
                   <div className="flex items-center space-x-2">
-                    <Button size="sm" variant="outline" className="h-8">
-                      <UserPlus className="h-4 w-4 mr-1" />
-                      Connect
-                    </Button>
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
+                    <MapPin className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-900 text-sm">{alumni.location}</span>
                   </div>
+                </TableCell>
+                
+                {/* Company - Number of Employees Column */}
+                <TableCell className="bg-white">
+                  <span className="text-gray-900 text-sm">
+                    {Math.floor(Math.random() * 1000) + 1}
+                    {Math.random() > 0.7 ? 'K' : ''}
+                    {Math.random() > 0.9 ? 'M' : ''}
+                  </span>
                 </TableCell>
               </motion.tr>
             ))}
           </TableBody>
         </Table>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 } 
