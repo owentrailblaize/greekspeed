@@ -275,7 +275,6 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   {/* Company Column */}
                   <TableCell className="bg-white">
                     <div className="flex items-center space-x-2">
-                      <Building2 className="h-4 w-4 text-gray-400" />
                       <span className="text-gray-900 text-sm">{alumni.company || 'N/A'}</span>
                     </div>
                   </TableCell>
@@ -290,7 +289,6 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   {/* Chapter Column */}
                   <TableCell className="bg-white">
                     <div className="flex items-center space-x-2">
-                      <Users className="h-4 w-4 text-gray-400" />
                       <span className="text-gray-900 text-sm">{alumni.chapter || 'N/A'}</span>
                     </div>
                   </TableCell>

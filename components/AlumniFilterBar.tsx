@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { Search, X, ChevronDown } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +6,6 @@ import { Select, SelectItem } from "@/components/ui/select";
 import { graduationYears, industries, chapters, locations } from "@/lib/mockAlumni";
 import { US_STATES, getStateNameByCode } from "@/lib/usStates";
 import { motion } from "framer-motion";
-// import { STATE_CODES } from 'us-state-codes';
 
 interface FilterState {
   searchTerm: string;
