@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectItem } from "@/components/ui/select";
 import { graduationYears, industries, chapters, locations } from "@/lib/mockAlumni";
+import { US_STATES, getStateNameByCode } from "@/lib/usStates";
 import { motion } from "framer-motion";
 // import { STATE_CODES } from 'us-state-codes';
 
@@ -25,31 +26,6 @@ interface AlumniFilterBarProps {
 }
 
 export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSidebar = false }: AlumniFilterBarProps) {
-  const [usStates, setUsStates] = useState<Array<{code: string, name: string}>>([]);
-  const [isLoadingStates, setIsLoadingStates] = useState(true);
-
-  useEffect(() => {
-    const loadStates = async () => {
-      try {
-        const { STATE_CODES } = await import('us-state-codes');
-        if (STATE_CODES) {
-          const states = Object.entries(STATE_CODES).map(([code, name]) => ({
-            code,
-            name: name as string
-          })).sort((a, b) => a.name.localeCompare(b.name));
-          setUsStates(states);
-        }
-      } catch (error) {
-        console.error('Failed to load US states:', error);
-        setUsStates([]);
-      } finally {
-        setIsLoadingStates(false);
-      }
-    };
-
-    loadStates();
-  }, []);
-  
   const handleFilterChange = (key: keyof FilterState, value: string) => {
     onFiltersChange({
       ...filters,
@@ -77,23 +53,7 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
             />
           </div>
         </div>
-
-        {/* State Filter - NEW */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">State</label>
-          <Select 
-            value={filters.state} 
-            onValueChange={(value) => handleFilterChange('state', value)}
-          >
-            <SelectItem value="">All States</SelectItem>
-            {usStates.map((state) => (
-              <SelectItem key={state.code} value={state.code}>
-                {state.name}
-              </SelectItem>
-            ))}
-          </Select>
-        </div>
-
+        
         {/* Graduation Year Filter */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-700">Graduation Year</label>
@@ -137,6 +97,22 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
           </Select>
         </div>
 
+        {/* State Filter */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">State</label>
+          <Select 
+            value={filters.state} 
+            onValueChange={(value) => handleFilterChange('state', value)}
+          >
+            <SelectItem value="">All States</SelectItem>
+            {US_STATES.map((state) => (
+              <SelectItem key={state.code} value={state.code}>
+                {state.name}
+              </SelectItem>
+            ))}
+          </Select>
+        </div>
+
         {/* Location Filter */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-700">Location</label>
@@ -176,7 +152,7 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
             <div className="flex flex-wrap gap-2">
               {filters.state && (
                 <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
-                  State: {usStates.find(s => s.code === filters.state)?.name || filters.state}
+                  State: {getStateNameByCode(filters.state) || filters.state}
                   <X 
                     className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
                     onClick={() => handleFilterChange('state', '')}
@@ -245,7 +221,7 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
           
           {/* Filter Dropdowns */}
           <div className="flex items-center space-x-3">
-            {/* State Filter - NEW */}
+            {/* State Filter */}
             <div className="relative">
               <Select 
                 value={filters.state} 
@@ -254,7 +230,7 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                 className="w-32"
               >
                 <SelectItem value="">All States</SelectItem>
-                {usStates.map((state) => (
+                {US_STATES.map((state) => (
                   <SelectItem key={state.code} value={state.code}>
                     {state.name}
                   </SelectItem>
@@ -350,7 +326,7 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
             </span>
             {filters.state && (
               <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
-                State: {usStates.find(s => s.code === filters.state)?.name || filters.state}
+                State: {getStateNameByCode(filters.state) || filters.state}
                 <X 
                   className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
                   onClick={() => handleFilterChange('state', '')}

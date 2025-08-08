@@ -34,16 +34,16 @@ export function LinkedInStyleAlumniCard({
         <div className="px-4 pb-4 -mt-8 relative">
           {/* Avatar */}
           <div className="flex justify-center mb-3">
-            <div className="w-16 h-16 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden">
+            <div className="w-16 h-16 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden relative">
               {avatar ? (
-                <ImageWithFallback src={avatar} alt={name} className="w-full h-full object-cover" />
+                <ImageWithFallback src={avatar} alt={name} width={64} height={64}className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
                   <span className="text-white font-medium text-lg">
                     {name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
+                      ?.split(" ")
+                      ?.map((n) => n[0])
+                      ?.join("") || "?"}
                   </span>
                 </div>
               )}
@@ -61,17 +61,17 @@ export function LinkedInStyleAlumniCard({
 
           <div className="flex items-center justify-center space-x-2 mb-4">
             <div className="flex -space-x-1">
-              {mutualConnections.slice(0, 3).map((c, i) => (
-                <div key={i} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200">
+              {mutualConnections?.slice(0, 3).map((c, i) => (
+                <div key={i} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
                   {c.avatar ? (
-                    <ImageWithFallback src={c.avatar} alt={c.name} className="w-full h-full object-cover" />
+                    <ImageWithFallback src={c.avatar} alt={c.name || 'Unknown'} width={64} height={64} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
                       <span className="text-white text-xs">
                         {c.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
+                          ?.split(" ")
+                          ?.map((n) => n[0])
+                          ?.join("") || "?"}
                       </span>
                     </div>
                   )}
@@ -79,7 +79,7 @@ export function LinkedInStyleAlumniCard({
               ))}
             </div>
             <span className="text-sm text-gray-600">
-              {mutualConnections[0]?.name} and {mutualConnectionsCount - 1} other mutual connections
+              {mutualConnections?.[0]?.name || 'Unknown'} and {mutualConnectionsCount - 1} other mutual connections
             </span>
           </div>
 
@@ -93,4 +93,4 @@ export function LinkedInStyleAlumniCard({
       </CardContent>
     </Card>
   );
-} 
+}
