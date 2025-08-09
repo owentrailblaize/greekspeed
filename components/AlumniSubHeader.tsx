@@ -56,12 +56,6 @@ export function AlumniSubHeader({
                   <Badge className="bg-navy-600 text-white">
                     {selectedCount} selected
                   </Badge>
-                  <Button size="sm" variant="outline" onClick={() => onBulkAction('message')}>
-                    Message
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => onBulkAction('tag')}>
-                    Add Tag
-                  </Button>
                   <Button size="sm" variant="outline" onClick={onClearSelection}>
                     Clear
                   </Button>
