@@ -4,6 +4,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { LinkedInStyleAlumniCard } from "@/components/LinkedInStyleAlumniCard";
 import { 
   ChevronDown, 
   ChevronUp, 
@@ -21,7 +23,8 @@ import {
   Calendar,
   Tag,
   Users,
-  Check
+  Check,
+  X
 } from "lucide-react";
 import { Alumni } from "@/lib/mockAlumni";
 
@@ -39,6 +42,8 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [accessedEmails, setAccessedEmails] = useState<Set<string>>(new Set());
   const [accessedPhones, setAccessedPhones] = useState<Set<string>>(new Set());
+  const [selectedAlumniForPopup, setSelectedAlumniForPopup] = useState<Alumni | null>(null);
+  const [popupOpen, setPopupOpen] = useState(false);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -71,6 +76,16 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
 
   const handleAccessPhone = (alumniId: string) => {
     setAccessedPhones(prev => new Set([...prev, alumniId]));
+  };
+
+  const handleAlumniNameClick = (alumni: Alumni) => {
+    setSelectedAlumniForPopup(alumni);
+    setPopupOpen(true);
+  };
+
+  const handleClosePopup = () => {
+    setPopupOpen(false);
+    setSelectedAlumniForPopup(null);
   };
 
   const sortedAlumni = [...alumni].sort((a, b) => {
@@ -137,15 +152,47 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
   };
 
   return (
-    <div className="w-full h-full bg-white flex flex-col">
-      {/* Table container with horizontal scroll ONLY for the table */}
-      <div className="flex-1 overflow-auto">
-        <div className="min-w-[1400px] h-full">
-          <Table className="w-full h-full">
+    <div className="w-full">
+      {/* Alumni Popup Sheet */}
+      <Sheet open={popupOpen} onOpenChange={setPopupOpen}>
+        <SheetContent side="right" className="w-[400px] sm:w-[540px] p-0">
+          <SheetHeader className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-lg font-semibold text-gray-900">
+                Alumni Profile
+              </SheetTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClosePopup}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </SheetHeader>
+          <div className="p-6">
+            {selectedAlumniForPopup && (
+              <LinkedInStyleAlumniCard
+                name={selectedAlumniForPopup.fullName}
+                description={selectedAlumniForPopup.description}
+                mutualConnections={selectedAlumniForPopup.mutualConnections}
+                mutualConnectionsCount={selectedAlumniForPopup.mutualConnectionsCount}
+                avatar={selectedAlumniForPopup.avatar}
+                verified={selectedAlumniForPopup.verified}
+              />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50 border-b border-gray-200 hover:bg-gray-50">
-                <TableHead className="sticky left-0 z-20 bg-gray-50 border-r border-gray-200 w-12">
-                  <div className="flex justify-center items-center h-full">
+              <TableRow className="bg-gray-50">
+                <TableHead className="bg-gray-50 text-gray-900 font-medium w-12">
+                  <div className="flex justify-center">
                     <Checkbox
                       checked={selectedAlumni.length === alumni.length && alumni.length > 0}
                       onCheckedChange={handleSelectAll}
@@ -154,11 +201,11 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   </div>
                 </TableHead>
                 <TableHead 
-                  className="sticky left-12 z-20 bg-gray-50 border-r border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors min-w-[200px]"
+                  className="bg-gray-50 text-gray-900 font-medium cursor-pointer hover:bg-gray-100 transition-colors sticky left-12 z-20 min-w-[200px]"
                   onClick={() => handleSort('name')}
                 >
                   <div className="flex items-center space-x-2">
-                    <span className="text-gray-900 font-medium">NAME</span>
+                    <span>NAME</span>
                     <SortIcon field="name" />
                   </div>
                 </TableHead>
@@ -199,7 +246,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   </div>
                 </TableHead>
                 <TableHead 
-                  className="bg-gray-50 text-gray-900 font-medium cursor-pointer hover:bg-gray-100 transition-colors min-w-[100px]"
+                  className="bg-gray-50 text-gray-900 font-medium cursor-pointer hover:bg-gray-100 transition-colors min-w-[120px]"
                   onClick={() => handleSort('graduationYear')}
                 >
                   <div className="flex items-center space-x-2">
@@ -212,7 +259,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                     <span>EMAILS</span>
                   </div>
                 </TableHead>
-                <TableHead className="bg-gray-50 text-gray-900 font-medium min-w-[140px]">
+                <TableHead className="bg-gray-50 text-gray-900 font-medium min-w-[120px]">
                   <div className="flex items-center space-x-2">
                     <span>PHONE NUMBERS</span>
                   </div>
@@ -269,7 +316,10 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                       </div>
                       <div>
                         <div className="flex items-center space-x-2">
-                          <span className="font-medium text-gray-900 underline cursor-pointer hover:text-navy-600 transition-colors">
+                          <span 
+                            className="font-medium text-gray-900 underline cursor-pointer hover:text-navy-600 transition-colors"
+                            onClick={() => handleAlumniNameClick(alumni)}
+                          >
                             {alumni.fullName}
                           </span>
                           {alumni.verified && (
