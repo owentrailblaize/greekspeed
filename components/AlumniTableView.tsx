@@ -127,7 +127,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
           <Table className="w-full h-full">
             <TableHeader>
               <TableRow className="bg-gray-50 border-b border-gray-200 hover:bg-gray-50">
-                <TableHead className="sticky left-0 z-20 bg-gray-50 border-r border-gray-200 w-12">
+                <TableHead className="bg-gray-50 border-r border-gray-200 w-12">
                   <div className="flex justify-center items-center h-full">
                     <Checkbox
                       checked={selectedAlumni.length === alumni.length && alumni.length > 0}
@@ -137,7 +137,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   </div>
                 </TableHead>
                 <TableHead 
-                  className="sticky left-12 z-20 bg-gray-50 border-r border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors min-w-[200px]"
+                  className=" bg-gray-50 border-r border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors min-w-[200px]"
                   onClick={() => handleSort('name')}
                 >
                   <div className="flex items-center space-x-2">
@@ -234,7 +234,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                 >
                   {/* Sticky Name Column */}
-                  <TableCell className="sticky left-0 z-10 bg-white border-r border-gray-200 w-12">
+                  <TableCell className=" bg-white border-r border-gray-200 w-12">
                     <div className="flex justify-center items-center h-full">
                       <Checkbox
                         checked={selectedAlumni.includes(alumni.id)}
@@ -243,7 +243,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                       />
                     </div>
                   </TableCell>
-                  <TableCell className="sticky left-12 z-10 bg-white border-r border-gray-200">
+                  <TableCell className=" bg-white border-r border-gray-200">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
                         <span className="text-white text-sm font-medium">
