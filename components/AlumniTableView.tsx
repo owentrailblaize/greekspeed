@@ -221,8 +221,8 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
         </SheetContent>
       </Sheet>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden h-full">
+        <div className="overflow-x-auto h-full">
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50 border-b border-gray-200 hover:bg-gray-50">

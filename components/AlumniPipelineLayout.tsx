@@ -9,7 +9,6 @@ import { AlumniTableView } from "@/components/AlumniTableView";
 import { LinkedInStyleAlumniCard } from "@/components/LinkedInStyleAlumniCard";
 import { AlumniToolbar } from "@/components/AlumniToolbar";
 import { AlumniDetailSheet } from "@/components/AlumniDetailSheet";
-import { AlumniPagination } from "@/components/AlumniPagination";
 import { Alumni } from "@/lib/mockAlumni";
 import { exportAlumniToCSV, exportSelectedAlumniToCSV } from "@/lib/csvExport";
 
@@ -52,9 +51,6 @@ export function AlumniPipelineLayout({
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedAlumniDetail, setSelectedAlumniDetail] = useState<Alumni | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(25);
-
   const handleBulkAction = (action: string) => {
     console.log(`Bulk action: ${action} for ${selectedAlumni.length} alumni`);
     
@@ -107,11 +103,8 @@ export function AlumniPipelineLayout({
     return !lastContact || lastContact > thirtyDaysAgo;
   }).length;
 
-  // Calculate pagination
-  const totalPages = Math.ceil(totalAlumni / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedAlumni = alumni.slice(startIndex, endIndex);
+  // Show all alumni without pagination
+  const displayAlumni = alumni;
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -169,8 +162,8 @@ export function AlumniPipelineLayout({
           onExport={handleExport}
         />
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-hidden">
+                 {/* Content Area */}
+         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
@@ -207,49 +200,36 @@ export function AlumniPipelineLayout({
                     Clear all filters
                   </Button>
                 </div>
-              ) : viewMode === 'table' ? (
-                <div className="h-full flex flex-col">
-                  <div className="flex-1 min-h-0">
-                    <AlumniTableView 
-                      alumni={paginatedAlumni}
-                      selectedAlumni={selectedAlumni}
-                      onSelectionChange={onSelectionChange}
-                    />
-                  </div>
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <AlumniPagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      totalItems={totalAlumni}
-                      itemsPerPage={itemsPerPage}
-                      onPageChange={setCurrentPage}
-                      onItemsPerPageChange={setItemsPerPage}
-                    />
-                  )}
-                </div>
+                             ) : viewMode === 'table' ? (
+                 <div className="h-full overflow-y-auto">
+                   <AlumniTableView 
+                     alumni={displayAlumni}
+                     selectedAlumni={selectedAlumni}
+                     onSelectionChange={onSelectionChange}
+                   />
+                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {paginatedAlumni.map((alumniItem, index) => (
-                    <motion.div
-                      key={alumniItem.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.05 }}
-                      onClick={() => handleAlumniClick(alumniItem)}
-                      className="cursor-pointer"
-                    >
-                      <LinkedInStyleAlumniCard
-                        name={alumniItem.fullName}
-                        description={alumniItem.description}
-                        mutualConnections={alumniItem.mutualConnections}
-                        mutualConnectionsCount={alumniItem.mutualConnectionsCount}
-                        avatar={alumniItem.avatar}
-                        verified={alumniItem.verified}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                   {displayAlumni.map((alumniItem: Alumni, index: number) => (
+                     <motion.div
+                       key={alumniItem.id}
+                       initial={{ opacity: 0, y: 20 }}
+                       animate={{ opacity: 1, y: 0 }}
+                       transition={{ duration: 0.5, delay: index * 0.05 }}
+                       onClick={() => handleAlumniClick(alumniItem)}
+                       className="cursor-pointer"
+                     >
+                       <LinkedInStyleAlumniCard
+                         name={alumniItem.fullName}
+                         description={alumniItem.description}
+                         mutualConnections={alumniItem.mutualConnections}
+                         mutualConnectionsCount={alumniItem.mutualConnectionsCount}
+                         avatar={alumniItem.avatar}
+                         verified={alumniItem.verified}
+                       />
+                     </motion.div>
+                   ))}
+                 </div>
               )}
             </div>
           )}
