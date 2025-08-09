@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -102,6 +103,7 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
           <Select 
             value={filters.graduationYear} 
             onValueChange={(value) => handleFilterChange('graduationYear', value)}
+            placeholder="All Years"
           >
             <SelectItem value="">All Years</SelectItem>
             {loading ? (
@@ -123,6 +125,7 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
           <Select 
             value={filters.industry} 
             onValueChange={(value) => handleFilterChange('industry', value)}
+            placeholder="All Industries"
           >
             <SelectItem value="">All Industries</SelectItem>
             {loading ? (
@@ -141,6 +144,7 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
           <Select 
             value={filters.chapter} 
             onValueChange={(value) => handleFilterChange('chapter', value)}
+            placeholder="All Chapters"
           >
             <SelectItem value="">All Chapters</SelectItem>
             {loading ? (
@@ -159,6 +163,7 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
           <Select 
             value={filters.state} 
             onValueChange={(value) => handleFilterChange('state', value)}
+            placeholder="All States"
           >
             <SelectItem value="">All States</SelectItem>
             {US_STATES.map((state) => (
@@ -175,6 +180,7 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
           <Select 
             value={filters.location} 
             onValueChange={(value) => handleFilterChange('location', value)}
+            placeholder="All Locations"
           >
             <SelectItem value="">All Locations</SelectItem>
             {loading ? (
