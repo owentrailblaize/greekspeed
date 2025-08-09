@@ -1,5 +1,6 @@
 export interface Alumni {
-  id: string;
+  id: string; // This will be the user_id for connection functionality
+  alumniId?: string; // Original alumni table ID
   firstName: string;
   lastName: string;
   fullName: string;
@@ -19,6 +20,7 @@ export interface Alumni {
   isActivelyHiring?: boolean;
   lastContact?: string;
   tags: string[];
+  hasProfile?: boolean; // Indicates if this alumni has a linked profile
 }
 
 export interface MutualConnection {

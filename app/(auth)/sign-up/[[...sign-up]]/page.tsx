@@ -24,7 +24,7 @@ export default function SignUpPage() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [chapter, setChapter] = useState('');
-  const [role, setRole] = useState('');
+  const [role, setRole] = useState<'Admin / Executive' | 'Active Member' | 'Alumni' | ''>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -62,6 +62,7 @@ export default function SignUpPage() {
 
     try {
       await signUp(email, password, {
+        fullName: `${firstName} ${lastName}`,
         firstName,
         lastName,
         chapter,
@@ -195,8 +196,7 @@ export default function SignUpPage() {
               <Label htmlFor="role">Role</Label>
               <Select 
                 value={role} 
-                onValueChange={setRole}
-                placeholder="Select your role"
+                onValueChange={(value: string) => setRole(value as 'Admin / Executive' | 'Active Member' | 'Alumni')}                placeholder="Select your role"
                 className={loading ? "opacity-50 pointer-events-none" : ""}
               >
                 {userRoles.map((userRole) => (

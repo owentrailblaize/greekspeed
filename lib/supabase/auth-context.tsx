@@ -5,10 +5,11 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from './client';
 
 interface ProfileData {
+  fullName: string;
   firstName: string;
   lastName: string;
   chapter: string;
-  role: string;
+  role: 'Admin / Executive' | 'Active Member' | 'Alumni';
 }
 
 interface AuthContextType {
@@ -85,6 +86,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  const syncExistingAlumni = async (userId: string) => {
+    try {
+      // Check if user has role 'alumni' in profiles
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (profileError) {
+        console.error('❌ AuthContext: Profile fetch failed:', profileError);
+        return;
+      }
+
+      // If profile has role 'alumni' and no alumni record exists
+      if (profile.role?.toLowerCase() === 'alumni') {
+        const { data: existingAlumni, error: alumniCheckError } = await supabase
+          .from('alumni')
+          .select('id')
+          .eq('user_id', userId)
+          .single();
+
+        if (alumniCheckError && alumniCheckError.code !== 'PGRST116') {
+          console.error('❌ AuthContext: Alumni check failed:', alumniCheckError);
+          return;
+        }
+
+        // If no alumni record exists, create one
+        if (!existingAlumni) {
+          console.log('🔍 AuthContext: Creating missing alumni record for existing user:', userId);
+          
+          const { error: alumniError } = await supabase
+            .from('alumni')
+            .insert({
+              user_id: userId,
+              first_name: profile.first_name,
+              last_name: profile.last_name,
+              full_name: profile.full_name,
+              chapter: profile.chapter,
+              industry: 'Not specified',
+              graduation_year: new Date().getFullYear(),
+              company: 'Not specified',
+              job_title: 'Not specified',
+              email: profile.email,
+              phone: null,
+              location: 'Not specified',
+              description: `Alumni from ${profile.chapter}`,
+              avatar_url: null,
+              verified: false,
+              is_actively_hiring: false,
+              last_contact: null,
+              tags: null,
+              mutual_connections: [],
+            });
+
+          if (alumniError) {
+            console.error('❌ AuthContext: Missing alumni record creation failed:', alumniError);
+          } else {
+            console.log('✅ AuthContext: Missing alumni record created successfully');
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ AuthContext: Alumni sync exception:', error);
+    }
+  };
+
   const signIn = async (email: string, password: string) => {
     console.log('🔍 AuthContext: Attempting sign in for:', email);
     
@@ -104,6 +172,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       console.log('✅ AuthContext: Sign in successful');
+      
+      if (!error && data.user) {
+        // Sync existing alumni after successful sign in
+        await syncExistingAlumni(data.user.id);
+      }
     } catch (error) {
       console.error('❌ AuthContext: Sign in exception:', error);
       throw error;
@@ -168,6 +241,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               chapter: profileData?.chapter,
               role: profileData?.role
             });
+
+            // NEW CODE: If role is "Alumni", also create an alumni record
+            if (profileData?.role?.toLowerCase() === 'alumni') {
+              console.log('🔍 AuthContext: Creating alumni record for user:', data.user.id);
+              
+              try {
+                const { error: alumniError } = await supabase
+                  .from('alumni')
+                  .insert({
+                    user_id: data.user.id,
+                    first_name: profileData.firstName,
+                    last_name: profileData.lastName,
+                    full_name: fullName,
+                    chapter: profileData.chapter,
+                    industry: 'Not specified', // Default value
+                    graduation_year: new Date().getFullYear(), // Default to current year
+                    company: 'Not specified', // Default value
+                    job_title: 'Not specified', // Default value
+                    email: data.user.email,
+                    phone: null,
+                    location: 'Not specified', // Default value
+                    description: `Alumni from ${profileData.chapter}`,
+                    avatar_url: null,
+                    verified: false,
+                    is_actively_hiring: false,
+                    last_contact: null,
+                    tags: null,
+                    mutual_connections: [], // Empty array for new alumni
+                  });
+
+                if (alumniError) {
+                  console.error('❌ AuthContext: Alumni record creation failed:', alumniError);
+                  // Don't throw here - profile was created successfully
+                  // We can handle alumni creation later if needed
+                } else {
+                  console.log('✅ AuthContext: Alumni record created successfully');
+                }
+              } catch (alumniError) {
+                console.error('❌ AuthContext: Alumni record creation exception:', alumniError);
+                // Don't throw here - profile was created successfully
+              }
+            }
           }
         } catch (profileError) {
           console.error('❌ AuthContext: Profile creation exception:', profileError);
