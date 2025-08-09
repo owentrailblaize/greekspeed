@@ -97,7 +97,7 @@ export function AlumniToolbar({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" onClick={onExport}>
+              <Button variant="outline">
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
@@ -105,15 +105,11 @@ export function AlumniToolbar({
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => onExport()}>
                 <Download className="h-4 w-4 mr-2" />
-                Export to CSV
+                Export All to CSV
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onExport()}>
                 <Download className="h-4 w-4 mr-2" />
-                Export to Excel
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onExport()}>
-                <Download className="h-4 w-4 mr-2" />
-                Export Selected
+                Export All to Excel
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -131,6 +127,10 @@ export function AlumniToolbar({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => onBulkAction('export')}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export CSV
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onBulkAction('email')}>
                   <Mail className="h-4 w-4 mr-2" />
                   Send Email
@@ -142,10 +142,6 @@ export function AlumniToolbar({
                 <DropdownMenuItem onClick={() => onBulkAction('tag')}>
                   <Tag className="h-4 w-4 mr-2" />
                   Add Tags
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onBulkAction('export')}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Selected
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

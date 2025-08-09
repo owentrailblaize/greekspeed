@@ -56,7 +56,8 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      onSelectionChange(alumni.map(a => a.id));
+      const allIds = alumni.map(a => a.id);
+      onSelectionChange(allIds);
     } else {
       onSelectionChange([]);
     }
@@ -64,9 +65,11 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
 
   const handleSelectAlumni = (alumniId: string, checked: boolean) => {
     if (checked) {
-      onSelectionChange([...selectedAlumni, alumniId]);
+      const newSelection = [...selectedAlumni, alumniId];
+      onSelectionChange(newSelection);
     } else {
-      onSelectionChange(selectedAlumni.filter(id => id !== alumniId));
+      const newSelection = selectedAlumni.filter(id => id !== alumniId);
+      onSelectionChange(newSelection);
     }
   };
 
@@ -151,8 +154,40 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
     return date.toLocaleDateString();
   };
 
+  // Add computed values for selection state
+  const isAllSelected = selectedAlumni.length === alumni.length && alumni.length > 0;
+  const isIndeterminate = selectedAlumni.length > 0 && selectedAlumni.length < alumni.length;
+  
+
+
+  // Add SelectionStatus component
+  const SelectionStatus = () => {
+    if (selectedAlumni.length === 0) return null;
+    
+    return (
+      <div className="px-4 py-2 bg-navy-50 border-b border-navy-200">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-navy-700">
+            {selectedAlumni.length} of {alumni.length} alumni selected
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onSelectionChange([])}
+            className="text-navy-600 hover:text-navy-700"
+          >
+            Clear selection
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="w-full">
+      {/* Selection Status */}
+      <SelectionStatus />
+
       {/* Alumni Popup Sheet */}
       <Sheet open={popupOpen} onOpenChange={setPopupOpen}>
         <SheetContent side="right" className="w-[400px] sm:w-[540px] p-0">
@@ -191,15 +226,19 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50 border-b border-gray-200 hover:bg-gray-50">
-                <TableHead className="bg-gray-50 border-r border-gray-200 w-12">
-                  <div className="flex justify-center items-center h-full">
-                    <Checkbox
-                      checked={selectedAlumni.length === alumni.length && alumni.length > 0}
-                      onCheckedChange={handleSelectAll}
-                      className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
-                    />
-                  </div>
-                </TableHead>
+                                 <TableHead 
+                   className="bg-gray-50 border-r border-gray-200 w-12"
+                   onClick={(e) => e.stopPropagation()}
+                 >
+                   <div className="flex justify-center items-center h-full p-2">
+                     <Checkbox
+                       checked={isAllSelected}
+                       onCheckedChange={handleSelectAll}
+                       indeterminate={isIndeterminate}
+                       className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
+                     />
+                   </div>
+                 </TableHead>
                 <TableHead 
                   className=" bg-gray-50 border-r border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors min-w-[200px]"
                   onClick={() => handleSort('name')}
@@ -295,18 +334,23 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   key={alumni.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                  className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
+                    selectedAlumni.includes(alumni.id) ? 'bg-navy-50 border-navy-200' : ''
+                  }`}
                 >
-                  {/* Sticky Name Column */}
-                  <TableCell className=" bg-white border-r border-gray-200 w-12">
-                    <div className="flex justify-center items-center h-full">
-                      <Checkbox
-                        checked={selectedAlumni.includes(alumni.id)}
-                        onCheckedChange={(checked) => handleSelectAlumni(alumni.id, checked as boolean)}
-                        className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
-                      />
-                    </div>
-                  </TableCell>
+                                     {/* Checkbox Column */}
+                   <TableCell 
+                     className=" bg-white border-r border-gray-200 w-12"
+                     onClick={(e) => e.stopPropagation()}
+                   >
+                     <div className="flex justify-center items-center h-full p-2">
+                       <Checkbox
+                         checked={selectedAlumni.includes(alumni.id)}
+                         onCheckedChange={(checked) => handleSelectAlumni(alumni.id, checked as boolean)}
+                         className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
+                       />
+                     </div>
+                   </TableCell>
                   <TableCell className=" bg-white border-r border-gray-200">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
@@ -447,4 +491,4 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
       </div>
     </div>
   );
-} 
+}

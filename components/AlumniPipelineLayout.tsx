@@ -11,6 +11,7 @@ import { AlumniToolbar } from "@/components/AlumniToolbar";
 import { AlumniDetailSheet } from "@/components/AlumniDetailSheet";
 import { AlumniPagination } from "@/components/AlumniPagination";
 import { Alumni } from "@/lib/mockAlumni";
+import { exportAlumniToCSV, exportSelectedAlumniToCSV } from "@/lib/csvExport";
 
 interface FilterState {
   searchTerm: string;
@@ -56,6 +57,29 @@ export function AlumniPipelineLayout({
 
   const handleBulkAction = (action: string) => {
     console.log(`Bulk action: ${action} for ${selectedAlumni.length} alumni`);
+    
+    switch (action) {
+      case 'export':
+        if (selectedAlumni.length > 0) {
+          const timestamp = new Date().toISOString().split('T')[0];
+          exportSelectedAlumniToCSV(alumni, selectedAlumni, `trailblaize-alumni-${timestamp}.csv`);
+        }
+        break;
+      case 'email':
+        console.log('Sending email to selected alumni');
+        // TODO: Implement email functionality
+        break;
+      case 'message':
+        console.log('Sending message to selected alumni');
+        // TODO: Implement message functionality
+        break;
+      case 'tag':
+        console.log('Adding tags to selected alumni');
+        // TODO: Implement tag functionality
+        break;
+      default:
+        console.log(`Unknown bulk action: ${action}`);
+    }
   };
 
   const handleSaveSearch = () => {
@@ -63,7 +87,8 @@ export function AlumniPipelineLayout({
   };
 
   const handleExport = () => {
-    console.log('Exporting alumni data');
+    const timestamp = new Date().toISOString().split('T')[0];
+    exportAlumniToCSV(alumni, `alumni-export-${timestamp}.csv`);
   };
 
   const handleAlumniClick = (alumni: Alumni) => {
