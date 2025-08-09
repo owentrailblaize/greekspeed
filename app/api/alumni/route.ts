@@ -44,8 +44,9 @@ export async function GET(request: NextRequest) {
     const chapter = searchParams.get('chapter') || ''
     const location = searchParams.get('location') || ''
     const graduationYear = searchParams.get('graduationYear') || ''
+    const activelyHiring = searchParams.get('activelyHiring') || ''
 
-    console.log('Query params:', { search, industry, chapter, location, graduationYear })
+    console.log('Query params:', { search, industry, chapter, location, graduationYear, activelyHiring })
 
     // Build the query - start simple
     let query = supabase
@@ -69,8 +70,16 @@ export async function GET(request: NextRequest) {
       query = query.eq('location', location)
     }
     
-    if (graduationYear) {
-      query = query.eq('graduation_year', parseInt(graduationYear))
+    if (graduationYear && graduationYear !== 'All Years') {
+      if (graduationYear === 'older') {
+        query = query.lte('graduation_year', 2019)
+      } else {
+        query = query.eq('graduation_year', parseInt(graduationYear))
+      }
+    } 
+
+    if (activelyHiring) {
+      query = query.eq('is_actively_hiring', true)
     }
 
     // Apply pagination
