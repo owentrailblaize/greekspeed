@@ -4,12 +4,19 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from './client';
 
+interface ProfileData {
+  firstName: string;
+  lastName: string;
+  chapter: string;
+  role: string;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, profileData?: ProfileData) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -103,8 +110,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string) => {
-    console.log('🔍 AuthContext: Attempting sign up for:', email);
+  const signUp = async (email: string, password: string, profileData?: ProfileData) => {
+    console.log('🔍 AuthContext: Attempting sign up for:', email, 'with profile data:', profileData);
     
     try {
       // First, sign up the user
@@ -133,12 +140,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('🔍 AuthContext: Creating profile for user:', data.user.id);
         
         try {
+          const fullName = profileData 
+            ? `${profileData.firstName} ${profileData.lastName}`
+            : data.user.email?.split('@')[0] || 'User';
+
           const { error: profileError } = await supabase
             .from('profiles')
             .upsert({
               id: data.user.id,
               email: data.user.email,
-              full_name: data.user.email?.split('@')[0] || 'User',
+              full_name: fullName,
+              first_name: profileData?.firstName || null,
+              last_name: profileData?.lastName || null,
+              chapter: profileData?.chapter || null,
+              role: profileData?.role || null,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             }, {
@@ -148,7 +163,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (profileError) {
             console.error('❌ AuthContext: Profile creation failed:', profileError);
           } else {
-            console.log('✅ AuthContext: Profile created successfully');
+            console.log('✅ AuthContext: Profile created successfully with data:', {
+              fullName,
+              chapter: profileData?.chapter,
+              role: profileData?.role
+            });
           }
         } catch (profileError) {
           console.error('❌ AuthContext: Profile creation exception:', profileError);

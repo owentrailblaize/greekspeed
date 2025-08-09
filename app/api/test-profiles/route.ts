@@ -1,16 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-interface UserData {
-  id: string;
-  email: string;
-  created_at: string;
-  last_sign_in_at: string;
-}
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    console.log('🔍 Test Auth API: Called')
+    console.log('🔍 Test Profiles API: Called')
     
     // Check environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -27,33 +20,35 @@ export async function GET() {
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     
-    // Get all users (for testing purposes)
-    const { data: users, error } = await supabase.auth.admin.listUsers()
+    // Get profiles table structure
+    const { data: profiles, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .limit(5)
     
     if (error) {
-      console.error('❌ Test Auth API: Error fetching users:', error)
+      console.error('❌ Test Profiles API: Error fetching profiles:', error)
       return NextResponse.json({ 
-        error: 'Failed to fetch users',
+        error: 'Failed to fetch profiles',
         details: error.message
       }, { status: 500 })
     }
     
-    console.log('✅ Test Auth API: Successfully fetched users:', users?.length || 0)
+    console.log('✅ Test Profiles API: Successfully fetched profiles:', profiles?.length || 0)
+    
+    // Get table structure by looking at the first profile
+    const tableStructure = profiles && profiles.length > 0 ? Object.keys(profiles[0]) : []
     
     return NextResponse.json({
       success: true,
-      userCount: users?.length || 0,
-      users: users?.map((user: UserData) => ({
-        id: user.id,
-        email: user.email,
-        created_at: user.created_at,
-        last_sign_in_at: user.last_sign_in_at
-      })) || [],
+      profileCount: profiles?.length || 0,
+      tableStructure,
+      sampleProfile: profiles?.[0] || null,
       timestamp: new Date().toISOString()
     })
     
   } catch (error) {
-    console.error('❌ Test Auth API: Unexpected error:', error)
+    console.error('❌ Test Profiles API: Unexpected error:', error)
     return NextResponse.json({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
