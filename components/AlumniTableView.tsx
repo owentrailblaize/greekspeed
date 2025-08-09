@@ -20,7 +20,8 @@ import {
   GraduationCap,
   Calendar,
   Tag,
-  Users
+  Users,
+  Check
 } from "lucide-react";
 import { Alumni } from "@/lib/mockAlumni";
 
@@ -36,6 +37,8 @@ type SortDirection = 'asc' | 'desc';
 export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: AlumniTableViewProps) {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [accessedEmails, setAccessedEmails] = useState<Set<string>>(new Set());
+  const [accessedPhones, setAccessedPhones] = useState<Set<string>>(new Set());
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -60,6 +63,14 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
     } else {
       onSelectionChange(selectedAlumni.filter(id => id !== alumniId));
     }
+  };
+
+  const handleAccessEmail = (alumniId: string) => {
+    setAccessedEmails(prev => new Set([...prev, alumniId]));
+  };
+
+  const handleAccessPhone = (alumniId: string) => {
+    setAccessedPhones(prev => new Set([...prev, alumniId]));
   };
 
   const sortedAlumni = [...alumni].sort((a, b) => {
@@ -99,24 +110,30 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
         bValue = b.lastContact || '';
         break;
       default:
-        return 0;
+        aValue = a.fullName;
+        bValue = b.fullName;
     }
 
     if (sortDirection === 'asc') {
-      return aValue > bValue ? 1 : -1;
+      return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
     } else {
-      return aValue < bValue ? 1 : -1;
+      return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
     }
   });
 
   const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return null;
-    return sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />;
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4 text-gray-400" />;
+    }
+    return sortDirection === 'asc' ? 
+      <ChevronUp className="h-4 w-4 text-navy-600" /> : 
+      <ChevronDown className="h-4 w-4 text-navy-600" />;
   };
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString();
+    if (!dateString) return 'Never';
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
   };
 
   return (
@@ -303,26 +320,48 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   
                   {/* Emails Column */}
                   <TableCell className="bg-white">
-                    <Button 
-                      size="sm" 
-                      className="h-8 bg-navy-600 hover:bg-navy-700 text-white border-navy-600 text-xs whitespace-nowrap"
-                      disabled={!alumni.email}
-                    >
-                      <Mail className="h-3 w-3 mr-1" />
-                      {alumni.email ? 'Access email' : 'No email'}
-                    </Button>
+                    {accessedEmails.has(alumni.id) ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full flex items-center justify-center">
+                          <Check className="h-1 w-1 text-white" />
+                        </div>
+                        <span className="text-gray-900 text-sm">{alumni.email}</span>
+                      </div>
+                    ) : alumni.email ? (
+                      <Button 
+                        size="sm" 
+                        className="h-8 bg-gray-600 hover:bg-gray-700 text-white border-gray-600 text-xs whitespace-nowrap"
+                        onClick={() => handleAccessEmail(alumni.id)}
+                      >
+                        <div className="w-2 h-2 bg-green-500 rounded-full flex items-center justify-center mr-2">
+                          <Check className="h-1 w-1 text-white" />
+                        </div>
+                        Access email
+                      </Button>
+                    ) : (
+                      <span className="text-gray-500 text-sm">No email available</span>
+                    )}
                   </TableCell>
                   
                   {/* Phone Numbers Column */}
                   <TableCell className="bg-white">
-                    <Button 
-                      size="sm" 
-                      className="h-8 bg-navy-600 hover:bg-navy-700 text-white border-navy-600 text-xs whitespace-nowrap"
-                      disabled={!alumni.phone}
-                    >
-                      <Phone className="h-3 w-3 mr-1" />
-                      {alumni.phone ? 'Access Mobile' : 'No phone'}
-                    </Button>
+                    {accessedPhones.has(alumni.id) ? (
+                      <div className="flex items-center space-x-2">
+                        <Phone className="h-4 w-4 text-gray-400" />
+                        <span className="text-gray-900 text-sm">{alumni.phone}</span>
+                      </div>
+                    ) : alumni.phone ? (
+                      <Button 
+                        size="sm" 
+                        className="h-8 bg-gray-600 hover:bg-gray-700 text-white border-gray-600 text-xs whitespace-nowrap"
+                        onClick={() => handleAccessPhone(alumni.id)}
+                      >
+                        <Phone className="h-3 w-3 mr-2" />
+                        Access Mobile
+                      </Button>
+                    ) : (
+                      <span className="text-gray-500 text-sm">Request phone number</span>
+                    )}
                   </TableCell>
                   
                   {/* Location Column */}
