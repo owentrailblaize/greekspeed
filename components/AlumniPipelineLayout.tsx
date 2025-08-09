@@ -135,44 +135,6 @@ export function AlumniPipelineLayout({
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Enhanced Top Bar */}
-        <div className="bg-white border-b border-gray-200 px-6 py-3 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              {!sidebarOpen && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSidebarOpen(true)}
-                  className="h-8 w-8 p-0"
-                >
-                  <Filter className="h-4 w-4" />
-                </Button>
-              )}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Alumni Pipeline</h2>
-                <p className="text-sm text-gray-500">
-                  {totalAlumni} alumni found
-                  {selectedAlumni.length > 0 && ` • ${selectedAlumni.length} selected`}
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              {selectedAlumni.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onSelectionChange([])}
-                  className="text-gray-600"
-                >
-                  Clear Selection
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-
         {/* Enhanced Toolbar */}
         <AlumniToolbar
           selectedCount={selectedAlumni.length}
