@@ -19,6 +19,8 @@ interface FilterState {
   chapter: string;
   location: string;
   state: string;
+  activelyHiring: boolean;
+  myChapter: boolean;
 }
 
 interface AlumniPipelineLayoutProps {
@@ -29,6 +31,9 @@ interface AlumniPipelineLayoutProps {
   selectedAlumni: string[];
   onSelectionChange: (selectedIds: string[]) => void;
   onRetry: () => void;
+  filters: FilterState;
+  onFiltersChange: (filters: FilterState) => void;
+  onClearFilters: () => void;
 }
 
 export function AlumniPipelineLayout({
@@ -38,36 +43,16 @@ export function AlumniPipelineLayout({
   viewMode,
   selectedAlumni,
   onSelectionChange,
-  onRetry
+  onRetry,
+  filters,
+  onFiltersChange,
+  onClearFilters
 }: AlumniPipelineLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [filters, setFilters] = useState<FilterState>({
-    searchTerm: "",
-    graduationYear: "",
-    industry: "",
-    chapter: "",
-    location: "",
-    state: "",
-  });
   const [selectedAlumniDetail, setSelectedAlumniDetail] = useState<Alumni | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
-
-  const handleClearFilters = () => {
-    setFilters({
-      searchTerm: "",
-      graduationYear: "",
-      industry: "",
-      chapter: "",
-      location: "",
-      state: "",
-    });
-  };
-
-  const handleFilterChange = (newFilters: FilterState) => {
-    setFilters(newFilters);
-  };
 
   const handleBulkAction = (action: string) => {
     console.log(`Bulk action: ${action} for ${selectedAlumni.length} alumni`);
@@ -138,8 +123,8 @@ export function AlumniPipelineLayout({
               <div className="flex-1 overflow-y-auto p-4">
                 <AlumniFilterBar
                   filters={filters}
-                  onFiltersChange={handleFilterChange}
-                  onClearFilters={handleClearFilters}
+                  onFiltersChange={onFiltersChange}
+                  onClearFilters={onClearFilters}
                   isSidebar={true}
                 />
               </div>
@@ -231,7 +216,7 @@ export function AlumniPipelineLayout({
                   <p className="text-gray-600 mb-4">
                     Try adjusting your search criteria or filters to find more alumni.
                   </p>
-                  <Button variant="outline" onClick={handleClearFilters}>
+                  <Button variant="outline" onClick={onClearFilters}>
                     Clear all filters
                   </Button>
                 </div>
