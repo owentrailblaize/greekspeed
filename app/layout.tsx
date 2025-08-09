@@ -1,6 +1,5 @@
 import "../styles/globals.css";
 import type { ReactNode } from "react";
-//import { ClerkProvider } from "@clerk/nextjs";
 import { AuthProvider } from '@/lib/supabase/auth-context';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
