@@ -38,8 +38,19 @@ export function UserAvatar({
     lg: 56
   };
 
+  // Calculate the actual avatar size in pixels for proper centering
+  const avatarSizePx = {
+    sm: 32, // w-8 = 32px
+    md: 40, // w-10 = 40px
+    lg: 48  // w-12 = 48px
+  };
+
+  // Calculate progress ring dimensions
   const radius = (progressRingSize[size] - 8) / 2;
   const circumference = 2 * Math.PI * radius;
+  
+  // For the progress arc, we want to show only the completed portion
+  // strokeDasharray defines the total length, strokeDashoffset hides the incomplete portion
   const strokeDasharray = circumference;
   const strokeDashoffset = circumference - (completionPercent / 100) * circumference;
 
@@ -52,11 +63,15 @@ export function UserAvatar({
           width={progressRingSize[size]}
           height={progressRingSize[size]}
           style={{
-            left: `-${(progressRingSize[size] - parseInt(sizeClasses[size].split(' ')[0])) / 2}px`,
-            top: `-${(progressRingSize[size] - parseInt(sizeClasses[size].split(' ')[1])) / 2}px`
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: `${progressRingSize[size]}px`,
+            height: `${progressRingSize[size]}px`
           }}
         >
-          {/* Background circle */}
+          {/* Background circle - always full circle */}
           <circle
             cx={progressRingSize[size] / 2}
             cy={progressRingSize[size] / 2}
@@ -66,7 +81,7 @@ export function UserAvatar({
             fill="none"
             className="text-gray-100"
           />
-          {/* Progress circle */}
+          {/* Progress arc - only shows completed portion */}
           <circle
             cx={progressRingSize[size] / 2}
             cy={progressRingSize[size] / 2}
@@ -77,6 +92,7 @@ export function UserAvatar({
             className="text-navy-500 transition-all duration-300 ease-in-out"
             strokeDasharray={strokeDasharray}
             strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
           />
         </svg>
       )}
