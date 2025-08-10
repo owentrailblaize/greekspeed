@@ -74,7 +74,7 @@ export const SheetContent = React.forwardRef<HTMLDivElement, SheetContentProps>(
       <>
         {/* Backdrop */}
         <div
-          className="fixed inset-0 bg-black/50 z-40"
+          className="fixed inset-0 bg-black/50 z-[9998]"
           onClick={() => context.setIsOpen(false)}
         />
         
@@ -82,7 +82,7 @@ export const SheetContent = React.forwardRef<HTMLDivElement, SheetContentProps>(
         <div
           ref={ref}
           className={cn(
-            "fixed z-50 bg-white shadow-lg",
+            "fixed z-[9999] bg-white shadow-lg",
             sideClasses[side],
             className
           )}

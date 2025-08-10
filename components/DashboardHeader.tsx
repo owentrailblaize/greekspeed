@@ -1,0 +1,82 @@
+'use client';
+
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
+import { UserDropdown } from './UserDropdown';
+import { useAuth } from '@/lib/supabase/auth-context';
+
+// Small helper for consistent tab styling
+function NavLink({ href, label }: { href: string; label: string }) {
+  const pathname = usePathname();
+  const isActive = pathname === href;
+  return (
+    <Link
+      href={href}
+      className={cn(
+        'relative flex items-center justify-center h-9 rounded-md px-2 sm:px-4 text-sm font-medium transition-colors duration-200 focus-visible:ring-2 ring-offset-2 ring-navy-500',
+        isActive ? 'bg-navy-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50 hover:text-navy-700'
+      )}
+    >
+      {label}
+      {isActive && (
+        <motion.div
+          layoutId="nav-indicator"
+          className="absolute -bottom-0.5 left-0 right-0 h-0.5 bg-white"
+        />
+      )}
+    </Link>
+  );
+}
+
+const links = [
+  { href: '/dashboard', label: 'Overview' },
+  { href: '/dashboard/alumni', label: 'Alumni' },
+  { href: '/dashboard/dues', label: 'Dues' },
+  { href: '/dashboard/admin', label: 'Exec Admin' },
+];
+
+export function DashboardHeader() {
+  const { user, signOut } = useAuth();
+  
+  // Hardcoded values for now - will be replaced with real data later
+  const completionPercent = 72; // Mock profile completion percentage
+  const hasUnread = true; // Mock unread notifications
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      // Redirect to landing page after successful sign out
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Error signing out:', error);
+      // Even if there's an error, redirect to landing page
+      window.location.href = '/';
+    }
+  };
+
+  return (
+    <header className="border-b border-gray-200 bg-white/80 backdrop-blur relative z-10">
+      <div className="w-full px-4 sm:px-6 h-14 flex items-center justify-between">
+        {/* Left side - Navigation tabs */}
+        <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+          {links.map((l) => (
+            <NavLink key={l.href} href={l.href} label={l.label} />
+          ))}
+        </div>
+
+        {/* Right side - User dropdown */}
+        <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+          <UserDropdown
+            user={user}
+            completionPercent={completionPercent}
+            hasUnread={hasUnread}
+            onSignOut={handleSignOut}
+          />
+        </div>
+      </div>
+    </header>
+  );
+} 
