@@ -18,7 +18,7 @@ export interface ProfileFormData {
   first_name: string;
   last_name: string;
   chapter: string;
-  role: 'Admin / Executive' | 'Active Member' | 'Alumni';
+  role?: 'Admin / Executive' | 'Active Member' | 'Alumni'; // Made optional since not editable
   bio?: string;
   phone?: string;
   location?: string;

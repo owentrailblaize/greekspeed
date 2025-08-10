@@ -21,7 +21,19 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
 
     React.useEffect(() => {
       setSelectedValue(value || "");
-    }, [value]);
+      // Find the label for the current value
+      if (value) {
+        React.Children.forEach(children, (child) => {
+          if (React.isValidElement(child) && child.type === SelectItem) {
+            if (child.props.value === value) {
+              setSelectedLabel(child.props.children as string);
+            }
+          }
+        });
+      } else {
+        setSelectedLabel("");
+      }
+    }, [value, children]);
 
     React.useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {

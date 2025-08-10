@@ -64,11 +64,11 @@ export class ProfileService {
       if (!user) throw new Error('User not authenticated');
 
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;  // Changed: user ID as folder
 
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
+        .from('user-avatar')  // Changed: correct bucket name
         .upload(filePath, file);
 
       if (uploadError) {
@@ -76,12 +76,10 @@ export class ProfileService {
         return null;
       }
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
+        .from('user-avatar')  // Changed: correct bucket name
         .getPublicUrl(filePath);
 
-      // Update profile with new avatar URL
       await this.updateProfile({ avatar_url: publicUrl });
 
       return publicUrl;
