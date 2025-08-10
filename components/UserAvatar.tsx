@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { User } from 'lucide-react';
+
 
 interface UserAvatarProps {
   user: { email?: string | null; user_metadata?: { avatar_url?: string | null; full_name?: string } } | null;
@@ -23,8 +23,9 @@ export function UserAvatar({
 }: UserAvatarProps) {
   const [imageError, setImageError] = useState(false);
   
-  // Mock avatar URL - in real implementation this would come from user.avatar_url
+  // Get avatar URL from user metadata or fallback to initials
   const avatarUrl = user?.user_metadata?.avatar_url || null;
+  const fullName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'U';
   
   const sizeClasses = {
     sm: 'w-8 h-8 text-xs',
@@ -50,9 +51,13 @@ export function UserAvatar({
   const circumference = 2 * Math.PI * radius;
   
   // For the progress arc, we want to show only the completed portion
-  // strokeDasharray defines the total length, strokeDashoffset hides the incomplete portion
   const strokeDasharray = circumference;
   const strokeDashoffset = circumference - (completionPercent / 100) * circumference;
+
+  // Generate initials from full name
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
 
   return (
     <div className={cn('relative inline-block', className)}>
@@ -111,7 +116,9 @@ export function UserAvatar({
             onError={() => setImageError(true)}
           />
         ) : (
-          <User className="w-1/2 h-1/2" />
+          <span className="font-semibold text-gray-700">
+            {getInitials(fullName)}
+          </span>
         )}
 
         {/* Loading Overlay */}

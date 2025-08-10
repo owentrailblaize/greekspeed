@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,20 +10,100 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectItem } from '@/components/ui/select';
 import { User, Mail, MapPin, Building, Shield, FileText, Phone, Save, X, Upload } from 'lucide-react';
 import Link from 'next/link';
+import { useProfile } from '@/lib/hooks/useProfile';
+import { UserAvatar } from '@/components/UserAvatar';
+import { ProfileFormData } from '@/types/profile';
 
 export default function EditProfilePage() {
-  // Mock user data - will be replaced with real data later
-  const mockUser = {
-    fullName: 'John Doe',
-    email: 'john.doe@example.com',
-    chapter: 'Alpha Beta Gamma',
+  const { profile, loading, error, updateProfile, uploadAvatar } = useProfile();
+  const [formData, setFormData] = useState<ProfileFormData>({
+    first_name: '',
+    last_name: '',
+    chapter: '',
     role: 'Alumni',
-    bio: 'Experienced software engineer with 5+ years in web development. Passionate about building scalable applications and mentoring junior developers.',
-    phone: '+1 (555) 123-4567',
-    location: 'San Francisco, CA',
-    avatarUrl: null,
-    completionPercent: 72
+    bio: '',
+    phone: '',
+    location: ''
+  });
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
+        chapter: profile.chapter || '',
+        role: profile.role || 'Alumni',
+        bio: profile.bio || '',
+        phone: profile.phone || '',
+        location: profile.location || ''
+      });
+    }
+  }, [profile]);
+
+  const handleInputChange = (field: keyof ProfileFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    
+    try {
+      await updateProfile(formData);
+      // Redirect to profile page after successful update
+      window.location.href = '/dashboard/profile';
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      await uploadAvatar(file);
+    } catch (error) {
+      console.error('Failed to upload avatar:', error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+        <div className="max-w-4xl mx-auto px-6 py-10">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="h-64 bg-gray-200 rounded"></div>
+              <div className="lg:col-span-2 h-64 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+        <div className="max-w-4xl mx-auto px-6 py-10">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Profile</h1>
+            <p className="text-gray-600">{error || 'Profile not found'}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const chapters = [
     'Alpha Beta Gamma',
@@ -55,26 +136,12 @@ export default function EditProfilePage() {
             </Link>
           </div>
           
-          {/* Profile Completion Banner */}
-          <div className="mt-4 p-4 bg-navy-50 rounded-lg border border-navy-200">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-navy-900">
-                  Profile Completion: {mockUser.completionPercent}%
-                </p>
-                <p className="text-xs text-navy-600 mt-1">
-                  Complete your profile to unlock full features and improve your visibility in the network
-                </p>
-              </div>
-              <Badge className="bg-navy-600 text-white">
-                {mockUser.completionPercent}% Complete
-              </Badge>
-            </div>
-          </div>
+
         </div>
 
         {/* Edit Form */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Avatar Upload */}
           <div className="lg:col-span-1">
             <Card>
@@ -82,15 +149,38 @@ export default function EditProfilePage() {
                 <CardTitle className="text-lg">Profile Photo</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
-                <div className="w-32 h-32 mx-auto mb-4 rounded-full bg-navy-600 flex items-center justify-center text-white text-4xl font-bold">
-                  {mockUser.fullName.split(' ').map(n => n[0]).join('')}
+                <div className="flex justify-center mb-4">
+                  <UserAvatar
+                    user={{
+                      user_metadata: {
+                        avatar_url: profile.avatar_url,
+                        full_name: profile.full_name
+                      }
+                    }}
+                    completionPercent={0}
+                    hasUnread={false}
+                    size="lg"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Button className="w-full bg-navy-600 hover:bg-navy-700">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload Photo
-                  </Button>
-                  <Button variant="outline" className="w-full">
+                  <input
+                    type="file"
+                    id="avatar-upload"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
+                  <label htmlFor="avatar-upload">
+                    <Button 
+                      type="button"
+                      className="w-full bg-navy-600 hover:bg-navy-700 cursor-pointer"
+                      disabled={uploading}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {uploading ? 'Uploading...' : 'Upload Photo'}
+                    </Button>
+                  </label>
+                  <Button type="button" variant="outline" className="w-full">
                     Remove Photo
                   </Button>
                 </div>
@@ -120,8 +210,10 @@ export default function EditProfilePage() {
                     </Label>
                     <Input
                       id="firstName"
-                      defaultValue={mockUser.fullName.split(' ')[0]}
+                      value={formData.first_name}
+                      onChange={(e) => handleInputChange('first_name', e.target.value)}
                       placeholder="Enter first name"
+                      required
                     />
                   </div>
                   
@@ -135,8 +227,10 @@ export default function EditProfilePage() {
                     </Label>
                     <Input
                       id="lastName"
-                      defaultValue={mockUser.fullName.split(' ')[1]}
+                      value={formData.last_name}
+                      onChange={(e) => handleInputChange('last_name', e.target.value)}
                       placeholder="Enter last name"
+                      required
                     />
                   </div>
                 </div>
@@ -150,13 +244,12 @@ export default function EditProfilePage() {
                       Required
                     </Badge>
                   </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    defaultValue={mockUser.email}
-                    placeholder="Enter email address"
-                    disabled
-                  />
+                                      <Input
+                      id="email"
+                      type="email"
+                      value={profile.email}
+                      disabled
+                    />
                   <p className="text-xs text-gray-500">Email cannot be changed</p>
                 </div>
 
@@ -170,7 +263,10 @@ export default function EditProfilePage() {
                         Required
                       </Badge>
                     </Label>
-                    <Select value={mockUser.chapter}>
+                    <Select 
+                      value={formData.chapter}
+                      onValueChange={(value) => handleInputChange('chapter', value)}
+                    >
                       {chapters.map((chapter) => (
                         <SelectItem key={chapter} value={chapter}>
                           {chapter}
@@ -187,7 +283,10 @@ export default function EditProfilePage() {
                         Required
                       </Badge>
                     </Label>
-                    <Select value={mockUser.role}>
+                    <Select 
+                      value={formData.role}
+                      onValueChange={(value) => handleInputChange('role', value as 'Admin / Executive' | 'Active Member' | 'Alumni')}
+                    >
                       {roles.map((role) => (
                         <SelectItem key={role} value={role}>
                           {role}
@@ -209,7 +308,8 @@ export default function EditProfilePage() {
                   <Textarea
                     id="bio"
                     rows={4}
-                    defaultValue={mockUser.bio}
+                    value={formData.bio}
+                    onChange={(e) => handleInputChange('bio', e.target.value)}
                     placeholder="Tell us about yourself..."
                   />
                 </div>
@@ -227,7 +327,8 @@ export default function EditProfilePage() {
                     <Input
                       id="phone"
                       type="tel"
-                      defaultValue={mockUser.phone}
+                      value={formData.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
                       placeholder="Enter phone number"
                     />
                   </div>
@@ -242,7 +343,8 @@ export default function EditProfilePage() {
                     </Label>
                     <Input
                       id="location"
-                      defaultValue={mockUser.location}
+                      value={formData.location}
+                      onChange={(e) => handleInputChange('location', e.target.value)}
                       placeholder="Enter city, state"
                     />
                   </div>
@@ -250,13 +352,18 @@ export default function EditProfilePage() {
               </CardContent>
             </Card>
           </div>
-        </div>
+          </div>
+        </form>
 
         {/* Action Buttons */}
         <div className="mt-8 flex justify-center space-x-4">
-          <Button className="px-8 py-2 bg-navy-600 hover:bg-navy-700">
+          <Button 
+            type="submit" 
+            className="px-8 py-2 bg-navy-600 hover:bg-navy-700"
+            disabled={saving}
+          >
             <Save className="w-4 h-4 mr-2" />
-            Save Changes
+            {saving ? 'Saving...' : 'Save Changes'}
           </Button>
           <Link href="/dashboard/profile">
             <Button variant="outline" className="px-8 py-2">

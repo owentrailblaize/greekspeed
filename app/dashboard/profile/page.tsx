@@ -1,31 +1,57 @@
 'use client';
 
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { User, Mail, MapPin, Building, Shield, FileText, Phone } from 'lucide-react';
+import { useProfile } from '@/lib/hooks/useProfile';
+import { UserAvatar } from '@/components/UserAvatar';
+import { ProfileService } from '@/lib/services/profileService';
 
 export default function ProfilePage() {
-  // Mock user data - will be replaced with real data later
-  const mockUser = {
-    fullName: 'John Doe',
-    email: 'john.doe@example.com',
-    chapter: 'Alpha Beta Gamma',
-    role: 'Alumni',
-    bio: 'Experienced software engineer with 5+ years in web development. Passionate about building scalable applications and mentoring junior developers.',
-    phone: '+1 (555) 123-4567',
-    location: 'San Francisco, CA',
-    avatarUrl: null,
-    completionPercent: 72
-  };
+  const { profile, loading, error } = useProfile();
+  
+  // Calculate completion percentage
+  const completion = profile ? ProfileService.calculateCompletion(profile) : null;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+        <div className="max-w-4xl mx-auto px-6 py-10">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="h-64 bg-gray-200 rounded"></div>
+              <div className="lg:col-span-2 h-64 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+        <div className="max-w-4xl mx-auto px-6 py-10">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Profile</h1>
+            <p className="text-gray-600">{error || 'Profile not found'}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const profileFields = [
-    { label: 'Full Name', value: mockUser.fullName, icon: User, required: true },
-    { label: 'Email', value: mockUser.email, icon: Mail, required: true },
-    { label: 'Chapter', value: mockUser.chapter, icon: Building, required: true },
-    { label: 'Role', value: mockUser.role, icon: Shield, required: true },
-    { label: 'Bio', value: mockUser.bio, icon: FileText, required: false },
-    { label: 'Phone', value: mockUser.phone, icon: Phone, required: false },
-    { label: 'Location', value: mockUser.location, icon: MapPin, required: false },
+    { label: 'Full Name', value: profile.full_name, icon: User, required: true },
+    { label: 'Email', value: profile.email, icon: Mail, required: true },
+    { label: 'Chapter', value: profile.chapter, icon: Building, required: true },
+    { label: 'Role', value: profile.role, icon: Shield, required: true },
+    { label: 'Bio', value: profile.bio, icon: FileText, required: false },
+    { label: 'Phone', value: profile.phone, icon: Phone, required: false },
+    { label: 'Location', value: profile.location, icon: MapPin, required: false },
   ];
 
   return (
@@ -37,21 +63,23 @@ export default function ProfilePage() {
           <p className="text-gray-600">View and manage your profile information</p>
           
           {/* Profile Completion Banner */}
-          <div className="mt-4 p-4 bg-navy-50 rounded-lg border border-navy-200">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-navy-900">
-                  Profile Completion: {mockUser.completionPercent}%
-                </p>
-                <p className="text-xs text-navy-600 mt-1">
-                  Complete your profile to unlock full features and improve your visibility in the network
-                </p>
+          {completion && (
+            <div className="mt-4 p-4 bg-navy-50 rounded-lg border border-navy-200">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-navy-900">
+                    Profile Completion: {completion.percentage}%
+                  </p>
+                  <p className="text-xs text-navy-600 mt-1">
+                    Complete your profile to unlock full features and improve your visibility in the network
+                  </p>
+                </div>
+                <Badge className="bg-navy-600 text-white">
+                  {completion.percentage}% Complete
+                </Badge>
               </div>
-              <Badge className="bg-navy-600 text-white">
-                {mockUser.completionPercent}% Complete
-              </Badge>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Profile Information */}
@@ -63,10 +91,22 @@ export default function ProfilePage() {
                 <CardTitle className="text-lg">Profile Photo</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
-                <div className="w-32 h-32 mx-auto mb-4 rounded-full bg-navy-600 flex items-center justify-center text-white text-4xl font-bold">
-                  {mockUser.fullName.split(' ').map(n => n[0]).join('')}
+                <div className="flex justify-center mb-4">
+                  <UserAvatar
+                    user={{
+                      user_metadata: {
+                        avatar_url: profile.avatar_url,
+                        full_name: profile.full_name
+                      }
+                    }}
+                    completionPercent={completion?.percentage || 0}
+                    hasUnread={false}
+                    size="lg"
+                  />
                 </div>
-                <p className="text-sm text-gray-600">No photo uploaded</p>
+                <p className="text-sm text-gray-600">
+                  {profile.avatar_url ? 'Photo uploaded' : 'No photo uploaded'}
+                </p>
                 <button className="mt-2 text-sm text-navy-600 hover:text-navy-700 underline">
                   Upload Photo
                 </button>
