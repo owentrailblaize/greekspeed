@@ -25,8 +25,8 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
       if (value) {
         React.Children.forEach(children, (child) => {
           if (React.isValidElement(child) && child.type === SelectItem) {
-            if (child.props.value === value) {
-              setSelectedLabel(child.props.children as string);
+            if ((child as React.ReactElement<SelectItemProps>).props.value === value) {
+              setSelectedLabel((child as React.ReactElement<SelectItemProps>).props.children as string);
             }
           }
         });
