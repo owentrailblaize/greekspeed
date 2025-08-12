@@ -235,7 +235,7 @@ export function LinkedInStyleAlumniCard({
 
           <div className="flex items-center justify-center space-x-2 mb-4">
             <div className="flex -space-x-1">
-              {mutualConnections?.slice(0, 3).map((c, i) => (
+              {Array.isArray(mutualConnections) && mutualConnections.slice(0, 3).map((c, i) => (
                 <div key={i} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
                   {c.avatar ? (
                     <ImageWithFallback src={c.avatar} alt={c.name || 'Unknown'} width={64} height={64} className="w-full h-full object-cover" />
@@ -253,7 +253,10 @@ export function LinkedInStyleAlumniCard({
               ))}
             </div>
             <span className="text-sm text-gray-600">
-              {mutualConnections?.[0]?.name || 'Unknown'} and {mutualConnectionsCount - 1} other mutual connections
+              {Array.isArray(mutualConnections) && mutualConnections.length > 0 
+                ? `${mutualConnections[0]?.name || 'Unknown'} and ${mutualConnectionsCount - 1} other mutual connections`
+                : 'No mutual connections'
+              }
             </span>
           </div>
 
