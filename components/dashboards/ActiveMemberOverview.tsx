@@ -1,10 +1,10 @@
 'use client';
 
-import { SocialFeed } from './SocialFeed';
-import { DuesStatusCard } from './DuesStatusCard';
-import { MyTasksCard } from './MyTasksCard';
-import { UpcomingEventsCard } from './UpcomingEventsCard';
-import { NetworkingSuggestionsCard } from './NetworkingSuggestionsCard';
+import { SocialFeed } from './ui/SocialFeed';
+import { DuesStatusCard } from './ui/DuesStatusCard';
+import { MyTasksCard } from './ui/MyTasksCard';
+import { UpcomingEventsCard } from './ui/UpcomingEventsCard';
+import { NetworkingSuggestionsCard } from './ui/NetworkingSuggestionsCard';
 
 export function ActiveMemberOverview() {
   return (

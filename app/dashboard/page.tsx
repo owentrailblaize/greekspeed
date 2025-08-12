@@ -47,7 +47,7 @@ export default function DashboardPage() {
   return (
     <div>
       <div style={{ display: 'none' }}>Dashboard Page Wrapper</div>
-      <DashboardOverview userRole={profile?.role || undefined} />
+      <DashboardOverview userRole={profile?.role || null} />
     </div>
   );
 } 
