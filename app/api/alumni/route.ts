@@ -111,7 +111,8 @@ export async function GET(request: NextRequest) {
 
     // Transform data to match your interface
     const transformedAlumni = alumni?.map(alumni => ({
-      id: alumni.id,
+      id: alumni.user_id || alumni.id, // Use user_id for connection functionality
+      alumniId: alumni.id, // Keep original alumni ID for reference
       firstName: alumni.first_name,
       lastName: alumni.last_name,
       fullName: alumni.full_name,
@@ -124,17 +125,14 @@ export async function GET(request: NextRequest) {
       phone: alumni.phone,
       location: alumni.location,
       description: alumni.description || `Experienced professional in ${alumni.industry}.`,
-      mutualConnections: alumni.mutual_connections || [
-        { name: "Luke", avatar: null },
-        { name: "Sarah", avatar: null },
-        { name: "Mike", avatar: null }
-      ],
-      mutualConnectionsCount: alumni.mutual_connections?.length || 3,
+      mutualConnections: alumni.mutual_connections || [],
+      mutualConnectionsCount: alumni.mutual_connections?.length || 0,
       avatar: alumni.avatar_url,
       verified: alumni.verified,
       isActivelyHiring: alumni.is_actively_hiring,
       lastContact: alumni.last_contact,
-      tags: alumni.tags || []
+      tags: alumni.tags || [],
+      hasProfile: !!alumni.user_id // This will now be true for all alumni
     })) || []
 
     return NextResponse.json({

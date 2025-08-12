@@ -21,7 +21,19 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
 
     React.useEffect(() => {
       setSelectedValue(value || "");
-    }, [value]);
+      // Find the label for the current value
+      if (value) {
+        React.Children.forEach(children, (child) => {
+          if (React.isValidElement(child) && child.type === SelectItem) {
+            if ((child as React.ReactElement<SelectItemProps>).props.value === value) {
+              setSelectedLabel((child as React.ReactElement<SelectItemProps>).props.children as string);
+            }
+          }
+        });
+      } else {
+        setSelectedLabel("");
+      }
+    }, [value, children]);
 
     React.useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
@@ -59,7 +71,7 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
         </button>
 
         {isOpen && (
-          <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
+          <div className="absolute top-full left-0 right-0 z-20 mt-1 max-h-60 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
             {React.Children.map(children, (child) => {
               if (React.isValidElement(child) && child.type === SelectItem) {
                 return React.cloneElement(child as React.ReactElement<SelectItemProps>, {

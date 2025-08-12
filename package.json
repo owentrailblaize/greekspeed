@@ -9,8 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@clerk/clerk-react": "^5.38.1",
-    "@clerk/nextjs": "^6.28.1",
+    "@radix-ui/react-label": "^2.1.7",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.54.0",
     "class-variance-authority": "^0.7.1",

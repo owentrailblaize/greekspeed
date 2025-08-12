@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Users, DollarSign, Shield, Star, Check, Menu, X } from "lucide-react";
 import Link from "next/link";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { useAuth } from "@/lib/supabase/auth-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -83,6 +83,7 @@ const pricingPlans = [
 export function LandingPage() {
   const [activeSection, setActiveSection] = useState("home");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
 
   const scrollToSection = (sectionId: string) => {
     setActiveSection(sectionId);
@@ -125,28 +126,34 @@ export function LandingPage() {
                 </button>
               ))}
               {/* Dashboard link for authenticated users */}
-              <SignedIn>
+              {user && (
                 <Link href="/dashboard" className="text-sm font-medium text-gray-700 hover:text-navy-600">
                   Dashboard
                 </Link>
-              </SignedIn>
+              )}
             </div>
 
             {/* Auth Buttons */}
             <div className="hidden md:flex items-center space-x-4">
-              <SignedOut>
-                <Link href="/sign-in">
-                  <Button variant="ghost" className="text-gray-700 hover:text-navy-600">
-                    Log In
+              {!user ? (
+                <>
+                  <Link href="/sign-in">
+                    <Button variant="ghost" className="text-gray-700 hover:text-navy-600">
+                      Log In
+                    </Button>
+                  </Link>
+                  <Link href="/sign-up">
+                    <Button className="bg-navy-600 hover:bg-navy-700 text-white">Sign Up</Button>
+                  </Link>
+                </>
+              ) : (
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-gray-700">{user.email}</span>
+                  <Button variant="ghost" onClick={() => signOut()}>
+                    Sign Out
                   </Button>
-                </Link>
-                <Link href="/sign-up">
-                  <Button className="bg-navy-600 hover:bg-navy-700 text-white">Sign Up</Button>
-                </Link>
-              </SignedOut>
-              <SignedIn>
-                <UserButton afterSignOutUrl="/" />
-              </SignedIn>
+                </div>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -175,12 +182,12 @@ export function LandingPage() {
                     {label}
                   </button>
                 ))}
-                <SignedIn>
+                {user && (
                   <Link href="/dashboard" className="block w-full text-left text-gray-700 hover:text-navy-600">
                     Dashboard
                   </Link>
-                </SignedIn>
-                <SignedOut>
+                )}
+                {!user ? (
                   <div className="pt-4 border-t border-gray-200 space-y-2">
                     <Link href="/sign-in">
                       <Button variant="ghost" className="w-full justify-start text-gray-700">
@@ -191,12 +198,14 @@ export function LandingPage() {
                       <Button className="w-full bg-navy-600 hover:bg-navy-700 text-white">Sign Up</Button>
                     </Link>
                   </div>
-                </SignedOut>
-                <SignedIn>
+                ) : (
                   <div className="pt-4 border-t border-gray-200">
-                    <UserButton afterSignOutUrl="/" />
+                    <div className="text-sm text-gray-700 mb-2">{user.email}</div>
+                    <Button variant="ghost" className="w-full justify-start" onClick={() => signOut()}>
+                      Sign Out
+                    </Button>
                   </div>
-                </SignedIn>
+                )}
               </div>
             </motion.div>
           )}
@@ -231,10 +240,12 @@ export function LandingPage() {
               transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
               className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-16"
             >
-              <Button size="lg" className="bg-navy-600 hover:bg-navy-700 text-white px-8 py-4 text-lg group">
-                Get Started Free
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
+              <Link href="/sign-up">
+                <Button size="lg" className="bg-navy-600 hover:bg-navy-700 text-white px-8 py-4 text-lg group">
+                  Get Started Free
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
               <Button size="lg" variant="outline" className="border-navy-300 text-navy-600 hover:bg-navy-50 px-8 py-4 text-lg">
                 Watch Demo
               </Button>

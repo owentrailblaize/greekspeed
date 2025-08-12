@@ -25,7 +25,7 @@ export function AlumniSubHeader({
   onClearSelection
 }: AlumniSubHeaderProps) {
   return (
-    <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+    <div className="sticky top-0 z-5 bg-white border-b border-gray-200 shadow-sm">
       {/* Main Header */}
       <div className="px-6 py-4">
         <div className="max-w-7xl mx-auto">

@@ -71,6 +71,7 @@ INSERT INTO alumni (
 ## Step 5: Test the Connection
 
 1. Restart your development server: `npm run dev`
+- Test the url: `http://localhost:3000`
 2. Test the environment: `http://localhost:3000/api/test-env`
 3. Test Supabase connection: `http://localhost:3000/api/test-supabase`
 4. Test alumni API: `http://localhost:3000/api/alumni`

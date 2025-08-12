@@ -135,7 +135,7 @@ export const DropdownMenuContent = React.forwardRef<HTMLDivElement, DropdownMenu
       <div
         ref={ref}
         className={cn(
-          "absolute top-full mt-1 z-50 min-w-[8rem] overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg",
+          "absolute top-full mt-1 z-[9999] min-w-[8rem] overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg",
           alignClasses[align],
           className
         )}

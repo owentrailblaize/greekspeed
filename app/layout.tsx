@@ -1,6 +1,6 @@
 import "../styles/globals.css";
 import type { ReactNode } from "react";
-import { ClerkProvider } from "@clerk/nextjs";
+import { AuthProvider } from '@/lib/supabase/auth-context';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -9,9 +9,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           className="antialiased bg-white text-gray-900"
           suppressHydrationWarning={true}
         >
-          <ClerkProvider>
+          <AuthProvider>
             {children}
-          </ClerkProvider>
+          </AuthProvider>
         </body>
       </html>
   );
