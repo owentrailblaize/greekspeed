@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { UserAvatar } from '@/components/UserAvatar';
 import { ProfileFormData } from '@/types/profile';
+import { chapters } from '@/lib/mockAlumni';
 
 export default function EditProfilePage() {
   const { profile, loading, error, updateProfile, uploadAvatar } = useProfile();
@@ -107,19 +108,19 @@ export default function EditProfilePage() {
     );
   }
 
-  // Updated chapters to match signup dropdown
-  const chapters = [
-    'Alpha Beta Gamma',
-    'Beta Gamma Delta', 
-    'Gamma Delta Epsilon',
-    'Delta Epsilon Zeta',
-    'Epsilon Zeta Eta',
-    'Zeta Eta Theta',
-    'Eta Theta Iota',
-    'Theta Iota Kappa',
-    'Iota Kappa Lambda',
-    'Kappa Lambda Mu'
-  ];
+  // Remove the local chapters array and use the imported one
+  // const chapters = [
+  //   'Alpha Beta Gamma',
+  //   'Beta Gamma Delta',
+  //   'Gamma Delta Epsilon',
+  //   'Delta Epsilon Zeta',
+  //   'Epsilon Zeta Eta',
+  //   'Zeta Eta Theta',
+  //   'Eta Theta Iota',
+  //   'Theta Iota Kappa',
+  //   'Iota Kappa Lambda',
+  //   'Kappa Lambda Mu'
+  // ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
