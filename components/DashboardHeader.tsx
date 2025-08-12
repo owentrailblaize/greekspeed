@@ -1,12 +1,12 @@
 'use client';
 
-
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { UserDropdown } from './UserDropdown';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { useProfile } from '@/lib/hooks/useProfile';
 
 // Small helper for consistent tab styling
 function NavLink({ href, label }: { href: string; label: string }) {
@@ -31,19 +31,27 @@ function NavLink({ href, label }: { href: string; label: string }) {
   );
 }
 
-const links = [
-  { href: '/dashboard', label: 'Overview' },
-  { href: '/dashboard/alumni', label: 'Alumni' },
-  { href: '/dashboard/dues', label: 'Dues' },
-  { href: '/dashboard/admin', label: 'Exec Admin' },
-];
-
 export function DashboardHeader() {
   const { user, signOut } = useAuth();
+  const { profile } = useProfile();
+  const userRole = profile?.role;
   
   // Hardcoded values for now - will be replaced with real data later
   const completionPercent = 72; // Mock profile completion percentage
   const hasUnread = true; // Mock unread notifications
+
+  // Define navigation tabs with role-based access
+  const navigationTabs = [
+    { href: '/dashboard', label: 'Overview', roles: ['admin', 'active_member', 'alumni'] },
+    { href: '/dashboard/alumni', label: 'Alumni', roles: ['admin', 'alumni', 'active_member'] },
+    { href: '/dashboard/dues', label: 'Dues', roles: ['active_member', 'alumni'] }, // Hidden from admin
+    { href: '/dashboard/admin', label: 'Exec Admin', roles: ['admin'] }, // Hidden from non-admin
+  ];
+
+  // Filter tabs based on user role
+  const visibleTabs = navigationTabs.filter(tab => 
+    tab.roles.includes(userRole || '')
+  );
 
   const handleSignOut = async () => {
     try {
@@ -62,8 +70,8 @@ export function DashboardHeader() {
       <div className="w-full px-4 sm:px-6 h-14 flex items-center justify-between">
         {/* Left side - Navigation tabs */}
         <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-          {links.map((l) => (
-            <NavLink key={l.href} href={l.href} label={l.label} />
+          {visibleTabs.map((tab) => (
+            <NavLink key={tab.href} href={tab.href} label={tab.label} />
           ))}
         </div>
 

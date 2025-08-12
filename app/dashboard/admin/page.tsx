@@ -1,6 +1,7 @@
 'use client';
 export const dynamic = "force-dynamic";
 
+import { useRoleAccess } from '@/lib/hooks/useRoleAccess';
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Crown, UserCheck, Calculator, PartyPopper } from "lucide-react";
@@ -121,4 +122,12 @@ function ExecAdminPage() {
   );
 }
 
-export default ExecAdminPage;
+export default function AdminPage() {
+  // Only allow admin
+  const { hasAccess, loading } = useRoleAccess(['admin']);
+
+  if (loading) return <div>Loading...</div>;
+  if (!hasAccess) return <div>Access denied. Admin access required.</div>;
+
+  return <ExecAdminPage />;
+}
