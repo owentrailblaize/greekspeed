@@ -198,19 +198,44 @@ const networkingSpotlight = [
   }
 ];
 
+interface Event {
+  id: number;
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  rsvpStatus: string;
+  attendees: number;
+  image: string;
+}
+
+interface Profile {
+  id: number;
+  name: string;
+  // Remove title property since it's not in networkingSpotlight data
+  avatar: string;
+  chapter: string;
+  gradYear: number;
+  jobTitle: string;
+  company: string;
+  isActivelyHiring: boolean;
+  location: string;
+  mutualConnections: number;
+}
+
 export function AlumniOverview() {
   const [rsvpModalOpen, setRsvpModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [connectModalOpen, setConnectModalOpen] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState<any>(null);
+  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
 
-  const handleRSVP = (event: any) => {
+  const handleRSVP = (event: Event) => {
     setSelectedEvent(event);
     setRsvpModalOpen(true);
     console.log('RSVP for event:', event.title);
   };
 
-  const handleConnect = (profile: any) => {
+  const handleConnect = (profile: Profile) => {
     setSelectedProfile(profile);
     setConnectModalOpen(true);
     console.log('Connect with:', profile.name);
