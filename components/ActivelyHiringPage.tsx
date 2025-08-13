@@ -186,9 +186,9 @@ export function ActivelyHiringPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Top Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-3">
-        <div className="max-w-10xl mx-auto">
+        <div className="w-full">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 -mr-2">
+            <div className="flex items-center space-x-2">
               <Briefcase className="h-6 w-6 text-navy-600" />
               <h1 className="text-navy-900 font-medium text-lg">Actively Hiring</h1>
             </div>
@@ -202,11 +202,11 @@ export function ActivelyHiringPage() {
       </div>
 
       {/* Main Content - 2 Pane Layout */}
-      <div className="flex flex-1 min-h-0">
+      <div className="flex h-screen">
         {/* Left Pane: Job List Sidebar */}
         <div className="w-1/3 bg-white border-r border-gray-200 flex flex-col">
-          {/* Search and Filters Header */}
-          <div className="p-4 border-b border-gray-200">
+          {/* Search and Filters Header - Fixed height */}
+          <div className="p-4 border-b border-gray-200 flex-shrink-0">
             <div className="relative mb-4">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input 
@@ -271,7 +271,7 @@ export function ActivelyHiringPage() {
             </div>
           </div>
 
-          {/* Job Listings */}
+          {/* Job Listings - Takes remaining height and scrolls */}
           <div className="flex-1 overflow-y-auto">
             {filteredJobs.map((job) => (
               <div
