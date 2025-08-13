@@ -8,12 +8,14 @@ interface LinkedInStyleChapterCardProps {
   member: ChapterMember;
   onMessage?: (memberId: string) => void;
   onConnect?: (memberId: string) => void;
+  isConnected?: boolean; // New prop to determine connection status
 }
 
 export function LinkedInStyleChapterCard({ 
   member, 
   onMessage, 
-  onConnect 
+  onConnect,
+  isConnected = false
 }: LinkedInStyleChapterCardProps) {
   const {
     id,
@@ -55,15 +57,45 @@ export function LinkedInStyleChapterCard({
     }
   };
 
+  // Dynamic button rendering based on connection status
+  const renderActionButton = () => {
+    if (isConnected) {
+      // Show message button for connected members
+      return (
+        <Button
+          onClick={handleMessage}
+          className="w-full bg-navy-600 hover:bg-navy-700 text-white rounded-full font-medium h-10"
+          size="default"
+        >
+          <MessageCircle className="h-4 w-4 mr-2" />
+          Message
+        </Button>
+      );
+    } else {
+      // Show connect button for non-connected members
+      return (
+        <Button
+          onClick={handleConnect}
+          className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-10"
+          variant="outline"
+          size="default"
+        >
+          <UserPlus className="h-4 w-4 mr-2" />
+          Connect
+        </Button>
+      );
+    }
+  };
+
   return (
-    <Card className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 overflow-hidden group">
-      <CardContent className="p-0">
+    <Card className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 overflow-hidden group h-full flex flex-col">
+      <CardContent className="p-0 flex flex-col h-full">
         {/* Header Banner */}
         <div className="h-16 bg-gradient-to-r from-navy-100 to-blue-100 relative" />
 
-        <div className="px-4 pb-4 -mt-8 relative">
+        <div className="px-4 pb-4 -mt-8 relative flex-1 flex flex-col">
           {/* Avatar */}
-          <div className="flex justify-center mb-3">
+          <div className="flex justify-center mb-4">
             <div className="w-16 h-16 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden relative">
               {avatar ? (
                 <img 
@@ -85,11 +117,11 @@ export function LinkedInStyleChapterCard({
           </div>
 
           {/* Name and Verification */}
-          <div className="text-center mb-2">
-            <h3 className="font-semibold text-gray-900 inline-flex items-center gap-1">
+          <div className="text-center mb-3">
+            <h3 className="font-semibold text-gray-900 inline-flex items-center gap-1 text-lg leading-tight">
               {name}
               {verified && (
-                <Badge className="bg-blue-500 text-white text-xs p-1">
+                <Badge className="bg-blue-500 text-white text-xs p-1 ml-1 flex-shrink-0">
                   <Shield className="h-3 w-3" />
                 </Badge>
               )}
@@ -97,27 +129,27 @@ export function LinkedInStyleChapterCard({
           </div>
 
           {/* Position and Description */}
-          <div className="text-center mb-3">
+          <div className="text-center mb-4">
             {position && (
-              <p className="text-sm font-medium text-navy-600 mb-1">{position}</p>
+              <p className="text-sm font-medium text-navy-600 mb-2 leading-tight">{position}</p>
             )}
             <p className="text-sm text-gray-600 leading-relaxed">{memberDescription}</p>
           </div>
 
           {/* Interests */}
           {interests.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-1 mb-4">
+            <div className="flex flex-wrap justify-center gap-2 mb-5">
               {interests.slice(0, 3).map((interest, index) => (
                 <Badge 
                   key={index} 
                   variant="secondary" 
-                  className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
                 >
                   {interest}
                 </Badge>
               ))}
               {interests.length > 3 && (
-                <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700">
+                <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700 px-2 py-1 flex-shrink-0">
                   +{interests.length - 3}
                 </Badge>
               )}
@@ -125,7 +157,7 @@ export function LinkedInStyleChapterCard({
           )}
 
           {/* Mutual Connections */}
-          <div className="flex items-center justify-center space-x-2 mb-4">
+          <div className="flex items-center justify-center space-x-3 mb-6">
             <div className="flex -space-x-1">
               {connections.slice(0, 3).map((c, i) => (
                 <div key={i} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
@@ -148,7 +180,7 @@ export function LinkedInStyleChapterCard({
                 </div>
               ))}
             </div>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-gray-600 leading-tight">
               {connections.length > 0 
                 ? `${connections[0]?.name || 'Unknown'} and ${connectionsCount - 1} other connections`
                 : 'Chapter member'
@@ -156,25 +188,9 @@ export function LinkedInStyleChapterCard({
             </span>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex space-x-2">
-            <Button
-              onClick={handleMessage}
-              className="flex-1 bg-navy-600 hover:bg-navy-700 text-white rounded-full font-medium"
-              size="sm"
-            >
-              <MessageCircle className="h-4 w-4 mr-2" />
-              Message
-            </Button>
-            <Button
-              onClick={handleConnect}
-              className="flex-1 border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium"
-              variant="outline"
-              size="sm"
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Connect
-            </Button>
+          {/* Action Button - Dynamic based on connection status */}
+          <div className="mt-auto pt-2">
+            {renderActionButton()}
           </div>
         </div>
       </CardContent>
