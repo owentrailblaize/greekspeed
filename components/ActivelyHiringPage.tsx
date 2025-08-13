@@ -202,7 +202,7 @@ export function ActivelyHiringPage() {
       </div>
 
       {/* Main Content - 2 Pane Layout */}
-      <div className="flex h-[calc(100vh-120px)]">
+      <div className="flex flex-1 min-h-0">
         {/* Left Pane: Job List Sidebar */}
         <div className="w-1/3 bg-white border-r border-gray-200 flex flex-col">
           {/* Search and Filters Header */}
