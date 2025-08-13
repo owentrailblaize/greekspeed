@@ -23,7 +23,7 @@ export function ActiveMemberOverview() {
           
           {/* Left Sidebar - Dues & Tasks */}
           <div className="col-span-3">
-            <div className="space-y-6">
+            <div className="sticky top-6 space-y-6">
               <DuesStatusCard />
               <MyTasksCard />
             </div>

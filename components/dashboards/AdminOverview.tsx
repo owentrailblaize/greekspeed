@@ -31,7 +31,7 @@ export function AdminOverview() {
           
           {/* Left Sidebar - Quick Actions & Snapshots */}
           <div className="col-span-3">
-            <div className="space-y-6">
+            <div className="sticky top-6 space-y-6">
               <QuickActions />
               <DuesSnapshot />
               <ComplianceSnapshot />
