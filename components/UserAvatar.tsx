@@ -39,12 +39,7 @@ export function UserAvatar({
     lg: 56
   };
 
-  // Calculate the actual avatar size in pixels for proper centering
-  const avatarSizePx = {
-    sm: 32, // w-8 = 32px
-    md: 40, // w-10 = 40px
-    lg: 48  // w-12 = 48px
-  };
+
 
   // Calculate progress ring dimensions
   const radius = (progressRingSize[size] - 8) / 2;

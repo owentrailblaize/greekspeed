@@ -1,4 +1,4 @@
-import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu, 
@@ -12,9 +12,7 @@ import {
   Star, 
   Download, 
   Upload,
-  Users, 
   Mail, 
-  Phone,
   MessageSquare,
   Calendar,
   Tag

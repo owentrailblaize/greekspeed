@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ListTodo, CheckCircle2 } from 'lucide-react';
+import { ListTodo } from 'lucide-react';
 
 // Mock data for tasks
 const initialTasks = [

@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Upload, CheckCircle, AlertTriangle, Calendar } from 'lucide-react';
+import { FileText, Upload, AlertTriangle } from 'lucide-react';
 
 // Mock data for documents
 const documentsData = [

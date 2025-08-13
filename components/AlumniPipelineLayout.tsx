@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Filter, X, ChevronLeft, ChevronRight, Users, UserCheck, Briefcase } from "lucide-react";
+import { Filter, X, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlumniFilterBar } from "@/components/AlumniFilterBar";
 import { AlumniTableView } from "@/components/AlumniTableView";
@@ -94,14 +94,6 @@ export function AlumniPipelineLayout({
 
   // Calculate stats
   const totalAlumni = alumni.length;
-  const connectedAlumni = alumni.filter(a => a.verified).length;
-  const hiringAlumni = alumni.filter(a => a.isActivelyHiring).length;
-  const newAlumni = alumni.filter(a => {
-    const lastContact = a.lastContact ? new Date(a.lastContact) : null;
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return !lastContact || lastContact > thirtyDaysAgo;
-  }).length;
 
   // Show all alumni without pagination
   const displayAlumni = alumni;
