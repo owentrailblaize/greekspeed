@@ -21,7 +21,7 @@ export default function EditProfilePage() {
     first_name: '',
     last_name: '',
     chapter: '',
-    role: 'Alumni', // Keep for type compatibility but won't be editable
+    role: 'alumni', // Keep for type compatibility but won't be editable
     bio: '',
     phone: '',
     location: ''
@@ -35,7 +35,7 @@ export default function EditProfilePage() {
         first_name: profile.first_name || '',
         last_name: profile.last_name || '',
         chapter: profile.chapter || '',
-        role: profile.role || 'Alumni',
+        role: profile.role || 'alumni',
         bio: profile.bio || '',
         phone: profile.phone || '',
         location: profile.location || ''
