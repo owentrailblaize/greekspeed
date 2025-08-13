@@ -11,24 +11,17 @@ import { useAuth } from "@/lib/supabase/auth-context";
 import { 
   ChevronDown, 
   ChevronUp, 
-  Mail, 
   Phone, 
   UserPlus, 
-  MoreHorizontal, 
-  ExternalLink, 
-  Send, 
-  Plus, 
   ArrowUpDown,
-  Building2,
   MapPin,
-  GraduationCap,
-  Calendar,
-  Tag,
   Users,
   Check,
   X,
   Clock,
-  MessageCircle
+  MessageCircle,
+  GraduationCap,
+  Calendar
 } from "lucide-react";
 import { Alumni } from "@/lib/mockAlumni";
 

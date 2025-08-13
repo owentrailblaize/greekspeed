@@ -14,7 +14,6 @@ interface AlumniPaginationProps {
   totalItems: number;
   itemsPerPage: number;
   onPageChange: (page: number) => void;
-  onItemsPerPageChange: (itemsPerPage: number) => void;
 }
 
 export function AlumniPagination({
@@ -22,8 +21,7 @@ export function AlumniPagination({
   totalPages,
   totalItems,
   itemsPerPage,
-  onPageChange,
-  onItemsPerPageChange
+  onPageChange
 }: AlumniPaginationProps) {
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AlumniPipelineLayout } from "@/components/AlumniPipelineLayout";
 import { AlumniSubHeader } from "@/components/AlumniSubHeader";
 import { Alumni } from "@/lib/mockAlumni";
@@ -33,7 +33,7 @@ export function AlumniPipeline() {
     myChapter: false,
   });
 
-  const fetchAlumni = async (currentFilters?: FilterState) => {
+  const fetchAlumni = useCallback(async (currentFilters?: FilterState) => {
     try {
       setLoading(true);
       setError(null);
@@ -67,11 +67,11 @@ export function AlumniPipeline() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
   useEffect(() => {
     fetchAlumni();
-  }, []);
+  }, [fetchAlumni]);
 
   useEffect(() => {
     if (Object.values(filters).some(value => 
@@ -79,12 +79,9 @@ export function AlumniPipeline() {
     )) {
       fetchAlumni();
     }
-  }, [filters]);
+  }, [filters, fetchAlumni]);
 
-  const handleBulkAction = (action: string) => {
-    console.log(`Bulk action: ${action} for ${selectedAlumni.length} alumni`);
-    // TODO: Implement bulk actions
-  };
+
 
   const handleClearSelection = () => {
     setSelectedAlumni([]);
@@ -117,7 +114,6 @@ export function AlumniPipeline() {
         onViewModeChange={setViewMode}
         selectedCount={selectedAlumni.length}
         totalCount={alumni.length}
-        onBulkAction={handleBulkAction}
         onClearSelection={handleClearSelection}
       />
 

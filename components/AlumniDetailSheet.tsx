@@ -1,4 +1,4 @@
-import { useState } from "react";
+
 import { 
   Sheet, 
   SheetContent, 
@@ -12,12 +12,9 @@ import {
   Phone, 
   MapPin, 
   Building2, 
-  GraduationCap, 
-  Calendar,
   MessageSquare,
   Star,
-  Share2,
-  MoreHorizontal
+  Share2
 } from "lucide-react";
 import { Alumni } from "@/lib/mockAlumni";
 import ImageWithFallback from "./figma/ImageWithFallback";

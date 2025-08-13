@@ -53,7 +53,8 @@ export default function EditProfilePage() {
     
     try {
       // Remove role from the data being sent since it's not editable
-      const { role: _, ...updateData } = formData;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { role, ...updateData } = formData;
       await updateProfile(updateData);
       // Redirect to profile page after successful update
       window.location.href = '/dashboard/profile';

@@ -1,18 +1,15 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ViewToggle } from "@/components/ViewToggle";
-import { cn } from "@/lib/utils";
 
 interface AlumniSubHeaderProps {
   viewMode: 'table' | 'card';
   onViewModeChange: (mode: 'table' | 'card') => void;
   selectedCount: number;
   totalCount: number;
-  onBulkAction: (action: string) => void;
   onClearSelection: () => void;
 }
 
@@ -21,7 +18,6 @@ export function AlumniSubHeader({
   onViewModeChange,
   selectedCount,
   totalCount,
-  onBulkAction,
   onClearSelection
 }: AlumniSubHeaderProps) {
   return (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
 
 export interface Connection {
@@ -19,7 +19,7 @@ export function useConnections() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchConnections = async () => {
+  const fetchConnections = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -38,7 +38,7 @@ export function useConnections() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   const sendConnectionRequest = async (recipientId: string, message?: string) => {
     if (!user) throw new Error('User not authenticated');
@@ -137,7 +137,7 @@ export function useConnections() {
     if (user) {
       fetchConnections();
     }
-  }, [user]);
+  }, [user, fetchConnections]);
 
   return {
     connections,

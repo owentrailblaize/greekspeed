@@ -50,7 +50,7 @@ export async function GET() {
     }
 
     // Test 5: Check for any orphaned alumni records (without corresponding profiles)
-    const { data: orphanedAlumni, error: orphanedError } = await supabase
+    const { data: orphanedAlumni } = await supabase
       .from('alumni')
       .select('user_id, created_at')
       .limit(10);

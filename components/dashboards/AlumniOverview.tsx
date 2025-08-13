@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Users, Newspaper, MapPin, Clock, Building, GraduationCap, Heart, MessageCircle, Share, MoreHorizontal, Plus } from 'lucide-react';
+import { Calendar, Users, MapPin, Clock, Heart, MessageCircle, Share, MoreHorizontal } from 'lucide-react';
 
 // Mock data for social feed (LinkedIn-style posts)
 const socialFeed = [

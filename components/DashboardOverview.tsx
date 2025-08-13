@@ -1,6 +1,6 @@
 'use client';
 
-import { useProfile } from '@/lib/hooks/useProfile';
+
 import { AlumniOverview } from './dashboards/AlumniOverview';
 import { ActiveMemberOverview } from './dashboards/ActiveMemberOverview';
 import { AdminOverview } from './dashboards/AdminOverview';
