@@ -125,7 +125,7 @@ export function ActivelyHiringPage() {
   const rightPanelRef = useRef<HTMLDivElement>(null);
 
   // Function to handle job selection with scroll reset
-  const handleJobSelection = (job: any) => {
+  const handleJobSelection = (job: typeof mockJobs[0]) => {
     setSelectedJob(job);
     
     // Scroll the right panel to the top after a brief delay to ensure DOM update
@@ -143,7 +143,7 @@ export function ActivelyHiringPage() {
   const canPostJob = () => {
     if (!profile || loading) return false;
     
-    const userRole = profile.role as any; // Type assertion to bypass type checking
+    const userRole = profile.role as string; // Type assertion to string instead of any
     console.log('User role:', userRole);
     
     // Check for 'active_member' role (exact match from database)
