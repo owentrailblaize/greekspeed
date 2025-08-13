@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChapterMemberCard } from "./ChapterMemberCard";
+import { LinkedInStyleChapterCard } from "./LinkedInStyleChapterCard";
 import { ChapterMember } from "./types";
 
 interface MyChapterContentProps {
@@ -31,6 +31,16 @@ export function MyChapterContent({ members, onNavigate }: MyChapterContentProps)
 
   const filteredOfficers = filteredMembers.filter(member => member.position);
   const filteredGeneralMembers = filteredMembers.filter(member => !member.position);
+
+  const handleMessage = (memberId: string) => {
+    console.log(`Message member: ${memberId}`);
+    // TODO: Implement messaging functionality
+  };
+
+  const handleConnect = (memberId: string) => {
+    console.log(`Connect with member: ${memberId}`);
+    // TODO: Implement connection functionality
+  };
 
   return (
     <div className="flex-1 bg-gray-50">
@@ -101,9 +111,14 @@ export function MyChapterContent({ members, onNavigate }: MyChapterContentProps)
               <h2 className="text-lg font-medium text-gray-900">Chapter Officers</h2>
               <span className="text-sm text-gray-500">({filteredOfficers.length})</span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredOfficers.map((member) => (
-                <ChapterMemberCard key={member.id} member={member} />
+                <LinkedInStyleChapterCard 
+                  key={member.id} 
+                  member={member}
+                  onMessage={handleMessage}
+                  onConnect={handleConnect}
+                />
               ))}
             </div>
           </div>
@@ -116,9 +131,14 @@ export function MyChapterContent({ members, onNavigate }: MyChapterContentProps)
               <h2 className="text-lg font-medium text-gray-900">General Members</h2>
               <span className="text-sm text-gray-500">({filteredGeneralMembers.length})</span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredGeneralMembers.map((member) => (
-                <ChapterMemberCard key={member.id} member={member} />
+                <LinkedInStyleChapterCard 
+                  key={member.id} 
+                  member={member}
+                  onMessage={handleMessage}
+                  onConnect={handleConnect}
+                />
               ))}
             </div>
           </div>

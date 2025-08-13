@@ -6,6 +6,16 @@ export interface ChapterMember {
   position?: string;
   interests: string[];
   avatar?: string;
+  // New fields for LinkedIn-style cards
+  verified?: boolean;
+  mutualConnections?: MutualConnection[];
+  mutualConnectionsCount?: number;
+  description?: string;
+}
+
+export interface MutualConnection {
+  name: string;
+  avatar?: string;
 }
 
 export interface ChapterStats {

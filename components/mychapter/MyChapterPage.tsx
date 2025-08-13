@@ -5,7 +5,7 @@ import { MyChapterSidebar } from "./MyChapterSidebar";
 import { MyChapterContent } from "./MyChapterContent";
 import { ChapterMember, ChapterStats } from "./types";
 
-// Mock data for current chapter members
+// Mock data for current chapter members with LinkedIn-style fields
 const chapterMembers: ChapterMember[] = [
   {
     id: "1",
@@ -13,7 +13,15 @@ const chapterMembers: ChapterMember[] = [
     year: "Senior",
     major: "Computer Science",
     position: "President",
-    interests: ["Leadership", "Tech", "Networking"]
+    interests: ["Leadership", "Tech", "Networking"],
+    verified: true,
+    mutualConnections: [
+      { name: "Sofia Rodriguez", avatar: undefined },
+      { name: "Marcus Johnson", avatar: undefined },
+      { name: "Lily Chen", avatar: undefined }
+    ],
+    mutualConnectionsCount: 8,
+    description: "Chapter President • Computer Science Senior"
   },
   {
     id: "2",
@@ -21,7 +29,15 @@ const chapterMembers: ChapterMember[] = [
     year: "Junior",
     major: "Business Administration",
     position: "Vice President",
-    interests: ["Business Strategy", "Marketing", "Finance"]
+    interests: ["Business Strategy", "Marketing", "Finance"],
+    verified: true,
+    mutualConnections: [
+      { name: "Jake Williams", avatar: undefined },
+      { name: "Ethan Davis", avatar: undefined },
+      { name: "Maya Patel", avatar: undefined }
+    ],
+    mutualConnectionsCount: 6,
+    description: "Vice President • Business Administration Junior"
   },
   {
     id: "3",
@@ -29,28 +45,56 @@ const chapterMembers: ChapterMember[] = [
     year: "Sophomore",
     major: "Mechanical Engineering",
     position: "Treasurer",
-    interests: ["Engineering", "Innovation", "Sports"]
+    interests: ["Engineering", "Innovation", "Sports"],
+    verified: false,
+    mutualConnections: [
+      { name: "Jake Williams", avatar: undefined },
+      { name: "Connor Murphy", avatar: undefined }
+    ],
+    mutualConnectionsCount: 4,
+    description: "Treasurer • Mechanical Engineering Sophomore"
   },
   {
     id: "4",
     name: "Lily Chen",
     year: "Senior",
     major: "Psychology",
-    interests: ["Research", "Mental Health", "Community Service"]
+    interests: ["Research", "Mental Health", "Community Service"],
+    verified: true,
+    mutualConnections: [
+      { name: "Jake Williams", avatar: undefined },
+      { name: "Zoe Thompson", avatar: undefined }
+    ],
+    mutualConnectionsCount: 5,
+    description: "Psychology Senior • Research Focus"
   },
   {
     id: "5",
     name: "Ethan Davis",
     year: "Junior",
     major: "Economics",
-    interests: ["Finance", "Investment", "Analytics"]
+    interests: ["Finance", "Investment", "Analytics"],
+    verified: false,
+    mutualConnections: [
+      { name: "Sofia Rodriguez", avatar: undefined },
+      { name: "Maya Patel", avatar: undefined }
+    ],
+    mutualConnectionsCount: 3,
+    description: "Economics Junior • Finance Focus"
   },
   {
     id: "6",
     name: "Maya Patel",
     year: "Sophomore",
     major: "Pre-Med",
-    interests: ["Healthcare", "Research", "Volunteering"]
+    interests: ["Healthcare", "Research", "Volunteering"],
+    verified: false,
+    mutualConnections: [
+      { name: "Sofia Rodriguez", avatar: undefined },
+      { name: "Ethan Davis", avatar: undefined }
+    ],
+    mutualConnectionsCount: 3,
+    description: "Pre-Med Sophomore • Healthcare Focus"
   },
   {
     id: "7",
@@ -58,14 +102,28 @@ const chapterMembers: ChapterMember[] = [
     year: "Senior",
     major: "Marketing",
     position: "Social Chair",
-    interests: ["Creative Design", "Social Media", "Events"]
+    interests: ["Creative Design", "Social Media", "Events"],
+    verified: true,
+    mutualConnections: [
+      { name: "Marcus Johnson", avatar: undefined },
+      { name: "Zoe Thompson", avatar: undefined }
+    ],
+    mutualConnectionsCount: 4,
+    description: "Social Chair • Marketing Senior"
   },
   {
     id: "8",
     name: "Zoe Thompson",
     year: "Junior",
     major: "Environmental Science",
-    interests: ["Sustainability", "Research", "Outdoor Activities"]
+    interests: ["Sustainability", "Research", "Outdoor Activities"],
+    verified: false,
+    mutualConnections: [
+      { name: "Lily Chen", avatar: undefined },
+      { name: "Connor Murphy", avatar: undefined }
+    ],
+    mutualConnectionsCount: 3,
+    description: "Environmental Science Junior • Sustainability Focus"
   }
 ];
 

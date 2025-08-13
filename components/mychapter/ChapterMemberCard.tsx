@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChapterMember } from "./types";
 
+// LEGACY COMPONENT: This is the old card design
+// The new LinkedInStyleChapterCard is now used in MyChapterContent
 interface ChapterMemberCardProps {
   member: ChapterMember;
 }
