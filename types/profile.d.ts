@@ -5,7 +5,7 @@ export interface Profile {
   first_name: string | null;
   last_name: string | null;
   chapter: string | null;
-  role: 'Admin / Executive' | 'Active Member' | 'Alumni' | null;
+  role: "admin" | "alumni" | "active_member" | null;
   bio: string | null;
   phone: string | null;
   location: string | null;
@@ -18,7 +18,7 @@ export interface ProfileFormData {
   first_name: string;
   last_name: string;
   chapter: string;
-  role?: 'Admin / Executive' | 'Active Member' | 'Alumni'; // Made optional since not editable
+  role?: 'admin' | 'alumni' | 'active_member'; // Made optional since not editable
   bio?: string;
   phone?: string;
   location?: string;

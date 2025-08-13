@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Search, Briefcase, Bookmark, Share2, MapPin, Calendar, Building, Clock, DollarSign, X, MessageCircle, User, GraduationCap, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { useProfile } from "@/lib/hooks/useProfile";
 
 // Mock job data
 const mockJobs = [
@@ -113,11 +114,47 @@ interface Salary {
 }
 
 export function ActivelyHiringPage() {
+  const { profile, loading } = useProfile();
   const [selectedJob, setSelectedJob] = useState(mockJobs[0]);
   const [searchTerm, setSearchTerm] = useState("");
   const [jobTypeFilter, setJobTypeFilter] = useState("");
   const [remoteFilter, setRemoteFilter] = useState("");
   const [postedWithinFilter, setPostedWithinFilter] = useState("");
+
+  // Add ref for the right panel
+  const rightPanelRef = useRef<HTMLDivElement>(null);
+
+  // Function to handle job selection with scroll reset
+  const handleJobSelection = (job: any) => {
+    setSelectedJob(job);
+    
+    // Scroll the right panel to the top after a brief delay to ensure DOM update
+    setTimeout(() => {
+      if (rightPanelRef.current) {
+        rightPanelRef.current.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
+  };
+
+  // Function to check if user can post jobs
+  const canPostJob = () => {
+    if (!profile || loading) return false;
+    
+    const userRole = profile.role as any; // Type assertion to bypass type checking
+    console.log('User role:', userRole);
+    
+    // Check for 'active_member' role (exact match from database)
+    if (userRole === 'active_member') {
+      console.log('User is active_member - hiding button');
+      return false;
+    }
+    
+    console.log('User can post job - showing button');
+    return true;
+  };
 
   const filteredJobs = mockJobs.filter(job => {
     if (searchTerm && !job.title.toLowerCase().includes(searchTerm.toLowerCase()) && 
@@ -148,14 +185,18 @@ export function ActivelyHiringPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-2">
+      <div className="bg-white border-b border-gray-200 px-6 py-3">
+        <div className="max-w-10xl mx-auto">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 -mr-2">
               <Briefcase className="h-6 w-6 text-navy-600" />
-              <h1 className="text-navy-900 font-medium">Actively Hiring</h1>
+              <h1 className="text-navy-900 font-medium text-lg">Actively Hiring</h1>
             </div>
-            <Button className="bg-navy-600 hover:bg-navy-700 text-white">Post Job Opening</Button>
+            {canPostJob() && (
+              <Button className="bg-navy-600 hover:bg-navy-700 text-white">
+                Post Job Opening
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -238,7 +279,7 @@ export function ActivelyHiringPage() {
                 className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
                   selectedJob?.id === job.id ? "bg-blue-50 border-l-4 border-l-blue-500" : ""
                 }`}
-                onClick={() => setSelectedJob(job)}
+                onClick={() => handleJobSelection(job)}
               >
                 <div className="flex items-start space-x-3">
                   <div className="w-10 h-10 bg-navy-600 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -277,7 +318,7 @@ export function ActivelyHiringPage() {
                         className="mt-2 p-2 bg-blue-50 rounded-md border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
                         onClick={(e) => {
                           e.stopPropagation(); // Prevent job selection
-                          setSelectedJob(job);
+                          handleJobSelection(job); // Use the new handler
                           // Scroll to connected alumni section after a brief delay to ensure DOM update
                           setTimeout(() => {
                             const alumniSection = document.getElementById('connected-alumni-section');
@@ -287,7 +328,7 @@ export function ActivelyHiringPage() {
                                 block: 'start' 
                               });
                             }
-                          }, 100);
+                          }, 200); // Increased delay to ensure job loads first
                         }}
                       >
                         <div className="flex items-center justify-between mb-1">
@@ -348,7 +389,10 @@ export function ActivelyHiringPage() {
         </div>
 
         {/* Right Pane: Job Detail + Connected Alumni */}
-        <div className="flex-1 bg-gray-50 overflow-y-auto">
+        <div 
+          ref={rightPanelRef} 
+          className="flex-1 bg-gray-50 overflow-y-auto"
+        >
           {selectedJob ? (
             <div className="p-6">
               {/* Job Detail Section */}
