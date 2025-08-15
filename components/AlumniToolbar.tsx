@@ -15,7 +15,8 @@ import {
   Mail, 
   MessageSquare,
   Calendar,
-  Tag
+  Tag,
+  Lock
 } from "lucide-react";
 
 interface AlumniToolbarProps {
@@ -33,66 +34,106 @@ export function AlumniToolbar({
   onSaveSearch, 
   onExport 
 }: AlumniToolbarProps) {
+  const handleNonFunctionalFeature = (featureName: string) => {
+    console.log(`${featureName} - Feature coming soon!`);
+    // Could add a toast notification here
+  };
+
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
+          {/* Create Workflow - LOCKED */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="bg-gray-50">
+              <Button variant="outline" className="bg-gray-50 opacity-60 cursor-not-allowed" disabled>
                 <Workflow className="h-4 w-4 mr-2" />
                 Create workflow
+                <Lock className="h-3 w-3 ml-2 text-gray-400" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem>
+              <DropdownMenuItem className="opacity-60 cursor-not-allowed" disabled>
                 <Mail className="h-4 w-4 mr-2" />
                 Email Campaign
+                <Lock className="h-3 w-3 ml-auto text-gray-400" />
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem className="opacity-60 cursor-not-allowed" disabled>
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Message Sequence
+                <Lock className="h-3 w-3 ml-auto text-gray-400" />
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem className="opacity-60 cursor-not-allowed" disabled>
                 <Calendar className="h-4 w-4 mr-2" />
                 Meeting Reminder
+                <Lock className="h-3 w-3 ml-auto text-gray-400" />
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="outline" onClick={onSaveSearch}>
+          {/* Save List - LOCKED */}
+          <Button 
+            variant="outline" 
+            onClick={() => handleNonFunctionalFeature('Save List')}
+            className="opacity-60 cursor-not-allowed"
+            disabled
+          >
             <Save className="h-4 w-4 mr-2" />
             Save list
+            <Lock className="h-3 w-3 ml-2 text-gray-400" />
           </Button>
 
+          {/* Research with AI - LOCKED */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" className="opacity-60 cursor-not-allowed" disabled>
                 <Star className="h-4 w-4 mr-2" />
                 Research with AI
+                <Lock className="h-3 w-3 ml-2 text-gray-400" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem>Generate Email</DropdownMenuItem>
-              <DropdownMenuItem>Find Similar Alumni</DropdownMenuItem>
-              <DropdownMenuItem>Career Insights</DropdownMenuItem>
+              <DropdownMenuItem className="opacity-60 cursor-not-allowed" disabled>
+                Generate Email
+                <Lock className="h-3 w-3 ml-auto text-gray-400" />
+              </DropdownMenuItem>
+              <DropdownMenuItem className="opacity-60 cursor-not-allowed" disabled>
+                Find Similar Alumni
+                <Lock className="h-3 w-3 ml-auto text-gray-400" />
+              </DropdownMenuItem>
+              <DropdownMenuItem className="opacity-60 cursor-not-allowed" disabled>
+                Career Insights
+                <Lock className="h-3 w-3 ml-auto text-gray-400" />
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* Import - LOCKED */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" className="opacity-60 cursor-not-allowed" disabled>
                 <Upload className="h-4 w-4 mr-2" />
                 Import
+                <Lock className="h-3 w-3 ml-2 text-gray-400" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem>Import CSV</DropdownMenuItem>
-              <DropdownMenuItem>Import from LinkedIn</DropdownMenuItem>
-              <DropdownMenuItem>Bulk Import</DropdownMenuItem>
+              <DropdownMenuItem className="opacity-60 cursor-not-allowed" disabled>
+                Import CSV
+                <Lock className="h-3 w-3 ml-auto text-gray-400" />
+              </DropdownMenuItem>
+              <DropdownMenuItem className="opacity-60 cursor-not-allowed" disabled>
+                Import from LinkedIn
+                <Lock className="h-3 w-3 ml-auto text-gray-400" />
+              </DropdownMenuItem>
+              <DropdownMenuItem className="opacity-60 cursor-not-allowed" disabled>
+                Bulk Import
+                <Lock className="h-3 w-3 ml-auto text-gray-400" />
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* Export - WORKING */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">
@@ -105,9 +146,10 @@ export function AlumniToolbar({
                 <Download className="h-4 w-4 mr-2" />
                 Export All to CSV
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onExport()}>
+              <DropdownMenuItem className="opacity-60 cursor-not-allowed" disabled>
                 <Download className="h-4 w-4 mr-2" />
                 Export All to Excel
+                <Lock className="h-3 w-3 ml-auto text-gray-400" />
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -129,17 +171,20 @@ export function AlumniToolbar({
                   <Download className="h-4 w-4 mr-2" />
                   Export CSV
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onBulkAction('email')}>
+                <DropdownMenuItem className="opacity-60 cursor-not-allowed" disabled>
                   <Mail className="h-4 w-4 mr-2" />
                   Send Email
+                  <Lock className="h-3 w-3 ml-auto text-gray-400" />
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onBulkAction('message')}>
+                <DropdownMenuItem className="opacity-60 cursor-not-allowed" disabled>
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Send Message
+                  <Lock className="h-3 w-3 ml-auto text-gray-400" />
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onBulkAction('tag')}>
+                <DropdownMenuItem className="opacity-60 cursor-not-allowed" disabled>
                   <Tag className="h-4 w-4 mr-2" />
                   Add Tags
+                  <Lock className="h-3 w-3 ml-auto text-gray-400" />
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

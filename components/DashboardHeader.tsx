@@ -7,6 +7,8 @@ import { motion } from 'framer-motion';
 import { UserDropdown } from './UserDropdown';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useProfile } from '@/lib/hooks/useProfile';
+import { useConnections } from '@/lib/hooks/useConnections';
+import { Badge } from '@/components/ui/badge';
 
 // Small helper for consistent tab styling
 function NavLink({ href, label }: { href: string; label: string }) {
@@ -34,11 +36,17 @@ function NavLink({ href, label }: { href: string; label: string }) {
 export function DashboardHeader() {
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
+  const { connections } = useConnections();
   const userRole = profile?.role;
+  
+  // Count pending connection requests that require action
+  const pendingConnections = connections.filter(conn => 
+    conn.status === 'pending' && conn.recipient_id === user?.id
+  ).length;
   
   // Hardcoded values for now - will be replaced with real data later
   const completionPercent = 72; // Mock profile completion percentage
-  const hasUnread = true; // Mock unread notifications
+  const hasUnread = pendingConnections > 0; // Now based on actual pending connections
 
   // Define navigation tabs with role-based access
   const navigationTabs = [
@@ -66,7 +74,7 @@ export function DashboardHeader() {
   };
 
   return (
-    <header className="border-b border-gray-200 bg-white/80 backdrop-blur relative z-10">
+    <header className="border-b border-gray-200 bg-white/80 backdrop-blur z-50">
       <div className="w-full px-4 sm:px-6 h-14 flex items-center justify-between">
         {/* Left side - Navigation tabs */}
         <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
@@ -81,6 +89,7 @@ export function DashboardHeader() {
             user={user}
             completionPercent={completionPercent}
             hasUnread={hasUnread}
+            unreadCount={pendingConnections}
             onSignOut={handleSignOut}
           />
         </div>

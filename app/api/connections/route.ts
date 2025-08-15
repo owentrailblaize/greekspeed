@@ -18,10 +18,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 });
     }
 
-    // Get all connections for the user (both sent and received)
+    // Get all connections for the user with profile information
     const { data: connections, error } = await supabase
       .from('connections')
-      .select('*')
+      .select(`
+        *,
+        requester:profiles!requester_id(
+          id,
+          full_name,
+          first_name,
+          last_name,
+          chapter,
+          avatar_url
+        ),
+        recipient:profiles!recipient_id(
+          id,
+          full_name,
+          first_name,
+          last_name,
+          chapter,
+          avatar_url
+        )
+      `)
       .or(`requester_id.eq.${userId},recipient_id.eq.${userId}`);
 
     if (error) {

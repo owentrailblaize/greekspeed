@@ -8,6 +8,7 @@ interface UserAvatarProps {
   user: { email?: string | null; user_metadata?: { avatar_url?: string | null; full_name?: string } } | null;
   completionPercent: number;
   hasUnread: boolean;
+  unreadCount?: number; // Add this new prop
   isLoading?: boolean;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
@@ -17,6 +18,7 @@ export function UserAvatar({
   user, 
   completionPercent, 
   hasUnread, 
+  unreadCount = 0, // Default to 0
   isLoading = false,
   size = 'md',
   className 
@@ -55,7 +57,7 @@ export function UserAvatar({
   };
 
   return (
-    <div className={cn('relative inline-block', className)}>
+    <div className={cn('relative', className)}>
       {/* Progress Ring - positioned absolutely around the avatar */}
       {completionPercent < 100 && (
         <svg
@@ -124,9 +126,11 @@ export function UserAvatar({
         )}
       </div>
 
-      {/* Unread Notification Dot */}
-      {hasUnread && (
-        <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border border-white shadow-sm" />
+      {/* Notification Badge - Positioned to replace the red dot */}
+      {unreadCount > 0 && (
+        <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+          <span className="text-white text-xs font-bold">{unreadCount}</span>
+        </div>
       )}
     </div>
   );

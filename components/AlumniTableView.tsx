@@ -4,7 +4,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { LinkedInStyleAlumniCard } from "@/components/LinkedInStyleAlumniCard";
 import { useConnections } from "@/lib/hooks/useConnections";
 import { useAuth } from "@/lib/supabase/auth-context";
@@ -24,6 +23,7 @@ import {
   Calendar
 } from "lucide-react";
 import { Alumni } from "@/lib/mockAlumni";
+import { AlumniProfileModal } from "@/components/AlumniProfileModal";
 
 interface AlumniTableViewProps {
   alumni: Alumni[];
@@ -347,39 +347,12 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
       {/* Selection Status */}
       <SelectionStatus />
 
-      {/* Alumni Popup Sheet */}
-      <Sheet open={popupOpen} onOpenChange={setPopupOpen}>
-        <SheetContent side="right" className="w-[400px] sm:w-[540px] p-0">
-          <SheetHeader className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <SheetTitle className="text-lg font-semibold text-gray-900">
-                Alumni Profile
-              </SheetTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClosePopup}
-                className="h-8 w-8 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </SheetHeader>
-          <div className="p-6">
-            {selectedAlumniForPopup && (
-              <LinkedInStyleAlumniCard
-                name={selectedAlumniForPopup.fullName}
-                description={selectedAlumniForPopup.description}
-                mutualConnections={selectedAlumniForPopup.mutualConnections}
-                mutualConnectionsCount={selectedAlumniForPopup.mutualConnectionsCount}
-                avatar={selectedAlumniForPopup.avatar}
-                verified={selectedAlumniForPopup.verified}
-                alumniId={selectedAlumniForPopup.id}
-              />
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
+      {/* Alumni Profile Modal - Replace the Sheet with this */}
+      <AlumniProfileModal
+        alumni={selectedAlumniForPopup}
+        isOpen={popupOpen}
+        onClose={handleClosePopup}
+      />
 
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden h-full">
         <div className="overflow-x-auto h-full">
@@ -535,10 +508,9 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                             <Badge className="bg-navy-600 text-white text-xs px-1">✓</Badge>
                           )}
                           {alumni.isActivelyHiring && (
-                            <Badge className="bg-green-500 text-white text-xs px-1">Hiring</Badge>
+                            <Badge className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-600 hover:to-gray-800  text-white text-xs px-1">Hiring</Badge>
                           )}
                         </div>
-                        <div className="text-sm text-gray-500">{alumni.jobTitle}</div>
                       </div>
                     </div>
                   </TableCell>
