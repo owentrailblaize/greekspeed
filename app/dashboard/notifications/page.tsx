@@ -7,8 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useConnections } from '@/lib/hooks/useConnections';
 import { useAuth } from '@/lib/supabase/auth-context';
-import { Check, X, UserPlus, Users, Clock, MessageCircle, UserX, Search, Bell, FileText } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Check, X, UserPlus, Users, Clock, MessageCircle, UserX, Bell, FileText } from 'lucide-react';
 
 export default function NotificationsPage() {
   const { user } = useAuth();
@@ -20,7 +19,6 @@ export default function NotificationsPage() {
   } = useConnections();
   
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
 
   // Filter connections by status
   const pendingRequests = connections.filter(conn => 
@@ -79,13 +77,6 @@ export default function NotificationsPage() {
     }
   };
 
-  const filteredConnections = (connections: any[]) => {
-    if (!searchTerm) return connections;
-    return connections.filter(conn => 
-      getConnectionPartner(conn).name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -108,19 +99,6 @@ export default function NotificationsPage() {
       </div>
       
       <div className="max-w-7xl mx-auto px-6 py-6">
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search connections..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
-
         {/* Main Content Tabs */}
         <Card>
           <CardHeader>
@@ -152,7 +130,7 @@ export default function NotificationsPage() {
 
               {/* Pending Requests Tab */}
               <TabsContent value="pending" className="mt-6">
-                {filteredConnections(pendingRequests).length === 0 ? (
+                {pendingRequests.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <UserPlus className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                     <p>No pending connection requests</p>
@@ -160,7 +138,7 @@ export default function NotificationsPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {filteredConnections(pendingRequests).map((connection) => {
+                    {pendingRequests.map((connection) => {
                       const partner = getConnectionPartner(connection);
                       return (
                         <div key={connection.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
@@ -226,7 +204,7 @@ export default function NotificationsPage() {
 
               {/* Sent Requests Tab */}
               <TabsContent value="sent" className="mt-6">
-                {filteredConnections(sentRequests).length === 0 ? (
+                {sentRequests.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <UserPlus className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                     <p>No sent connection requests</p>
@@ -234,7 +212,7 @@ export default function NotificationsPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {filteredConnections(sentRequests).map((connection) => {
+                    {sentRequests.map((connection) => {
                       const partner = getConnectionPartner(connection);
                       return (
                         <div key={connection.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
@@ -275,7 +253,7 @@ export default function NotificationsPage() {
 
               {/* Connected Tab */}
               <TabsContent value="connected" className="mt-6">
-                {filteredConnections(acceptedConnections).length === 0 ? (
+                {acceptedConnections.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                     <p>No connections yet</p>
@@ -283,7 +261,7 @@ export default function NotificationsPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {filteredConnections(acceptedConnections).map((connection) => {
+                    {acceptedConnections.map((connection) => {
                       const partner = getConnectionPartner(connection);
                       return (
                         <div key={connection.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
@@ -321,7 +299,7 @@ export default function NotificationsPage() {
 
               {/* Declined Tab */}
               <TabsContent value="declined" className="mt-6">
-                {filteredConnections(declinedConnections).length === 0 ? (
+                {declinedConnections.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <UserX className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                     <p>No declined connections</p>
@@ -329,7 +307,7 @@ export default function NotificationsPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {filteredConnections(declinedConnections).map((connection) => {
+                    {declinedConnections.map((connection) => {
                       const partner = getConnectionPartner(connection);
                       return (
                         <div key={connection.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">

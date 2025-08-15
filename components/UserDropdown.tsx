@@ -112,7 +112,7 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
               onClick={handleSignOut}
               className="flex items-center space-x-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left rounded-md transition-colors"
             >
-              <LogOut className="w-4 w-4" />
+              <LogOut className="w-4" />
               <span>Sign out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -172,7 +172,7 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="flex items-center space-x-3 px-3 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-navy-700 rounded-md transition-colors relative"
                   >
-                    <Icon className="w-4 w-4 text-gray-500" />
+                    <Icon className="w-4 text-gray-500" />
                     <span>{item.label}</span>
                     
                     {/* Tiny red bubble indicator over Notifications item */}
@@ -192,7 +192,7 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
               onClick={handleSignOut}
               className="flex items-center space-x-3 px-3 py-3 text-sm text-red-600 hover:bg-red-50 w-full text-left rounded-md transition-colors"
             >
-              <LogOut className="w-4 w-4" />
+              <LogOut className="w-4" />
               <span>Sign out</span>
             </button>
           </div>
