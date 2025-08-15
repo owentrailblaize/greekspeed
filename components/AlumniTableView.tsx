@@ -502,24 +502,33 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                        />
                      </div>
                    </TableCell>
-                  <TableCell className=" bg-white border-r border-gray-200">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
+                  {/* Name Column - Allow names to wrap and prevent truncation */}
+                  <TableCell className="bg-white border-r border-gray-200">
+                    <div className="flex items-start space-x-3">
+                      {/* Avatar - Fixed width */}
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center flex-shrink-0">
                         <span className="text-white text-sm font-medium">
                           {alumni.firstName?.[0] || ''}{alumni.lastName?.[0] || ''}
                         </span>
                       </div>
-                      <div>
-                        <div className="flex items-center space-x-2">
+                      
+                      {/* Name and Badge Container - Flexible width */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          {/* Name - Allow wrapping, no truncation */}
                           <span 
-                            className="font-medium text-gray-900 underline cursor-pointer hover:text-navy-600 transition-colors"
+                            className="font-medium text-gray-900 underline cursor-pointer hover:text-navy-600 transition-colors break-words"
                             onClick={() => handleAlumniNameClick(alumni)}
                           >
                             {alumni.fullName}
                           </span>
-                          {alumni.verified && (
-                            <Badge className="bg-navy-600 text-white text-xs px-1">✓</Badge>
-                          )}
+                          
+                          {/* Badge - Right-aligned */}
+                          <div className="ml-2 flex-shrink-0">
+                            {alumni.verified && (
+                              <Badge className="bg-navy-600 text-white text-xs px-1">✓</Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
