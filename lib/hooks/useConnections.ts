@@ -11,6 +11,23 @@ export interface Connection {
   message?: string;
   created_at: string;
   updated_at: string;
+  // Add profile information
+  requester: {
+    id: string;
+    full_name: string;
+    first_name: string | null;
+    last_name: string | null;
+    chapter: string | null;
+    avatar_url: string | null;
+  };
+  recipient: {
+    id: string;
+    full_name: string;
+    first_name: string | null;
+    last_name: string | null;
+    chapter: string | null;
+    avatar_url: string | null;
+  };
 }
 
 export function useConnections() {

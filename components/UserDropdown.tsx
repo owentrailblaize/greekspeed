@@ -17,11 +17,13 @@ import {
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { UserAvatar } from './UserAvatar';
+import { Badge } from '@/components/ui/badge';
 
 interface UserDropdownProps {
   user: { email?: string | null; user_metadata?: { avatar_url?: string | null; full_name?: string } } | null;
   completionPercent: number;
   hasUnread: boolean;
+  unreadCount?: number; // Add this prop
   onSignOut: () => void;
 }
 
@@ -31,12 +33,12 @@ const menuItems = [
   { label: 'Account & Security', href: '#', icon: Shield },
   { label: 'Privacy & Visibility', href: '#', icon: Shield },
   { label: 'Documents & Uploads', href: '#', icon: FileText },
-  { label: 'Notifications', href: '#', icon: Bell },
+  { label: 'Notifications', href: '/dashboard/notifications', icon: Bell, key: 'notifications' },
   { label: 'Chapter & Role', href: '#', icon: Users },
   { label: 'Help & Support', href: '#', icon: HelpCircle },
 ];
 
-export function UserDropdown({ user, completionPercent, hasUnread, onSignOut }: UserDropdownProps) {
+export function UserDropdown({ user, completionPercent, hasUnread, unreadCount = 0, onSignOut }: UserDropdownProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleSignOut = () => {
@@ -55,6 +57,7 @@ export function UserDropdown({ user, completionPercent, hasUnread, onSignOut }: 
                 user={user}
                 completionPercent={completionPercent}
                 hasUnread={hasUnread}
+                unreadCount={unreadCount}
                 size="md"
               />
               <ChevronDown className="w-4 h-4 text-gray-600" />
@@ -74,7 +77,7 @@ export function UserDropdown({ user, completionPercent, hasUnread, onSignOut }: 
                       Add missing information to unlock full features
                     </p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-navy-600" />
+                  <ChevronRight className="h-4 w-4 text-navy-600" />
                 </div>
               </div>
             )}
@@ -87,10 +90,15 @@ export function UserDropdown({ user, completionPercent, hasUnread, onSignOut }: 
                   <DropdownMenuItem 
                     key={item.label} 
                     onClick={() => window.location.href = item.href}
-                    className="flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-navy-700 rounded-md transition-colors"
+                    className="flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-navy-700 rounded-md transition-colors relative"
                   >
                     <Icon className="w-4 h-4 text-gray-500" />
                     <span>{item.label}</span>
+                    
+                    {/* Tiny red bubble indicator over Notifications item */}
+                    {item.key === 'notifications' && unreadCount > 0 && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full border border-white shadow-sm" />
+                    )}
                   </DropdownMenuItem>
                 );
               })}
@@ -104,7 +112,7 @@ export function UserDropdown({ user, completionPercent, hasUnread, onSignOut }: 
               onClick={handleSignOut}
               className="flex items-center space-x-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left rounded-md transition-colors"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-4 w-4" />
               <span>Sign out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -121,6 +129,7 @@ export function UserDropdown({ user, completionPercent, hasUnread, onSignOut }: 
             user={user}
             completionPercent={completionPercent}
             hasUnread={hasUnread}
+            unreadCount={unreadCount}
             size="md"
           />
           <ChevronDown className="w-4 h-4 text-gray-600" />
@@ -147,7 +156,7 @@ export function UserDropdown({ user, completionPercent, hasUnread, onSignOut }: 
                       Add missing information to unlock full features
                     </p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-navy-600" />
+                  <ChevronRight className="h-4 w-4 text-navy-600" />
                 </div>
               </div>
             )}
@@ -161,10 +170,15 @@ export function UserDropdown({ user, completionPercent, hasUnread, onSignOut }: 
                     key={item.label}
                     href={item.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center space-x-3 px-3 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-navy-700 rounded-md transition-colors"
+                    className="flex items-center space-x-3 px-3 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-navy-700 rounded-md transition-colors relative"
                   >
-                    <Icon className="w-4 h-4 text-gray-500" />
+                    <Icon className="w-4 w-4 text-gray-500" />
                     <span>{item.label}</span>
+                    
+                    {/* Tiny red bubble indicator over Notifications item */}
+                    {item.key === 'notifications' && unreadCount > 0 && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full border border-white shadow-sm" />
+                    )}
                   </Link>
                 );
               })}
@@ -178,7 +192,7 @@ export function UserDropdown({ user, completionPercent, hasUnread, onSignOut }: 
               onClick={handleSignOut}
               className="flex items-center space-x-3 px-3 py-3 text-sm text-red-600 hover:bg-red-50 w-full text-left rounded-md transition-colors"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-4 w-4" />
               <span>Sign out</span>
             </button>
           </div>

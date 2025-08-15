@@ -535,7 +535,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                             <Badge className="bg-navy-600 text-white text-xs px-1">✓</Badge>
                           )}
                           {alumni.isActivelyHiring && (
-                            <Badge className="bg-green-500 text-white text-xs px-1">Hiring</Badge>
+                            <Badge className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-600 hover:to-gray-800  text-white text-xs px-1">Hiring</Badge>
                           )}
                         </div>
                       </div>
