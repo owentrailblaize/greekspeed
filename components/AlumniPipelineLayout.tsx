@@ -156,13 +156,15 @@ export function AlumniPipelineLayout({
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Enhanced Toolbar */}
-        <AlumniToolbar
-          selectedCount={selectedAlumni.length}
-          totalCount={totalAlumni}
-          onBulkAction={handleBulkAction}
-          onSaveSearch={handleSaveSearch}
-          onExport={handleExport}
-        />
+        {viewMode === 'table' && (
+          <AlumniToolbar
+            selectedCount={selectedAlumni.length}
+            totalCount={totalAlumni}
+            onBulkAction={handleBulkAction}
+            onSaveSearch={handleSaveSearch}
+            onExport={handleExport}
+          />
+        )}
 
                  {/* Content Area */}
          <div className="flex-1 overflow-y-auto">
