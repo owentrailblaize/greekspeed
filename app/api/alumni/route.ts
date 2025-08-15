@@ -45,11 +45,23 @@ export async function GET(request: NextRequest) {
     const location = searchParams.get('location') || ''
     const graduationYear = searchParams.get('graduationYear') || ''
     const activelyHiring = searchParams.get('activelyHiring') || ''
-
-    console.log('Query params:', { search, industry, chapter, location, graduationYear, activelyHiring })
-
-    // Add state parameter extraction
     const state = searchParams.get('state') || ''
+    
+    // Add My Chapter parameters
+    const myChapter = searchParams.get('myChapter') || ''
+    const userChapter = searchParams.get('userChapter') || ''
+
+    console.log('Query params:', { 
+      search, 
+      industry, 
+      chapter, 
+      location, 
+      graduationYear, 
+      activelyHiring, 
+      state,
+      myChapter,
+      userChapter 
+    })
 
     // Build the query - start simple
     let query = supabase
@@ -75,7 +87,11 @@ export async function GET(request: NextRequest) {
       query = query.eq('industry', industry)
     }
     
-    if (chapter) {
+    // Handle My Chapter filtering - this takes precedence over regular chapter filter
+    if (myChapter === 'true' && userChapter) {
+      query = query.eq('chapter', userChapter)
+    } else if (chapter) {
+      // Only apply regular chapter filter if My Chapter is not active
       query = query.eq('chapter', chapter)
     }
     
@@ -94,7 +110,7 @@ export async function GET(request: NextRequest) {
         query = query.eq('graduation_year', parseInt(graduationYear))
       }
     } 
-
+    
     if (activelyHiring) {
       query = query.eq('is_actively_hiring', true)
     }
