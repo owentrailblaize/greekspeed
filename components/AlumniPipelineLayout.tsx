@@ -18,7 +18,6 @@ interface FilterState {
   graduationYear: string;
   industry: string;
   chapter: string;
-  location: string;
   state: string;
   activelyHiring: boolean;
   myChapter: boolean;

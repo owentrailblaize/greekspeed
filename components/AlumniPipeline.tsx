@@ -11,7 +11,6 @@ interface FilterState {
   graduationYear: string;
   industry: string;
   chapter: string;
-  location: string;
   state: string;
   activelyHiring: boolean;
   myChapter: boolean;
@@ -28,7 +27,6 @@ export function AlumniPipeline() {
     graduationYear: "",
     industry: "",
     chapter: "",
-    location: "",
     state: "",
     activelyHiring: false,
     myChapter: false,
@@ -58,7 +56,6 @@ export function AlumniPipeline() {
       if (filterParams.searchTerm) params.append('search', filterParams.searchTerm);
       if (filterParams.industry) params.append('industry', filterParams.industry);
       if (filterParams.chapter) params.append('chapter', filterParams.chapter);
-      if (filterParams.location) params.append('location', filterParams.location);
       if (filterParams.graduationYear) params.append('graduationYear', filterParams.graduationYear);
       if (filterParams.state) params.append('state', filterParams.state); // Add this line
       if (filterParams.activelyHiring) params.append('activelyHiring', 'true');
@@ -112,7 +109,6 @@ export function AlumniPipeline() {
       graduationYear: "",
       industry: "",
       chapter: "",
-      location: "",
       state: "",
       activelyHiring: false,
       myChapter: false,

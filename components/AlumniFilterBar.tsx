@@ -12,7 +12,6 @@ interface FilterState {
   graduationYear: string;
   industry: string;
   chapter: string;
-  location: string;
   state: string;
   activelyHiring: boolean;
   myChapter: boolean;
@@ -142,20 +141,6 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
           </Select>
         </div>
 
-        {/* Location Filter */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Location</label>
-          <Select 
-            value={filters.location} 
-            onValueChange={(value) => handleFilterChange('location', value)}
-          >
-            <SelectItem value="">All Locations</SelectItem>
-            {locations.map((location) => (
-              <SelectItem key={location} value={location}>{location}</SelectItem>
-            ))}
-          </Select>
-        </div>
-
         {/* Clear Filters Button */}
         {hasActiveFilters && (
           <Button
@@ -212,15 +197,6 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                   <X 
                     className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
                     onClick={() => handleFilterChange('chapter', '')}
-                  />
-                </Badge>
-              )}
-              {filters.location && (
-                <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
-                  Location: {filters.location}
-                  <X 
-                    className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
-                    onClick={() => handleFilterChange('location', '')}
                   />
                 </Badge>
               )}
@@ -351,21 +327,6 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
               </Select>
             </div>
 
-            {/* Location Filter */}
-            <div className="relative">
-              <Select 
-                value={filters.location} 
-                onValueChange={(value) => handleFilterChange('location', value)}
-                placeholder="All Locations"
-                className="w-36"
-              >
-                <SelectItem value="">All Locations</SelectItem>
-                {locations.map((location) => (
-                  <SelectItem key={location} value={location}>{location}</SelectItem>
-                ))}
-              </Select>
-            </div>
-
             {/* Clear Filters Button */}
             {hasActiveFilters && (
               <Button
@@ -424,15 +385,6 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                 <X 
                   className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
                   onClick={() => handleFilterChange('chapter', '')}
-                />
-              </Badge>
-            )}
-            {filters.location && (
-              <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
-                Location: {filters.location}
-                <X 
-                  className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
-                  onClick={() => handleFilterChange('location', '')}
                 />
               </Badge>
             )}
