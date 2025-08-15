@@ -24,6 +24,7 @@ import {
   Calendar
 } from "lucide-react";
 import { Alumni } from "@/lib/mockAlumni";
+import { AlumniProfileModal } from "@/components/AlumniProfileModal";
 
 interface AlumniTableViewProps {
   alumni: Alumni[];
@@ -347,39 +348,12 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
       {/* Selection Status */}
       <SelectionStatus />
 
-      {/* Alumni Popup Sheet */}
-      <Sheet open={popupOpen} onOpenChange={setPopupOpen}>
-        <SheetContent side="right" className="w-[400px] sm:w-[540px] p-0">
-          <SheetHeader className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <SheetTitle className="text-lg font-semibold text-gray-900">
-                Alumni Profile
-              </SheetTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClosePopup}
-                className="h-8 w-8 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </SheetHeader>
-          <div className="p-6">
-            {selectedAlumniForPopup && (
-              <LinkedInStyleAlumniCard
-                name={selectedAlumniForPopup.fullName}
-                description={selectedAlumniForPopup.description}
-                mutualConnections={selectedAlumniForPopup.mutualConnections}
-                mutualConnectionsCount={selectedAlumniForPopup.mutualConnectionsCount}
-                avatar={selectedAlumniForPopup.avatar}
-                verified={selectedAlumniForPopup.verified}
-                alumniId={selectedAlumniForPopup.id}
-              />
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
+      {/* Alumni Profile Modal - Replace the Sheet with this */}
+      <AlumniProfileModal
+        alumni={selectedAlumniForPopup}
+        isOpen={popupOpen}
+        onClose={handleClosePopup}
+      />
 
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden h-full">
         <div className="overflow-x-auto h-full">
