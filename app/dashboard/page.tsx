@@ -6,11 +6,13 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import { ProfileService } from '@/lib/services/profileService';
 import { Profile } from '@/types/profile';
 import { DashboardOverview } from '@/components/DashboardOverview';
+import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
   console.log('🔍 DashboardPage: Component rendering');
   
   const { user } = useAuth();
+  const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -20,6 +22,12 @@ export default function DashboardPage() {
         try {
           const profileData = await ProfileService.getCurrentProfile();
           setProfile(profileData);
+          
+          // Check if profile is incomplete and redirect if needed
+          if (!profileData?.chapter || !profileData?.role) {
+            router.push('/profile/complete');
+            return;
+          }
         } catch (error) {
           console.error('Error loading profile:', error);
         } finally {
@@ -31,7 +39,7 @@ export default function DashboardPage() {
     };
 
     loadProfile();
-  }, [user]);
+  }, [user, router]);
 
   if (loading) {
     return (
@@ -44,10 +52,15 @@ export default function DashboardPage() {
     );
   }
 
+  // Don't render dashboard if profile is incomplete (will redirect)
+  if (!profile?.chapter || !profile?.role) {
+    return null;
+  }
+
   return (
     <div>
       <div style={{ display: 'none' }}>Dashboard Page Wrapper</div>
-      <DashboardOverview userRole={profile?.role || null} />
+      <DashboardOverview userRole={profile.role} />
     </div>
   );
 } 
