@@ -41,6 +41,7 @@ export default function SignUpPage() {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const { signUp, user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const [oauthLoading, setOauthLoading] = useState(false);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -48,6 +49,71 @@ export default function SignUpPage() {
       router.push('/dashboard');
     }
   }, [user, authLoading, router]);
+
+  // Handle OAuth callback on component mount
+  useEffect(() => {
+    const handleOAuthCallback = async () => {
+      // Check if we're returning from OAuth (hash contains access_token or error)
+      if (typeof window !== 'undefined' && window.location.hash) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const error = hashParams.get('error');
+        
+        if (error) {
+          setError(`OAuth error: ${error}`);
+          return;
+        }
+        
+        if (accessToken) {
+          setOauthLoading(true);
+          try {
+            // Set the session with the access token
+            const { data, error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: hashParams.get('refresh_token') || '',
+            });
+            
+            if (sessionError) {
+              setError('Failed to complete authentication');
+              return;
+            }
+            
+            if (data.user) {
+              // Check if profile exists, create if not
+              const { data: existingProfile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', data.user.id)
+                .single();
+
+              if (!existingProfile) {
+                await supabase
+                  .from('profiles')
+                  .insert({
+                    id: data.user.id,
+                    email: data.user.email,
+                    full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || 'Google User',
+                    first_name: data.user.user_metadata?.given_name || '',
+                    last_name: data.user.user_metadata?.family_name || '',
+                    chapter: null,
+                    role: 'alumni'
+                  });
+              }
+              
+              // Redirect to dashboard
+              router.push('/dashboard');
+            }
+          } catch (error) {
+            setError('Authentication failed');
+          } finally {
+            setOauthLoading(false);
+          }
+        }
+      }
+    };
+
+    handleOAuthCallback();
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,11 +152,11 @@ export default function SignUpPage() {
       setLoading(true);
       setError('');
       
-      // Fixed redirect path to match the callback route location
+      // Use popup or redirect without custom callback URL
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/(auth)/auth/callback`,
+          redirectTo: window.location.origin + '/(auth)/sign-up', // Redirect back to sign-up page
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -101,9 +167,6 @@ export default function SignUpPage() {
       if (error) {
         console.error('Google sign-up error:', error);
         setError('Google sign-up failed. Please try again.');
-      } else {
-        console.log('Google sign-up initiated:', data);
-        // User will be redirected to Google OAuth
       }
     } catch (error) {
       console.error('Google sign-up exception:', error);
@@ -117,12 +180,12 @@ export default function SignUpPage() {
     setShowEmailForm(true);
   };
 
-  if (authLoading) {
+  if (authLoading || oauthLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">Completing authentication...</p>
         </div>
       </div>
     );

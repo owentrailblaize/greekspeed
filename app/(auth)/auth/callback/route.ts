@@ -1,62 +1,74 @@
-import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/client';
+import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase/client';
 
-export async function GET(request: Request) {
-  try {
-    const { searchParams, origin } = new URL(request.url);
-    const code = searchParams.get('code');
-    const next = searchParams.get('next') ?? '/dashboard';
+export async function GET(request: NextRequest) {
+  const requestUrl = new URL(request.url);
+  const code = requestUrl.searchParams.get('code');
+  const error = requestUrl.searchParams.get('error');
+  const errorDescription = requestUrl.searchParams.get('error_description');
 
-    if (code) {
-      const supabase = createServerSupabaseClient();
-      
+  // Handle OAuth errors
+  if (error) {
+    console.error('OAuth error:', error, errorDescription);
+    return NextResponse.redirect(
+      `${requestUrl.origin}/(auth)/sign-up?error=${encodeURIComponent(errorDescription || 'Authentication failed')}`
+    );
+  }
+
+  // Handle successful OAuth callback
+  if (code) {
+    try {
       // Exchange code for session
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+      const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
       
-      if (!error && data.user) {
+      if (exchangeError) {
+        console.error('Session exchange error:', exchangeError);
+        return NextResponse.redirect(
+          `${requestUrl.origin}/(auth)/sign-up?error=${encodeURIComponent('Failed to complete authentication')}`
+        );
+      }
+
+      // Get user data
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
         // Check if profile already exists
         const { data: existingProfile } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', data.user.id)
+          .eq('id', user.id)
           .single();
 
         if (!existingProfile) {
-          // Create new profile for Google user
+          // Create profile for new Google user
           const { error: profileError } = await supabase
             .from('profiles')
             .insert({
-              id: data.user.id,
-              email: data.user.email,
-              full_name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'User',
-              first_name: data.user.user_metadata?.first_name || null,
-              last_name: data.user.user_metadata?.last_name || null,
-              chapter: null, // Will be filled later by user
-              role: null, // Will be filled later by user
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
+              id: user.id,
+              email: user.email,
+              full_name: user.user_metadata?.full_name || user.user_metadata?.name || 'Google User',
+              first_name: user.user_metadata?.given_name || '',
+              last_name: user.user_metadata?.family_name || '',
+              chapter: null,
+              role: 'alumni'
             });
 
           if (profileError) {
             console.error('Profile creation error:', profileError);
-            // Don't fail the auth - user can complete profile later
-          } else {
-            console.log('Profile created successfully for Google user:', data.user.id);
           }
         }
 
-        // Successfully authenticated, redirect to dashboard
-        return NextResponse.redirect(`${origin}${next}`);
-      } else {
-        console.error('Auth callback error:', error);
-        return NextResponse.redirect(`${origin}/sign-up?error=auth_callback_failed`);
+        // Redirect to dashboard on success
+        return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
       }
+    } catch (error) {
+      console.error('Callback processing error:', error);
+      return NextResponse.redirect(
+        `${requestUrl.origin}/(auth)/sign-up?error=${encodeURIComponent('Authentication processing failed')}`
+      );
     }
-
-    // No code provided, redirect to sign-up
-    return NextResponse.redirect(`${origin}/sign-up`);
-  } catch (error) {
-    console.error('Auth callback exception:', error);
-    return NextResponse.redirect(`${origin}/sign-up?error=auth_callback_exception`);
   }
+
+  // Fallback redirect
+  return NextResponse.redirect(`${requestUrl.origin}/(auth)/sign-up`);
 } 
