@@ -163,21 +163,25 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
             </div>
           </div>
 
-          {/* Name and Verification - Ensure perfect centering */}
+          {/* Name and Verification - Stack badges below name in row */}
           <div className="text-center mb-2">
-            <h3 className="font-semibold text-gray-900 inline-flex items-center justify-center gap-1 text-lg leading-tight w-full">
+            <h3 className="font-semibold text-gray-900 text-lg leading-tight mb-2">
               {alumni.fullName}
+            </h3>
+            
+            {/* Badges in row below name */}
+            <div className="flex flex-row items-center justify-center gap-1">
               {alumni.verified && (
-                <Badge className="bg-blue-500 text-white text-xs p-1 ml-1 flex-shrink-0">
+                <Badge className="bg-blue-500 text-white text-xs p-1 flex-shrink-0">
                   <Shield className="h-3 w-3" />
                 </Badge>
               )}
               {alumni.isActivelyHiring && (
-                <Badge className="bg-gradient-to-r from-gray-600 to-gray-700 text-white text-xs p-1 ml-1 flex-shrink-0">
+                <Badge className="bg-gradient-to-r from-gray-600 to-gray-700 text-white text-xs p-1 flex-shrink-0">
                   Hiring
                 </Badge>
               )}
-            </h3>
+            </div>
           </div>
 
           {/* Job Title and Company - Reduced margin */}
