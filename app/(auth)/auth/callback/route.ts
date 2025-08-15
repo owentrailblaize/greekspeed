@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   if (error) {
     console.error('OAuth error:', error, errorDescription);
     return NextResponse.redirect(
-      `${requestUrl.origin}/(auth)/sign-up?error=${encodeURIComponent(errorDescription || 'Authentication failed')}`
+      `${requestUrl.origin}/sign-up?error=${encodeURIComponent(errorDescription || 'Authentication failed')}`
     );
   }
 
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       if (exchangeError) {
         console.error('Session exchange error:', exchangeError);
         return NextResponse.redirect(
-          `${requestUrl.origin}/(auth)/sign-up?error=${encodeURIComponent('Failed to complete authentication')}`
+          `${requestUrl.origin}/sign-up?error=${encodeURIComponent('Failed to complete authentication')}`
         );
       }
 
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
           .single();
 
         if (!existingProfile) {
-          // Create profile for new Google user
+          // Create profile for new Google user with minimal info
           const { error: profileError } = await supabase
             .from('profiles')
             .insert({
@@ -49,8 +49,10 @@ export async function GET(request: NextRequest) {
               full_name: user.user_metadata?.full_name || user.user_metadata?.name || 'Google User',
               first_name: user.user_metadata?.given_name || '',
               last_name: user.user_metadata?.family_name || '',
-              chapter: null,
-              role: 'alumni'
+              chapter: null,  // Will be filled in profile completion
+              role: null,     // Will be filled in profile completion
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
             });
 
           if (profileError) {
@@ -58,17 +60,17 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // Redirect to dashboard on success
-        return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
+        // Redirect to profile completion page for new Google users
+        return NextResponse.redirect(`${requestUrl.origin}/profile/complete?source=google&incomplete=true`);
       }
     } catch (error) {
       console.error('Callback processing error:', error);
       return NextResponse.redirect(
-        `${requestUrl.origin}/(auth)/sign-up?error=${encodeURIComponent('Authentication processing failed')}`
+        `${requestUrl.origin}/sign-up?error=${encodeURIComponent('Authentication processing failed')}`
       );
     }
   }
 
-  // Fallback redirect
-  return NextResponse.redirect(`${requestUrl.origin}/(auth)/sign-up`);
+  // Fallback redirect - Fixed URL
+  return NextResponse.redirect(`${requestUrl.origin}/sign-up`);
 } 

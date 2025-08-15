@@ -50,70 +50,70 @@ export default function SignUpPage() {
     }
   }, [user, authLoading, router]);
 
-  // Handle OAuth callback on component mount
-  useEffect(() => {
-    const handleOAuthCallback = async () => {
-      // Check if we're returning from OAuth (hash contains access_token or error)
-      if (typeof window !== 'undefined' && window.location.hash) {
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const error = hashParams.get('error');
+  // Remove this useEffect - it's not needed here
+  // useEffect(() => {
+  //   const handleOAuthCallback = async () => {
+  //     // Check if we're returning from OAuth (hash contains access_token or error)
+  //     if (typeof window !== 'undefined' && window.location.hash) {
+  //       const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  //       const accessToken = hashParams.get('access_token');
+  //       const error = hashParams.get('error');
         
-        if (error) {
-          setError(`OAuth error: ${error}`);
-          return;
-        }
+  //       if (error) {
+  //         setError(`OAuth error: ${error}`);
+  //         return;
+  //       }
         
-        if (accessToken) {
-          setOauthLoading(true);
-          try {
-            // Set the session with the access token
-            const { data, error: sessionError } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: hashParams.get('refresh_token') || '',
-            });
+  //       if (accessToken) {
+  //         setOauthLoading(true);
+  //         try {
+  //           // Set the session with the access token
+  //           const { data, error: sessionError } = await supabase.auth.setSession({
+  //             access_token: accessToken,
+  //             refresh_token: hashParams.get('refresh_token') || '',
+  //           });
             
-            if (sessionError) {
-              setError('Failed to complete authentication');
-              return;
-            }
+  //           if (sessionError) {
+  //             setError('Failed to complete authentication');
+  //             return;
+  //           }
             
-            if (data.user) {
-              // Check if profile exists, create if not
-              const { data: existingProfile } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', data.user.id)
-                .single();
+  //           if (data.user) {
+  //             // Check if profile exists, create if not
+  //             const { data: existingProfile } = await supabase
+  //               .from('profiles')
+  //               .select('*')
+  //               .eq('id', data.user.id)
+  //               .single();
 
-              if (!existingProfile) {
-                await supabase
-                  .from('profiles')
-                  .insert({
-                    id: data.user.id,
-                    email: data.user.email,
-                    full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || 'Google User',
-                    first_name: data.user.user_metadata?.given_name || '',
-                    last_name: data.user.user_metadata?.family_name || '',
-                    chapter: null,
-                    role: 'alumni'
-                  });
-              }
+  //             if (!existingProfile) {
+  //               await supabase
+  //                 .from('profiles')
+  //                 .insert({
+  //                   id: data.user.id,
+  //                   email: data.user.email,
+  //                   full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || 'Google User',
+  //                   first_name: data.user.user_metadata?.given_name || '',
+  //                   last_name: data.user.user_metadata?.family_name || '',
+  //                   chapter: null,
+  //                   role: 'alumni'
+  //                 });
+  //             }
               
-              // Redirect to dashboard
-              router.push('/dashboard');
-            }
-          } catch (error) {
-            setError('Authentication failed');
-          } finally {
-            setOauthLoading(false);
-          }
-        }
-      }
-    };
+  //             // Redirect to dashboard
+  //             router.push('/dashboard');
+  //           }
+  //         } catch (error) {
+  //           setError('Authentication failed');
+  //         } finally {
+  //           setOauthLoading(false);
+  //         }
+  //       }
+  //     }
+  //   };
 
-    handleOAuthCallback();
-  }, [router]);
+  //   handleOAuthCallback();
+  // }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,11 +152,11 @@ export default function SignUpPage() {
       setLoading(true);
       setError('');
       
-      // Use popup or redirect without custom callback URL
+      // Fix: Use the correct callback URL
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/(auth)/sign-up', // Redirect back to sign-up page
+          redirectTo: `${window.location.origin}/auth/callback`, // Use the callback route
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
