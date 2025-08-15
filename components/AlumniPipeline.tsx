@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { AlumniPipelineLayout } from "@/components/AlumniPipelineLayout";
 import { AlumniSubHeader } from "@/components/AlumniSubHeader";
 import { Alumni } from "@/lib/mockAlumni";
+import { AlumniProfileModal } from "./AlumniProfileModal";
 
 interface FilterState {
   searchTerm: string;
@@ -32,6 +33,18 @@ export function AlumniPipeline() {
     activelyHiring: false,
     myChapter: false,
   });
+  const [selectedAlumniForModal, setSelectedAlumniForModal] = useState<Alumni | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleAlumniClick = (alumni: Alumni) => {
+    setSelectedAlumniForModal(alumni);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedAlumniForModal(null);
+  };
 
   const fetchAlumni = useCallback(async (currentFilters?: FilterState) => {
     try {
@@ -129,7 +142,17 @@ export function AlumniPipeline() {
         filters={filters}
         onFiltersChange={handleFiltersChange}
         onClearFilters={handleClearFilters}
+        onAlumniClick={handleAlumniClick}
       />
+
+      {/* Alumni Profile Modal */}
+      {selectedAlumniForModal && (
+        <AlumniProfileModal
+          alumni={selectedAlumniForModal}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+        />
+      )}
     </div>
   );
 } 

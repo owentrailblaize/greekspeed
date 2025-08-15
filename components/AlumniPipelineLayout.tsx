@@ -6,11 +6,12 @@ import { Filter, X, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlumniFilterBar } from "@/components/AlumniFilterBar";
 import { AlumniTableView } from "@/components/AlumniTableView";
-import { LinkedInStyleAlumniCard } from "@/components/LinkedInStyleAlumniCard";
+import { EnhancedAlumniCard } from "@/components/EnhancedAlumniCard";
 import { AlumniToolbar } from "@/components/AlumniToolbar";
 import { AlumniDetailSheet } from "@/components/AlumniDetailSheet";
 import { Alumni } from "@/lib/mockAlumni";
 import { exportAlumniToCSV, exportSelectedAlumniToCSV } from "@/lib/csvExport";
+import { AlumniProfileModal } from "./AlumniProfileModal";
 
 interface FilterState {
   searchTerm: string;
@@ -34,6 +35,7 @@ interface AlumniPipelineLayoutProps {
   filters: FilterState;
   onFiltersChange: (filters: FilterState) => void;
   onClearFilters: () => void;
+  onAlumniClick?: (alumni: Alumni) => void;
 }
 
 export function AlumniPipelineLayout({
@@ -46,11 +48,14 @@ export function AlumniPipelineLayout({
   onRetry,
   filters,
   onFiltersChange,
-  onClearFilters
+  onClearFilters,
+  onAlumniClick
 }: AlumniPipelineLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedAlumniDetail, setSelectedAlumniDetail] = useState<Alumni | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const handleBulkAction = (action: string) => {
     console.log(`Bulk action: ${action} for ${selectedAlumni.length} alumni`);
     
@@ -89,7 +94,12 @@ export function AlumniPipelineLayout({
 
   const handleAlumniClick = (alumni: Alumni) => {
     setSelectedAlumniDetail(alumni);
-    setDetailSheetOpen(true);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedAlumniDetail(null);
   };
 
   // Calculate stats
@@ -208,16 +218,10 @@ export function AlumniPipelineLayout({
                        initial={{ opacity: 0, y: 20 }}
                        animate={{ opacity: 1, y: 0 }}
                        transition={{ duration: 0.5, delay: index * 0.05 }}
-                       onClick={() => handleAlumniClick(alumniItem)}
-                       className="cursor-pointer"
                      >
-                       <LinkedInStyleAlumniCard
-                         name={alumniItem.fullName}
-                         description={alumniItem.description}
-                         mutualConnections={alumniItem.mutualConnections}
-                         mutualConnectionsCount={alumniItem.mutualConnectionsCount}
-                         avatar={alumniItem.avatar}
-                         verified={alumniItem.verified}
+                       <EnhancedAlumniCard
+                         alumni={alumniItem}
+                         onClick={handleAlumniClick}
                        />
                      </motion.div>
                    ))}
@@ -237,6 +241,14 @@ export function AlumniPipelineLayout({
           setSelectedAlumniDetail(null);
         }}
       />
+
+      {selectedAlumniDetail && (
+        <AlumniProfileModal
+          alumni={selectedAlumniDetail}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+        />
+      )}
     </div>
   );
 } 
