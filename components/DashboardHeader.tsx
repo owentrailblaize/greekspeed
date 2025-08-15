@@ -74,7 +74,7 @@ export function DashboardHeader() {
   };
 
   return (
-    <header className="border-b border-gray-200 bg-white/80 backdrop-blur relative z-10">
+    <header className="border-b border-gray-200 bg-white/80 backdrop-blur z-50">
       <div className="w-full px-4 sm:px-6 h-14 flex items-center justify-between">
         {/* Left side - Navigation tabs */}
         <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">

@@ -64,7 +64,10 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
             </button>
           </DropdownMenuTrigger>
           
-          <DropdownMenuContent align="end" className="w-64 p-2">
+          <DropdownMenuContent 
+            align="end" 
+            className="w-64 p-2 z-[99999]"
+          >
             {/* Profile Completion Banner */}
             {completionPercent < 100 && (
               <div className="mb-3 p-3 bg-navy-50 rounded-lg border border-navy-200">
@@ -138,7 +141,10 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
 
       {/* Mobile Sheet */}
       <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-        <SheetContent side="right" className="w-80">
+        <SheetContent 
+          side="right" 
+          className="w-80 z-[99999]"
+        >
           <SheetHeader className="pb-4 border-b border-gray-200">
             <SheetTitle className="text-left">Account Menu</SheetTitle>
           </SheetHeader>
