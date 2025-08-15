@@ -31,7 +31,7 @@ interface AlumniTableViewProps {
   onSelectionChange: (selectedIds: string[]) => void;
 }
 
-type SortField = 'name' | 'company' | 'industry' | 'graduationYear' | 'location' | 'jobTitle' | 'chapter' | 'lastContact';
+type SortField = 'name' | 'company' | 'industry' | 'graduationYear' | 'location' | 'jobTitle' | 'chapter' | 'lastContact' | 'isActivelyHiring';
 type SortDirection = 'asc' | 'desc';
 
 export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: AlumniTableViewProps) {
@@ -286,6 +286,10 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
         aValue = a.lastContact || '';
         bValue = b.lastContact || '';
         break;
+      case 'isActivelyHiring':
+        aValue = a.isActivelyHiring ? 1 : 0;
+        bValue = b.isActivelyHiring ? 1 : 0;
+        break;
       default:
         aValue = a.fullName;
         bValue = b.fullName;
@@ -388,6 +392,15 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   <div className="flex items-center space-x-2">
                     <span>JOB TITLE</span>
                     <SortIcon field="jobTitle" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="bg-gray-50 text-gray-900 font-medium cursor-pointer hover:bg-gray-100 transition-colors min-w-[100px]"
+                  onClick={() => handleSort('isActivelyHiring')}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span>HIRING</span>
+                    <SortIcon field="isActivelyHiring" />
                   </div>
                 </TableHead>
                 <TableHead 
@@ -507,9 +520,6 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                           {alumni.verified && (
                             <Badge className="bg-navy-600 text-white text-xs px-1">✓</Badge>
                           )}
-                          {alumni.isActivelyHiring && (
-                            <Badge className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-600 hover:to-gray-800  text-white text-xs px-1">Hiring</Badge>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -518,6 +528,17 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   {/* Job Title Column */}
                   <TableCell className="bg-white">
                     <span className="text-gray-900 text-sm">{alumni.jobTitle || 'N/A'}</span>
+                  </TableCell>
+                  
+                  {/* Hiring Column - NEW */}
+                  <TableCell className="bg-white">
+                    {alumni.isActivelyHiring ? (
+                      <Badge className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-600 hover:to-gray-800 text-white text-xs px-2 py-1">
+                        Hiring
+                      </Badge>
+                    ) : (
+                      <span className="text-gray-400 text-sm">—</span>
+                    )}
                   </TableCell>
                   
                   {/* Company Column */}
