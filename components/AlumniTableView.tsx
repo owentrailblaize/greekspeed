@@ -538,7 +538,6 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                             <Badge className="bg-green-500 text-white text-xs px-1">Hiring</Badge>
                           )}
                         </div>
-                        <div className="text-sm text-gray-500">{alumni.jobTitle}</div>
                       </div>
                     </div>
                   </TableCell>
