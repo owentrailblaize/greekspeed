@@ -48,6 +48,9 @@ export async function GET(request: NextRequest) {
 
     console.log('Query params:', { search, industry, chapter, location, graduationYear, activelyHiring })
 
+    // Add state parameter extraction
+    const state = searchParams.get('state') || ''
+
     // Build the query - start simple
     let query = supabase
       .from('alumni')
@@ -55,7 +58,17 @@ export async function GET(request: NextRequest) {
 
     // Apply filters
     if (search) {
-      query = query.or(`full_name.ilike.%${search}%,company.ilike.%${search}%,job_title.ilike.%${search}%`)
+      const searchTerm = search.toLowerCase().trim()
+      
+      // Split search terms for multi-word searches
+      const searchTerms = searchTerm.split(/\s+/)
+      
+      // Build dynamic OR conditions for each search term
+      const searchConditions = searchTerms.map(term => 
+        `full_name.ilike.%${term}%,company.ilike.%${term}%,job_title.ilike.%${term}%,industry.ilike.%${term}%,chapter.ilike.%${term}%`
+      ).join(',')
+      
+      query = query.or(searchConditions)
     }
     
     if (industry) {
@@ -68,6 +81,10 @@ export async function GET(request: NextRequest) {
     
     if (location) {
       query = query.eq('location', location)
+    }
+
+    if (state) {
+      query = query.ilike('location', `%, ${state}`)
     }
     
     if (graduationYear && graduationYear !== 'All Years') {

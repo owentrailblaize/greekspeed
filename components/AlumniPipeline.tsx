@@ -54,13 +54,13 @@ export function AlumniPipeline() {
       const filterParams = currentFilters || filters;
       const params = new URLSearchParams();
 
-      // Add filter parameters
+      // Add all filter parameters including state
       if (filterParams.searchTerm) params.append('search', filterParams.searchTerm);
       if (filterParams.industry) params.append('industry', filterParams.industry);
       if (filterParams.chapter) params.append('chapter', filterParams.chapter);
       if (filterParams.location) params.append('location', filterParams.location);
       if (filterParams.graduationYear) params.append('graduationYear', filterParams.graduationYear);
-      if (filterParams.state) params.append('state', filterParams.state);
+      if (filterParams.state) params.append('state', filterParams.state); // Add this line
       if (filterParams.activelyHiring) params.append('activelyHiring', 'true');
         
       console.log('Fetching alumni with params...', params.toString());

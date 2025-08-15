@@ -193,6 +193,13 @@ export function AlumniPipelineLayout({
             </div>
           ) : (
             <div className={viewMode === 'table' ? 'h-full' : 'p-6'}>
+              {alumni.length > 0 && filters.searchTerm && (
+                <div className="px-6 py-2 bg-blue-50 border-b border-blue-200">
+                  <p className="text-sm text-blue-700">
+                    Found {alumni.length} alumni matching "{filters.searchTerm}"
+                  </p>
+                </div>
+              )}
               {alumni.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />

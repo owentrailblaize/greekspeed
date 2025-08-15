@@ -259,7 +259,7 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search alumni by name, company, or job title..."
+              placeholder="Search"
               value={filters.searchTerm}
               onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
               className="pl-10 bg-white border-gray-300 focus:border-navy-500 focus:ring-navy-500"
