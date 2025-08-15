@@ -31,7 +31,7 @@ interface AlumniTableViewProps {
   onSelectionChange: (selectedIds: string[]) => void;
 }
 
-type SortField = 'name' | 'company' | 'industry' | 'graduationYear' | 'location' | 'jobTitle' | 'chapter' | 'lastContact';
+type SortField = 'name' | 'company' | 'industry' | 'graduationYear' | 'location' | 'jobTitle' | 'chapter' | 'lastContact' | 'isActivelyHiring';
 type SortDirection = 'asc' | 'desc';
 
 export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: AlumniTableViewProps) {
@@ -286,6 +286,10 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
         aValue = a.lastContact || '';
         bValue = b.lastContact || '';
         break;
+      case 'isActivelyHiring':
+        aValue = a.isActivelyHiring ? 1 : 0;
+        bValue = b.isActivelyHiring ? 1 : 0;
+        break;
       default:
         aValue = a.fullName;
         bValue = b.fullName;
@@ -391,6 +395,15 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   </div>
                 </TableHead>
                 <TableHead 
+                  className="bg-gray-50 text-gray-900 font-medium cursor-pointer hover:bg-gray-100 transition-colors min-w-[100px]"
+                  onClick={() => handleSort('isActivelyHiring')}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span>HIRING</span>
+                    <SortIcon field="isActivelyHiring" />
+                  </div>
+                </TableHead>
+                <TableHead 
                   className="bg-gray-50 text-gray-900 font-medium cursor-pointer hover:bg-gray-100 transition-colors min-w-[150px]"
                   onClick={() => handleSort('company')}
                 >
@@ -489,27 +502,33 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                        />
                      </div>
                    </TableCell>
-                  <TableCell className=" bg-white border-r border-gray-200">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
+                  {/* Name Column - Allow names to wrap and prevent truncation */}
+                  <TableCell className="bg-white border-r border-gray-200">
+                    <div className="flex items-start space-x-3">
+                      {/* Avatar - Fixed width */}
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center flex-shrink-0">
                         <span className="text-white text-sm font-medium">
                           {alumni.firstName?.[0] || ''}{alumni.lastName?.[0] || ''}
                         </span>
                       </div>
-                      <div>
-                        <div className="flex items-center space-x-2">
+                      
+                      {/* Name and Badge Container - Flexible width */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          {/* Name - Allow wrapping, no truncation */}
                           <span 
-                            className="font-medium text-gray-900 underline cursor-pointer hover:text-navy-600 transition-colors"
+                            className="font-medium text-gray-900 underline cursor-pointer hover:text-navy-600 transition-colors break-words"
                             onClick={() => handleAlumniNameClick(alumni)}
                           >
                             {alumni.fullName}
                           </span>
-                          {alumni.verified && (
-                            <Badge className="bg-navy-600 text-white text-xs px-1">✓</Badge>
-                          )}
-                          {alumni.isActivelyHiring && (
-                            <Badge className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-600 hover:to-gray-800  text-white text-xs px-1">Hiring</Badge>
-                          )}
+                          
+                          {/* Badge - Right-aligned */}
+                          <div className="ml-2 flex-shrink-0">
+                            {alumni.verified && (
+                              <Badge className="bg-navy-600 text-white text-xs px-1">✓</Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -518,6 +537,17 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   {/* Job Title Column */}
                   <TableCell className="bg-white">
                     <span className="text-gray-900 text-sm">{alumni.jobTitle || 'N/A'}</span>
+                  </TableCell>
+                  
+                  {/* Hiring Column - NEW */}
+                  <TableCell className="bg-white">
+                    {alumni.isActivelyHiring ? (
+                      <Badge className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-600 hover:to-gray-800 text-white text-xs px-2 py-1">
+                        Hiring
+                      </Badge>
+                    ) : (
+                      <span className="text-gray-400 text-sm">—</span>
+                    )}
                   </TableCell>
                   
                   {/* Company Column */}

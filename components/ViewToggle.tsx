@@ -1,4 +1,4 @@
-import { Table, Grid3X3 } from "lucide-react";
+import { Table, IdCardLanyard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +36,7 @@ export function ViewToggle({ viewMode, onViewChange }: ViewToggleProps) {
             : "text-gray-600 hover:text-gray-900"
         )}
       >
-        <Grid3X3 className="h-4 w-4" />
+        <IdCardLanyard className="h-4 w-4" />
         <span className="text-sm font-medium">Cards</span>
       </Button>
     </div>

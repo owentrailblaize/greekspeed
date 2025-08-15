@@ -5,19 +5,20 @@ import { AlumniPipelineLayout } from "@/components/AlumniPipelineLayout";
 import { AlumniSubHeader } from "@/components/AlumniSubHeader";
 import { Alumni } from "@/lib/mockAlumni";
 import { AlumniProfileModal } from "./AlumniProfileModal";
+import { useProfile } from "@/lib/hooks/useProfile";
 
 interface FilterState {
   searchTerm: string;
   graduationYear: string;
   industry: string;
   chapter: string;
-  location: string;
   state: string;
   activelyHiring: boolean;
   myChapter: boolean;
 }
 
 export function AlumniPipeline() {
+  const { profile } = useProfile();
   const [alumni, setAlumni] = useState<Alumni[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +29,6 @@ export function AlumniPipeline() {
     graduationYear: "",
     industry: "",
     chapter: "",
-    location: "",
     state: "",
     activelyHiring: false,
     myChapter: false,
@@ -54,14 +54,19 @@ export function AlumniPipeline() {
       const filterParams = currentFilters || filters;
       const params = new URLSearchParams();
 
-      // Add filter parameters
+      // Add all filter parameters including state
       if (filterParams.searchTerm) params.append('search', filterParams.searchTerm);
       if (filterParams.industry) params.append('industry', filterParams.industry);
       if (filterParams.chapter) params.append('chapter', filterParams.chapter);
-      if (filterParams.location) params.append('location', filterParams.location);
       if (filterParams.graduationYear) params.append('graduationYear', filterParams.graduationYear);
       if (filterParams.state) params.append('state', filterParams.state);
       if (filterParams.activelyHiring) params.append('activelyHiring', 'true');
+      
+      // Add My Chapter filtering logic
+      if (filterParams.myChapter && profile?.chapter) {
+        params.append('myChapter', 'true');
+        params.append('userChapter', profile.chapter);
+      }
         
       console.log('Fetching alumni with params...', params.toString());
       const response = await fetch(`/api/alumni?${params.toString()}`);
@@ -80,7 +85,7 @@ export function AlumniPipeline() {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, profile]);
 
   useEffect(() => {
     fetchAlumni();
@@ -112,7 +117,6 @@ export function AlumniPipeline() {
       graduationYear: "",
       industry: "",
       chapter: "",
-      location: "",
       state: "",
       activelyHiring: false,
       myChapter: false,

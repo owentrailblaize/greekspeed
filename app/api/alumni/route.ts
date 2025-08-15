@@ -45,8 +45,23 @@ export async function GET(request: NextRequest) {
     const location = searchParams.get('location') || ''
     const graduationYear = searchParams.get('graduationYear') || ''
     const activelyHiring = searchParams.get('activelyHiring') || ''
+    const state = searchParams.get('state') || ''
+    
+    // Add My Chapter parameters
+    const myChapter = searchParams.get('myChapter') || ''
+    const userChapter = searchParams.get('userChapter') || ''
 
-    console.log('Query params:', { search, industry, chapter, location, graduationYear, activelyHiring })
+    console.log('Query params:', { 
+      search, 
+      industry, 
+      chapter, 
+      location, 
+      graduationYear, 
+      activelyHiring, 
+      state,
+      myChapter,
+      userChapter 
+    })
 
     // Build the query - start simple
     let query = supabase
@@ -55,19 +70,37 @@ export async function GET(request: NextRequest) {
 
     // Apply filters
     if (search) {
-      query = query.or(`full_name.ilike.%${search}%,company.ilike.%${search}%,job_title.ilike.%${search}%`)
+      const searchTerm = search.toLowerCase().trim()
+      
+      // Split search terms for multi-word searches
+      const searchTerms = searchTerm.split(/\s+/)
+      
+      // Build dynamic OR conditions for each search term
+      const searchConditions = searchTerms.map(term => 
+        `full_name.ilike.%${term}%,company.ilike.%${term}%,job_title.ilike.%${term}%,industry.ilike.%${term}%,chapter.ilike.%${term}%`
+      ).join(',')
+      
+      query = query.or(searchConditions)
     }
     
     if (industry) {
       query = query.eq('industry', industry)
     }
     
-    if (chapter) {
+    // Handle My Chapter filtering - this takes precedence over regular chapter filter
+    if (myChapter === 'true' && userChapter) {
+      query = query.eq('chapter', userChapter)
+    } else if (chapter) {
+      // Only apply regular chapter filter if My Chapter is not active
       query = query.eq('chapter', chapter)
     }
     
     if (location) {
       query = query.eq('location', location)
+    }
+
+    if (state) {
+      query = query.ilike('location', `%, ${state}`)
     }
     
     if (graduationYear && graduationYear !== 'All Years') {
@@ -77,7 +110,7 @@ export async function GET(request: NextRequest) {
         query = query.eq('graduation_year', parseInt(graduationYear))
       }
     } 
-
+    
     if (activelyHiring) {
       query = query.eq('is_actively_hiring', true)
     }

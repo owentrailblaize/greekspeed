@@ -12,7 +12,6 @@ interface FilterState {
   graduationYear: string;
   industry: string;
   chapter: string;
-  location: string;
   state: string;
   activelyHiring: boolean;
   myChapter: boolean;
@@ -142,20 +141,6 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
           </Select>
         </div>
 
-        {/* Location Filter */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Location</label>
-          <Select 
-            value={filters.location} 
-            onValueChange={(value) => handleFilterChange('location', value)}
-          >
-            <SelectItem value="">All Locations</SelectItem>
-            {locations.map((location) => (
-              <SelectItem key={location} value={location}>{location}</SelectItem>
-            ))}
-          </Select>
-        </div>
-
         {/* Clear Filters Button */}
         {hasActiveFilters && (
           <Button
@@ -215,15 +200,6 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                   />
                 </Badge>
               )}
-              {filters.location && (
-                <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
-                  Location: {filters.location}
-                  <X 
-                    className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
-                    onClick={() => handleFilterChange('location', '')}
-                  />
-                </Badge>
-              )}
               {filters.activelyHiring && (
                 <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
                   Actively Hiring
@@ -259,7 +235,7 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search alumni by name, company, or job title..."
+              placeholder="Search"
               value={filters.searchTerm}
               onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
               className="pl-10 bg-white border-gray-300 focus:border-navy-500 focus:ring-navy-500"
@@ -351,21 +327,6 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
               </Select>
             </div>
 
-            {/* Location Filter */}
-            <div className="relative">
-              <Select 
-                value={filters.location} 
-                onValueChange={(value) => handleFilterChange('location', value)}
-                placeholder="All Locations"
-                className="w-36"
-              >
-                <SelectItem value="">All Locations</SelectItem>
-                {locations.map((location) => (
-                  <SelectItem key={location} value={location}>{location}</SelectItem>
-                ))}
-              </Select>
-            </div>
-
             {/* Clear Filters Button */}
             {hasActiveFilters && (
               <Button
@@ -424,15 +385,6 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                 <X 
                   className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
                   onClick={() => handleFilterChange('chapter', '')}
-                />
-              </Badge>
-            )}
-            {filters.location && (
-              <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
-                Location: {filters.location}
-                <X 
-                  className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
-                  onClick={() => handleFilterChange('location', '')}
                 />
               </Badge>
             )}
