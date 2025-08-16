@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alumni } from "@/lib/mockAlumni";
-import { MessageCircle, UserPlus, Shield, Building2, MapPin, GraduationCap } from "lucide-react";
+import { MessageCircle, UserPlus, Shield, Building2, MapPin, GraduationCap, Clock } from "lucide-react";
 import ImageWithFallback from "./figma/ImageWithFallback";
 import { useConnections } from "@/lib/hooks/useConnections";
 import { useAuth } from "@/lib/supabase/auth-context";
@@ -104,13 +104,13 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
           <Button
             onClick={(e) => handleConnectionAction('cancel', e)}
             disabled={isLoading}
-            className="w-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 transition-colors duration-200 rounded-full font-medium h-10"
+            className="w-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 transition-colors duration-200 rounded-full font-medium h-10 flex items-center justify-center"
             variant="outline"
           >
             {isLoading ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b border-gray-600 mr-2" />
             ) : (
-              <div className="h-4 w-4 mr-2" />
+              <Clock className="h-4 w-4 mr-2" /> // Add Clock icon for pending state
             )}
             Requested
           </Button>
