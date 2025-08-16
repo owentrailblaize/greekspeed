@@ -24,7 +24,10 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
 
-  const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel') => {
+  const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel', e: React.MouseEvent) => {
+    // Stop event propagation to prevent card click from triggering
+    e.stopPropagation();
+    
     if (!user || user.id === alumni.id) return;
     
     setConnectionLoading(true);
@@ -68,6 +71,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
           className="w-full text-gray-400 border-gray-200 rounded-full font-medium h-10"
           variant="outline"
           disabled
+          onClick={(e) => e.stopPropagation()} // Prevent card click even for disabled button
         >
           No Profile
         </Button>
@@ -81,7 +85,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
       case 'none':
         return (
           <Button
-            onClick={() => handleConnectionAction('connect')}
+            onClick={(e) => handleConnectionAction('connect', e)}
             disabled={isLoading}
             className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-10"
             variant="outline"
@@ -98,7 +102,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
       case 'pending_sent':
         return (
           <Button
-            onClick={() => handleConnectionAction('cancel')}
+            onClick={(e) => handleConnectionAction('cancel', e)}
             disabled={isLoading}
             className="w-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 transition-colors duration-200 rounded-full font-medium h-10"
             variant="outline"
@@ -118,11 +122,12 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
             className="w-full bg-green-50 text-green-700 border-green-300 rounded-full font-medium h-10"
             variant="outline"
             disabled
+            onClick={(e) => e.stopPropagation()} // Prevent card click for disabled button
           >
             <MessageCircle className="h-4 w-4 mr-2" />
             Connected
           </Button>
-        );
+          );
       
       default:
         return null;
