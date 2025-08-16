@@ -7,6 +7,7 @@ import ImageWithFallback from "./figma/ImageWithFallback";
 import { useConnections } from "@/lib/hooks/useConnections";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface EnhancedAlumniCardProps {
   alumni: Alumni;
@@ -15,6 +16,7 @@ interface EnhancedAlumniCardProps {
 
 export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps) {
   const { user } = useAuth();
+  const router = useRouter();
   const { 
     sendConnectionRequest, 
     updateConnectionStatus, 
@@ -59,6 +61,14 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
       console.error('Connection action failed:', error);
     } finally {
       setConnectionLoading(false);
+    }
+  };
+
+  const handleMessageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const connectionId = getConnectionId(alumni.id);
+    if (connectionId) {
+      router.push(`/messages?connection=${connectionId}`);
     }
   };
 
@@ -118,16 +128,25 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
       
       case 'accepted':
         return (
-          <Button
-            className="w-full bg-green-50 text-green-700 border-green-300 rounded-full font-medium h-10"
-            variant="outline"
-            disabled
-            onClick={(e) => e.stopPropagation()} // Prevent card click for disabled button
-          >
-            <MessageCircle className="h-4 w-4 mr-2" />
-            Connected
-          </Button>
-          );
+          <div className="space-y-2">
+            <Button
+              className="w-full bg-green-50 text-green-700 border-green-300 rounded-full font-medium h-10"
+              variant="outline"
+              disabled
+              onClick={(e) => e.stopPropagation()} // Prevent card click for disabled button
+            >
+              <MessageCircle className="h-4 w-4 mr-2" />
+              Connected
+            </Button>
+            <Button
+              onClick={(e) => handleMessageClick(e)}
+              className="w-full bg-navy-600 hover:bg-navy-700 text-white rounded-full font-medium h-10"
+            >
+              <MessageCircle className="h-4 w-4 mr-2" />
+              Message
+            </Button>
+          </div>
+        );
       
       default:
         return null;

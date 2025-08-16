@@ -52,6 +52,7 @@ export function DashboardHeader() {
   const navigationTabs = [
     { href: '/dashboard', label: 'Overview', roles: ['admin', 'active_member', 'alumni'] },
     { href: '/dashboard/alumni', label: 'Alumni', roles: ['admin', 'alumni', 'active_member'] },
+    { href: '/messages', label: 'Messages', roles: ['admin', 'alumni', 'active_member'] },
     { href: '/dashboard/dues', label: 'Dues', roles: ['active_member', 'alumni'] }, // Hidden from admin
     { href: '/dashboard/admin', label: 'Exec Admin', roles: ['admin'] }, // Hidden from non-admin
   ];
