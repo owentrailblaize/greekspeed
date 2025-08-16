@@ -140,6 +140,18 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
     }
   };
 
+  const isValidField = (value: any): boolean => {
+    if (!value) return false;
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      return trimmed !== "" && 
+             trimmed !== "Not specified" && 
+             trimmed !== "N/A" && 
+             trimmed !== "Unknown";
+    }
+    return true;
+  };
+
   return (
     <Card className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 overflow-hidden group h-full flex flex-col cursor-pointer" onClick={handleCardClick}>
       <CardContent className="!p-0 flex flex-col h-full">
@@ -189,37 +201,48 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
             </div>
           </div>
 
-          {/* Job Title and Company - Reduced margin */}
-          <div className="text-center mb-3">
-            <p className="text-sm font-medium text-navy-600 mb-1 leading-tight">{alumni.jobTitle}</p>
-            <div className="flex items-center justify-center space-x-2 text-gray-500 text-sm">
-              <Building2 className="h-3 w-3" />
-              <span>{alumni.company}</span>
+          {/* Job Title and Company - Only show if data exists and is not "Not specified" */}
+          {((alumni.jobTitle && alumni.jobTitle !== "Not specified") || 
+            (alumni.company && alumni.company !== "Not specified")) && (
+            <div className="text-center mb-3">
+              {isValidField(alumni.jobTitle) && (
+                <p className="text-sm font-medium text-navy-600 mb-1 leading-tight">{alumni.jobTitle}</p>
+              )}
+              {isValidField(alumni.company) && (
+                <div className="flex items-center justify-center space-x-2 text-gray-500 text-sm">
+                  <Building2 className="h-3 w-3" />
+                  <span>{alumni.company}</span>
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
-          {/* Remove Description Section Completely */}
-
-          {/* Professional Tags - Reduced margin */}
+          {/* Professional Tags - Only show tags that have valid data */}
           <div className="flex flex-wrap justify-center gap-2 mb-4">
-            <Badge 
-              variant="secondary" 
-              className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
-            >
-              {alumni.industry}
-            </Badge>
-            <Badge 
-              variant="secondary" 
-              className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
-            >
-              {alumni.chapter}
-            </Badge>
-            <Badge 
-              variant="secondary" 
-              className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
-            >
-              {alumni.graduationYear}
-            </Badge>
+            {isValidField(alumni.industry) && (
+              <Badge 
+                variant="secondary" 
+                className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
+              >
+                {alumni.industry}
+              </Badge>
+            )}
+            {isValidField(alumni.chapter) && (
+              <Badge 
+                variant="secondary" 
+                className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
+              >
+                {alumni.chapter}
+              </Badge>
+            )}
+            {isValidField(alumni.graduationYear) && (
+              <Badge 
+                variant="secondary" 
+                className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
+              >
+                {alumni.graduationYear}
+              </Badge>
+            )}
           </div>
 
           {/* Mutual Connections - Ensure perfect centering */}
