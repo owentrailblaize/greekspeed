@@ -22,7 +22,7 @@ export function AlumniPipeline() {
   const [alumni, setAlumni] = useState<Alumni[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
   const [selectedAlumni, setSelectedAlumni] = useState<string[]>([]);
   const [filters, setFilters] = useState<FilterState>({
     searchTerm: "",
