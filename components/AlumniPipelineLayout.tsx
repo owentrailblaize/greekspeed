@@ -192,13 +192,15 @@ export function AlumniPipelineLayout({
             </div>
           ) : (
             <div className={viewMode === 'table' ? 'h-full' : 'p-6'}>
-              {alumni.length > 0 && filters.searchTerm && (
+              {/* Only show search results message for table view */}
+              {viewMode === 'table' && alumni.length > 0 && filters.searchTerm && (
                 <div className="px-6 py-2 bg-blue-50 border-b border-blue-200">
                   <p className="text-sm text-blue-700">
                     Found {alumni.length} alumni matching "{filters.searchTerm}"
                   </p>
                 </div>
               )}
+              
               {alumni.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -210,30 +212,30 @@ export function AlumniPipelineLayout({
                     Clear all filters
                   </Button>
                 </div>
-                             ) : viewMode === 'table' ? (
-                 <div className="h-full overflow-y-auto">
-                   <AlumniTableView 
-                     alumni={displayAlumni}
-                     selectedAlumni={selectedAlumni}
-                     onSelectionChange={onSelectionChange}
-                   />
-                 </div>
+              ) : viewMode === 'table' ? (
+                <div className="h-full overflow-y-auto">
+                  <AlumniTableView 
+                    alumni={displayAlumni}
+                    selectedAlumni={selectedAlumni}
+                    onSelectionChange={onSelectionChange}
+                  />
+                </div>
               ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                   {displayAlumni.map((alumniItem: Alumni, index: number) => (
-                     <motion.div
-                       key={alumniItem.id}
-                       initial={{ opacity: 0, y: 20 }}
-                       animate={{ opacity: 1, y: 0 }}
-                       transition={{ duration: 0.5, delay: index * 0.05 }}
-                     >
-                       <EnhancedAlumniCard
-                         alumni={alumniItem}
-                         onClick={handleAlumniClick}
-                       />
-                     </motion.div>
-                   ))}
-                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {displayAlumni.map((alumniItem: Alumni, index: number) => (
+                    <motion.div
+                      key={alumniItem.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.05 }}
+                    >
+                      <EnhancedAlumniCard
+                        alumni={alumniItem}
+                        onClick={handleAlumniClick}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
               )}
             </div>
           )}
