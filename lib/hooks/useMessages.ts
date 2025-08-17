@@ -31,7 +31,7 @@ export interface MessageResponse {
 }
 
 export function useMessages(connectionId: string | null) {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +60,13 @@ export function useMessages(connectionId: string | null) {
         params.append('before', before);
       }
       
-      const response = await fetch(`/api/messages?${params}`);
+      // Add authentication header
+      const response = await fetch(`/api/messages?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`
+        }
+      });
+      
       if (!response.ok) {
         throw new Error('Failed to fetch messages');
       }
@@ -80,7 +86,7 @@ export function useMessages(connectionId: string | null) {
     } finally {
       setLoading(false);
     }
-  }, [connectionId, user]);
+  }, [connectionId, user, session]);
 
   const sendMessage = async (content: string, messageType: 'text' | 'image' | 'file' | 'link' = 'text', metadata?: Record<string, unknown>) => {
     if (!connectionId || !user || !content.trim()) return;
@@ -107,9 +113,13 @@ export function useMessages(connectionId: string | null) {
       
       setMessages(prev => [...prev, optimisticMessage]);
       
+      // Add authentication header to POST request
       const response = await fetch('/api/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({
           connectionId,
           content: content.trim(),

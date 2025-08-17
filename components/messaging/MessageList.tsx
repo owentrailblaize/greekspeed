@@ -107,7 +107,7 @@ export function MessageList({
         <div className="text-center">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
           </div>
           <p className="text-gray-500 text-lg font-medium">No messages yet</p>
@@ -118,11 +118,10 @@ export function MessageList({
   }
 
   return (
-    // 🔴 FIXED: Use h-full and overflow-y-auto for proper scrolling
     <div className="h-full overflow-y-auto p-4">
       {/* Load more button */}
       {hasMore && (
-        <div className="flex justify-center">
+        <div className="flex justify-center mb-4">
           <Button
             onClick={onLoadMore}
             disabled={loading}
@@ -141,7 +140,7 @@ export function MessageList({
 
       {/* Messages */}
       {messageGroups.map(({ date, messages: groupMessages }) => (
-        <div key={date} className="space-y-4">
+        <div key={date} className="space-y-4 mb-6">
           {/* Date separator */}
           <div className="flex items-center justify-center">
             <div className="bg-gray-100 px-3 py-1 rounded-full">
@@ -164,12 +163,13 @@ export function MessageList({
             return (
               <div
                 key={message.id}
-                className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-3`}
               >
-                <div className={`flex max-w-[70%] ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}>
-                  {/* Avatar */}
-                  {!isOwnMessage && (
-                    <div className="flex-shrink-0 mr-2">
+                {/* Left side - Avatar and content for received messages */}
+                {!isOwnMessage && (
+                  <div className="flex items-end space-x-2 max-w-[70%]">
+                    {/* Avatar */}
+                    <div className="flex-shrink-0">
                       <UserAvatar
                         user={{ 
                           email: null, 
@@ -183,105 +183,146 @@ export function MessageList({
                         size="sm"
                       />
                     </div>
-                  )}
-
-                  {/* Message content */}
-                  <div className={`flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'}`}>
-                    {/* Sender name for other messages */}
-                    {!isOwnMessage && (
+                    
+                    {/* Message content */}
+                    <div className="flex flex-col">
+                      {/* Sender name */}
                       <span className="text-xs text-gray-500 mb-1 px-2">
                         {message.sender.full_name}
                       </span>
-                    )}
-
-                    {/* Message bubble */}
-                    <div className="relative group">
-                      {isEditing ? (
-                        <div className="bg-white border border-navy-200 rounded-lg p-3 shadow-sm">
-                          <textarea
-                            value={editContent}
-                            onChange={(e) => setEditContent(e.target.value)}
-                            className="w-full resize-none border-none outline-none text-sm"
-                            rows={1}
-                            autoFocus
-                          />
-                          <div className="flex justify-end space-x-2 mt-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={handleCancelEdit}
-                              className="h-6 px-2 text-xs"
-                            >
-                              <X className="w-3 h-3 mr-1" />
-                              Cancel
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={handleSaveEdit}
-                              className="h-6 px-2 text-xs bg-navy-600 hover:bg-navy-700"
-                            >
-                              <Check className="w-3 h-3 mr-1" />
-                              Save
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div
-                          className={`px-4 py-2 rounded-lg shadow-sm ${
-                            isOwnMessage
-                              ? 'bg-navy-600 text-white'
-                              : 'bg-white border border-gray-200 text-gray-900'
-                          }`}
-                        >
-                          <p className="text-sm whitespace-pre-wrap break-words">
-                            {message.content}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Message actions menu */}
-                      {isOwnMessage && !isEditing && (
-                        <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setShowMenuFor(showMenuFor === message.id ? null : message.id)}
-                            className="h-6 w-6 p-0 bg-white/90 hover:bg-white shadow-sm"
-                          >
-                            <MoreHorizontal className="w-3 h-3" />
-                          </Button>
-                          
-                          {showMenuFor === message.id && (
-                            <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10">
-                              <button
-                                onClick={() => handleEdit(message)}
-                                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                      
+                      {/* Message bubble */}
+                      <div className="relative group">
+                        {isEditing ? (
+                          <div className="bg-white border border-navy-200 rounded-lg p-3 shadow-sm">
+                            <textarea
+                              value={editContent}
+                              onChange={(e) => setEditContent(e.target.value)}
+                              className="w-full resize-none border-none outline-none text-sm"
+                              rows={1}
+                              autoFocus
+                            />
+                            <div className="flex justify-end space-x-2 mt-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={handleCancelEdit}
+                                className="h-6 px-2 text-xs"
                               >
-                                <Edit className="w-3 h-3 mr-2" />
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDelete(message.id)}
-                                className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
+                                <X className="w-3 h-3 mr-1" />
+                                Cancel
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={handleSaveEdit}
+                                className="h-6 px-2 text-xs bg-navy-600 hover:bg-navy-700"
                               >
-                                <Trash2 className="w-3 h-3 mr-2" />
-                                Delete
-                              </button>
+                                <Check className="w-3 h-3 mr-1" />
+                                Save
+                              </Button>
                             </div>
-                          )}
-                        </div>
-                      )}
+                          </div>
+                        ) : (
+                          <div className="bg-white border border-gray-200 text-gray-900 px-4 py-2 rounded-lg shadow-sm">
+                            <p className="text-sm whitespace-pre-wrap break-words">
+                              {message.content}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Timestamp */}
+                      <span className="text-xs text-gray-400 mt-1 px-2">
+                        {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
+                      </span>
                     </div>
-
-                    {/* Timestamp */}
-                    <span className="text-xs text-gray-400 mt-1 px-2">
-                      {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
-                    </span>
                   </div>
+                )}
 
-                  {/* Avatar for own messages */}
-                  {isOwnMessage && (
-                    <div className="flex-shrink-0 ml-2">
+                {/* Right side - Content and avatar for own messages */}
+                {isOwnMessage && (
+                  <div className="flex items-end space-x-2 max-w-[70%]">
+                    {/* Message content */}
+                    <div className="flex flex-col items-end">
+                      {/* Message bubble */}
+                      <div className="relative group">
+                        {isEditing ? (
+                          <div className="bg-white border border-navy-200 rounded-lg p-3 shadow-sm">
+                            <textarea
+                              value={editContent}
+                              onChange={(e) => setEditContent(e.target.value)}
+                              className="w-full resize-none border-none outline-none text-sm"
+                              rows={1}
+                              autoFocus
+                            />
+                            <div className="flex justify-end space-x-2 mt-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={handleCancelEdit}
+                                className="h-6 px-2 text-xs"
+                              >
+                                <X className="w-3 h-3 mr-1" />
+                                Cancel
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={handleSaveEdit}
+                                className="h-6 px-2 text-xs bg-navy-600 hover:bg-navy-700"
+                              >
+                                <Check className="w-3 h-3 mr-1" />
+                                Save
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="bg-navy-600 text-white px-4 py-2 rounded-lg shadow-sm">
+                            <p className="text-sm whitespace-pre-wrap break-words">
+                              {message.content}
+                            </p>
+                            
+                            {/* Message actions menu */}
+                            <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setShowMenuFor(showMenuFor === message.id ? null : message.id)}
+                                className="h-6 w-6 p-0 bg-white/90 hover:bg-white shadow-sm"
+                              >
+                                <MoreHorizontal className="w-3 h-3" />
+                              </Button>
+                              
+                              {showMenuFor === message.id && (
+                                <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10">
+                                  <button
+                                    onClick={() => handleEdit(message)}
+                                    className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                                  >
+                                    <Edit className="w-3 h-3 mr-2" />
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(message.id)}
+                                    className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
+                                  >
+                                    <Trash2 className="w-3 h-3 mr-2" />
+                                    Delete
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Timestamp */}
+                      <span className="text-xs text-gray-400 mt-1 px-2">
+                        {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
+                      </span>
+                    </div>
+                    
+                    {/* Avatar */}
+                    <div className="flex-shrink-0">
                       <UserAvatar
                         user={{ 
                           email: null, 
@@ -295,8 +336,8 @@ export function MessageList({
                         size="sm"
                       />
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             );
           })}
