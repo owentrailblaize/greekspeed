@@ -17,7 +17,6 @@ interface ChatWindowProps {
   onLoadMore: () => void;
   typingUsers: string[];
   disabled?: boolean;
-  // 🔴 NEW: Add back navigation
   onBack?: () => void;
   contactName?: string;
 }
@@ -55,9 +54,10 @@ export function ChatWindow({
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
-      {/* 🔴 NEW: Chat Header with Back Button */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3">
+    // 🔴 FIXED: Use h-full and flex flex-col for full height
+    <div className="h-full flex flex-col bg-white">
+      {/* Chat header - fixed height */}
+      <div className="flex-shrink-0 bg-white border-b border-gray-200 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {/* Back Button */}
@@ -97,8 +97,8 @@ export function ChatWindow({
         </div>
       </div>
 
-      {/* Messages area */}
-      <div className="flex-1 overflow-hidden">
+      {/* Messages area - flex-1 to fill remaining space */}
+      <div className="flex-1 overflow-hidden min-h-0">
         <MessageList
           messages={messages}
           loading={loading}
@@ -109,13 +109,15 @@ export function ChatWindow({
         />
       </div>
 
-      {/* Message input */}
-      <MessageInput
-        onSendMessage={onSendMessage}
-        onTyping={handleTyping}
-        disabled={disabled}
-        placeholder="Type a message..."
-      />
+      {/* Message input - fixed at bottom */}
+      <div className="flex-shrink-0 border-t border-gray-200">
+        <MessageInput
+          onSendMessage={onSendMessage}
+          onTyping={handleTyping}
+          disabled={disabled}
+          placeholder="Type a message..."
+        />
+      </div>
     </div>
   );
 } 

@@ -118,7 +118,8 @@ export function MessageList({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    // 🔴 FIXED: Use h-full and overflow-y-auto for proper scrolling
+    <div className="h-full overflow-y-auto p-4">
       {/* Load more button */}
       {hasMore && (
         <div className="flex justify-center">
@@ -170,11 +171,15 @@ export function MessageList({
                   {!isOwnMessage && (
                     <div className="flex-shrink-0 mr-2">
                       <UserAvatar
-                        user={{
-                          id: message.sender.id,
-                          full_name: message.sender.full_name,
-                          avatar_url: message.sender.avatar_url
+                        user={{ 
+                          email: null, 
+                          user_metadata: { 
+                            avatar_url: message.sender.avatar_url, 
+                            full_name: message.sender.full_name 
+                          } 
                         }}
+                        completionPercent={100}
+                        hasUnread={false}
                         size="sm"
                       />
                     </div>
@@ -278,11 +283,15 @@ export function MessageList({
                   {isOwnMessage && (
                     <div className="flex-shrink-0 ml-2">
                       <UserAvatar
-                        user={{
-                          id: message.sender.id,
-                          full_name: message.sender.full_name,
-                          avatar_url: message.sender.avatar_url
+                        user={{ 
+                          email: null, 
+                          user_metadata: { 
+                            avatar_url: message.sender.avatar_url, 
+                            full_name: message.sender.full_name 
+                          } 
                         }}
+                        completionPercent={100}
+                        hasUnread={false}
                         size="sm"
                       />
                     </div>
