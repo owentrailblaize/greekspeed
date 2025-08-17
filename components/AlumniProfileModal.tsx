@@ -19,6 +19,8 @@ import ImageWithFallback from "./figma/ImageWithFallback";
 import { useConnections } from "@/lib/hooks/useConnections";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { useState } from "react";
+import { useRouter } from 'next/navigation';
+import { cn } from "@/lib/utils";
 
 interface AlumniProfileModalProps {
   alumni: Alumni | null;
@@ -28,6 +30,7 @@ interface AlumniProfileModalProps {
 
 export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileModalProps) {
   const { user } = useAuth();
+  const router = useRouter();
   const { 
     sendConnectionRequest, 
     updateConnectionStatus, 
@@ -72,6 +75,23 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
     } finally {
       setConnectionLoading(false);
     }
+  };
+
+  const handleMessageClick = () => {
+    const connectionId = getConnectionId(alumni.id);
+    if (connectionId) {
+      // Navigate to messages page with the connection pre-selected
+      router.push(`/dashboard/messages?connection=${connectionId}`);
+      // Close the modal after navigation
+      onClose();
+    }
+  };
+
+  const canSendMessage = () => {
+    if (!user || user.id === alumni.id) return false;
+    
+    const status = getConnectionStatus(alumni.id);
+    return status === 'accepted'; // Only allow messaging if connected
   };
 
   const renderConnectionButton = () => {
@@ -320,18 +340,32 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
             {renderConnectionButton()}
           </div>
 
-          {/* Action Buttons - Compact with Locked Features */}
+          {/* Action Buttons - Updated with messaging functionality */}
           <div className="flex space-x-2 pt-3 border-t border-gray-200">
             <Button className="flex-1" variant="outline" size="sm" disabled>
               <Mail className="h-3 w-3 mr-2" />
               Send Email
               <Lock className="h-3 w-3 ml-2 text-gray-400" />
             </Button>
-            <Button className="flex-1" variant="outline" size="sm" disabled>
+            
+            {/* ✅ Updated Send Message Button */}
+            <Button 
+              className={cn(
+                "flex-1",
+                canSendMessage() 
+                  ? "border-navy-600 text-navy-600 hover:bg-navy-50" 
+                  : "text-gray-400 border-gray-200"
+              )}
+              variant="outline" 
+              size="sm" 
+              onClick={handleMessageClick}
+              disabled={!canSendMessage()}
+            >
               <MessageSquare className="h-3 w-3 mr-2" />
               Send Message
-              <Lock className="h-3 w-3 ml-2 text-gray-400" />
+              {!canSendMessage() && <Lock className="h-3 w-3 ml-2 text-gray-400" />}
             </Button>
+            
             <Button variant="outline" size="sm" className="w-10 h-10 p-0" disabled>
               <Share2 className="h-3 w-3" />
               <Lock className="h-3 w-3 text-gray-400" />
