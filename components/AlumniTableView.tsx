@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Alumni } from "@/lib/mockAlumni";
 import { AlumniProfileModal } from "@/components/AlumniProfileModal";
+import { useRouter } from 'next/navigation';
 
 interface AlumniTableViewProps {
   alumni: Alumni[];
@@ -36,6 +37,7 @@ type SortDirection = 'asc' | 'desc';
 
 export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: AlumniTableViewProps) {
   const { user } = useAuth();
+  const router = useRouter();
   const { 
     sendConnectionRequest, 
     updateConnectionStatus, 
@@ -133,6 +135,14 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
     }
   };
 
+  const handleConnectedButtonClick = (alumniId: string) => {
+    const connectionId = getConnectionId(alumniId);
+    if (connectionId) {
+      // Navigate to messages page with the connection pre-selected
+      router.push(`/dashboard/messages?connection=${connectionId}`);
+    }
+  };
+
   const renderConnectionButton = (alumniId: string, hasProfile?: boolean) => {
     if (!user || user.id === alumniId) return null;
     
@@ -225,8 +235,8 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
           <Button
             size="sm"
             variant="outline"
-            className="h-8 bg-green-50 text-green-700 border-green-300 text-xs"
-            disabled
+            onClick={() => handleConnectedButtonClick(alumniId)}
+            className="h-8 bg-green-50 text-green-700 border-green-300 text-xs hover:bg-green-100 cursor-pointer"
           >
             <MessageCircle className="h-3 w-3 mr-2" />
             Connected

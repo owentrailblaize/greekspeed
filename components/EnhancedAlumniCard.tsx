@@ -68,7 +68,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
     e.stopPropagation();
     const connectionId = getConnectionId(alumni.id);
     if (connectionId) {
-      router.push(`/messages?connection=${connectionId}`);
+      router.push(`/dashboard/messages?connection=${connectionId}`);
     }
   };
 
@@ -128,24 +128,13 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
       
       case 'accepted':
         return (
-          <div className="space-y-2">
-            <Button
-              className="w-full bg-green-50 text-green-700 border-green-300 rounded-full font-medium h-10"
-              variant="outline"
-              disabled
-              onClick={(e) => e.stopPropagation()} // Prevent card click for disabled button
-            >
-              <MessageCircle className="h-4 w-4 mr-2" />
-              Connected
-            </Button>
-            <Button
-              onClick={(e) => handleMessageClick(e)}
-              className="w-full bg-navy-600 hover:bg-navy-700 text-white rounded-full font-medium h-10"
-            >
-              <MessageCircle className="h-4 w-4 mr-2" />
-              Message
-            </Button>
-          </div>
+          <Button
+            onClick={(e) => handleMessageClick(e)}
+            className="w-full bg-green-600 hover:bg-green-700 text-white rounded-full font-medium h-10"
+          >
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Connected
+          </Button>
         );
       
       default:

@@ -7,11 +7,28 @@ import { MessagesSidebar } from '@/components/messaging/MessagesSidebar';
 import { MessagesMainChat } from '@/components/messaging/MessagesMainChat';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation'; // ✅ Add these imports
 
 export default function MessagesPage() {
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { connections, loading } = useConnections();
+  const searchParams = useSearchParams(); // ✅ Add this
+  const router = useRouter(); // ✅ Add this
+
+  // ✅ Add effect to handle URL parameters
+  useEffect(() => {
+    const connectionParam = searchParams.get('connection');
+    if (connectionParam) {
+      // Check if this connection exists and is valid
+      const connectionExists = connections.some(conn => conn.id === connectionParam);
+      if (connectionExists) {
+        setSelectedConnectionId(connectionParam);
+        // Clear the URL parameter after setting the connection
+        router.replace('/dashboard/messages');
+      }
+    }
+  }, [searchParams, connections, router]);
 
   const handleConnectionSelect = (connectionId: string) => {
     setSelectedConnectionId(connectionId);
