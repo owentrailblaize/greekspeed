@@ -8,6 +8,7 @@ import { useConnections } from "@/lib/hooks/useConnections";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ClickableField } from './ClickableField';
 
 interface EnhancedAlumniCardProps {
   alumni: Alumni;
@@ -219,28 +220,24 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
               {isValidField(alumni.company) && (
                 <div className="flex items-center justify-center space-x-2 text-gray-500 text-sm">
                   <Building2 className="h-3 w-3" />
-                  <span>{alumni.company}</span>
+                  <ClickableField 
+                    value={alumni.company} 
+                    entityType="company" 
+                    className="text-gray-500 hover:text-blue-600"
+                  />
                 </div>
               )}
             </div>
           )}
 
           {/* Professional Tags - Only show tags that have valid data */}
-          <div className="flex flex-wrap justify-center gap-2 mb-4">
+          <div className="flex flex-wrap justify-center gap-2 mb-3">
             {isValidField(alumni.industry) && (
               <Badge 
                 variant="secondary" 
                 className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
               >
                 {alumni.industry}
-              </Badge>
-            )}
-            {isValidField(alumni.chapter) && (
-              <Badge 
-                variant="secondary" 
-                className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
-              >
-                {alumni.chapter}
               </Badge>
             )}
             {isValidField(alumni.graduationYear) && (
@@ -252,6 +249,17 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
               </Badge>
             )}
           </div>
+
+          {/* Chapter - Separate section with distinct styling */}
+          {isValidField(alumni.chapter) && (
+            <div className="text-center mb-4">
+              <ClickableField 
+                value={alumni.chapter} 
+                entityType="chapter"
+                className="text-sm font-medium text-navy-600 hover:text-blue-600 px-3 py-1 rounded-full border border-navy-200 hover:border-blue-300 transition-all duration-200"
+              />
+            </div>
+          )}
 
           {/* Mutual Connections - Ensure perfect centering */}
           <div className="flex flex-col items-center justify-center space-y-2 mb-4">
