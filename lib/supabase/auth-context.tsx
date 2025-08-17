@@ -14,7 +14,7 @@ interface ProfileData {
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
+  session: Session | null; // ✅ Make sure session is exposed
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, profileData?: ProfileData) => Promise<void>;

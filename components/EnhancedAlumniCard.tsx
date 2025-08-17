@@ -2,11 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alumni } from "@/lib/mockAlumni";
-import { MessageCircle, UserPlus, Shield, Building2, MapPin, GraduationCap } from "lucide-react";
+import { MessageCircle, UserPlus, Shield, Building2, MapPin, GraduationCap, Clock } from "lucide-react";
 import ImageWithFallback from "./figma/ImageWithFallback";
 import { useConnections } from "@/lib/hooks/useConnections";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface EnhancedAlumniCardProps {
   alumni: Alumni;
@@ -15,6 +16,7 @@ interface EnhancedAlumniCardProps {
 
 export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps) {
   const { user } = useAuth();
+  const router = useRouter();
   const { 
     sendConnectionRequest, 
     updateConnectionStatus, 
@@ -24,7 +26,10 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
 
-  const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel') => {
+  const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel', e: React.MouseEvent) => {
+    // Stop event propagation to prevent card click from triggering
+    e.stopPropagation();
+    
     if (!user || user.id === alumni.id) return;
     
     setConnectionLoading(true);
@@ -59,6 +64,14 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
     }
   };
 
+  const handleMessageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const connectionId = getConnectionId(alumni.id);
+    if (connectionId) {
+      router.push(`/dashboard/messages?connection=${connectionId}`);
+    }
+  };
+
   const renderConnectionButton = () => {
     if (!user || user.id === alumni.id) return null;
     
@@ -68,6 +81,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
           className="w-full text-gray-400 border-gray-200 rounded-full font-medium h-10"
           variant="outline"
           disabled
+          onClick={(e) => e.stopPropagation()} // Prevent card click even for disabled button
         >
           No Profile
         </Button>
@@ -81,7 +95,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
       case 'none':
         return (
           <Button
-            onClick={() => handleConnectionAction('connect')}
+            onClick={(e) => handleConnectionAction('connect', e)}
             disabled={isLoading}
             className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-10"
             variant="outline"
@@ -98,15 +112,15 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
       case 'pending_sent':
         return (
           <Button
-            onClick={() => handleConnectionAction('cancel')}
+            onClick={(e) => handleConnectionAction('cancel', e)}
             disabled={isLoading}
-            className="w-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 transition-colors duration-200 rounded-full font-medium h-10"
+            className="w-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 transition-colors duration-200 rounded-full font-medium h-10 flex items-center justify-center"
             variant="outline"
           >
             {isLoading ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b border-gray-600 mr-2" />
             ) : (
-              <div className="h-4 w-4 mr-2" />
+              <Clock className="h-4 w-4 mr-2" /> // Add Clock icon for pending state
             )}
             Requested
           </Button>
@@ -115,9 +129,8 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
       case 'accepted':
         return (
           <Button
-            className="w-full bg-green-50 text-green-700 border-green-300 rounded-full font-medium h-10"
-            variant="outline"
-            disabled
+            onClick={(e) => handleMessageClick(e)}
+            className="w-full bg-green-600 hover:bg-green-700 text-white rounded-full font-medium h-10"
           >
             <MessageCircle className="h-4 w-4 mr-2" />
             Connected
@@ -133,6 +146,18 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
     if (onClick) {
       onClick(alumni);
     }
+  };
+
+  const isValidField = (value: any): boolean => {
+    if (!value) return false;
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      return trimmed !== "" && 
+             trimmed !== "Not specified" && 
+             trimmed !== "N/A" && 
+             trimmed !== "Unknown";
+    }
+    return true;
   };
 
   return (
@@ -184,37 +209,48 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
             </div>
           </div>
 
-          {/* Job Title and Company - Reduced margin */}
-          <div className="text-center mb-3">
-            <p className="text-sm font-medium text-navy-600 mb-1 leading-tight">{alumni.jobTitle}</p>
-            <div className="flex items-center justify-center space-x-2 text-gray-500 text-sm">
-              <Building2 className="h-3 w-3" />
-              <span>{alumni.company}</span>
+          {/* Job Title and Company - Only show if data exists and is not "Not specified" */}
+          {((alumni.jobTitle && alumni.jobTitle !== "Not specified") || 
+            (alumni.company && alumni.company !== "Not specified")) && (
+            <div className="text-center mb-3">
+              {isValidField(alumni.jobTitle) && (
+                <p className="text-sm font-medium text-navy-600 mb-1 leading-tight">{alumni.jobTitle}</p>
+              )}
+              {isValidField(alumni.company) && (
+                <div className="flex items-center justify-center space-x-2 text-gray-500 text-sm">
+                  <Building2 className="h-3 w-3" />
+                  <span>{alumni.company}</span>
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
-          {/* Remove Description Section Completely */}
-
-          {/* Professional Tags - Reduced margin */}
+          {/* Professional Tags - Only show tags that have valid data */}
           <div className="flex flex-wrap justify-center gap-2 mb-4">
-            <Badge 
-              variant="secondary" 
-              className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
-            >
-              {alumni.industry}
-            </Badge>
-            <Badge 
-              variant="secondary" 
-              className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
-            >
-              {alumni.chapter}
-            </Badge>
-            <Badge 
-              variant="secondary" 
-              className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
-            >
-              {alumni.graduationYear}
-            </Badge>
+            {isValidField(alumni.industry) && (
+              <Badge 
+                variant="secondary" 
+                className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
+              >
+                {alumni.industry}
+              </Badge>
+            )}
+            {isValidField(alumni.chapter) && (
+              <Badge 
+                variant="secondary" 
+                className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
+              >
+                {alumni.chapter}
+              </Badge>
+            )}
+            {isValidField(alumni.graduationYear) && (
+              <Badge 
+                variant="secondary" 
+                className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
+              >
+                {alumni.graduationYear}
+              </Badge>
+            )}
           </div>
 
           {/* Mutual Connections - Ensure perfect centering */}

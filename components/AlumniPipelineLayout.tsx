@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Filter, X, Users } from "lucide-react";
+import { Filter, X, ChevronRight, Settings, Search, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlumniFilterBar } from "@/components/AlumniFilterBar";
 import { AlumniTableView } from "@/components/AlumniTableView";
@@ -51,6 +51,7 @@ export function AlumniPipelineLayout({
   onAlumniClick
 }: AlumniPipelineLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedAlumniDetail, setSelectedAlumniDetail] = useState<Alumni | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -109,48 +110,128 @@ export function AlumniPipelineLayout({
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Original Sidebar with AlumniFilterBar */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 320, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="bg-white border-r border-gray-200 shadow-sm overflow-hidden flex-shrink-0"
-          >
-            <div className="h-full flex flex-col">
-              {/* Header */}
-              <div className="p-4 border-b border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Filter className="h-5 w-5 text-navy-600" />
-                    <h3 className="font-semibold text-gray-900">Filters</h3>
+      {/* Collapsible Sidebar */}
+      <div className="flex">
+        {/* Main Sidebar */}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ 
+                width: sidebarCollapsed ? 64 : 320, 
+                opacity: 1 
+              }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="bg-white border-r border-gray-200 shadow-sm overflow-hidden flex-shrink-0"
+            >
+              <div className="h-full flex flex-col">
+                {/* Header */}
+                <div className="p-4 border-b border-gray-200 bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Filter className="h-5 w-5 text-navy-600 flex-shrink-0" />
+                      {!sidebarCollapsed && (
+                        <motion.h3 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="font-semibold text-gray-900"
+                        >
+                          Filters
+                        </motion.h3>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                        className="h-8 w-8 p-0"
+                      >
+                        {sidebarCollapsed ? (
+                          <ChevronRight className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 rotate-180" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSidebarOpen(false)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSidebarOpen(false)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+                </div>
+
+                {/* Filters */}
+                <div className="flex-1 overflow-y-auto p-4">
+                  {sidebarCollapsed ? (
+                    // Collapsed view - show only icons
+                    <div className="space-y-4">
+                      <div className="flex flex-col items-center space-y-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-10 w-10 p-0"
+                          onClick={() => setSidebarCollapsed(false)}
+                        >
+                          <Search className="h-5 w-5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-10 w-10 p-0"
+                          onClick={() => setSidebarCollapsed(false)}
+                        >
+                          <Users className="h-5 w-5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-10 w-10 p-0"
+                          onClick={() => setSidebarCollapsed(false)}
+                        >
+                          <Filter className="h-5 w-5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    // Expanded view - show full filters
+                    <AlumniFilterBar
+                      filters={filters}
+                      onFiltersChange={onFiltersChange}
+                      onClearFilters={onClearFilters}
+                      isSidebar={true}
+                    />
+                  )}
                 </div>
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-              {/* Filters */}
-              <div className="flex-1 overflow-y-auto p-4">
-                <AlumniFilterBar
-                  filters={filters}
-                  onFiltersChange={onFiltersChange}
-                  onClearFilters={onClearFilters}
-                  isSidebar={true}
-                />
-              </div>
-            </div>
+        {/* Sidebar Toggle Button (when sidebar is completely closed) */}
+        {!sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center"
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSidebarOpen(true)}
+              className="h-12 w-8 bg-white border-r border-gray-200 shadow-sm rounded-r-lg hover:bg-gray-50"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </motion.div>
         )}
-      </AnimatePresence>
+      </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -192,13 +273,15 @@ export function AlumniPipelineLayout({
             </div>
           ) : (
             <div className={viewMode === 'table' ? 'h-full' : 'p-6'}>
-              {alumni.length > 0 && filters.searchTerm && (
+              {/* Only show search results message for table view */}
+              {viewMode === 'table' && alumni.length > 0 && filters.searchTerm && (
                 <div className="px-6 py-2 bg-blue-50 border-b border-blue-200">
                   <p className="text-sm text-blue-700">
                     Found {alumni.length} alumni matching "{filters.searchTerm}"
                   </p>
                 </div>
               )}
+              
               {alumni.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -210,30 +293,30 @@ export function AlumniPipelineLayout({
                     Clear all filters
                   </Button>
                 </div>
-                             ) : viewMode === 'table' ? (
-                 <div className="h-full overflow-y-auto">
-                   <AlumniTableView 
-                     alumni={displayAlumni}
-                     selectedAlumni={selectedAlumni}
-                     onSelectionChange={onSelectionChange}
-                   />
-                 </div>
+              ) : viewMode === 'table' ? (
+                <div className="h-full overflow-y-auto">
+                  <AlumniTableView 
+                    alumni={displayAlumni}
+                    selectedAlumni={selectedAlumni}
+                    onSelectionChange={onSelectionChange}
+                  />
+                </div>
               ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                   {displayAlumni.map((alumniItem: Alumni, index: number) => (
-                     <motion.div
-                       key={alumniItem.id}
-                       initial={{ opacity: 0, y: 20 }}
-                       animate={{ opacity: 1, y: 0 }}
-                       transition={{ duration: 0.5, delay: index * 0.05 }}
-                     >
-                       <EnhancedAlumniCard
-                         alumni={alumniItem}
-                         onClick={handleAlumniClick}
-                       />
-                     </motion.div>
-                   ))}
-                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {displayAlumni.map((alumniItem: Alumni, index: number) => (
+                    <motion.div
+                      key={alumniItem.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.05 }}
+                    >
+                      <EnhancedAlumniCard
+                        alumni={alumniItem}
+                        onClick={handleAlumniClick}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
               )}
             </div>
           )}
