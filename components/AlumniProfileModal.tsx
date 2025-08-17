@@ -4,12 +4,11 @@ import {
   X, 
   Mail, 
   Phone, 
-  MapPin, 
+  MessageSquare, 
   Building2, 
-  MessageSquare,
   Star,
   Share2,
-  GraduationCap,
+  Handshake,
   Calendar,
   Users,
   Lock
@@ -185,7 +184,7 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
             variant="outline"
             disabled
           >
-            <MessageSquare className="h-4 w-4 mr-2" />
+            <Handshake className="h-4 w-4 mr-2" />
             Connected
           </Button>
         );
