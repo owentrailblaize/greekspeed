@@ -1,20 +1,22 @@
 'use client';
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useConnections } from '@/lib/hooks/useConnections';
 import { MessagesSidebar } from '@/components/messaging/MessagesSidebar';
 import { MessagesMainChat } from '@/components/messaging/MessagesMainChat';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
-import { useSearchParams, useRouter } from 'next/navigation'; // ✅ Add these imports
+import { useSearchParams, useRouter } from 'next/navigation';
 
-export default function MessagesPage() {
+// ✅ Create a separate component that uses useSearchParams
+function MessagesPageContent() {
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false); // ✅ Add state for mobile detection
   const { connections, loading } = useConnections();
-  const searchParams = useSearchParams(); // ✅ Add this
-  const router = useRouter(); // ✅ Add this
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   // ✅ Add effect to handle URL parameters
   useEffect(() => {
@@ -33,7 +35,7 @@ export default function MessagesPage() {
   const handleConnectionSelect = (connectionId: string) => {
     setSelectedConnectionId(connectionId);
     // On mobile, close sidebar when selecting a connection
-    if (window.innerWidth < 768) {
+    if (isMobile) { // ✅ Use state instead of window.innerWidth
       setSidebarOpen(false);
     }
   };
@@ -58,17 +60,22 @@ export default function MessagesPage() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [selectedConnectionId]);
 
-  // Handle responsive behavior
+  // ✅ Handle responsive behavior and mobile detection
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768) {
-        setSidebarOpen(true);
-      } else {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      
+      if (mobile) {
         setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
       }
     };
 
-    handleResize(); // Set initial state
+    // Set initial state
+    handleResize();
+    
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -98,7 +105,9 @@ export default function MessagesPage() {
           z-30 md:z-auto
           transition-transform duration-200 ease-in-out
           md:transition-none
-          h-full
+          w-80 md:w-80
+          bg-gray-50 border-r border-gray-200
+          flex-shrink-0
         `}>
           <MessagesSidebar
             connections={connections}
@@ -106,12 +115,12 @@ export default function MessagesPage() {
             selectedConnectionId={selectedConnectionId}
             onConnectionSelect={handleConnectionSelect}
             onMobileMenuToggle={toggleSidebar}
-            isMobile={!sidebarOpen}
+            isMobile={isMobile} // ✅ Use state instead of window.innerWidth
           />
         </div>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col min-w-0 h-full">
+        <div className="flex-1 flex flex-col min-h-0">
           <MessagesMainChat
             selectedConnectionId={selectedConnectionId}
             connections={connections}
@@ -119,15 +128,23 @@ export default function MessagesPage() {
             onConnectionSelect={handleConnectionSelect}
           />
         </div>
-
-        {/* Mobile Overlay */}
-        {sidebarOpen && (
-          <div 
-            className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-20"
-            onClick={toggleSidebar}
-          />
-        )}
       </div>
     </div>
+  );
+}
+
+// ✅ Main component with Suspense boundary
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading messages...</p>
+        </div>
+      </div>
+    }>
+      <MessagesPageContent />
+    </Suspense>
   );
 }
