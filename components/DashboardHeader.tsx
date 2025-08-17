@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useConnections } from '@/lib/hooks/useConnections';
 import { Badge } from '@/components/ui/badge';
+import { MessageCircle } from 'lucide-react'; // ✅ Add this import
 
 // Small helper for consistent tab styling
 function NavLink({ href, label }: { href: string; label: string }) {
@@ -38,6 +39,7 @@ export function DashboardHeader() {
   const { profile } = useProfile();
   const { connections } = useConnections();
   const userRole = profile?.role;
+  const pathname = usePathname(); // ✅ Add this line to get current pathname
   
   // Count pending connection requests that require action
   const pendingConnections = connections.filter(conn => 
@@ -48,11 +50,11 @@ export function DashboardHeader() {
   const completionPercent = 72; // Mock profile completion percentage
   const hasUnread = pendingConnections > 0; // Now based on actual pending connections
 
-  // Define navigation tabs with role-based access
+  // Define navigation tabs with role-based access (Messages removed)
   const navigationTabs = [
     { href: '/dashboard', label: 'Overview', roles: ['admin', 'active_member', 'alumni'] },
     { href: '/dashboard/alumni', label: 'Alumni', roles: ['admin', 'alumni', 'active_member'] },
-    { href: '/dashboard/messages', label: 'Messages', roles: ['admin', 'alumni', 'active_member'] },
+    // ✅ Messages tab removed from here
     { href: '/dashboard/dues', label: 'Dues', roles: ['active_member', 'alumni'] }, // Hidden from admin
     { href: '/dashboard/admin', label: 'Exec Admin', roles: ['admin'] }, // Hidden from non-admin
   ];
@@ -84,8 +86,25 @@ export function DashboardHeader() {
           ))}
         </div>
 
-        {/* Right side - User dropdown */}
+        {/* Right side - Messages icon and User dropdown */}
         <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+          {/* ✅ Messages Icon Button */}
+          <Link
+            href="/dashboard/messages"
+            className={cn(
+              'relative flex items-center justify-center p-2 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2',
+              pathname === '/dashboard/messages' 
+                ? 'bg-navy-50 text-navy-700' 
+                : 'text-gray-600 hover:bg-gray-50 hover:text-navy-700'
+            )}
+          >
+            <MessageCircle className="w-5 h-5" />
+            {/* Optional: Add unread message indicator */}
+            {/* {hasUnreadMessages && (
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white" />
+            )} */}
+          </Link>
+
           <UserDropdown
             user={user}
             completionPercent={completionPercent}
