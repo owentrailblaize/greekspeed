@@ -1,58 +1,102 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LinkedInStyleChapterCard } from "./LinkedInStyleChapterCard";
-import { ChapterMember } from "./types";
+import { ChapterMember } from "@/types/chapter";
 import { useChapterRoleAccess } from '@/lib/hooks/useChapterRoleAccess';
+import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
+import { useProfile } from '@/lib/hooks/useProfile';
 import { CHAPTER_ADMIN_ROLES } from '@/lib/permissions';
 
 interface MyChapterContentProps {
-  members: ChapterMember[];
   onNavigate: (section: string) => void;
 }
 
-export function MyChapterContent({ members, onNavigate }: MyChapterContentProps) {
+export function MyChapterContent({ onNavigate }: MyChapterContentProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedMajor, setSelectedMajor] = useState("");
+  
+  // Get current user's profile and chapter
+  const { profile, loading: profileLoading } = useProfile();
+  
+  // Fetch chapter members based on user's chapter
+  const { members, loading: membersLoading, error } = useChapterMembers(profile?.chapter_id || undefined);
+  
+  // Role checking
+  const { hasChapterRoleAccess } = useChapterRoleAccess(CHAPTER_ADMIN_ROLES);
 
-  const officers = members.filter(member => member.position);
-  const generalMembers = members.filter(member => !member.position);
+  // Transform database data to match component expectations
+  const transformedMembers: ChapterMember[] = members.map(member => ({
+    id: member.id,
+    name: member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Unknown Member',
+    year: member.grad_year ? member.grad_year.toString() : 'N/A',
+    major: member.major || 'Undeclared',
+    position: member.chapter_role ? getRoleDisplayName(member.chapter_role) : undefined, // Change null to undefined
+    interests: member.bio ? [member.bio] : [],
+    avatar: member.avatar_url || undefined,
+    verified: member.role === 'admin',
+    mutualConnections: [],
+    mutualConnectionsCount: 0,
+    description: member.bio || `${member.major || 'Undeclared'} • ${member.chapter_role || 'Member'}`
+  }));
 
-  const filteredMembers = members.filter(member => {
-    const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         member.major.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         member.interests.some(interest => 
-                           interest.toLowerCase().includes(searchTerm.toLowerCase())
-                         );
-    const matchesYear = !selectedYear || member.year === selectedYear;
+  // Filter members based on search and filters
+  const filteredMembers = transformedMembers.filter(member => {
+    const matchesSearch = 
+      member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.major.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (member.description && member.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesYear = !selectedYear || member.year.includes(selectedYear);
     const matchesMajor = !selectedMajor || member.major === selectedMajor;
     
     return matchesSearch && matchesYear && matchesMajor;
   });
 
-  const filteredOfficers = filteredMembers.filter(member => member.position);
-  const filteredGeneralMembers = filteredMembers.filter(member => !member.position);
+  // Separate officers from general members
+  const officers = filteredMembers.filter(member => 
+    member.position && ['President', 'Vice President', 'Treasurer', 'Secretary', 'Rush Chair', 'Social Chair'].includes(member.position)
+  );
+  const generalMembers = filteredMembers.filter(member => 
+    !member.position || member.position === 'Member' || member.position === 'Pledge'
+  );
 
-  const handleMessage = (memberId: string) => {
-    console.log(`Message member: ${memberId}`);
-    // TODO: Implement messaging functionality
-  };
+  // Helper function to get role display name
+  function getRoleDisplayName(role: string): string {
+    const roleNames: Record<string, string> = {
+      'president': 'President',
+      'vice_president': 'Vice President',
+      'treasurer': 'Treasurer',
+      'secretary': 'Secretary',
+      'rush_chair': 'Rush Chair',
+      'social_chair': 'Social Chair',
+      'philanthropy_chair': 'Philanthropy Chair',
+      'risk_management_chair': 'Risk Management Chair',
+      'alumni_relations_chair': 'Alumni Relations Chair',
+      'member': 'Member',
+      'pledge': 'Pledge'
+    };
+    return roleNames[role] || 'Member';
+  }
 
-  const handleConnect = (memberId: string) => {
-    console.log(`Connect with member: ${memberId}`);
-    // TODO: Implement connection functionality
-  };
+  if (profileLoading || membersLoading) {
+    return <div className="flex-1 bg-gray-50 flex items-center justify-center">
+      <div className="text-lg">Loading chapter members...</div>
+    </div>;
+  }
 
-  // Mock connection status - in real app this would come from your backend
-  const getConnectionStatus = (memberId: string) => {
-    // For demo purposes, let's say officers are connected and some general members are
-    const connectedMembers = ['1', '2', '3', '7']; // Jake, Sofia, Marcus, Connor
-    return connectedMembers.includes(memberId);
-  };
+  if (error) {
+    return <div className="flex-1 bg-gray-50 flex items-center justify-center">
+      <div className="text-lg text-red-600">Error loading members: {error}</div>
+    </div>;
+  }
 
-  // Add role checking hook
-  const { hasChapterRoleAccess, loading } = useChapterRoleAccess(CHAPTER_ADMIN_ROLES);
+  if (!profile?.chapter_id) {
+    return <div className="flex-1 bg-gray-50 flex items-center justify-center">
+      <div className="text-lg">You are not connected to any chapter.</div>
+    </div>;
+  }
 
   return (
     <div className="flex-1 bg-gray-50">
@@ -62,8 +106,11 @@ export function MyChapterContent({ members, onNavigate }: MyChapterContentProps)
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
               <h1 className="text-xl font-semibold text-gray-900">My Chapter</h1>
+              {profile.chapter && (
+                <span className="text-sm text-gray-500">({profile.chapter})</span>
+              )}
             </div>
-            {/* Only show Add Member button if user has appropriate role */}
+            
             {hasChapterRoleAccess && (
               <button 
                 className="bg-navy-600 hover:bg-navy-700 text-white px-4 py-2 rounded-md text-sm font-medium"
@@ -95,10 +142,10 @@ export function MyChapterContent({ members, onNavigate }: MyChapterContentProps)
               className="px-3 py-2 border border-gray-300 rounded-md focus:ring-navy-500 focus:border-navy-500"
             >
               <option value="">All Years</option>
-              <option value="Freshman">Freshman</option>
-              <option value="Sophomore">Sophomore</option>
-              <option value="Junior">Junior</option>
-              <option value="Senior">Senior</option>
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+              <option value="2027">2027</option>
             </select>
             
             <select
@@ -120,20 +167,20 @@ export function MyChapterContent({ members, onNavigate }: MyChapterContentProps)
       {/* Content */}
       <div className="max-w-7xl mx-auto px-6 py-6">
         {/* Officers Section */}
-        {filteredOfficers.length > 0 && (
+        {officers.length > 0 && (
           <div className="mb-8">
             <div className="flex items-center space-x-2 mb-4">
               <h2 className="text-lg font-medium text-gray-900">Officers & Leadership</h2>
-              <span className="text-sm text-gray-500">({filteredOfficers.length})</span>
+              <span className="text-sm text-gray-500">({officers.length})</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
-              {filteredOfficers.map((member) => (
+              {officers.map((member) => (
                 <LinkedInStyleChapterCard 
                   key={member.id} 
                   member={member}
-                  onMessage={handleMessage}
-                  onConnect={handleConnect}
-                  isConnected={getConnectionStatus(member.id)}
+                  onMessage={() => console.log(`Message ${member.name}`)}
+                  onConnect={() => console.log(`Connect with ${member.name}`)}
+                  isConnected={true}
                 />
               ))}
             </div>
@@ -141,20 +188,20 @@ export function MyChapterContent({ members, onNavigate }: MyChapterContentProps)
         )}
         
         {/* General Members Section */}
-        {filteredGeneralMembers.length > 0 && (
+        {generalMembers.length > 0 && (
           <div>
             <div className="flex items-center space-x-2 mb-4">
               <h2 className="text-lg font-medium text-gray-900">General Members</h2>
-              <span className="text-sm text-gray-500">({filteredGeneralMembers.length})</span>
+              <span className="text-sm text-gray-500">({generalMembers.length})</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
-              {filteredGeneralMembers.map((member) => (
+              {generalMembers.map((member) => (
                 <LinkedInStyleChapterCard 
                   key={member.id} 
                   member={member}
-                  onMessage={handleMessage}
-                  onConnect={handleConnect}
-                  isConnected={getConnectionStatus(member.id)}
+                  onMessage={() => console.log(`Message ${member.name}`)}
+                  onConnect={() => console.log(`Connect with ${member.name}`)}
+                  isConnected={false}
                 />
               ))}
             </div>

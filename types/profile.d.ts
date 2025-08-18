@@ -27,7 +27,8 @@ export interface Profile {
   first_name: string | null;
   last_name: string | null;
   chapter: string | null;
-  role: SystemRole | null;
+  chapter_id: string | null; // Add this field
+  role: "admin" | "alumni" | "active_member" | null;
   chapter_role: ChapterRole | null;
   member_status: MemberStatus | null;
   pledge_class?: string;
