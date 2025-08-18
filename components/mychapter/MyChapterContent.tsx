@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { LinkedInStyleChapterCard } from "./LinkedInStyleChapterCard";
 import { ChapterMember } from "./types";
+import { useChapterRoleAccess } from '@/lib/hooks/useChapterRoleAccess';
+import { CHAPTER_ADMIN_ROLES } from '@/lib/permissions';
 
 interface MyChapterContentProps {
   members: ChapterMember[];
@@ -49,6 +51,9 @@ export function MyChapterContent({ members, onNavigate }: MyChapterContentProps)
     return connectedMembers.includes(memberId);
   };
 
+  // Add role checking hook
+  const { hasChapterRoleAccess, loading } = useChapterRoleAccess(CHAPTER_ADMIN_ROLES);
+
   return (
     <div className="flex-1 bg-gray-50">
       {/* Header */}
@@ -58,12 +63,15 @@ export function MyChapterContent({ members, onNavigate }: MyChapterContentProps)
             <div className="flex items-center space-x-2">
               <h1 className="text-xl font-semibold text-gray-900">My Chapter</h1>
             </div>
-            <button 
-              className="bg-navy-600 hover:bg-navy-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-              onClick={() => onNavigate('add-member')}
-            >
-              Add Member
-            </button>
+            {/* Only show Add Member button if user has appropriate role */}
+            {hasChapterRoleAccess && (
+              <button 
+                className="bg-navy-600 hover:bg-navy-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                onClick={() => onNavigate('add-member')}
+              >
+                Add Member
+              </button>
+            )}
           </div>
           
           {/* Search and Filters */}
