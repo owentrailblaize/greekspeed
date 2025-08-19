@@ -177,9 +177,6 @@ export function MyChapterContent({ onNavigate }: MyChapterContentProps) {
                 <LinkedInStyleChapterCard 
                   key={member.id} 
                   member={member}
-                  onMessage={() => console.log(`Message ${member.name}`)}
-                  onConnect={() => console.log(`Connect with ${member.name}`)}
-                  isConnected={true}
                 />
               ))}
             </div>
@@ -198,9 +195,6 @@ export function MyChapterContent({ onNavigate }: MyChapterContentProps) {
                 <LinkedInStyleChapterCard 
                   key={member.id} 
                   member={member}
-                  onMessage={() => console.log(`Message ${member.name}`)}
-                  onConnect={() => console.log(`Connect with ${member.name}`)}
-                  isConnected={false}
                 />
               ))}
             </div>
