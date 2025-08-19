@@ -3,6 +3,7 @@
 import { Users, Calendar, BookOpen, GraduationCap, UserPlus, Settings, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useProfile } from '@/lib/hooks/useProfile';
 
 interface MyChapterSidebarProps {
   stats: {
@@ -16,6 +17,12 @@ interface MyChapterSidebarProps {
 }
 
 export function MyChapterSidebar({ stats, onNavigate }: MyChapterSidebarProps) {
+  // Get current user's profile to check role
+  const { profile } = useProfile();
+  
+  // Check if user is admin (same pattern as other components)
+  const isAdmin = profile?.role === 'admin';
+
   const sidebarItems = [
     {
       id: "members",
@@ -23,7 +30,8 @@ export function MyChapterSidebar({ stats, onNavigate }: MyChapterSidebarProps) {
       icon: Users,
       count: stats.totalMembers,
       description: "Active chapter members",
-      locked: false
+      locked: false,
+      showForAll: true
     },
     {
       id: "officers",
@@ -31,7 +39,8 @@ export function MyChapterSidebar({ stats, onNavigate }: MyChapterSidebarProps) {
       icon: GraduationCap,
       count: stats.officers,
       description: "Chapter leadership team",
-      locked: false
+      locked: false,
+      showForAll: true
     },
     {
       id: "events",
@@ -39,7 +48,8 @@ export function MyChapterSidebar({ stats, onNavigate }: MyChapterSidebarProps) {
       icon: Calendar,
       count: stats.events,
       description: "Upcoming and past events",
-      locked: false
+      locked: false,
+      showForAll: true
     },
     {
       id: "alumni",
@@ -47,7 +57,8 @@ export function MyChapterSidebar({ stats, onNavigate }: MyChapterSidebarProps) {
       icon: UserPlus,
       count: stats.alumniConnections,
       description: "Alumni connections",
-      locked: false
+      locked: false,
+      showForAll: true
     },
     {
       id: "resources",
@@ -55,7 +66,8 @@ export function MyChapterSidebar({ stats, onNavigate }: MyChapterSidebarProps) {
       icon: BookOpen,
       count: null,
       description: "Chapter resources & documents",
-      locked: true
+      locked: true,
+      showForAll: true
     },
     {
       id: "settings",
@@ -63,9 +75,16 @@ export function MyChapterSidebar({ stats, onNavigate }: MyChapterSidebarProps) {
       icon: Settings,
       count: null,
       description: "Manage chapter settings",
-      locked: true
+      locked: false,
+      showForAll: false, // Only for admins
+      adminOnly: true
     }
   ];
+
+  // Filter items based on user role (hide admin-only items for non-admins)
+  const visibleItems = sidebarItems.filter(item => 
+    item.showForAll || (item.adminOnly && isAdmin)
+  );
 
   return (
     <div className="w-80 bg-white border-r border-gray-200 p-6 space-y-6">
@@ -77,7 +96,7 @@ export function MyChapterSidebar({ stats, onNavigate }: MyChapterSidebarProps) {
 
       {/* Navigation Items */}
       <div className="space-y-2">
-        {sidebarItems.map((item) => (
+        {visibleItems.map((item) => (
           <Button
             key={item.id}
             variant="ghost"
@@ -118,30 +137,32 @@ export function MyChapterSidebar({ stats, onNavigate }: MyChapterSidebarProps) {
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <div className="border-t border-gray-200 pt-4">
-        <h3 className="text-sm font-medium text-gray-900 mb-3">Quick Actions</h3>
-        <div className="space-y-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full"
-            onClick={() => onNavigate('add-member')}
-          >
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add New Member
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full"
-            onClick={() => onNavigate('create-event')}
-          >
-            <Calendar className="h-4 w-4 mr-2" />
-            Create Event
-          </Button>
+      {/* Quick Actions - Only show for admins */}
+      {isAdmin && (
+        <div className="border-t border-gray-200 pt-4">
+          <h3 className="text-sm font-medium text-gray-900 mb-3">Quick Actions</h3>
+          <div className="space-y-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full"
+              onClick={() => onNavigate('add-member')}
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
+              Add New Member
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full"
+              onClick={() => onNavigate('create-event')}
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Create Event
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 } 

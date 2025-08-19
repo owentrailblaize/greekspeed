@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { MyChapterSidebar } from "./MyChapterSidebar";
 import { MyChapterContent } from "./MyChapterContent";
-import { ChapterMember, ChapterStats } from "./types";
+import { ChapterMember } from "@/types/chapter";
 
 // Mock data for current chapter members with LinkedIn-style fields
 const chapterMembers: ChapterMember[] = [
@@ -128,7 +128,7 @@ const chapterMembers: ChapterMember[] = [
 ];
 
 // Mock stats
-const chapterStats: ChapterStats = {
+const chapterStats = {
   totalMembers: chapterMembers.length,
   activeMembers: chapterMembers.length,
   officers: chapterMembers.filter(m => m.position).length,
