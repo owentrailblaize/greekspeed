@@ -138,8 +138,13 @@ const chapterStats = {
 };
 
 export function MyChapterPage() {
+  // Default to "all" to show the original view
+  const [activeSection, setActiveSection] = useState("all");
+
   const handleNavigate = (section: string) => {
     console.log(`Navigating to: ${section}`);
+    setActiveSection(section);
+    
     // TODO: Implement navigation logic
     switch (section) {
       case 'add-member':
@@ -155,15 +160,15 @@ export function MyChapterPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Left Column - Sidebar */}
       <MyChapterSidebar 
         stats={chapterStats} 
-        onNavigate={handleNavigate} 
+        onNavigate={handleNavigate}
+        activeSection={activeSection}
       />
       
-      {/* Right Column - Main Content */}
       <MyChapterContent 
-        onNavigate={handleNavigate} 
+        onNavigate={handleNavigate}
+        activeSection={activeSection}
       />
     </div>
   );

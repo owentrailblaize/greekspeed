@@ -14,9 +14,10 @@ interface MyChapterSidebarProps {
     alumniConnections: number;
   };
   onNavigate: (section: string) => void;
+  activeSection: string; // Add this prop
 }
 
-export function MyChapterSidebar({ stats, onNavigate }: MyChapterSidebarProps) {
+export function MyChapterSidebar({ stats, onNavigate, activeSection }: MyChapterSidebarProps) {
   // Get current user's profile to check role
   const { profile } = useProfile();
   
@@ -25,10 +26,19 @@ export function MyChapterSidebar({ stats, onNavigate }: MyChapterSidebarProps) {
 
   const sidebarItems = [
     {
-      id: "members",
-      label: "Chapter Members",
+      id: "all",
+      label: "All Members",
       icon: Users,
       count: stats.totalMembers,
+      description: "View all chapter members",
+      locked: false,
+      showForAll: true
+    },
+    {
+      id: "members",
+      label: "General Members",
+      icon: Users,
+      count: stats.totalMembers - stats.officers,
       description: "Active chapter members",
       locked: false,
       showForAll: true
@@ -48,7 +58,7 @@ export function MyChapterSidebar({ stats, onNavigate }: MyChapterSidebarProps) {
       icon: Calendar,
       count: stats.events,
       description: "Upcoming and past events",
-      locked: false,
+      locked: true, // Lock this since it's not implemented
       showForAll: true
     },
     {
@@ -57,7 +67,7 @@ export function MyChapterSidebar({ stats, onNavigate }: MyChapterSidebarProps) {
       icon: UserPlus,
       count: stats.alumniConnections,
       description: "Alumni connections",
-      locked: false,
+      locked: true, // Lock this since it's not implemented
       showForAll: true
     },
     {
@@ -76,7 +86,7 @@ export function MyChapterSidebar({ stats, onNavigate }: MyChapterSidebarProps) {
       count: null,
       description: "Manage chapter settings",
       locked: false,
-      showForAll: false, // Only for admins
+      showForAll: false,
       adminOnly: true
     }
   ];
@@ -99,11 +109,13 @@ export function MyChapterSidebar({ stats, onNavigate }: MyChapterSidebarProps) {
         {visibleItems.map((item) => (
           <Button
             key={item.id}
-            variant="ghost"
+            variant={activeSection === item.id ? "default" : "ghost"} // Highlight active section
             className={`w-full justify-start h-auto p-3 ${
               item.locked 
                 ? 'opacity-60 cursor-not-allowed' 
-                : 'hover:bg-gray-50'
+                : activeSection === item.id 
+                  ? 'bg-navy-600 text-white hover:bg-navy-700' 
+                  : 'hover:bg-gray-50'
             }`}
             onClick={() => !item.locked && onNavigate(item.id)}
             disabled={item.locked}
