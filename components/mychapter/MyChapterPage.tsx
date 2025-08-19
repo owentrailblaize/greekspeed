@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { MyChapterSidebar } from "./MyChapterSidebar";
 import { MyChapterContent } from "./MyChapterContent";
-import { ChapterMember, ChapterStats } from "./types";
+import { ChapterMember } from "@/types/chapter";
 
 // Mock data for current chapter members with LinkedIn-style fields
 const chapterMembers: ChapterMember[] = [
@@ -128,7 +128,7 @@ const chapterMembers: ChapterMember[] = [
 ];
 
 // Mock stats
-const chapterStats: ChapterStats = {
+const chapterStats = {
   totalMembers: chapterMembers.length,
   activeMembers: chapterMembers.length,
   officers: chapterMembers.filter(m => m.position).length,
@@ -138,8 +138,13 @@ const chapterStats: ChapterStats = {
 };
 
 export function MyChapterPage() {
+  // Default to "all" to show the original view
+  const [activeSection, setActiveSection] = useState("all");
+
   const handleNavigate = (section: string) => {
     console.log(`Navigating to: ${section}`);
+    setActiveSection(section);
+    
     // TODO: Implement navigation logic
     switch (section) {
       case 'add-member':
@@ -155,16 +160,15 @@ export function MyChapterPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Left Column - Sidebar */}
       <MyChapterSidebar 
         stats={chapterStats} 
-        onNavigate={handleNavigate} 
+        onNavigate={handleNavigate}
+        activeSection={activeSection}
       />
       
-      {/* Right Column - Main Content */}
       <MyChapterContent 
-        members={chapterMembers} 
-        onNavigate={handleNavigate} 
+        onNavigate={handleNavigate}
+        activeSection={activeSection}
       />
     </div>
   );

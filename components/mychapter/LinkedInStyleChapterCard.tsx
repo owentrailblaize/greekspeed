@@ -1,97 +1,187 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChapterMember, MutualConnection } from "./types";
-import { MessageCircle, UserPlus, Check, Shield } from "lucide-react";
+import { ChapterMember } from "@/types/chapter"; // Use the main types file
+import { MessageCircle, UserPlus, Clock, Shield } from "lucide-react";
+import { useConnections } from "@/lib/hooks/useConnections";
+import { useAuth } from "@/lib/supabase/auth-context";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface LinkedInStyleChapterCardProps {
   member: ChapterMember;
-  onMessage?: (memberId: string) => void;
-  onConnect?: (memberId: string) => void;
-  isConnected?: boolean; // New prop to determine connection status
 }
 
-export function LinkedInStyleChapterCard({ 
-  member, 
-  onMessage, 
-  onConnect,
-  isConnected = false
-}: LinkedInStyleChapterCardProps) {
+export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardProps) {
+  const { user } = useAuth();
+  const router = useRouter();
+  const { 
+    sendConnectionRequest, 
+    updateConnectionStatus, 
+    cancelConnectionRequest, 
+    getConnectionStatus,
+    getConnectionId
+  } = useConnections();
+  const [connectionLoading, setConnectionLoading] = useState(false);
+
   const {
     id,
     name,
     year,
     major,
     position,
-    interests,
     avatar,
     verified = false,
-    mutualConnections = [],
-    mutualConnectionsCount = 0,
     description
   } = member;
 
   // Generate description if not provided
-  const memberDescription = description || `${year} • ${major}`;
+  const memberDescription = description || 'Chapter Member';
   
   // Generate mutual connections data if not provided
-  const connections = mutualConnections.length > 0 ? mutualConnections : [
+  const connections = [
     { name: "Chapter Member", avatar: undefined },
     { name: "Alumni", avatar: undefined }
   ];
-  const connectionsCount = mutualConnectionsCount || 5;
+  const connectionsCount = 5;
 
-  const handleMessage = () => {
-    if (onMessage) {
-      onMessage(id);
-    } else {
-      console.log(`Message ${name}`);
+  const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel', e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!user || user.id === id) return;
+    
+    setConnectionLoading(true);
+    try {
+      switch (action) {
+        case 'connect':
+          await sendConnectionRequest(id, 'Would love to connect with a fellow chapter member!');
+          break;
+        case 'accept':
+          const connectionId = getConnectionId(id);
+          if (connectionId) {
+            await updateConnectionStatus(connectionId, 'accepted');
+          }
+          break;
+        case 'decline':
+          const declineConnectionId = getConnectionId(id);
+          if (declineConnectionId) {
+            await updateConnectionStatus(declineConnectionId, 'declined');
+          }
+          break;
+        case 'cancel':
+          const cancelConnectionId = getConnectionId(id);
+          if (cancelConnectionId) {
+            await cancelConnectionRequest(cancelConnectionId);
+          }
+          break;
+      }
+    } catch (error) {
+      console.error('Connection action failed:', error);
+    } finally {
+      setConnectionLoading(false);
     }
   };
 
-  const handleConnect = () => {
-    if (onConnect) {
-      onConnect(id);
-    } else {
-      console.log(`Connect with ${name}`);
+  const handleMessageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const connectionId = getConnectionId(id);
+    if (connectionId) {
+      router.push(`/dashboard/messages?connection=${connectionId}`);
     }
   };
 
-  // Dynamic button rendering based on connection status
-  const renderActionButton = () => {
-    if (isConnected) {
-      // Show message button for connected members
-      return (
-        <Button
-          onClick={handleMessage}
-          className="w-full bg-navy-600 hover:bg-navy-700 text-white rounded-full font-medium h-10"
-          size="default"
-        >
-          <MessageCircle className="h-4 w-4 mr-2" />
-          Message
-        </Button>
-      );
-    } else {
-      // Show connect button for non-connected members
-      return (
-        <Button
-          onClick={handleConnect}
-          className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-10"
-          variant="outline"
-          size="default"
-        >
-          <UserPlus className="h-4 w-4 mr-2" />
-          Connect
-        </Button>
-      );
+  const renderConnectionButton = () => {
+    if (!user || user.id === id) return null;
+    
+    const status = getConnectionStatus(id);
+    const isLoading = connectionLoading;
+
+    switch (status) {
+      case 'none':
+        return (
+          <Button
+            onClick={(e) => handleConnectionAction('connect', e)}
+            disabled={isLoading}
+            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-10"
+            variant="outline"
+          >
+            {isLoading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b border-navy-600 mr-2" />
+            ) : (
+              <UserPlus className="h-4 w-4 mr-2" />
+            )}
+            Connect
+          </Button>
+        );
+      
+      case 'pending_sent':
+        return (
+          <Button
+            onClick={(e) => handleConnectionAction('cancel', e)}
+            disabled={isLoading}
+            className="w-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 transition-colors duration-200 rounded-full font-medium h-10 flex items-center justify-center"
+            variant="outline"
+          >
+            {isLoading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b border-gray-600 mr-2" />
+            ) : (
+              <Clock className="h-4 w-4 mr-2" />
+            )}
+            Requested
+          </Button>
+        );
+      
+      case 'pending_received':
+        return (
+          <div className="flex space-x-2">
+            <Button
+              onClick={(e) => handleConnectionAction('accept', e)}
+              disabled={isLoading}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-full font-medium h-10"
+            >
+              Accept
+            </Button>
+            <Button
+              onClick={(e) => handleConnectionAction('decline', e)}
+              disabled={isLoading}
+              className="flex-1 border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 rounded-full font-medium h-10"
+              variant="outline"
+            >
+              Decline
+            </Button>
+          </div>
+        );
+      
+      case 'accepted':
+        return (
+          <Button
+            onClick={handleMessageClick}
+            className="w-full bg-navy-600 hover:bg-navy-700 text-white rounded-full font-medium h-10"
+          >
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Message
+          </Button>
+        );
+      
+      default:
+        return (
+          <Button
+            onClick={(e) => handleConnectionAction('connect', e)}
+            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-10"
+            variant="outline"
+          >
+            <UserPlus className="h-4 w-4 mr-2" />
+            Connect
+          </Button>
+        );
     }
   };
 
   return (
     <Card className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 overflow-hidden group h-full flex flex-col">
-      <CardContent className="p-0 flex flex-col h-full">
+      <CardContent className="!p-0 flex flex-col h-full">
         {/* Header Banner */}
-        <div className="h-16 bg-gradient-to-r from-navy-100 to-blue-100 relative" />
+        <div className="h-16 bg-gradient-to-r from-navy-100 to-blue-100" />
 
         <div className="px-4 pb-4 -mt-8 relative flex-1 flex flex-col">
           {/* Avatar */}
@@ -122,7 +212,7 @@ export function LinkedInStyleChapterCard({
               {name}
               {verified && (
                 <Badge className="bg-blue-500 text-white text-xs p-1 ml-1 flex-shrink-0">
-                  <Shield className="h-3 w-3" />
+                  <Shield className="h-3 w-4" />
                 </Badge>
               )}
             </h3>
@@ -130,31 +220,11 @@ export function LinkedInStyleChapterCard({
 
           {/* Position and Description */}
           <div className="text-center mb-4">
-            {position && (
+            {position && position !== 'Member' && (
               <p className="text-sm font-medium text-navy-600 mb-2 leading-tight">{position}</p>
             )}
             <p className="text-sm text-gray-600 leading-relaxed">{memberDescription}</p>
           </div>
-
-          {/* Interests */}
-          {interests.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-2 mb-5">
-              {interests.slice(0, 3).map((interest, index) => (
-                <Badge 
-                  key={index} 
-                  variant="secondary" 
-                  className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
-                >
-                  {interest}
-                </Badge>
-              ))}
-              {interests.length > 3 && (
-                <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700 px-2 py-1 flex-shrink-0">
-                  +{interests.length - 3}
-                </Badge>
-              )}
-            </div>
-          )}
 
           {/* Mutual Connections */}
           <div className="flex items-center justify-center space-x-3 mb-6">
@@ -188,9 +258,9 @@ export function LinkedInStyleChapterCard({
             </span>
           </div>
 
-          {/* Action Button - Dynamic based on connection status */}
+          {/* Action Button */}
           <div className="mt-auto pt-2">
-            {renderActionButton()}
+            {renderConnectionButton()}
           </div>
         </div>
       </CardContent>
