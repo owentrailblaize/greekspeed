@@ -117,7 +117,7 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
                 <h1 className="text-xl font-semibold text-gray-900">My Chapter</h1>
-                {profile.chapter && (
+                {profile?.chapter && (
                   <span className="text-sm text-gray-500">({profile.chapter})</span>
                 )}
               </div>
@@ -216,7 +216,7 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
                 {activeSection === "resources" && "Chapter Resources"}
                 {activeSection === "settings" && "Chapter Settings"}
               </h1>
-              {profile.chapter && (
+              {profile?.chapter && (
                 <span className="text-sm text-gray-500">({profile.chapter})</span>
               )}
             </div>
