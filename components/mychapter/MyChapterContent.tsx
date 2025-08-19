@@ -14,8 +14,6 @@ interface MyChapterContentProps {
 
 export function MyChapterContent({ onNavigate }: MyChapterContentProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
-  const [selectedMajor, setSelectedMajor] = useState("");
   
   // Get current user's profile and chapter
   const { profile, loading: profileLoading } = useProfile();
@@ -26,31 +24,40 @@ export function MyChapterContent({ onNavigate }: MyChapterContentProps) {
   // Role checking
   const { hasChapterRoleAccess } = useChapterRoleAccess(CHAPTER_ADMIN_ROLES);
 
-  // Transform database data to match component expectations
-  const transformedMembers: ChapterMember[] = members.map(member => ({
-    id: member.id,
-    name: member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Unknown Member',
-    year: member.grad_year ? member.grad_year.toString() : 'N/A',
-    major: member.major || 'Undeclared',
-    position: member.chapter_role ? getRoleDisplayName(member.chapter_role) : undefined, // Change null to undefined
-    avatar: member.avatar_url || undefined,
-    verified: member.role === 'admin',
-    mutualConnections: [],
-    mutualConnectionsCount: 0,
-    description: member.bio || `${member.major || 'Undeclared'} • ${member.chapter_role || 'Member'}`
-  }));
+  // Update the transformation logic to handle null values better
+  const transformedMembers: ChapterMember[] = members.map(member => {
+    // Only use bio for description, nothing else
+    const memberDescription = member.bio && member.bio !== 'null' && member.bio.trim() !== '' 
+      ? member.bio 
+      : 'Chapter Member';
+
+    console.log('Member:', member.full_name, 'Bio:', member.bio, 'Description:', memberDescription); // Debug log
+
+    return {
+      id: member.id,
+      name: member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Unknown Member',
+      year: member.grad_year ? member.grad_year.toString() : undefined,
+      major: member.major && member.major !== 'null' ? member.major : undefined,
+      position: member.chapter_role && member.chapter_role !== 'member' ? getRoleDisplayName(member.chapter_role) : undefined,
+      avatar: member.avatar_url || undefined,
+      verified: member.role === 'admin',
+      mutualConnections: [],
+      mutualConnectionsCount: 0,
+      description: memberDescription
+    };
+  });
+
+  // Add this after the transformation
+  console.log('Transformed members:', transformedMembers);
 
   // Filter members based on search and filters
   const filteredMembers = transformedMembers.filter(member => {
     const matchesSearch = 
       member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.major.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.major?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (member.description && member.description.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesYear = !selectedYear || member.year.includes(selectedYear);
-    const matchesMajor = !selectedMajor || member.major === selectedMajor;
-    
-    return matchesSearch && matchesYear && matchesMajor;
+    return matchesSearch;
   });
 
   // Separate officers from general members
@@ -135,11 +142,8 @@ export function MyChapterContent({ onNavigate }: MyChapterContentProps) {
               </svg>
             </div>
             
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-navy-500 focus:border-navy-500"
-            >
+            {/* Remove these two select dropdowns:
+            <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-md focus:ring-navy-500 focus:border-navy-500">
               <option value="">All Years</option>
               <option value="2024">2024</option>
               <option value="2025">2025</option>
@@ -147,11 +151,7 @@ export function MyChapterContent({ onNavigate }: MyChapterContentProps) {
               <option value="2027">2027</option>
             </select>
             
-            <select
-              value={selectedMajor}
-              onChange={(e) => setSelectedMajor(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-navy-500 focus:border-navy-500"
-            >
+            <select value={selectedMajor} onChange={(e) => setSelectedMajor(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-md focus:ring-navy-500 focus:border-navy-500">
               <option value="">All Majors</option>
               <option value="Business">Business</option>
               <option value="Engineering">Engineering</option>
@@ -159,6 +159,7 @@ export function MyChapterContent({ onNavigate }: MyChapterContentProps) {
               <option value="Pre-Med">Pre-Med</option>
               <option value="Liberal Arts">Liberal Arts</option>
             </select>
+            */}
           </div>
         </div>
       </div>

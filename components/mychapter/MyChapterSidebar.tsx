@@ -1,12 +1,17 @@
 "use client";
 
-import { Users, Calendar, Building, BookOpen, MapPin, GraduationCap, UserPlus, Settings } from "lucide-react";
+import { Users, Calendar, BookOpen, GraduationCap, UserPlus, Settings, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChapterStats } from "./types";
 
 interface MyChapterSidebarProps {
-  stats: ChapterStats;
+  stats: {
+    totalMembers: number;
+    activeMembers: number;
+    officers: number;
+    events: number;
+    alumniConnections: number;
+  };
   onNavigate: (section: string) => void;
 }
 
@@ -17,56 +22,48 @@ export function MyChapterSidebar({ stats, onNavigate }: MyChapterSidebarProps) {
       label: "Chapter Members",
       icon: Users,
       count: stats.totalMembers,
-      description: "Active chapter members"
+      description: "Active chapter members",
+      locked: false
     },
     {
       id: "officers",
       label: "Officers & Leadership",
       icon: GraduationCap,
       count: stats.officers,
-      description: "Chapter leadership team"
+      description: "Chapter leadership team",
+      locked: false
     },
     {
       id: "events",
       label: "Events & Activities",
       icon: Calendar,
       count: stats.events,
-      description: "Upcoming and past events"
-    },
-    {
-      id: "committees",
-      label: "Committees",
-      icon: Building,
-      count: stats.committees,
-      description: "Chapter committees"
+      description: "Upcoming and past events",
+      locked: false
     },
     {
       id: "alumni",
       label: "Alumni Network",
       icon: UserPlus,
       count: stats.alumniConnections,
-      description: "Alumni connections"
+      description: "Alumni connections",
+      locked: false
     },
     {
       id: "resources",
       label: "Resources",
       icon: BookOpen,
       count: null,
-      description: "Chapter resources & documents"
-    },
-    {
-      id: "locations",
-      label: "Chapter Locations",
-      icon: MapPin,
-      count: null,
-      description: "Chapter locations & regions"
+      description: "Chapter resources & documents",
+      locked: true
     },
     {
       id: "settings",
       label: "Chapter Settings",
       icon: Settings,
       count: null,
-      description: "Manage chapter settings"
+      description: "Manage chapter settings",
+      locked: true
     }
   ];
 
@@ -84,8 +81,13 @@ export function MyChapterSidebar({ stats, onNavigate }: MyChapterSidebarProps) {
           <Button
             key={item.id}
             variant="ghost"
-            className="w-full justify-start h-auto p-3 hover:bg-gray-50"
-            onClick={() => onNavigate(item.id)}
+            className={`w-full justify-start h-auto p-3 ${
+              item.locked 
+                ? 'opacity-60 cursor-not-allowed' 
+                : 'hover:bg-gray-50'
+            }`}
+            onClick={() => !item.locked && onNavigate(item.id)}
+            disabled={item.locked}
           >
             <div className="flex items-center space-x-3 w-full">
               <div className="flex-shrink-0">
@@ -96,11 +98,16 @@ export function MyChapterSidebar({ stats, onNavigate }: MyChapterSidebarProps) {
                   <span className="text-sm font-medium text-gray-900 truncate">
                     {item.label}
                   </span>
-                  {item.count !== null && (
-                    <Badge variant="secondary" className="ml-2 text-xs">
-                      {item.count}
-                    </Badge>
-                  )}
+                  <div className="flex items-center space-x-2">
+                    {item.count !== null && (
+                      <Badge variant="secondary" className="text-xs">
+                        {item.count}
+                      </Badge>
+                    )}
+                    {item.locked && (
+                      <Lock className="h-3 w-3 text-gray-400" />
+                    )}
+                  </div>
                 </div>
                 <p className="text-xs text-gray-500 truncate mt-1">
                   {item.description}

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChapterMember } from "./types";
+import { ChapterMember } from "@/types/chapter"; // Use the main types file
 import { MessageCircle, UserPlus, Clock, Shield } from "lucide-react";
 import { useConnections } from "@/lib/hooks/useConnections";
 import { useAuth } from "@/lib/supabase/auth-context";
@@ -36,7 +36,14 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
   } = member;
 
   // Generate description if not provided
-  const memberDescription = description || `${year} • ${major}`;
+  const memberDescription = description || 'Chapter Member';
+  
+  // Generate mutual connections data if not provided
+  const connections = [
+    { name: "Chapter Member", avatar: undefined },
+    { name: "Alumni", avatar: undefined }
+  ];
+  const connectionsCount = 5;
 
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel', e: React.MouseEvent) => {
     e.stopPropagation();
@@ -173,7 +180,7 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
   return (
     <Card className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 overflow-hidden group h-full flex flex-col">
       <CardContent className="!p-0 flex flex-col h-full">
-        {/* Header Banner - Remove any margins/padding to touch edges */}
+        {/* Header Banner */}
         <div className="h-16 bg-gradient-to-r from-navy-100 to-blue-100" />
 
         <div className="px-4 pb-4 -mt-8 relative flex-1 flex flex-col">
@@ -213,20 +220,45 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
 
           {/* Position and Description */}
           <div className="text-center mb-4">
-            {position && (
+            {position && position !== 'Member' && (
               <p className="text-sm font-medium text-navy-600 mb-2 leading-tight">{position}</p>
             )}
             <p className="text-sm text-gray-600 leading-relaxed">{memberDescription}</p>
           </div>
 
-          {/* Chapter Member Info */}
-          <div className="text-center mb-6">
+          {/* Mutual Connections */}
+          <div className="flex items-center justify-center space-x-3 mb-6">
+            <div className="flex -space-x-1">
+              {connections.slice(0, 3).map((c, i) => (
+                <div key={i} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
+                  {c.avatar ? (
+                    <img 
+                      src={c.avatar} 
+                      alt={c.name || 'Unknown'} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
+                      <span className="text-white text-xs">
+                        {c.name
+                          ?.split(" ")
+                          ?.map((n) => n[0])
+                          ?.join("") || "?"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
             <span className="text-sm text-gray-600 leading-tight">
-              Chapter Member
+              {connections.length > 0 
+                ? `${connections[0]?.name || 'Unknown'} and ${connectionsCount - 1} other connections`
+                : 'Chapter member'
+              }
             </span>
           </div>
 
-          {/* Action Button - Dynamic based on connection status */}
+          {/* Action Button */}
           <div className="mt-auto pt-2">
             {renderConnectionButton()}
           </div>

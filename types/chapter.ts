@@ -27,9 +27,9 @@ export interface Chapter {
 export interface ChapterMember {
   id: string;
   name: string;
-  year: string;
-  major: string;
-  position: string | undefined;
+  year?: string; // Make optional
+  major?: string; // Make optional
+  position?: string; // Make optional
   interests?: string[]; // Make interests optional
   avatar?: string;
   verified: boolean;
@@ -77,8 +77,7 @@ export interface ChapterMemberData {
 export interface ChapterStats {
   totalMembers: number;
   activeMembers: number;
-  newPledges: number;
-  graduatingMembers: number;
-  membershipGrowth: number;
-  executiveMembers: number;
+  officers: number;
+  events: number;
+  alumniConnections: number;
 } 
