@@ -33,7 +33,6 @@ export function MyChapterContent({ onNavigate }: MyChapterContentProps) {
     year: member.grad_year ? member.grad_year.toString() : 'N/A',
     major: member.major || 'Undeclared',
     position: member.chapter_role ? getRoleDisplayName(member.chapter_role) : undefined, // Change null to undefined
-    interests: member.bio ? [member.bio] : [],
     avatar: member.avatar_url || undefined,
     verified: member.role === 'admin',
     mutualConnections: [],

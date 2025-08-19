@@ -89,9 +89,9 @@ export function LinkedInStyleChapterCard({
 
   return (
     <Card className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 overflow-hidden group h-full flex flex-col">
-      <CardContent className="p-0 flex flex-col h-full">
-        {/* Header Banner */}
-        <div className="h-16 bg-gradient-to-r from-navy-100 to-blue-100 relative" />
+      <CardContent className="!p-0 flex flex-col h-full">
+        {/* Header Banner - Remove any margins/padding to touch edges */}
+        <div className="h-16 bg-gradient-to-r from-navy-100 to-blue-100" />
 
         <div className="px-4 pb-4 -mt-8 relative flex-1 flex flex-col">
           {/* Avatar */}
@@ -136,26 +136,7 @@ export function LinkedInStyleChapterCard({
             <p className="text-sm text-gray-600 leading-relaxed">{memberDescription}</p>
           </div>
 
-          {/* Interests */}
-          {interests.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-2 mb-5">
-              {interests.slice(0, 3).map((interest, index) => (
-                <Badge 
-                  key={index} 
-                  variant="secondary" 
-                  className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
-                >
-                  {interest}
-                </Badge>
-              ))}
-              {interests.length > 3 && (
-                <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700 px-2 py-1 flex-shrink-0">
-                  +{interests.length - 3}
-                </Badge>
-              )}
-            </div>
-          )}
-
+          
           {/* Mutual Connections */}
           <div className="flex items-center justify-center space-x-3 mb-6">
             <div className="flex -space-x-1">

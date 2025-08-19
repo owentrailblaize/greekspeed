@@ -29,8 +29,8 @@ export interface ChapterMember {
   name: string;
   year: string;
   major: string;
-  position: string | undefined; // Change from string | null to string | undefined
-  interests: string[];
+  position: string | undefined;
+  interests?: string[]; // Make interests optional
   avatar?: string;
   verified: boolean;
   mutualConnections: Array<{

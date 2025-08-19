@@ -3,14 +3,16 @@ export interface ChapterMember {
   name: string;
   year: string;
   major: string;
-  position?: string;
-  interests: string[];
+  position: string | undefined;
+  interests?: string[]; // Make interests optional to match types/chapter.ts
   avatar?: string;
-  // New fields for LinkedIn-style cards
-  verified?: boolean;
-  mutualConnections?: MutualConnection[];
-  mutualConnectionsCount?: number;
-  description?: string;
+  verified: boolean;
+  mutualConnections: Array<{
+    name: string;
+    avatar?: string;
+  }>;
+  mutualConnectionsCount: number;
+  description: string;
 }
 
 export interface MutualConnection {
