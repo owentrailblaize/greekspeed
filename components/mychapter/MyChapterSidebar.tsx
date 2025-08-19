@@ -114,7 +114,7 @@ export function MyChapterSidebar({ stats, onNavigate, activeSection }: MyChapter
               item.locked 
                 ? 'opacity-60 cursor-not-allowed' 
                 : activeSection === item.id 
-                  ? 'bg-navy-600 text-white hover:bg-navy-700' 
+                  ? 'bg-[#DEEBFE] text-white hover:bg-[#c9dfff]' 
                   : 'hover:bg-gray-50'
             }`}
             onClick={() => !item.locked && onNavigate(item.id)}
