@@ -3,6 +3,10 @@ import { ChapterRole, MemberStatus } from '@/types/profile';
 export interface Chapter {
   id: string;
   name: string;
+  national_fraternity: string;
+  chapter_name: string;
+  school: string;
+  school_location?: string;
   description?: string;
   location?: string;
   university?: string;
@@ -10,6 +14,7 @@ export interface Chapter {
   member_count?: number;
   founded_year?: number;
   founded_date?: string;
+  chapter_status: 'active' | 'inactive' | 'suspended';
   events?: string[];
   achievements?: string[];
   llm_enriched?: boolean;

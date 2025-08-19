@@ -163,7 +163,6 @@ export function MyChapterPage() {
       
       {/* Right Column - Main Content */}
       <MyChapterContent 
-        members={chapterMembers} 
         onNavigate={handleNavigate} 
       />
     </div>
