@@ -42,21 +42,9 @@ export function AlumniSubHeader({
             </div>
             
             {/* Right Side - View Toggle and Bulk Actions */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center">
               {/* View Toggle */}
               <ViewToggle viewMode={viewMode} onViewChange={onViewModeChange} />
-              
-              {/* Bulk Actions */}
-              {selectedCount > 0 && (
-                <div className="flex items-center space-x-2">
-                  <Badge className="bg-navy-600 text-white">
-                    {selectedCount} selected
-                  </Badge>
-                  <Button size="sm" variant="outline" onClick={onClearSelection}>
-                    Clear
-                  </Button>
-                </div>
-              )}
             </div>
           </div>
         </div>

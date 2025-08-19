@@ -4,7 +4,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LinkedInStyleAlumniCard } from "@/components/LinkedInStyleAlumniCard";
 import { useConnections } from "@/lib/hooks/useConnections";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { 
@@ -25,6 +24,7 @@ import {
 import { Alumni } from "@/lib/mockAlumni";
 import { AlumniProfileModal } from "@/components/AlumniProfileModal";
 import { useRouter } from 'next/navigation';
+import { ClickableField } from './ClickableField';
 
 interface AlumniTableViewProps {
   alumni: Alumni[];
@@ -562,8 +562,12 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   
                   {/* Company Column */}
                   <TableCell className="bg-white">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-gray-900 text-sm">{alumni.company || 'N/A'}</span>
+                    <div className="flex items-center justify-start w-full">
+                      <ClickableField 
+                        value={alumni.company} 
+                        entityType="company" 
+                        className="text-gray-900 hover:text-blue-600 text-sm text-left"
+                      />
                     </div>
                   </TableCell>
                   
@@ -576,8 +580,12 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   
                   {/* Chapter Column */}
                   <TableCell className="bg-white">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-gray-900 text-sm">{alumni.chapter || 'N/A'}</span>
+                    <div className="flex items-center justify-start w-full">
+                      <ClickableField 
+                        value={alumni.chapter} 
+                        entityType="chapter"
+                        className="text-gray-900 hover:text-blue-600 text-sm text-left"
+                      />
                     </div>
                   </TableCell>
                   
