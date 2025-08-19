@@ -1,9 +1,8 @@
 "use client";
 
 import { Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ViewToggle } from "@/components/ViewToggle";
+import { ViewToggle } from "./ViewToggle";
+import { Badge } from "./ui/badge";
 
 interface AlumniSubHeaderProps {
   viewMode: 'table' | 'card';
@@ -11,6 +10,8 @@ interface AlumniSubHeaderProps {
   selectedCount: number;
   totalCount: number;
   onClearSelection: () => void;
+  userChapter?: string | null; // Add this prop
+  showAllAlumni?: boolean; // Add this prop
 }
 
 export function AlumniSubHeader({
@@ -18,7 +19,9 @@ export function AlumniSubHeader({
   onViewModeChange,
   selectedCount,
   totalCount,
-  onClearSelection
+  onClearSelection,
+  userChapter,
+  showAllAlumni
 }: AlumniSubHeaderProps) {
   return (
     <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
@@ -34,9 +37,21 @@ export function AlumniSubHeader({
                   <h1 className="text-navy-900 font-semibold text-lg">
                     Alumni Pipeline
                   </h1>
-                  <p className="text-gray-600 text-sm">
-                    {totalCount} alumni found • {selectedCount} selected
-                  </p>
+                  <div className="flex items-center space-x-2">
+                    <p className="text-gray-600 text-sm">
+                      {totalCount} alumni found • {selectedCount} selected
+                    </p>
+                    {userChapter && !showAllAlumni && (
+                      <Badge variant="outline" className="bg-navy-50 border-navy-200 text-navy-700 text-xs">
+                        Filtered by {userChapter}
+                      </Badge>
+                    )}
+                    {showAllAlumni && (
+                      <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700 text-xs">
+                        All Chapters
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

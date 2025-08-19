@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('Alumni API called')
+    console.log('🚀 Alumni API called')
     
     // Check environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -47,11 +47,10 @@ export async function GET(request: NextRequest) {
     const activelyHiring = searchParams.get('activelyHiring') || ''
     const state = searchParams.get('state') || ''
     
-    // Add My Chapter parameters
-    const myChapter = searchParams.get('myChapter') || ''
+    // Chapter filtering parameter
     const userChapter = searchParams.get('userChapter') || ''
 
-    console.log('Query params:', { 
+    console.log('📋 Query params:', { 
       search, 
       industry, 
       chapter, 
@@ -59,7 +58,6 @@ export async function GET(request: NextRequest) {
       graduationYear, 
       activelyHiring, 
       state,
-      myChapter,
       userChapter 
     })
 
@@ -87,12 +85,16 @@ export async function GET(request: NextRequest) {
       query = query.eq('industry', industry)
     }
     
-    // Handle My Chapter filtering - this takes precedence over regular chapter filter
-    if (myChapter === 'true' && userChapter) {
+    // Handle chapter filtering - apply user's chapter filter if provided
+    if (userChapter) {
       query = query.eq('chapter', userChapter)
+      console.log(`🔍 Filtering by user's chapter: ${userChapter}`)
     } else if (chapter) {
-      // Only apply regular chapter filter if My Chapter is not active
+      // Only apply regular chapter filter if no user chapter is specified
       query = query.eq('chapter', chapter)
+      console.log(`🔍 Filtering by selected chapter: ${chapter}`)
+    } else {
+      console.log('🌍 No chapter filter applied - showing all chapters')
     }
     
     if (location) {
@@ -119,14 +121,14 @@ export async function GET(request: NextRequest) {
     const from = (page - 1) * limit
     const to = from + limit - 1
     
-    console.log('Executing query with pagination:', { from, to, limit })
+    console.log('🔍 Final query being executed...')
 
     const { data: alumni, error, count } = await query
       .range(from, to)
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Supabase error:', error)
+      console.error('❌ Supabase error:', error)
       return NextResponse.json({ 
         error: 'Database query failed',
         details: error.message,
@@ -140,7 +142,10 @@ export async function GET(request: NextRequest) {
       }, { status: 500 })
     }
 
-    console.log('Query successful, alumni count:', alumni?.length || 0)
+    console.log('✅ Query successful, alumni count:', alumni?.length || 0)
+    if (alumni && alumni.length > 0) {
+      console.log('📊 Sample alumni chapters:', alumni.slice(0, 3).map(a => a.chapter))
+    }
 
     // Transform data to match your interface
     const transformedAlumni = alumni?.map(alumni => ({
