@@ -17,6 +17,8 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
     const [isOpen, setIsOpen] = React.useState(false);
     const [selectedValue, setSelectedValue] = React.useState(value || "");
     const [selectedLabel, setSelectedLabel] = React.useState<string>("");
+    const selectRef = React.useRef<HTMLDivElement>(null);
+    
     React.useEffect(() => {
       setSelectedValue(value || "");
       // Find the label for the current value
@@ -35,14 +37,14 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
 
     React.useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
-        if (ref && typeof ref === 'object' && ref.current && !ref.current.contains(event.target as Node)) {
+        if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
           setIsOpen(false);
         }
       };
 
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [ref]);
+    }, []);
 
     const handleSelect = (value: string, label: string) => {
       setSelectedValue(value);
@@ -52,7 +54,7 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
     };
 
     return (
-      <div ref={ref} className={cn("relative", className)} {...props}>
+      <div ref={selectRef} className={cn("relative", className)} {...props}>
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
