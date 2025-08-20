@@ -3,9 +3,10 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     
@@ -19,14 +20,14 @@ export async function GET(
     let { data: industry, error } = await supabase
       .from('industries')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single();
 
     if (!industry && !error) {
       const { data: industries, error: nameError } = await supabase
         .from('industries')
         .select('*')
-        .eq('name', params.id)
+        .eq('name', id)
         .single();
       
       if (industries) {
@@ -38,7 +39,7 @@ export async function GET(
     }
 
     if (error || !industry) {
-      return await createIndustryWithLLM(params.id, supabase);
+      return await createIndustryWithLLM(id, supabase);
     }
 
     if (!industry.llm_enriched) {
