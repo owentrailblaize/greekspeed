@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from './client';
+import { canAccessDeveloperPortal } from '@/lib/developerPermissions';
 
 interface ProfileData {
   fullName: string;
@@ -19,6 +20,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, profileData?: ProfileData) => Promise<void>;
   signOut: () => Promise<void>;
+  profile: any | null;
+  isDeveloper: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,19 +30,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<any | null>(null);
+  const [isDeveloper, setIsDeveloper] = useState(false);
 
   useEffect(() => {
-    console.log('🔍 AuthProvider: Initializing...');
     
     // Get initial session
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('🔍 AuthProvider: Initial session check:', { 
-          session: !!session, 
-          error: error?.message,
-          userId: session?.user?.id 
-        });
         
         if (error) {
           console.error('❌ AuthProvider: Session check error:', error);
@@ -47,16 +46,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         setSession(session);
         setUser(session?.user ?? null);
-        console.log('🔍 AuthProvider: State updated:', { 
-          hasSession: !!session, 
-          hasUser: !!session?.user,
-          userId: session?.user?.id 
-        });
       } catch (error) {
         console.error('❌ AuthProvider: Session check exception:', error);
       } finally {
         setLoading(false);
-        console.log('🔍 AuthProvider: Loading set to false');
       }
     };
 
@@ -65,26 +58,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('🔄 AuthProvider: Auth state changed:', { 
-          event, 
-          session: !!session, 
-          userId: session?.user?.id 
-        });
         
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
         
-        console.log('🔄 AuthProvider: State updated after auth change:', { 
-          hasSession: !!session, 
-          hasUser: !!session?.user,
-          userId: session?.user?.id 
-        });
       }
     );
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Add profile loading logic
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (user) {
+        try {
+          const { data: profileData, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+          if (profileData) {
+            setProfile(profileData);
+            setIsDeveloper(canAccessDeveloperPortal(profileData));
+          }
+        } catch (error) {
+          console.error('Error loading profile:', error);
+        }
+      }
+    };
+
+    loadProfile();
+  }, [user]);
 
   const syncExistingAlumni = async (userId: string) => {
     try {
@@ -154,24 +161,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    console.log('🔍 AuthContext: Attempting sign in for:', email);
     
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      
-      console.log('🔍 AuthContext: Sign in result:', { 
-        success: !error, 
-        error: error?.message,
-        userId: data.user?.id,
-        session: !!data.session 
-      });
       
       if (error) {
         console.error('❌ AuthContext: Sign in failed:', error);
         throw error;
       }
-      
-      console.log('✅ AuthContext: Sign in successful');
       
       if (!error && data.user) {
         // Sync existing alumni after successful sign in
@@ -184,7 +181,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, profileData?: ProfileData) => {
-    console.log('🔍 AuthContext: Attempting sign up for:', email, 'with profile data:', profileData);
     
     try {
       // First, sign up the user
@@ -194,13 +190,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           emailRedirectTo: `${window.location.origin}/dashboard`
         }
-      });
-      
-      console.log('🔍 AuthContext: Sign up result:', { 
-        success: !error, 
-        error: error?.message,
-        userId: data.user?.id,
-        session: !!data.session 
       });
       
       if (error) {
@@ -315,12 +304,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    console.log('🔍 AuthContext: Attempting sign out');
     
     try {
       const { error } = await supabase.auth.signOut();
-      
-      console.log('🔍 AuthContext: Sign out result:', { success: !error, error: error?.message });
       
       if (error) {
         console.error('❌ AuthContext: Sign out failed:', error);
@@ -354,15 +340,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  console.log('🔍 AuthProvider: Rendering with state:', { 
-    loading, 
-    hasUser: !!user, 
-    hasSession: !!session,
-    userId: user?.id 
-  });
+  const value = {
+    user,
+    session,
+    loading,
+    profile,
+    isDeveloper,
+    signIn,
+    signUp,
+    signOut
+  };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,11 +1,19 @@
 'use client';
 
-
 import { AlumniOverview } from './dashboards/AlumniOverview';
 import { ActiveMemberOverview } from './dashboards/ActiveMemberOverview';
 import { AdminOverview } from './dashboards/AdminOverview';
+import { DeveloperOverview } from '@/components/dashboards/DeveloperOverview';
+import { useAuth } from '@/lib/supabase/auth-context';
 
 export function DashboardOverview({ userRole }: { userRole: string | null }) {
+  const { isDeveloper } = useAuth();
+
+  // Check if user is a developer first
+  if (isDeveloper) {
+    return <DeveloperOverview />;
+  }
+
   // Render role-specific dashboard based on userRole
   if (userRole === 'alumni') {
     return <AlumniOverview />;
