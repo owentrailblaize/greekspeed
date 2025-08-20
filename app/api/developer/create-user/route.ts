@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
       lastName, 
       chapter, 
       role = 'active_member',
+      chapter_role = 'member', // Add this field
       is_developer = false, 
       developer_permissions = [],
       member_status = 'active'
@@ -63,12 +64,14 @@ export async function POST(request: NextRequest) {
       .from('profiles')
       .upsert({
         id: newUserAuth.user.id,
-        email: newUserAuth.user.email,
+        email: email.toLowerCase(),
         full_name: `${firstName} ${lastName}`,
         first_name: firstName,
         last_name: lastName,
         chapter: chapter,
+        chapter_id: chapter,
         role: role,
+        chapter_role: chapter_role, // Add this field
         member_status: member_status,
         is_developer: is_developer,
         developer_permissions: developer_permissions,
@@ -98,12 +101,14 @@ export async function POST(request: NextRequest) {
         const { data: updatedProfile, error: updateError } = await supabase
           .from('profiles')
           .update({
-            email: newUserAuth.user.email,
+            email: email.toLowerCase(),
             full_name: `${firstName} ${lastName}`,
             first_name: firstName,
             last_name: lastName,
             chapter: chapter,
+            chapter_id: chapter,
             role: role,
+            chapter_role: chapter_role,
             member_status: member_status,
             is_developer: is_developer,
             developer_permissions: developer_permissions,

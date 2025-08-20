@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
+import { AddMemberForm } from '@/components/chapter/AddMemberForm'; // Add this import
 
 interface MyChapterSidebarProps {
   onNavigate: (section: string) => void;
@@ -14,7 +15,10 @@ interface MyChapterSidebarProps {
 }
 
 export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebarProps) {
-  // Get current user's profile to check role
+  // Add state for the modal
+  const [showAddMemberForm, setShowAddMemberForm] = useState(false);
+  
+  // Get current user's profile to check role and chapter
   const { profile } = useProfile();
   
   // Fetch chapter members to calculate stats dynamically
@@ -251,7 +255,7 @@ export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebar
                               variant="outline" 
                               size="sm" 
                               className="w-full"
-                              onClick={() => onNavigate('add-member')}
+                              onClick={() => setShowAddMemberForm(true)} // Direct modal open
                             >
                               <UserPlus className="h-4 w-4 mr-2" />
                               Add New Member
@@ -299,6 +303,25 @@ export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebar
       <div className="flex-1 flex flex-col min-w-0">
         {/* Content will be rendered by MyChapterContent component */}
       </div>
+
+      {/* Add Member Modal - Render at sidebar level */}
+      {showAddMemberForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <AddMemberForm
+            onClose={() => setShowAddMemberForm(false)}
+            onSuccess={() => {
+              setShowAddMemberForm(false);
+              // Optionally refresh member list or navigate back to members section
+              onNavigate('all');
+            }}
+            chapterContext={{
+              chapterId: profile?.chapter_id || '',
+              chapterName: profile?.chapter || 'Phi Delta Theta',
+              isChapterAdmin: true
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 } 
