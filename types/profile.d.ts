@@ -1,4 +1,4 @@
-export type SystemRole = 'admin' | 'active_member' | 'alumni';
+export type SystemRole = 'admin' | 'active_member' | 'alumni' | 'developer';
 
 export type ChapterRole = 
   | 'president'
@@ -19,6 +19,17 @@ export type MemberStatus =
   | 'probation'
   | 'suspended'
   | 'graduated';
+
+export type DeveloperPermission = 
+  | 'view_users'
+  | 'view_analytics'
+  | 'create_endpoints'
+  | 'manage_chapters'
+  | 'manage_permissions'
+  | 'view_system_health'
+  | 'manage_onboarding';
+
+export type AccessLevel = 'standard' | 'elevated' | 'admin';
 
 export interface Profile {
   id: string;
@@ -43,6 +54,9 @@ export interface Profile {
   avatar_url: string | null;
   created_at: string;
   updated_at: string;
+  is_developer?: boolean;
+  developer_permissions?: DeveloperPermission[];
+  access_level?: AccessLevel;
 }
 
 export interface ProfileFormData {

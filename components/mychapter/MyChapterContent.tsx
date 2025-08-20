@@ -32,8 +32,6 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
       ? member.bio 
       : 'Chapter Member';
 
-    console.log('Member:', member.full_name, 'Bio:', member.bio, 'Description:', memberDescription); // Debug log
-
     return {
       id: member.id,
       name: member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Unknown Member',
@@ -47,9 +45,6 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
       description: memberDescription
     };
   });
-
-  // Add this after the transformation
-  console.log('Transformed members:', transformedMembers);
 
   // Filter members based on search and filters
   const filteredMembers = transformedMembers.filter(member => {
@@ -121,15 +116,6 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
                   <span className="text-sm text-gray-500">({profile.chapter})</span>
                 )}
               </div>
-              
-              {hasChapterRoleAccess && (
-                <button 
-                  className="bg-navy-600 hover:bg-navy-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                  onClick={() => onNavigate('add-member')}
-                >
-                  Add Member
-                </button>
-              )}
             </div>
             
             {/* Search Bar */}

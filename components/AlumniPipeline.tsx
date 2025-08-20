@@ -14,11 +14,11 @@ interface FilterState {
   chapter: string;
   state: string;
   activelyHiring: boolean;
-  myChapter: boolean;
+  showAllAlumni: boolean;
 }
 
 export function AlumniPipeline() {
-  const { profile } = useProfile();
+  const { profile, loading: profileLoading } = useProfile();
   const [alumni, setAlumni] = useState<Alumni[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +31,7 @@ export function AlumniPipeline() {
     chapter: "",
     state: "",
     activelyHiring: false,
-    myChapter: false,
+    showAllAlumni: false, // Default to false (only show user's chapter)
   });
   const [selectedAlumniForModal, setSelectedAlumniForModal] = useState<Alumni | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -62,13 +62,17 @@ export function AlumniPipeline() {
       if (filterParams.state) params.append('state', filterParams.state);
       if (filterParams.activelyHiring) params.append('activelyHiring', 'true');
       
-      // Add My Chapter filtering logic
-      if (filterParams.myChapter && profile?.chapter) {
-        params.append('myChapter', 'true');
+      // Add chapter filtering logic - only filter by user's chapter if showAllAlumni is false
+      if (!filterParams.showAllAlumni && profile?.chapter) {
         params.append('userChapter', profile.chapter);
+        console.log(`🔍 Filtering by user's chapter: ${profile.chapter}`);
+      } else if (filterParams.showAllAlumni) {
+        console.log('🌍 Showing all alumni from all chapters');
+      } else {
+        console.log('⚠️ No profile chapter found, showing all alumni');
       }
         
-      console.log('Fetching alumni with params...', params.toString());
+      console.log('📡 Fetching alumni with params...', params.toString());
       const response = await fetch(`/api/alumni?${params.toString()}`);
       
       if (!response.ok) {
@@ -77,41 +81,46 @@ export function AlumniPipeline() {
       }
       
       const data = await response.json();
-      console.log('Received alumni data:', data);
+      console.log('✅ Received alumni data:', data);
       setAlumni(data.alumni || []);
     } catch (err) {
-      console.error('Error fetching alumni:', err);
+      console.error('❌ Error fetching alumni:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
   }, [filters, profile]);
 
+  // Only fetch alumni when profile is loaded and not loading
   useEffect(() => {
-    fetchAlumni();
-  }, [fetchAlumni]);
-
-  useEffect(() => {
-    if (Object.values(filters).some(value => 
-      typeof value === 'boolean' ? value : value !== ''
-    )) {
+    if (!profileLoading && profile !== undefined) {
+      console.log('👤 Profile loaded, fetching alumni...', { profile: profile?.chapter });
       fetchAlumni();
     }
-  }, [filters, fetchAlumni]);
+  }, [profile, profileLoading, fetchAlumni]);
 
-
+  // Handle filter changes
+  useEffect(() => {
+    if (!profileLoading && profile !== undefined && Object.values(filters).some(value => 
+      typeof value === 'boolean' ? value : value !== ''
+    )) {
+      console.log('🔧 Filters changed, refetching alumni...');
+      fetchAlumni();
+    }
+  }, [filters, profile, profileLoading, fetchAlumni]);
 
   const handleClearSelection = () => {
     setSelectedAlumni([]);
   };
 
   const handleFiltersChange = (newFilters: FilterState) => {
+    console.log('🔧 Filters changing:', newFilters);
     setFilters(newFilters);
-    fetchAlumni(newFilters);
-    // TODO: Implement filtering logic based on new filters
+    // Don't call fetchAlumni here - let the useEffect handle it
   };
 
   const handleClearFilters = () => {
+    console.log('🧹 Clearing filters...');
     setFilters({
       searchTerm: "",
       graduationYear: "",
@@ -119,9 +128,21 @@ export function AlumniPipeline() {
       chapter: "",
       state: "",
       activelyHiring: false,
-      myChapter: false,
+      showAllAlumni: false, // Reset to default (only user's chapter)
     });
   };
+
+  // Show loading state while profile is loading
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -132,6 +153,8 @@ export function AlumniPipeline() {
         selectedCount={selectedAlumni.length}
         totalCount={alumni.length}
         onClearSelection={handleClearSelection}
+        userChapter={profile?.chapter}
+        showAllAlumni={filters.showAllAlumni}
       />
 
       {/* Main Layout */}

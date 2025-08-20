@@ -11,21 +11,14 @@ import { Select, SelectItem } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Star, Mail } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
+import { useChapters } from '@/lib/hooks/useChapters';
+import { Chapter } from '@/types/chapter';
 
 // User roles for the dropdown
 const userRoles = [
   { value: 'admin', label: 'Admin / Executive' },
   { value: 'active_member', label: 'Active Member' },
   { value: 'alumni', label: 'Alumni' }
-];
-
-// Mock chapters - you can replace this with actual data
-const chapters = [
-  'Alpha Chapter',
-  'Beta Chapter', 
-  'Gamma Chapter',
-  'Delta Chapter',
-  'Epsilon Chapter'
 ];
 
 export default function SignUpPage() {
@@ -42,6 +35,9 @@ export default function SignUpPage() {
   const { signUp, user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [oauthLoading, setOauthLoading] = useState(false);
+  
+  // Use the chapters hook to fetch dynamic data
+  const { chapters, loading: chaptersLoading, error: chaptersError } = useChapters();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -363,13 +359,21 @@ export default function SignUpPage() {
                         value={chapter} 
                         onValueChange={setChapter}
                       >
-                        <SelectItem value="">Select your chapter</SelectItem>
-                        {chapters.map((chapterName) => (
-                          <SelectItem key={chapterName} value={chapterName}>
-                            {chapterName}
+                        <SelectItem value="">
+                          {chaptersLoading ? 'Loading chapters...' : 'Select your chapter'}
+                        </SelectItem>
+                        {chapters.map((chapterData) => (
+                          <SelectItem key={chapterData.id} value={chapterData.name}>
+                            {chapterData.name}
                           </SelectItem>
                         ))}
                       </Select>
+                      {chaptersError && (
+                        <p className="text-red-500 text-xs">Failed to load chapters. Please refresh the page.</p>
+                      )}
+                      {chapters.length === 0 && !chaptersLoading && (
+                        <p className="text-yellow-500 text-xs">No chapters available. Please contact support.</p>
+                      )}
                     </div>
 
                     {/* Role Selection */}

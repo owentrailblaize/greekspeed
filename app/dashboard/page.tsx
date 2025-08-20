@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 export default function DashboardPage() {
   console.log('🔍 DashboardPage: Component rendering');
   
-  const { user } = useAuth();
+  const { user, isDeveloper } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -24,7 +24,8 @@ export default function DashboardPage() {
           setProfile(profileData);
           
           // Check if profile is incomplete and redirect if needed
-          if (!profileData?.chapter || !profileData?.role) {
+          // Skip this check for developers
+          if (!isDeveloper && (!profileData?.chapter || !profileData?.role)) {
             router.push('/profile/complete');
             return;
           }
@@ -39,7 +40,7 @@ export default function DashboardPage() {
     };
 
     loadProfile();
-  }, [user, router]);
+  }, [user, router, isDeveloper]);
 
   if (loading) {
     return (
@@ -53,14 +54,15 @@ export default function DashboardPage() {
   }
 
   // Don't render dashboard if profile is incomplete (will redirect)
-  if (!profile?.chapter || !profile?.role) {
+  // Skip this check for developers
+  if (!isDeveloper && (!profile?.chapter || !profile?.role)) {
     return null;
   }
 
   return (
     <div>
       <div style={{ display: 'none' }}>Dashboard Page Wrapper</div>
-      <DashboardOverview userRole={profile.role} />
+      <DashboardOverview userRole={profile?.role || null} />
     </div>
   );
 } 

@@ -256,6 +256,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
               <ClickableField 
                 value={alumni.chapter} 
                 entityType="chapter"
+                textAlign="center"
                 className="text-sm font-medium text-navy-600 hover:text-blue-600 px-3 py-1 rounded-full border border-navy-200 hover:border-blue-300 transition-all duration-200"
               />
             </div>

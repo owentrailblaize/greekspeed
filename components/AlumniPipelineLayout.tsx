@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Filter, X, ChevronRight, Settings, Search, Users } from "lucide-react";
+import { Filter, X, ChevronRight, Settings, Search, Users, Building2, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlumniFilterBar } from "@/components/AlumniFilterBar";
 import { AlumniTableView } from "@/components/AlumniTableView";
@@ -12,6 +12,14 @@ import { AlumniDetailSheet } from "@/components/AlumniDetailSheet";
 import { Alumni } from "@/lib/mockAlumni";
 import { exportAlumniToCSV, exportSelectedAlumniToCSV } from "@/lib/csvExport";
 import { AlumniProfileModal } from "./AlumniProfileModal";
+import { AlumniSubHeader } from "@/components/AlumniSubHeader";
+import { ViewToggle } from "./ViewToggle";
+import { Badge } from "./ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectItem } from "@/components/ui/select";
+import { graduationYears, industries, chapters, locations } from "@/lib/mockAlumni";
+import { US_STATES, getStateNameByCode } from "@/lib/usStates";
+import { useProfile } from "@/lib/hooks/useProfile";
 
 interface FilterState {
   searchTerm: string;
@@ -20,7 +28,7 @@ interface FilterState {
   chapter: string;
   state: string;
   activelyHiring: boolean;
-  myChapter: boolean;
+  showAllAlumni: boolean; // Changed from myChapter to showAllAlumni
 }
 
 interface AlumniPipelineLayoutProps {

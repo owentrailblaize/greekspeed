@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChapterMember } from "./types";
+import { ChapterMember } from "@/types/chapter";
 
 // LEGACY COMPONENT: This is the old card design
 // The new LinkedInStyleChapterCard is now used in MyChapterContent
@@ -16,7 +16,7 @@ export function ChapterMemberCard({ member }: ChapterMemberCardProps) {
         <div className="flex items-start space-x-3">
           <div className="w-12 h-12 bg-navy-600 rounded-full flex items-center justify-center flex-shrink-0">
             <span className="text-white text-sm font-medium">
-              {member.name.split(' ').map(n => n[0]).join('')}
+              {member.name.split(' ').map((n: string) => n[0]).join('')}
             </span>
           </div>
           
@@ -32,7 +32,7 @@ export function ChapterMemberCard({ member }: ChapterMemberCardProps) {
             </div>
             
             <div className="mt-3 flex flex-wrap gap-1">
-              {member.interests.slice(0, 2).map((interest, index) => (
+              {member.interests?.slice(0, 2).map((interest: string, index: number) => (
                 <Badge 
                   key={index} 
                   variant="secondary" 
@@ -41,7 +41,7 @@ export function ChapterMemberCard({ member }: ChapterMemberCardProps) {
                   {interest}
                 </Badge>
               ))}
-              {member.interests.length > 2 && (
+              {member.interests && member.interests.length > 2 && (
                 <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700">
                   +{member.interests.length - 2}
                 </Badge>

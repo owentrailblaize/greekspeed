@@ -1,0 +1,342 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { X } from 'lucide-react';
+import { useChapters } from '@/lib/hooks/useChapters';
+
+interface CreateUserFormProps {
+  onClose: () => void;
+  onSuccess: () => void;
+  chapterContext?: {
+    chapterId: string;
+    chapterName: string;
+    isChapterAdmin?: boolean;
+  };
+}
+
+export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUserFormProps) {
+  const [formData, setFormData] = useState({
+    email: '',
+    firstName: '',
+    lastName: '',
+    chapter: chapterContext?.chapterId || '',
+    role: 'active_member' as 'admin' | 'active_member' | 'alumni',
+    chapter_role: 'member' as 'member' | 'president' | 'vice_president' | 'social_chair' | 'treasurer',
+    is_developer: false,
+    developer_permissions: [] as string[]
+  });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [createdUser, setCreatedUser] = useState<any>(null);
+  const [tempPassword, setTempPassword] = useState('');
+  
+  // Use the chapters hook to fetch available chapters
+  const { chapters, loading: chaptersLoading, error: chaptersError } = useChapters();
+
+  // Auto-populate chapter if provided
+  useEffect(() => {
+    if (chapterContext && chapterContext.isChapterAdmin) {
+      setFormData(prev => ({ ...prev, chapter: chapterContext.chapterId }));
+    }
+  }, [chapterContext]);
+
+  // Add this debug log at the top of the component
+  console.log('CreateUserForm render - success state:', success);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    console.log('Starting user creation...'); // Debug log
+
+    try {
+      // Validate required fields
+      if (!formData.email || !formData.firstName || !formData.lastName || !formData.chapter) {
+        throw new Error('Email, firstName, lastName, and chapter are required');
+      }
+
+      const response = await fetch('/api/developer/create-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          chapter: formData.chapter,
+          role: formData.role,
+          chapter_role: formData.chapter_role,
+          is_developer: formData.is_developer,
+          developer_permissions: formData.developer_permissions
+        })
+      });
+
+      console.log('API Response status:', response.status); // Debug log
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create user');
+      }
+
+      const data = await response.json();
+      console.log('API Response data:', data); // Debug log
+      
+      setCreatedUser(data.user);
+      setTempPassword(data.tempPassword);
+      setSuccess(true);
+      
+      console.log('Success state set to true'); // Debug log
+      console.log('Created user:', data.user); // Debug log
+      console.log('Temp password:', data.tempPassword); // Debug log
+      
+      // DON'T call onSuccess() here - let the success modal handle it
+      // onSuccess(); // Remove this line
+      
+    } catch (error) {
+      console.error('Error creating user:', error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to create user'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
+
+  if (success) {
+    console.log('Rendering success modal'); // Debug log
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <Card className="w-full max-w-2xl">
+          <CardHeader>
+            <CardTitle className="text-green-600">User Created Successfully!</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-green-50 p-4 rounded-lg">
+              <h3 className="font-medium text-green-800 mb-2">User Details:</h3>
+              <p><strong>Name:</strong> {createdUser.full_name}</p>
+              <p><strong>Email:</strong> {createdUser.email}</p>
+              <p><strong>Chapter:</strong> {createdUser.chapter}</p>
+              <p><strong>Role:</strong> {createdUser.role}</p>
+              <p><strong>Developer Access:</strong> {createdUser.is_developer ? 'Yes' : 'No'}</p>
+              {createdUser.is_developer && (
+                <p><strong>Permissions:</strong> {createdUser.developer_permissions?.length || 0} permissions</p>
+              )}
+            </div>
+
+            <div className="bg-yellow-50 p-4 rounded-lg">
+              <h3 className="font-medium text-yellow-800 mb-2">Temporary Password:</h3>
+              <div className="flex items-center space-x-2">
+                <code className="bg-white px-3 py-2 rounded border flex-1 font-mono">
+                  {tempPassword}
+                </code>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => copyToClipboard(tempPassword)}
+                >
+                  Copy
+                </Button>
+              </div>
+              <p className="text-sm text-yellow-700 mt-2">
+                Share this password with the user. They should change it on first login.
+              </p>
+            </div>
+
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="font-medium text-blue-800 mb-2">Next Steps:</h3>
+              <p className="text-sm text-blue-700">
+                The user can now sign in with their email and this temporary password. 
+                They will be guided through the onboarding process to complete their profile.
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button onClick={() => {
+                setSuccess(false); // Reset success state
+                onSuccess(); // Call onSuccess when closing the modal
+                onClose(); // Close the modal
+              }}>
+                Close
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <Card className="w-full max-w-md mx-4">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Create New User</CardTitle>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Email Field - Full Width */}
+          <div>
+            <Label htmlFor="email">Email *</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="user@example.com"
+              required
+            />
+          </div>
+
+          {/* First Name and Last Name - Same Row */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="firstName">First Name *</Label>
+              <Input
+                id="firstName"
+                value={formData.firstName}
+                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                placeholder="John"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="lastName">Last Name *</Label>
+              <Input
+                id="lastName"
+                value={formData.lastName}
+                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                placeholder="Doe"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Chapter Field - Full Width */}
+          {chapterContext ? (
+            <div>
+              <Label htmlFor="chapter">Chapter *</Label>
+              <Input
+                id="chapter"
+                value={chapterContext.chapterName}
+                disabled
+                className="bg-gray-100"
+              />
+            </div>
+          ) : (
+            <div>
+              <Label htmlFor="chapter">Chapter *</Label>
+              <Select 
+                value={formData.chapter} 
+                onValueChange={(value: string) => setFormData({ ...formData, chapter: value })}
+              >
+                {chapters.map((chapterData) => (
+                  <SelectItem key={chapterData.id} value={chapterData.id}>
+                    {chapterData.name}
+                  </SelectItem>
+                ))}
+              </Select>
+            </div>
+          )}
+
+          {/* Role and Chapter Role - Same Row */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="role">Role *</Label>
+              <Select 
+                value={formData.role} 
+                onValueChange={(value: string) => setFormData({ ...formData, role: value as 'admin' | 'active_member' | 'alumni' })}
+              >
+                <SelectItem value="active_member">Active Member</SelectItem>
+                <SelectItem value="admin">Admin / Executive</SelectItem>
+                {/* Only show Alumni option when NOT in chapter context (i.e., on User Management page) */}
+                {!chapterContext?.isChapterAdmin && (
+                  <SelectItem value="alumni">Alumni</SelectItem>
+                )}
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="chapter_role">Chapter Role *</Label>
+              <Select 
+                value={formData.chapter_role} 
+                onValueChange={(value: string) => setFormData({ ...formData, chapter_role: value as any })}
+              >
+                <SelectItem value="member">General Member</SelectItem>
+                <SelectItem value="president">President</SelectItem>
+                <SelectItem value="vice_president">Vice President</SelectItem>
+                <SelectItem value="social_chair">Social Chair</SelectItem>
+                <SelectItem value="treasurer">Treasurer</SelectItem>
+              </Select>
+            </div>
+          </div>
+
+          {/* Developer Access - Only show if not chapter context */}
+          {!chapterContext?.isChapterAdmin && (
+            <>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="is_developer"
+                  checked={formData.is_developer}
+                  onCheckedChange={(checked) => 
+                    setFormData({ ...formData, is_developer: checked as boolean })
+                  }
+                />
+                <Label htmlFor="is_developer">Developer Access</Label>
+              </div>
+
+              {formData.is_developer && (
+                <div>
+                  <Label>Developer Permissions</Label>
+                  <div className="space-y-2">
+                    {['user_management', 'content_management', 'analytics'].map((permission) => (
+                      <div key={permission} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={permission}
+                          checked={formData.developer_permissions.includes(permission)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setFormData({
+                                ...formData,
+                                developer_permissions: [...formData.developer_permissions, permission]
+                              });
+                            } else {
+                              setFormData({
+                                ...formData,
+                                developer_permissions: formData.developer_permissions.filter(p => p !== permission)
+                              });
+                            }
+                          }}
+                        />
+                        <Label htmlFor={permission} className="text-sm capitalize">
+                          {permission.replace('_', ' ')}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex space-x-2 pt-4">
+            <Button variant="outline" onClick={onClose} className="flex-1">
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit} className="flex-1">
+              Create User
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
