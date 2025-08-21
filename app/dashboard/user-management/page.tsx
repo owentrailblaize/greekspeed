@@ -65,10 +65,6 @@ export default function UserManagementPage() {
               <Users className="h-4 w-4" />
               <span>Users</span>
             </TabsTrigger>
-            <TabsTrigger value="profiles" className="flex items-center space-x-2">
-              <Table className="h-4 w-4" />
-              <span>Profiles</span>
-            </TabsTrigger>
             <TabsTrigger value="chapters" className="flex items-center space-x-2">
               <Shield className="h-4 w-4" />
               <span>Chapters</span>
