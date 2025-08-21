@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Plus, Table, Shield, ArrowLeft } from 'lucide-react';
 import { UsersTab } from '@/components/user-management/UsersTab';
+import { ChaptersTab } from '@/components/user-management/ChaptersTab';
+import { ViewChapterModal } from '@/components/user-management/ViewChapterModal';
 
 export default function UserManagementPage() {
   const router = useRouter();
@@ -77,6 +79,10 @@ export default function UserManagementPage() {
 
           <TabsContent value="users" className="space-y-6">
             <UsersTab />
+          </TabsContent>
+
+          <TabsContent value="chapters" className="space-y-6">
+            <ChaptersTab />
           </TabsContent>
 
           {/* Comment out until you create these components */}
