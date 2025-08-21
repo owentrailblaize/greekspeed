@@ -127,7 +127,7 @@ export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebar
               }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="bg-white border-r border-gray-200 shadow-sm overflow-hidden flex-shrink-0"
+              className="bg-gradient-to-b from-[#FFFFFF] to-[#F9FAFB] shadow-sm overflow-hidden flex-shrink-0 border-r-4 border-transparent bg-clip-padding"
             >
               <div className="h-full flex flex-col">
                 {/* Header */}
