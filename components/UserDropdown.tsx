@@ -12,30 +12,38 @@ import {
   HelpCircle, 
   LogOut,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  Lock
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { UserAvatar } from './UserAvatar';
 import { Badge } from '@/components/ui/badge';
 
+// Update the interface to match UserAvatar expectations
 interface UserDropdownProps {
-  user: { email?: string | null; user_metadata?: { avatar_url?: string | null; full_name?: string } } | null;
+  user: { 
+    email?: string | null; 
+    user_metadata?: { 
+      avatar_url?: string | null; 
+      full_name?: string; 
+    } | undefined; // Change from | null to | undefined
+  } | null;
   completionPercent: number;
   hasUnread: boolean;
-  unreadCount?: number; // Add this prop
+  unreadCount?: number;
   onSignOut: () => void;
 }
 
 const menuItems = [
-  { label: 'View Profile', href: '/dashboard/profile', icon: User },
-  { label: 'Edit Profile', href: '/dashboard/profile/edit', icon: Settings },
-  { label: 'Account & Security', href: '#', icon: Shield },
-  { label: 'Privacy & Visibility', href: '#', icon: Shield },
-  { label: 'Documents & Uploads', href: '#', icon: FileText },
-  { label: 'Notifications', href: '/dashboard/notifications', icon: Bell, key: 'notifications' },
-  { label: 'Chapter & Role', href: '#', icon: Users },
-  { label: 'Help & Support', href: '#', icon: HelpCircle },
+  { label: 'View Profile', href: '/dashboard/profile', icon: User, locked: false },
+  { label: 'Edit Profile', href: '/dashboard/profile/edit', icon: Settings, locked: false },
+  { label: 'Account & Security', href: '#', icon: Shield, locked: true },
+  { label: 'Privacy & Visibility', href: '#', icon: Shield, locked: true },
+  { label: 'Documents & Uploads', href: '#', icon: FileText, locked: true },
+  { label: 'Notifications', href: '/dashboard/notifications', icon: Bell, key: 'notifications', locked: false },
+  { label: 'Chapter & Role', href: '#', icon: Users, locked: true },
+  { label: 'Help & Support', href: '#', icon: HelpCircle, locked: true },
 ];
 
 export function UserDropdown({ user, completionPercent, hasUnread, unreadCount = 0, onSignOut }: UserDropdownProps) {
@@ -44,6 +52,17 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
   const handleSignOut = () => {
     onSignOut();
     setIsMobileMenuOpen(false);
+  };
+
+  const handleMenuItemClick = (item: any) => {
+    if (item.locked) {
+      // Don't navigate for locked items
+      return;
+    }
+    
+    if (item.href !== '#') {
+      window.location.href = item.href;
+    }
   };
 
   return (
@@ -92,11 +111,20 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
                 return (
                   <DropdownMenuItem 
                     key={item.label} 
-                    onClick={() => window.location.href = item.href}
-                    className="flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-navy-700 rounded-md transition-colors relative"
+                    onClick={() => handleMenuItemClick(item)}
+                    className={`flex items-center space-x-3 px-3 py-2 text-sm rounded-md transition-colors relative ${
+                      item.locked 
+                        ? 'text-gray-400 cursor-not-allowed hover:bg-gray-50' 
+                        : 'text-gray-700 hover:bg-gray-50 hover:text-navy-700 cursor-pointer'
+                    }`}
                   >
-                    <Icon className="w-4 h-4 text-gray-500" />
-                    <span>{item.label}</span>
+                    <Icon className={`w-4 ${item.locked ? 'text-gray-400' : 'text-gray-500'}`} />
+                    <span className={item.locked ? 'line-through' : ''}>{item.label}</span>
+                    
+                    {/* Lock icon for locked items */}
+                    {item.locked && (
+                      <Lock className="w-3 h-3 ml-auto text-gray-400" />
+                    )}
                     
                     {/* Tiny red bubble indicator over Notifications item */}
                     {item.key === 'notifications' && unreadCount > 0 && (
@@ -172,20 +200,27 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <Link
+                  <div
                     key={item.label}
-                    href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center space-x-3 px-3 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-navy-700 rounded-md transition-colors relative"
+                    className={`flex items-center space-x-3 px-3 py-3 text-sm rounded-md transition-colors relative ${
+                      item.locked 
+                        ? 'text-gray-400 cursor-not-allowed' 
+                        : 'text-gray-700 hover:bg-gray-50 hover:text-navy-700'
+                    }`}
                   >
-                    <Icon className="w-4 text-gray-500" />
-                    <span>{item.label}</span>
+                    <Icon className={`w-4 ${item.locked ? 'text-gray-400' : 'text-gray-500'}`} />
+                    <span className={item.locked ? 'line-through' : ''}>{item.label}</span>
+                    
+                    {/* Lock icon for locked items */}
+                    {item.locked && (
+                      <Lock className="w-3 h-3 ml-auto text-gray-400" />
+                    )}
                     
                     {/* Tiny red bubble indicator over Notifications item */}
                     {item.key === 'notifications' && unreadCount > 0 && (
                       <div className="absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full border border-white shadow-sm" />
                     )}
-                  </Link>
+                  </div>
                 );
               })}
             </div>
