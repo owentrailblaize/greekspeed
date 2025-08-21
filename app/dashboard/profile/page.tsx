@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,9 @@ import { ProfileService } from '@/lib/services/profileService';
 import Link from 'next/link';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { useRouter } from 'next/navigation';
+import { EditProfileModal } from '@/components/EditProfileModal';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -22,6 +25,7 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState('connections');
   const [connectionLoading, setConnectionLoading] = useState<string | null>(null);
   const router = useRouter();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
   // Calculate completion percentage
   const completion = profile ? ProfileService.calculateCompletion(profile) : null;
@@ -73,6 +77,47 @@ export default function ProfilePage() {
   const handleMessageClick = (connectionId: string) => {
     router.push(`/dashboard/messages?connection=${connectionId}`);
   };
+
+  // Handle profile update
+  const handleProfileUpdate = async (updatedProfile: any) => {
+    try {
+      console.log('Submitting profile update:', updatedProfile);
+      
+      // Call the ProfileService to update the profile
+      const result = await ProfileService.updateProfile(updatedProfile);
+      
+      if (result) {
+        console.log('Profile updated successfully:', result);
+        
+        // Close the modal
+        setIsEditModalOpen(false);
+        
+        // Force a refresh of the profile data
+        // You might need to implement a refresh function in your useProfile hook
+        // For now, we can reload the page or trigger a re-fetch
+        window.location.reload(); // Temporary solution
+        
+        // Better solution would be to implement a refresh function:
+        // await refreshProfile();
+      } else {
+        throw new Error('Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      // You might want to show an error message to the user here
+      alert('Failed to update profile. Please try again.');
+    }
+  };
+
+  // Debug: Log the profile data to see what's available
+  useEffect(() => {
+    if (profile) {
+      console.log('Full profile object:', profile);
+      console.log('Available keys:', Object.keys(profile));
+      console.log('Chapter value:', profile.chapter);
+      console.log('Role value:', profile.role);
+    }
+  }, [profile]);
 
   if (loading) {
     return (
@@ -359,12 +404,14 @@ export default function ProfilePage() {
                   <CardTitle className="text-lg text-navy-600">Profile Tools</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Link href="/dashboard/profile/edit">
-                    <Button variant="outline" className="w-full justify-start">
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit Profile
-                    </Button>
-                  </Link>
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start"
+                    onClick={() => setIsEditModalOpen(true)}
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit Profile
+                  </Button>
                   <Button 
                     variant="outline" 
                     className="w-full justify-start opacity-50 cursor-not-allowed" 
@@ -455,6 +502,14 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* Edit Profile Modal */}
+        <EditProfileModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          profile={profile}
+          onUpdate={handleProfileUpdate}
+        />
       </div>
     </div>
   );

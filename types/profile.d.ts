@@ -60,21 +60,19 @@ export interface Profile {
 }
 
 export interface ProfileFormData {
-  first_name: string;
-  last_name: string;
-  chapter: string;
-  role?: SystemRole;
-  chapter_role?: ChapterRole;
-  member_status?: MemberStatus;
-  pledge_class?: string;
-  grad_year?: number;
-  major?: string;
-  minor?: string;
-  gpa?: number;
-  hometown?: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  chapter?: string;
+  role?: string;
   bio?: string;
   phone?: string;
   location?: string;
+  grad_year?: string;
+  major?: string;
+  minor?: string;
+  hometown?: string;
+  gpa?: string;
   avatar_url?: string;
 }
 

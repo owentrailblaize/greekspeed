@@ -32,28 +32,49 @@ export class ProfileService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      // Prepare the update data, handling special cases
+      const updateData: any = {
+        ...profileData,
+        updated_at: new Date().toISOString()
+      };
+
+      // Handle first_name and last_name updates
+      if (profileData.first_name || profileData.last_name) {
+        const currentProfile = await this.getCurrentProfile();
+        const firstName = profileData.first_name || currentProfile?.first_name || '';
+        const lastName = profileData.last_name || currentProfile?.last_name || '';
+        
+        updateData.first_name = firstName;
+        updateData.last_name = lastName;
+        updateData.full_name = `${firstName} ${lastName}`.trim();
+      }
+
+      // Remove undefined values to avoid overwriting with null
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === undefined) {
+          delete updateData[key];
+        }
+      });
+
+      console.log('Updating profile with data:', updateData);
+
       const { data: profile, error } = await supabase
         .from('profiles')
-        .update({
-          ...profileData,
-          full_name: profileData.first_name && profileData.last_name 
-            ? `${profileData.first_name} ${profileData.last_name}` 
-            : undefined,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', user.id)
         .select()
         .single();
 
       if (error) {
         console.error('Error updating profile:', error);
-        return null;
+        throw error;
       }
 
+      console.log('Profile updated successfully:', profile);
       return profile;
     } catch (error) {
       console.error('Error in updateProfile:', error);
-      return null;
+      throw error;
     }
   }
 
