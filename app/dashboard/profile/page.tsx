@@ -120,45 +120,50 @@ export default function ProfilePage() {
              </div>
            </div>
           
-          {/* Profile Picture Overlay */}
-          <div className="absolute left-8 bottom-4">
-            <div className="relative">
-              <UserAvatar
-                user={{
-                  user_metadata: {
-                    avatar_url: profile.avatar_url,
-                    full_name: profile.full_name
-                  }
-                }}
-                completionPercent={completion?.percentage || 0}
-                hasUnread={false}
-                size="lg"
-                className="ring-4 ring-white shadow-lg"
-              />
-              <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-navy-600 rounded-full flex items-center justify-center shadow-md">
-                <Edit className="w-4 h-4 text-white" />
-              </div>
+          {/* Profile Picture and User Info Container */}
+          <div className="absolute left-8 bottom-4 flex items-center space-x-4">
+            <UserAvatar
+              user={{
+                user_metadata: {
+                  avatar_url: profile.avatar_url,
+                  full_name: profile.full_name
+                }
+              }}
+              completionPercent={completion?.percentage || 0}
+              hasUnread={false}
+              size="lg"
+              className="shadow-lg"
+            />
+            
+            <div className="text-white">
+              <h1 className="text-3xl font-bold mb-1">{profile.full_name || 'User Name'}</h1>
+              <p className="text-lg opacity-90">{profile.chapter || 'Chapter'}</p>
             </div>
-          </div>
-
-          {/* User Info and Action Buttons */}
-          <div className="absolute left-48 bottom-4 text-white">
-            <h1 className="text-3xl font-bold mb-1">{profile.full_name || 'User Name'}</h1>
-            <p className="text-lg opacity-90">{profile.role ? profile.role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Member'}</p>
           </div>
 
                      {/* Action Buttons */}
            <div className="absolute right-8 bottom-4 flex items-center space-x-3">
-             <Button size="sm" className="w-10 h-10 rounded-full bg-navy-600 hover:bg-navy-700">
-               <MessageCircle className="w-4 h-4" />
-             </Button>
-             <Button size="sm" className="bg-navy-600 hover:bg-navy-700 text-white">
-               Follow
-             </Button>
-             <Button size="sm" variant="outline" className="bg-white text-navy-600 border-navy-600 hover:bg-navy-50">
-               Schedule Meeting
-             </Button>
-           </div>
+            <Link href="/dashboard/messages">
+              <Button size="sm" className="w-10 h-10 rounded-full bg-navy-600 hover:bg-navy-700">
+                <MessageCircle className="w-4 h-4" />
+              </Button>
+            </Link>
+            <Button 
+              size="sm" 
+              className="bg-navy-600/60 hover:bg-navy-600/60 text-white/80 cursor-not-allowed backdrop-blur-sm border border-navy-400/30" 
+              disabled
+            >
+              Follow
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="bg-white/60 text-navy-600/60 border-navy-400/40 hover:bg-white/60 cursor-not-allowed backdrop-blur-sm" 
+              disabled
+            >
+              Schedule Meeting
+            </Button>
+          </div>
         </div>
 
         {/* Main Content Area - Three Columns */}
