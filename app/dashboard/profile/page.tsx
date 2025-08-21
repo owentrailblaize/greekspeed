@@ -13,12 +13,15 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { ProfileService } from '@/lib/services/profileService';
 import Link from 'next/link';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
+import { useRouter } from 'next/navigation';
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const { profile, loading, error } = useProfile();
-  const { connections, loading: connectionsLoading } = useConnections();
+  const { connections, loading: connectionsLoading, sendConnectionRequest } = useConnections();
   const [activeTab, setActiveTab] = useState('connections');
+  const [connectionLoading, setConnectionLoading] = useState<string | null>(null);
+  const router = useRouter();
   
   // Calculate completion percentage
   const completion = profile ? ProfileService.calculateCompletion(profile) : null;
@@ -65,6 +68,11 @@ export default function ProfilePage() {
   };
 
   const suggestedUsers = getSuggestedUsers();
+
+  // Handle message button click
+  const handleMessageClick = (connectionId: string) => {
+    router.push(`/dashboard/messages?connection=${connectionId}`);
+  };
 
   if (loading) {
     return (
@@ -258,7 +266,12 @@ export default function ProfilePage() {
                                 <p className="font-medium text-gray-900">{partner.full_name}</p>
                                 <p className="text-sm text-gray-500">{partner.chapter}</p>
                               </div>
-                              <Button size="sm" variant="outline" className="text-navy-600 border-navy-300 hover:bg-navy-50">
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="text-navy-600 border-navy-300 hover:bg-navy-50"
+                                onClick={() => handleMessageClick(connection.id)}
+                              >
                                 <MessageCircle className="w-4 h-4 mr-2" />
                                 Message
                               </Button>
