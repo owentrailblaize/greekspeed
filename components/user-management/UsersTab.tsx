@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Users, Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
+import { Users, Plus, Search, Edit, Trash2, Eye, Lock } from 'lucide-react';
 import { CreateUserForm } from './CreateUserForm';
+import { DeleteUserModal } from './DeleteUserModal';
+import { ViewUserModal } from './ViewUserModal';
 
 interface User {
   id: string;
@@ -41,6 +43,11 @@ export function UsersTab() {
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [userToView, setUserToView] = useState<User | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -57,6 +64,61 @@ export function UsersTab() {
       console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openDeleteModal = (user: User) => {
+    setUserToDelete(user);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setUserToDelete(null);
+  };
+
+  const openViewModal = (user: User) => {
+    setUserToView(user);
+    setViewModalOpen(true);
+  };
+
+  const closeViewModal = () => {
+    setViewModalOpen(false);
+    setUserToView(null);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      setDeletingUserId(userToDelete.id);
+      
+      const response = await fetch(`/api/developer/users?userId=${userToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete user');
+      }
+
+      const result = await response.json();
+      console.log('User deleted successfully:', result);
+      
+      // Remove the user from the local state
+      setUsers(prevUsers => prevUsers.filter(user => user.id !== userToDelete.id));
+      
+      // Close modal and show success message
+      closeDeleteModal();
+      
+      // Show success message (you could replace this with a toast notification)
+      alert(`User "${userToDelete.email}" has been deleted successfully.`);
+      
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert(`Failed to delete user: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setDeletingUserId(null);
     }
   };
 
@@ -138,9 +200,7 @@ export function UsersTab() {
                         <div>
                           <p className="font-medium">{user.full_name || 'N/A'}</p>
                           <p className="text-sm text-gray-600">{user.email}</p>
-                          <p className="text-xs text-gray-500">
-                            {user.first_name && user.last_name ? `${user.first_name} ${user.last_name}` : 'Name not set'}
-                          </p>
+                          
                         </div>
                       </td>
                       <td className="p-3">
@@ -194,13 +254,37 @@ export function UsersTab() {
                       </td>
                       <td className="p-3">
                         <div className="flex items-center space-x-2">
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => openViewModal(user)}
+                            className="hover:bg-blue-50 hover:text-blue-600"
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="outline" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm" className="text-red-600">
+                          
+                          {/* Edit Button with Lock Indicator */}
+                          <div className="relative">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled
+                              className="h-8 w-8 p-0 bg-gray-50 cursor-not-allowed opacity-60"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <div className="absolute -top-1 -right-1">
+                              <Lock className="h-3 w-3 text-gray-500" />
+                            </div>
+                          </div>
+                          
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                            onClick={() => openDeleteModal(user)}
+                            disabled={deletingUserId === user.id}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -218,6 +302,22 @@ export function UsersTab() {
       {showCreateForm && (
         <CreateUserForm onClose={() => setShowCreateForm(false)} onSuccess={fetchUsers} />
       )}
+
+      {/* Delete User Modal */}
+      <DeleteUserModal
+        isOpen={deleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={handleDeleteUser}
+        user={userToDelete}
+        isDeleting={deletingUserId === userToDelete?.id}
+      />
+
+      {/* View User Modal */}
+      <ViewUserModal
+        isOpen={viewModalOpen}
+        onClose={closeViewModal}
+        user={userToView}
+      />
     </div>
   );
 }

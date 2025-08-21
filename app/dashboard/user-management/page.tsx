@@ -1,16 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { hasDeveloperPermission } from '@/lib/developerPermissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Plus, Table, Shield } from 'lucide-react';
+import { Users, Plus, Table, Shield, ArrowLeft } from 'lucide-react';
 import { UsersTab } from '@/components/user-management/UsersTab';
+import { ChaptersTab } from '@/components/user-management/ChaptersTab';
+import { ViewChapterModal } from '@/components/user-management/ViewChapterModal';
 
 export default function UserManagementPage() {
+  const router = useRouter();
   const { profile, isDeveloper } = useAuth();
   const [activeTab, setActiveTab] = useState('users');
 
@@ -34,6 +38,15 @@ export default function UserManagementPage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between">
             <div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push('/dashboard')}
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 mb-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>Dashboard</span>
+              </Button>
               <h1 className="text-3xl font-bold text-navy-900">User Management</h1>
               <p className="text-gray-600">Manage users, profiles, and database tables</p>
             </div>
@@ -54,22 +67,18 @@ export default function UserManagementPage() {
               <Users className="h-4 w-4" />
               <span>Users</span>
             </TabsTrigger>
-            <TabsTrigger value="profiles" className="flex items-center space-x-2">
-              <Table className="h-4 w-4" />
-              <span>Profiles</span>
-            </TabsTrigger>
             <TabsTrigger value="chapters" className="flex items-center space-x-2">
               <Shield className="h-4 w-4" />
               <span>Chapters</span>
-            </TabsTrigger>
-            <TabsTrigger value="tables" className="flex items-center space-x-2">
-              <Table className="h-4 w-4" />
-              <span>All Tables</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="users" className="space-y-6">
             <UsersTab />
+          </TabsContent>
+
+          <TabsContent value="chapters" className="space-y-6">
+            <ChaptersTab />
           </TabsContent>
 
           {/* Comment out until you create these components */}
