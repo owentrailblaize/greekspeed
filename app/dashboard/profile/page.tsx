@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 import { EditProfileModal } from '@/components/EditProfileModal';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { AvatarService } from '@/lib/services/avatarService';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -81,31 +82,16 @@ export default function ProfilePage() {
   // Handle profile update
   const handleProfileUpdate = async (updatedProfile: any) => {
     try {
-      console.log('Submitting profile update:', updatedProfile);
-      
-      // Call the ProfileService to update the profile
+      // Update profile data
       const result = await ProfileService.updateProfile(updatedProfile);
       
       if (result) {
-        console.log('Profile updated successfully:', result);
-        
-        // Close the modal
-        setIsEditModalOpen(false);
-        
-        // Force a refresh of the profile data
-        // You might need to implement a refresh function in your useProfile hook
-        // For now, we can reload the page or trigger a re-fetch
-        window.location.reload(); // Temporary solution
-        
-        // Better solution would be to implement a refresh function:
-        // await refreshProfile();
-      } else {
-        throw new Error('Failed to update profile');
+        // Refresh profile data
+        // You might want to add a refresh function to your useProfile hook
+        window.location.reload(); // Simple refresh for now
       }
     } catch (error) {
       console.error('Error updating profile:', error);
-      // You might want to show an error message to the user here
-      alert('Failed to update profile. Please try again.');
     }
   };
 

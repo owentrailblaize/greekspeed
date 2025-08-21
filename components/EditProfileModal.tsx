@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { AvatarService } from '@/lib/services/avatarService';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
   const [loading, setLoading] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
 
   // Initialize form data when profile changes
   useEffect(() => {
@@ -127,17 +129,50 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
     }
   };
 
-  // Handle avatar file selection
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle avatar file selection with upload
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setAvatarFile(file);
-      // Create preview URL
-      const reader = new FileReader();
-      reader.onload = () => {
-        setAvatarPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file || !profile?.id) return;
+
+    // Validate file type and size
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      alert('File size must be less than 5MB');
+      return;
+    }
+
+    setAvatarUploading(true);
+    try {
+      // Upload new avatar
+      const newAvatarUrl = await AvatarService.uploadAvatar(file, profile.id);
+      
+      if (newAvatarUrl) {
+        // Delete old avatar if it exists
+        if (profile.avatar_url) {
+          await AvatarService.deleteOldAvatar(profile.avatar_url);
+        }
+
+        // Update profile with new avatar URL
+        await AvatarService.updateProfileAvatar(profile.id, newAvatarUrl);
+
+        // Update local state
+        setAvatarFile(file);
+        setAvatarPreview(newAvatarUrl);
+        
+        // Update the profile object
+        if (onUpdate) {
+          await onUpdate({ ...profile, avatar_url: newAvatarUrl });
+        }
+      }
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      alert('Failed to upload avatar. Please try again.');
+    } finally {
+      setAvatarUploading(false);
     }
   };
 
@@ -228,9 +263,9 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
                   {/* Avatar Container */}
                   <div className="relative">
                     <div className="w-20 h-20 rounded-full border-4 border-white shadow-lg bg-gray-50 flex items-center justify-center overflow-hidden">
-                      {profile?.avatar_url ? (
+                      {avatarPreview || profile?.avatar_url ? (
                         <img 
-                          src={profile.avatar_url} 
+                          src={avatarPreview || profile.avatar_url} 
                           alt="Profile avatar" 
                           className="w-full h-full object-cover"
                         />
@@ -243,7 +278,18 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
                     
                     {/* Upload Icon Overlay */}
                     <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-navy-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-navy-700 transition-colors shadow-md">
-                      <Image className="w-4 h-4 text-white" />
+                      {avatarUploading ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Image className="w-4 h-4 text-white" />
+                      )}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/gif"
+                        onChange={handleAvatarChange}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        disabled={avatarUploading}
+                      />
                     </div>
                   </div>
                 </div>
