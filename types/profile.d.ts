@@ -52,6 +52,7 @@ export interface Profile {
   phone: string | null;
   location: string | null;
   avatar_url: string | null;
+  banner_url?: string | null;
   created_at: string;
   updated_at: string;
   is_developer?: boolean;
@@ -74,6 +75,7 @@ export interface ProfileFormData {
   hometown?: string;
   gpa?: string;
   avatar_url?: string;
+  banner_url?: string;
 }
 
 export interface ProfileCompletion {

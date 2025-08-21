@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AvatarService } from '@/lib/services/avatarService';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { BannerService } from '@/lib/services/bannerService';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -41,6 +42,9 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [bannerUploading, setBannerUploading] = useState(false);
 
   const { updateProfile, refreshProfile } = useProfile();
 
@@ -65,6 +69,9 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
       });
       if (profile.avatar_url) {
         setAvatarPreview(profile.avatar_url);
+      }
+      if (profile.banner_url) {
+        setBannerPreview(profile.banner_url);
       }
     }
   }, [profile]);
@@ -180,6 +187,54 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
     }
   };
 
+  // Handle banner file selection with upload
+  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !profile?.id) return;
+
+    // Validate file type and size
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      alert('File size must be less than 10MB');
+      return;
+    }
+
+    setBannerUploading(true);
+    try {
+      // Upload new banner
+      const newBannerUrl = await BannerService.uploadBanner(file, profile.id);
+      
+      if (newBannerUrl) {
+        // Delete old banner if it exists
+        if (profile.banner_url) {
+          await BannerService.deleteOldBanner(profile.banner_url);
+        }
+
+        // Update profile with new banner URL
+        await BannerService.updateProfileBanner(profile.id, newBannerUrl);
+        
+        // Update global profile state
+        await updateProfile({ banner_url: newBannerUrl });
+        
+        // Update local state
+        setBannerFile(file);
+        setBannerPreview(newBannerUrl);
+        
+        // Refresh profile data everywhere
+        await refreshProfile();
+      }
+    } catch (error) {
+      console.error('Error uploading banner:', error);
+      alert('Failed to upload banner. Please try again.');
+    } finally {
+      setBannerUploading(false);
+    }
+  };
+
   // Remove avatar
   const handleRemoveAvatar = () => {
     setAvatarFile(null);
@@ -244,25 +299,47 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
             {/* Combined Profile Photo & Banner Card */}
             <Card className="p-0">
               <CardContent className="relative h-64 p-0 overflow-hidden">
-                {/* Banner Section - Takes up entire card with rounded corners */}
-                <div className="absolute inset-0 bg-gradient-to-r from-navy-600 via-blue-600 to-navy-700 flex items-center justify-center text-white cursor-pointer group rounded-lg">
+                {/* Banner Section - Make it clickable */}
+                <div 
+                  className="absolute inset-0 bg-gradient-to-r from-navy-600 via-blue-600 to-navy-700 flex items-center justify-center text-white cursor-pointer group rounded-lg"
+                  onClick={() => document.getElementById('banner-upload')?.click()}
+                >
+                  {/* Show actual banner if it exists */}
+                  {bannerPreview || profile?.banner_url ? (
+                    <img 
+                      src={bannerPreview || profile.banner_url} 
+                      alt="Profile banner" 
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                  ) : null}
+                  
                   {/* Banner Upload Overlay */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-lg">
                     <div className="text-center">
-                      <Upload className="w-8 h-8 mx-auto mb-2" />
-                      <p className="text-lg font-medium">Upload Banner</p>
-                      <p className="text-sm">Click to upload banner image</p>
+                      {bannerUploading ? (
+                        <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                      ) : (
+                        <Upload className="w-8 h-8 mx-auto mb-2" />
+                      )}
+                      <p className="text-lg font-medium">
+                        {bannerUploading ? 'Uploading...' : 'Upload Banner'}
+                      </p>
+                      <p className="text-sm">
+                        {bannerUploading ? 'Please wait...' : 'Click to upload banner image'}
+                      </p>
                     </div>
                   </div>
                   
-                  {/* Banner Placeholder Text */}
-                  <div className="text-center opacity-80 group-hover:opacity-0 transition-opacity">
-                    <p className="text-lg font-medium">Banner Image</p>
-                    <p className="text-sm">Click to upload your banner</p>
-                  </div>
+                  {/* Default banner text (only show if no banner exists) */}
+                  {!bannerPreview && !profile?.banner_url && (
+                    <div className="text-center opacity-80 group-hover:opacity-0 transition-opacity">
+                      <p className="text-lg font-medium">Banner Image</p>
+                      <p className="text-sm">Click to upload your banner</p>
+                    </div>
+                  )}
                 </div>
 
-                {/* Profile Photo Section - Positioned at bottom-left, no text */}
+                {/* Profile Photo Section - Positioned at bottom-left */}
                 <div className="absolute bottom-4 left-4 z-10">
                   {/* Avatar Container */}
                   <div className="relative">
@@ -298,12 +375,14 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
                   </div>
                 </div>
 
-                {/* Banner Upload Input (Hidden) */}
+                {/* Hidden banner upload input */}
                 <input
                   type="file"
                   accept="image/*"
+                  onChange={handleBannerChange}
                   className="hidden"
                   id="banner-upload"
+                  disabled={bannerUploading}
                 />
                 
                 {/* Avatar Upload Input (Hidden) */}

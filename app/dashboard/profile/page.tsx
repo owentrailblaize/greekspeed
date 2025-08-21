@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, Mail, MapPin, Building, Shield, FileText, Phone, MessageCircle, Users, Calendar, Settings, Edit, UserCheck, UserPlus, Clock, Lock } from 'lucide-react';
+import { User, Mail, MapPin, Building, Shield, FileText, Phone, MessageCircle, Users, Calendar, Settings, Edit, UserCheck, UserPlus, Clock, Lock, Upload } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useConnections } from '@/lib/hooks/useConnections';
 import { useAuth } from '@/lib/supabase/auth-context';
@@ -18,6 +18,7 @@ import { EditProfileModal } from '@/components/EditProfileModal';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { AvatarService } from '@/lib/services/avatarService';
+import { BannerService } from '@/lib/services/bannerService';
 
 export default function ProfilePage() {
   const { profile, loading, refreshProfile } = useProfile();
@@ -170,12 +171,20 @@ export default function ProfilePage() {
         {/* Banner Header Section */}
         <div className="relative mb-8 rounded-xl overflow-hidden">
                      {/* Banner Image - Placeholder for now */}
-           <div className="w-full h-48 bg-gradient-to-r from-navy-600 via-blue-600 to-navy-700 flex items-center justify-center">
-             <div className="text-white text-center">
-               <p className="text-lg font-medium">Banner Image</p>
-               <p className="text-sm opacity-80">Users will be able to update this later</p>
-             </div>
-        </div>
+           <div className="w-full h-48 bg-gradient-to-r from-navy-600 via-blue-600 to-navy-700 flex items-center justify-center overflow-hidden">
+             {profile?.banner_url ? (
+               <img 
+                 src={profile.banner_url} 
+                 alt="Profile banner" 
+                 className="w-full h-full object-cover"
+               />
+             ) : (
+               <div className="text-white text-center">
+                 <p className="text-lg font-medium">Banner Image</p>
+                 <p className="text-sm opacity-80">Users will be able to update this later</p>
+               </div>
+             )}
+           </div>
 
           {/* Profile Picture and User Info Container */}
           <div className="absolute left-8 bottom-4 flex items-center space-x-4">
