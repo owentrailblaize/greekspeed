@@ -117,7 +117,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
-      <div className="max-w-7xl mx-auto px-6 py-10">
+      <div className="max-w-full mx-auto px-6 py-10">
         {/* Profile Completion Banner - Moved above banner for maximum visibility */}
         {completion && completion.percentage < 100 && (
           <div className="mb-8 p-4 bg-navy-50 rounded-lg border border-navy-200">
