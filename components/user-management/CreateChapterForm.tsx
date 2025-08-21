@@ -271,7 +271,7 @@ export function CreateChapterForm({ onClose, onSuccess }: CreateChapterFormProps
                 onValueChange={(value) => handleInputChange('chapter_status', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="active">Active</SelectItem>
