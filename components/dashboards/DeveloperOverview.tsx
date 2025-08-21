@@ -15,7 +15,8 @@ import {
   Activity, 
   UserPlus,
   Settings,
-  Network
+  Network,
+  Lock
 } from 'lucide-react';
 
 export function DeveloperOverview() {
@@ -188,24 +189,24 @@ export function DeveloperOverview() {
             </Card>
           )}
 
-          {hasDeveloperPermission(userPermissions, 'view_analytics') && (
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <BarChart3 className="h-5 w-5 text-green-600" />
-                  <span>Analytics Dashboard</span>
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  View detailed system analytics and user metrics
-                </p>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full" variant="outline">
-                  View Analytics
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+          {/* Analytics Dashboard - LOCKED */}
+          <Card className="hover:shadow-md transition-shadow cursor-pointer opacity-60">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <BarChart3 className="h-5 w-5 text-green-600" />
+                <span>Analytics Dashboard</span>
+                <Lock className="h-4 w-4 text-gray-400 ml-auto" />
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                View detailed system analytics and user metrics
+              </p>
+            </CardHeader>
+            <CardContent>
+              <Button className="w-full" variant="outline" disabled>
+                View Analytics
+              </Button>
+            </CardContent>
+          </Card>
 
           {hasDeveloperPermission(userPermissions, 'manage_chapters') && (
             <Card className="hover:shadow-md transition-shadow cursor-pointer">
@@ -226,24 +227,24 @@ export function DeveloperOverview() {
             </Card>
           )}
 
-          {hasDeveloperPermission(userPermissions, 'create_endpoints') && (
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Code2 className="h-5 w-5 text-orange-600" />
-                  <span>API Management</span>
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Create and manage API endpoints and integrations
-                </p>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full" variant="outline">
-                  Manage APIs
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+          {/* API Management - LOCKED */}
+          <Card className="hover:shadow-md transition-shadow cursor-pointer opacity-60">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Code2 className="h-5 w-5 text-orange-600" />
+                <span>API Management</span>
+                <Lock className="h-4 w-4 text-gray-400 ml-auto" />
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Create and manage API endpoints and integrations
+              </p>
+            </CardHeader>
+            <CardContent>
+              <Button className="w-full" variant="outline" disabled>
+                Manage APIs
+              </Button>
+            </CardContent>
+          </Card>
 
           {hasDeveloperPermission(userPermissions, 'manage_permissions') && (
             <Card className="hover:shadow-md transition-shadow cursor-pointer">

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Users, Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
 import { CreateUserForm } from './CreateUserForm';
+import { DeleteUserModal } from './DeleteUserModal';
 
 interface User {
   id: string;
@@ -41,6 +42,9 @@ export function UsersTab() {
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -57,6 +61,51 @@ export function UsersTab() {
       console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openDeleteModal = (user: User) => {
+    setUserToDelete(user);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setUserToDelete(null);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      setDeletingUserId(userToDelete.id);
+      
+      const response = await fetch(`/api/developer/users?userId=${userToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete user');
+      }
+
+      const result = await response.json();
+      console.log('User deleted successfully:', result);
+      
+      // Remove the user from the local state
+      setUsers(prevUsers => prevUsers.filter(user => user.id !== userToDelete.id));
+      
+      // Close modal and show success message
+      closeDeleteModal();
+      
+      // Show success message (you could replace this with a toast notification)
+      alert(`User "${userToDelete.email}" has been deleted successfully.`);
+      
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert(`Failed to delete user: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setDeletingUserId(null);
     }
   };
 
@@ -200,7 +249,13 @@ export function UsersTab() {
                           <Button variant="outline" size="sm">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="outline" size="sm" className="text-red-600">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                            onClick={() => openDeleteModal(user)}
+                            disabled={deletingUserId === user.id}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -218,6 +273,15 @@ export function UsersTab() {
       {showCreateForm && (
         <CreateUserForm onClose={() => setShowCreateForm(false)} onSuccess={fetchUsers} />
       )}
+
+      {/* Delete User Modal */}
+      <DeleteUserModal
+        isOpen={deleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={handleDeleteUser}
+        user={userToDelete}
+        isDeleting={deletingUserId === userToDelete?.id}
+      />
     </div>
   );
 }
