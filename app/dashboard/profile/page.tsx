@@ -110,6 +110,25 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
       <div className="max-w-7xl mx-auto px-6 py-10">
+        {/* Profile Completion Banner - Moved above banner for maximum visibility */}
+        {completion && completion.percentage < 100 && (
+          <div className="mb-8 p-4 bg-navy-50 rounded-lg border border-navy-200">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-navy-900">
+                  Profile Completion: {completion.percentage}%
+                </p>
+                <p className="text-xs text-navy-600 mt-1">
+                  Complete your profile to unlock full features and improve your visibility in the network
+                </p>
+              </div>
+              <Badge className="bg-navy-600 text-white">
+                {completion.percentage}% Complete
+              </Badge>
+            </div>
+          </div>
+        )}
+
         {/* Banner Header Section */}
         <div className="relative mb-8 rounded-xl overflow-hidden">
                      {/* Banner Image - Placeholder for now */}
@@ -423,25 +442,6 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-
-        {/* Profile Completion Banner - Preserved from original */}
-          {completion && (
-          <div className="mt-8 p-4 bg-navy-50 rounded-lg border border-navy-200">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-navy-900">
-                    Profile Completion: {completion.percentage}%
-                  </p>
-                  <p className="text-xs text-navy-600 mt-1">
-                    Complete your profile to unlock full features and improve your visibility in the network
-                  </p>
-                </div>
-                <Badge className="bg-navy-600 text-white">
-                  {completion.percentage}% Complete
-                </Badge>
-              </div>
-            </div>
-          )}
       </div>
     </div>
   );
