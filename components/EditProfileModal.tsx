@@ -34,6 +34,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
     gpa: ''
   });
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   // Initialize form data when profile changes
@@ -58,19 +59,96 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
     }
   }, [profile]);
 
+  // Email validation regex
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // GPA validation (0.0 - 4.0)
+  const validateGPA = (gpa: string): boolean => {
+    const gpaNum = parseFloat(gpa);
+    return !isNaN(gpaNum) && gpaNum >= 0.0 && gpaNum <= 4.0;
+  };
+
+  // Phone number formatting
+  const formatPhoneNumber = (value: string): string => {
+    // Remove all non-digits
+    const phoneNumber = value.replace(/\D/g, '');
+    
+    // Format as (XXX) XXX-XXXX
+    if (phoneNumber.length <= 3) {
+      return phoneNumber;
+    } else if (phoneNumber.length <= 6) {
+      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
+    } else {
+      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
+    }
+  };
+
+  // Enhanced input change handler with validation
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+
+    // Real-time validation for specific fields
+    if (field === 'email' && value) {
+      if (!validateEmail(value)) {
+        setErrors(prev => ({ ...prev, email: 'Please enter a valid email address' }));
+      }
+    }
+
+    if (field === 'gpa' && value) {
+      if (!validateGPA(value)) {
+        setErrors(prev => ({ ...prev, gpa: 'GPA must be between 0.0 and 4.0' }));
+      }
+    }
   };
 
+  // Phone number specific handler
+  const handlePhoneChange = (value: string) => {
+    const formatted = formatPhoneNumber(value);
+    setFormData(prev => ({ ...prev, phone: formatted }));
+    
+    if (errors.phone) {
+      setErrors(prev => ({ ...prev, phone: '' }));
+    }
+  };
+
+  // Enhanced submit handler with validation
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     
+    // Validate all required fields
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.first_name.trim()) {
+      newErrors.first_name = 'First name is required';
+    }
+    if (!formData.last_name.trim()) {
+      newErrors.last_name = 'Last name is required';
+    }
+    if (!validateEmail(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+    if (formData.gpa && !validateGPA(formData.gpa)) {
+      newErrors.gpa = 'GPA must be between 0.0 and 4.0';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setLoading(true);
     try {
-      // Call the existing update logic
       await onUpdate(formData);
       onClose();
     } catch (error) {
@@ -147,10 +225,13 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
                     id="email"
                     type="email"
                     value={formData.email}
-                    disabled
-                    className="mt-1 bg-gray-50"
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className={`mt-1 ${errors.email ? 'border-red-500 focus:border-red-500' : ''}`}
+                    required
                   />
-                  <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                  {errors.email && (
+                    <p className="text-xs text-red-500 mt-1">{errors.email}</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -221,9 +302,16 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
                       id="gpa"
                       value={formData.gpa}
                       onChange={(e) => handleInputChange('gpa', e.target.value)}
-                      className="mt-1"
+                      className={`mt-1 ${errors.gpa ? 'border-red-500 focus:border-red-500' : ''}`}
                       placeholder="3.8"
+                      type="number"
+                      step="0.1"
+                      min="0.0"
+                      max="4.0"
                     />
+                    {errors.gpa && (
+                      <p className="text-xs text-red-500 mt-1">{errors.gpa}</p>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -268,9 +356,10 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
                   <Input
                     id="phone"
                     value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    onChange={(e) => handlePhoneChange(e.target.value)}
                     className="mt-1"
                     placeholder="(555) 123-4567"
+                    maxLength={14}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
