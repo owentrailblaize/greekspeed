@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, User, Mail, Building, Shield, FileText, Phone, MapPin, GraduationCap, Home, Calculator } from 'lucide-react';
+import { X, User, Mail, Building, Shield, FileText, Phone, MapPin, GraduationCap, Home, Calculator, Image, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,6 +36,8 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   // Initialize form data when profile changes
   useEffect(() => {
@@ -56,6 +58,9 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
         hometown: profile.hometown || profile.birth_place || '',
         gpa: profile.gpa || profile.grade_point_average || ''
       });
+      if (profile.avatar_url) {
+        setAvatarPreview(profile.avatar_url);
+      }
     }
   }, [profile]);
 
@@ -122,6 +127,26 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
     }
   };
 
+  // Handle avatar file selection
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Remove avatar
+  const handleRemoveAvatar = () => {
+    setAvatarFile(null);
+    setAvatarPreview(null);
+  };
+
   // Enhanced submit handler with validation
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,6 +202,70 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
         {/* Scrollable Content Area */}
         <div className="flex-1 overflow-y-auto p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Combined Profile Photo & Banner Card */}
+            <Card className="p-0">
+              <CardContent className="relative h-64 p-0 overflow-hidden">
+                {/* Banner Section - Takes up entire card with rounded corners */}
+                <div className="absolute inset-0 bg-gradient-to-r from-navy-600 via-blue-600 to-navy-700 flex items-center justify-center text-white cursor-pointer group rounded-lg">
+                  {/* Banner Upload Overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-lg">
+                    <div className="text-center">
+                      <Upload className="w-8 h-8 mx-auto mb-2" />
+                      <p className="text-lg font-medium">Upload Banner</p>
+                      <p className="text-sm">Click to upload banner image</p>
+                    </div>
+                  </div>
+                  
+                  {/* Banner Placeholder Text */}
+                  <div className="text-center opacity-80 group-hover:opacity-0 transition-opacity">
+                    <p className="text-lg font-medium">Banner Image</p>
+                    <p className="text-sm">Click to upload your banner</p>
+                  </div>
+                </div>
+
+                {/* Profile Photo Section - Positioned at bottom-left, no text */}
+                <div className="absolute bottom-4 left-4 z-10">
+                  {/* Avatar Container */}
+                  <div className="relative">
+                    <div className="w-20 h-20 rounded-full border-4 border-white shadow-lg bg-gray-50 flex items-center justify-center overflow-hidden">
+                      {profile?.avatar_url ? (
+                        <img 
+                          src={profile.avatar_url} 
+                          alt="Profile avatar" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="text-xl font-semibold text-gray-500">
+                          {profile?.first_name?.[0]}{profile?.last_name?.[0]}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Upload Icon Overlay */}
+                    <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-navy-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-navy-700 transition-colors shadow-md">
+                      <Image className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Banner Upload Input (Hidden) */}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  id="banner-upload"
+                />
+                
+                {/* Avatar Upload Input (Hidden) */}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  id="avatar-upload"
+                />
+              </CardContent>
+            </Card>
+
             {/* Personal Information */}
             <Card>
               <CardHeader className="pb-0">
