@@ -1,6 +1,7 @@
 import "../styles/globals.css";
 import type { ReactNode } from "react";
 import { AuthProvider } from '@/lib/supabase/auth-context';
+import { ProfileProvider } from '@/lib/contexts/ProfileContext';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -10,7 +11,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           suppressHydrationWarning={true}
         >
           <AuthProvider>
-            {children}
+            <ProfileProvider>
+              {children}
+            </ProfileProvider>
           </AuthProvider>
         </body>
       </html>

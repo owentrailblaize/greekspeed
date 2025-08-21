@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AvatarService } from '@/lib/services/avatarService';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -40,6 +41,8 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+
+  const { updateProfile, refreshProfile } = useProfile();
 
   // Initialize form data when profile changes
   useEffect(() => {
@@ -158,15 +161,16 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
 
         // Update profile with new avatar URL
         await AvatarService.updateProfileAvatar(profile.id, newAvatarUrl);
-
+        
+        // Update global profile state
+        await updateProfile({ avatar_url: newAvatarUrl });
+        
         // Update local state
         setAvatarFile(file);
         setAvatarPreview(newAvatarUrl);
         
-        // Update the profile object
-        if (onUpdate) {
-          await onUpdate({ ...profile, avatar_url: newAvatarUrl });
-        }
+        // Refresh profile data everywhere
+        await refreshProfile();
       }
     } catch (error) {
       console.error('Error uploading avatar:', error);

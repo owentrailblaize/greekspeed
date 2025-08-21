@@ -19,15 +19,14 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { UserAvatar } from './UserAvatar';
 import { Badge } from '@/components/ui/badge';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 
 // Update the interface to match UserAvatar expectations
 interface UserDropdownProps {
   user: { 
     email?: string | null; 
-    user_metadata?: { 
-      avatar_url?: string | null; 
-      full_name?: string; 
-    } | undefined; // Change from | null to | undefined
+    user_metadata?: { avatar_url?: string | null; full_name?: string };
+    profile?: any; // Add profile data
   } | null;
   completionPercent: number;
   hasUnread: boolean;
@@ -48,6 +47,7 @@ const menuItems = [
 
 export function UserDropdown({ user, completionPercent, hasUnread, unreadCount = 0, onSignOut }: UserDropdownProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { profile } = useProfile(); // Get profile from context
 
   const handleSignOut = () => {
     onSignOut();
@@ -73,7 +73,12 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
           <DropdownMenuTrigger asChild>
             <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2">
               <UserAvatar
-                user={user}
+                user={{
+                  user_metadata: {
+                    avatar_url: profile?.avatar_url, // Use profile avatar_url
+                    full_name: profile?.full_name
+                  }
+                }}
                 completionPercent={completionPercent}
                 hasUnread={hasUnread}
                 unreadCount={unreadCount}
@@ -157,7 +162,12 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
           className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2"
         >
           <UserAvatar
-            user={user}
+            user={{
+              user_metadata: {
+                avatar_url: profile?.avatar_url, // Use profile avatar_url
+                full_name: profile?.full_name
+              }
+            }}
             completionPercent={completionPercent}
             hasUnread={hasUnread}
             unreadCount={unreadCount}
