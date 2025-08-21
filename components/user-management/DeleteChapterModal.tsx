@@ -71,7 +71,6 @@ export function DeleteChapterModal({ isOpen, onClose, onConfirm, chapter, isDele
               Cancel
             </Button>
             <Button
-              variant="destructive"
               onClick={onConfirm}
               disabled={isDeleting}
               className="flex items-center space-x-2"
