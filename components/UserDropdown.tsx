@@ -19,15 +19,14 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { UserAvatar } from './UserAvatar';
 import { Badge } from '@/components/ui/badge';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 
 // Update the interface to match UserAvatar expectations
 interface UserDropdownProps {
   user: { 
     email?: string | null; 
-    user_metadata?: { 
-      avatar_url?: string | null; 
-      full_name?: string; 
-    } | undefined; // Change from | null to | undefined
+    user_metadata?: { avatar_url?: string | null; full_name?: string };
+    profile?: any; // Add profile data
   } | null;
   completionPercent: number;
   hasUnread: boolean;
@@ -37,17 +36,16 @@ interface UserDropdownProps {
 
 const menuItems = [
   { label: 'View Profile', href: '/dashboard/profile', icon: User, locked: false },
-  { label: 'Edit Profile', href: '/dashboard/profile/edit', icon: Settings, locked: false },
-  { label: 'Account & Security', href: '#', icon: Shield, locked: true },
-  { label: 'Privacy & Visibility', href: '#', icon: Shield, locked: true },
-  { label: 'Documents & Uploads', href: '#', icon: FileText, locked: true },
   { label: 'Notifications', href: '/dashboard/notifications', icon: Bell, key: 'notifications', locked: false },
   { label: 'Chapter & Role', href: '#', icon: Users, locked: true },
+  { label: 'Account & Security', href: '#', icon: Shield, locked: true },
+  { label: 'Documents & Uploads', href: '#', icon: FileText, locked: true },
   { label: 'Help & Support', href: '#', icon: HelpCircle, locked: true },
 ];
 
 export function UserDropdown({ user, completionPercent, hasUnread, unreadCount = 0, onSignOut }: UserDropdownProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { profile } = useProfile(); // Get profile from context
 
   const handleSignOut = () => {
     onSignOut();
@@ -71,9 +69,14 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
       <div className="hidden md:block">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2">
+            <button className="flex items-center space-x-2 rounded-2xl hover:bg-gray-50 transition-colors">
               <UserAvatar
-                user={user}
+                user={{
+                  user_metadata: {
+                    avatar_url: profile?.avatar_url, // Use profile avatar_url
+                    full_name: profile?.full_name
+                  }
+                }}
                 completionPercent={completionPercent}
                 hasUnread={hasUnread}
                 unreadCount={unreadCount}
@@ -157,7 +160,12 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
           className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2"
         >
           <UserAvatar
-            user={user}
+            user={{
+              user_metadata: {
+                avatar_url: profile?.avatar_url, // Use profile avatar_url
+                full_name: profile?.full_name
+              }
+            }}
             completionPercent={completionPercent}
             hasUnread={hasUnread}
             unreadCount={unreadCount}

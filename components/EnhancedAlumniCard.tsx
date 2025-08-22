@@ -265,7 +265,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
           {/* Mutual Connections - Ensure perfect centering */}
           <div className="flex flex-col items-center justify-center space-y-2 mb-4">
             <div className="flex -space-x-1">
-              {alumni.mutualConnections && alumni.mutualConnections.slice(0, 3).map((c, i) => (
+              {Array.isArray(alumni.mutualConnections) && alumni.mutualConnections.slice(0, 3).map((c, i) => (
                 <div key={i} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
                   {c.avatar ? (
                     <ImageWithFallback 
@@ -289,7 +289,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
               ))}
             </div>
             <span className="text-sm text-gray-600 leading-tight text-center">
-              {alumni.mutualConnections && alumni.mutualConnections.length > 0 
+              {Array.isArray(alumni.mutualConnections) && alumni.mutualConnections.length > 0 
                 ? `${alumni.mutualConnections[0]?.name || 'Unknown'} and ${alumni.mutualConnectionsCount - 1} other connections`
                 : 'No mutual connections'
               }
