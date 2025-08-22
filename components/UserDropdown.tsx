@@ -36,12 +36,10 @@ interface UserDropdownProps {
 
 const menuItems = [
   { label: 'View Profile', href: '/dashboard/profile', icon: User, locked: false },
-  { label: 'Edit Profile', href: '/dashboard/profile/edit', icon: Settings, locked: false },
-  { label: 'Account & Security', href: '#', icon: Shield, locked: true },
-  { label: 'Privacy & Visibility', href: '#', icon: Shield, locked: true },
-  { label: 'Documents & Uploads', href: '#', icon: FileText, locked: true },
   { label: 'Notifications', href: '/dashboard/notifications', icon: Bell, key: 'notifications', locked: false },
   { label: 'Chapter & Role', href: '#', icon: Users, locked: true },
+  { label: 'Account & Security', href: '#', icon: Shield, locked: true },
+  { label: 'Documents & Uploads', href: '#', icon: FileText, locked: true },
   { label: 'Help & Support', href: '#', icon: HelpCircle, locked: true },
 ];
 
@@ -71,7 +69,7 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
       <div className="hidden md:block">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2">
+            <button className="flex items-center space-x-2 rounded-2xl hover:bg-gray-50 transition-colors">
               <UserAvatar
                 user={{
                   user_metadata: {

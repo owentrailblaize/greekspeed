@@ -404,7 +404,7 @@ export default function ProfilePage() {
                     onClick={() => setIsEditModalOpen(true)}
                   >
                     <Edit className="w-4 h-4 mr-2" />
-            Edit Profile
+                      Edit Profile
                   </Button>
                   <Button 
                     variant="outline" 
