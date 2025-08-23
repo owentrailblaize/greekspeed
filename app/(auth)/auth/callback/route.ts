@@ -60,8 +60,8 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // Redirect to profile completion page for new Google users
-        return NextResponse.redirect(`${requestUrl.origin}/profile/complete?source=google&incomplete=true`);
+        // Redirect to dashboard instead of profile completion
+        return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
       }
     } catch (error) {
       console.error('Callback processing error:', error);
