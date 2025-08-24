@@ -198,22 +198,22 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-6">
-      <Card className="w-full max-w-6xl shadow-xl border-0">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <Card className="w-full max-w-5xl shadow-xl border-0">
         <CardContent className="p-0">
-          <div className="flex min-h-[600px]">
+          <div className="flex min-h-[500px]">
             {/* Left Column - Introduction */}
-            <div className="w-full lg:w-1/2 bg-gradient-to-br from-navy-50 to-blue-50 p-12 flex flex-col justify-center">
+            <div className="w-full lg:w-1/2 bg-gradient-to-br from-navy-50 to-blue-50 p-8 flex flex-col justify-center">
               <div className="text-center lg:text-left">
-                <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+                <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
                   Welcome to Trailblaize
                 </h1>
-                <p className="text-xl text-gray-700 mb-8 leading-relaxed">
+                <p className="text-lg text-gray-700 mb-6 leading-relaxed">
                   Rethink the way you connect, manage, and grow your fraternity network
                 </p>
                 
-                {/* Network Visualization */}
-                <div className="relative w-64 h-64 mx-auto lg:mx-0">
+                {/* Network Visualization - Smaller */}
+                <div className="relative w-48 h-48 mx-auto lg:mx-0">
                   <div className="absolute inset-0 bg-gradient-to-br from-navy-200 to-blue-200 rounded-full opacity-20"></div>
                   <div className="absolute inset-4 bg-gradient-to-br from-navy-300 to-blue-300 rounded-full opacity-30"></div>
                   <div className="absolute inset-8 bg-gradient-to-br from-navy-400 to-blue-400 rounded-full opacity-40"></div>
@@ -237,9 +237,9 @@ export default function SignUpPage() {
             </div>
 
             {/* Right Column - Sign Up */}
-            <div className="w-full lg:w-1/2 p-12 flex flex-col justify-center text-center">
+            <div className="w-full lg:w-1/2 p-8 flex flex-col justify-center text-center">
               {/* Logo - Centered */}
-              <div className="flex items-center justify-center space-x-3 mb-8">
+              <div className="flex items-center justify-center space-x-3 mb-6">
                 <div className="w-8 h-8 bg-navy-600 rounded-lg flex items-center justify-center">
                   <Star className="h-5 w-5 text-white" />
                 </div>
@@ -247,11 +247,11 @@ export default function SignUpPage() {
               </div>
 
               {/* Heading - Centered */}
-              <h2 className="text-3xl font-bold text-gray-900 mb-8">Get started for free</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Get started for free</h2>
 
               {!showEmailForm ? (
                 /* Social Sign Up Options - Centered */
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <Button 
                     type="button"
                     variant="outline" 
@@ -283,7 +283,7 @@ export default function SignUpPage() {
                   <button
                     type="button"
                     onClick={() => setShowEmailForm(false)}
-                    className="flex items-center text-sm text-gray-600 hover:text-gray-800 mb-6 transition-colors"
+                    className="flex items-center text-sm text-gray-600 hover:text-gray-800 mb-4 transition-colors"
                   >
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -291,7 +291,7 @@ export default function SignUpPage() {
                     Back to sign up options
                   </button>
 
-                  <form onSubmit={handleSubmit} className="space-y-4">
+                  <form onSubmit={handleSubmit} className="space-y-3">
                     {/* Name Fields */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
