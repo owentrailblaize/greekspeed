@@ -48,9 +48,11 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    
     const supabase = createServerComponentClient({ cookies });
     
     // Get user session
@@ -75,10 +77,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
-    const taskId = params.id;
-
     // Delete the task
-    await deleteTask(taskId);
+    await deleteTask(id);
 
     return NextResponse.json({ message: 'Task deleted successfully' });
   } catch (error) {
