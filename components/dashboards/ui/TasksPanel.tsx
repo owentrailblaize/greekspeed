@@ -9,11 +9,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ClipboardList, User, Calendar, AlertTriangle, Plus, Loader2, X } from 'lucide-react';
+import { ClipboardList, User, Calendar, AlertTriangle, Plus, Loader2, X, Eye, Trash2, CheckCircle, Clock } from 'lucide-react';
 import { Task, TaskStatus, TaskPriority, CreateTaskRequest } from '@/types/operations';
 import { getTasksByChapter, updateTask, getChapterMembers, subscribeToTasks } from '@/lib/services/taskService';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { TaskModal } from '@/components/ui/TaskModal';
+import { supabase } from '@/lib/supabase/client';
 
 interface TasksPanelProps {
   chapterId?: string;
@@ -21,7 +22,15 @@ interface TasksPanelProps {
 
 export function TasksPanel({ chapterId }: TasksPanelProps) {
   const { profile } = useProfile();
-  const [tasks, setTasks] = useState<Task[]>([]);
+  
+  // Add this debug log to see what's in the profile
+  console.log('Current profile in TasksPanel:', profile);
+  console.log('Profile role:', profile?.role);
+  console.log('Profile chapter_role:', profile?.chapter_role);
+  console.log('Profile ID:', profile?.id);
+
+  const [tasks, setTasks] = useState<Task[]>([]); // Personal tasks only
+  const [allChapterTasks, setAllChapterTasks] = useState<Task[]>([]); // All chapter tasks for modal
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -35,37 +44,20 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
     priority: 'medium'
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Debug logging
-  console.log('TasksPanel render:', { 
-    chapterId, 
-    profileId: profile?.id, 
-    profileChapterId: profile?.chapter_id,
-    loading, 
-    tasksCount: tasks.length 
-  });
+  const [isViewAllModalOpen, setIsViewAllModalOpen] = useState(false);
 
   // Load tasks and chapter members
   useEffect(() => {
-    console.log('TasksPanel useEffect triggered:', { 
-      chapterId, 
-      profileId: profile?.id,
-      profileChapterId: profile?.chapter_id 
-    });
-    
     if (!chapterId) {
-      console.log('No chapterId provided, setting loading to false');
       setLoading(false);
       return;
     }
 
     if (!profile?.id) {
-      console.log('No profile ID, setting loading to false');
       setLoading(false);
       return;
     }
 
-    console.log('Starting to load data for chapter:', chapterId);
     loadAllData();
   }, [chapterId, profile?.id]);
 
@@ -75,12 +67,17 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
       const subscription = subscribeToTasks(chapterId, (payload) => {
         if (payload.eventType === 'INSERT') {
           setTasks(prev => [payload.new, ...prev]);
+          setAllChapterTasks(prev => [payload.new, ...prev]); // Also update allChapterTasks
         } else if (payload.eventType === 'UPDATE') {
           setTasks(prev => prev.map(task => 
             task.id === payload.new.id ? payload.new : task
           ));
+          setAllChapterTasks(prev => prev.map(task => 
+            task.id === payload.new.id ? payload.new : task
+          )); // Also update allChapterTasks
         } else if (payload.eventType === 'DELETE') {
           setTasks(prev => prev.filter(task => task.id !== payload.old.id));
+          setAllChapterTasks(prev => prev.filter(task => task.id !== payload.old.id)); // Also update allChapterTasks
         }
       });
 
@@ -91,28 +88,38 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
   }, [chapterId]);
 
   const loadAllData = async () => {
-    console.log('loadAllData started');
     try {
       setLoading(true);
-      console.log('Loading tasks for chapter:', chapterId);
       
-      // Load both tasks and members in parallel
-      const [tasksData, membersData] = await Promise.all([
-        getTasksByChapter(chapterId!),
+      // Load personal tasks, all chapter tasks, and members in parallel
+      const [personalTasksData, allTasksData, membersData] = await Promise.all([
+        // Personal tasks only (for the main panel)
+        supabase
+          .from('tasks')
+          .select('*')
+          .eq('chapter_id', chapterId!)
+          .eq('assignee_id', profile!.id)
+          .order('due_date', { ascending: true }),
+        
+        // All chapter tasks (for the modal)
+        supabase
+          .from('tasks')
+          .select('*')
+          .eq('chapter_id', chapterId!)
+          .order('due_date', { ascending: true }),
+        
         getChapterMembers(chapterId!)
       ]);
       
-      console.log('Data loaded:', { tasks: tasksData.length, members: membersData.length });
-      
-      setTasks(tasksData);
+      setTasks(personalTasksData.data || []); // Personal tasks
+      setAllChapterTasks(allTasksData.data || []); // All chapter tasks
       setChapterMembers(membersData);
     } catch (error) {
       console.error('Error loading data:', error);
-      // Set empty arrays on error so UI can still render
       setTasks([]);
+      setAllChapterTasks([]);
       setChapterMembers([]);
     } finally {
-      console.log('Setting loading to false');
       setLoading(false);
     }
   };
@@ -123,17 +130,30 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
     try {
       setCreating(true);
       
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      console.log('Creating task with data:', {
+        ...taskData,
+        chapter_id: chapterId,
+        assigned_by: profile.id
+      });
+      
+      // Use Supabase directly instead of API route
+      const { data: task, error } = await supabase
+        .from('tasks')
+        .insert({
           ...taskData,
           chapter_id: chapterId,
-          assigned_by: profile.id
+          assigned_by: profile.id,
+          status: 'pending'
         })
-      });
+        .select()
+        .single();
 
-      if (!response.ok) throw new Error('Failed to create task');
+      if (error) {
+        console.error('Supabase error:', error);
+        throw new Error(`Failed to create task: ${error.message}`);
+      }
+
+      console.log('Task created successfully:', task);
 
       // Close modal
       setIsModalOpen(false);
@@ -174,23 +194,36 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
     }
   };
 
-  const getStatusColor = (status: TaskStatus) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'overdue': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      // Remove from local state
+      setTasks(prev => prev.filter(task => task.id !== taskId));
+      console.log('Task deleted successfully');
+    } catch (error) {
+      console.error('Error deleting task:', error);
     }
   };
 
-  const getStatusText = (status: TaskStatus) => {
+  const getStatusIcon = (status: TaskStatus) => {
     switch (status) {
-      case 'pending': return 'Pending';
-      case 'in_progress': return 'In Progress';
-      case 'completed': return 'Completed';
-      case 'overdue': return 'Overdue';
-      default: return 'Unknown';
+      case 'completed': return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'pending': return <Clock className="h-4 w-4 text-yellow-600" />;
+      default: return <Clock className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  const getStatusColor = (status: TaskStatus) => {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -274,6 +307,18 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
           </Button>
         </div>
 
+        {/* View All Tasks Button */}
+        <div className="mb-4">
+          <Button 
+            onClick={() => setIsViewAllModalOpen(true)}
+            variant="outline"
+            className="w-full border-navy-600 text-navy-600 hover:bg-navy-50"
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            View All Assigned Tasks
+          </Button>
+        </div>
+
         {/* Task Modal */}
         <TaskModal
           isOpen={isModalOpen}
@@ -283,7 +328,106 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
           creating={creating}
         />
 
-        {/* Tasks List */}
+        {/* View All Tasks Modal */}
+        {isViewAllModalOpen && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={() => setIsViewAllModalOpen(false)} />
+              
+              <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full max-w-6xl">
+                {/* Header */}
+                <div className="bg-white px-6 py-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      All Chapter Tasks
+                    </h3>
+                    <button
+                      onClick={() => setIsViewAllModalOpen(false)}
+                      className="rounded-lg p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="bg-white px-6 py-6 max-h-96 overflow-y-auto">
+                  <div className="space-y-4">
+                    {allChapterTasks.length === 0 ? ( // Use allChapterTasks here
+                      <div className="text-center py-8 text-gray-500">
+                        <ClipboardList className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                        <p className="text-lg font-medium mb-2">No tasks yet</p>
+                        <p className="text-sm">Create your first task to get started!</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {allChapterTasks.map((task) => ( // Use allChapterTasks here
+                              <tr key={task.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="flex items-center space-x-2">
+                                    {getStatusIcon(task.status)}
+                                    <Badge className={getStatusColor(task.status)}>
+                                      {task.status}
+                                    </Badge>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div>
+                                    <div className="text-sm font-medium text-gray-900">{task.title}</div>
+                                    {task.description && (
+                                      <div className="text-sm text-gray-500">{task.description}</div>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {task.assignee_name || 'Unassigned'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <Badge className={getPriorityColor(task.priority)}>
+                                    {task.priority}
+                                  </Badge>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {formatDate(task.due_date)}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                  {task.status === 'completed' && (
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleDeleteTask(task.id)}
+                                      className="flex items-center space-x-1"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                      <span>Delete</span>
+                                    </Button>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Existing Tasks List */}
         <div className="space-y-4">
           {tasks.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -298,7 +442,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
                   <h4 className="font-medium text-gray-900 text-sm">{task.title}</h4>
                   <div className="flex space-x-2">
                     <Badge className={getStatusColor(task.status)}>
-                      {getStatusText(task.status)}
+                      {task.status}
                     </Badge>
                     <Badge className={getPriorityColor(task.priority)}>
                       {task.priority}

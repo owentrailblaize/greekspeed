@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ListTodo, Loader2 } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
-import { getTasksByChapter } from '@/lib/services/taskService';
+import { supabase } from '@/lib/supabase/client'; // Add this import
 import { Task, TaskStatus } from '@/types/operations';
 
 export function MyTasksCard() {
@@ -17,7 +17,7 @@ export function MyTasksCard() {
 
   // Load tasks for the current user
   useEffect(() => {
-    if (!profile?.chapter_id) {
+    if (!profile?.chapter_id || !profile?.id) {
       setLoading(false);
       return;
     }
@@ -27,13 +27,33 @@ export function MyTasksCard() {
         setLoading(true);
         setError(null);
         
-        // Fetch all tasks for the chapter - profile.chapter_id is guaranteed to be string here
-        const allTasks = await getTasksByChapter(profile.chapter_id!);
-        
-        // Filter to only show tasks assigned to the current user
-        const myTasks = allTasks.filter(task => task.assignee_id === profile.id);
-        
-        setTasks(myTasks);
+        // Use Supabase directly to fetch tasks
+        const { data: allTasks, error: fetchError } = await supabase
+          .from('tasks')
+          .select(`
+            *,
+            assignee:profiles!tasks_assignee_id_fkey(full_name),
+            assigned_by:profiles!tasks_assigned_by_fkey(full_name),
+            chapter:chapters!tasks_chapter_id_fkey(name)
+          `)
+          .eq('chapter_id', profile.chapter_id)
+          .eq('assignee_id', profile.id) // Only get tasks assigned to current user
+          .order('created_at', { ascending: false });
+
+        if (fetchError) {
+          throw fetchError;
+        }
+
+        // Transform data to include computed fields
+        const transformedTasks = allTasks.map(task => ({
+          ...task,
+          assignee_name: task.assignee?.full_name || 'Unassigned',
+          assigned_by_name: task.assigned_by?.full_name || 'Unknown',
+          chapter_name: task.chapter?.name || 'Unknown Chapter',
+          is_overdue: task.due_date && task.status !== 'completed' && new Date(task.due_date) < new Date()
+        }));
+
+        setTasks(transformedTasks);
       } catch (error) {
         console.error('Error loading my tasks:', error);
         setError('Failed to load tasks');
@@ -50,21 +70,26 @@ export function MyTasksCard() {
     try {
       const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
       
-      // Update task status via API
-      const response = await fetch(`/api/tasks/${taskId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
-      });
+      // Update in Supabase
+      const { error: updateError } = await supabase
+        .from('tasks')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString() // Track when it was updated
+        })
+        .eq('id', taskId);
 
-      if (response.ok) {
-        // Update local state
-        setTasks(prev => prev.map(task => 
-          task.id === taskId ? { ...task, status: newStatus } : task
-        ));
-      }
+      if (updateError) throw updateError;
+
+      // Update local state
+      setTasks(prev => prev.map(task => 
+        task.id === taskId ? { ...task, status: newStatus } : task
+      ));
+
+      console.log(`Task marked as ${newStatus}`);
     } catch (error) {
       console.error('Error updating task:', error);
+      // Could add toast notification here
     }
   };
 

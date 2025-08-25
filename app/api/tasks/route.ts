@@ -1,12 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { createTask } from '@/lib/services/taskService';
 import { canManageMembers } from '@/lib/permissions';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createServerComponentClient({ cookies });
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set() {}, // No-op for API routes
+          remove() {}, // No-op for API routes
+        },
+      }
+    );
     
     // Get user session
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -55,11 +68,33 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerComponentClient({ cookies });
+    // Use createServerClient instead of createRouteHandlerClient
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set(name: string, value: string, options: any) {
+            // This won't work in API routes, but we don't need to set cookies here
+          },
+          remove(name: string, options: any) {
+            // This won't work in API routes, but we don't need to remove cookies here
+          },
+        },
+      }
+    );
     
     // Get user session
     const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    console.log('Auth check result:', { user: user?.id, error: authError });
+    
     if (authError || !user) {
+      console.log('Authentication failed:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -70,12 +105,22 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
+    console.log('Profile data:', profile);
+
     if (profileError || !profile) {
+      console.log('Profile not found:', profileError);
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
     // Check permissions
-    if (!canManageMembers(profile.role as any, profile.chapter_role)) {
+    const hasPermission = canManageMembers(profile.role as any, profile.chapter_role);
+    console.log('Permission check:', { 
+      role: profile.role, 
+      chapter_role: profile.chapter_role, 
+      hasPermission 
+    });
+
+    if (!hasPermission) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
