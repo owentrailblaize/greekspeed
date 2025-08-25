@@ -158,9 +158,6 @@ export function MyTasksCard() {
           <div className="text-center py-8">
             <p className="text-gray-500 text-sm mb-2">You&apos;re all caught up 🎉</p>
             <p className="text-gray-400 text-xs mb-3">No tasks assigned to you yet</p>
-            <Button variant="outline" size="sm" className="text-navy-600 border-navy-600 hover:bg-navy-50">
-              Complete your profile
-            </Button>
           </div>
         </CardContent>
       </Card>

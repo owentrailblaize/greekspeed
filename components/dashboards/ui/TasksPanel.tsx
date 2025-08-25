@@ -61,25 +61,46 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
     loadAllData();
   }, [chapterId, profile?.id]);
 
-  // Subscribe to real-time updates
+  // Enhanced real-time subscription with proper state updates
   useEffect(() => {
     if (chapterId) {
-      const subscription = subscribeToTasks(chapterId, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          setTasks(prev => [payload.new, ...prev]);
-          setAllChapterTasks(prev => [payload.new, ...prev]); // Also update allChapterTasks
-        } else if (payload.eventType === 'UPDATE') {
-          setTasks(prev => prev.map(task => 
-            task.id === payload.new.id ? payload.new : task
-          ));
-          setAllChapterTasks(prev => prev.map(task => 
-            task.id === payload.new.id ? payload.new : task
-          )); // Also update allChapterTasks
-        } else if (payload.eventType === 'DELETE') {
-          setTasks(prev => prev.filter(task => task.id !== payload.old.id));
-          setAllChapterTasks(prev => prev.filter(task => task.id !== payload.old.id)); // Also update allChapterTasks
-        }
-      });
+      const subscription = supabase
+        .channel(`tasks-${chapterId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'tasks',
+            filter: `chapter_id=eq.${chapterId}`
+          },
+          (payload) => {
+            console.log('Real-time update received:', payload);
+            
+            if (payload.eventType === 'INSERT') {
+              // Add new task to both states
+              const newTask = payload.new as Task;
+              setTasks(prev => [newTask, ...prev]);
+              setAllChapterTasks(prev => [newTask, ...prev]);
+            } else if (payload.eventType === 'UPDATE') {
+              // Update task in both states
+              const updatedTask = payload.new as Task;
+              setTasks(prev => prev.map(task => 
+                task.id === updatedTask.id ? updatedTask : task
+              ));
+              setAllChapterTasks(prev => prev.map(task => 
+                task.id === updatedTask.id ? updatedTask : task
+              ));
+            } else if (payload.eventType === 'DELETE') {
+              // Remove task from both states
+              const deletedTaskId = payload.old.id;
+              console.log('Removing deleted task:', deletedTaskId);
+              setTasks(prev => prev.filter(task => task.id !== deletedTaskId));
+              setAllChapterTasks(prev => prev.filter(task => task.id !== deletedTaskId));
+            }
+          }
+        )
+        .subscribe();
 
       return () => {
         subscription.unsubscribe();
@@ -194,8 +215,11 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
     }
   };
 
+  // Enhanced delete function with immediate state update
   const handleDeleteTask = async (taskId: string) => {
     try {
+      console.log('Deleting task:', taskId);
+      
       const { error } = await supabase
         .from('tasks')
         .delete()
@@ -203,11 +227,15 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
 
       if (error) throw error;
 
-      // Remove from local state
+      console.log('Task deleted successfully from Supabase');
+      
+      // Immediately update local state for instant UI feedback
+      setAllChapterTasks(prev => prev.filter(task => task.id !== taskId));
       setTasks(prev => prev.filter(task => task.id !== taskId));
-      console.log('Task deleted successfully');
+      
     } catch (error) {
       console.error('Error deleting task:', error);
+      alert('Failed to delete task. Please try again.');
     }
   };
 
