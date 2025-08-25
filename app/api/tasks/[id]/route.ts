@@ -6,9 +6,11 @@ import { canManageMembers } from '@/lib/permissions';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    
     const supabase = createServerComponentClient({ cookies });
     
     // Get user session
@@ -34,10 +36,9 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const taskId = params.id;
 
     // Update the task
-    const task = await updateTask(taskId, body);
+    const task = await updateTask(id, body);
 
     return NextResponse.json(task);
   } catch (error) {
