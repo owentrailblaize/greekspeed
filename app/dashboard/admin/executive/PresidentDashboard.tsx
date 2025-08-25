@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+import { TasksPanel } from '@/components/dashboards/ui/TasksPanel';
+import { useProfile } from '@/lib/hooks/useProfile';
 
 const chapterStats = {
   totalMembers: 156,
@@ -30,6 +32,8 @@ const pendingApprovals = [
 
 export function PresidentDashboard() {
   const [announcement, setAnnouncement] = useState("");
+  const { profile } = useProfile();
+  const chapterId = profile?.chapter_id;
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
@@ -295,6 +299,9 @@ export function PresidentDashboard() {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Add Tasks Panel */}
+          {chapterId && <TasksPanel chapterId={chapterId} />}
         </div>
       </div>
     </div>
