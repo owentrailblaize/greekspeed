@@ -8,8 +8,12 @@ import { EventsPanel } from './ui/EventsPanel';
 import { TasksPanel } from './ui/TasksPanel';
 import { DocsCompliancePanel } from './ui/DocsCompliancePanel';
 import { AlertsStrip } from './ui/AlertsStrip';
+import { useProfile } from '@/lib/hooks/useProfile';
 
 export function AdminOverview() {
+  const { profile } = useProfile();
+  const chapterId = profile?.chapter_id; // Get the chapter_id from profile
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -27,31 +31,24 @@ export function AdminOverview() {
 
       {/* Main Content - Three Column Layout */}
       <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className="grid grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* Left Sidebar - Quick Actions & Snapshots */}
-          <div className="col-span-3">
-            <div className="sticky top-6 space-y-6">
-              <QuickActions />
-              <DuesSnapshot />
-              <ComplianceSnapshot />
-            </div>
+          {/* Left Column */}
+          <div className="col-span-1 space-y-6">
+            <QuickActions />
+            <DuesSnapshot />
           </div>
-
-          {/* Center Column - Operations Feed & Events */}
-          <div className="col-span-6">
-            <div className="space-y-6">
-              <OperationsFeed />
-              <EventsPanel />
-            </div>
+          
+          {/* Center Column */}
+          <div className="col-span-1 space-y-6">
+            <OperationsFeed />
           </div>
-
-          {/* Right Sidebar - Tasks & Compliance */}
-          <div className="col-span-3">
-            <div className="space-y-6">
-              <TasksPanel />
-              <DocsCompliancePanel />
-            </div>
+          
+          {/* Right Column */}
+          <div className="col-span-1 space-y-6">
+            {/* Pass chapterId to TasksPanel */}
+            {chapterId && <TasksPanel chapterId={chapterId} />}
+            <DocsCompliancePanel />
           </div>
         </div>
       </div>

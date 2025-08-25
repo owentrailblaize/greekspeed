@@ -5,17 +5,25 @@ import type { NextRequest } from 'next/server';
 export async function middleware(req: NextRequest) {
   console.log('🔍 Middleware: Processing request for:', req.nextUrl.pathname);
   
-  const res = NextResponse.next();
+  let response = NextResponse.next({
+    request: {
+      headers: req.headers,
+    },
+  });
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return req.cookies.getAll();
+        get(name: string) {
+          return req.cookies.get(name)?.value;
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => res.cookies.set(name, value, options));
+        set(name: string, value: string, options: any) {
+          response.cookies.set(name, value, options);
+        },
+        remove(name: string, options: any) {
+          response.cookies.set(name, '', { ...options, maxAge: 0 });
         },
       },
     }
@@ -29,28 +37,15 @@ export async function middleware(req: NextRequest) {
   console.log('🔍 Middleware: Session check:', { 
     hasSession: !!session, 
     error: error?.message,
-    pathname: req.nextUrl.pathname 
+    pathname: req.nextUrl.pathname,
+    userId: session?.user?.id
   });
 
-  // Temporarily disable dashboard protection to debug
-  // if (req.nextUrl.pathname.startsWith('/dashboard')) {
-  //   if (!session) {
-  //     console.log('❌ Middleware: No session for dashboard, redirecting to sign-in');
-  //     return NextResponse.redirect(new URL('/sign-in', req.url));
-  //   }
-  //   console.log('✅ Middleware: Session valid for dashboard access');
-  // }
-
-  // If user is signed in and tries to access auth pages, redirect to dashboard
-  if (session && (req.nextUrl.pathname === '/sign-in' || req.nextUrl.pathname === '/sign-up')) {
-    console.log('✅ Middleware: Signed in user accessing auth page, redirecting to dashboard');
-    return NextResponse.redirect(new URL('/dashboard', req.url));
-  }
-
+  // Don't block dashboard access for now - just log the session state
   console.log('✅ Middleware: Request allowed to proceed');
-  return res;
+  return response;
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/sign-in', '/sign-up'],
+  matcher: ['/dashboard/:path*', '/sign-in', '/sign-up', '/api/:path*'],
 };
