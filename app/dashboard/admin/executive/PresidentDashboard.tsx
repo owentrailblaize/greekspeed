@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { TasksPanel } from '@/components/dashboards/ui/TasksPanel';
+import { ChapterDocumentManager } from '@/components/dashboards/ui/ChapterDocumentManager';
 import { useProfile } from '@/lib/hooks/useProfile';
 
 const chapterStats = {
@@ -226,6 +227,14 @@ export function PresidentDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* NEW: Chapter Document Management */}
+          {chapterId && (
+            <ChapterDocumentManager 
+              chapterId={chapterId} 
+              className="w-full"
+            />
+          )}
         </div>
 
         {/* Sidebar */}

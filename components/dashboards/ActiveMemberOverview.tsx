@@ -5,6 +5,7 @@ import { DuesStatusCard } from './ui/DuesStatusCard';
 import { MyTasksCard } from './ui/MyTasksCard';
 import { UpcomingEventsCard } from './ui/UpcomingEventsCard';
 import { NetworkingSuggestionsCard } from './ui/NetworkingSuggestionsCard';
+import { DocsCompliancePanel } from './ui/DocsCompliancePanel';
 
 export function ActiveMemberOverview() {
   return (
@@ -21,11 +22,12 @@ export function ActiveMemberOverview() {
       <div className="max-w-7xl mx-auto px-6 py-6">
         <div className="grid grid-cols-12 gap-6">
           
-          {/* Left Sidebar - Dues & Tasks */}
+          {/* Left Sidebar - Dues, Tasks & Documents */}
           <div className="col-span-3">
             <div className="sticky top-6 space-y-6">
               <DuesStatusCard />
               <MyTasksCard />
+              <DocsCompliancePanel />
             </div>
           </div>
 

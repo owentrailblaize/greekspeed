@@ -129,5 +129,9 @@ export default function AdminPage() {
   if (loading) return <div>Loading...</div>;
   if (!hasAccess) return <div>Access denied. Admin access required.</div>;
 
-  return <ExecAdminPage />;
+  return (
+    <div className="space-y-6">
+      <ExecAdminPage />
+    </div>
+  );
 }
