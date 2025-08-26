@@ -27,6 +27,9 @@ import {
   Loader2,
   X
 } from 'lucide-react';
+import { documentUploadService, DocumentUploadData } from '@/lib/services/documentUploadService';
+import { toast } from 'react-toastify';
+import { supabase } from '@/lib/supabase/client'; // Fixed import path
 
 // Mock data structure that matches your future database schema
 interface ChapterDocument {
@@ -81,65 +84,13 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
     title: '',
     description: '',
     documentType: 'general',
-    visibility: ['Admins'],
+    visibility: ['admins'], // Changed from ['Admins']
     tags: [],
     effectiveDate: new Date().toISOString().split('T')[0]
   });
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
-
-  // Mock data for development - replace with API calls later
-  const mockDocuments: ChapterDocument[] = [
-    {
-      id: '1',
-      title: 'Chapter Bylaws 2024',
-      description: 'Official chapter bylaws and constitution',
-      file_url: '/mock/bylaws.pdf',
-      file_type: 'application/pdf',
-      file_size: 245760,
-      owner_id: 'user1',
-      chapter_id: chapterId || 'chapter1',
-      visibility: ['Admins', 'Active Members'],
-      document_type: 'chapter_document',
-      created_at: '2024-01-15T10:00:00Z',
-      updated_at: '2024-01-15T10:00:00Z',
-      owner_name: 'Sarah Johnson',
-      tags: ['legal', 'constitution']
-    },
-    {
-      id: '2',
-      title: 'Spring 2024 Budget',
-      description: 'Chapter budget and financial planning',
-      file_url: '/mock/budget.xlsx',
-      file_type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.document',
-      file_size: 512000,
-      owner_id: 'user2',
-      chapter_id: chapterId || 'chapter1',
-      visibility: ['Admins', 'Treasurer'],
-      document_type: 'chapter_document',
-      created_at: '2024-01-10T14:30:00Z',
-      updated_at: '2024-01-10T14:30:00Z',
-      owner_name: 'Michael Chen',
-      tags: ['finance', 'budget']
-    },
-    {
-      id: '3',
-      title: 'Risk Management Policy',
-      description: 'Chapter risk management and safety guidelines',
-      file_url: '/mock/risk-policy.pdf',
-      file_type: 'application/pdf',
-      file_size: 189440,
-      owner_id: 'user3',
-      chapter_id: chapterId || 'chapter1',
-      visibility: ['Admins', 'Active Members'],
-      document_type: 'chapter_document',
-      created_at: '2024-01-05T09:15:00Z',
-      updated_at: '2024-01-05T09:15:00Z',
-      owner_name: 'Alex Thompson',
-      tags: ['safety', 'policy']
-    }
-  ];
 
   // Load documents on component mount
   useEffect(() => {
@@ -155,14 +106,41 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
     try {
       setLoading(true);
       
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/documents?chapterId=${chapterId}&type=chapter_document`);
-      // const data = await response.json();
-      // setDocuments(data.documents || []);
-      
-      // For now, use mock data
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
-      setDocuments(mockDocuments);
+      // Replace mock data with actual API call
+      const { data: documents, error } = await supabase
+        .from('documents')
+        .select(`
+          *,
+          profiles!documents_owner_id_fkey(full_name)
+        `)
+        .eq('chapter_id', chapterId)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading documents:', error);
+        setDocuments([]);
+      } else {
+        // Transform the data to match your ChapterDocument interface
+        const transformedDocuments: ChapterDocument[] = documents.map(doc => ({
+          id: doc.id,
+          title: doc.title,
+          description: doc.description,
+          file_url: doc.file_url,
+          file_type: doc.mime_type,
+          file_size: doc.file_size,
+          owner_id: doc.owner_id,
+          chapter_id: doc.chapter_id,
+          visibility: doc.visibility,
+          document_type: doc.document_type === 'chapter_document' ? 'chapter_document' : 'general',
+          created_at: doc.created_at,
+          updated_at: doc.updated_at,
+          owner_name: doc.profiles?.full_name,
+          tags: doc.tags || []
+        }));
+        
+        setDocuments(transformedDocuments);
+      }
     } catch (error) {
       console.error('Error loading documents:', error);
       setDocuments([]);
@@ -344,34 +322,47 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
   // Add this function to handle form submission
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile || !uploadFormData.title.trim()) return;
+    
+    if (!selectedFile) {
+      setUploadError('Please select a file to upload');
+      return;
+    }
 
     setUploading(true);
-    setUploadError(null);
+    setUploadError('');
 
     try {
-      // TODO: Replace with actual API call
-      // For now, simulate upload
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Create new document object
-      const newDocument: ChapterDocument = {
-        id: Date.now().toString(),
-        title: uploadFormData.title.trim(),
-        description: uploadFormData.description.trim(),
-        file_url: URL.createObjectURL(selectedFile), // Temporary URL for demo
-        file_type: selectedFile.type,
-        file_size: selectedFile.size,
-        owner_id: 'current-user-id', // TODO: Get from auth context
-        chapter_id: chapterId || 'chapter1',
+      const uploadData: DocumentUploadData = {
+        title: uploadFormData.title,
+        description: uploadFormData.description,
+        documentType: uploadFormData.documentType,
         visibility: uploadFormData.visibility,
-        document_type: 'chapter_document',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        owner_name: 'Current User', // TODO: Get from auth context
-        tags: uploadFormData.tags
+        tags: uploadFormData.tags,
+        effectiveDate: uploadFormData.effectiveDate,
+        expiresAt: uploadFormData.expiresAt || undefined,
+        reviewBy: uploadFormData.reviewBy || undefined,
+        file: selectedFile
       };
 
+      const uploadedDocument = await documentUploadService.uploadDocument(uploadData);
+      
+      // Convert UploadedDocument to ChapterDocument format
+      const newDocument: ChapterDocument = {
+        id: uploadedDocument.id,
+        title: uploadedDocument.title,
+        description: uploadedDocument.description,
+        file_url: uploadedDocument.file_url,
+        file_type: uploadedDocument.mime_type,
+        file_size: uploadedDocument.file_size,
+        owner_id: uploadedDocument.owner_id,
+        chapter_id: uploadedDocument.chapter_id,
+        visibility: uploadedDocument.visibility,
+        document_type: 'chapter_document', // Convert to expected type
+        created_at: uploadedDocument.created_at,
+        updated_at: uploadedDocument.updated_at,
+        tags: uploadedDocument.tags
+      };
+      
       // Add to documents list
       setDocuments(prev => [newDocument, ...prev]);
       
@@ -380,15 +371,21 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
         title: '',
         description: '',
         documentType: 'general',
-        visibility: ['Admins'],
+        visibility: ['admins'], // Changed from ['Admins']
         tags: [],
-        effectiveDate: new Date().toISOString().split('T')[0]
+        effectiveDate: new Date().toISOString().split('T')[0],
+        expiresAt: '',
+        reviewBy: ''
       });
       setSelectedFile(null);
       setShowUploadModal(false);
       
+      // Show success message
+      toast.success('Document uploaded successfully!');
+      
     } catch (error) {
-      setUploadError('Upload failed. Please try again.');
+      console.error('Upload error:', error);
+      setUploadError(error instanceof Error ? error.message : 'Upload failed');
     } finally {
       setUploading(false);
     }
@@ -701,21 +698,17 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                   <label className="text-sm font-medium text-gray-700">Document Type *</label>
                   <Select 
                     value={uploadFormData.documentType} 
-                    onValueChange={(value) => setUploadFormData(prev => ({ ...prev, documentType: value }))}
+                    onValueChange={(value: string) => setUploadFormData(prev => ({ ...prev, documentType: value }))}
                   >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bylaws">Bylaws & Governance</SelectItem>
-                      <SelectItem value="policy">Policy Documents</SelectItem>
-                      <SelectItem value="meeting_minutes">Meeting Minutes</SelectItem>
-                      <SelectItem value="budget">Budget & Finance</SelectItem>
-                      <SelectItem value="event_doc">Event Documents</SelectItem>
-                      <SelectItem value="compliance">Compliance & Training</SelectItem>
-                      <SelectItem value="general">General</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
+                    <SelectItem value="">Select document type</SelectItem>
+                    <SelectItem value="bylaws">Bylaws & Governance</SelectItem>
+                    <SelectItem value="policy">Policy Documents</SelectItem>
+                    <SelectItem value="meeting_minutes">Meeting Minutes</SelectItem>
+                    <SelectItem value="budget">Budget & Finance</SelectItem>
+                    <SelectItem value="event_doc">Event Documents</SelectItem>
+                    <SelectItem value="compliance">Compliance & Training</SelectItem>
+                    <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
                   </Select>
                 </div>
 
@@ -775,10 +768,10 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                   <label className="text-sm font-medium text-gray-700">Visibility *</label>
                   <div className="grid grid-cols-2 gap-3">
                     {[
-                      { value: 'Admins', label: 'Admins Only' },
-                      { value: 'Active Members', label: 'Active Members' },
-                      { value: 'Alumni', label: 'Alumni' },
-                      { value: 'Everyone in chapter', label: 'Everyone in Chapter' }
+                      { value: 'admins', label: 'Admins Only' },
+                      { value: 'active_members', label: 'Active Members' },
+                      { value: 'alumni', label: 'Alumni' },
+                      { value: 'chapter_all', label: 'Everyone in Chapter' }
                     ].map(option => (
                       <label key={option.value} className="flex items-center space-x-2 cursor-pointer">
                         <input
