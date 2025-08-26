@@ -25,7 +25,8 @@ import {
   CheckCircle,
   Clock,
   Loader2,
-  X
+  X,
+  Lock
 } from 'lucide-react';
 import { documentUploadService, DocumentUploadData } from '@/lib/services/documentUploadService';
 import { toast } from 'react-toastify';
@@ -47,6 +48,7 @@ interface ChapterDocument {
   updated_at: string;
   owner_name?: string;
   tags?: string[];
+  storage_path?: string; // Added for delete functionality
 }
 
 interface ChapterDocumentManagerProps {
@@ -76,8 +78,6 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedVisibility, setSelectedVisibility] = useState('all');
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<ChapterDocument | null>(null);
-  const [showViewModal, setShowViewModal] = useState(false);
 
   // Add new state for upload form
   const [uploadFormData, setUploadFormData] = useState<DocumentUploadFormData>({
@@ -136,7 +136,8 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
           created_at: doc.created_at,
           updated_at: doc.updated_at,
           owner_name: doc.profiles?.full_name,
-          tags: doc.tags || []
+          tags: doc.tags || [],
+          storage_path: doc.storage_path // Add storage_path to transformed documents
         }));
         
         setDocuments(transformedDocuments);
@@ -196,14 +197,29 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
     setShowUploadModal(true);
   };
 
-  const handleViewDocument = (doc: ChapterDocument) => {
-    setSelectedDocument(doc);
-    setShowViewModal(true);
+  const handleViewDocument = async (doc: ChapterDocument) => {
+    // Functionality is locked - show toast message
+    toast.info('Document viewing is currently locked. This feature will be available soon!');
+    
+    // TODO: Implement when signed URLs are working
+    // try {
+    //   if (doc.file_url) {
+    //     window.open(doc.file_url, '_blank');
+    //   } else {
+    //     toast.error('Document not accessible');
+    //   }
+    // } catch (error) {
+    //   console.error('Error viewing document:', error);
+    //   toast.error('Unable to open document. Please try again.');
+    // }
   };
 
   const handleEditDocument = (doc: ChapterDocument) => {
+    // Functionality is locked - show toast message
+    toast.info('Document editing is currently locked. This feature will be available soon!');
+    
     // TODO: Implement edit functionality
-    console.log('Edit document:', doc);
+    // console.log('Edit document:', doc);
   };
 
   const handleDeleteDocument = async (documentId: string) => {
@@ -212,24 +228,121 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
     }
 
     try {
-      // TODO: Replace with actual API call
-      // await fetch(`/api/documents/${documentId}`, { method: 'DELETE' });
+      const docToDelete = documents.find(doc => doc.id === documentId);
+      if (!docToDelete) {
+        toast.error('Document not found');
+        return;
+      }
+
+      console.log('🗑️ Deleting document:', {
+        id: docToDelete.id,
+        title: docToDelete.title,
+        storage_path: docToDelete.storage_path
+      });
+
+      // Debug storage access
+      console.log('🔍 Testing storage access...');
       
-      // For now, just remove from local state
+      // Test 1: List root directory
+      const { data: rootList, error: rootError } = await supabase.storage
+        .from('chapter-documents')
+        .list('', { limit: 100 });
+      console.log('📁 Root listing:', { data: rootList, error: rootError });
+      
+      // Test 2: List specific chapter directory
+      const { data: chapterList, error: chapterError } = await supabase.storage
+        .from('chapter-documents')
+        .list('Sigma Chi Eta (Ole Miss)', { limit: 100 });
+      console.log('📁 Chapter listing:', { data: chapterList, error: chapterError });
+      
+      // Test 3: Check if file exists
+      const { data: fileExists, error: fileError } = await supabase.storage
+        .from('chapter-documents')
+        .list('Sigma Chi Eta (Ole Miss)/governance', { limit: 100 });
+      console.log('📁 Governance listing:', { data: fileExists, error: fileError });
+
+      // FIRST: List what's actually in the bucket to debug
+      const { data: bucketContents, error: listError } = await supabase.storage
+        .from('chapter-documents')
+        .list('', { limit: 100 });
+
+      if (listError) {
+        console.error('❌ Error listing bucket:', listError);
+      } else {
+        console.log('📁 Actual bucket contents:', bucketContents);
+      }
+
+      // SECOND: Try to delete with the exact path
+      if (docToDelete.storage_path) {
+        const pathsToTry = [
+          docToDelete.storage_path, // Original: "Sigma Chi Eta (Ole Miss)/governance/..."
+          docToDelete.storage_path.replace(/^chapter-documents\//, ''), // Remove bucket prefix if present
+          docToDelete.storage_path.split('/').slice(1).join('/') // Remove first segment
+        ];
+
+        console.log('🔄 Trying different path formats:', pathsToTry);
+
+        for (const path of pathsToTry) {
+          console.log(`🔄 Attempting to delete with path: "${path}"`);
+          
+          const { error: storageError } = await supabase.storage
+            .from('chapter-documents')
+            .remove([path]);
+
+          if (!storageError) {
+            console.log(`✅ Successfully deleted with path: "${path}"`);
+            break;
+          } else {
+            console.log(`❌ Failed with path "${path}":`, storageError);
+          }
+        }
+      }
+
+      // Then delete from database
+      const { error: dbError } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', documentId);
+
+      if (dbError) {
+        console.error('❌ Database deletion error:', dbError);
+        toast.error('Failed to delete document record');
+        return;
+      }
+
+      console.log('✅ Database record deleted successfully');
+
+      // Remove from local state
       setDocuments(prev => prev.filter(doc => doc.id !== documentId));
-      console.log('Document deleted:', documentId);
+      toast.success('Document deleted successfully!');
+
     } catch (error) {
-      console.error('Error deleting document:', error);
+      console.error('❌ Error deleting document:', error);
+      toast.error('Failed to delete document');
     }
   };
 
-  const handleDownload = (doc: ChapterDocument) => {
-    // TODO: Implement actual download with proper authentication
-    if (doc.file_url) {
-      const link = document.createElement('a');
-      link.href = doc.file_url;
-      link.download = doc.title;
-      link.click();
+  const handleDownload = async (doc: ChapterDocument) => {
+    try {
+      if (doc.file_url) {
+        // Create a temporary link element for download
+        const link = document.createElement('a');
+        link.href = doc.file_url;
+        link.download = `${doc.title}.${doc.file_type || 'pdf'}`;
+        link.target = '_blank';
+        
+        // Append to DOM, click, and remove
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast.success('Download started!');
+      } else {
+        toast.error('Document not accessible for download');
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Download failed. Please try again.');
     }
   };
 
@@ -360,7 +473,8 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
         document_type: 'chapter_document', // Convert to expected type
         created_at: uploadedDocument.created_at,
         updated_at: uploadedDocument.updated_at,
-        tags: uploadedDocument.tags
+        tags: uploadedDocument.tags,
+        storage_path: uploadedDocument.storage_path // Add storage_path to new document
       };
       
       // Add to documents list
@@ -577,9 +691,12 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                         variant="ghost"
                         size="sm"
                         onClick={() => handleViewDocument(doc)}
-                        title="View Document"
+                        title="Document viewing is locked - coming soon!"
+                        className="opacity-60 cursor-not-allowed"
+                        disabled
                       >
                         <Eye className="h-4 w-4" />
+                        <Lock className="h-3 w-3 ml-1 text-gray-400" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -593,9 +710,12 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                         variant="ghost"
                         size="sm"
                         onClick={() => handleEditDocument(doc)}
-                        title="Edit Document"
+                        title="Document editing is locked - coming soon!"
+                        className="opacity-60 cursor-not-allowed"
+                        disabled
                       >
                         <Edit className="h-4 w-4" />
+                        <Lock className="h-3 w-3 ml-1 text-gray-400" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -856,31 +976,6 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                   </>
                 )}
               </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* View Document Modal Placeholder */}
-      {showViewModal && selectedDocument && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">{selectedDocument.title}</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowViewModal(false)}
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-              <div className="text-center py-8 text-gray-500">
-                <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p className="text-lg font-medium mb-2">Document Viewer</p>
-                <p className="text-sm">This will be implemented with proper document viewing</p>
-              </div>
             </div>
           </div>
         </div>
