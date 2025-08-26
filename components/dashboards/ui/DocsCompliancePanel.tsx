@@ -42,7 +42,7 @@ export function DocsCompliancePanel() {
     try {
       setLoading(true);
       
-      // Get current user's chapter_id from their profile
+      // Get current user's chapter_id and role from their profile
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         console.error('No authenticated user');
@@ -52,7 +52,7 @@ export function DocsCompliancePanel() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('chapter_id')
+        .select('chapter_id, role')
         .eq('id', user.id)
         .single();
 
@@ -62,7 +62,31 @@ export function DocsCompliancePanel() {
         return;
       }
 
-      // Fetch only 3 most recent documents
+      // Build visibility filter based on user role
+      let visibilityFilter = [];
+      
+      if (profile.role === 'admin') {
+        // Admins can see all documents in their chapter
+        visibilityFilter = ['chapter_all', 'active_members', 'alumni', 'admins'];
+      } else if (profile.role === 'active_member') {
+        // Active members can see documents visible to chapter_all or active_members
+        visibilityFilter = ['chapter_all', 'active_members'];
+      } else if (profile.role === 'alumni') {
+        // Alumni can see documents visible to chapter_all or alumni
+        visibilityFilter = ['chapter_all', 'alumni'];
+      } else {
+        // Default fallback - only chapter_all documents
+        visibilityFilter = ['chapter_all'];
+      }
+
+      console.log('🔐 User role-based access:', {
+        userId: user.id,
+        userRole: profile.role,
+        chapterId: profile.chapter_id,
+        visibilityFilter: visibilityFilter
+      });
+
+      // Fetch documents with role-based visibility filtering
       const { data: documents, error } = await supabase
         .from('documents')
         .select(`
@@ -71,6 +95,7 @@ export function DocsCompliancePanel() {
         `)
         .eq('chapter_id', profile.chapter_id)
         .eq('is_active', true)
+        .overlaps('visibility', visibilityFilter) // This checks if any value in visibility array matches our filter
         .order('created_at', { ascending: false })
         .limit(3);
 
@@ -78,8 +103,14 @@ export function DocsCompliancePanel() {
         console.error('Error loading documents:', error);
         setDocuments([]);
       } else {
+        console.log('📄 Documents loaded with role-based access:', {
+          totalDocuments: documents?.length || 0,
+          userRole: profile.role,
+          visibilityFilter: visibilityFilter
+        });
+
         // Transform the data to match ChapterDocument interface
-        const transformedDocuments: ChapterDocument[] = documents.map(doc => ({
+        const transformedDocuments: ChapterDocument[] = (documents || []).map(doc => ({
           id: doc.id,
           title: doc.title,
           description: doc.description,
