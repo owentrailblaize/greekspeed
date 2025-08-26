@@ -1,54 +1,177 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-
 import { Calendar, MapPin, Clock, Users } from 'lucide-react';
-
-// Mock data for upcoming events
-const upcomingEvents = [
-  {
-    id: 1,
-    title: "Spring Formal",
-    start_time: "March 22, 2024 • 8:00 PM",
-    location: "Grand Ballroom",
-    rsvp_status: "going",
-    attendees: 120
-  },
-  {
-    id: 2,
-    title: "Community Service Day",
-    start_time: "March 25, 2024 • 9:00 AM",
-    location: "City Park",
-    rsvp_status: "maybe",
-    attendees: 45
-  },
-  {
-    id: 3,
-    title: "Study Group Session",
-    start_time: "March 28, 2024 • 6:00 PM",
-    location: "Library Study Room",
-    rsvp_status: "not_going",
-    attendees: 15
-  }
-];
+import { useProfile } from '@/lib/hooks/useProfile';
+import { Event } from '@/types/events';
 
 export function UpcomingEventsCard() {
-  const [events, setEvents] = useState(upcomingEvents);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [rsvpStatuses, setRsvpStatuses] = useState<Record<string, 'attending' | 'maybe' | 'not_attending'>>({});
+  
+  const { profile } = useProfile();
+  const chapterId = profile?.chapter_id;
 
-  const handleRSVP = (eventId: number, status: 'going' | 'maybe' | 'not_going') => {
-    setEvents(prev => prev.map(event => 
-      event.id === eventId ? { ...event, rsvp_status: status } : event
-    ));
+  // Fetch events for the user's chapter
+  useEffect(() => {
+    const fetchEvents = async () => {
+      if (!chapterId || !profile?.id) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log('UpcomingEventsCard - Fetching events for chapter:', chapterId);
+        const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=upcoming`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch events');
+        }
+        
+        const data = await response.json();
+        console.log('UpcomingEventsCard - Fetched events:', data);
+        setEvents(data);
+
+        // Fetch user's RSVP statuses for all events
+        await fetchUserRSVPs(data, profile.id);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [chapterId, profile?.id]);
+
+  // Fetch user's RSVP statuses for all events
+  const fetchUserRSVPs = async (eventsList: Event[], userId: string) => {
+    try {
+      const rsvpPromises = eventsList.map(async (event) => {
+        const response = await fetch(`/api/events/${event.id}/rsvp?user_id=${userId}`);
+        if (response.ok) {
+          const rsvpData = await response.json();
+          return { eventId: event.id, status: rsvpData.status };
+        }
+        return null;
+      });
+
+      const rsvpResults = await Promise.all(rsvpPromises);
+      const userRsvps: Record<string, 'attending' | 'maybe' | 'not_attending'> = {};
+      
+      rsvpResults.forEach((result) => {
+        if (result && result.status) {
+          userRsvps[result.eventId] = result.status;
+        }
+      });
+
+      setRsvpStatuses(userRsvps);
+      console.log('UpcomingEventsCard - Fetched user RSVPs:', userRsvps);
+    } catch (error) {
+      console.error('Error fetching user RSVPs:', error);
+    }
   };
 
-  const getRSVPButtonVariant = (eventStatus: string, buttonStatus: string) => {
-    if (eventStatus === buttonStatus) {
+  const handleRSVP = async (eventId: string, status: 'attending' | 'maybe' | 'not_attending') => {
+    if (!profile?.id) return;
+    
+    try {
+      const response = await fetch(`/api/events/${eventId}/rsvp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status,
+          user_id: profile.id,
+        }),
+      });
+
+      if (response.ok) {
+        // Update local RSVP status
+        setRsvpStatuses(prev => ({ ...prev, [eventId]: status }));
+        
+        // Refresh events to get updated RSVP counts
+        const eventsResponse = await fetch(`/api/events?chapter_id=${chapterId}&scope=upcoming`);
+        if (eventsResponse.ok) {
+          const updatedEvents = await eventsResponse.json();
+          setEvents(updatedEvents);
+        }
+      } else {
+        const errorData = await response.json();
+        console.error('RSVP error:', errorData.error);
+      }
+    } catch (error) {
+      console.error('Error submitting RSVP:', error);
+    }
+  };
+
+  const getRSVPButtonVariant = (eventId: string, buttonStatus: string) => {
+    const currentStatus = rsvpStatuses[eventId];
+    if (currentStatus === buttonStatus) {
       return 'default';
     }
     return 'outline';
   };
+
+  const formatEventDateTime = (isoString: string): string => {
+    const date = new Date(isoString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'long', 
+      day: 'numeric',
+      year: 'numeric'
+    }) + ' • ' + date.toLocaleTimeString('en-US', { 
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  };
+
+  if (loading) {
+    return (
+      <Card className="bg-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center space-x-2">
+            <Calendar className="h-5 w-5 text-navy-600" />
+            <span>Upcoming Events</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="text-center py-8">
+            <p className="text-gray-500 text-sm">Loading events...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="bg-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center space-x-2">
+            <Calendar className="h-5 w-5 text-navy-600" />
+            <span>Upcoming Events</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="text-center py-8">
+            <p className="text-red-500 text-sm mb-2">Error loading events</p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => window.location.reload()}
+              className="text-navy-600 border-navy-600 hover:bg-navy-50"
+            >
+              Retry
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (events.length === 0) {
     return (
@@ -81,37 +204,37 @@ export function UpcomingEventsCard() {
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-4">
-          {events.map((event) => (
+          {events.slice(0, 3).map((event) => (
             <div key={event.id} className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
               <h4 className="font-medium text-gray-900 text-sm mb-2">{event.title}</h4>
               
               <div className="space-y-2 text-xs text-gray-600 mb-3">
                 <div className="flex items-center space-x-2">
                   <Clock className="h-3 w-3" />
-                  <span>{event.start_time}</span>
+                  <span>{formatEventDateTime(event.start_time)}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <MapPin className="h-3 w-3" />
-                  <span>{event.location}</span>
+                  <span>{event.location || 'TBD'}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Users className="h-3 w-3" />
-                  <span>{event.attendees} attending</span>
+                  <span>{event.attendee_count || 0} attending</span>
                 </div>
               </div>
               
               <div className="flex space-x-1">
                 <Button 
                   size="sm" 
-                  variant={getRSVPButtonVariant(event.rsvp_status, 'going')}
-                  onClick={() => handleRSVP(event.id, 'going')}
+                  variant={getRSVPButtonVariant(event.id, 'attending')}
+                  onClick={() => handleRSVP(event.id, 'attending')}
                   className="text-xs h-7 px-2"
                 >
                   Going
                 </Button>
                 <Button 
                   size="sm" 
-                  variant={getRSVPButtonVariant(event.rsvp_status, 'maybe')}
+                  variant={getRSVPButtonVariant(event.id, 'maybe')}
                   onClick={() => handleRSVP(event.id, 'maybe')}
                   className="text-xs h-7 px-2"
                 >
@@ -119,8 +242,8 @@ export function UpcomingEventsCard() {
                 </Button>
                 <Button 
                   size="sm" 
-                  variant={getRSVPButtonVariant(event.rsvp_status, 'not_going')}
-                  onClick={() => handleRSVP(event.id, 'not_going')}
+                  variant={getRSVPButtonVariant(event.id, 'not_attending')}
+                  onClick={() => handleRSVP(event.id, 'not_attending')}
                   className="text-xs h-7 px-2"
                 >
                   Not going

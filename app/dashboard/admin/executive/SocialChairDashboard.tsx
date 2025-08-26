@@ -1,7 +1,7 @@
 'use client';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Users, DollarSign, BookOpen, Clock, Plus, Edit, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, Users, DollarSign, BookOpen, Clock, Plus, Edit, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Trash2, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
+import { EventForm } from "@/components/ui/EventForm";
+import { useEvents } from "@/lib/hooks/useEvents";
+import { useProfile } from "@/lib/hooks/useProfile";
+import { Event as EventType, CreateEventRequest, UpdateEventRequest } from "@/types/events";
 
 const eventBudget = {
   totalAllocated: 12000,
@@ -73,6 +77,36 @@ export function SocialChairDashboard() {
   const [selectedTab, setSelectedTab] = useState("overview");
   const [newLoreEntry, setNewLoreEntry] = useState({ title: "", content: "" });
   const [calendarDate, setCalendarDate] = useState(currentDate);
+  
+  // Event management state
+  const [showEventForm, setShowEventForm] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<EventType | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Get user profile and chapter ID
+  const { profile } = useProfile();
+  const chapterId = profile?.chapter_id;
+  
+  // Use events hook
+  const { 
+    events, 
+    loading: eventsLoading, 
+    error: eventsError, 
+    createEvent, 
+    updateEvent, 
+    deleteEvent 
+  } = useEvents({ 
+    chapterId: chapterId || '', 
+    scope: 'all' 
+  });
+
+  // Debug logging
+  useEffect(() => {
+    console.log('SocialChairDashboard - Chapter ID:', chapterId);
+    console.log('SocialChairDashboard - Events:', events);
+    console.log('SocialChairDashboard - Events Loading:', eventsLoading);
+    console.log('SocialChairDashboard - Events Error:', eventsError);
+  }, [chapterId, events, eventsLoading, eventsError]);
 
   const getDaysInMonth = (date: Date): number => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -83,11 +117,12 @@ export function SocialChairDashboard() {
   };
 
   const getEventsForDate = (date: Date) => {
-    return calendarEvents.filter(event => 
-      event.date.getDate() === date.getDate() &&
-      event.date.getMonth() === date.getMonth() &&
-      event.date.getFullYear() === date.getFullYear()
-    );
+    return events.filter(event => {
+      const eventDate = new Date(event.start_time);
+      return eventDate.getDate() === date.getDate() &&
+             eventDate.getMonth() === date.getMonth() &&
+             eventDate.getFullYear() === date.getFullYear();
+    });
   };
 
   const getEventTypeColor = (type: string): string => {
@@ -101,6 +136,115 @@ export function SocialChairDashboard() {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // Event management functions
+  const handleCreateEvent = async (eventData: CreateEventRequest) => {
+    if (!chapterId) return;
+    
+    setIsSubmitting(true);
+    try {
+      const newEvent = await createEvent({
+        ...eventData,
+        created_by: profile?.id || 'system',
+        updated_by: profile?.id || 'system'
+      });
+      
+      if (newEvent) {
+        setShowEventForm(false);
+        // Reset form data
+        setEditingEvent(null);
+      }
+    } catch (error) {
+      console.error('Error creating event:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateEvent = async (eventData: UpdateEventRequest) => {
+    if (!editingEvent) return;
+    
+    setIsSubmitting(true);
+    try {
+      const updatedEvent = await updateEvent(editingEvent.id, {
+        ...eventData,
+        updated_by: profile?.id || 'system'
+      });
+      
+      if (updatedEvent) {
+        setShowEventForm(false);
+        setEditingEvent(null);
+      }
+    } catch (error) {
+      console.error('Error updating event:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEditEvent = (event: EventType) => {
+    setEditingEvent(event);
+    setShowEventForm(true);
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+      const success = await deleteEvent(eventId);
+      if (success) {
+        console.log('Event deleted successfully');
+      }
+    }
+  };
+
+  const handleCancelEventForm = () => {
+    setShowEventForm(false);
+    setEditingEvent(null);
+  };
+
+  const handleSubmitEvent = async (data: CreateEventRequest | UpdateEventRequest) => {
+    if (editingEvent) {
+      await handleUpdateEvent(data as UpdateEventRequest);
+    } else {
+      await handleCreateEvent(data as CreateEventRequest);
+    }
+  };
+
+  // Format event data for display
+  const formatEventDate = (isoString: string): string => {
+    const date = new Date(isoString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const formatEventTime = (isoString: string): string => {
+    const date = new Date(isoString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  };
+
+  // Get upcoming events for stats
+  const upcomingEvents = events.filter(event => 
+    event.status === 'published' && new Date(event.start_time) >= new Date()
+  );
+
+  // Calculate total attendees
+  const totalAttendees = upcomingEvents.reduce((sum, event) => 
+    sum + (event.attendee_count || 0), 0
+  );
+
+  // Transform events for display (to match existing mock data structure)
+  const displayEvents = upcomingEvents.map(event => ({
+    name: event.title,
+    date: formatEventDate(event.start_time),
+    budget: event.budget_amount || 0,
+    status: event.status,
+    attendees: event.attendee_count || 0
+  }));
 
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(calendarDate);
@@ -127,7 +271,7 @@ export function SocialChairDashboard() {
           </div>
           <div className="space-y-1">
             {events.slice(0, 2).map(event => (
-              <div key={event.id} className={`text-xs px-1 py-0.5 rounded truncate ${getEventTypeColor(event.type)}`}>
+              <div key={event.id} className={`text-xs px-1 py-0.5 rounded truncate ${getEventTypeColor('meeting')}`}>
                 {event.title}
               </div>
             ))}
@@ -214,7 +358,9 @@ export function SocialChairDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-600 text-sm font-medium">Upcoming Events</p>
-                  <p className="text-2xl font-semibold text-blue-900">{eventBudget.upcomingEvents}</p>
+                  <p className="text-2xl font-semibold text-blue-900">
+                    {eventsLoading ? '...' : upcomingEvents.length}
+                  </p>
                   <p className="text-xs text-blue-600">This month</p>
                 </div>
                 <Calendar className="h-8 w-8 text-blue-600" />
@@ -234,7 +380,7 @@ export function SocialChairDashboard() {
                 <div>
                   <p className="text-green-600 text-sm font-medium">Total Attendees</p>
                   <p className="text-2xl font-semibold text-green-900">
-                    {upcomingEvents.reduce((sum, event) => sum + event.attendees, 0)}
+                    {totalAttendees}
                   </p>
                   <p className="text-xs text-green-600">Expected</p>
                 </div>
@@ -297,34 +443,78 @@ export function SocialChairDashboard() {
               <CardTitle>Upcoming Events</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {upcomingEvents.map((event, index) => (
-                  <div key={index} className="p-4 border border-gray-200 rounded-lg">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium">{event.name}</h4>
-                      <Badge 
-                        variant={event.status === 'confirmed' ? 'default' : 
-                                event.status === 'planning' ? 'secondary' : 'destructive'}
-                      >
-                        {event.status}
-                      </Badge>
+              {eventsLoading ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Loading events...</p>
+                </div>
+              ) : eventsError ? (
+                <div className="text-center py-8">
+                  <p className="text-red-500">Error loading events: {eventsError}</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => window.location.reload()}
+                    className="mt-2"
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : displayEvents.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No upcoming events</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowEventForm(true)}
+                    className="mt-2"
+                  >
+                    Create First Event
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {displayEvents.map((event, index) => (
+                    <div key={index} className="p-4 border border-gray-200 rounded-lg">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-medium">{event.name}</h4>
+                        <div className="flex items-center space-x-2">
+                          <Badge 
+                            variant={event.status === 'published' ? 'default' : 
+                                    event.status === 'draft' ? 'secondary' : 'destructive'}
+                          >
+                            {event.status}
+                          </Badge>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteEvent(upcomingEvents[index].id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600 flex items-center mb-2">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {event.date}
+                      </p>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">
+                          Budget: ${event.budget} • {event.attendees} attendees
+                        </span>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleEditEvent(upcomingEvents[index])}
+                        >
+                          <Edit className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-600 flex items-center mb-2">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {event.date}
-                    </p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">
-                        Budget: ${event.budget} • {event.attendees} attendees
-                      </span>
-                      <Button size="sm" variant="outline">
-                        <Edit className="h-3 w-3 mr-1" />
-                        Edit
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -333,7 +523,10 @@ export function SocialChairDashboard() {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full justify-start bg-orange-600 hover:bg-orange-700">
+              <Button 
+                className="w-full justify-start bg-orange-600 hover:bg-orange-700"
+                onClick={() => setShowEventForm(true)}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Plan New Event
               </Button>
@@ -452,7 +645,11 @@ export function SocialChairDashboard() {
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Event Calendar</h3>
             <div className="flex space-x-2">
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowEventForm(true)}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Event
               </Button>
@@ -476,21 +673,21 @@ export function SocialChairDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {calendarEvents
-                      .filter(event => event.date >= new Date())
-                      .sort((a, b) => a.date.getTime() - b.date.getTime())
+                    {events
+                      .filter(event => new Date(event.start_time) >= new Date())
+                      .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
                       .slice(0, 5)
                       .map(event => (
                         <div key={event.id} className="p-3 border border-gray-200 rounded-lg">
                           <h4 className="font-medium text-sm">{event.title}</h4>
                           <p className="text-xs text-gray-600 mt-1">
-                            {event.date.toLocaleDateString()} at {event.time}
+                            {formatEventDate(event.start_time)} at {formatEventTime(event.start_time)}
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
-                            📍 {event.location}
+                            📍 {event.location || 'TBD'}
                           </p>
-                          <Badge className={`mt-2 text-xs ${getEventTypeColor(event.type)}`}>
-                            {event.type}
+                          <Badge className={`mt-2 text-xs ${getEventTypeColor('meeting')}`}>
+                            {event.status}
                           </Badge>
                         </div>
                       ))}
@@ -617,6 +814,28 @@ export function SocialChairDashboard() {
               </div>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* Event Form Modal */}
+      {showEventForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCancelEventForm}
+              className="absolute top-4 right-4 z-10 text-gray-500 hover:text-gray-700"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+            <EventForm
+              event={editingEvent}
+              onSubmit={handleSubmitEvent}
+              onCancel={handleCancelEventForm}
+              loading={isSubmitting}
+            />
+          </div>
         </div>
       )}
     </div>
