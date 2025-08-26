@@ -75,8 +75,6 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedVisibility, setSelectedVisibility] = useState('all');
   const [showUploadModal, setShowUploadModal] = useState(false);
 
   // Add new state for upload form
@@ -97,10 +95,10 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
     loadDocuments();
   }, [chapterId]);
 
-  // Filter documents when search or filters change
+  // Filter documents when search or tab changes
   useEffect(() => {
     filterDocuments();
-  }, [documents, searchQuery, selectedCategory, selectedVisibility, activeTab]);
+  }, [documents, searchQuery, activeTab]);
 
   const loadDocuments = async () => {
     try {
@@ -153,27 +151,12 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
   const filterDocuments = () => {
     let filtered = [...documents];
 
-    // Apply search filter
+    // Apply search filter only
     if (searchQuery) {
       filtered = filtered.filter(doc => 
         doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doc.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doc.owner_name?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Apply category filter
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(doc => 
-        doc.tags?.includes(selectedCategory) || 
-        doc.document_type === selectedCategory
-      );
-    }
-
-    // Apply visibility filter
-    if (selectedVisibility !== 'all') {
-      filtered = filtered.filter(doc => 
-        doc.visibility.includes(selectedVisibility)
       );
     }
 
@@ -186,7 +169,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
       filtered = filtered.filter(doc => 
         doc.tags?.includes('legal') || 
         doc.tags?.includes('finance') ||
-        doc.visibility.includes('Admins')
+        doc.visibility.includes('admins')
       );
     }
 
@@ -569,29 +552,6 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                   className="pl-10"
                 />
               </div>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="legal">Legal</SelectItem>
-                  <SelectItem value="finance">Finance</SelectItem>
-                  <SelectItem value="safety">Safety</SelectItem>
-                  <SelectItem value="policy">Policy</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={selectedVisibility} onValueChange={setSelectedVisibility}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Visibility</SelectItem>
-                  <SelectItem value="Admins">Admins Only</SelectItem>
-                  <SelectItem value="Active Members">Active Members</SelectItem>
-                  <SelectItem value="Everyone in chapter">Everyone</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
 
@@ -623,8 +583,8 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                 <FileText className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                 <p className="text-lg font-medium mb-2">No documents found</p>
                 <p className="text-sm">
-                  {searchQuery || selectedCategory !== 'all' || selectedVisibility !== 'all'
-                    ? 'Try adjusting your search or filters'
+                  {searchQuery
+                    ? 'Try adjusting your search'
                     : 'Upload your first document to get started!'
                   }
                 </p>
