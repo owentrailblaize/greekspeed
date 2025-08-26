@@ -83,7 +83,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
   const [uploadFormData, setUploadFormData] = useState<DocumentUploadFormData>({
     title: '',
     description: '',
-    documentType: 'general',
+    documentType: 'other', // Changed from 'general' to 'other'
     visibility: ['admins'], // Changed from ['Admins']
     tags: [],
     effectiveDate: new Date().toISOString().split('T')[0]
@@ -370,7 +370,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
       setUploadFormData({
         title: '',
         description: '',
-        documentType: 'general',
+        documentType: 'other', // Changed from 'general' to 'other'
         visibility: ['admins'], // Changed from ['Admins']
         tags: [],
         effectiveDate: new Date().toISOString().split('T')[0],
@@ -707,8 +707,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                     <SelectItem value="budget">Budget & Finance</SelectItem>
                     <SelectItem value="event_doc">Event Documents</SelectItem>
                     <SelectItem value="compliance">Compliance & Training</SelectItem>
-                    <SelectItem value="general">General</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="other">Other</SelectItem> {/* Changed from 'general' to 'other' */}
                   </Select>
                 </div>
 
