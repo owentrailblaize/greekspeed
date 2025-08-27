@@ -21,13 +21,6 @@ const eventBudget = {
   upcomingEvents: 4
 };
 
-const upcomingEvents = [
-  { name: "Spring Formal", date: "March 20, 2024", budget: 2500, status: "planning", attendees: 85 },
-  { name: "Alumni Mixer", date: "March 15, 2024", budget: 800, status: "confirmed", attendees: 45 },
-  { name: "Brotherhood BBQ", date: "March 25, 2024", budget: 600, status: "planning", attendees: 60 },
-  { name: "Recruitment Social", date: "April 5, 2024", budget: 1200, status: "pending", attendees: 75 }
-];
-
 const vendorContacts = [
   { name: "Oxford Catering Co.", type: "Catering", contact: "Sarah Johnson", phone: "(662) 555-0123", email: "sarah@oxfordcatering.com", rating: 4.8 },
   { name: "Party Perfect Rentals", type: "Equipment", contact: "Mike Davis", phone: "(662) 555-0456", email: "mike@partyrentals.com", rating: 4.6 },
@@ -62,21 +55,10 @@ const budgetBreakdown = [
   ]}
 ];
 
-// Calendar data
-const currentDate = new Date(2024, 2, 15); // March 15, 2024
-const calendarEvents = [
-  { id: 1, title: "Alumni Mixer", date: new Date(2024, 2, 15), time: "6:00 PM", type: "alumni", location: "Downtown Oxford" },
-  { id: 2, title: "Spring Formal", date: new Date(2024, 2, 20), time: "7:00 PM", type: "formal", location: "The Depot" },
-  { id: 3, title: "Brotherhood BBQ", date: new Date(2024, 2, 25), time: "12:00 PM", type: "brotherhood", location: "Chapter House" },
-  { id: 4, title: "Recruitment Social", date: new Date(2024, 3, 5), time: "6:30 PM", type: "recruitment", location: "Student Union" },
-  { id: 5, title: "Committee Meeting", date: new Date(2024, 2, 18), time: "7:00 PM", type: "meeting", location: "Chapter House" },
-  { id: 6, title: "Vendor Meeting", date: new Date(2024, 2, 22), time: "3:00 PM", type: "planning", location: "Office" }
-];
-
 export function SocialChairDashboard() {
   const [selectedTab, setSelectedTab] = useState("overview");
   const [newLoreEntry, setNewLoreEntry] = useState({ title: "", content: "" });
-  const [calendarDate, setCalendarDate] = useState(currentDate);
+  const [calendarDate, setCalendarDate] = useState(new Date());
   
   // Event management state
   const [showEventForm, setShowEventForm] = useState(false);
@@ -415,9 +397,9 @@ export function SocialChairDashboard() {
         <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
           {[
             { value: "overview", label: "Overview" },
-            { value: "budget", label: "Budget" },
             { value: "calendar", label: "Calendar" },
             { value: "contacts", label: "Contacts" },
+            { value: "budget", label: "Budget" },
             { value: "lore", label: "Social Lore" }
           ].map((tab) => (
             <button
@@ -530,15 +512,36 @@ export function SocialChairDashboard() {
                 <Plus className="h-4 w-4 mr-2" />
                 Plan New Event
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => {
+                  setSelectedTab("calendar")
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              >
                 <Calendar className="h-4 w-4 mr-2" />
                 View Full Calendar
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => {
+                  setSelectedTab("contacts")
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              >
                 <Users className="h-4 w-4 mr-2" />
                 Manage Vendors
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => {
+                  setSelectedTab("budget")
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              >
                 <DollarSign className="h-4 w-4 mr-2" />
                 Budget Report
               </Button>
