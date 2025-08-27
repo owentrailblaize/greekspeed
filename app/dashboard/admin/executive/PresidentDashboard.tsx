@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { TasksPanel } from '@/components/dashboards/ui/TasksPanel';
 import { ChapterDocumentManager } from '@/components/dashboards/ui/ChapterDocumentManager';
 import { useProfile } from '@/lib/hooks/useProfile';
+import { UpcomingEventsCard } from '@/components/dashboards/ui/UpcomingEventsCard';
 
 const chapterStats = {
   totalMembers: 156,
@@ -18,12 +19,6 @@ const chapterStats = {
   graduatingMembers: 18,
   membershipGrowth: 12.5
 };
-
-const upcomingEvents = [
-  { name: "Executive Board Meeting", date: "Tomorrow, 7:00 PM", type: "meeting" },
-  { name: "Alumni Networking Event", date: "Friday, 6:00 PM", type: "networking" },
-  { name: "Chapter Retreat Planning", date: "Next Monday, 5:00 PM", type: "planning" }
-];
 
 const pendingApprovals = [
   { item: "Budget Amendment - Social Events", amount: "$2,500", priority: "high" },
@@ -239,34 +234,8 @@ export function PresidentDashboard() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Upcoming Events */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-blue-600" />
-                <span>Upcoming Events</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {upcomingEvents.map((event, index) => (
-                  <div key={index} className="p-3 border border-gray-200 rounded-lg">
-                    <h4 className="font-medium text-sm">{event.name}</h4>
-                    <p className="text-xs text-gray-600 flex items-center mt-1">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {event.date}
-                    </p>
-                    <Badge variant="outline" className="mt-2 text-xs">
-                      {event.type}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-              <Button variant="outline" className="w-full mt-4">
-                View Full Calendar
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Upcoming Events - Now using the existing component */}
+          <UpcomingEventsCard />
 
           {/* Quick Actions */}
           <Card>

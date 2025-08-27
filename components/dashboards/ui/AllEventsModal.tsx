@@ -7,6 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Users, Edit, Eye, X, User, Clock, Shield } from 'lucide-react';
 import { Event } from '@/types/events';
 import { toast } from 'react-toastify';
+import { 
+  parseRawTime, 
+  parseRawDetailedTime,
+  getTimezoneInfo
+} from '@/lib/utils/timezoneUtils';
 
 interface AllEventsModalProps {
   isOpen: boolean;
@@ -107,7 +112,12 @@ export function AllEventsModal({ isOpen, onClose, events, loading, error }: AllE
         <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col relative">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
-            <h3 className="text-2xl font-bold text-navy-900">All Chapter Events</h3>
+            <div>
+              <h3 className="text-2xl font-bold text-navy-900">All Chapter Events</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                {getTimezoneInfo().note}
+              </p>
+            </div>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -170,12 +180,22 @@ export function AllEventsModal({ isOpen, onClose, events, loading, error }: AllE
                           </Badge>
                         </div>
 
-                        {/* Event Metadata */}
-                        <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
+                        {/* Event Metadata - Using RAW parsing */}
+                        <div className="space-y-2 text-xs text-gray-500 mb-3">
                           <div className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            <span>{formatDateDetailed(event.start_time)}</span>
+                            <span className="font-medium">Start:</span>
+                            <span>{parseRawDetailedTime(event.start_time)}</span>
                           </div>
+                          
+                          {event.end_time && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              <span className="font-medium">End:</span>
+                              <span>{parseRawDetailedTime(event.end_time)}</span>
+                            </div>
+                          )}
+                          
                           {event.location && (
                             <div className="flex items-center gap-1">
                               <MapPin className="h-3 w-3" />

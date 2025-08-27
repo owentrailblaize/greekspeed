@@ -7,6 +7,7 @@ import { Calendar, MapPin, Clock, Users } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { Event } from '@/types/events';
 import { AllEventsModal } from './AllEventsModal';
+import { parseRawTime } from '@/lib/utils/timezoneUtils';
 
 export function UpcomingEventsCard() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -120,15 +121,7 @@ export function UpcomingEventsCard() {
   };
 
   const formatEventDateTime = (isoString: string): string => {
-    const date = new Date(isoString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'long', 
-      day: 'numeric',
-      year: 'numeric'
-    }) + ' • ' + date.toLocaleTimeString('en-US', { 
-      hour: 'numeric',
-      minute: '2-digit'
-    });
+    return parseRawTime(isoString);
   };
 
   const handleViewAllEvents = () => {
