@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Users, DollarSign, BookOpen, Clock, Plus, Edit, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Trash2, X } from "lucide-react";
+import { Calendar, Users, DollarSign, BookOpen, Clock, Plus, Edit, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Trash2, X, Lock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -751,8 +751,14 @@ export function SocialChairDashboard() {
                 <Plus className="h-4 w-4 mr-2" />
                 Add Event
               </Button>
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="opacity-60 cursor-not-allowed" 
+                disabled
+              >
                 Export Calendar
+                <Lock className="h-3 w-3 ml-2 text-gray-400" />
               </Button>
             </div>
           </div>
@@ -789,22 +795,6 @@ export function SocialChairDashboard() {
                           </Badge>
                         </div>
                       ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Event Types</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {['formal', 'alumni', 'brotherhood', 'recruitment', 'meeting', 'planning'].map(type => (
-                      <div key={type} className="flex items-center space-x-2">
-                        <div className={`w-3 h-3 rounded-full ${getEventTypeColor(type).replace('text-', 'bg-').replace('800', '500')}`}></div>
-                        <span className="text-sm capitalize">{type}</span>
-                      </div>
-                    ))}
                   </div>
                 </CardContent>
               </Card>
