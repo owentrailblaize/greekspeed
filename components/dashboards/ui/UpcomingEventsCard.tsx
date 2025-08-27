@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Clock, Users } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { Event } from '@/types/events';
+import { AllEventsModal } from './AllEventsModal';
 
 export function UpcomingEventsCard() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rsvpStatuses, setRsvpStatuses] = useState<Record<string, 'attending' | 'maybe' | 'not_attending'>>({});
+  const [showAllEventsModal, setShowAllEventsModal] = useState(false);
   
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
@@ -129,6 +131,13 @@ export function UpcomingEventsCard() {
     });
   };
 
+  const handleViewAllEvents = () => {
+    console.log('🎯 View All Events button clicked!');
+    console.log('📊 Current showAllEventsModal state:', showAllEventsModal);
+    setShowAllEventsModal(true);
+    console.log('✅ After setting showAllEventsModal to true');
+  };
+
   if (loading) {
     return (
       <Card className="bg-white">
@@ -195,70 +204,85 @@ export function UpcomingEventsCard() {
   }
 
   return (
-    <Card className="bg-white">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center space-x-2">
-          <Calendar className="h-5 w-5 text-navy-600" />
-          <span>Upcoming Events</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="space-y-4">
-          {events.slice(0, 3).map((event) => (
-            <div key={event.id} className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-              <h4 className="font-medium text-gray-900 text-sm mb-2">{event.title}</h4>
-              
-              <div className="space-y-2 text-xs text-gray-600 mb-3">
-                <div className="flex items-center space-x-2">
-                  <Clock className="h-3 w-3" />
-                  <span>{formatEventDateTime(event.start_time)}</span>
+    <>
+      <Card className="bg-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center space-x-2">
+            <Calendar className="h-5 w-5 text-navy-600" />
+            <span>Upcoming Events</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="space-y-4">
+            {events.slice(0, 3).map((event) => (
+              <div key={event.id} className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                <h4 className="font-medium text-gray-900 text-sm mb-2">{event.title}</h4>
+                
+                <div className="space-y-2 text-xs text-gray-600 mb-3">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-3 w-3" />
+                    <span>{formatEventDateTime(event.start_time)}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="h-3 w-3" />
+                    <span>{event.location || 'TBD'}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-3 w-3" />
+                    <span>{event.attendee_count || 0} attending</span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <MapPin className="h-3 w-3" />
-                  <span>{event.location || 'TBD'}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Users className="h-3 w-3" />
-                  <span>{event.attendee_count || 0} attending</span>
+                
+                <div className="flex space-x-1">
+                  <Button 
+                    size="sm" 
+                    variant={getRSVPButtonVariant(event.id, 'attending')}
+                    onClick={() => handleRSVP(event.id, 'attending')}
+                    className="text-xs h-7 px-2"
+                  >
+                    Going
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant={getRSVPButtonVariant(event.id, 'maybe')}
+                    onClick={() => handleRSVP(event.id, 'maybe')}
+                    className="text-xs h-7 px-2"
+                  >
+                    Maybe
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant={getRSVPButtonVariant(event.id, 'not_attending')}
+                    onClick={() => handleRSVP(event.id, 'not_attending')}
+                    className="text-xs h-7 px-2"
+                  >
+                    Not going
+                  </Button>
                 </div>
               </div>
-              
-              <div className="flex space-x-1">
-                <Button 
-                  size="sm" 
-                  variant={getRSVPButtonVariant(event.id, 'attending')}
-                  onClick={() => handleRSVP(event.id, 'attending')}
-                  className="text-xs h-7 px-2"
-                >
-                  Going
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant={getRSVPButtonVariant(event.id, 'maybe')}
-                  onClick={() => handleRSVP(event.id, 'maybe')}
-                  className="text-xs h-7 px-2"
-                >
-                  Maybe
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant={getRSVPButtonVariant(event.id, 'not_attending')}
-                  onClick={() => handleRSVP(event.id, 'not_attending')}
-                  className="text-xs h-7 px-2"
-                >
-                  Not going
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        <div className="pt-4 border-t border-gray-100">
-          <Button variant="outline" className="w-full text-navy-600 border-navy-600 hover:bg-navy-50">
-            View All Events
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+            ))}
+          </div>
+          
+          <div className="pt-4 border-t border-gray-100">
+            <Button 
+              variant="outline" 
+              className="w-full text-navy-600 border-navy-600 hover:bg-navy-50"
+              onClick={handleViewAllEvents}
+            >
+              View All Events
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* All Events Modal */}
+      <AllEventsModal
+        isOpen={showAllEventsModal}
+        onClose={() => setShowAllEventsModal(false)}
+        events={events}
+        loading={loading}
+        error={error}
+      />
+    </>
   );
 }
