@@ -35,6 +35,9 @@ export function useVendors({ chapterId }: UseVendorsOptions) {
     try {
       setError(null);
       
+      console.log('Sending vendor data:', vendorData);
+      console.log('Chapter ID:', chapterId);
+      
       const response = await fetch('/api/vendors', {
         method: 'POST',
         headers: {
@@ -46,15 +49,20 @@ export function useVendors({ chapterId }: UseVendorsOptions) {
         }),
       });
 
+      console.log('Response status:', response.status);
+
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('API error response:', errorData);
         throw new Error(errorData.error || 'Failed to create vendor');
       }
 
       const result = await response.json();
+      console.log('API success response:', result);
       await fetchVendors(); // Refresh the vendors list
       return result.vendor;
     } catch (err) {
+      console.error('Error in createVendor:', err);
       setError(err instanceof Error ? err.message : 'Failed to create vendor');
       return null;
     }

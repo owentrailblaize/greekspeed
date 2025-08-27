@@ -37,27 +37,29 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const vendorData = await request.json();
+    console.log('Received vendor data:', vendorData);
     
     // Validate required fields
     const requiredFields = ['name', 'type', 'chapter_id'];
     for (const field of requiredFields) {
       if (!vendorData[field]) {
+        console.log(`Missing required field: ${field}`);
         return NextResponse.json({ error: `${field} is required` }, { status: 400 });
       }
     }
 
-    // Validate rating range
-    if (vendorData.rating && (vendorData.rating < 0 || vendorData.rating > 5)) {
-      return NextResponse.json({ error: 'Rating must be between 0 and 5' }, { status: 400 });
-    }
+    console.log('Creating vendor with data:', vendorData);
 
-    // Create the vendor
+    // Create the vendor - use the actual user ID from the request
     const insertData = {
       ...vendorData,
       is_active: true,
-      created_by: vendorData.created_by || 'system',
-      updated_by: vendorData.updated_by || 'system'
+      // Use the actual user ID instead of "system"
+      created_by: vendorData.created_by,
+      updated_by: vendorData.updated_by
     };
+
+    console.log('Insert data:', insertData);
 
     const { data: newVendor, error } = await supabase
       .from('vendor_contacts')
@@ -66,9 +68,11 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating vendor:', error);
-      return NextResponse.json({ error: 'Failed to create vendor' }, { status: 500 });
+      console.error('Supabase error:', error);
+      return NextResponse.json({ error: `Failed to create vendor: ${error.message}` }, { status: 500 });
     }
+
+    console.log('Vendor created successfully:', newVendor);
 
     return NextResponse.json({ 
       success: true, 
@@ -78,6 +82,6 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in create vendor API:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: `Internal server error: ${error}` }, { status: 500 });
   }
 }

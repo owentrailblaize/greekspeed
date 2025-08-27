@@ -217,7 +217,16 @@ export function SocialChairDashboard() {
     
     setIsSubmittingVendor(true);
     try {
-      const newVendor = await createVendor(vendorData);
+      // Add the missing user ID fields
+      const vendorWithUser = {
+        ...vendorData,
+        created_by: profile?.id || '', // Add this
+        updated_by: profile?.id || ''  // Add this
+      };
+      
+      console.log('Sending vendor with user data:', vendorWithUser);
+      
+      const newVendor = await createVendor(vendorWithUser);
       
       if (newVendor) {
         setShowVendorForm(false);
