@@ -181,48 +181,6 @@ export function PresidentDashboard() {
             </CardContent>
           </Card>
 
-          {/* Chapter Health */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Chapter Health Metrics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium">Member Engagement</span>
-                    <span className="text-sm text-gray-600">87%</span>
-                  </div>
-                  <Progress value={87} className="h-2" />
-                </div>
-                
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium">Dues Collection</span>
-                    <span className="text-sm text-gray-600">92%</span>
-                  </div>
-                  <Progress value={92} className="h-2" />
-                </div>
-                
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium">Event Attendance</span>
-                    <span className="text-sm text-gray-600">78%</span>
-                  </div>
-                  <Progress value={78} className="h-2" />
-                </div>
-                
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium">Alumni Engagement</span>
-                    <span className="text-sm text-gray-600">65%</span>
-                  </div>
-                  <Progress value={65} className="h-2" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* NEW: Chapter Document Management */}
           {chapterId && (
             <ChapterDocumentManager 
@@ -258,22 +216,6 @@ export function PresidentDashboard() {
               <Button variant="outline" className="w-full justify-start">
                 <TrendingUp className="h-4 w-4 mr-2" />
                 View Reports
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Executive Notes */}
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100">
-            <CardHeader>
-              <CardTitle className="text-purple-900">Executive Notes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Personal notes and reminders..."
-                className="min-h-[120px] bg-white/50"
-              />
-              <Button size="sm" className="mt-3 bg-purple-600 hover:bg-purple-700">
-                Save Notes
               </Button>
             </CardContent>
           </Card>
