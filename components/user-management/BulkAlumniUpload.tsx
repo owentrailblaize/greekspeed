@@ -76,22 +76,32 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
           const jsonData = XLSX.utils.sheet_to_json(worksheet);
           
           // Transform the data to match your expected format
-          const transformedData = jsonData.map((row: any) => ({
-            email: row.email || row.Email || row.EMAIL,
-            first_name: row.first_name || row.firstName || row['First Name'] || row['First Name'],
-            last_name: row.last_name || row.lastName || row['Last Name'] || row['Last Name'],
-            chapter: row.chapter || row.Chapter || row.CHAPTER,
-            industry: row.industry || row.Industry || row.INDUSTRY,
-            graduation_year: row.graduation_year || row.graduationYear || row['Graduation Year'] || row['Graduation Year'],
-            company: row.company || row.Company || row.COMPANY,
-            job_title: row.job_title || row.jobTitle || row['Job Title'] || row['Job Title'],
-            phone: row.phone || row.Phone || row.PHONE,
-            location: row.location || row.Location || row.LOCATION,
-            description: row.description || row.Description || row.DESCRIPTION,
-            pledge_class: row.pledge_class || row.pledgeClass || row['Pledge Class'] || row['Pledge Class'],
-            major: row.major || row.Major || row.MAJOR,
-            hometown: row.hometown || row.Hometown || row.HOMETOWN
-          })).filter(row => row.email && row.first_name && row.last_name);
+          const transformedData = jsonData.map((row: any, index: number) => {
+            const transformed = {
+              email: row.email || row.Email || row.EMAIL,
+              first_name: row.first_name || row.firstName || row['First Name'],
+              last_name: row.last_name || row.lastName || row['Last Name'],
+              chapter: row.chapter || row.Chapter || row.CHAPTER,
+              industry: row.industry || row.Industry || row.INDUSTRY,
+              graduation_year: row.graduation_year || row.graduationYear || row['Graduation Year'],
+              company: row.company || row.Company || row.COMPANY,
+              job_title: row.job_title || row.jobTitle || row['Job Title'],
+              phone: row.phone || row.Phone || row.PHONE,
+              location: row.location || row.Location || row.LOCATION,
+              description: row.description || row.Description || row.DESCRIPTION,
+              pledge_class: row.pledge_class || row.pledgeClass || row['Pledge Class'],
+              major: row.major || row.Major || row.MAJOR,
+              hometown: row.hometown || row.Hometown || row.HOMETOWN
+            };
+            
+            // Debug logging for first few rows
+            if (index < 3) {
+              console.log(`📊 Row ${index} original:`, row);
+              console.log(`📊 Row ${index} transformed:`, transformed);
+            }
+            
+            return transformed;
+          }).filter(row => row.email && row.first_name && row.last_name);
 
           resolve(transformedData);
         } catch (error) {
