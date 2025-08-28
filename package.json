@@ -25,7 +25,8 @@
     "react-dom": "19.1.0",
     "react-toastify": "^11.0.5",
     "tailwind-merge": "^3.3.1",
-    "us-state-codes": "^1.1.2"
+    "us-state-codes": "^1.1.2",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

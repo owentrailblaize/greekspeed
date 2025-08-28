@@ -8,9 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Plus, Table, Shield, ArrowLeft } from 'lucide-react';
+import { Users, Plus, Table, Shield, ArrowLeft, GraduationCap } from 'lucide-react';
 import { UsersTab } from '@/components/user-management/UsersTab';
 import { ChaptersTab } from '@/components/user-management/ChaptersTab';
+import { AlumniTab } from '@/components/user-management/AlumniTab';
 import { ViewChapterModal } from '@/components/user-management/ViewChapterModal';
 
 export default function UserManagementPage() {
@@ -48,7 +49,7 @@ export default function UserManagementPage() {
                 <span>Dashboard</span>
               </Button>
               <h1 className="text-3xl font-bold text-navy-900">User Management</h1>
-              <p className="text-gray-600">Manage users, profiles, and database tables</p>
+              <p className="text-gray-600">Manage users, profiles, chapters, and alumni</p>
             </div>
             <div className="flex items-center space-x-3">
               <Badge variant="secondary" className="bg-blue-100 text-blue-800">
@@ -62,7 +63,7 @@ export default function UserManagementPage() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="users" className="flex items-center space-x-2">
               <Users className="h-4 w-4" />
               <span>Users</span>
@@ -70,6 +71,10 @@ export default function UserManagementPage() {
             <TabsTrigger value="chapters" className="flex items-center space-x-2">
               <Shield className="h-4 w-4" />
               <span>Chapters</span>
+            </TabsTrigger>
+            <TabsTrigger value="alumni" className="flex items-center space-x-2">
+              <GraduationCap className="h-4 w-4" />
+              <span>Alumni</span>
             </TabsTrigger>
           </TabsList>
 
@@ -81,18 +86,9 @@ export default function UserManagementPage() {
             <ChaptersTab />
           </TabsContent>
 
-          {/* Comment out until you create these components */}
-          {/* <TabsContent value="profiles" className="space-y-6">
-            <ProfilesTab />
+          <TabsContent value="alumni" className="space-y-6">
+            <AlumniTab />
           </TabsContent>
-
-          <TabsContent value="chapters" className="space-y-6">
-            <ChaptersTab />
-          </TabsContent>
-
-          <TabsContent value="tables" className="space-y-6">
-            <TablesTab />
-          </TabsContent> */}
         </Tabs>
       </div>
     </div>
