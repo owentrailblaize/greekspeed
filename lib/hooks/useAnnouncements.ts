@@ -41,7 +41,14 @@ export function useAnnouncements(chapterId: string | null) {
       }
       
       const data = await response.json();
-      setAnnouncements(data.announcements || []);
+      
+      // Filter out announcements that the user has already read
+      const unreadAnnouncements = data.announcements.filter((announcement: Announcement) => {
+        // Check if this user has read this announcement
+        return !announcement.is_read;
+      });
+      
+      setAnnouncements(unreadAnnouncements || []);
       setPagination(data.pagination || {});
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch announcements');
@@ -99,14 +106,13 @@ export function useAnnouncements(chapterId: string | null) {
         throw new Error('Failed to mark announcement as read');
       }
 
-      // Update local state
-      setAnnouncements(prev => prev.map(announcement => 
-        announcement.id === announcementId 
-          ? { ...announcement, is_read: true }
-          : announcement
-      ));
+      // Remove the announcement from the local state since it's now read
+      setAnnouncements(prev => prev.filter(announcement => announcement.id !== announcementId));
+      
+      return true;
     } catch (err) {
       console.error('Failed to mark announcement as read:', err);
+      return false;
     }
   }, [user, session]);
 

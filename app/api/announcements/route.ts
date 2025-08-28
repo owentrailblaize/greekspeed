@@ -20,10 +20,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Chapter ID required' }, { status: 400 });
     }
 
+    // Get authenticated user to check read status
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
+    }
+
     // Calculate offset for pagination
     const offset = (page - 1) * limit;
 
-    // Fetch announcements with sender information and recipient counts
+    // Fetch announcements with sender information and read status for current user
     const { data: announcements, error } = await supabase
       .from('announcements')
       .select(`
@@ -34,9 +47,14 @@ export async function GET(request: NextRequest) {
           first_name,
           last_name,
           avatar_url
+        ),
+        recipients:announcement_recipients!inner(
+          is_read,
+          read_at
         )
       `)
       .eq('chapter_id', chapterId)
+      .eq('recipients.recipient_id', user.id)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -45,6 +63,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch announcements' }, { status: 500 });
     }
 
+    // Transform the data to include read status
+    const transformedAnnouncements = announcements?.map(announcement => ({
+      ...announcement,
+      is_read: announcement.recipients?.[0]?.is_read || false,
+      read_at: announcement.recipients?.[0]?.read_at || null
+    })) || [];
+
     // Get total count for pagination
     const { count: totalCount } = await supabase
       .from('announcements')
@@ -52,7 +77,7 @@ export async function GET(request: NextRequest) {
       .eq('chapter_id', chapterId);
 
     return NextResponse.json({
-      announcements: announcements || [],
+      announcements: transformedAnnouncements,
       pagination: {
         page,
         limit,

@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, MessageSquare, Clock, AlertTriangle, GraduationCap, Calendar, AlertCircle, TrendingUp, Minus } from 'lucide-react';
 import { useAnnouncements } from '@/lib/hooks/useAnnouncements';
 import { useProfile } from '@/lib/hooks/useProfile';
-import { Announcement } from '@/types/announcements';
+import { Announcement, CreateAnnouncementData } from '@/types/announcements';
 
 // Helper function to get icon and color based on announcement type
 const getAnnouncementTypeConfig = (type: string) => {
@@ -58,26 +58,21 @@ export function AnnouncementsCard() {
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id || null;
   const { announcements, loading, markAsRead, refresh } = useAnnouncements(chapterId);
-  const [dismissedAnnouncements, setDismissedAnnouncements] = useState<Set<string>>(new Set());
 
   const handleMarkAsRead = async (announcementId: string) => {
     try {
-      await markAsRead(announcementId);
-      // Add to dismissed set after marking as read
-      setDismissedAnnouncements(prev => new Set(prev).add(announcementId));
+      const success = await markAsRead(announcementId);
+      if (success) {
+        // The announcement will automatically be removed from the list
+        // since the hook now filters out read announcements
+      }
     } catch (error) {
       console.error('Failed to mark announcement as read:', error);
     }
   };
 
-  const handleDismiss = (announcementId: string) => {
-    setDismissedAnnouncements(prev => new Set(prev).add(announcementId));
-  };
-
-  // Filter out dismissed announcements and only show unread ones
-  const visibleAnnouncements = announcements.filter(
-    announcement => !dismissedAnnouncements.has(announcement.id)
-  );
+  // No need for dismissedAnnouncements state anymore
+  // The hook automatically filters out read announcements
 
   if (loading) {
     return (
@@ -97,7 +92,7 @@ export function AnnouncementsCard() {
     );
   }
 
-  if (visibleAnnouncements.length === 0) {
+  if (announcements.length === 0) {
     return (
       <Card className="bg-white">
         <CardHeader className="pb-3">
@@ -125,16 +120,16 @@ export function AnnouncementsCard() {
         <CardTitle className="text-lg flex items-center space-x-2">
           <MessageSquare className="h-5 w-5 text-navy-600" />
           <span>Chapter Announcements</span>
-          {visibleAnnouncements.length > 0 && (
+          {announcements.length > 0 && (
             <Badge variant="secondary" className="ml-2 bg-navy-100 text-navy-800">
-              {visibleAnnouncements.length}
+              {announcements.length}
             </Badge>
           )}
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-3">
-          {visibleAnnouncements.map((announcement) => {
+          {announcements.map((announcement) => {
             const typeConfig = getAnnouncementTypeConfig(announcement.announcement_type);
             const TypeIcon = typeConfig.icon;
             
@@ -143,15 +138,6 @@ export function AnnouncementsCard() {
                 key={announcement.id} 
                 className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors relative group"
               >
-                {/* Dismiss button */}
-                <button
-                  onClick={() => handleDismiss(announcement.id)}
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-200 rounded-full"
-                  title="Dismiss announcement"
-                >
-                  <X className="h-3 w-3 text-gray-500" />
-                </button>
-
                 <div className="flex items-start space-x-3">
                   {/* Type icon */}
                   <div className={`w-8 h-8 ${typeConfig.bgColor} rounded-full flex items-center justify-center shrink-0`}>
@@ -165,7 +151,7 @@ export function AnnouncementsCard() {
                         <h4 className="font-medium text-gray-900 text-sm line-clamp-2">
                           {announcement.title}
                         </h4>
-                        {/* Priority icon instead of badge */}
+                        {/* Priority icon */}
                         {(() => {
                           const priorityConfig = getPriorityIcon(announcement.priority);
                           const PriorityIcon = priorityConfig.icon;
@@ -208,7 +194,7 @@ export function AnnouncementsCard() {
           })}
         </div>
         
-        {visibleAnnouncements.length > 0 && (
+        {announcements.length > 0 && (
           <div className="pt-4 border-t border-gray-100">
             <Button 
               variant="outline" 
