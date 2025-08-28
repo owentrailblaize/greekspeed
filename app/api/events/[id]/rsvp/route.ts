@@ -74,9 +74,10 @@ export async function POST(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params; // Await the params
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('user_id');
 
@@ -88,7 +89,7 @@ export async function GET(
     const { data: existingRSVP, error } = await supabase
       .from('event_rsvps')
       .select('status')
-      .eq('event_id', params.id)
+      .eq('event_id', id)
       .eq('user_id', userId)
       .single();
 
