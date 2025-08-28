@@ -41,16 +41,18 @@ export async function PATCH(
   }
 }
 
+// Fix the DELETE method parameter type for Next.js 15
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params; // Await the params
     // Soft delete by setting is_active to false
     const { error } = await supabase
       .from('vendor_contacts')
       .update({ is_active: false, updated_at: new Date().toISOString() })
-      .eq('id', params.id);
+      .eq('id', id);
 
     if (error) {
       console.error('Error deleting vendor:', error);
