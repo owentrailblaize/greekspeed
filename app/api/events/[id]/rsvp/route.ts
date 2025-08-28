@@ -8,9 +8,10 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params; // Await params first
     const { status, user_id } = await request.json();
     
     if (!['attending', 'maybe', 'not_attending'].includes(status)) {
@@ -25,7 +26,7 @@ export async function POST(
     const { data: event } = await supabase
       .from('events')
       .select('id, chapter_id, start_time, status')
-      .eq('id', params.id)
+      .eq('id', id) // Use awaited id
       .single();
 
     if (!event) {
@@ -45,7 +46,7 @@ export async function POST(
     const { data: rsvp, error } = await supabase
       .from('event_rsvps')
       .upsert({
-        event_id: params.id,
+        event_id: id, // Use awaited id
         user_id,
         status,
         responded_at: new Date().toISOString()
