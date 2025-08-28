@@ -4,7 +4,7 @@ import { SocialFeed } from './ui/SocialFeed';
 import { DuesStatusCard } from './ui/DuesStatusCard';
 import { MyTasksCard } from './ui/MyTasksCard';
 import { UpcomingEventsCard } from './ui/UpcomingEventsCard';
-import { NetworkingSuggestionsCard } from './ui/NetworkingSuggestionsCard';
+import { AnnouncementsCard } from './ui/AnnouncementsCard';
 import { DocsCompliancePanel } from './ui/DocsCompliancePanel';
 
 export function ActiveMemberOverview() {
@@ -40,7 +40,7 @@ export function ActiveMemberOverview() {
           <div className="col-span-3">
             <div className="space-y-6">
               <UpcomingEventsCard />
-              <NetworkingSuggestionsCard />
+              <AnnouncementsCard />
             </div>
           </div>
         </div>
