@@ -22,6 +22,8 @@ export interface Announcement {
   };
   recipients_count?: number;
   read_count?: number;
+  is_read?: boolean;
+  read_at?: string;
 }
 
 export interface AnnouncementRecipient {
