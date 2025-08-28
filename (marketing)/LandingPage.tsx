@@ -42,39 +42,28 @@ const features = [
 
 const pricingPlans = [
   {
-    name: "Basic",
-    price: "$50",
-    period: "per semester",
-    description: "Perfect for individual members",
-    features: ["Alumni Network Access", "Basic Profile", "Event Notifications", "Mobile App Access"],
-    popular: false,
-  },
-  {
     name: "Premium",
-    price: "$150",
-    period: "per semester",
+    price: "$5",
+    period: "per month",
     description: "Full access for active members",
     features: [
-      "Everything in Basic",
-      "Dues Management",
-      "Advanced Networking",
-      "Priority Support",
-      "Event Planning Tools",
+      "Alumni Network Access",
+      "Basic Profile",
+      "Chapter Directory",
+      "Dues Management"
     ],
     popular: true,
   },
   {
     name: "Executive",
-    price: "$250",
-    period: "per semester",
+    price: "Contact for pricing",
+    period: "",
     description: "Complete administrative suite",
     features: [
-      "Everything in Premium",
       "Executive Dashboard",
       "Chapter Analytics",
-      "Role Management",
+      "Chapter Management",
       "Custom Reporting",
-      "White-label Options",
     ],
     popular: false,
   },
@@ -242,13 +231,15 @@ export function LandingPage() {
             >
               <Link href="/sign-up">
                 <Button size="lg" className="bg-navy-600 hover:bg-navy-700 text-white px-8 py-4 text-lg group">
-                  Get Started Free
+                  Get Started
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
+              {/*}
               <Button size="lg" variant="outline" className="border-navy-300 text-navy-600 hover:bg-navy-50 px-8 py-4 text-lg">
                 Watch Demo
               </Button>
+              */}
             </motion.div>
 
             {/* Stats */}
@@ -259,16 +250,16 @@ export function LandingPage() {
               className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto"
             >
               <div className="text-center">
-                <div className="text-3xl font-bold text-navy-600 mb-2">500+</div>
+                <div className="text-3xl font-bold text-navy-600 mb-2">3+</div>
                 <div className="text-gray-600">Active Chapters</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-navy-600 mb-2">50K+</div>
+                <div className="text-3xl font-bold text-navy-600 mb-2">5000+</div>
                 <div className="text-gray-600">Connected Alumni</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-navy-600 mb-2">$2M+</div>
-                <div className="text-gray-600">Dues Processed</div>
+                <div className="text-3xl font-bold text-navy-600 mb-2">1000+</div>
+                <div className="text-gray-600">Connected Members</div>
               </div>
             </motion.div>
           </div>
@@ -338,7 +329,7 @@ export function LandingPage() {
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Simple, Transparent Pricing</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">Choose the plan that fits your chapter's needs. All plans include our core features.</p>
           </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {pricingPlans.map((plan, index) => (
               <motion.div
                 key={index}
@@ -361,7 +352,7 @@ export function LandingPage() {
                       <p className="text-gray-600 mb-4">{plan.description}</p>
                       <div className="mb-4">
                         <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
-                        <span className="text-gray-600">/{plan.period}</span>
+                        {plan.period && <span className="text-gray-600">/{plan.period}</span>}
                       </div>
                     </div>
                     <div className="space-y-4 mb-8">
@@ -372,7 +363,9 @@ export function LandingPage() {
                         </div>
                       ))}
                     </div>
-                    <Button className={`w-full ${plan.popular ? "bg-navy-600 hover:bg-navy-700 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-900"}`}>Get Started</Button>
+                    <Button className={`w-full ${plan.popular ? "bg-navy-600 hover:bg-navy-700 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-900"}`}>
+                      {plan.name === "Executive" ? "Contact Sales" : "Get Started"}
+                    </Button>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -400,7 +393,7 @@ export function LandingPage() {
               <p className="text-navy-200 text-lg leading-relaxed mb-6">To modernize Greek life operations by providing intuitive, powerful tools that strengthen alumni connections, streamline financial management, and empower chapter leadership.</p>
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <div className="text-3xl font-bold text-white mb-2">2019</div>
+                  <div className="text-3xl font-bold text-white mb-2">2025</div>
                   <div className="text-navy-300">Founded</div>
                 </div>
                 <div>
@@ -416,8 +409,8 @@ export function LandingPage() {
                     <Star className="h-10 w-10 text-yellow-400" />
                   </div>
                   <blockquote className="text-lg text-navy-100 mb-4">"Trailblaize has completely transformed how we manage our chapter. The alumni connections alone have been game-changing."</blockquote>
-                  <div className="text-white font-semibold">Sarah Johnson</div>
-                  <div className="text-navy-300">Chapter President, Delta Gamma</div>
+                  <div className="text-white font-semibold">Nick Siebert</div>
+                  <div className="text-navy-300">Sigma Chi Eta</div>
                 </div>
               </div>
             </motion.div>
@@ -454,7 +447,7 @@ export function LandingPage() {
               </div>
               <span className="font-semibold text-lg">Trailblaize</span>
             </div>
-            <div className="text-gray-400 text-sm">© 2024 Trailblaize. All rights reserved.</div>
+            <div className="text-gray-400 text-sm">© Trailblaize, Inc. 2025</div>
           </div>
         </div>
       </footer>
