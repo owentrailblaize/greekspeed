@@ -6,12 +6,14 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Fix the PATCH method parameter type for Next.js 15
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const updateData = await request.json();
+    const { id } = await params; // Await the params
 
     // Update the vendor
     const { data: updatedVendor, error } = await supabase
@@ -20,7 +22,7 @@ export async function PATCH(
         ...updateData,
         updated_at: new Date().toISOString()
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single();
 
