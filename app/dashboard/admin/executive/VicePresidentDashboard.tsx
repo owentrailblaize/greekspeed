@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, CheckCircle, Clock, Calendar, MessageSquare, UserCheck, Settings } from "lucide-react";
+import { Users, CheckCircle, Clock, Calendar, MessageSquare, UserCheck, Settings, Lock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -220,7 +220,8 @@ export function VicePresidentDashboard() {
 
       {/* Tab Content */}
       {selectedTab === "overview" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-8">
+          {/* Task Completion Progress - Full Width */}
           <Card>
             <CardHeader>
               <CardTitle>Task Completion Progress</CardTitle>
@@ -256,14 +257,17 @@ export function VicePresidentDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Committee Overview - Full Width Below (LOCKED) */}
+          <Card className="opacity-60">
             <CardHeader>
-              <CardTitle>Committee Overview</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                Committee Overview
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {committeeStatus.map((committee, index) => (
-                  <div key={index} className="p-3 border border-gray-200 rounded-lg">
+                  <div key={index} className="p-3 border border-gray-200 rounded-lg opacity-60">
                     <div className="flex justify-between items-center mb-2">
                       <h4 className="font-medium text-sm">{committee.name}</h4>
                       <span className="text-xs text-gray-600">{committee.completion}%</span>
@@ -275,6 +279,10 @@ export function VicePresidentDashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+              <div className="text-center py-4 text-gray-500">
+                <Lock className="h-5 w-5 mx-auto mb-2 text-gray-400" />
+                <p className="text-sm">Committee management features coming soon</p>
               </div>
             </CardContent>
           </Card>
