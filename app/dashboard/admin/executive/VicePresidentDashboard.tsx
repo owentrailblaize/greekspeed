@@ -1,29 +1,17 @@
 'use client';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, CheckCircle, Clock, Calendar, MessageSquare, UserCheck, Settings } from "lucide-react";
+import { Users, CheckCircle, Clock, Calendar, MessageSquare, UserCheck, Settings, Lock, Eye, Edit, DollarSign, MapPin, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-const operationsOverview = {
-  totalTasks: 24,
-  completedTasks: 18,
-  pendingTasks: 6,
-  memberCompliance: 89.5
-};
-
-const memberTasks = [
-  { member: "Connor McMullan", task: "Complete Leadership Training", deadline: "2024-03-15", status: "completed", priority: "high" },
-  { member: "Brett Ashy", task: "Submit Committee Report", deadline: "2024-03-10", status: "pending", priority: "medium" },
-  { member: "Margaret Dye", task: "Attend Risk Management Session", deadline: "2024-03-20", status: "overdue", priority: "high" },
-  { member: "Rush Bland", task: "Update Contact Information", deadline: "2024-03-05", status: "completed", priority: "low" },
-  { member: "Kinkead Dent", task: "Community Service Hours", deadline: "2024-03-25", status: "pending", priority: "medium" },
-  { member: "Victor Razi", task: "Alumni Mentorship Meeting", deadline: "2024-03-12", status: "pending", priority: "low" }
-];
-
+import { useProfile } from "@/lib/hooks/useProfile";
+import { supabase } from "@/lib/supabase/client";
+import { Event } from '@/types/events';
+import { EventForm } from "@/components/ui/EventForm";
+import { CreateEventRequest, UpdateEventRequest } from "@/types/events";
 const committeeStatus = [
   { name: "Risk Management", chair: "John Smith", members: 8, completion: 92, nextMeeting: "March 10" },
   { name: "Professional Development", chair: "Mike Johnson", members: 12, completion: 78, nextMeeting: "March 12" },
@@ -31,14 +19,169 @@ const committeeStatus = [
   { name: "Alumni Relations", chair: "Chris Brown", members: 10, completion: 95, nextMeeting: "March 18" }
 ];
 
-const upcomingMeetings = [
-  { name: "Executive Board Meeting", date: "Tomorrow, 7:00 PM", attendees: 8, location: "Chapter House" },
-  { name: "Committee Chairs Meeting", date: "Thursday, 6:00 PM", attendees: 6, location: "Student Union" },
-  { name: "Member Orientation", date: "Saturday, 2:00 PM", attendees: 25, location: "Library Room 204" }
-];
-
 export function VicePresidentDashboard() {
+  const { profile } = useProfile();
   const [selectedTab, setSelectedTab] = useState("overview");
+  const [operationsOverview, setOperationsOverview] = useState({
+    totalTasks: 0,
+    completedTasks: 0,
+    pendingTasks: 0,
+    memberCompliance: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  // Add this state for real tasks
+  const [chapterTasks, setChapterTasks] = useState<any[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
+
+  // Add state for events
+  const [chapterEvents, setChapterEvents] = useState<Event[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+
+  // State for modal
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [editingEvent, setEditingEvent] = useState(false);
+  const [showCreateEventModal, setShowCreateEventModal] = useState(false);
+
+  // Load real task data from Supabase
+  useEffect(() => {
+    if (profile?.chapter_id) {
+      loadTaskStats();
+      loadChapterTasks();
+      loadChapterEvents();
+    }
+  }, [profile?.chapter_id]);
+
+  const loadTaskStats = async () => {
+    try {
+      setLoading(true);
+      
+      // Add null check for profile
+      if (!profile?.chapter_id) {
+        return;
+      }
+      
+      // Fetch all tasks for the current chapter
+      const { data: tasks, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('chapter_id', profile.chapter_id);
+
+      if (error) {
+        console.error('Error fetching tasks:', error);
+        return;
+      }
+
+      // Calculate task statistics
+      const totalTasks = tasks?.length || 0;
+      const completedTasks = tasks?.filter(task => task.status === 'completed').length || 0;
+      const pendingTasks = tasks?.filter(task => task.status === 'pending').length || 0;
+      
+      // Calculate member compliance (you can adjust this logic based on your needs)
+      const memberCompliance = totalTasks > 0 ? ((completedTasks / totalTasks) * 100) : 0;
+
+      setOperationsOverview({
+        totalTasks,
+        completedTasks,
+        pendingTasks,
+        memberCompliance: Math.round(memberCompliance * 10) / 10 // Round to 1 decimal place
+      });
+    } catch (error) {
+      console.error('Error loading task stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add this function to load tasks with assignee names
+  const loadChapterTasks = async () => {
+    try {
+      setTasksLoading(true);
+      
+      if (!profile?.chapter_id) {
+        return;
+      }
+      
+      // Fetch tasks with assignee information
+      const { data: tasks, error } = await supabase
+        .from('tasks')
+        .select(`
+          *,
+          assignee:profiles!tasks_assignee_id_fkey(full_name)
+        `)
+        .eq('chapter_id', profile.chapter_id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching tasks:', error);
+        return;
+      }
+
+      setChapterTasks(tasks || []);
+    } catch (error) {
+      console.error('Error loading chapter tasks:', error);
+    } finally {
+      setTasksLoading(false);
+    }
+  };
+
+  // Add function to load events
+  const loadChapterEvents = async () => {
+    try {
+      setEventsLoading(true);
+      
+      if (!profile?.chapter_id) {
+        return;
+      }
+      
+      // Fetch events for the current chapter
+      const response = await fetch(`/api/events?chapter_id=${profile.chapter_id}&scope=upcoming`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
+      }
+      
+      const events = await response.json();
+      setChapterEvents(events);
+    } catch (error) {
+      console.error('Error loading chapter events:', error);
+    } finally {
+      setEventsLoading(false);
+    }
+  };
+
+  // Add helper function to format event dates
+  const formatEventDate = (startTime: string) => {
+    const now = new Date();
+    const eventDate = new Date(startTime);
+    const diffTime = eventDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return 'Today, ' + eventDate.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit' 
+      });
+    } else if (diffDays === 1) {
+      return 'Tomorrow, ' + eventDate.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit' 
+      });
+    } else if (diffDays > 1 && diffDays <= 7) {
+      return eventDate.toLocaleDateString('en-US', { 
+        weekday: 'long',
+        hour: 'numeric', 
+        minute: '2-digit' 
+      });
+    } else {
+      return eventDate.toLocaleDateString('en-US', { 
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric', 
+        minute: '2-digit' 
+      });
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -58,6 +201,64 @@ export function VicePresidentDashboard() {
     }
   };
 
+  const handleEditEvent = async (eventData: CreateEventRequest | UpdateEventRequest) => {
+    if (!selectedEvent?.id) return;
+    
+    setEditingEvent(true);
+    try {
+      const response = await fetch(`/api/events/${selectedEvent.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...eventData,
+          updated_by: profile?.id || 'system',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update event');
+      }
+
+      // Refresh events list
+      await loadChapterEvents();
+      setIsEditModalOpen(false);
+      setSelectedEvent(null);
+    } catch (error) {
+      console.error('Error editing event:', error);
+    } finally {
+      setEditingEvent(false);
+    }
+  };
+
+  const handleCreateEvent = async (eventData: CreateEventRequest | UpdateEventRequest) => {
+    try {
+      const response = await fetch('/api/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...eventData,
+          chapter_id: profile?.chapter_id,
+          created_by: profile?.id || 'system',
+          updated_by: profile?.id || 'system',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create event');
+      }
+
+      // Refresh events list
+      await loadChapterEvents();
+      setShowCreateEventModal(false);
+    } catch (error) {
+      console.error('Error creating event:', error);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
       {/* Operations Overview */}
@@ -72,7 +273,9 @@ export function VicePresidentDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-600 text-sm font-medium">Total Tasks</p>
-                  <p className="text-2xl font-semibold text-blue-900">{operationsOverview.totalTasks}</p>
+                  <p className="text-2xl font-semibold text-blue-900">
+                    {loading ? '...' : operationsOverview.totalTasks}
+                  </p>
                 </div>
                 <Settings className="h-8 w-8 text-blue-600" />
               </div>
@@ -90,7 +293,9 @@ export function VicePresidentDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-green-600 text-sm font-medium">Completed</p>
-                  <p className="text-2xl font-semibold text-green-900">{operationsOverview.completedTasks}</p>
+                  <p className="text-2xl font-semibold text-green-900">
+                    {loading ? '...' : operationsOverview.completedTasks}
+                  </p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
@@ -108,7 +313,9 @@ export function VicePresidentDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-yellow-600 text-sm font-medium">Pending</p>
-                  <p className="text-2xl font-semibold text-yellow-900">{operationsOverview.pendingTasks}</p>
+                  <p className="text-2xl font-semibold text-yellow-900">
+                    {loading ? '...' : operationsOverview.pendingTasks}
+                  </p>
                 </div>
                 <Clock className="h-8 w-8 text-yellow-600" />
               </div>
@@ -126,7 +333,9 @@ export function VicePresidentDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-purple-600 text-sm font-medium">Compliance</p>
-                  <p className="text-2xl font-semibold text-purple-900">{operationsOverview.memberCompliance}%</p>
+                  <p className="text-2xl font-semibold text-purple-900">
+                    {loading ? '...' : `${operationsOverview.memberCompliance}%`}
+                  </p>
                 </div>
                 <UserCheck className="h-8 w-8 text-purple-600" />
               </div>
@@ -141,19 +350,23 @@ export function VicePresidentDashboard() {
           {[
             { value: "overview", label: "Overview" },
             { value: "tasks", label: "Member Tasks" },
-            { value: "committees", label: "Committees" },
-            { value: "meetings", label: "Meetings" }
+            { value: "meetings", label: "Meetings" },
+            { value: "committees", label: "Committees", locked: true }
           ].map((tab) => (
             <button
               key={tab.value}
-              onClick={() => setSelectedTab(tab.value)}
+              onClick={() => !tab.locked && setSelectedTab(tab.value)}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                 selectedTab === tab.value
                   ? "bg-white text-navy-600 shadow-sm"
+                  : tab.locked
+                  ? "opacity-60 cursor-not-allowed text-gray-400"
                   : "text-gray-600 hover:text-gray-900"
               }`}
+              disabled={tab.locked}
             >
               {tab.label}
+              {tab.locked && <Lock className="h-3 w-3 ml-2 text-gray-400 inline" />}
             </button>
           ))}
         </div>
@@ -161,7 +374,8 @@ export function VicePresidentDashboard() {
 
       {/* Tab Content */}
       {selectedTab === "overview" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-8">
+          {/* Task Completion Progress - Full Width */}
           <Card>
             <CardHeader>
               <CardTitle>Task Completion Progress</CardTitle>
@@ -171,21 +385,25 @@ export function VicePresidentDashboard() {
                 <div className="flex justify-between items-center">
                   <span>Overall Progress</span>
                   <span className="font-medium">
-                    {((operationsOverview.completedTasks / operationsOverview.totalTasks) * 100).toFixed(1)}%
+                    {loading ? '...' : `${((operationsOverview.completedTasks / operationsOverview.totalTasks) * 100).toFixed(1)}%`}
                   </span>
                 </div>
                 <Progress 
-                  value={(operationsOverview.completedTasks / operationsOverview.totalTasks) * 100} 
+                  value={loading ? 0 : ((operationsOverview.completedTasks / operationsOverview.totalTasks) * 100)} 
                   className="h-3" 
                 />
                 
                 <div className="grid grid-cols-2 gap-4 mt-6">
                   <div className="text-center">
-                    <p className="text-2xl font-semibold text-green-600">{operationsOverview.completedTasks}</p>
+                    <p className="text-2xl font-semibold text-green-600">
+                      {loading ? '...' : operationsOverview.completedTasks}
+                    </p>
                     <p className="text-sm text-gray-600">Completed</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-semibold text-yellow-600">{operationsOverview.pendingTasks}</p>
+                    <p className="text-2xl font-semibold text-yellow-600">
+                      {loading ? '...' : operationsOverview.pendingTasks}
+                    </p>
                     <p className="text-sm text-gray-600">Pending</p>
                   </div>
                 </div>
@@ -193,14 +411,17 @@ export function VicePresidentDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Committee Overview - Full Width Below (LOCKED) */}
+          <Card className="opacity-60">
             <CardHeader>
-              <CardTitle>Committee Overview</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                Committee Overview
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {committeeStatus.map((committee, index) => (
-                  <div key={index} className="p-3 border border-gray-200 rounded-lg">
+                  <div key={index} className="p-3 border border-gray-200 rounded-lg opacity-60">
                     <div className="flex justify-between items-center mb-2">
                       <h4 className="font-medium text-sm">{committee.name}</h4>
                       <span className="text-xs text-gray-600">{committee.completion}%</span>
@@ -213,6 +434,10 @@ export function VicePresidentDashboard() {
                   </div>
                 ))}
               </div>
+              <div className="text-center py-4 text-gray-500">
+                <Lock className="h-5 w-5 mx-auto mb-2 text-gray-400" />
+                <p className="text-sm">Committee management features coming soon</p>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -223,54 +448,76 @@ export function VicePresidentDashboard() {
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle>Member Task Tracking</CardTitle>
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button className="bg-blue-600 hover:bg-blue-700 opacity-60 cursor-not-allowed" disabled>
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Send Reminders
+                <Lock className="h-3 w-3 ml-2 text-gray-400" />
               </Button>
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Member</TableHead>
-                  <TableHead>Task</TableHead>
-                  <TableHead>Deadline</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {memberTasks.map((task, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{task.member}</TableCell>
-                    <TableCell>{task.task}</TableCell>
-                    <TableCell>{task.deadline}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(task.status)}>
-                        {task.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getPriorityColor(task.priority)}>
-                        {task.priority}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {task.status !== "completed" && (
-                        <Button size="sm" variant="outline">
-                          Follow Up
-                        </Button>
-                      )}
-                      {task.status === "completed" && (
-                        <span className="text-green-600 text-sm">✓ Done</span>
-                      )}
-                    </TableCell>
+            {tasksLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                <p className="text-gray-600">Loading tasks...</p>
+              </div>
+            ) : chapterTasks.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p className="text-lg font-medium mb-2">No tasks found</p>
+                <p className="text-sm">No tasks have been assigned to chapter members yet.</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Member</TableHead>
+                    <TableHead>Task</TableHead>
+                    <TableHead>Deadline</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Action</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {chapterTasks.map((task) => (
+                    <TableRow key={task.id}>
+                      <TableCell className="font-medium">
+                        {task.assignee?.full_name || 'Unassigned'}
+                      </TableCell>
+                      <TableCell>{task.title}</TableCell>
+                      <TableCell>
+                        {task.due_date ? new Date(task.due_date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        }) : 'No due date'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(task.status)}>
+                          {task.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getPriorityColor(task.priority)}>
+                          {task.priority}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {task.status !== "completed" && (
+                          <Button size="sm" variant="outline" className="opacity-60 cursor-not-allowed" disabled>
+                            Follow Up
+                            <Lock className="h-3 w-3 ml-2 text-gray-400" />
+                          </Button>
+                        )}
+                        {task.status === "completed" && (
+                          <span className="text-green-600 text-sm">✓ Done</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       )}
@@ -319,45 +566,124 @@ export function VicePresidentDashboard() {
         <Card>
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle>Upcoming Meetings</CardTitle>
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <CardTitle>Upcoming Events</CardTitle>
+              <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setShowCreateEventModal(true)}>
                 <Calendar className="h-4 w-4 mr-2" />
-                Schedule Meeting
+                Schedule Event
               </Button>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {upcomingMeetings.map((meeting, index) => (
-                <div key={index} className="p-4 border border-gray-200 rounded-lg">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-medium">{meeting.name}</h4>
-                      <div className="text-sm text-gray-600 mt-1">
-                        <p className="flex items-center">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {meeting.date}
-                        </p>
-                        <p className="flex items-center mt-1">
-                          <Users className="h-3 w-3 mr-1" />
-                          {meeting.attendees} attendees
-                        </p>
-                        <p className="flex items-center mt-1">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          {meeting.location}
-                        </p>
+            {eventsLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                <p className="text-gray-600">Loading events...</p>
+              </div>
+            ) : chapterEvents.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Calendar className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <p className="text-lg font-medium mb-2">No upcoming events</p>
+                <p className="text-sm">No events have been scheduled for your chapter yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {chapterEvents.map((event) => (
+                  <div key={event.id} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-medium text-lg">{event.title}</h4>
+                          <Badge 
+                            className={
+                              event.status === 'published' ? 'bg-green-100 text-green-800' :
+                              event.status === 'draft' ? 'bg-gray-100 text-gray-800' :
+                              'bg-red-100 text-red-800'
+                            }
+                          >
+                            {event.status}
+                          </Badge>
+                        </div>
+                        
+                        {event.description && (
+                          <p className="text-sm text-gray-600 mb-3">{event.description}</p>
+                        )}
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
+                          <div className="flex items-center">
+                            <Clock className="h-4 w-4 mr-2 text-gray-400" />
+                            <span>{formatEventDate(event.start_time)}</span>
+                          </div>
+                          
+                          {event.location && (
+                            <div className="flex items-center">
+                              <MapPin className="h-4 w-4 mr-2 text-gray-400" />
+                              <span>{event.location}</span>
+                            </div>
+                          )}
+                          
+                          {event.budget_label && event.budget_amount && (
+                            <div className="flex items-center">
+                              <DollarSign className="h-4 w-4 mr-2 text-gray-400" />
+                              <span>{event.budget_label}: ${event.budget_amount.toLocaleString()}</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center">
+                            <Users className="h-4 w-4 mr-2 text-gray-400" />
+                            <span>
+                              {event.attendee_count || 0} attending
+                              {event.maybe_count ? `, ${event.maybe_count} maybe` : ''}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex space-x-2 ml-4">
+
+                        <Button size="sm" variant="outline" onClick={() => { setSelectedEvent(event); setIsEditModalOpen(true); }}>
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline">Edit</Button>
-                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700">Join</Button>
-                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Edit Event Modal */}
+      {isEditModalOpen && selectedEvent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <EventForm
+                event={selectedEvent}
+                onSubmit={handleEditEvent}
+                onCancel={() => setIsEditModalOpen(false)}
+                loading={editingEvent}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Event Modal */}
+      {showCreateEventModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <EventForm
+                event={null}
+                onSubmit={handleCreateEvent}
+                onCancel={() => setShowCreateEventModal(false)}
+                loading={false}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
