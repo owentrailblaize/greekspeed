@@ -1,7 +1,7 @@
 'use client';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, TrendingUp, Calendar, MessageSquare, AlertCircle, CheckCircle, Clock, Crown, Send, Image, Clock as ClockIcon } from "lucide-react";
+import { Users, TrendingUp, Calendar, MessageSquare, AlertCircle, CheckCircle, Clock, Crown, Send, Image, Clock as ClockIcon, Lock, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,21 +15,9 @@ import { useProfile } from '@/lib/hooks/useProfile';
 import { useAnnouncements } from '@/lib/hooks/useAnnouncements';
 import { UpcomingEventsCard } from '@/components/dashboards/ui/UpcomingEventsCard';
 import { CreateAnnouncementData } from '@/types/announcements';
+import { EventForm } from '@/components/ui/EventForm';
 import { toast } from 'react-toastify';
-
-const chapterStats = {
-  totalMembers: 156,
-  activeMembers: 142,
-  newPledges: 23,
-  graduatingMembers: 18,
-  membershipGrowth: 12.5
-};
-
-const pendingApprovals = [
-  { item: "Budget Amendment - Social Events", amount: "$2,500", priority: "high" },
-  { item: "New Member Initiation Ceremony", date: "March 15", priority: "medium" },
-  { item: "Alumni Speaker Request", contact: "Dr. Johnson", priority: "low" }
-];
+import { useRouter } from 'next/navigation';
 
 export function PresidentDashboard() {
   const [announcement, setAnnouncement] = useState("");
@@ -40,9 +28,108 @@ export function PresidentDashboard() {
   const [scheduledDate, setScheduledDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // New state for event modal
+  const [showEventModal, setShowEventModal] = useState(false);
+  
+  // Add state for member count
+  const [memberCount, setMemberCount] = useState<number | null>(null);
+  const [loadingMemberCount, setLoadingMemberCount] = useState(false);
+  
+  // Add state for active member count
+  const [activeMemberCount, setActiveMemberCount] = useState<number | null>(null);
+  const [loadingActiveMemberCount, setLoadingActiveMemberCount] = useState(false);
+  
+  // Add state for membership growth
+  const [membershipGrowth, setMembershipGrowth] = useState<number>(0);
+  const [loadingGrowth, setLoadingGrowth] = useState(false);
+  
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
   const { createAnnouncement, loading: announcementsLoading } = useAnnouncements(chapterId || null);
+  const router = useRouter();
+
+  // Simple function to fetch just the member count
+  const fetchMemberCount = async () => {
+    if (!chapterId) return;
+    
+    try {
+      setLoadingMemberCount(true);
+      const response = await fetch(`/api/chapter/member-count?chapter_id=${chapterId}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setMemberCount(data.count);
+      }
+    } catch (error) {
+      console.error('Error fetching member count:', error);
+    } finally {
+      setLoadingMemberCount(false);
+    }
+  };
+
+  // Function to fetch active member count
+  const fetchActiveMemberCount = async () => {
+    if (!chapterId) return;
+    
+    try {
+      setLoadingActiveMemberCount(true);
+      const response = await fetch(`/api/chapter/active-member-count?chapter_id=${chapterId}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setActiveMemberCount(data.count);
+      }
+    } catch (error) {
+      console.error('Error fetching active member count:', error);
+    } finally {
+      setLoadingActiveMemberCount(false);
+    }
+  };
+
+  // Add useEffect for membership growth
+  useEffect(() => {
+    const fetchMembershipGrowth = async () => {
+      if (!chapterId) return;
+      
+      setLoadingGrowth(true);
+      try {
+        const response = await fetch(`/api/chapter/membership-growth?chapter_id=${chapterId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setMembershipGrowth(data.growth);
+        }
+      } catch (error) {
+        console.error('Error fetching membership growth:', error);
+      } finally {
+        setLoadingGrowth(false);
+      }
+    };
+
+    fetchMembershipGrowth();
+  }, [chapterId]);
+
+  // Fetch both counts when component mounts
+  useEffect(() => {
+    if (chapterId) {
+      fetchMemberCount();
+      fetchActiveMemberCount();
+    }
+  }, [chapterId]);
+
+  // Calculate stats with real data
+  const chapterStats = {
+    totalMembers: memberCount || 0,
+    activeMembers: activeMemberCount || 0,
+    newPledges: 23, // Keep existing for now
+    graduatingMembers: 18, // Keep existing for now
+    membershipGrowth: 12.5 // Keep existing for now
+  };
+
+  const pendingApprovals = [
+    { item: "Budget Amendment - Social Events", amount: "$2,500", priority: "high" },
+    { item: "New Member Initiation Ceremony", date: "March 15", priority: "medium" },
+    { item: "Alumni Speaker Request", contact: "Dr. Johnson", priority: "low" }
+  ];
 
   const handleSendAnnouncement = async () => {
     if (!announcementTitle.trim() || !announcement.trim()) {
@@ -86,6 +173,44 @@ export function PresidentDashboard() {
     }
   };
 
+  // New function for send message navigation
+  const handleSendMessage = () => {
+    router.push('/dashboard/messages');
+  };
+
+  // New function for schedule meeting
+  const handleScheduleMeeting = () => {
+    setShowEventModal(true);
+  };
+
+  // New function for creating events
+  const handleCreateEvent = async (eventData: any) => {
+    try {
+      const response = await fetch('/api/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...eventData,
+          chapter_id: chapterId,
+          created_by: profile?.id || 'system',
+          updated_by: profile?.id || 'system',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create event');
+      }
+
+      toast.success('Meeting scheduled successfully!');
+      setShowEventModal(false);
+    } catch (error) {
+      toast.error('Failed to schedule meeting');
+      console.error('Error creating event:', error);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
       {/* Quick Stats */}
@@ -100,7 +225,11 @@ export function PresidentDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-purple-600 text-sm font-medium">Total Members</p>
-                  <p className="text-2xl font-semibold text-purple-900">{chapterStats.totalMembers}</p>
+                  {loadingMemberCount ? (
+                    <div className="animate-pulse bg-purple-200 h-8 w-16 rounded"></div>
+                  ) : (
+                    <p className="text-2xl font-semibold text-purple-900">{chapterStats.totalMembers}</p>
+                  )}
                 </div>
                 <Users className="h-8 w-8 text-purple-600" />
               </div>
@@ -118,7 +247,11 @@ export function PresidentDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-green-600 text-sm font-medium">Active Members</p>
-                  <p className="text-2xl font-semibold text-green-900">{chapterStats.activeMembers}</p>
+                  {loadingActiveMemberCount ? (
+                    <div className="animate-pulse bg-green-200 h-8 w-16 rounded"></div>
+                  ) : (
+                    <p className="text-2xl font-semibold text-green-900">{chapterStats.activeMembers}</p>
+                  )}
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
@@ -154,7 +287,13 @@ export function PresidentDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-orange-600 text-sm font-medium">Membership Growth</p>
-                  <p className="text-2xl font-semibold text-orange-900">+{chapterStats.membershipGrowth}%</p>
+                  {loadingGrowth ? (
+                    <p className="text-2xl font-semibold text-orange-900">...</p>
+                  ) : (
+                    <p className="text-2xl font-semibold text-orange-900">
+                      {membershipGrowth >= 0 ? '+' : ''}{membershipGrowth}%
+                    </p>
+                  )}
                 </div>
                 <Crown className="h-8 w-8 text-orange-600" />
               </div>
@@ -249,8 +388,9 @@ export function PresidentDashboard() {
               </div>
             </CardContent>
           </Card>
-
+          
           {/* Pending Approvals */}
+          {/*
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -290,6 +430,7 @@ export function PresidentDashboard() {
               </div>
             </CardContent>
           </Card>
+          */}
 
           {/* NEW: Chapter Document Management */}
           {chapterId && (
@@ -311,21 +452,43 @@ export function PresidentDashboard() {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start">
-                <Users className="h-4 w-4 mr-2" />
-                Manage Members
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={handleScheduleMeeting}
+              >
                 <Calendar className="h-4 w-4 mr-2" />
                 Schedule Meeting
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={handleSendMessage}
+              >
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Send Message
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start opacity-60 cursor-not-allowed" 
+                disabled
+                title="Feature coming soon!"
+              >
                 <TrendingUp className="h-4 w-4 mr-2" />
                 View Reports
+                <Lock className="h-3 w-3 ml-2 text-gray-400" />
+              </Button>
+              
+              {/* Locked Manage Members button */}
+              <Button 
+                variant="outline" 
+                className="w-full justify-start opacity-60 cursor-not-allowed" 
+                disabled
+                title="Feature coming soon!"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Manage Members
+                <Lock className="h-3 w-3 ml-2 text-gray-400" />
               </Button>
             </CardContent>
           </Card>
@@ -334,6 +497,33 @@ export function PresidentDashboard() {
           {chapterId && <TasksPanel chapterId={chapterId} />}
         </div>
       </div>
+
+      {/* Event Creation Modal */}
+      {showEventModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-semibold">Schedule Chapter Meeting</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowEventModal(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <EventForm
+                event={null}
+                onSubmit={handleCreateEvent}
+                onCancel={() => setShowEventModal(false)}
+                loading={false}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
