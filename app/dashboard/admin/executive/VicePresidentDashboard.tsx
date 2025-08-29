@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, CheckCircle, Clock, Calendar, MessageSquare, UserCheck, Settings, Lock, Eye, Edit, DollarSign, MapPin } from "lucide-react";
+import { Users, CheckCircle, Clock, Calendar, MessageSquare, UserCheck, Settings, Lock, Eye, Edit, DollarSign, MapPin, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useProfile } from "@/lib/hooks/useProfile";
 import { supabase } from "@/lib/supabase/client";
 import { Event } from '@/types/events';
-
+import { EventForm } from "@/components/ui/EventForm";
+import { CreateEventRequest, UpdateEventRequest } from "@/types/events";
 const committeeStatus = [
   { name: "Risk Management", chair: "John Smith", members: 8, completion: 92, nextMeeting: "March 10" },
   { name: "Professional Development", chair: "Mike Johnson", members: 12, completion: 78, nextMeeting: "March 12" },
@@ -36,6 +37,12 @@ export function VicePresidentDashboard() {
   // Add state for events
   const [chapterEvents, setChapterEvents] = useState<Event[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
+
+  // State for modal
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [editingEvent, setEditingEvent] = useState(false);
+  const [showCreateEventModal, setShowCreateEventModal] = useState(false);
 
   // Load real task data from Supabase
   useEffect(() => {
@@ -191,6 +198,64 @@ export function VicePresidentDashboard() {
       case "medium": return "bg-yellow-100 text-yellow-800";
       case "low": return "bg-gray-100 text-gray-800";
       default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const handleEditEvent = async (eventData: CreateEventRequest | UpdateEventRequest) => {
+    if (!selectedEvent?.id) return;
+    
+    setEditingEvent(true);
+    try {
+      const response = await fetch(`/api/events/${selectedEvent.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...eventData,
+          updated_by: profile?.id || 'system',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update event');
+      }
+
+      // Refresh events list
+      await loadChapterEvents();
+      setIsEditModalOpen(false);
+      setSelectedEvent(null);
+    } catch (error) {
+      console.error('Error editing event:', error);
+    } finally {
+      setEditingEvent(false);
+    }
+  };
+
+  const handleCreateEvent = async (eventData: CreateEventRequest | UpdateEventRequest) => {
+    try {
+      const response = await fetch('/api/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...eventData,
+          chapter_id: profile?.chapter_id,
+          created_by: profile?.id || 'system',
+          updated_by: profile?.id || 'system',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create event');
+      }
+
+      // Refresh events list
+      await loadChapterEvents();
+      setShowCreateEventModal(false);
+    } catch (error) {
+      console.error('Error creating event:', error);
     }
   };
 
@@ -502,7 +567,7 @@ export function VicePresidentDashboard() {
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle>Upcoming Events</CardTitle>
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setShowCreateEventModal(true)}>
                 <Calendar className="h-4 w-4 mr-2" />
                 Schedule Event
               </Button>
@@ -574,11 +639,8 @@ export function VicePresidentDashboard() {
                       </div>
                       
                       <div className="flex space-x-2 ml-4">
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
-                        <Button size="sm" variant="outline">
+
+                        <Button size="sm" variant="outline" onClick={() => { setSelectedEvent(event); setIsEditModalOpen(true); }}>
                           <Edit className="h-4 w-4 mr-1" />
                           Edit
                         </Button>
@@ -590,6 +652,60 @@ export function VicePresidentDashboard() {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Edit Event Modal */}
+      {isEditModalOpen && selectedEvent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-semibold">Edit Event</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsEditModalOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <EventForm
+                event={selectedEvent}
+                onSubmit={handleEditEvent}
+                onCancel={() => setIsEditModalOpen(false)}
+                loading={editingEvent}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Event Modal */}
+      {showCreateEventModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-semibold">Schedule Chapter Meeting</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowCreateEventModal(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <EventForm
+                event={null}
+                onSubmit={handleCreateEvent}
+                onCancel={() => setShowCreateEventModal(false)}
+                loading={false}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
