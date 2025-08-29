@@ -1,76 +1,123 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from 'react';
+import { Calendar, Users, TrendingUp, MessageSquare, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Plus, Calendar, ClipboardList, Upload, Megaphone } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EventForm } from '@/components/ui/EventForm';
+import { useProfile } from '@/lib/hooks/useProfile';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
+import { createPortal } from 'react-dom';
 
 export function QuickActions() {
-  const handleCreateEvent = () => {
-    console.log('Create Event clicked');
-    // TODO: Open event creation modal/form
+  const [showEventModal, setShowEventModal] = useState(false);
+  const { profile } = useProfile();
+  const chapterId = profile?.chapter_id;
+  const router = useRouter();
+
+  // Handle schedule meeting/event
+  const handleScheduleMeeting = () => {
+    setShowEventModal(true);
   };
 
-  const handleAssignTask = () => {
-    console.log('Assign Task clicked');
-    // TODO: Open task assignment modal/form
+  // Handle send message navigation
+  const handleSendMessage = () => {
+    router.push('/dashboard/messages');
   };
 
-  const handleUploadDoc = () => {
-    console.log('Upload Doc clicked');
-    // TODO: Open document upload modal/form
-  };
+  // Handle creating events
+  const handleCreateEvent = async (eventData: any) => {
+    try {
+      const response = await fetch('/api/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...eventData,
+          chapter_id: chapterId,
+          created_by: profile?.id || 'system',
+          updated_by: profile?.id || 'system',
+        }),
+      });
 
-  const handleSendAnnouncement = () => {
-    console.log('Send Announcement clicked');
-    // TODO: Open announcement creation modal/form
+      if (!response.ok) {
+        throw new Error('Failed to create event');
+      }
+
+      toast.success('Event created successfully!');
+      setShowEventModal(false);
+    } catch (error) {
+      toast.error('Failed to create event');
+      console.error('Error creating event:', error);
+    }
   };
 
   return (
-    <Card className="bg-white">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center space-x-2">
-          <Plus className="h-5 w-5 text-navy-600" />
-          <span>Quick Actions</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="space-y-3">
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
           <Button 
-            onClick={handleCreateEvent}
-            className="w-full justify-start bg-navy-600 hover:bg-navy-700"
+            variant="outline" 
+            className="w-full justify-start"
+            onClick={handleScheduleMeeting}
           >
             <Calendar className="h-4 w-4 mr-2" />
             Create Event
           </Button>
-          
           <Button 
-            onClick={handleAssignTask}
-            variant="outline"
-            className="w-full justify-start text-navy-600 border-navy-600 hover:bg-navy-50"
+            variant="outline" 
+            className="w-full justify-start"
+            onClick={handleSendMessage}
           >
-            <ClipboardList className="h-4 w-4 mr-2" />
-            Assign Task
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Send Message
           </Button>
-          
           <Button 
-            onClick={handleUploadDoc}
-            variant="outline"
-            className="w-full justify-start text-navy-600 border-navy-600 hover:bg-navy-50"
+            variant="outline" 
+            className="w-full justify-start opacity-60 cursor-not-allowed" 
+            disabled
+            title="Feature coming soon!"
           >
-            <Upload className="h-4 w-4 mr-2" />
-            Upload Doc
+            <Users className="h-4 w-4 mr-2" />
+            Manage Members
+            <Lock className="h-3 w-3 ml-2 text-gray-400" />
           </Button>
-          
           <Button 
-            onClick={handleSendAnnouncement}
-            variant="outline"
-            className="w-full justify-start text-navy-600 border-navy-600 hover:bg-navy-50"
+            variant="outline" 
+            className="w-full justify-start opacity-60 cursor-not-allowed" 
+            disabled
+            title="Feature coming soon!"
           >
-            <Megaphone className="h-4 w-4 mr-2" />
-            Send Announcement
+            <TrendingUp className="h-4 w-4 mr-2" />
+            View Reports
+            <Lock className="h-3 w-3 ml-2 text-gray-400" />
           </Button>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {/* Event Creation Modal with Portal for full screen coverage */}
+      {showEventModal && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-50">
+          {/* Full screen overlay */}
+          <div className="absolute inset-0 bg-black bg-opacity-50" />
+          
+          {/* Modal content centered */}
+          <div className="relative flex items-center justify-center min-h-screen p-4">
+            <EventForm
+              event={null}
+              onSubmit={handleCreateEvent}
+              onCancel={() => setShowEventModal(false)}
+              loading={false}
+            />
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
   );
 } 
