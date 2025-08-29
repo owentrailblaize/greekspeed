@@ -43,6 +43,10 @@ export function PresidentDashboard() {
   const [membershipGrowth, setMembershipGrowth] = useState<number>(0);
   const [loadingGrowth, setLoadingGrowth] = useState(false);
   
+  // Add state for alumni count
+  const [alumniCount, setAlumniCount] = useState<number | null>(null);
+  const [loadingAlumniCount, setLoadingAlumniCount] = useState(false);
+
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
   const { createAnnouncement, loading: announcementsLoading } = useAnnouncements(chapterId || null);
@@ -106,6 +110,28 @@ export function PresidentDashboard() {
     };
 
     fetchMembershipGrowth();
+  }, [chapterId]);
+
+  // Add useEffect for alumni count
+  useEffect(() => {
+    const fetchAlumniCount = async () => {
+      if (!chapterId) return;
+      
+      setLoadingAlumniCount(true);
+      try {
+        const response = await fetch(`/api/chapter/alumni-count?chapter_id=${chapterId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setAlumniCount(data.count);
+        }
+      } catch (error) {
+        console.error('Error fetching alumni count:', error);
+      } finally {
+        setLoadingAlumniCount(false);
+      }
+    };
+
+    fetchAlumniCount();
   }, [chapterId]);
 
   // Fetch both counts when component mounts
@@ -268,10 +294,14 @@ export function PresidentDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-600 text-sm font-medium">New Pledges</p>
-                  <p className="text-2xl font-semibold text-blue-900">{chapterStats.newPledges}</p>
+                  <p className="text-blue-600 text-sm font-medium">Alumni</p>
+                  {loadingAlumniCount ? (
+                    <p className="text-2xl font-semibold text-blue-900">...</p>
+                  ) : (
+                    <p className="text-2xl font-semibold text-blue-900">{alumniCount || 0}</p>
+                  )}
                 </div>
-                <TrendingUp className="h-8 w-8 text-blue-600" />
+                <Crown className="h-8 w-8 text-blue-600" />
               </div>
             </CardContent>
           </Card>
@@ -295,7 +325,7 @@ export function PresidentDashboard() {
                     </p>
                   )}
                 </div>
-                <Crown className="h-8 w-8 text-orange-600" />
+                <TrendingUp className="h-8 w-8 text-orange-600" />
               </div>
             </CardContent>
           </Card>
