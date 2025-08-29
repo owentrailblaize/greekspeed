@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, CheckCircle, Clock, Calendar, MessageSquare, UserCheck, Settings, Lock } from "lucide-react";
+import { Users, CheckCircle, Clock, Calendar, MessageSquare, UserCheck, Settings, Lock, Eye, Edit, DollarSign, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,18 +9,13 @@ import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useProfile } from "@/lib/hooks/useProfile";
 import { supabase } from "@/lib/supabase/client";
+import { Event } from '@/types/events';
 
 const committeeStatus = [
   { name: "Risk Management", chair: "John Smith", members: 8, completion: 92, nextMeeting: "March 10" },
   { name: "Professional Development", chair: "Mike Johnson", members: 12, completion: 78, nextMeeting: "March 12" },
   { name: "Community Service", chair: "David Wilson", members: 15, completion: 85, nextMeeting: "March 15" },
   { name: "Alumni Relations", chair: "Chris Brown", members: 10, completion: 95, nextMeeting: "March 18" }
-];
-
-const upcomingMeetings = [
-  { name: "Executive Board Meeting", date: "Tomorrow, 7:00 PM", attendees: 8, location: "Chapter House" },
-  { name: "Committee Chairs Meeting", date: "Thursday, 6:00 PM", attendees: 6, location: "Student Union" },
-  { name: "Member Orientation", date: "Saturday, 2:00 PM", attendees: 25, location: "Library Room 204" }
 ];
 
 export function VicePresidentDashboard() {
@@ -38,11 +33,16 @@ export function VicePresidentDashboard() {
   const [chapterTasks, setChapterTasks] = useState<any[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
 
+  // Add state for events
+  const [chapterEvents, setChapterEvents] = useState<Event[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+
   // Load real task data from Supabase
   useEffect(() => {
     if (profile?.chapter_id) {
       loadTaskStats();
-      loadChapterTasks(); // Add this line
+      loadChapterTasks();
+      loadChapterEvents();
     }
   }, [profile?.chapter_id]);
 
@@ -116,6 +116,63 @@ export function VicePresidentDashboard() {
       console.error('Error loading chapter tasks:', error);
     } finally {
       setTasksLoading(false);
+    }
+  };
+
+  // Add function to load events
+  const loadChapterEvents = async () => {
+    try {
+      setEventsLoading(true);
+      
+      if (!profile?.chapter_id) {
+        return;
+      }
+      
+      // Fetch events for the current chapter
+      const response = await fetch(`/api/events?chapter_id=${profile.chapter_id}&scope=upcoming`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
+      }
+      
+      const events = await response.json();
+      setChapterEvents(events);
+    } catch (error) {
+      console.error('Error loading chapter events:', error);
+    } finally {
+      setEventsLoading(false);
+    }
+  };
+
+  // Add helper function to format event dates
+  const formatEventDate = (startTime: string) => {
+    const now = new Date();
+    const eventDate = new Date(startTime);
+    const diffTime = eventDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return 'Today, ' + eventDate.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit' 
+      });
+    } else if (diffDays === 1) {
+      return 'Tomorrow, ' + eventDate.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit' 
+      });
+    } else if (diffDays > 1 && diffDays <= 7) {
+      return eventDate.toLocaleDateString('en-US', { 
+        weekday: 'long',
+        hour: 'numeric', 
+        minute: '2-digit' 
+      });
+    } else {
+      return eventDate.toLocaleDateString('en-US', { 
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric', 
+        minute: '2-digit' 
+      });
     }
   };
 
@@ -444,43 +501,93 @@ export function VicePresidentDashboard() {
         <Card>
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle>Upcoming Meetings</CardTitle>
+              <CardTitle>Upcoming Events</CardTitle>
               <Button className="bg-blue-600 hover:bg-blue-700">
                 <Calendar className="h-4 w-4 mr-2" />
-                Schedule Meeting
+                Schedule Event
               </Button>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {upcomingMeetings.map((meeting, index) => (
-                <div key={index} className="p-4 border border-gray-200 rounded-lg">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-medium">{meeting.name}</h4>
-                      <div className="text-sm text-gray-600 mt-1">
-                        <p className="flex items-center">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {meeting.date}
-                        </p>
-                        <p className="flex items-center mt-1">
-                          <Users className="h-3 w-3 mr-1" />
-                          {meeting.attendees} attendees
-                        </p>
-                        <p className="flex items-center mt-1">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          {meeting.location}
-                        </p>
+            {eventsLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                <p className="text-gray-600">Loading events...</p>
+              </div>
+            ) : chapterEvents.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Calendar className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <p className="text-lg font-medium mb-2">No upcoming events</p>
+                <p className="text-sm">No events have been scheduled for your chapter yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {chapterEvents.map((event) => (
+                  <div key={event.id} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-medium text-lg">{event.title}</h4>
+                          <Badge 
+                            className={
+                              event.status === 'published' ? 'bg-green-100 text-green-800' :
+                              event.status === 'draft' ? 'bg-gray-100 text-gray-800' :
+                              'bg-red-100 text-red-800'
+                            }
+                          >
+                            {event.status}
+                          </Badge>
+                        </div>
+                        
+                        {event.description && (
+                          <p className="text-sm text-gray-600 mb-3">{event.description}</p>
+                        )}
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
+                          <div className="flex items-center">
+                            <Clock className="h-4 w-4 mr-2 text-gray-400" />
+                            <span>{formatEventDate(event.start_time)}</span>
+                          </div>
+                          
+                          {event.location && (
+                            <div className="flex items-center">
+                              <MapPin className="h-4 w-4 mr-2 text-gray-400" />
+                              <span>{event.location}</span>
+                            </div>
+                          )}
+                          
+                          {event.budget_label && event.budget_amount && (
+                            <div className="flex items-center">
+                              <DollarSign className="h-4 w-4 mr-2 text-gray-400" />
+                              <span>{event.budget_label}: ${event.budget_amount.toLocaleString()}</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center">
+                            <Users className="h-4 w-4 mr-2 text-gray-400" />
+                            <span>
+                              {event.attendee_count || 0} attending
+                              {event.maybe_count ? `, ${event.maybe_count} maybe` : ''}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex space-x-2 ml-4">
+                        <Button size="sm" variant="outline">
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline">Edit</Button>
-                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700">Join</Button>
-                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
