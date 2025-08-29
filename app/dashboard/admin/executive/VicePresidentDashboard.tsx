@@ -10,15 +10,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useProfile } from "@/lib/hooks/useProfile";
 import { supabase } from "@/lib/supabase/client";
 
-const memberTasks = [
-  { member: "Connor McMullan", task: "Complete Leadership Training", deadline: "2024-03-15", status: "completed", priority: "high" },
-  { member: "Brett Ashy", task: "Submit Committee Report", deadline: "2024-03-10", status: "pending", priority: "medium" },
-  { member: "Margaret Dye", task: "Attend Risk Management Session", deadline: "2024-03-20", status: "overdue", priority: "high" },
-  { member: "Rush Bland", task: "Update Contact Information", deadline: "2024-03-05", status: "completed", priority: "low" },
-  { member: "Kinkead Dent", task: "Community Service Hours", deadline: "2024-03-25", status: "pending", priority: "medium" },
-  { member: "Victor Razi", task: "Alumni Mentorship Meeting", deadline: "2024-03-12", status: "pending", priority: "low" }
-];
-
 const committeeStatus = [
   { name: "Risk Management", chair: "John Smith", members: 8, completion: 92, nextMeeting: "March 10" },
   { name: "Professional Development", chair: "Mike Johnson", members: 12, completion: 78, nextMeeting: "March 12" },
@@ -43,10 +34,15 @@ export function VicePresidentDashboard() {
   });
   const [loading, setLoading] = useState(true);
 
+  // Add this state for real tasks
+  const [chapterTasks, setChapterTasks] = useState<any[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
+
   // Load real task data from Supabase
   useEffect(() => {
     if (profile?.chapter_id) {
       loadTaskStats();
+      loadChapterTasks(); // Add this line
     }
   }, [profile?.chapter_id]);
 
@@ -88,6 +84,38 @@ export function VicePresidentDashboard() {
       console.error('Error loading task stats:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Add this function to load tasks with assignee names
+  const loadChapterTasks = async () => {
+    try {
+      setTasksLoading(true);
+      
+      if (!profile?.chapter_id) {
+        return;
+      }
+      
+      // Fetch tasks with assignee information
+      const { data: tasks, error } = await supabase
+        .from('tasks')
+        .select(`
+          *,
+          assignee:profiles!tasks_assignee_id_fkey(full_name)
+        `)
+        .eq('chapter_id', profile.chapter_id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching tasks:', error);
+        return;
+      }
+
+      setChapterTasks(tasks || []);
+    } catch (error) {
+      console.error('Error loading chapter tasks:', error);
+    } finally {
+      setTasksLoading(false);
     }
   };
 
@@ -294,54 +322,76 @@ export function VicePresidentDashboard() {
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle>Member Task Tracking</CardTitle>
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button className="bg-blue-600 hover:bg-blue-700 opacity-60 cursor-not-allowed" disabled>
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Send Reminders
+                <Lock className="h-3 w-3 ml-2 text-gray-400" />
               </Button>
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Member</TableHead>
-                  <TableHead>Task</TableHead>
-                  <TableHead>Deadline</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {memberTasks.map((task, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{task.member}</TableCell>
-                    <TableCell>{task.task}</TableCell>
-                    <TableCell>{task.deadline}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(task.status)}>
-                        {task.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getPriorityColor(task.priority)}>
-                        {task.priority}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {task.status !== "completed" && (
-                        <Button size="sm" variant="outline">
-                          Follow Up
-                        </Button>
-                      )}
-                      {task.status === "completed" && (
-                        <span className="text-green-600 text-sm">✓ Done</span>
-                      )}
-                    </TableCell>
+            {tasksLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                <p className="text-gray-600">Loading tasks...</p>
+              </div>
+            ) : chapterTasks.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p className="text-lg font-medium mb-2">No tasks found</p>
+                <p className="text-sm">No tasks have been assigned to chapter members yet.</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Member</TableHead>
+                    <TableHead>Task</TableHead>
+                    <TableHead>Deadline</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Action</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {chapterTasks.map((task) => (
+                    <TableRow key={task.id}>
+                      <TableCell className="font-medium">
+                        {task.assignee?.full_name || 'Unassigned'}
+                      </TableCell>
+                      <TableCell>{task.title}</TableCell>
+                      <TableCell>
+                        {task.due_date ? new Date(task.due_date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        }) : 'No due date'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(task.status)}>
+                          {task.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getPriorityColor(task.priority)}>
+                          {task.priority}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {task.status !== "completed" && (
+                          <Button size="sm" variant="outline" className="opacity-60 cursor-not-allowed" disabled>
+                            Follow Up
+                            <Lock className="h-3 w-3 ml-2 text-gray-400" />
+                          </Button>
+                        )}
+                        {task.status === "completed" && (
+                          <span className="text-green-600 text-sm">✓ Done</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       )}
