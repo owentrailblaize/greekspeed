@@ -228,19 +228,23 @@ export function VicePresidentDashboard() {
           {[
             { value: "overview", label: "Overview" },
             { value: "tasks", label: "Member Tasks" },
-            { value: "committees", label: "Committees" },
-            { value: "meetings", label: "Meetings" }
+            { value: "meetings", label: "Meetings" },
+            { value: "committees", label: "Committees", locked: true }
           ].map((tab) => (
             <button
               key={tab.value}
-              onClick={() => setSelectedTab(tab.value)}
+              onClick={() => !tab.locked && setSelectedTab(tab.value)}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                 selectedTab === tab.value
                   ? "bg-white text-navy-600 shadow-sm"
+                  : tab.locked
+                  ? "opacity-60 cursor-not-allowed text-gray-400"
                   : "text-gray-600 hover:text-gray-900"
               }`}
+              disabled={tab.locked}
             >
               {tab.label}
+              {tab.locked && <Lock className="h-3 w-3 ml-2 text-gray-400 inline" />}
             </button>
           ))}
         </div>
