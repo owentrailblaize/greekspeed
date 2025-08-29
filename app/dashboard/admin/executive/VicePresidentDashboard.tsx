@@ -1,5 +1,5 @@
 'use client';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Users, CheckCircle, Clock, Calendar, MessageSquare, UserCheck, Settings } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,13 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-const operationsOverview = {
-  totalTasks: 24,
-  completedTasks: 18,
-  pendingTasks: 6,
-  memberCompliance: 89.5
-};
+import { useProfile } from "@/lib/hooks/useProfile";
+import { supabase } from "@/lib/supabase/client";
 
 const memberTasks = [
   { member: "Connor McMullan", task: "Complete Leadership Training", deadline: "2024-03-15", status: "completed", priority: "high" },
@@ -38,7 +33,63 @@ const upcomingMeetings = [
 ];
 
 export function VicePresidentDashboard() {
+  const { profile } = useProfile();
   const [selectedTab, setSelectedTab] = useState("overview");
+  const [operationsOverview, setOperationsOverview] = useState({
+    totalTasks: 0,
+    completedTasks: 0,
+    pendingTasks: 0,
+    memberCompliance: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  // Load real task data from Supabase
+  useEffect(() => {
+    if (profile?.chapter_id) {
+      loadTaskStats();
+    }
+  }, [profile?.chapter_id]);
+
+  const loadTaskStats = async () => {
+    try {
+      setLoading(true);
+      
+      // Add null check for profile
+      if (!profile?.chapter_id) {
+        return;
+      }
+      
+      // Fetch all tasks for the current chapter
+      const { data: tasks, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('chapter_id', profile.chapter_id);
+
+      if (error) {
+        console.error('Error fetching tasks:', error);
+        return;
+      }
+
+      // Calculate task statistics
+      const totalTasks = tasks?.length || 0;
+      const completedTasks = tasks?.filter(task => task.status === 'completed').length || 0;
+      const pendingTasks = tasks?.filter(task => task.status === 'pending').length || 0;
+      
+      // Calculate member compliance (you can adjust this logic based on your needs)
+      const memberCompliance = totalTasks > 0 ? ((completedTasks / totalTasks) * 100) : 0;
+
+      setOperationsOverview({
+        totalTasks,
+        completedTasks,
+        pendingTasks,
+        memberCompliance: Math.round(memberCompliance * 10) / 10 // Round to 1 decimal place
+      });
+    } catch (error) {
+      console.error('Error loading task stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -72,7 +123,9 @@ export function VicePresidentDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-600 text-sm font-medium">Total Tasks</p>
-                  <p className="text-2xl font-semibold text-blue-900">{operationsOverview.totalTasks}</p>
+                  <p className="text-2xl font-semibold text-blue-900">
+                    {loading ? '...' : operationsOverview.totalTasks}
+                  </p>
                 </div>
                 <Settings className="h-8 w-8 text-blue-600" />
               </div>
@@ -90,7 +143,9 @@ export function VicePresidentDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-green-600 text-sm font-medium">Completed</p>
-                  <p className="text-2xl font-semibold text-green-900">{operationsOverview.completedTasks}</p>
+                  <p className="text-2xl font-semibold text-green-900">
+                    {loading ? '...' : operationsOverview.completedTasks}
+                  </p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
@@ -108,7 +163,9 @@ export function VicePresidentDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-yellow-600 text-sm font-medium">Pending</p>
-                  <p className="text-2xl font-semibold text-yellow-900">{operationsOverview.pendingTasks}</p>
+                  <p className="text-2xl font-semibold text-yellow-900">
+                    {loading ? '...' : operationsOverview.pendingTasks}
+                  </p>
                 </div>
                 <Clock className="h-8 w-8 text-yellow-600" />
               </div>
@@ -126,7 +183,9 @@ export function VicePresidentDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-purple-600 text-sm font-medium">Compliance</p>
-                  <p className="text-2xl font-semibold text-purple-900">{operationsOverview.memberCompliance}%</p>
+                  <p className="text-2xl font-semibold text-purple-900">
+                    {loading ? '...' : `${operationsOverview.memberCompliance}%`}
+                  </p>
                 </div>
                 <UserCheck className="h-8 w-8 text-purple-600" />
               </div>
@@ -171,21 +230,25 @@ export function VicePresidentDashboard() {
                 <div className="flex justify-between items-center">
                   <span>Overall Progress</span>
                   <span className="font-medium">
-                    {((operationsOverview.completedTasks / operationsOverview.totalTasks) * 100).toFixed(1)}%
+                    {loading ? '...' : `${((operationsOverview.completedTasks / operationsOverview.totalTasks) * 100).toFixed(1)}%`}
                   </span>
                 </div>
                 <Progress 
-                  value={(operationsOverview.completedTasks / operationsOverview.totalTasks) * 100} 
+                  value={loading ? 0 : ((operationsOverview.completedTasks / operationsOverview.totalTasks) * 100)} 
                   className="h-3" 
                 />
                 
                 <div className="grid grid-cols-2 gap-4 mt-6">
                   <div className="text-center">
-                    <p className="text-2xl font-semibold text-green-600">{operationsOverview.completedTasks}</p>
+                    <p className="text-2xl font-semibold text-green-600">
+                      {loading ? '...' : operationsOverview.completedTasks}
+                    </p>
                     <p className="text-sm text-gray-600">Completed</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-semibold text-yellow-600">{operationsOverview.pendingTasks}</p>
+                    <p className="text-2xl font-semibold text-yellow-600">
+                      {loading ? '...' : operationsOverview.pendingTasks}
+                    </p>
                     <p className="text-sm text-gray-600">Pending</p>
                   </div>
                 </div>
