@@ -9,6 +9,7 @@ import { TasksPanel } from './ui/TasksPanel';
 import { DocsCompliancePanel } from './ui/DocsCompliancePanel';
 import { AlertsStrip } from './ui/AlertsStrip';
 import { useProfile } from '@/lib/hooks/useProfile';
+import { SocialFeed } from './ui/SocialFeed';
 
 export function AdminOverview() {
   const { profile } = useProfile();
@@ -29,11 +30,12 @@ export function AdminOverview() {
           <div className="col-span-1 space-y-6">
             <QuickActions />
             <DuesSnapshot />
+            <OperationsFeed />
           </div>
           
           {/* Center Column */}
           <div className="col-span-1 space-y-6">
-            <OperationsFeed />
+            <SocialFeed />
           </div>
           
           {/* Right Column */}
