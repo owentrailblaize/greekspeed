@@ -17,9 +17,8 @@ export function ActiveMemberOverview() {
           {/* Left Sidebar - Dues, Tasks & Documents */}
           <div className="col-span-3">
             <div className="sticky top-6 space-y-6">
-              <MyTasksCard />
-              <DocsCompliancePanel />
-              <DuesStatusCard />
+              <AnnouncementsCard />
+              <MyTasksCard />              
             </div>
           </div>
 
@@ -32,7 +31,8 @@ export function ActiveMemberOverview() {
           <div className="col-span-3">
             <div className="space-y-6">
               <UpcomingEventsCard />
-              <AnnouncementsCard />
+              
+              <DuesStatusCard />
             </div>
           </div>
         </div>

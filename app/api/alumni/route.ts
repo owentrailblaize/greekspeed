@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
+// Add this helper function at the top of the file
+const getChapterId = async (supabase: any, chapterIdentifier: string): Promise<string | null> => {
+  // If it's already a UUID, return it
+  if (chapterIdentifier.length === 36 && chapterIdentifier.includes('-')) {
+    return chapterIdentifier;
+  }
+  
+  // If it's a name, look it up
+  const { data } = await supabase
+    .from('chapters')
+    .select('id')
+    .eq('name', chapterIdentifier)
+    .single();
+  
+  return data?.id || null;
+};
+
 export async function GET(request: NextRequest) {
   try {
     console.log('🚀 Alumni API called')
@@ -87,12 +104,17 @@ export async function GET(request: NextRequest) {
     
     // Handle chapter filtering - apply user's chapter filter if provided
     if (userChapter) {
-      query = query.eq('chapter', userChapter)
-      console.log(`🔍 Filtering by user's chapter: ${userChapter}`)
+      const chapterId = await getChapterId(supabase, userChapter);
+      if (chapterId) {
+        query = query.eq('chapter', chapterId);
+        console.log(`🔍 Filtering by user's chapter ID: ${chapterId}`);
+      }
     } else if (chapter) {
-      // Only apply regular chapter filter if no user chapter is specified
-      query = query.eq('chapter', chapter)
-      console.log(`🔍 Filtering by selected chapter: ${chapter}`)
+      const chapterId = await getChapterId(supabase, chapter);
+      if (chapterId) {
+        query = query.eq('chapter', chapterId);
+        console.log(`🔍 Filtering by selected chapter ID: ${chapterId}`);
+      }
     } else {
       console.log('🌍 No chapter filter applied - showing all chapters')
     }

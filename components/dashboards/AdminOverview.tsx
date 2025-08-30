@@ -9,6 +9,7 @@ import { TasksPanel } from './ui/TasksPanel';
 import { DocsCompliancePanel } from './ui/DocsCompliancePanel';
 import { AlertsStrip } from './ui/AlertsStrip';
 import { useProfile } from '@/lib/hooks/useProfile';
+import { SocialFeed } from './ui/SocialFeed';
 
 export function AdminOverview() {
   const { profile } = useProfile();
@@ -21,24 +22,24 @@ export function AdminOverview() {
         <AlertsStrip />
       </div>
 
-      {/* Main Content - Three Column Layout */}
+      {/* Main Content - Three Column Layout - Updated to match ActiveMemberOverview */}
       <div className="max-w-full mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-12 gap-6">
           
-          {/* Left Column */}
-          <div className="col-span-1 space-y-6">
+          {/* Left Column - 3 columns wide */}
+          <div className="col-span-3 space-y-6">
             <QuickActions />
             <DuesSnapshot />
-          </div>
-          
-          {/* Center Column */}
-          <div className="col-span-1 space-y-6">
             <OperationsFeed />
           </div>
           
-          {/* Right Column */}
-          <div className="col-span-1 space-y-6">
-            {/* Pass chapterId to TasksPanel */}
+          {/* Center Column - 6 columns wide */}
+          <div className="col-span-6 space-y-6">
+            <SocialFeed />
+          </div>
+          
+          {/* Right Column - 3 columns wide */}
+          <div className="col-span-3 space-y-6">
             {chapterId && <TasksPanel chapterId={chapterId} />}
             <DocsCompliancePanel />
           </div>

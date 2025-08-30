@@ -10,6 +10,19 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ClickableField } from './ClickableField';
 
+// Add this function at the top of the file, outside the component
+const getChapterName = (chapterId: string): string => {
+  // This maps the UUIDs from your database to readable chapter names
+  const chapterMap: Record<string, string> = {
+    "404e65ab-1123-44a0-81c7-e8e75118e741": "Sigma Chi Eta (Ole Miss)",
+    "8ede10e8-b848-427d-8f4a-aacf74cea2c2": "Phi Gamma Delta Omega Chi (Chapman)",
+    "b25a4acf-59f0-46d4-bb5c-d41fda5b3252": "Phi Delta Theta Mississippi Alpha (Ole Miss)",
+    "ff740e3f-c45c-4728-a5d5-22088c19d847": "Kappa Sigma Delta-Xi (Ole Miss)"
+  };
+  
+  return chapterMap[chapterId] || chapterId; // Fallback to ID if not found
+};
+
 interface EnhancedAlumniCardProps {
   alumni: Alumni;
   onClick?: (alumni: Alumni) => void;
@@ -250,15 +263,12 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
             )}
           </div>
 
-          {/* Chapter - Separate section with distinct styling */}
+          {/* Chapter - Display chapter name instead of ID */}
           {isValidField(alumni.chapter) && (
             <div className="text-center mb-4">
-              <ClickableField 
-                value={alumni.chapter} 
-                entityType="chapter"
-                textAlign="center"
-                className="text-sm font-medium text-navy-600 hover:text-blue-600 px-3 py-1 rounded-full border border-navy-200 hover:border-blue-300 transition-all duration-200"
-              />
+              <div className="text-sm font-medium text-navy-600 px-3 py-1 rounded-full border border-navy-200 bg-navy-50">
+                {getChapterName(alumni.chapter)}
+              </div>
             </div>
           )}
 
