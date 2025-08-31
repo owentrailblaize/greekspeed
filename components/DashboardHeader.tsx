@@ -9,12 +9,28 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useConnections } from '@/lib/hooks/useConnections';
 import { Badge } from '@/components/ui/badge';
-import { MessageCircle } from 'lucide-react'; // ✅ Add this import
+import { MessageCircle, Lock } from 'lucide-react'; // ✅ Add Lock import
 
 // Small helper for consistent tab styling
-function NavLink({ href, label }: { href: string; label: string }) {
+function NavLink({ href, label, locked = false }: { href: string; label: string; locked?: boolean }) {
   const pathname = usePathname();
   const isActive = pathname === href;
+  
+  if (locked) {
+    return (
+      <div
+        className={cn(
+          'relative flex items-center justify-center h-9 rounded-md px-2 sm:px-4 text-sm font-medium transition-colors duration-200 opacity-60 cursor-not-allowed',
+          'text-gray-400'
+        )}
+        title="Feature coming soon!"
+      >
+        {label}
+        <Lock className="h-3 w-3 ml-1 text-gray-400" />
+      </div>
+    );
+  }
+  
   return (
     <Link
       href={href}
@@ -52,11 +68,11 @@ export function DashboardHeader() {
 
   // Define navigation tabs with role-based access (Messages removed)
   const navigationTabs = [
-    { href: '/dashboard', label: 'Overview', roles: ['admin', 'active_member', 'alumni'] },
-    { href: '/dashboard/alumni', label: 'Alumni', roles: ['admin', 'alumni', 'active_member'] },
+    { href: '/dashboard', label: 'Overview', roles: ['admin', 'active_member', 'alumni'], locked: false },
+    { href: '/dashboard/alumni', label: 'Alumni', roles: ['admin', 'alumni', 'active_member'], locked: false },
     // ✅ Messages tab removed from here
-    { href: '/dashboard/dues', label: 'Dues', roles: ['active_member', 'alumni'] }, // Hidden from admin
-    { href: '/dashboard/admin', label: 'Exec Admin', roles: ['admin'] }, // Hidden from non-admin
+    { href: '/dashboard/dues', label: 'Dues', roles: ['active_member', 'alumni'], locked: true }, // Locked for coming soon
+    { href: '/dashboard/admin', label: 'Exec Admin', roles: ['admin'], locked: false }, // Hidden from non-admin
   ];
 
   // Filter tabs based on user role
@@ -82,7 +98,7 @@ export function DashboardHeader() {
         {/* Left side - Navigation tabs */}
         <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
           {visibleTabs.map((tab) => (
-            <NavLink key={tab.href} href={tab.href} label={tab.label} />
+            <NavLink key={tab.href} href={tab.href} label={tab.label} locked={tab.locked} />
           ))}
         </div>
 

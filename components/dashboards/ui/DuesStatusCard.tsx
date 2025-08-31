@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, AlertTriangle } from 'lucide-react';
+import { DollarSign, AlertTriangle, Lock } from 'lucide-react';
 
 // Mock data for dues status
 const duesData = {
@@ -38,7 +38,16 @@ export function DuesStatusCard() {
   };
 
   return (
-    <Card className="bg-white">
+    <Card className="bg-white relative">
+      {/* Coming Soon Overlay */}
+      <div className="absolute inset-0 bg-white bg-opacity-90 z-10 flex items-center justify-center rounded-lg">
+        <div className="text-center">
+          <Lock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+          <p className="text-sm font-medium text-gray-600">Dues Management</p>
+          <p className="text-xs text-gray-500">Coming Soon</p>
+        </div>
+      </div>
+      
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center space-x-2">
           <DollarSign className="h-5 w-5 text-navy-600" />
@@ -70,9 +79,12 @@ export function DuesStatusCard() {
               
               <Button 
                 onClick={handlePayNow}
-                className="w-full bg-navy-600 hover:bg-navy-700"
+                className="w-full bg-navy-600 hover:bg-navy-700 opacity-60 cursor-not-allowed"
+                disabled
+                title="Dues payment functionality coming soon!"
               >
                 Pay Now
+                <Lock className="h-3 w-3 ml-2 text-gray-400" />
               </Button>
             </>
           )}
