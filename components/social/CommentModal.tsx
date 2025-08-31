@@ -85,11 +85,8 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
       <DialogContent className="sm:max-w-[600px] h-[80vh] max-h-[700px] flex flex-col overflow-hidden">
         {/* Fixed Header */}
         <DialogHeader className="flex-shrink-0 border-b border-gray-200">
-          <DialogTitle className="flex items-center justify-between">
-            <span>Comments</span>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
+          <DialogTitle>
+            Comments
           </DialogTitle>
         </DialogHeader>
 
