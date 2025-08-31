@@ -16,6 +16,7 @@ import { Event as EventType, CreateEventRequest, UpdateEventRequest } from "@/ty
 import { useVendors } from "@/lib/hooks/useVendors";
 import { VendorForm } from "@/components/ui/VendorForm";
 import { VendorContact, CreateVendorRequest, UpdateVendorRequest } from "@/types/vendors";
+import { SocialFeed } from "@/components/dashboards/ui/SocialFeed";
 
 const eventBudget = {
   totalAllocated: 12000,
@@ -581,6 +582,7 @@ export function SocialChairDashboard() {
         <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
           {[
             { value: "overview", label: "Overview" },
+            { value: "social", label: "Social Feed" },
             { value: "calendar", label: "Calendar" },
             { value: "contacts", label: "Contacts" },
             { value: "budget", label: "Budget" },
@@ -607,7 +609,7 @@ export function SocialChairDashboard() {
 
       {/* Tab Content */}
       {selectedTab === "overview" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Budget Summary Card */}
           <Card>
             <CardHeader>
@@ -769,6 +771,32 @@ export function SocialChairDashboard() {
                 <DollarSign className="h-4 w-4 mr-2" />
                 Budget Report
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* Social Feed Card */}
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle>Chapter Social Feed</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SocialFeed chapterId={profile?.chapter_id || ''} />
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {selectedTab === "social" && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Chapter Social Feed</CardTitle>
+              <p className="text-sm text-gray-600">
+                Share updates, announcements, and connect with your chapter members.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <SocialFeed chapterId={profile?.chapter_id || ''} />
             </CardContent>
           </Card>
         </div>

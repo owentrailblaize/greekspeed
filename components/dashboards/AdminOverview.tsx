@@ -35,7 +35,7 @@ export function AdminOverview() {
           
           {/* Center Column - 6 columns wide */}
           <div className="col-span-6 space-y-6">
-            <SocialFeed />
+            <SocialFeed chapterId={chapterId || ''} />
           </div>
           
           {/* Right Column - 3 columns wide */}
