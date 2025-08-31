@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { X, Image, Smile, Clock } from 'lucide-react';
+import { X, Image, Smile, Clock, Lock } from 'lucide-react';
 import { CreatePostRequest } from '@/types/posts';
 
 interface CreatePostModalProps {
@@ -73,11 +73,8 @@ export function CreatePostModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Create a post</span>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
+          <DialogTitle>
+            Create a post
           </DialogTitle>
         </DialogHeader>
 
@@ -145,18 +142,24 @@ export function CreatePostModal({
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-gray-500 hover:text-gray-700"
+                disabled
+                className="text-gray-400 hover:text-gray-400 cursor-not-allowed"
+                title="Emoji functionality coming soon"
               >
                 <Smile className="h-4 w-4 mr-1" />
                 Emoji
+                <Lock className="h-3 w-3 ml-1 text-gray-400" />
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-gray-500 hover:text-gray-700"
+                disabled
+                className="text-gray-400 hover:text-gray-400 cursor-not-allowed"
+                title="Schedule functionality coming soon"
               >
                 <Clock className="h-4 w-4 mr-1" />
                 Schedule
+                <Lock className="h-3 w-3 ml-1 text-gray-400" />
               </Button>
             </div>
 
