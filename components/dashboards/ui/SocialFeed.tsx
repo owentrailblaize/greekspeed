@@ -15,11 +15,16 @@ interface SocialFeedProps {
 
 export function SocialFeed({ chapterId }: SocialFeedProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const { posts, loading, error, createPost, likePost } = usePosts(chapterId);
+  const { posts, loading, error, createPost, likePost, refetch } = usePosts(chapterId);
   const { profile } = useProfile();
 
   const handleCreatePost = async (postData: CreatePostRequest) => {
     await createPost(postData);
+  };
+
+  const handleCommentAdded = () => {
+    // Refetch posts to update comment counts
+    refetch();
   };
 
   const handleDeletePost = async (postId: string) => {
@@ -87,6 +92,7 @@ export function SocialFeed({ chapterId }: SocialFeedProps) {
             post={post}
             onLike={likePost}
             onDelete={handleDeletePost}
+            onCommentAdded={handleCommentAdded}
           />
         ))
       )}
