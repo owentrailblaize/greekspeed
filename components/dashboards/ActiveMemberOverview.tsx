@@ -6,8 +6,11 @@ import { MyTasksCard } from './ui/MyTasksCard';
 import { UpcomingEventsCard } from './ui/UpcomingEventsCard';
 import { AnnouncementsCard } from './ui/AnnouncementsCard';
 import { DocsCompliancePanel } from './ui/DocsCompliancePanel';
+import { useProfile } from '@/lib/hooks/useProfile';
 
 export function ActiveMemberOverview() {
+  const { profile } = useProfile();
+  
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Main Content - Three Column Layout */}
@@ -24,7 +27,7 @@ export function ActiveMemberOverview() {
 
           {/* Center Column - Social Feed */}
           <div className="col-span-6">
-            <SocialFeed />
+            <SocialFeed chapterId={profile?.chapter_id || ''} />
           </div>
 
           {/* Right Sidebar - Events & Networking */}
