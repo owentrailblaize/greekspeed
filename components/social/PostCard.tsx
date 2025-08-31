@@ -4,10 +4,11 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, MessageCircle, Share, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, Share, MoreHorizontal, Trash2, Lock } from 'lucide-react';
 import { Post } from '@/types/posts';
 import { formatDistanceToNow } from 'date-fns';
 import { CommentModal } from './CommentModal';
+import { DeletePostModal } from './DeletePostModal';
 
 interface PostCardProps {
   post: Post;
@@ -18,6 +19,8 @@ interface PostCardProps {
 
 export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardProps) {
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const getPostTypeColor = (type: string) => {
     switch (type) {
@@ -34,6 +37,29 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
     } catch {
       return 'recently';
     }
+  };
+
+  const handleDeleteClick = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!onDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await onDelete(post.id);
+      setIsDeleteModalOpen(false);
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+      // You could show a toast notification here
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setIsDeleteModalOpen(false);
   };
 
   return (
@@ -69,8 +95,9 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => onDelete(post.id)}
+                  onClick={handleDeleteClick}
                   className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                  title="Delete post"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -123,10 +150,13 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="text-gray-500 hover:text-green-500 hover:bg-green-50"
+                disabled
+                className="text-gray-400 hover:text-gray-400 cursor-not-allowed"
+                title="Share functionality coming soon"
               >
                 <Share className="h-4 w-4 mr-1" />
                 {post.shares_count}
+                <Lock className="h-3 w-3 ml-1 text-gray-400" />
               </Button>
             </div>
           </div>
@@ -140,6 +170,15 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
         post={post}
         onLike={onLike}
         onCommentAdded={onCommentAdded}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeletePostModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        post={post}
+        isDeleting={isDeleting}
       />
     </>
   );

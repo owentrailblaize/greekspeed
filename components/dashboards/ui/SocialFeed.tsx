@@ -15,7 +15,7 @@ interface SocialFeedProps {
 
 export function SocialFeed({ chapterId }: SocialFeedProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const { posts, loading, error, createPost, likePost, refetch } = usePosts(chapterId);
+  const { posts, loading, error, createPost, likePost, deletePost, refetch } = usePosts(chapterId);
   const { profile } = useProfile();
 
   const handleCreatePost = async (postData: CreatePostRequest) => {
@@ -28,8 +28,12 @@ export function SocialFeed({ chapterId }: SocialFeedProps) {
   };
 
   const handleDeletePost = async (postId: string) => {
-    // TODO: Implement delete functionality
-    console.log('Delete post:', postId);
+    try {
+      await deletePost(postId);
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+      // You could show a toast notification here
+    }
   };
 
   if (loading) {
@@ -66,9 +70,9 @@ export function SocialFeed({ chapterId }: SocialFeedProps) {
               {profile?.avatar_url || profile?.first_name?.charAt(0) || 'U'}
             </div>
             <div className="flex-1">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start text-gray-500 hover:text-gray-700 border-gray-300"
+              <Button
+                variant="outline"
+                className="w-full justify-start text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                 onClick={() => setIsCreateModalOpen(true)}
               >
                 Start a post...
@@ -78,13 +82,12 @@ export function SocialFeed({ chapterId }: SocialFeedProps) {
         </CardContent>
       </Card>
 
-      {/* Social Feed Posts */}
+      {/* Posts */}
       {posts.length === 0 ? (
-        <Card className="bg-white">
-          <CardContent className="p-8 text-center">
-            <p className="text-gray-500">No posts yet. Be the first to share something!</p>
-          </CardContent>
-        </Card>
+        <div className="text-center py-8">
+          <p className="text-gray-500">No posts yet</p>
+          <p className="text-sm text-gray-400">Be the first to share something!</p>
+        </div>
       ) : (
         posts.map((post: Post) => (
           <PostCard

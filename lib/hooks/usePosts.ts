@@ -126,6 +126,36 @@ export function usePosts(chapterId: string) {
     }
   }, [user]);
 
+  const deletePost = useCallback(async (postId: string) => {
+    if (!user) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`/api/posts/${postId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete post');
+      }
+
+      // Remove the post from the local state
+      setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
+      
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete post');
+      return false;
+    }
+  }, [user]);
+
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
@@ -138,6 +168,7 @@ export function usePosts(chapterId: string) {
     fetchPosts,
     createPost,
     likePost,
+    deletePost,
     refetch: () => fetchPosts(1)
   };
 }
