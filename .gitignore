@@ -43,3 +43,7 @@ next-env.d.ts
 
 # workspace
 greekspeed.code-workspace
+
+# cursor
+.cursor/
+.cursorrules
