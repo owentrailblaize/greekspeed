@@ -108,8 +108,8 @@ export function EventForm({ event, onSubmit, onCancel, loading = false }: EventF
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader className="pb-4 sm:pb-6">
+    <Card className="w-full max-w-2xl mx-auto max-h-[90vh] overflow-y-auto">
+      <CardHeader className="pb-4 sm:pb-6 sticky top-0 bg-white z-10 border-b border-gray-100">
         <CardTitle className="flex items-center space-x-3 sm:space-x-2 text-xl sm:text-lg">
           <Calendar className="h-6 w-6 sm:h-5 sm:w-5 text-navy-600" />
           <span>{event ? 'Edit Event' : 'Create New Event'}</span>
@@ -229,7 +229,7 @@ export function EventForm({ event, onSubmit, onCancel, loading = false }: EventF
           </div>
 
           {/* Form Actions */}
-          <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-6 sm:pt-4">
+          <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-6 sm:pt-4 sticky bottom-0 bg-white border-t border-gray-100 mt-6 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4">
             <Button
               type="button"
               variant="outline"
