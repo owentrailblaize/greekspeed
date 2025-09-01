@@ -71,29 +71,29 @@ export function CreatePostModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
+      <DialogContent className="sm:max-w-[600px] max-w-[95vw] max-h-[90vh] sm:max-h-[80vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="pb-4 sm:pb-6">
+          <DialogTitle className="text-xl sm:text-lg">
             Create a post
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-6 sm:space-y-4">
           {/* User Info */}
-          <div className="flex items-start space-x-3">
-            <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
+          <div className="flex items-start space-x-4 sm:space-x-3">
+            <div className="w-12 h-12 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-base sm:text-sm font-semibold shrink-0">
               {userAvatar || userName?.charAt(0) || 'U'}
             </div>
             <div className="flex-1">
-              <p className="font-medium text-gray-900">{userName || 'You'}</p>
-              <Badge variant="outline" className="text-xs">
+              <p className="font-medium text-gray-900 text-base sm:text-sm">{userName || 'You'}</p>
+              <Badge variant="outline" className="text-sm sm:text-xs mt-1">
                 Post to Chapter
               </Badge>
             </div>
           </div>
 
           {/* Content Input */}
-          <div className="space-y-3">
+          <div className="space-y-4 sm:space-y-3">
             <Textarea
               placeholder="What do you want to talk about?"
               value={content}
@@ -101,7 +101,7 @@ export function CreatePostModal({
                 setContent(e.target.value);
                 setPostType(e.target.value && imageUrl ? 'text_image' : e.target.value ? 'text' : 'image');
               }}
-              className="min-h-[120px] resize-none border-0 focus:ring-0 text-lg"
+              className="min-h-[140px] sm:min-h-[120px] resize-none border-0 focus:ring-0 text-base sm:text-lg p-4 sm:p-3"
             />
 
             {/* Image Preview */}
@@ -110,7 +110,7 @@ export function CreatePostModal({
                 <img 
                   src={imageUrl} 
                   alt="Post image" 
-                  className="max-w-full max-h-64 object-cover rounded-lg"
+                  className="max-w-full max-h-80 sm:max-h-64 object-cover rounded-lg"
                 />
                 <Button
                   variant="ghost"
@@ -119,56 +119,56 @@ export function CreatePostModal({
                     setImageUrl('');
                     setPostType(content ? 'text' : 'text');
                   }}
-                  className="absolute top-2 right-2 bg-black/50 text-white hover:bg-black/70"
+                  className="absolute top-3 right-3 sm:top-2 sm:right-2 bg-black/50 text-white hover:bg-black/70 h-10 w-10 sm:h-8 sm:w-8 p-0"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5 sm:h-4 sm:w-4" />
                 </Button>
               </div>
             )}
           </div>
 
           {/* Action Bar */}
-          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-            <div className="flex items-center space-x-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 pt-4 sm:pt-3 border-t border-gray-100">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-2">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 h-12 sm:h-8 px-4 sm:px-2"
               >
-                <Image className="h-4 w-4 mr-1" />
-                Photo
+                <Image className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1" />
+                <span className="text-base sm:text-sm">Photo</span>
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 disabled
-                className="text-gray-400 hover:text-gray-400 cursor-not-allowed"
+                className="text-gray-400 hover:text-gray-400 cursor-not-allowed h-12 sm:h-8 px-4 sm:px-2"
                 title="Emoji functionality coming soon"
               >
-                <Smile className="h-4 w-4 mr-1" />
-                Emoji
-                <Lock className="h-3 w-3 ml-1 text-gray-400" />
+                <Smile className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1" />
+                <span className="text-base sm:text-sm">Emoji</span>
+                <Lock className="h-4 w-4 sm:h-3 sm:w-3 ml-1 text-gray-400" />
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 disabled
-                className="text-gray-400 hover:text-gray-400 cursor-not-allowed"
+                className="text-gray-400 hover:text-gray-400 cursor-not-allowed h-12 sm:h-8 px-4 sm:px-2"
                 title="Schedule functionality coming soon"
               >
-                <Clock className="h-4 w-4 mr-1" />
-                Schedule
-                <Lock className="h-3 w-3 ml-1 text-gray-400" />
+                <Clock className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1" />
+                <span className="text-base sm:text-sm">Schedule</span>
+                <Lock className="h-4 w-4 sm:h-3 sm:w-3 ml-1 text-gray-400" />
               </Button>
             </div>
 
             <Button
               onClick={handleSubmit}
               disabled={!canSubmit}
-              className="bg-navy-600 hover:bg-navy-700 text-white"
+              className="bg-navy-600 hover:bg-navy-700 text-white h-12 sm:h-8 px-6 sm:px-4 w-full sm:w-auto"
             >
-              {isSubmitting ? 'Posting...' : 'Post'}
+              <span className="text-base sm:text-sm">{isSubmitting ? 'Posting...' : 'Post'}</span>
             </Button>
           </div>
 
