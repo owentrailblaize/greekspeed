@@ -82,10 +82,10 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] h-[80vh] max-h-[700px] flex flex-col overflow-hidden">
+      <DialogContent className="sm:max-w-[600px] max-w-[95vw] h-[90vh] sm:h-[80vh] max-h-[700px] flex flex-col overflow-hidden p-0 sm:p-6">
         {/* Fixed Header */}
-        <DialogHeader className="flex-shrink-0 border-b border-gray-200">
-          <DialogTitle>
+        <DialogHeader className="flex-shrink-0 border-b border-gray-200 p-4 sm:p-6">
+          <DialogTitle className="text-xl sm:text-lg">
             Comments
           </DialogTitle>
         </DialogHeader>
@@ -93,43 +93,51 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
         {/* Scrollable Content Area */}
         <div className="flex-1 overflow-hidden flex flex-col min-h-0">
           {/* Original Post - Fixed at top */}
-          <div className="flex-shrink-0 border-b border-gray-200 p-4">
-            <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
+          <div className="flex-shrink-0 border-b border-gray-200 p-4 sm:p-6">
+            <div className="flex items-start space-x-4 sm:space-x-3">
+              <div className="w-12 h-12 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-base sm:text-sm font-semibold shrink-0">
                 {post.author?.avatar_url || post.author?.first_name?.charAt(0) || 'U'}
               </div>
               
               <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2 mb-1">
-                  <h4 className="font-medium text-gray-900 text-sm">
+                <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-1">
+                  <h4 className="font-medium text-gray-900 text-base sm:text-sm break-words">
                     {post.author?.full_name || 'Unknown User'}
                   </h4>
-                  <Badge className={getPostTypeColor(post.post_type)}>
+                  <Badge className={`${getPostTypeColor(post.post_type)} text-xs`}>
                     {post.post_type.replace('_', ' ')}
                   </Badge>
                 </div>
-                <p className="text-xs text-gray-600 mb-1">
-                  {post.author?.chapter_role && `${post.author.chapter_role} • `}
-                  {post.author?.member_status}
-                </p>
-                <p className="text-xs text-gray-500 mb-2">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  {post.author?.chapter_role && (
+                    <span className="text-sm sm:text-xs text-gray-600 break-words">
+                      {post.author.chapter_role}
+                    </span>
+                  )}
+                  {post.author?.member_status && (
+                    <span className="text-sm sm:text-xs text-gray-600 break-words">
+                      {post.author.member_status}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm sm:text-xs text-gray-500 mb-3 sm:mb-2">
                   {formatTimestamp(post.created_at)}
                 </p>
                 
                 {/* Post Content */}
                 {post.content && (
-                  <p className="text-gray-900 text-sm leading-relaxed mb-3">{post.content}</p>
+                  <p className="text-gray-900 text-base sm:text-sm leading-relaxed mb-4 sm:mb-3 break-words">{post.content}</p>
                 )}
                 {post.image_url && (
                   <img 
                     src={post.image_url} 
                     alt="Post content" 
-                    className="w-full max-h-64 object-cover rounded-lg mb-3"
+                    className="w-full max-h-80 sm:max-h-64 object-cover rounded-lg mb-4 sm:mb-3"
                   />
                 )}
 
                 {/* Post Actions */}
-                <div className="flex items-center space-x-6">
+                <div className="flex items-center space-x-4 sm:space-x-6">
                   <Button 
                     variant="ghost" 
                     size="sm" 
@@ -138,26 +146,26 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                       post.is_liked 
                         ? 'text-red-500 hover:text-red-700 hover:bg-red-50' 
                         : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
-                    }`}
+                    } h-10 sm:h-8 px-3 sm:px-2`}
                   >
-                    <Heart className={`h-4 w-4 mr-1 ${post.is_liked ? 'fill-current' : ''}`} />
-                    {post.likes_count}
+                    <Heart className={`h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1 ${post.is_liked ? 'fill-current' : ''}`} />
+                    <span className="text-sm sm:text-xs">{post.likes_count}</span>
                   </Button>
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                    className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 h-10 sm:h-8 px-3 sm:px-2"
                   >
-                    <MessageCircle className="h-4 w-4 mr-1" />
-                    {post.comments_count}
+                    <MessageCircle className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1" />
+                    <span className="text-sm sm:text-xs">{post.comments_count}</span>
                   </Button>
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="text-gray-500 hover:text-green-500 hover:bg-green-50"
+                    className="text-gray-500 hover:text-green-500 hover:bg-green-50 h-10 sm:h-8 px-3 sm:px-2"
                   >
-                    <Share className="h-4 w-4 mr-1" />
-                    {post.shares_count}
+                    <Share className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1" />
+                    <span className="text-sm sm:text-xs">{post.shares_count}</span>
                   </Button>
                 </div>
               </div>
@@ -167,39 +175,39 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
           {/* Comments Section - Scrollable */}
           <div className="flex-1 overflow-y-auto min-h-0">
             {loading ? (
-              <div className="p-4 text-center">
-                <p className="text-gray-500">Loading comments...</p>
+              <div className="p-4 sm:p-6 text-center">
+                <p className="text-gray-500 text-base sm:text-sm">Loading comments...</p>
               </div>
             ) : error ? (
-              <div className="p-4 text-center">
-                <p className="text-red-500">Error loading comments: {error}</p>
+              <div className="p-4 sm:p-6 text-center">
+                <p className="text-red-500 text-base sm:text-sm">Error loading comments: {error}</p>
               </div>
             ) : comments.length === 0 ? (
-              <div className="p-8 text-center">
-                <MessageCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No comments yet</p>
-                <p className="text-sm text-gray-400">Be the first to comment!</p>
+              <div className="p-8 sm:p-6 text-center">
+                <MessageCircle className="h-16 w-16 sm:h-12 sm:w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 text-base sm:text-sm">No comments yet</p>
+                <p className="text-sm sm:text-xs text-gray-400">Be the first to comment!</p>
               </div>
             ) : (
-              <div className="p-4 space-y-4">
+              <div className="p-4 sm:p-6 space-y-4">
                 {comments.map((comment) => (
                   <div key={comment.id}>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-xs font-semibold shrink-0">
+                    <div className="flex items-start space-x-4 sm:space-x-3">
+                      <div className="w-10 h-10 sm:w-8 sm:h-8 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm sm:text-xs font-semibold shrink-0">
                         {comment.author?.avatar_url || comment.author?.first_name?.charAt(0) || 'U'}
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h5 className="font-medium text-gray-900 text-sm">
+                        <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-1">
+                          <h5 className="font-medium text-gray-900 text-base sm:text-sm break-words">
                             {comment.author?.full_name || 'Unknown User'}
                           </h5>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-sm sm:text-xs text-gray-500">
                             {formatTimestamp(comment.created_at)}
                           </p>
                         </div>
                         
-                        <p className="text-gray-900 text-sm leading-relaxed mb-2">
+                        <p className="text-gray-900 text-base sm:text-sm leading-relaxed mb-3 sm:mb-2 break-words">
                           {comment.content}
                         </p>
                         
@@ -213,9 +221,9 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                               comment.is_liked 
                                 ? 'text-red-500 hover:text-red-700' 
                                 : 'text-gray-500 hover:text-gray-700'
-                            } text-xs`}
+                            } text-sm sm:text-xs h-10 sm:h-8 px-3 sm:px-2`}
                           >
-                            <Heart className={`h-3 w-3 mr-1 ${comment.is_liked ? 'fill-current' : ''}`} />
+                            <Heart className={`h-4 w-4 sm:h-3 sm:w-3 mr-2 sm:mr-1 ${comment.is_liked ? 'fill-current' : ''}`} />
                             {comment.likes_count || 0}
                           </Button>
                           {comment.author_id === profile?.id && (
@@ -223,9 +231,9 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                               variant="ghost" 
                               size="sm" 
                               onClick={() => handleDeleteComment(comment.id)}
-                              className="text-red-500 hover:text-red-700 text-xs"
+                              className="text-red-500 hover:text-red-700 text-sm sm:text-xs h-10 sm:h-8 px-3 sm:px-2"
                             >
-                              <Trash2 className="h-3 w-3 mr-1" />
+                              <Trash2 className="h-4 w-4 sm:h-3 sm:w-3 mr-2 sm:mr-1" />
                               Delete
                             </Button>
                           )}
@@ -239,9 +247,9 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
           </div>
 
           {/* Comment Input - Fixed at bottom */}
-          <div className="flex-shrink-0 border-t border-gray-200 p-4 bg-white">
-            <div className="flex items-end space-x-3">
-              <div className="w-8 h-8 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-xs font-semibold shrink-0">
+          <div className="flex-shrink-0 border-t border-gray-200 p-4 sm:p-6 bg-white">
+            <div className="flex items-end space-x-4 sm:space-x-3">
+              <div className="w-10 h-10 sm:w-8 sm:h-8 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm sm:text-xs font-semibold shrink-0">
                 {profile?.avatar_url || profile?.first_name?.charAt(0) || 'U'}
               </div>
               
@@ -252,7 +260,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="min-h-[40px] max-h-[120px] resize-none border-gray-300 focus:ring-navy-500 focus:border-navy-500"
+                  className="min-h-[50px] sm:min-h-[40px] max-h-[120px] resize-none border-gray-300 focus:ring-navy-500 focus:border-navy-500 text-base sm:text-sm p-3"
                   rows={1}
                 />
               </div>
@@ -261,12 +269,12 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                 onClick={handleSubmitComment}
                 disabled={!newComment.trim() || isSubmitting}
                 size="sm"
-                className="bg-navy-600 hover:bg-navy-700 text-white"
+                className="bg-navy-600 hover:bg-navy-700 text-white h-12 sm:h-8 px-4 sm:px-2"
               >
                 {isSubmitting ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <Send className="h-4 w-4" />
+                  <Send className="h-5 w-5 sm:h-4 sm:w-4" />
                 )}
               </Button>
             </div>
