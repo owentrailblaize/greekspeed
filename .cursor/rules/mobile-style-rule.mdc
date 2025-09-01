@@ -1,0 +1,28 @@
+---
+description: |
+  Ensure that only **mobile responsiveness** updates are made. 
+  Do NOT alter or override existing desktop / larger screen styles, 
+  components, structures, or logic.  
+  Focus only on styling improvements for mobile devices.
+
+globs:
+  - "src/**/*.{js,jsx,ts,tsx}"   # adjust to match your project structure
+  - "src/**/*.{css,scss}"        # if using CSS/SCSS modules
+alwaysApply: true
+
+instructions: |
+  1. Only add or modify styles that target small/mobile screens 
+     (e.g., Tailwind responsive classes, media queries, or CSS rules 
+     scoped to max-width breakpoints).  
+  2. Do not change, remove, or refactor existing desktop/larger screen styles.  
+  3. Do not modify component logic, structure, or props — only layout/styling.  
+  4. Prioritize mobile layouts by:
+     - Making the **Posts feature** the main focal element on dashboards.  
+     - Stacking or collapsing secondary components (e.g., sidebars, widgets, info panels).  
+     - Ensuring text remains readable and buttons/touch targets are finger-friendly.  
+  5. Use your best judgment to rearrange or hide non-essential components on smaller screens, 
+     but keep all existing functionality intact.  
+
+# Example cursor behavior:
+# - ✅ OK: Adding `sm:`/`md:` breakpoints in Tailwind, wrapping elements in flex/stack for mobile.
+# - ❌ NOT OK: Changing desktop layout, deleting components, or rewriting logic.

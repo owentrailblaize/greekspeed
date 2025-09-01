@@ -64,15 +64,15 @@ export function SocialFeed({ chapterId }: SocialFeedProps) {
     <div className="space-y-4">
       {/* Create Post Card */}
       <Card className="bg-white">
-        <CardContent className="p-4">
-          <div className="flex items-start space-x-3">
-            <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex items-start space-x-3 sm:space-x-4">
+            <div className="w-12 h-12 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
               {profile?.avatar_url || profile?.first_name?.charAt(0) || 'U'}
             </div>
             <div className="flex-1">
               <Button
                 variant="outline"
-                className="w-full justify-start text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                className="w-full justify-start text-gray-500 hover:text-gray-700 hover:bg-gray-50 h-12 sm:h-10 text-left px-4"
                 onClick={() => setIsCreateModalOpen(true)}
               >
                 Start a post...
@@ -84,9 +84,9 @@ export function SocialFeed({ chapterId }: SocialFeedProps) {
 
       {/* Posts */}
       {posts.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-gray-500">No posts yet</p>
-          <p className="text-sm text-gray-400">Be the first to share something!</p>
+        <div className="text-center py-8 sm:py-12">
+          <p className="text-gray-500 text-lg sm:text-base">No posts yet</p>
+          <p className="text-sm text-gray-400 mt-2">Be the first to share something!</p>
         </div>
       ) : (
         posts.map((post: Post) => (

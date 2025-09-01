@@ -165,7 +165,7 @@ export function UpcomingEventsCard() {
               variant="outline" 
               size="sm" 
               onClick={() => window.location.reload()}
-              className="text-navy-600 border-navy-600 hover:bg-navy-50"
+              className="text-navy-600 border-navy-600 hover:bg-navy-50 h-10 sm:h-8"
             >
               Retry
             </Button>
@@ -187,7 +187,7 @@ export function UpcomingEventsCard() {
         <CardContent className="pt-0">
           <div className="text-center py-8">
             <p className="text-gray-500 text-sm mb-2">No upcoming events 👀</p>
-            <Button variant="outline" size="sm" className="text-navy-600 border-navy-600 hover:bg-navy-50">
+            <Button variant="outline" size="sm" className="text-navy-600 border-navy-600 hover:bg-navy-50 h-10 sm:h-8">
               Browse events
             </Button>
           </div>
@@ -208,30 +208,30 @@ export function UpcomingEventsCard() {
         <CardContent className="pt-0">
           <div className="space-y-4">
             {events.slice(0, 3).map((event) => (
-              <div key={event.id} className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-                <h4 className="font-medium text-gray-900 text-sm mb-2">{event.title}</h4>
+              <div key={event.id} className="p-4 sm:p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                <h4 className="font-medium text-gray-900 text-base sm:text-sm mb-3 sm:mb-2 break-words">{event.title}</h4>
                 
-                <div className="space-y-2 text-xs text-gray-600 mb-3">
+                <div className="space-y-2 text-sm sm:text-xs text-gray-600 mb-4 sm:mb-3">
                   <div className="flex items-center space-x-2">
-                    <Clock className="h-3 w-3" />
-                    <span>{formatEventDateTime(event.start_time)}</span>
+                    <Clock className="h-4 w-4 sm:h-3 sm:w-3" />
+                    <span className="break-words">{formatEventDateTime(event.start_time)}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <MapPin className="h-3 w-3" />
-                    <span>{event.location || 'TBD'}</span>
+                    <MapPin className="h-4 w-4 sm:h-3 sm:w-3" />
+                    <span className="break-words">{event.location || 'TBD'}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Users className="h-3 w-3" />
+                    <Users className="h-4 w-4 sm:h-3 sm:w-3" />
                     <span>{event.attendee_count || 0} attending</span>
                   </div>
                 </div>
                 
-                <div className="flex space-x-1">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-1">
                   <Button 
                     size="sm" 
                     variant={getRSVPButtonVariant(event.id, 'attending')}
                     onClick={() => handleRSVP(event.id, 'attending')}
-                    className="text-xs h-7 px-2"
+                    className="text-sm sm:text-xs h-10 sm:h-7 px-4 sm:px-2"
                   >
                     Going
                   </Button>
@@ -239,7 +239,7 @@ export function UpcomingEventsCard() {
                     size="sm" 
                     variant={getRSVPButtonVariant(event.id, 'maybe')}
                     onClick={() => handleRSVP(event.id, 'maybe')}
-                    className="text-xs h-7 px-2"
+                    className="text-sm sm:text-xs h-10 sm:h-7 px-4 sm:px-2"
                   >
                     Maybe
                   </Button>
@@ -247,7 +247,7 @@ export function UpcomingEventsCard() {
                     size="sm" 
                     variant={getRSVPButtonVariant(event.id, 'not_attending')}
                     onClick={() => handleRSVP(event.id, 'not_attending')}
-                    className="text-xs h-7 px-2"
+                    className="text-sm sm:text-xs h-10 sm:h-7 px-4 sm:px-2"
                   >
                     Not going
                   </Button>
@@ -259,7 +259,7 @@ export function UpcomingEventsCard() {
           <div className="pt-4 border-t border-gray-100">
             <Button 
               variant="outline" 
-              className="w-full text-navy-600 border-navy-600 hover:bg-navy-50"
+              className="w-full text-navy-600 border-navy-600 hover:bg-navy-50 h-10 sm:h-8"
               onClick={handleViewAllEvents}
             >
               View All Events
