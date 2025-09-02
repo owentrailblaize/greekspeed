@@ -839,15 +839,13 @@ export function VicePresidentDashboard() {
       {/* Edit Event Modal */}
       {isEditModalOpen && selectedEvent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-              <EventForm
-                event={selectedEvent}
-                onSubmit={handleEditEvent}
-                onCancel={() => setIsEditModalOpen(false)}
-                loading={editingEvent}
-              />
-            </div>
+          <div className="bg-white rounded-lg max-w-2xl w-full">
+            <EventForm
+              event={selectedEvent}
+              onSubmit={handleEditEvent}
+              onCancel={() => setIsEditModalOpen(false)}
+              loading={editingEvent}
+            />
           </div>
         </div>
       )}
@@ -855,15 +853,13 @@ export function VicePresidentDashboard() {
       {/* Create Event Modal */}
       {showCreateEventModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-              <EventForm
-                event={null}
-                onSubmit={handleCreateEvent}
-                onCancel={() => setShowCreateEventModal(false)}
-                loading={false}
-              />
-            </div>
+          <div className="bg-white rounded-lg max-w-2xl w-full">
+            <EventForm
+              event={null}
+              onSubmit={handleCreateEvent}
+              onCancel={() => setShowCreateEventModal(false)}
+              loading={false}
+            />
           </div>
         </div>
       )}
