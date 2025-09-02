@@ -841,10 +841,10 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
       {/* Upload Modal - Preserved */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] md:max-h-[90vh] max-h-[85vh] flex flex-col">
             {/* Persistent Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
-              <h3 className="text-2xl font-bold text-navy-900">Upload New Chapter Document</h3>
+            <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 flex-shrink-0">
+              <h3 className="text-lg md:text-2xl font-bold text-navy-900">New Document</h3>
               <button
                 onClick={() => setShowUploadModal(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -854,12 +854,12 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
             </div>
 
             {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <form onSubmit={handleUploadSubmit} className="space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6">
+              <form onSubmit={handleUploadSubmit} className="space-y-4 md:space-y-6">
                 {/* File Upload Section */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-gray-700">Document File *</label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 md:p-6 text-center hover:border-gray-400 transition-colors">
                     {selectedFile ? (
                       <div className="space-y-3">
                         <div className="flex items-center justify-center gap-2 text-green-600">
@@ -1045,7 +1045,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
             </div>
 
             {/* Persistent Footer */}
-            <div className="flex justify-end space-x-3 p-6 border-t border-gray-200 flex-shrink-0">
+            <div className="flex justify-end space-x-3 p-4 md:p-6 border-t border-gray-200 flex-shrink-0">
               <Button
                 type="button"
                 variant="outline"
