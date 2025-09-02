@@ -643,31 +643,52 @@ export function SocialChairDashboard() {
 
       {/* Tab Navigation */}
       <div className="mb-6">
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+        {/* Desktop Tab Navigation */}
+        <div className="hidden md:flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
           {[
             { value: "overview", label: "Overview" },
-            { value: "social", label: "Social Feed" },
             { value: "calendar", label: "Calendar" },
             { value: "contacts", label: "Contacts" },
-            { value: "budget", label: "Budget" },
-            { value: "lore", label: "Social Lore", locked: true }
+            { value: "budget", label: "Budget" }
           ].map((tab) => (
             <button
               key={tab.value}
-              onClick={() => !tab.locked && setSelectedTab(tab.value)}
+              onClick={() => setSelectedTab(tab.value)}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                 selectedTab === tab.value
                   ? "bg-white text-navy-600 shadow-sm"
-                  : tab.locked
-                  ? "text-gray-400 cursor-not-allowed opacity-60"
                   : "text-gray-600 hover:text-gray-900"
               }`}
-              disabled={tab.locked}
             >
               {tab.label}
-              {tab.locked && <Lock className="h-3 w-3 ml-2 inline" />}
             </button>
           ))}
+        </div>
+
+        {/* Mobile Tab Navigation */}
+        <div className="md:hidden">
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-full">
+            {[
+              { value: "overview", label: "Overview", mobileLabel: "Overview" },
+              { value: "calendar", label: "Calendar", mobileLabel: "Calendar" },
+              { value: "contacts", label: "Contacts", mobileLabel: "Contacts" },
+              { value: "budget", label: "Budget", mobileLabel: "Budget" }
+            ].map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setSelectedTab(tab.value)}
+                className={`flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+                  selectedTab === tab.value
+                    ? "bg-white text-navy-600 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                <span className="truncate">
+                  {tab.mobileLabel}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -850,194 +871,6 @@ export function SocialChairDashboard() {
         </div>
       )}
 
-      {selectedTab === "social" && (
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Chapter Social Feed</CardTitle>
-              <p className="text-sm text-gray-600">
-                Share updates, announcements, and connect with your chapter members.
-              </p>
-            </CardHeader>
-            <CardContent>
-              <SocialFeed chapterId={profile?.chapter_id || ''} />
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {selectedTab === "budget" && (
-        <div className="space-y-6">
-          {/* Budget Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Budget Allocated</p>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      ${budgetData.totalAllocated.toLocaleString()}
-                    </p>
-                  </div>
-                  <DollarSign className="h-8 w-8 text-blue-600" />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Events with Budgets</p>
-                    <p className="text-2xl font-semibold text-blue-600">
-                      {budgetData.eventsWithBudget.length}
-                    </p>
-                  </div>
-                  <Calendar className="h-8 w-8 text-blue-600" />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Events</p>
-                    <p className="text-2xl font-semibold text-gray-600">
-                      {events?.length || 0}
-                    </p>
-                  </div>
-                  <Users className="h-8 w-8 text-gray-600" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Budget Breakdown */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Budget Breakdown by Category</CardTitle>
-              <p className="text-sm text-gray-600">
-                Budgets are calculated from events with budget amounts. Create events with budget labels to organize spending.
-              </p>
-            </CardHeader>
-            <CardContent>
-              {budgetData.categories.length === 0 ? (
-                <div className="text-center py-8">
-                  <DollarSign className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-2">No budget data available</p>
-                  <p className="text-sm text-gray-400">
-                    Create events with budget amounts and labels to start tracking your chapter's spending.
-                  </p>
-                  <Button 
-                    onClick={() => setShowEventForm(true)}
-                    className="mt-4"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create First Event with Budget
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {budgetData.categories.map((category, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-3">
-                        <h4 className="font-medium">{category.category}</h4>
-                        <div className="text-right">
-                          <p className="text-sm font-medium">
-                            ${category.allocated.toLocaleString()}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {category.events.length} event{category.events.length !== 1 ? 's' : ''}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <h5 className="text-sm font-medium text-gray-700">Events in this category:</h5>
-                        {category.events.map((event, idx) => (
-                          <div key={idx} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded">
-                            <div className="flex-1">
-                              <span className="font-medium text-gray-900">{event.title}</span>
-                              <span className="text-gray-500 ml-2">• {event.status}</span>
-                              {event.budget_label && (
-                                <span className="text-gray-500 ml-2">• {event.budget_label}</span>
-                              )}
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <span className="font-medium text-green-900">
-                                ${parseFloat(String(event.budget_amount || '0')).toLocaleString()}
-                              </span>
-                              <Badge 
-                                variant={event.status === 'published' ? 'default' : 
-                                        event.status === 'draft' ? 'secondary' : 'destructive'}
-                                className="text-xs"
-                              >
-                                {event.status}
-                              </Badge>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* All Events Budget Summary */}
-          <Card>
-            <CardHeader>
-              <CardTitle>All Events Budget Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {events?.map((event, index) => (
-                  <div key={event.id || index} className="flex justify-between items-center p-2 border-b border-gray-100 last:border-b-0">
-                    <div className="flex-1">
-                      <span className="font-medium">{event.title}</span>
-                      <span className="text-gray-500 ml-2">• {event.status}</span>
-                    </div>
-                    <div className="text-right">
-                      {event.budget_amount ? (
-                        <span className="font-medium text-green-600">
-                          ${parseFloat(String(event.budget_amount)).toLocaleString()}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400 text-sm">No budget</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Budget Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex space-x-4">
-                <Button 
-                  onClick={() => setShowEventForm(true)}
-                  className="bg-orange-600 hover:bg-orange-700"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Event with Budget
-                </Button>
-                <Button variant="outline" disabled>
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Track Expenses (Coming Soon)
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {selectedTab === "calendar" && (
         <div className="space-y-6">
           {/* Calendar Controls */}
@@ -1208,61 +1041,172 @@ export function SocialChairDashboard() {
         </Card>
       )}
 
-      {selectedTab === "lore" && (
+      {selectedTab === "budget" && (
         <div className="space-y-6">
+          {/* Budget Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Budget Allocated</p>
+                    <p className="text-2xl font-semibold text-gray-900">
+                      ${budgetData.totalAllocated.toLocaleString()}
+                    </p>
+                  </div>
+                  <DollarSign className="h-8 w-8 text-blue-600" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Events with Budgets</p>
+                    <p className="text-2xl font-semibold text-blue-600">
+                      {budgetData.eventsWithBudget.length}
+                    </p>
+                  </div>
+                  <Calendar className="h-8 w-8 text-blue-600" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Events</p>
+                    <p className="text-2xl font-semibold text-gray-600">
+                      {events?.length || 0}
+                    </p>
+                  </div>
+                  <Users className="h-8 w-8 text-gray-600" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Budget Breakdown */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                Add New Social Lore Entry
-                <Lock className="h-4 w-4 ml-2 text-gray-400" />
-              </CardTitle>
+              <CardTitle>Budget Breakdown by Category</CardTitle>
+              <p className="text-sm text-gray-600">
+                Budgets are calculated from events with budget amounts. Create events with budget labels to organize spending.
+              </p>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4 opacity-60">
-                <Input
-                  placeholder="Entry title..."
-                  value={newLoreEntry.title}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewLoreEntry({ ...newLoreEntry, title: e.target.value })}
-                  disabled
-                  className="cursor-not-allowed"
-                />
-                <Textarea
-                  placeholder="Share insights, tips, and lessons learned for future social chairs..."
-                  value={newLoreEntry.content}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewLoreEntry({ ...newLoreEntry, content: e.target.value })}
-                  className="min-h-[120px] cursor-not-allowed"
-                  disabled
-                />
-                <Button className="bg-orange-600 hover:bg-orange-700 cursor-not-allowed" disabled>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Entry
-                  <Lock className="h-3 w-3 ml-2" />
-                </Button>
+              {budgetData.categories.length === 0 ? (
+                <div className="text-center py-8">
+                  <DollarSign className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 mb-2">No budget data available</p>
+                  <p className="text-sm text-gray-400">
+                    Create events with budget amounts and labels to start tracking your chapter's spending.
+                  </p>
+                  <Button 
+                    onClick={() => setShowEventForm(true)}
+                    className="mt-4"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First Event with Budget
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {budgetData.categories.map((category, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="font-medium">{category.category}</h4>
+                        <div className="text-right">
+                          <p className="text-sm font-medium">
+                            ${category.allocated.toLocaleString()}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {category.events.length} event{category.events.length !== 1 ? 's' : ''}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <h5 className="text-sm font-medium text-gray-700">Events in this category:</h5>
+                        {category.events.map((event, idx) => (
+                          <div key={idx} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded">
+                            <div className="flex-1">
+                              <span className="font-medium text-gray-900">{event.title}</span>
+                              <span className="text-gray-500 ml-2">• {event.status}</span>
+                              {event.budget_label && (
+                                <span className="text-gray-500 ml-2">• {event.budget_label}</span>
+                              )}
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="font-medium text-green-900">
+                                ${parseFloat(String(event.budget_amount || '0')).toLocaleString()}
+                              </span>
+                              <Badge 
+                                variant={event.status === 'published' ? 'default' : 
+                                        event.status === 'draft' ? 'secondary' : 'destructive'}
+                                className="text-xs"
+                              >
+                                {event.status}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* All Events Budget Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>All Events Budget Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {events?.map((event, index) => (
+                  <div key={event.id || index} className="flex justify-between items-center p-2 border-b border-gray-100 last:border-b-0">
+                    <div className="flex-1">
+                      <span className="font-medium">{event.title}</span>
+                      <span className="text-gray-500 ml-2">• {event.status}</span>
+                    </div>
+                    <div className="text-right">
+                      {event.budget_amount ? (
+                        <span className="font-medium text-green-600">
+                          ${parseFloat(String(event.budget_amount)).toLocaleString()}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 text-sm">No budget</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
 
+          {/* Quick Budget Actions */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                Social Lore Archive
-                <Lock className="h-4 w-4 ml-2 text-gray-400" />
-              </CardTitle>
+              <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4 opacity-60">
-                {socialLoreEntries.map((entry, index) => (
-                  <div key={index} className="p-4 border border-gray-200 rounded-lg">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium">{entry.title}</h4>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500">{entry.date}</p>
-                        <p className="text-xs text-gray-600">{entry.author}</p>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-700 leading-relaxed">{entry.content}</p>
-                  </div>
-                ))}
+              <div className="flex space-x-4">
+                <Button 
+                  onClick={() => setShowEventForm(true)}
+                  className="bg-orange-600 hover:bg-orange-700"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Event with Budget
+                </Button>
+                <Button variant="outline" disabled>
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  Track Expenses (Coming Soon)
+                </Button>
               </div>
             </CardContent>
           </Card>
