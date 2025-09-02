@@ -294,7 +294,7 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
 
         {/* Compact Information Grid */}
         <div className="px-6 pb-6">
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             {/* Contact Information - Compact */}
             <div className="space-y-2">
               <h3 className="font-medium text-gray-900 text-sm flex items-center">
@@ -302,18 +302,24 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
                 Contact
               </h3>
               <div className="space-y-1 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500">Email</span>
-                  <span className="text-gray-900 truncate">{alumni.email}</span>
+                {/* Email and Phone in same row on mobile */}
+                <div className="flex flex-row items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-gray-500">Email</span>
+                    <span className="text-gray-900 truncate">{alumni.email}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-gray-500">Phone</span>
+                    <span className="text-gray-900">{alumni.phone}</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500">Phone</span>
-                  <span className="text-gray-900">{alumni.phone}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500">Location</span>
-                  <span className="text-gray-900">{alumni.location}</span>
-                </div>
+                {/* Location in column */}
+                {alumni.location && alumni.location !== "Not Specified" && (
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-gray-500">Location</span>
+                    <span className="text-gray-900">{alumni.location}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -324,24 +330,32 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
                 Professional
               </h3>
               <div className="space-y-1 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500">Industry</span>
-                  <Badge variant="outline" className="text-xs">{alumni.industry}</Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500">Grad Year</span>
-                  <span className="text-gray-900">{alumni.graduationYear}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500">Chapter</span>
-                  <span className="text-gray-900">{getChapterName(alumni.chapter)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500">Last Contact</span>
-                  <span className="text-gray-900 text-xs">
-                    {alumni.lastContact ? new Date(alumni.lastContact).toLocaleDateString() : 'Never'}
-                  </span>
-                </div>
+                {alumni.industry && alumni.industry !== "Not Specified" && (
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-gray-500">Industry</span>
+                    <Badge variant="outline" className="text-xs">{alumni.industry}</Badge>
+                  </div>
+                )}
+                {alumni.graduationYear && (
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-gray-500">Grad Year</span>
+                    <span className="text-gray-900">{alumni.graduationYear}</span>
+                  </div>
+                )}
+                {alumni.chapter && (
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-gray-500">Chapter</span>
+                    <span className="text-gray-900">{getChapterName(alumni.chapter)}</span>
+                  </div>
+                )}
+                {alumni.lastContact && (
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-gray-500">Last Contact</span>
+                    <span className="text-gray-900 text-xs">
+                      {alumni.lastContact ? new Date(alumni.lastContact).toLocaleDateString() : 'Never'}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -355,7 +369,8 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
           <div className="flex space-x-2 pt-3 border-t border-gray-200">
             <Button className="flex-1" variant="outline" size="sm" disabled>
               <Mail className="h-3 w-3 mr-2" />
-              Send Email
+              <span className="hidden sm:inline">Send Email</span>
+              <span className="sm:hidden">Email</span>
               <Lock className="h-3 w-3 ml-2 text-gray-400" />
             </Button>
             
@@ -373,7 +388,8 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
               disabled={!canSendMessage()}
             >
               <MessageSquare className="h-3 w-3 mr-2" />
-              Send Message
+              <span className="hidden sm:inline">Send Message</span>
+              <span className="sm:hidden">Message</span>
               {!canSendMessage() && <Lock className="h-3 w-3 ml-2 text-gray-400" />}
             </Button>
             
