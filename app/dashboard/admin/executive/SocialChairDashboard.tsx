@@ -418,7 +418,7 @@ export function SocialChairDashboard() {
 
     // Empty cells for days before month starts
     for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="h-24"></div>);
+      days.push(<div key={`empty-${i}`} className="h-16 md:h-24"></div>);
     }
 
     // Days of the month
@@ -428,11 +428,11 @@ export function SocialChairDashboard() {
       const isToday = date.toDateString() === new Date().toDateString();
 
       days.push(
-        <div key={day} className={`h-24 border border-gray-200 p-1 ${isToday ? 'bg-orange-50 border-orange-300' : 'bg-white'}`}>
+        <div key={day} className={`h-16 md:h-24 border border-gray-200 p-1 ${isToday ? 'bg-orange-50 border-orange-300' : 'bg-white'}`}>
           <div className={`text-sm font-medium mb-1 ${isToday ? 'text-orange-600' : 'text-gray-900'}`}>
             {day}
           </div>
-          <div className="space-y-1">
+          <div className="space-y-0.5 md:space-y-1">
             {events.slice(0, 2).map(event => (
               <div key={event.id} className={`text-xs px-1 py-0.5 rounded truncate ${getEventTypeColor('meeting')}`}>
                 {event.title}
@@ -449,8 +449,8 @@ export function SocialChairDashboard() {
     return (
       <div className="bg-white rounded-lg border border-gray-200">
         {/* Calendar Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 className="font-semibold text-lg">
+        <div className="flex items-center justify-between p-3 md:p-4 border-b border-gray-200">
+          <h3 className="font-semibold text-base md:text-lg">
             {monthNames[calendarDate.getMonth()]} {calendarDate.getFullYear()}
           </h3>
           <div className="flex space-x-2">
@@ -458,15 +458,17 @@ export function SocialChairDashboard() {
               size="sm"
               variant="outline"
               onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1))}
+              className="h-7 md:h-10 px-2 md:px-4"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3 w-3 md:h-4 md:w-4" />
             </Button>
             <Button
               size="sm"
               variant="outline"
               onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1))}
+              className="h-7 md:h-10 px-2 md:px-4"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
             </Button>
           </div>
         </div>
@@ -474,7 +476,7 @@ export function SocialChairDashboard() {
         {/* Days of week header */}
         <div className="grid grid-cols-7 border-b border-gray-200">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div key={day} className="p-3 text-center font-medium text-gray-600 border-r border-gray-200 last:border-r-0">
+            <div key={day} className="p-2 md:p-3 text-center font-medium text-gray-600 border-r border-gray-200 last:border-r-0 text-xs md:text-sm">
               {day}
             </div>
           ))}
@@ -898,19 +900,19 @@ export function SocialChairDashboard() {
             </div>
 
             {/* Event List */}
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               <Card>
-                <CardHeader>
+                <CardHeader className="pb-2 md:pb-0">
                   <CardTitle className="text-base">Upcoming Events</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
+                <CardContent className="pt-2 md:pt-6">
+                  <div className="space-y-2 md:space-y-3">
                     {events
                       .filter(event => new Date(event.start_time) >= new Date())
                       .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
                       .slice(0, 5)
                       .map(event => (
-                        <div key={event.id} className="p-3 border border-gray-200 rounded-lg">
+                        <div key={event.id} className="p-2 md:p-3 border border-gray-200 rounded-lg">
                           <h4 className="font-medium text-sm">{event.title}</h4>
                           <p className="text-xs text-gray-600 mt-1">
                             {formatEventDate(event.start_time)} at {formatEventTime(event.start_time)}
