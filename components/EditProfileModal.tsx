@@ -408,7 +408,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
                   <div>
                     <Label htmlFor="first_name" className="flex items-center gap-2">
                       First Name
-                      <Badge variant="secondary" className="text-xs">Required</Badge>
+                      <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Required</Badge>
                     </Label>
                     <Input
                       id="first_name"
@@ -421,7 +421,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
                   <div>
                     <Label htmlFor="last_name" className="flex items-center gap-2">
                       Last Name
-                      <Badge variant="secondary" className="text-xs">Required</Badge>
+                      <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Required</Badge>
                     </Label>
                     <Input
                       id="last_name"
@@ -437,7 +437,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
                   <Label htmlFor="email" className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
                     Email
-                    <Badge variant="secondary" className="text-xs">Required</Badge>
+                    <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Required</Badge>
                   </Label>
                   <Input
                     id="email"
@@ -467,7 +467,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
                   <div>
                     <Label htmlFor="chapter" className="flex items-center gap-2">
                       Chapter
-                      <Badge variant="secondary" className="text-xs">Required</Badge>
+                      <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Required</Badge>
                     </Label>
                     <Input
                       id="chapter"
@@ -480,7 +480,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
                   <div>
                     <Label htmlFor="role" className="flex items-center gap-2">
                       Role
-                      <Badge variant="secondary" className="text-xs">Required</Badge>
+                      <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Required</Badge>
                     </Label>
                     <Input
                       id="role"
@@ -569,7 +569,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
                 <div>
                   <Label htmlFor="phone" className="flex items-center gap-2">
                     Phone
-                    <Badge variant="secondary" className="text-xs">Optional</Badge>
+                    <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Optional</Badge>
                   </Label>
                   <Input
                     id="phone"
@@ -580,7 +580,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
                     maxLength={14}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="location" className="flex items-center gap-2">
                       <MapPin className="w-4 h-4" />
@@ -617,7 +617,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
                 <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
                   <FileText className="w-5 h-5" />
                   Bio
-                  <Badge variant="secondary" className="text-xs">Optional</Badge>
+                  <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Optional</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
