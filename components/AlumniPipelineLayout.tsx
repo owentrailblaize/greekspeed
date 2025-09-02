@@ -58,11 +58,20 @@ export function AlumniPipelineLayout({
   onClearFilters,
   onAlumniClick
 }: AlumniPipelineLayoutProps) {
+  // Mobile-first state management
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedAlumniDetail, setSelectedAlumniDetail] = useState<Alumni | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Set mobile-specific initial state
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768; // md breakpoint
+    if (isMobile) {
+      setSidebarCollapsed(true); // Start collapsed on mobile
+    }
+  }, []);
 
   const handleBulkAction = (action: string) => {
     console.log(`Bulk action: ${action} for ${selectedAlumni.length} alumni`);
@@ -126,7 +135,7 @@ export function AlumniPipelineLayout({
             <motion.div
               initial={{ width: 0, opacity: 0 }}
               animate={{ 
-                width: sidebarCollapsed ? 64 : 320, 
+                width: sidebarCollapsed ? 64 : (window.innerWidth < 768 ? '100vw' : 320), 
                 opacity: 1 
               }}
               exit={{ width: 0, opacity: 0 }}
@@ -254,8 +263,8 @@ export function AlumniPipelineLayout({
           />
         )}
 
-                 {/* Content Area */}
-         <div className="flex-1 overflow-y-auto">
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
