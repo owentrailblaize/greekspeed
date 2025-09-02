@@ -1109,47 +1109,47 @@ export function SocialChairDashboard() {
       )}
 
       {selectedTab === "budget" && (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {/* Budget Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Budget Allocated</p>
-                    <p className="text-2xl font-semibold text-gray-900">
+                    <p className="text-xl md:text-2xl font-semibold text-gray-900">
                       ${budgetData.totalAllocated.toLocaleString()}
                     </p>
                   </div>
-                  <DollarSign className="h-8 w-8 text-blue-600" />
+                  <DollarSign className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
                 </div>
               </CardContent>
             </Card>
             
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Events with Budgets</p>
-                    <p className="text-2xl font-semibold text-blue-600">
+                    <p className="text-xl md:text-2xl font-semibold text-blue-600">
                       {budgetData.eventsWithBudget.length}
                     </p>
                   </div>
-                  <Calendar className="h-8 w-8 text-blue-600" />
+                  <Calendar className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
                 </div>
               </CardContent>
             </Card>
             
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Events</p>
-                    <p className="text-2xl font-semibold text-gray-600">
+                    <p className="text-xl md:text-2xl font-semibold text-gray-600">
                       {events?.length || 0}
                     </p>
                   </div>
-                  <Users className="h-8 w-8 text-gray-600" />
+                  <Users className="h-6 w-6 md:h-8 md:w-8 text-gray-600" />
                 </div>
               </CardContent>
             </Card>
@@ -1157,16 +1157,16 @@ export function SocialChairDashboard() {
 
           {/* Budget Breakdown */}
           <Card>
-            <CardHeader>
-              <CardTitle>Budget Breakdown by Category</CardTitle>
+            <CardHeader className="pb-2 md:pb-6">
+              <CardTitle className="text-lg md:text-xl">Budget Breakdown by Category</CardTitle>
               <p className="text-sm text-gray-600">
                 Budgets are calculated from events with budget amounts. Create events with budget labels to organize spending.
               </p>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-2 md:pt-6">
               {budgetData.categories.length === 0 ? (
-                <div className="text-center py-8">
-                  <DollarSign className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <div className="text-center py-6 md:py-8">
+                  <DollarSign className="h-8 w-8 md:h-12 md:w-12 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-500 mb-2">No budget data available</p>
                   <p className="text-sm text-gray-400">
                     Create events with budget amounts and labels to start tracking your chapter's spending.
@@ -1180,9 +1180,9 @@ export function SocialChairDashboard() {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-4 md:space-y-6">
                   {budgetData.categories.map((category, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <div key={index} className="border border-gray-200 rounded-lg p-3 md:p-4">
                       <div className="flex justify-between items-center mb-3">
                         <h4 className="font-medium">{category.category}</h4>
                         <div className="text-right">
@@ -1230,10 +1230,10 @@ export function SocialChairDashboard() {
 
           {/* All Events Budget Summary */}
           <Card>
-            <CardHeader>
-              <CardTitle>All Events Budget Summary</CardTitle>
+            <CardHeader className="pb-2 md:pb-6">
+              <CardTitle className="text-lg md:text-xl">All Events Budget Summary</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-2 md:pt-6">
               <div className="space-y-2">
                 {events?.map((event, index) => (
                   <div key={event.id || index} className="flex justify-between items-center p-2 border-b border-gray-100 last:border-b-0">
@@ -1258,21 +1258,27 @@ export function SocialChairDashboard() {
 
           {/* Quick Budget Actions */}
           <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+            <CardHeader className="pb-2 md:pb-6">
+              <CardTitle className="text-lg md:text-xl">Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="flex space-x-4">
+            <CardContent className="pt-2 md:pt-6">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                 <Button 
                   onClick={() => setShowEventForm(true)}
-                  className="bg-orange-600 hover:bg-orange-700"
+                  className="bg-orange-600 hover:bg-orange-700 text-xs md:text-sm h-8 md:h-10 px-2 md:px-4"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Event with Budget
+                  <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">Add Event with Budget</span>
+                  <span className="sm:hidden">Event</span>
                 </Button>
-                <Button variant="outline" disabled>
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Track Expenses (Coming Soon)
+                <Button 
+                  variant="outline" 
+                  disabled
+                  className="text-xs md:text-sm h-8 md:h-10 px-2 md:px-4"
+                >
+                  <DollarSign className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">Track Expenses (Coming Soon)</span>
+                  <span className="sm:hidden">Expense</span>
                 </Button>
               </div>
             </CardContent>
