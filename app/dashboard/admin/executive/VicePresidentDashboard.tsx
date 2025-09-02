@@ -416,7 +416,8 @@ export function VicePresidentDashboard() {
 
       {/* Tab Navigation */}
       <div className="mb-6">
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+        {/* Desktop Tab Navigation */}
+        <div className="hidden md:flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
           {[
             { value: "overview", label: "Overview" },
             { value: "tasks", label: "Member Tasks" },
@@ -440,6 +441,36 @@ export function VicePresidentDashboard() {
             </button>
           ))}
         </div>
+
+        {/* Mobile Tab Navigation */}
+        <div className="md:hidden">
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-full">
+            {[
+              { value: "overview", label: "Overview", mobileLabel: "Overview" },
+              { value: "tasks", label: "Member Tasks", mobileLabel: "Tasks" },
+              { value: "meetings", label: "Meetings", mobileLabel: "Meetings" },
+              { value: "committees", label: "Committees", mobileLabel: "Committees", locked: true }
+            ].map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => !tab.locked && setSelectedTab(tab.value)}
+                className={`flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+                  selectedTab === tab.value
+                    ? "bg-white text-navy-600 shadow-sm"
+                    : tab.locked
+                    ? "opacity-60 cursor-not-allowed text-gray-400"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+                disabled={tab.locked}
+              >
+                <span className="truncate">
+                  {tab.mobileLabel}
+                  {tab.locked && <Lock className="h-2.5 w-2.5 ml-1 text-gray-400 inline" />}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Tab Content */}
@@ -447,34 +478,34 @@ export function VicePresidentDashboard() {
         <div className="space-y-8">
           {/* Task Completion Progress - Full Width */}
           <Card>
-            <CardHeader>
-              <CardTitle>Task Completion Progress</CardTitle>
+            <CardHeader className="pb-2 md:pb-6">
+              <CardTitle className="text-lg md:text-xl">Task Completion Progress</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="pt-2 md:pt-6">
+              <div className="space-y-3 md:space-y-4">
                 <div className="flex justify-between items-center">
-                  <span>Overall Progress</span>
-                  <span className="font-medium">
+                  <span className="text-sm md:text-base">Overall Progress</span>
+                  <span className="font-medium text-sm md:text-base">
                     {loading ? '...' : `${((operationsOverview.completedTasks / operationsOverview.totalTasks) * 100).toFixed(1)}%`}
                   </span>
                 </div>
                 <Progress 
                   value={loading ? 0 : ((operationsOverview.completedTasks / operationsOverview.totalTasks) * 100)} 
-                  className="h-3" 
+                  className="h-2 md:h-3" 
                 />
                 
-                <div className="grid grid-cols-2 gap-4 mt-6">
+                <div className="grid grid-cols-2 gap-3 md:gap-4 mt-4 md:mt-6">
                   <div className="text-center">
-                    <p className="text-2xl font-semibold text-green-600">
+                    <p className="text-xl md:text-2xl font-semibold text-green-600">
                       {loading ? '...' : operationsOverview.completedTasks}
                     </p>
-                    <p className="text-sm text-gray-600">Completed</p>
+                    <p className="text-xs md:text-sm text-gray-600">Completed</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-semibold text-yellow-600">
+                    <p className="text-xl md:text-2xl font-semibold text-yellow-600">
                       {loading ? '...' : operationsOverview.pendingTasks}
                     </p>
-                    <p className="text-sm text-gray-600">Pending</p>
+                    <p className="text-xs md:text-sm text-gray-600">Pending</p>
                   </div>
                 </div>
               </div>
