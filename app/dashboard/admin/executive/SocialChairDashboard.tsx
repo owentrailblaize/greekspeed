@@ -694,17 +694,17 @@ export function SocialChairDashboard() {
 
       {/* Tab Content */}
       {selectedTab === "overview" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
           {/* Budget Summary Card */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
+            <CardHeader className="pb-2 md:pb-6">
+              <CardTitle className="flex items-center text-lg md:text-xl">
                 <DollarSign className="h-5 w-5 mr-2 text-green-600" />
                 Budget Overview
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="pt-2 md:pt-6">
+              <div className="space-y-3 md:space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Starting Budget</span>
                   <span className="font-semibold">${budgetData.startingBudget?.toLocaleString() || '12,000'}</span>
@@ -732,16 +732,16 @@ export function SocialChairDashboard() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Upcoming Events</CardTitle>
+            <CardHeader className="pb-2 md:pb-6">
+              <CardTitle className="text-lg md:text-xl">Upcoming Events</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-2 md:pt-6">
               {eventsLoading ? (
-                <div className="text-center py-8">
+                <div className="text-center py-6 md:py-8">
                   <p className="text-gray-500">Loading events...</p>
                 </div>
               ) : eventsError ? (
-                <div className="text-center py-8">
+                <div className="text-center py-6 md:py-8">
                   <p className="text-red-500">Error loading events: {eventsError}</p>
                   <Button 
                     variant="outline" 
@@ -753,7 +753,7 @@ export function SocialChairDashboard() {
                   </Button>
                 </div>
               ) : displayEvents.length === 0 ? (
-                <div className="text-center py-8">
+                <div className="text-center py-6 md:py-8">
                   <p className="text-gray-500">No upcoming events</p>
                   <Button 
                     variant="outline" 
@@ -765,9 +765,9 @@ export function SocialChairDashboard() {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 md:space-y-4">
                   {displayEvents.map((event, index) => (
-                    <div key={index} className="p-4 border border-gray-200 rounded-lg">
+                    <div key={index} className="p-3 md:p-4 border border-gray-200 rounded-lg">
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-medium">{event.name}</h4>
                         <div className="flex items-center space-x-2">
@@ -811,11 +811,12 @@ export function SocialChairDashboard() {
             </CardContent>
           </Card>
 
+          {/* Quick Actions */}
           <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+            <CardHeader className="pb-2 md:pb-6">
+              <CardTitle className="text-lg md:text-xl">Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="pt-2 md:pt-6 space-y-2 md:space-y-3">
               <Button 
                 className="w-full justify-start bg-orange-600 hover:bg-orange-700"
                 onClick={() => setShowEventForm(true)}
@@ -856,16 +857,6 @@ export function SocialChairDashboard() {
                 <DollarSign className="h-4 w-4 mr-2" />
                 Budget Report
               </Button>
-            </CardContent>
-          </Card>
-
-          {/* Social Feed Card */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle>Chapter Social Feed</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SocialFeed chapterId={profile?.chapter_id || ''} />
             </CardContent>
           </Card>
         </div>
