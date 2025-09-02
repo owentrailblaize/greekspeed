@@ -532,18 +532,192 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
 
   return (
     <div className={className}>
-      <Card className="bg-white">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center space-x-2">
-            <FileText className="h-5 w-5 text-navy-600" />
-            <span>Chapter Documents</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          {/* Search and Filter Bar */}
-          <div className="mb-4 space-y-3">
-            <div className="flex gap-2">
-              <div className="flex-1 relative">
+      {/* Desktop Layout - Preserved */}
+      <div className="hidden md:block">
+        <Card className="bg-white">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center space-x-2">
+              <FileText className="h-5 w-5 text-navy-600" />
+              <span>Chapter Documents</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {/* Search and Filter Bar */}
+            <div className="mb-4 space-y-3">
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search documents..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="all">All Documents</TabsTrigger>
+                <TabsTrigger value="recent">Recent</TabsTrigger>
+                <TabsTrigger value="important">Important</TabsTrigger>
+                <TabsTrigger value="compliance">Compliance</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {/* Upload Button */}
+            <div className="mb-4">
+              <Button 
+                onClick={handleUpload}
+                className="w-full bg-navy-600 hover:bg-navy-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Upload New Document
+              </Button>
+            </div>
+
+            {/* Documents List */}
+            <div className="space-y-3">
+              {filteredDocuments.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <FileText className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                  <p className="text-lg font-medium mb-2">No documents found</p>
+                  <p className="text-sm">
+                    {searchQuery
+                      ? 'Try adjusting your search'
+                      : 'Upload your first document to get started!'
+                    }
+                  </p>
+                </div>
+              ) : (
+                filteredDocuments.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        {/* Document Header */}
+                        <div className="flex items-center gap-3 mb-2">
+                          {getFileIcon(doc.file_type)}
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-medium text-gray-900 truncate">
+                              {doc.title}
+                            </h4>
+                            {doc.description && (
+                              <p className="text-sm text-gray-600 mt-1">
+                                {doc.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Document Metadata */}
+                        <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
+                          <div className="flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            <span>{doc.owner_name}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            <span>{formatDate(doc.updated_at)}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <FileText className="h-3 w-3" />
+                            <span>{getFileSize(doc.file_size)}</span>
+                          </div>
+                        </div>
+
+                        {/* Tags and Visibility */}
+                        <div className="flex items-center gap-2">
+                          {doc.tags?.map(tag => (
+                            <Badge 
+                              key={tag} 
+                              className={getCategoryColor(tag)}
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                          <div className="flex items-center gap-1 ml-2">
+                            <Shield className="h-3 w-3 text-gray-400" />
+                            {getVisibilityBadges(doc.visibility)}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 ml-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewDocument(doc)}
+                          title="Document viewing is locked - coming soon!"
+                          className="opacity-60 cursor-not-allowed"
+                          disabled
+                        >
+                          <Eye className="h-4 w-4" />
+                          <Lock className="h-3 w-3 ml-1 text-gray-400" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownload(doc)}
+                          title="Download Document"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditDocument(doc)}
+                          title="Document editing is locked - coming soon!"
+                          className="opacity-60 cursor-not-allowed"
+                          disabled
+                        >
+                          <Edit className="h-4 w-4" />
+                          <Lock className="h-3 w-3 ml-1 text-gray-400" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteDocument(doc.id)}
+                          title="Delete Document"
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Document Count */}
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <p className="text-sm text-gray-600 text-center">
+                Showing {filteredDocuments.length} of {documents.length} documents
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Mobile Layout */}
+      <div className="md:hidden">
+        <Card className="bg-white">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center space-x-2">
+              <FileText className="h-5 w-5 text-navy-600" />
+              <span>Chapter Documents</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {/* Mobile Search */}
+            <div className="mb-4">
+              <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Search documents..."
@@ -553,156 +727,118 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                 />
               </div>
             </div>
-          </div>
 
-          {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="all">All Documents</TabsTrigger>
-              <TabsTrigger value="recent">Recent</TabsTrigger>
-              <TabsTrigger value="important">Important</TabsTrigger>
-              <TabsTrigger value="compliance">Compliance</TabsTrigger>
-            </TabsList>
-          </Tabs>
-
-          {/* Upload Button */}
-          <div className="mb-4">
-            <Button 
-              onClick={handleUpload}
-              className="w-full bg-navy-600 hover:bg-navy-700"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Upload New Document
-            </Button>
-          </div>
-
-          {/* Documents List */}
-          <div className="space-y-3">
-            {filteredDocuments.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <FileText className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-lg font-medium mb-2">No documents found</p>
-                <p className="text-sm">
-                  {searchQuery
-                    ? 'Try adjusting your search'
-                    : 'Upload your first document to get started!'
-                  }
-                </p>
+            {/* Mobile Tabs - Horizontal Scroll */}
+            <div className="mb-4 overflow-x-auto">
+              <div className="flex space-x-2 min-w-max">
+                {[
+                  { value: 'all', label: 'All' },
+                  { value: 'recent', label: 'Recent' },
+                  { value: 'important', label: 'Important' },
+                  { value: 'compliance', label: 'Compliance' }
+                ].map((tab) => (
+                  <button
+                    key={tab.value}
+                    onClick={() => setActiveTab(tab.value)}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
+                      activeTab === tab.value
+                        ? 'bg-navy-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
               </div>
-            ) : (
-              filteredDocuments.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      {/* Document Header */}
-                      <div className="flex items-center gap-3 mb-2">
+            </div>
+
+            {/* Mobile Upload Button */}
+            <div className="mb-4">
+              <Button 
+                onClick={handleUpload}
+                className="w-full bg-navy-600 hover:bg-navy-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Upload New Document
+              </Button>
+            </div>
+
+            {/* Mobile Documents List */}
+            <div className="space-y-3">
+              {filteredDocuments.length === 0 ? (
+                <div className="text-center py-6 text-gray-500">
+                  <FileText className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                  <p className="text-sm">No documents found</p>
+                </div>
+              ) : (
+                filteredDocuments.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
                         {getFileIcon(doc.file_type)}
                         <div className="min-w-0 flex-1">
-                          <h4 className="font-medium text-gray-900 truncate">
-                            {doc.title}
-                          </h4>
-                          {doc.description && (
-                            <p className="text-sm text-gray-600 mt-1">
-                              {doc.description}
-                            </p>
-                          )}
+                          <h4 className="font-medium text-gray-900 text-sm truncate">{doc.title}</h4>
                         </div>
                       </div>
-
-                      {/* Document Metadata */}
-                      <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
-                        <div className="flex items-center gap-1">
-                          <User className="h-3 w-3" />
-                          <span>{doc.owner_name}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          <span>{formatDate(doc.updated_at)}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <FileText className="h-3 w-3" />
-                          <span>{getFileSize(doc.file_size)}</span>
-                        </div>
-                      </div>
-
-                      {/* Tags and Visibility */}
-                      <div className="flex items-center gap-2">
-                        {doc.tags?.map(tag => (
-                          <Badge 
-                            key={tag} 
-                            className={getCategoryColor(tag)}
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                        <div className="flex items-center gap-1 ml-2">
-                          <Shield className="h-3 w-3 text-gray-400" />
-                          {getVisibilityBadges(doc.visibility)}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-2 ml-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleViewDocument(doc)}
-                        title="Document viewing is locked - coming soon!"
-                        className="opacity-60 cursor-not-allowed"
-                        disabled
-                      >
-                        <Eye className="h-4 w-4" />
-                        <Lock className="h-3 w-3 ml-1 text-gray-400" />
-                      </Button>
+                      
+                      {/* Download Button - Top Right */}
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDownload(doc)}
                         title="Download Document"
+                        className="h-7 px-2 ml-2 flex-shrink-0"
                       >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditDocument(doc)}
-                        title="Document editing is locked - coming soon!"
-                        className="opacity-60 cursor-not-allowed"
-                        disabled
-                      >
-                        <Edit className="h-4 w-4" />
-                        <Lock className="h-3 w-3 ml-1 text-gray-400" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteDocument(doc.id)}
-                        title="Delete Document"
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
+                        <Download className="h-3 w-3" />
                       </Button>
                     </div>
+                    
+                    {/* Metadata in a single row */}
+                    <div className="flex items-center gap-4 text-xs text-gray-500 mb-2">
+                      <div className="flex items-center gap-1">
+                        <User className="h-3 w-3" />
+                        <span>{doc.owner_name}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        <span>{formatDate(doc.updated_at)}</span>
+                      </div>
+                    </div>
+
+                    {/* Tags and Visibility */}
+                    <div className="flex items-center gap-2 mb-2">
+                      {doc.tags?.slice(0, 2).map(tag => (
+                        <Badge 
+                          key={tag} 
+                          className={getCategoryColor(tag)}
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                      <div className="flex items-center gap-1 ml-2">
+                        <Shield className="h-3 w-3 text-gray-400" />
+                        {getVisibilityBadges(doc.visibility.slice(0, 1))}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))
-            )}
-          </div>
+                ))
+              )}
+            </div>
 
-          {/* Document Count */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <p className="text-sm text-gray-600 text-center">
-              Showing {filteredDocuments.length} of {documents.length} documents
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+            {/* Mobile Document Count */}
+            <div className="mt-4 pt-3 border-t border-gray-200">
+              <p className="text-xs text-gray-600 text-center">
+                Showing {filteredDocuments.length} of {documents.length} documents
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Upload Modal - Fixed Structure Matching EditProfileModal */}
+      {/* Upload Modal - Preserved */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
@@ -787,7 +923,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                     <SelectItem value="budget">Budget & Finance</SelectItem>
                     <SelectItem value="event_doc">Event Documents</SelectItem>
                     <SelectItem value="compliance">Compliance & Training</SelectItem>
-                    <SelectItem value="other">Other</SelectItem> {/* Changed from 'general' to 'other' */}
+                    <SelectItem value="other">Other</SelectItem>
                   </Select>
                 </div>
 
