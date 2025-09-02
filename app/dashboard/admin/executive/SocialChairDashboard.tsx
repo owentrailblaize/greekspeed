@@ -935,26 +935,27 @@ export function SocialChairDashboard() {
 
       {selectedTab === "contacts" && (
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-2 md:pb-6">
             <div className="flex justify-between items-center">
-              <CardTitle>Vendor Contacts</CardTitle>
+              <CardTitle className="text-lg md:text-xl">Vendor Contacts</CardTitle>
               <Button 
-                className="bg-orange-600 hover:bg-orange-700"
+                className="bg-orange-600 hover:bg-orange-700 text-xs md:text-sm h-8 md:h-10 px-2 md:px-4"
                 onClick={() => setShowVendorForm(true)}
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Vendor
+                <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">Add Vendor</span>
+                <span className="sm:hidden">Vendor</span>
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-2 md:pt-6">
             {vendorsLoading ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Loading vendors...</p>
+              <div className="text-center py-6 md:py-8">
+                <p className="text-gray-500 text-sm md:text-base">Loading vendors...</p>
               </div>
             ) : vendorsError ? (
-              <div className="text-center py-8">
-                <p className="text-red-500">Error loading vendors: {vendorsError}</p>
+              <div className="text-center py-6 md:py-8">
+                <p className="text-red-500 text-sm md:text-base">Error loading vendors: {vendorsError}</p>
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -965,8 +966,9 @@ export function SocialChairDashboard() {
                 </Button>
               </div>
             ) : vendors.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No vendor contacts found</p>
+              <div className="text-center py-6 md:py-8">
+                <p className="text-gray-500 text-base md:text-lg font-medium mb-2">No vendor contacts found</p>
+                <p className="text-xs md:text-sm text-gray-400 mb-4">No vendors have been added to your chapter yet.</p>
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -977,61 +979,130 @@ export function SocialChairDashboard() {
                 </Button>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Vendor Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Contact Person</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Rating</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {vendors.map((vendor) => (
-                    <TableRow key={vendor.id}>
-                      <TableCell className="font-medium">{vendor.name}</TableCell>
-                      <TableCell>{vendor.type}</TableCell>
-                      <TableCell>{vendor.contact_person || '-'}</TableCell>
-                      <TableCell>{vendor.phone || '-'}</TableCell>
-                      <TableCell>{vendor.email || '-'}</TableCell>
-                      <TableCell>
-                        {vendor.rating ? (
-                          <div className="flex items-center">
-                            <span className="text-yellow-500">★</span>
-                            <span className="ml-1">{vendor.rating}</span>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleEditVendor(vendor)}
-                          >
-                            <Edit className="h-3 w-3 mr-1" />
-                            Edit
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleDeleteVendor(vendor.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-3 w-3 mr-1" />
-                            Delete
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <>
+                {/* Desktop Table */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Vendor Name</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Contact Person</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Rating</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {vendors.map((vendor) => (
+                        <TableRow key={vendor.id}>
+                          <TableCell className="font-medium">{vendor.name}</TableCell>
+                          <TableCell>{vendor.type}</TableCell>
+                          <TableCell>{vendor.contact_person || '-'}</TableCell>
+                          <TableCell>{vendor.phone || '-'}</TableCell>
+                          <TableCell>{vendor.email || '-'}</TableCell>
+                          <TableCell>
+                            {vendor.rating ? (
+                              <div className="flex items-center">
+                                <span className="text-yellow-500">★</span>
+                                <span className="ml-1">{vendor.rating}</span>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleEditVendor(vendor)}
+                              >
+                                <Edit className="h-3 w-3 mr-1" />
+                                Edit
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleDeleteVendor(vendor.id)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Table with Horizontal Scroll */}
+                <div className="md:hidden">
+                  <div className="overflow-x-auto">
+                    <div className="min-w-[800px]">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs">Vendor Name</TableHead>
+                            <TableHead className="text-xs">Type</TableHead>
+                            <TableHead className="text-xs">Contact Person</TableHead>
+                            <TableHead className="text-xs">Phone</TableHead>
+                            <TableHead className="text-xs">Email</TableHead>
+                            <TableHead className="text-xs">Rating</TableHead>
+                            <TableHead className="text-xs">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {vendors.map((vendor) => (
+                            <TableRow key={vendor.id}>
+                              <TableCell className="font-medium text-xs">{vendor.name}</TableCell>
+                              <TableCell className="text-xs">{vendor.type}</TableCell>
+                              <TableCell className="text-xs">{vendor.contact_person || '-'}</TableCell>
+                              <TableCell className="text-xs">{vendor.phone || '-'}</TableCell>
+                              <TableCell className="text-xs">{vendor.email || '-'}</TableCell>
+                              <TableCell className="text-xs">
+                                {vendor.rating ? (
+                                  <div className="flex items-center">
+                                    <span className="text-yellow-500">★</span>
+                                    <span className="ml-1">{vendor.rating}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400">-</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-xs">
+                                <div className="flex space-x-1">
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => handleEditVendor(vendor)}
+                                    className="h-6 px-2"
+                                  >
+                                    <Edit className="h-3 w-3 mr-1" />
+                                    Edit
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => handleDeleteVendor(vendor.id)}
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 h-6 px-2"
+                                  >
+                                    <Trash2 className="h-3 w-3 mr-1" />
+                                    Delete
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
