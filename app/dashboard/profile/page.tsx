@@ -152,52 +152,73 @@ export default function ProfilePage() {
         {/* Profile Completion Banner - Moved above banner for maximum visibility */}
         {completion && completion.percentage < 100 && (
           <div className="mb-8 p-4 bg-navy-50 rounded-lg border border-navy-200">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-navy-900">
-                    Profile Completion: {completion.percentage}%
-                  </p>
-                  <p className="text-xs text-navy-600 mt-1">
-                    Complete your profile to unlock full features and improve your visibility in the network
-                  </p>
-                </div>
+            {/* Mobile Layout - Badge + Description in Column */}
+            <div className="sm:hidden text-center space-y-2">
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-sm font-medium text-navy-900">Profile Completion:</span>
                 <Badge className="bg-navy-600 text-white">
                   {completion.percentage}% Complete
                 </Badge>
               </div>
+              <p className="text-xs text-navy-600">
+                Complete your profile to unlock full features and improve your visibility in the network
+              </p>
             </div>
-          )}
+            
+            {/* Desktop Layout - Original Structure */}
+            <div className="hidden sm:flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-navy-900">
+                  Profile Completion: {completion.percentage}%
+                </p>
+                <p className="text-xs text-navy-600 mt-1">
+                  Complete your profile to unlock full features and improve your visibility in the network
+                </p>
+              </div>
+              <Badge className="bg-navy-600 text-white">
+                {completion.percentage}% Complete
+              </Badge>
+            </div>
+          </div>
+        )}
 
         {/* Banner Header Section */}
         <div className="relative mb-8 rounded-xl overflow-hidden">
-                     {/* Banner Image - Placeholder for now */}
-           <div className="w-full h-48 bg-gradient-to-r from-navy-600 via-blue-600 to-navy-700 flex items-center justify-center overflow-hidden">
-             {profile?.banner_url ? (
-               <img 
-                 src={profile.banner_url} 
-                 alt="Profile banner" 
-                 className="w-full h-full object-cover"
-               />
-             ) : (
-               <div className="text-white text-center">
-                 <p className="text-lg font-medium">Banner Image</p>
-                 <p className="text-sm opacity-80">Users will be able to update this later</p>
-               </div>
-             )}
-           </div>
+          {/* Banner Image - Placeholder for now */}
+          <div className="w-full h-48 bg-gradient-to-r from-navy-600 via-blue-600 to-navy-700 flex items-center justify-center overflow-hidden">
+            {profile?.banner_url ? (
+              <img 
+                src={profile.banner_url} 
+                alt="Profile banner" 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="text-white text-center">
+                {/* Removed the placeholder text - banner is now clean */}
+              </div>
+            )}
+          </div>
 
-          {/* Profile Picture and User Info Container */}
-          <div className="absolute left-8 bottom-4 flex items-center space-x-4">
-                  <UserAvatar
-                    user={{
-                      user_metadata: {
-                        avatar_url: profile?.avatar_url, // Use profile avatar_url
-                        full_name: profile?.full_name
-                      }
-                    }}
-                    completionPercent={completion?.percentage || 0}
-                    hasUnread={false}
-                    size="lg"
+          {/* Profile Name and Chapter - Mobile Top Position (Centered) */}
+          <div className="absolute top-4 left-0 right-0 sm:hidden">
+            <div className="text-white text-center">
+              <h1 className="text-xl font-bold mb-1">{profile.full_name || 'User Name'}</h1>
+              <p className="text-sm opacity-90">{profile.chapter || 'Chapter'}</p>
+            </div>
+          </div>
+
+          {/* Profile Picture and User Info Container - Desktop Bottom Position */}
+          <div className="absolute left-8 bottom-4 hidden sm:flex items-center space-x-4">
+            <UserAvatar
+              user={{
+                user_metadata: {
+                  avatar_url: profile?.avatar_url, // Use profile avatar_url
+                  full_name: profile?.full_name
+                }
+              }}
+              completionPercent={completion?.percentage || 0}
+              hasUnread={false}
+              size="lg"
               className="shadow-lg rounded-full ring-4"
             />
             
@@ -207,30 +228,31 @@ export default function ProfilePage() {
             </div>
           </div>
 
-                     {/* Action Buttons */}
-           <div className="absolute right-8 bottom-4 flex items-center space-x-3">
+          {/* Profile Picture - Mobile Bottom Position */}
+          <div className="absolute left-4 bottom-4 sm:hidden">
+            <UserAvatar
+              user={{
+                user_metadata: {
+                  avatar_url: profile?.avatar_url, // Use profile avatar_url
+                  full_name: profile?.full_name
+                }
+              }}
+              completionPercent={completion?.percentage || 0}
+              hasUnread={false}
+              size="lg"
+              className="shadow-lg rounded-full ring-4"
+            />
+          </div>
+
+          {/* Action Buttons - Only Messages Button */}
+          <div className="absolute right-4 sm:right-8 bottom-4 flex items-center space-x-3">
             <Link href="/dashboard/messages">
               <Button size="sm" className="w-10 h-10 rounded-full bg-navy-600 hover:bg-navy-700">
                 <MessageCircle className="w-4 h-4" />
               </Button>
             </Link>
-            <Button 
-              size="sm" 
-              className="bg-navy-600/60 hover:bg-navy-600/60 text-white/80 cursor-not-allowed backdrop-blur-sm border border-navy-400/30" 
-              disabled
-            >
-              Follow
-            </Button>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="bg-white/60 text-navy-600/60 border-navy-400/40 hover:bg-white/60 cursor-not-allowed backdrop-blur-sm" 
-              disabled
-            >
-              Schedule Meeting
-            </Button>
-                </div>
           </div>
+        </div>
 
         {/* Main Content Area - Three Columns */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
