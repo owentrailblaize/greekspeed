@@ -46,71 +46,6 @@ export default function SignUpPage() {
     }
   }, [user, authLoading, router]);
 
-  // Remove this useEffect - it's not needed here
-  // useEffect(() => {
-  //   const handleOAuthCallback = async () => {
-  //     // Check if we're returning from OAuth (hash contains access_token or error)
-  //     if (typeof window !== 'undefined' && window.location.hash) {
-  //       const hashParams = new URLSearchParams(window.location.hash.substring(1));
-  //       const accessToken = hashParams.get('access_token');
-  //       const error = hashParams.get('error');
-        
-  //       if (error) {
-  //         setError(`OAuth error: ${error}`);
-  //         return;
-  //       }
-        
-  //       if (accessToken) {
-  //         setOauthLoading(true);
-  //         try {
-  //           // Set the session with the access token
-  //           const { data, error: sessionError } = await supabase.auth.setSession({
-  //             access_token: accessToken,
-  //             refresh_token: hashParams.get('refresh_token') || '',
-  //           });
-            
-  //           if (sessionError) {
-  //             setError('Failed to complete authentication');
-  //             return;
-  //           }
-            
-  //           if (data.user) {
-  //             // Check if profile exists, create if not
-  //             const { data: existingProfile } = await supabase
-  //               .from('profiles')
-  //               .select('*')
-  //               .eq('id', data.user.id)
-  //               .single();
-
-  //             if (!existingProfile) {
-  //               await supabase
-  //                 .from('profiles')
-  //                 .insert({
-  //                   id: data.user.id,
-  //                   email: data.user.email,
-  //                   full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || 'Google User',
-  //                   first_name: data.user.user_metadata?.given_name || '',
-  //                   last_name: data.user.user_metadata?.family_name || '',
-  //                   chapter: null,
-  //                   role: 'alumni'
-  //                 });
-  //             }
-              
-  //             // Redirect to dashboard
-  //             router.push('/dashboard');
-  //           }
-  //         } catch (error) {
-  //           setError('Authentication failed');
-  //         } finally {
-  //           setOauthLoading(false);
-  //         }
-  //       }
-  //     }
-  //   };
-
-  //   handleOAuthCallback();
-  // }, [router]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -203,7 +138,7 @@ export default function SignUpPage() {
         <CardContent className="p-0">
           <div className="flex min-h-[500px]">
             {/* Left Column - Introduction */}
-            <div className="w-full lg:w-1/2 bg-gradient-to-br from-navy-50 to-blue-50 p-8 flex flex-col justify-center">
+            <div className="hidden lg:block w-full lg:w-1/2 bg-gradient-to-br from-navy-50 to-blue-50 p-8 flex flex-col justify-center">
               <div className="text-center lg:text-left">
                 <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
                   Welcome to Trailblaize
@@ -237,197 +172,208 @@ export default function SignUpPage() {
             </div>
 
             {/* Right Column - Sign Up */}
-            <div className="w-full lg:w-1/2 p-8 flex flex-col justify-center text-center">
-              {/* Logo - Centered */}
-              <div className="flex items-center justify-center space-x-3 mb-6">
-                <div className="w-8 h-8 bg-navy-600 rounded-lg flex items-center justify-center">
-                  <Star className="h-5 w-5 text-white" />
+            <div className="w-full lg:w-1/2 p-6 lg:p-8 flex flex-col justify-center min-h-screen lg:min-h-0">
+              <div className="w-full max-w-md mx-auto">
+                {/* Mobile Header - Only show on mobile */}
+                <div className="lg:hidden text-center mb-8">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Trailblaize</h1>
+                  <p className="text-sm text-gray-600">Create your account</p>
                 </div>
-                <span className="font-semibold text-xl text-gray-900">Trailblaize</span>
-              </div>
 
-              {/* Heading - Centered */}
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Get started for free</h2>
-
-              {!showEmailForm ? (
-                /* Social Sign Up Options - Centered */
-                <div className="space-y-3">
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    className="w-full h-12 border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-4"
-                    onClick={handleGoogleSignUp}
-                    disabled={loading}
-                  >
-                    <div className="w-5 h-5 bg-red-500 rounded-full mr-4 flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">G</span>
+                {/* Desktop Header - Only show on desktop */}
+                <div className="hidden lg:block text-center">
+                  {/* Logo - Centered */}
+                  <div className="flex items-center justify-center space-x-3 mb-6">
+                    <div className="w-8 h-8 bg-navy-600 rounded-lg flex items-center justify-center">
+                      <Star className="h-5 w-5 text-white" />
                     </div>
-                    Continue with Google
-                  </Button>
-                  
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    className="w-full h-12 border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-4"
-                    onClick={handleEmailSignUp}
-                    disabled={loading}
-                  >
-                    <Mail className="h-5 w-5 mr-4 text-gray-600" />
-                    Continue with Email
-                  </Button>
+                    <span className="font-semibold text-xl text-gray-900">Trailblaize</span>
+                  </div>
+
+                  {/* Heading - Centered */}
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Get started for free</h2>
                 </div>
-              ) : (
-                /* Email Form - Left-aligned for better form UX */
-                <div className="text-left">
-                  {/* Back Button */}
-                  <button
-                    type="button"
-                    onClick={() => setShowEmailForm(false)}
-                    className="flex items-center text-sm text-gray-600 hover:text-gray-800 mb-4 transition-colors"
-                  >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    Back to sign up options
-                  </button>
 
-                  <form onSubmit={handleSubmit} className="space-y-3">
-                    {/* Name Fields */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">First Name</Label>
-                        <Input
-                          id="firstName"
-                          type="text"
-                          placeholder="First Name"
-                          value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
-                          required
-                          disabled={loading}
-                          className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">Last Name</Label>
-                        <Input
-                          id="lastName"
-                          type="text"
-                          placeholder="Last Name"
-                          value={lastName}
-                          onChange={(e) => setLastName(e.target.value)}
-                          required
-                          disabled={loading}
-                          className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Email Field */}
-                    <div className="space-y-2">
-                      <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="Enter your email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        disabled={loading}
-                        className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
-                      />
-                    </div>
-
-                    {/* Password Field */}
-                    <div className="space-y-2">
-                      <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="Create a password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        disabled={loading}
-                        className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
-                      />
-                    </div>
-
-                    {/* Chapter Selection */}
-                    <div className="space-y-2">
-                      <Label htmlFor="chapter" className="text-sm font-medium text-gray-700">Chapter</Label>
-                      <Select 
-                        value={chapter} 
-                        onValueChange={setChapter}
-                      >
-                        <SelectItem value="">
-                          {chaptersLoading ? 'Loading chapters...' : 'Select your chapter'}
-                        </SelectItem>
-                        {chapters.map((chapterData) => (
-                          <SelectItem key={chapterData.id} value={chapterData.name}>
-                            {chapterData.name}
-                          </SelectItem>
-                        ))}
-                      </Select>
-                      {chaptersError && (
-                        <p className="text-red-500 text-xs">Failed to load chapters. Please refresh the page.</p>
-                      )}
-                      {chapters.length === 0 && !chaptersLoading && (
-                        <p className="text-yellow-500 text-xs">No chapters available. Please contact support.</p>
-                      )}
-                    </div>
-
-                    {/* Role Selection */}
-                    <div className="space-y-2">
-                      <Label htmlFor="role" className="text-sm font-medium text-gray-700">Role</Label>
-                      <Select 
-                        value={role} 
-                        onValueChange={(value: string) => setRole(value as 'Admin / Executive' | 'Active Member' | 'Alumni')}
-                      >
-                        <SelectItem value="">Select your role</SelectItem>
-                        {userRoles.map((userRole) => (
-                          <SelectItem key={userRole.value} value={userRole.value}>
-                            {userRole.label}
-                          </SelectItem>
-                        ))}
-                      </Select>
-                    </div>
-
-                    {/* Error and Success Messages */}
-                    {error && (
-                      <div className="text-red-500 text-sm bg-red-50 border border-red-200 rounded-lg p-3">{error}</div>
-                    )}
-                    {success && (
-                      <div className="text-green-500 text-sm bg-green-50 border border-green-200 rounded-lg p-3">{success}</div>
-                    )}
-
-                    {/* Submit Button */}
+                {!showEmailForm ? (
+                  /* Social Sign Up Options - Centered */
+                  <div className="space-y-3">
                     <Button 
-                      type="submit" 
-                      className="w-full h-11 bg-navy-600 hover:bg-navy-700 text-white font-medium" 
+                      type="button"
+                      variant="outline" 
+                      className="w-full h-12 border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-4"
+                      onClick={handleGoogleSignUp}
                       disabled={loading}
                     >
-                      {loading ? 'Creating account...' : 'Create Account'}
+                      <div className="w-5 h-5 bg-red-500 rounded-full mr-4 flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">G</span>
+                      </div>
+                      Continue with Google
                     </Button>
-                  </form>
-                </div>
-              )}
+                    
+                    <Button 
+                      type="button"
+                      variant="outline" 
+                      className="w-full h-12 border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-4"
+                      onClick={handleEmailSignUp}
+                      disabled={loading}
+                    >
+                      <Mail className="h-5 w-5 mr-4 text-gray-600" />
+                      Continue with Email
+                    </Button>
+                  </div>
+                ) : (
+                  /* Email Form - Left-aligned for better form UX */
+                  <div className="text-left">
+                    {/* Back Button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowEmailForm(false)}
+                      className="flex items-center text-sm text-gray-600 hover:text-gray-800 mb-4 transition-colors"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                      Back to sign up options
+                    </button>
 
-              {/* Terms */}
-              <p className="text-sm text-gray-500 mt-6">
-                By proceeding, you agree to our{' '}
-                <Link href="/terms" className="text-navy-600 hover:text-navy-700 underline">
-                  Terms of Service
-                </Link>
-              </p>
+                    <form onSubmit={handleSubmit} className="space-y-3">
+                      {/* Name Fields */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">First Name</Label>
+                          <Input
+                            id="firstName"
+                            type="text"
+                            placeholder="First Name"
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                            required
+                            disabled={loading}
+                            className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">Last Name</Label>
+                          <Input
+                            id="lastName"
+                            type="text"
+                            placeholder="Last Name"
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                            required
+                            disabled={loading}
+                            className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+                          />
+                        </div>
+                      </div>
 
-              {/* Sign In Link */}
-              <div className="text-center mt-6">
-                <p className="text-sm text-gray-600">
-                  Already have an account?{' '}
-                  <Link href="/sign-in" className="text-navy-600 hover:text-navy-700 font-medium">
-                    Sign in
+                      {/* Email Field */}
+                      <div className="space-y-2">
+                        <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="Enter your email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                          disabled={loading}
+                          className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+                        />
+                      </div>
+
+                      {/* Password Field */}
+                      <div className="space-y-2">
+                        <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password</Label>
+                        <Input
+                          id="password"
+                          type="password"
+                          placeholder="Create a password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                          disabled={loading}
+                          className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+                        />
+                      </div>
+
+                      {/* Chapter Selection */}
+                      <div className="space-y-2">
+                        <Label htmlFor="chapter" className="text-sm font-medium text-gray-700">Chapter</Label>
+                        <Select 
+                          value={chapter} 
+                          onValueChange={setChapter}
+                        >
+                          <SelectItem value="">
+                            {chaptersLoading ? 'Loading chapters...' : 'Select your chapter'}
+                          </SelectItem>
+                          {chapters.map((chapterData) => (
+                            <SelectItem key={chapterData.id} value={chapterData.name}>
+                              {chapterData.name}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                        {chaptersError && (
+                          <p className="text-red-500 text-xs">Failed to load chapters. Please refresh the page.</p>
+                        )}
+                        {chapters.length === 0 && !chaptersLoading && (
+                          <p className="text-yellow-500 text-xs">No chapters available. Please contact support.</p>
+                        )}
+                      </div>
+
+                      {/* Role Selection */}
+                      <div className="space-y-2">
+                        <Label htmlFor="role" className="text-sm font-medium text-gray-700">Role</Label>
+                        <Select 
+                          value={role} 
+                          onValueChange={(value: string) => setRole(value as 'Admin / Executive' | 'Active Member' | 'Alumni')}
+                        >
+                          <SelectItem value="">Select your role</SelectItem>
+                          {userRoles.map((userRole) => (
+                            <SelectItem key={userRole.value} value={userRole.value}>
+                              {userRole.label}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                      </div>
+
+                      {/* Error and Success Messages */}
+                      {error && (
+                        <div className="text-red-500 text-sm bg-red-50 border border-red-200 rounded-lg p-3">{error}</div>
+                      )}
+                      {success && (
+                        <div className="text-green-500 text-sm bg-green-50 border border-green-200 rounded-lg p-3">{success}</div>
+                      )}
+
+                      {/* Submit Button */}
+                      <Button 
+                        type="submit" 
+                        className="w-full h-11 bg-navy-600 hover:bg-navy-700 text-white font-medium" 
+                        disabled={loading}
+                      >
+                        {loading ? 'Creating account...' : 'Create Account'}
+                      </Button>
+                    </form>
+                  </div>
+                )}
+
+                {/* Terms */}
+                <p className="text-sm text-gray-500 mt-6 text-center">
+                  By proceeding, you agree to our{' '}
+                  <Link href="/terms" className="text-navy-600 hover:text-navy-700 underline">
+                    Terms of Service
                   </Link>
                 </p>
+
+                {/* Sign In Link */}
+                <div className="text-center mt-6">
+                  <p className="text-sm text-gray-600">
+                    Already have an account?{' '}
+                    <Link href="/sign-in" className="text-navy-600 hover:text-navy-700 font-medium">
+                      Sign in
+                    </Link>
+                  </p>
+                </div>
               </div>
             </div>
           </div>

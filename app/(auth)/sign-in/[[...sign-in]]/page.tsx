@@ -120,7 +120,7 @@ export default function SignInPage() {
       <div className="w-full max-w-5xl shadow-xl border-0">
         <div className="flex min-h-[500px]">
           {/* Left Column - Promotional Content */}
-          <div className="w-full lg:w-1/2 bg-gradient-to-br from-navy-50 to-blue-50 p-8 flex flex-col justify-center">
+          <div className="hidden lg:block w-full lg:w-1/2 bg-gradient-to-br from-navy-50 to-blue-50 p-8 flex flex-col justify-center">
             <div className="text-center lg:text-left">
               <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
                 Welcome to Trailblaize
@@ -169,106 +169,119 @@ export default function SignInPage() {
             </div>
           </div>
 
-          {/* Right Column - Sign In Form */}
-          <div className="w-full lg:w-1/2 p-8 flex flex-col justify-center">
-            {/* Header */}
-            <div className="mb-6">
-              <button
-                onClick={handleBackToLanding}
-                className="flex items-center text-base text-gray-600 mb-3 hover:text-gray-800 transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                <span className="text-lg font-medium">Login with email</span>
-              </button>
-              <div className="text-sm text-gray-600">
-                Don't have an account?{' '}
-                <Link href="/sign-up" className="text-purple-600 hover:text-purple-700 font-medium">
-                  Sign Up
-                </Link>
+          {/* Right Column - Login Form */}
+          <div className="w-full lg:w-1/2 p-6 lg:p-8 flex flex-col justify-center min-h-screen lg:min-h-0">
+            <div className="w-full max-w-md mx-auto">
+              {/* Mobile Header - Only show on mobile */}
+              <div className="lg:hidden text-center mb-8">
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Trailblaize</h1>
+                <p className="text-sm text-gray-600">Sign in to your account</p>
               </div>
-            </div>
 
-            {/* Sign In Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={loading || googleLoading}
-                  className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
-                />
+              {/* Desktop Header - Only show on desktop */}
+              <div className="hidden lg:block">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Login</h2>
               </div>
-              <div>
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={loading || googleLoading}
-                  className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
-                />
-              </div>
-              
-              {/* Forgot Password Link */}
-              <div className="text-right">
+
+              {/* Header */}
+              <div className="mb-6">
                 <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  className="text-sm text-purple-600 hover:text-purple-700"
+                  onClick={handleBackToLanding}
+                  className="flex items-center text-base text-gray-600 mb-3 hover:text-gray-800 transition-colors"
                 >
-                  Forgot Password?
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  <span className="text-lg font-medium">Login with email</span>
                 </button>
+                <div className="text-sm text-gray-600">
+                  Don't have an account?{' '}
+                  <Link href="/sign-up" className="text-purple-600 hover:text-purple-700 font-medium">
+                    Sign Up
+                  </Link>
+                </div>
               </div>
 
-              {/* Error Message */}
-              {error && (
-                <div className="text-red-500 text-sm bg-red-50 border border-red-200 rounded-lg p-3">
-                  {error}
+              {/* Sign In Form */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={loading || googleLoading}
+                    className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+                  />
                 </div>
-              )}
-
-              {/* Continue Button */}
-              <Button 
-                type="submit" 
-                className="w-full h-11 bg-navy-600 hover:bg-navy-700 text-white font-medium" 
-                disabled={loading || googleLoading}
-              >
-                <span>Continue</span>
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </form>
-
-            {/* Google Sign In Button */}
-            <div className="mt-4">
-              <Button 
-                type="button"
-                variant="outline" 
-                className="w-full h-11 border-gray-300 hover:bg-gray-50 text-gray-700 font-medium"
-                onClick={handleGoogleSignIn}
-                disabled={loading || googleLoading}
-              >
-                <div className="w-5 h-5 bg-red-500 rounded-full mr-3 flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">G</span>
+                <div>
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={loading || googleLoading}
+                    className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+                  />
                 </div>
-                {googleLoading ? 'Signing in...' : 'Sign in with Google'}
-              </Button>
+                
+                {/* Forgot Password Link */}
+                <div className="text-right">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-sm text-purple-600 hover:text-purple-700"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+
+                {/* Error Message */}
+                {error && (
+                  <div className="text-red-500 text-sm bg-red-50 border border-red-200 rounded-lg p-3">
+                    {error}
+                  </div>
+                )}
+
+                {/* Continue Button */}
+                <Button 
+                  type="submit" 
+                  className="w-full h-11 bg-navy-600 hover:bg-navy-700 text-white font-medium" 
+                  disabled={loading || googleLoading}
+                >
+                  <span>Continue</span>
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </form>
+
+              {/* Google Sign In Button */}
+              <div className="mt-4">
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  className="w-full h-11 border-gray-300 hover:bg-gray-50 text-gray-700 font-medium"
+                  onClick={handleGoogleSignIn}
+                  disabled={loading || googleLoading}
+                >
+                  <div className="w-5 h-5 bg-red-500 rounded-full mr-3 flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">G</span>
+                  </div>
+                  {googleLoading ? 'Signing in...' : 'Sign in with Google'}
+                </Button>
+              </div>
+
+              {/* Terms */}
+              <p className="text-sm text-gray-600 mt-4 text-center">
+                By clicking continue, you agree to our{' '}
+                <Link href="/terms" className="text-purple-600 hover:text-purple-700 underline">
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link href="/privacy" className="text-purple-600 hover:text-purple-700 underline">
+                  Privacy Policy
+                </Link>
+              </p>
             </div>
-
-            {/* Terms */}
-            <p className="text-sm text-gray-600 mt-4 text-center">
-              By clicking continue, you agree to our{' '}
-              <Link href="/terms" className="text-purple-600 hover:text-purple-700 underline">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link href="/privacy" className="text-purple-600 hover:text-purple-700 underline">
-                Privacy Policy
-              </Link>
-            </p>
           </div>
         </div>
       </div>
