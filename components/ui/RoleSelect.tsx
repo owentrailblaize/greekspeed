@@ -27,9 +27,21 @@ export const RoleSelect = React.forwardRef<HTMLDivElement, RoleSelectProps>(
     const [selectedValue, setSelectedValue] = React.useState(value || "");
     const [selectedLabel, setSelectedLabel] = React.useState<string>("");
     const [dropdownPosition, setDropdownPosition] = React.useState({ top: 0, left: 0, width: 0 });
+    const [isMobile, setIsMobile] = React.useState(false);
     const selectRef = React.useRef<HTMLDivElement>(null);
     
     const selectedOption = options.find(option => option.value === value);
+    
+    // Check if mobile on mount and resize
+    React.useEffect(() => {
+      const checkMobile = () => {
+        setIsMobile(window.innerWidth < 768); // md breakpoint
+      };
+      
+      checkMobile();
+      window.addEventListener('resize', checkMobile);
+      return () => window.removeEventListener('resize', checkMobile);
+    }, []);
     
     React.useEffect(() => {
       setSelectedValue(value || "");
@@ -100,7 +112,7 @@ export const RoleSelect = React.forwardRef<HTMLDivElement, RoleSelectProps>(
           <div 
             className="fixed z-[99999] max-h-60 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg"
             style={{
-              top: dropdownPosition.top + 8, // Add 8px spacing below the select
+              top: dropdownPosition.top + (isMobile ? 0 : 8), // Add spacing only on desktop
               left: dropdownPosition.left,
               width: dropdownPosition.width,
               minWidth: '200px'
