@@ -866,24 +866,27 @@ export function SocialChairDashboard() {
         <div className="space-y-6">
           {/* Calendar Controls */}
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Event Calendar</h3>
+            <h3 className="text-lg font-semibold whitespace-nowrap">Event Calendar</h3>
             <div className="flex space-x-2">
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={() => setShowEventForm(true)}
+                className="text-xs md:text-sm h-8 md:h-10 px-2 md:px-4"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Event
+                <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">Add Event</span>
+                <span className="sm:hidden">Event</span>
               </Button>
               <Button 
                 variant="outline" 
                 size="sm"
-                className="opacity-60 cursor-not-allowed" 
+                className="opacity-60 cursor-not-allowed text-xs md:text-sm h-8 md:h-10 px-2 md:px-4" 
                 disabled
               >
-                Export Calendar
-                <Lock className="h-3 w-3 ml-2 text-gray-400" />
+                <span className="hidden sm:inline">Export Calendar</span>
+                <span className="sm:hidden">Export</span>
+                <Lock className="h-2.5 w-2.5 md:h-3 md:w-3 ml-1 md:ml-2 text-gray-400" />
               </Button>
             </div>
           </div>
@@ -913,7 +916,7 @@ export function SocialChairDashboard() {
                             {formatEventDate(event.start_time)} at {formatEventTime(event.start_time)}
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
-                            �� {event.location || 'TBD'}
+                             {event.location || 'TBD'}
                           </p>
                           <Badge className={`mt-2 text-xs ${getEventTypeColor('meeting')}`}>
                             {event.status}
