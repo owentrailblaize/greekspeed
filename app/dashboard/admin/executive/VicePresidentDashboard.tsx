@@ -261,8 +261,8 @@ export function VicePresidentDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
-      {/* Operations Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* Operations Overview - Desktop Layout */}
+      <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -338,6 +338,76 @@ export function VicePresidentDashboard() {
                   </p>
                 </div>
                 <UserCheck className="h-8 w-8 text-purple-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Mobile Layout - Single Row */}
+      <div className="md:hidden mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-4 gap-2"
+        >
+          {/* Total Tasks */}
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <Settings className="h-5 w-5 text-blue-600" />
+                {loading ? (
+                  <div className="animate-pulse bg-blue-200 h-5 w-6 rounded"></div>
+                ) : (
+                  <p className="text-base font-semibold text-blue-900">{operationsOverview.totalTasks}</p>
+                )}
+                <p className="text-blue-600 text-xs font-medium">Tasks</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Completed */}
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                {loading ? (
+                  <div className="animate-pulse bg-green-200 h-5 w-6 rounded"></div>
+                ) : (
+                  <p className="text-base font-semibold text-green-900">{operationsOverview.completedTasks}</p>
+                )}
+                <p className="text-green-600 text-xs font-medium">Done</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Pending */}
+          <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <Clock className="h-5 w-5 text-yellow-600" />
+                {loading ? (
+                  <div className="animate-pulse bg-yellow-200 h-5 w-6 rounded"></div>
+                ) : (
+                  <p className="text-base font-semibold text-yellow-900">{operationsOverview.pendingTasks}</p>
+                )}
+                <p className="text-yellow-600 text-xs font-medium">Pending</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Compliance */}
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <UserCheck className="h-5 w-5 text-purple-600" />
+                {loading ? (
+                  <div className="animate-pulse bg-purple-200 h-5 w-6 rounded"></div>
+                ) : (
+                  <p className="text-base font-semibold text-purple-900">{operationsOverview.memberCompliance}%</p>
+                )}
+                <p className="text-purple-600 text-xs font-medium">Compliance</p>
               </div>
             </CardContent>
           </Card>
