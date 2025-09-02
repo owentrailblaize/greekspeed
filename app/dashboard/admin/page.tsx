@@ -66,7 +66,8 @@ function ExecAdminPage() {
       {/* Executive Header */}
       <div className="bg-white/95 backdrop-blur-lg border-b border-gray-200/60 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
+          {/* Desktop Layout */}
+          <div className="hidden md:flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className={`w-12 h-12 bg-gradient-to-br ${currentRole?.color} rounded-xl flex items-center justify-center shadow-lg`}>
                 {RoleIcon && <RoleIcon className="h-6 w-6 text-white" />}
@@ -90,6 +91,40 @@ function ExecAdminPage() {
                 value={selectedRole}
                 onChange={(e) => setSelectedRole(e.target.value)}
                 className="h-10 w-48 rounded-md border border-gray-300 bg-white px-3 text-sm focus:border-navy-500 focus:outline-none"
+              >
+                {executiveRoles.map((role) => (
+                  <option key={role.value} value={role.value}>
+                    {role.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Mobile Layout */}
+          <div className="md:hidden space-y-4">
+            {/* First Div - Executive Administration Info with Current Role */}
+            <div className="flex items-center space-x-3">
+              <div className={`w-10 h-10 bg-gradient-to-br ${currentRole?.color} rounded-lg flex items-center justify-center shadow-lg flex-shrink-0`}>
+                {RoleIcon && <RoleIcon className="h-5 w-5 text-white" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center space-x-2 mb-1">
+                  <h1 className="text-navy-900 font-semibold text-lg leading-tight">Executive Administration</h1>
+                  <Badge className={`${currentRole?.bgColor} ${currentRole?.textColor} border-0 text-xs whitespace-nowrap flex-shrink-0`}>
+                    {currentRole?.label}
+                  </Badge>
+                </div>
+                <p className="text-gray-600 text-sm leading-tight break-words">{currentRole?.description}</p>
+              </div>
+            </div>
+            
+            {/* Second Div - Role Selector */}
+            <div className="flex flex-col space-y-3">
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+                className="w-full h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-navy-500 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2"
               >
                 {executiveRoles.map((role) => (
                   <option key={role.value} value={role.value}>
