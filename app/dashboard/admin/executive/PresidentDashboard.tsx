@@ -238,13 +238,15 @@ export function PresidentDashboard() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="max-w-7xl mx-auto px-6 py-0 sm:py-8">
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Desktop Layout - Preserved */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
+          className="hidden md:block"
         >
           <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
             <CardContent className="p-6">
@@ -267,6 +269,7 @@ export function PresidentDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
+          className="hidden md:block"
         >
           <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
             <CardContent className="p-6">
@@ -289,6 +292,7 @@ export function PresidentDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
+          className="hidden md:block"
         >
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
             <CardContent className="p-6">
@@ -311,6 +315,7 @@ export function PresidentDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
+          className="hidden md:block"
         >
           <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
             <CardContent className="p-6">
@@ -332,6 +337,78 @@ export function PresidentDashboard() {
         </motion.div>
       </div>
 
+      {/* Mobile Layout - Single Row */}
+      <div className="md:hidden mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-4 gap-2"
+        >
+          {/* Total Members */}
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <Users className="h-5 w-5 text-purple-600" />
+                {loadingMemberCount ? (
+                  <div className="animate-pulse bg-purple-200 h-5 w-6 rounded"></div>
+                ) : (
+                  <p className="text-base font-semibold text-purple-900">{chapterStats.totalMembers}</p>
+                )}
+                <p className="text-purple-600 text-xs font-medium">Members</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Active Members */}
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                {loadingActiveMemberCount ? (
+                  <div className="animate-pulse bg-green-200 h-5 w-6 rounded"></div>
+                ) : (
+                  <p className="text-base font-semibold text-green-900">{chapterStats.activeMembers}</p>
+                )}
+                <p className="text-green-600 text-xs font-medium">Active</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Alumni */}
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <Crown className="h-5 w-5 text-blue-600" />
+                {loadingAlumniCount ? (
+                  <p className="text-base font-semibold text-blue-900">...</p>
+                ) : (
+                  <p className="text-base font-semibold text-blue-900">{alumniCount || 0}</p>
+                )}
+                <p className="text-blue-600 text-xs font-medium">Alumni</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Membership Growth */}
+          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <TrendingUp className="h-5 w-5 text-orange-600" />
+                {loadingGrowth ? (
+                  <p className="text-base font-semibold text-orange-900">...</p>
+                ) : (
+                  <p className="text-base font-semibold text-orange-900">
+                    {membershipGrowth >= 0 ? '+' : ''}{membershipGrowth}%
+                  </p>
+                )}
+                <p className="text-orange-600 text-xs font-medium">Growth</p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
@@ -344,7 +421,8 @@ export function PresidentDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              {/* Desktop Layout - Preserved */}
+              <div className="hidden md:block space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
                     placeholder="Announcement title..."
@@ -374,7 +452,72 @@ export function PresidentDashboard() {
                   className="min-h-[100px]"
                 />
                 
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={isScheduled}
+                        onChange={(e) => setIsScheduled(e.target.checked)}
+                        className="rounded"
+                      />
+                      <span className="text-sm">Schedule for later</span>
+                    </label>
+                    
+                    {isScheduled && (
+                      <Input
+                        type="datetime-local"
+                        value={scheduledDate}
+                        onChange={(e) => setScheduledDate(e.target.value)}
+                        className="w-auto"
+                      />
+                    )}
+                  </div>
+                  
+                  <Button 
+                    className="bg-purple-600 hover:bg-purple-700"
+                    onClick={handleSendAnnouncement}
+                    disabled={isSubmitting || announcementsLoading}
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    {isSubmitting ? 'Sending...' : 'Send Announcement'}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Mobile Layout */}
+              <div className="md:hidden space-y-4">
+                <div className="space-y-3">
+                  <Input
+                    placeholder="Announcement title..."
+                    value={announcementTitle}
+                    onChange={(e) => setAnnouncementTitle(e.target.value)}
+                    className="w-full"
+                  />
+                  <Select value={announcementType} onValueChange={(value: string) => setAnnouncementType(value as 'general' | 'urgent' | 'event' | 'academic')}>
+                    <SelectItem value="">Select type</SelectItem>
+                    <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                    <SelectItem value="event">Event</SelectItem>
+                    <SelectItem value="academic">Academic</SelectItem>
+                  </Select>
+                  <Select value={announcementPriority} onValueChange={(value: string) => setAnnouncementPriority(value as 'low' | 'normal' | 'high' | 'urgent')}>
+                    <SelectItem value="">Select priority</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                  </Select>
+                </div>
+                
+                <Textarea
+                  placeholder="Write a chapter announcement..."
+                  value={announcement}
+                  onChange={(e) => setAnnouncement(e.target.value)}
+                  className="min-h-[80px] w-full"
+                />
+                
+                <div className="space-y-3">
                   <label className="flex items-center space-x-2">
                     <input
                       type="checkbox"
@@ -390,24 +533,14 @@ export function PresidentDashboard() {
                       type="datetime-local"
                       value={scheduledDate}
                       onChange={(e) => setScheduledDate(e.target.value)}
-                      className="w-auto"
+                      className="w-full"
                     />
                   )}
                 </div>
                 
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-2">
-                    <Button size="sm" variant="outline" disabled>
-                      <Image className="h-4 w-4 mr-2" />
-                      Add Photo
-                    </Button>
-                    <Button size="sm" variant="outline" disabled>
-                      <ClockIcon className="h-4 w-4 mr-2" />
-                      Schedule Send
-                    </Button>
-                  </div>
+                <div className="flex justify-center pt-2">
                   <Button 
-                    className="bg-purple-600 hover:bg-purple-700"
+                    className="bg-purple-600 hover:bg-purple-700 w-full"
                     onClick={handleSendAnnouncement}
                     disabled={isSubmitting || announcementsLoading}
                   >

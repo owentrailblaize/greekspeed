@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Clock, Users } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, HelpCircle, X } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { Event } from '@/types/events';
 import { AllEventsModal } from './AllEventsModal';
@@ -198,75 +198,155 @@ export function UpcomingEventsCard() {
 
   return (
     <>
-      <Card className="bg-white">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center space-x-2">
-            <Calendar className="h-5 w-5 text-navy-600" />
-            <span>Upcoming Events</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="space-y-4">
-            {events.slice(0, 3).map((event) => (
-              <div key={event.id} className="p-4 sm:p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-                <h4 className="font-medium text-gray-900 text-base sm:text-sm mb-3 sm:mb-2 break-words">{event.title}</h4>
-                
-                <div className="space-y-2 text-sm sm:text-xs text-gray-600 mb-4 sm:mb-3">
-                  <div className="flex items-center space-x-2">
-                    <Clock className="h-4 w-4 sm:h-3 sm:w-3" />
-                    <span className="break-words">{formatEventDateTime(event.start_time)}</span>
+      {/* Desktop Layout - Preserved */}
+      <div className="hidden md:block">
+        <Card className="bg-white">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center space-x-2">
+              <Calendar className="h-5 w-5 text-navy-600" />
+              <span>Upcoming Events</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-4">
+              {events.slice(0, 3).map((event) => (
+                <div key={event.id} className="p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                  <h4 className="font-medium text-gray-900 text-base mb-3 break-words">{event.title}</h4>
+                  
+                  <div className="space-y-2 text-sm text-gray-600 mb-4">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="h-4 w-4" />
+                      <span className="break-words">{formatEventDateTime(event.start_time)}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="h-4 w-4" />
+                      <span className="break-words">{event.location || 'TBD'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Users className="h-4 w-4" />
+                      <span>{event.attendee_count || 0} attending</span>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 sm:h-3 sm:w-3" />
-                    <span className="break-words">{event.location || 'TBD'}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Users className="h-4 w-4 sm:h-3 sm:w-3" />
-                    <span>{event.attendee_count || 0} attending</span>
+                  
+                  <div className="flex flex-col space-y-2">
+                    <Button 
+                      size="sm" 
+                      variant={getRSVPButtonVariant(event.id, 'attending')}
+                      onClick={() => handleRSVP(event.id, 'attending')}
+                      className="text-sm h-10 px-4"
+                    >
+                      Going
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant={getRSVPButtonVariant(event.id, 'maybe')}
+                      onClick={() => handleRSVP(event.id, 'maybe')}
+                      className="text-sm h-10 px-4"
+                    >
+                      Maybe
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant={getRSVPButtonVariant(event.id, 'not_attending')}
+                      onClick={() => handleRSVP(event.id, 'not_attending')}
+                      className="text-sm h-10 px-4"
+                    >
+                      Not going
+                    </Button>
                   </div>
                 </div>
-                
-                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-1">
-                  <Button 
-                    size="sm" 
-                    variant={getRSVPButtonVariant(event.id, 'attending')}
-                    onClick={() => handleRSVP(event.id, 'attending')}
-                    className="text-sm sm:text-xs h-10 sm:h-7 px-4 sm:px-2"
-                  >
-                    Going
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant={getRSVPButtonVariant(event.id, 'maybe')}
-                    onClick={() => handleRSVP(event.id, 'maybe')}
-                    className="text-sm sm:text-xs h-10 sm:h-7 px-4 sm:px-2"
-                  >
-                    Maybe
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant={getRSVPButtonVariant(event.id, 'not_attending')}
-                    onClick={() => handleRSVP(event.id, 'not_attending')}
-                    className="text-sm sm:text-xs h-10 sm:h-7 px-4 sm:px-2"
-                  >
-                    Not going
-                  </Button>
+              ))}
+            </div>
+            
+            <div className="pt-4 border-t border-gray-100">
+              <Button 
+                variant="outline" 
+                className="w-full text-navy-600 border-navy-600 hover:bg-navy-50 h-10"
+                onClick={handleViewAllEvents}
+              >
+                View All Events
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Mobile Layout */}
+      <div className="md:hidden">
+        <Card className="bg-white">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center space-x-2">
+              <Calendar className="h-5 w-5 text-navy-600" />
+              <span>Upcoming Events</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-3">
+              {events.slice(0, 3).map((event) => (
+                <div key={event.id} className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                  <h4 className="font-medium text-gray-900 text-sm mb-2 break-words">{event.title}</h4>
+                  
+                  <div className="space-y-1 text-xs text-gray-600 mb-3">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="h-3 w-3" />
+                      <span className="break-words">{formatEventDateTime(event.start_time)}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="h-3 w-3" />
+                      <span className="break-words">{event.location || 'TBD'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Users className="h-3 w-3" />
+                      <span>{event.attendee_count || 0} attending</span>
+                    </div>
+                  </div>
+                  
+                  {/* Mobile RSVP Buttons - Same Row with Icons */}
+                  <div className="flex space-x-1">
+                    <Button 
+                      size="sm" 
+                      variant={getRSVPButtonVariant(event.id, 'attending')}
+                      onClick={() => handleRSVP(event.id, 'attending')}
+                      className="flex-1 text-xs h-8 px-2"
+                    >
+                      <Users className="h-3 w-3 mr-2 text-slate-600" />
+                      Going
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant={getRSVPButtonVariant(event.id, 'maybe')}
+                      onClick={() => handleRSVP(event.id, 'maybe')}
+                      className="flex-1 text-xs h-8 px-2"
+                    >
+                      <HelpCircle className="h-3 w-3 mr-2 text-slate-600" />
+                      Maybe
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant={getRSVPButtonVariant(event.id, 'not_attending')}
+                      onClick={() => handleRSVP(event.id, 'not_attending')}
+                      className="flex-1 text-xs h-8 px-2"
+                    >
+                      <X className="h-3 w-3 mr-2 text-red-400" />
+                      Not
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-          
-          <div className="pt-4 border-t border-gray-100">
-            <Button 
-              variant="outline" 
-              className="w-full text-navy-600 border-navy-600 hover:bg-navy-50 h-10 sm:h-8"
-              onClick={handleViewAllEvents}
-            >
-              View All Events
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+            
+            <div className="pt-3 border-t border-gray-100">
+              <Button 
+                variant="outline" 
+                className="w-full text-navy-600 border-navy-600 hover:bg-navy-50 h-8 text-sm"
+                onClick={handleViewAllEvents}
+              >
+                View All Events
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* All Events Modal */}
       <AllEventsModal
