@@ -16,14 +16,14 @@ export function ViewToggle({ viewMode, onViewChange }: ViewToggleProps) {
         size="sm"
         onClick={() => onViewChange('card')}
         className={cn(
-          "flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-200",
+          "flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md transition-all duration-200",
           viewMode === 'card'
             ? "bg-white text-navy-600 shadow-sm"
             : "text-gray-600 hover:text-gray-900"
         )}
       >
-        <IdCardLanyard className="h-4 w-4" />
-        <span className="text-sm font-medium">Cards</span>
+        <IdCardLanyard className="h-3 w-3 sm:h-4 sm:w-4" />
+        <span className="text-xs sm:text-sm font-medium">Cards</span>
       </Button>
       
       {/* Table Button - Now Second (Right) */}
@@ -32,14 +32,14 @@ export function ViewToggle({ viewMode, onViewChange }: ViewToggleProps) {
         size="sm"
         onClick={() => onViewChange('table')}
         className={cn(
-          "flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-200",
+          "flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md transition-all duration-200",
           viewMode === 'table'
             ? "bg-white text-navy-600 shadow-sm"
             : "text-gray-600 hover:text-gray-900"
         )}
       >
-        <Table className="h-4 w-4" />
-        <span className="text-sm font-medium">Table</span>
+        <Table className="h-3 w-3 sm:h-4 sm:w-4" />
+        <span className="text-xs sm:text-sm font-medium">Table</span>
       </Button>
     </div>
   );
