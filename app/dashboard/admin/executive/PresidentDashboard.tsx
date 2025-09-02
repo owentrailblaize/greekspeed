@@ -238,13 +238,15 @@ export function PresidentDashboard() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="max-w-7xl mx-auto px-6 py-0 sm:py-8">
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Desktop Layout - Preserved */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
+          className="hidden md:block"
         >
           <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
             <CardContent className="p-6">
@@ -267,6 +269,7 @@ export function PresidentDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
+          className="hidden md:block"
         >
           <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
             <CardContent className="p-6">
@@ -289,6 +292,7 @@ export function PresidentDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
+          className="hidden md:block"
         >
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
             <CardContent className="p-6">
@@ -311,6 +315,7 @@ export function PresidentDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
+          className="hidden md:block"
         >
           <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
             <CardContent className="p-6">
@@ -326,6 +331,78 @@ export function PresidentDashboard() {
                   )}
                 </div>
                 <TrendingUp className="h-8 w-8 text-orange-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Mobile Layout - Single Row */}
+      <div className="md:hidden mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-4 gap-2"
+        >
+          {/* Total Members */}
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <Users className="h-5 w-5 text-purple-600" />
+                {loadingMemberCount ? (
+                  <div className="animate-pulse bg-purple-200 h-5 w-6 rounded"></div>
+                ) : (
+                  <p className="text-base font-semibold text-purple-900">{chapterStats.totalMembers}</p>
+                )}
+                <p className="text-purple-600 text-xs font-medium">Members</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Active Members */}
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                {loadingActiveMemberCount ? (
+                  <div className="animate-pulse bg-green-200 h-5 w-6 rounded"></div>
+                ) : (
+                  <p className="text-base font-semibold text-green-900">{chapterStats.activeMembers}</p>
+                )}
+                <p className="text-green-600 text-xs font-medium">Active</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Alumni */}
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <Crown className="h-5 w-5 text-blue-600" />
+                {loadingAlumniCount ? (
+                  <p className="text-base font-semibold text-blue-900">...</p>
+                ) : (
+                  <p className="text-base font-semibold text-blue-900">{alumniCount || 0}</p>
+                )}
+                <p className="text-blue-600 text-xs font-medium">Alumni</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Membership Growth */}
+          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <TrendingUp className="h-5 w-5 text-orange-600" />
+                {loadingGrowth ? (
+                  <p className="text-base font-semibold text-orange-900">...</p>
+                ) : (
+                  <p className="text-base font-semibold text-orange-900">
+                    {membershipGrowth >= 0 ? '+' : ''}{membershipGrowth}%
+                  </p>
+                )}
+                <p className="text-orange-600 text-xs font-medium">Growth</p>
               </div>
             </CardContent>
           </Card>
