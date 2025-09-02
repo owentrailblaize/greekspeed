@@ -490,8 +490,8 @@ export function SocialChairDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* Quick Stats - Desktop Layout */}
+      <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -571,6 +571,70 @@ export function SocialChairDashboard() {
                   <p className="text-xs text-purple-600">Active</p>
                 </div>
                 <BookOpen className="h-8 w-8 text-purple-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Mobile Layout - Single Row */}
+      <div className="md:hidden mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-4 gap-2"
+        >
+          {/* Event Budget */}
+          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <DollarSign className="h-5 w-5 text-orange-600" />
+                <p className="text-base font-semibold text-orange-900">
+                  ${budgetData.remaining.toLocaleString()}
+                </p>
+                <p className="text-orange-600 text-xs font-medium">Budget</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Upcoming Events */}
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <Calendar className="h-5 w-5 text-blue-600" />
+                {eventsLoading ? (
+                  <div className="animate-pulse bg-blue-200 h-5 w-6 rounded"></div>
+                ) : (
+                  <p className="text-base font-semibold text-blue-900">{upcomingEvents.length}</p>
+                )}
+                <p className="text-blue-600 text-xs font-medium">Events</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Total Attendees */}
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <Users className="h-5 w-5 text-green-600" />
+                <p className="text-base font-semibold text-green-900">{totalAttendees}</p>
+                <p className="text-green-600 text-xs font-medium">Attendees</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Vendor Contacts */}
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <BookOpen className="h-5 w-5 text-purple-600" />
+                {vendorsLoading ? (
+                  <div className="animate-pulse bg-purple-200 h-5 w-6 rounded"></div>
+                ) : (
+                  <p className="text-base font-semibold text-purple-900">{vendors.length}</p>
+                )}
+                <p className="text-purple-600 text-xs font-medium">Vendors</p>
               </div>
             </CardContent>
           </Card>
