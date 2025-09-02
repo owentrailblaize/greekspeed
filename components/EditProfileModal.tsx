@@ -314,7 +314,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
                   ) : null}
                   
                   {/* Banner Upload Overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-lg">
+                  <div className="absolute inset-0 flex flex-col items-center justify-start opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-lg pt-8">
                     <div className="text-center">
                       {bannerUploading ? (
                         <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2" />
