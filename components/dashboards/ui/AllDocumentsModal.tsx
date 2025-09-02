@@ -52,13 +52,13 @@ export function AllDocumentsModal({ isOpen, onClose, documents }: AllDocumentsMo
 
   // Reuse the same helper functions
   const getFileIcon = (fileType: string | null) => {
-    if (!fileType) return <FileText className="h-4 w-4" />;
+    if (!fileType) return <FileText className="h-5 w-5 sm:h-4 sm:w-4" />;
     
-    if (fileType.includes('pdf')) return <FileText className="h-4 w-4 text-red-600" />;
-    if (fileType.includes('spreadsheet') || fileType.includes('excel')) return <FileText className="h-4 w-4 text-green-600" />;
-    if (fileType.includes('word')) return <FileText className="h-4 w-4 text-blue-600" />;
+    if (fileType.includes('pdf')) return <FileText className="h-5 w-5 sm:h-4 sm:w-4 text-red-600" />;
+    if (fileType.includes('spreadsheet') || fileType.includes('excel')) return <FileText className="h-5 w-5 sm:h-4 sm:w-4 text-green-600" />;
+    if (fileType.includes('word')) return <FileText className="h-5 w-5 sm:h-4 sm:w-4 text-blue-600" />;
     
-    return <FileText className="h-4 w-4" />;
+    return <FileText className="h-5 w-5 sm:h-4 sm:w-4" />;
   };
 
   const getFileSize = (bytes: number | null) => {
@@ -152,44 +152,44 @@ export function AllDocumentsModal({ isOpen, onClose, documents }: AllDocumentsMo
       
       {/* Modal */}
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col relative">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-[95vw] sm:max-w-6xl max-h-[90vh] flex flex-col relative">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
-            <h3 className="text-2xl font-bold text-navy-900">All Chapter Documents</h3>
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
+            <h3 className="text-xl sm:text-2xl font-bold text-navy-900">All Chapter Documents</h3>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="w-6 h-6 sm:w-5 sm:h-5 text-gray-500" />
             </button>
           </div>
 
           {/* Content - All Documents List */}
-          <div className="flex-1 overflow-y-auto p-6">
-            <div className="space-y-3">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+            <div className="space-y-4 sm:space-y-3">
               {documents.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
-                  <FileText className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                  <p className="text-lg font-medium mb-2">No documents found</p>
-                  <p className="text-sm">Upload your first document to get started!</p>
+                  <FileText className="h-16 w-16 sm:h-12 sm:w-12 mx-auto mb-4 sm:mb-3 text-gray-300" />
+                  <p className="text-xl sm:text-lg font-medium mb-2">No documents found</p>
+                  <p className="text-base sm:text-sm">Upload your first document to get started!</p>
                 </div>
               ) : (
                 documents.map((doc) => (
                   <div
                     key={doc.id}
-                    className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="p-4 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-4 sm:space-y-0">
                       <div className="flex-1 min-w-0">
                         {/* Document Header */}
-                        <div className="flex items-center gap-3 mb-2">
+                        <div className="flex items-start gap-3 mb-3 sm:mb-2">
                           {getFileIcon(doc.file_type)}
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-medium text-gray-900 truncate">
+                            <h4 className="font-medium text-gray-900 text-base sm:text-sm break-words">
                               {doc.title}
                             </h4>
                             {doc.description && (
-                              <p className="text-sm text-gray-600 mt-1">
+                              <p className="text-sm sm:text-xs text-gray-600 mt-2 sm:mt-1 break-words">
                                 {doc.description}
                               </p>
                             )}
@@ -197,81 +197,88 @@ export function AllDocumentsModal({ isOpen, onClose, documents }: AllDocumentsMo
                         </div>
 
                         {/* Document Metadata */}
-                        <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm sm:text-xs text-gray-500 mb-4 sm:mb-3">
                           <div className="flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            <span>{doc.owner_name}</span>
+                            <User className="h-4 w-4 sm:h-3 sm:w-3" />
+                            <span className="break-words">{doc.owner_name}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
+                            <Calendar className="h-4 w-4 sm:h-3 sm:w-3" />
                             <span>{formatDate(doc.updated_at)}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <FileText className="h-3 w-3" />
+                            <FileText className="h-4 w-4 sm:h-3 sm:w-3" />
                             <span>{getFileSize(doc.file_size)}</span>
                           </div>
                         </div>
 
                         {/* Tags and Visibility */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           {doc.tags?.map(tag => (
                             <Badge 
                               key={tag} 
-                              className={getCategoryColor(tag)}
+                              className={`${getCategoryColor(tag)} text-xs`}
                             >
                               {tag}
                             </Badge>
                           ))}
                           <div className="flex items-center gap-1 ml-2">
-                            <Shield className="h-3 w-3 text-gray-400" />
+                            <Shield className="h-4 w-4 sm:h-3 sm:w-3 text-gray-400" />
                             {getVisibilityBadges(doc.visibility)}
                           </div>
                         </div>
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex items-center gap-2 ml-4">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewDocument(doc)}
-                          title="Document viewing is locked - coming soon!"
-                          className="opacity-60 cursor-not-allowed"
-                          disabled
-                        >
-                          <Eye className="h-4 w-4" />
-                          <Lock className="h-3 w-3 ml-1 text-gray-400" />
-                        </Button>
+                      <div className="flex items-center justify-center sm:justify-end gap-3 sm:gap-2 sm:ml-4">
+                        <div className="relative">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewDocument(doc)}
+                            title="Document viewing is locked - coming soon!"
+                            className="opacity-60 cursor-not-allowed h-10 w-10 sm:h-8 sm:w-8 p-0"
+                            disabled
+                          >
+                            <Eye className="h-5 w-5 sm:h-4 sm:w-4" />
+                          </Button>
+                          <Lock className="h-4 w-4 sm:h-3 sm:w-3 absolute -top-1 -right-1 text-gray-400" />
+                        </div>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDownload(doc)}
                           title="Download Document"
+                          className="h-10 w-10 sm:h-8 sm:w-8 p-0"
                         >
-                          <Download className="h-4 w-4" />
+                          <Download className="h-5 w-5 sm:h-4 sm:w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditDocument(doc)}
-                          title="Document editing is locked - coming soon!"
-                          className="opacity-60 cursor-not-allowed"
-                          disabled
-                        >
-                          <Edit className="h-4 w-4" />
-                          <Lock className="h-3 w-3 ml-1 text-gray-400" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteDocument(doc)}
-                          title="Document deletion is locked - coming soon!"
-                          className="text-red-600 hover:text-red-700"
-                          disabled
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <Lock className="h-3 w-3 ml-1 text-gray-400" />
-                        </Button>
+                        <div className="relative">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditDocument(doc)}
+                            title="Document editing is locked - coming soon!"
+                            className="opacity-60 cursor-not-allowed h-10 w-10 sm:h-8 sm:w-8 p-0"
+                            disabled
+                          >
+                            <Edit className="h-5 w-5 sm:h-4 sm:w-4" />
+                          </Button>
+                          <Lock className="h-4 w-4 sm:h-3 sm:w-3 absolute -top-1 -right-1 text-gray-400" />
+                        </div>
+                        <div className="relative">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteDocument(doc)}
+                            title="Document deletion is locked - coming soon!"
+                            className="text-red-600 hover:text-red-700 h-10 w-10 sm:h-8 sm:w-8 p-0"
+                            disabled
+                          >
+                            <Trash2 className="h-5 w-5 sm:h-4 sm:w-4" />
+                          </Button>
+                          <Lock className="h-4 w-4 sm:h-3 sm:w-3 absolute -top-1 -right-1 text-gray-400" />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -280,8 +287,8 @@ export function AllDocumentsModal({ isOpen, onClose, documents }: AllDocumentsMo
             </div>
 
             {/* Document Count Footer */}
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <p className="text-sm text-gray-600 text-center">
+            <div className="mt-6 sm:mt-4 pt-4 border-t border-gray-200">
+              <p className="text-base sm:text-sm text-gray-600 text-center">
                 Showing {documents.length} of {documents.length} documents
               </p>
             </div>

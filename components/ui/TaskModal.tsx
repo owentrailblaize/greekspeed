@@ -54,17 +54,17 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
       />
       
       {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-        <div className="relative transform overflow-visible rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+      <div className="rounded-lg flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+        <div className="relative transform overflow-visible rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 w-full max-w-[95vw] sm:max-w-lg">
           {/* Header */}
-          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div className="rounded-lg bg-white px-6 pt-6 pb-4 sm:p-6 sm:pb-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium leading-6 text-gray-900">
+              <h3 className="text-xl sm:text-lg font-medium leading-6 text-gray-900">
                 Create New Task
               </h3>
               <button
                 onClick={onClose}
-                className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2"
+                className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 p-2"
               >
                 <X className="h-6 w-6" />
               </button>
@@ -72,10 +72,10 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
           </div>
 
           {/* Body */}
-          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div className="space-y-4">
+          <div className="bg-white px-6 pt-4 pb-6 sm:p-6 sm:pb-4">
+            <div className="space-y-6 sm:space-y-4">
               <div>
-                <Label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                <Label htmlFor="title" className="block text-base sm:text-sm font-medium text-gray-700 mb-2 sm:mb-1">
                   Task Title *
                 </Label>
                 <Input
@@ -83,12 +83,12 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
                   value={newTask.title}
                   onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="Enter task title"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 text-base sm:text-sm h-12 sm:h-10"
                 />
               </div>
               
               <div>
-                <Label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                <Label htmlFor="description" className="block text-base sm:text-sm font-medium text-gray-700 mb-2 sm:mb-1">
                   Description
                 </Label>
                 <Textarea
@@ -96,13 +96,13 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
                   value={newTask.description}
                   onChange={(e) => setNewTask(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Enter task description"
-                  rows={3}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 sm:text-sm"
+                  rows={4}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 text-base sm:text-sm min-h-[120px] sm:min-h-[80px] resize-none"
                 />
               </div>
               
               <div>
-                <Label htmlFor="assignee" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="assignee" className="text-base sm:text-sm font-medium text-gray-700 mb-2 sm:mb-1">
                   Assign To *
                 </Label>
                 <Select
@@ -119,7 +119,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
               </div>
               
               <div>
-                <Label htmlFor="due_date" className="block text-sm font-medium text-gray-700">
+                <Label htmlFor="due_date" className="block text-base sm:text-sm font-medium text-gray-700 mb-2 sm:mb-1">
                   Due Date
                 </Label>
                 <Input
@@ -127,12 +127,12 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
                   type="date"
                   value={newTask.due_date}
                   onChange={(e) => setNewTask(prev => ({ ...prev, due_date: e.target.value }))}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 text-base sm:text-sm h-12 sm:h-10"
                 />
               </div>
               
               <div>
-                <Label htmlFor="priority" className="block text-sm font-medium text-gray-700">
+                <Label htmlFor="priority" className="block text-base sm:text-sm font-medium text-gray-700 mb-2 sm:mb-1">
                   Priority *
                 </Label>
                 <Select
@@ -150,25 +150,27 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
           </div>
 
           {/* Footer */}
-          <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-            <Button
-              type="button"
-              onClick={handleSubmit}
-              disabled={creating || !newTask.title || !newTask.assignee_id}
-              className="inline-flex w-full justify-center rounded-md border border-transparent bg-navy-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
-            >
-              {creating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Create Task
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={creating}
-              className="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-            >
-              Cancel
-            </Button>
+          <div className="rounded-lg bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse sm:px-6">
+            <div className="flex flex-row space-x-3 sm:space-x-0 sm:ml-3">
+              <Button
+                type="button"
+                onClick={handleSubmit}
+                disabled={creating || !newTask.title || !newTask.assignee_id}
+                className="mr-3 x-1 sm:flex-none inline-flex justify-center rounded-md border border-transparent bg-navy-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 h-12 sm:h-10 sm:text-sm"
+              >
+                {creating ? <Loader2 className="h-5 w-5 sm:h-4 sm:w-4 animate-spin mr-2" /> : null}
+                <span className="text-base sm:text-sm">Create Task</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={creating}
+                className="flex-1 sm:flex-none inline-flex justify-center rounded-md border border-gray-300 bg-white px-6 py-3 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 h-12 sm:h-10 sm:text-sm"
+              >
+                <span className="text-base sm:text-sm">Cancel</span>
+              </Button>
+            </div>
           </div>
         </div>
       </div>

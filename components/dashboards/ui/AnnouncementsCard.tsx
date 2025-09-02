@@ -136,19 +136,19 @@ export function AnnouncementsCard() {
             return (
               <div 
                 key={announcement.id} 
-                className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors relative group"
+                className="p-3 sm:p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors relative group"
               >
-                <div className="flex items-start space-x-3">
+                <div className="flex items-start space-x-3 sm:space-x-4">
                   {/* Type icon */}
-                  <div className={`w-8 h-8 ${typeConfig.bgColor} rounded-full flex items-center justify-center shrink-0`}>
-                    <TypeIcon className={`h-4 w-4 ${typeConfig.color}`} />
+                  <div className={`w-10 h-10 sm:w-8 sm:h-8 ${typeConfig.bgColor} rounded-full flex items-center justify-center shrink-0`}>
+                    <TypeIcon className={`h-5 w-5 sm:h-4 sm:w-4 ${typeConfig.color}`} />
                   </div>
                   
                   <div className="flex-1 min-w-0">
                     {/* Header with title and priority icon */}
-                    <div className="flex items-start justify-between mb-1">
+                    <div className="flex items-start justify-between mb-2 sm:mb-1">
                       <div className="flex items-center space-x-2 flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 text-sm line-clamp-2">
+                        <h4 className="font-medium text-gray-900 text-base sm:text-sm line-clamp-2 break-words">
                           {announcement.title}
                         </h4>
                         {/* Priority icon */}
@@ -156,24 +156,24 @@ export function AnnouncementsCard() {
                           const priorityConfig = getPriorityIcon(announcement.priority);
                           const PriorityIcon = priorityConfig.icon;
                           return (
-                            <PriorityIcon className={`h-3 w-3 ${priorityConfig.color} shrink-0`} />
+                            <PriorityIcon className={`h-4 w-4 sm:h-3 sm:w-3 ${priorityConfig.color} shrink-0`} />
                           );
                         })()}
                       </div>
                     </div>
                     
                     {/* Content */}
-                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                    <p className="text-sm sm:text-xs text-gray-600 mb-3 sm:mb-2 line-clamp-2 break-words">
                       {announcement.content}
                     </p>
                     
                     {/* Footer with sender and time */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs text-gray-500">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm sm:text-xs text-gray-500 break-words">
                           {announcement.sender?.full_name || 'Unknown'}
                         </span>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-sm sm:text-xs text-gray-400">
                           {formatRelativeTime(announcement.created_at)}
                         </span>
                       </div>
@@ -182,7 +182,7 @@ export function AnnouncementsCard() {
                         size="sm" 
                         variant="outline"
                         onClick={() => handleMarkAsRead(announcement.id)}
-                        className="text-navy-600 border-navy-600 hover:bg-navy-50 text-xs h-6 px-2"
+                        className="text-navy-600 border-navy-600 hover:bg-navy-50 text-sm sm:text-xs h-8 sm:h-6 px-3 sm:px-2 w-full sm:w-auto"
                       >
                         Mark Read
                       </Button>
@@ -198,7 +198,7 @@ export function AnnouncementsCard() {
           <div className="pt-4 border-t border-gray-100">
             <Button 
               variant="outline" 
-              className="w-full text-navy-600 border-navy-600 hover:bg-navy-50"
+              className="w-full text-navy-600 border-navy-600 hover:bg-navy-50 h-10 sm:h-8"
               onClick={refresh}
             >
               Refresh Announcements

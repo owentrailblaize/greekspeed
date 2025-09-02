@@ -134,7 +134,7 @@ export function MyTasksCard() {
             <p className="text-sm">{error}</p>
             <Button 
               onClick={() => window.location.reload()} 
-              className="mt-3 bg-navy-600 hover:bg-navy-700"
+              className="mt-3 bg-navy-600 hover:bg-navy-700 h-10 sm:h-8"
             >
               Try Again
             </Button>
@@ -174,41 +174,41 @@ export function MyTasksCard() {
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="space-y-3">
+        <div className="space-y-4 sm:space-y-3">
           {/* Progress Bar - Exact same as before */}
           <div className="space-y-2">
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-base sm:text-sm">
               <span className="text-gray-600">Progress</span>
               <span className="text-gray-900 font-medium">{completedTasks}/{totalTasks}</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-gray-200 rounded-full h-3 sm:h-2">
               <div 
-                className="bg-navy-600 h-2 rounded-full transition-all duration-300"
+                className="bg-navy-600 h-3 sm:h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progressPercentage}%` }}
               ></div>
             </div>
           </div>
 
           {/* Task List - Exact same as before, but with real data */}
-          <div className="space-y-2 max-h-48 overflow-y-auto">
+          <div className="space-y-3 sm:space-y-2 max-h-48 overflow-y-auto">
             {tasks.slice(0, 5).map((task) => (
-              <div key={task.id} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50">
+              <div key={task.id} className="flex items-start space-x-3 sm:space-x-3 p-3 sm:p-2 rounded-lg hover:bg-gray-50">
                 <Checkbox
                   checked={task.status === 'completed'}
                   onCheckedChange={() => handleTaskToggle(task.id, task.status)}
-                  className="mt-0.5"
+                  className="mt-1 sm:mt-0.5"
                 />
                 <div className="flex-1 min-w-0">
-                  <div className={`text-sm ${task.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                  <div className={`text-base sm:text-sm break-words ${task.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-900'}`}>
                     {task.title}
                   </div>
                   {task.description && (
-                    <div className={`text-xs ${task.status === 'completed' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <div className={`text-sm sm:text-xs break-words ${task.status === 'completed' ? 'text-gray-400' : 'text-gray-600'}`}>
                       {task.description}
                     </div>
                   )}
                   {task.due_date && (
-                    <div className={`text-xs ${task.status === 'completed' ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <div className={`text-sm sm:text-xs ${task.status === 'completed' ? 'text-gray-400' : 'text-gray-500'}`}>
                       Due: {new Date(task.due_date).toLocaleDateString('en-US', { 
                         month: 'long', 
                         day: 'numeric', 
@@ -217,8 +217,8 @@ export function MyTasksCard() {
                     </div>
                   )}
                   {/* Show priority badge */}
-                  <div className="mt-1">
-                    <span className={`inline-block px-2 py-1 text-xs rounded-full ${
+                  <div className="mt-2 sm:mt-1">
+                    <span className={`inline-block px-3 py-1 sm:px-2 sm:py-1 text-sm sm:text-xs rounded-full ${
                       task.priority === 'urgent' ? 'bg-red-100 text-red-800' :
                       task.priority === 'high' ? 'bg-orange-100 text-orange-800' :
                       task.priority === 'medium' ? 'bg-blue-100 text-blue-800' :
@@ -234,8 +234,8 @@ export function MyTasksCard() {
 
           {/* View All Tasks button - Exact same as before */}
           {totalTasks > 5 && (
-            <div className="pt-2 border-t border-gray-100">
-              <Button variant="outline" size="sm" className="w-full text-navy-600 border-navy-600 hover:bg-navy-50">
+            <div className="pt-3 sm:pt-2 border-t border-gray-100">
+              <Button variant="outline" size="sm" className="w-full text-navy-600 border-navy-600 hover:bg-navy-50 h-10 sm:h-8">
                 View All Tasks
               </Button>
             </div>

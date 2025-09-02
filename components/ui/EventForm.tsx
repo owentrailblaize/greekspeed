@@ -108,143 +108,158 @@ export function EventForm({ event, onSubmit, onCancel, loading = false }: EventF
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Calendar className="h-5 w-5 text-navy-600" />
+    <Card className="rounded-lg w-full max-w-2xl mx-auto flex flex-col max-h-[90vh]">
+      {/* Fixed Header */}
+      <CardHeader className="rounded-lg pb-4 sm:pb-6 flex-shrink-0 bg-white border-b border-gray-100">
+        <CardTitle className="flex items-center space-x-3 sm:space-x-2 text-xl sm:text-lg">
+          <Calendar className="h-6 w-6 sm:h-5 sm:w-5 text-navy-600" />
           <span>{event ? 'Edit Event' : 'Create New Event'}</span>
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title" className="flex items-center space-x-2">
-              <FileText className="h-4 w-4" />
-              <span>Event Title *</span>
-            </Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
-              placeholder="Enter event title"
-              className={errors.title ? 'border-red-500' : ''}
-            />
-            {errors.title && (
-              <p className="text-sm text-red-500">{errors.title}</p>
-            )}
-          </div>
 
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Enter event description (optional)"
-              rows={3}
-            />
-          </div>
-
-          {/* Location */}
-          <div className="space-y-2">
-            <Label htmlFor="location" className="flex items-center space-x-2">
-              <MapPin className="h-4 w-4" />
-              <span>Location</span>
-            </Label>
-            <Input
-              id="location"
-              value={formData.location}
-              onChange={(e) => handleInputChange('location', e.target.value)}
-              placeholder="Enter event location (optional)"
-            />
-          </div>
-
-          {/* Date and Time */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="start_time">Start Date & Time *</Label>
-              <Input
-                id="start_time"
-                type="datetime-local"
-                value={formatDateTimeLocal(formData.start_time)}
-                onChange={(e) => handleInputChange('start_time', e.target.value)}
-                className={errors.start_time ? 'border-red-500' : ''}
-              />
-              {errors.start_time && (
-                <p className="text-sm text-red-500">{errors.start_time}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="end_time">End Date & Time *</Label>
-              <Input
-                id="end_time"
-                type="datetime-local"
-                value={formatDateTimeLocal(formData.end_time)}
-                onChange={(e) => handleInputChange('end_time', e.target.value)}
-                className={errors.end_time ? 'border-red-500' : ''}
-              />
-              {errors.end_time && (
-                <p className="text-sm text-red-500">{errors.end_time}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Budget */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="budget_label" className="flex items-center space-x-2">
-                <DollarSign className="h-4 w-4" />
-                <span>Budget Label</span>
+      {/* Scrollable Content Area */}
+      <div className="rounded-lg flex-1 overflow-y-auto min-h-0">
+        <CardContent className="p-4 sm:p-6">
+          <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-6">
+            {/* Title */}
+            <div className="space-y-3 sm:space-y-2">
+              <Label htmlFor="title" className="flex items-center space-x-2 text-base sm:text-sm">
+                <FileText className="h-5 w-5 sm:h-4 sm:w-4" />
+                <span>Event Title *</span>
               </Label>
               <Input
-                id="budget_label"
-                value={formData.budget_label}
-                onChange={(e) => handleInputChange('budget_label', e.target.value)}
-                placeholder="e.g., Food, Venue, Entertainment"
+                id="title"
+                value={formData.title}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                placeholder="Enter event title"
+                className={`h-12 sm:h-10 text-base sm:text-sm ${errors.title ? 'border-red-500' : ''}`}
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="budget_amount">Budget Amount</Label>
-              <Input
-                id="budget_amount"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.budget_amount || ''}
-                onChange={(e) => handleInputChange('budget_amount', e.target.value ? parseFloat(e.target.value) : undefined)}
-                placeholder="0.00"
-                className={errors.budget_amount ? 'border-red-500' : ''}
-              />
-              {errors.budget_amount && (
-                <p className="text-sm text-red-500">{errors.budget_amount}</p>
+              {errors.title && (
+                <p className="text-sm text-red-500">{errors.title}</p>
               )}
             </div>
-          </div>
 
-          {/* Form Actions */}
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="bg-orange-600 hover:bg-orange-700"
-            >
-              {loading ? 'Saving...' : (event ? 'Update Event' : 'Create Event')}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
+            {/* Description */}
+            <div className="space-y-3 sm:space-y-2">
+              <Label htmlFor="description" className="text-base sm:text-sm">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                placeholder="Enter event description (optional)"
+                rows={4}
+                className="text-base sm:text-sm min-h-[120px] sm:min-h-[80px] resize-none"
+              />
+            </div>
+
+            {/* Location */}
+            <div className="space-y-3 sm:space-y-2">
+              <Label htmlFor="location" className="flex items-center space-x-2 text-base sm:text-sm">
+                <MapPin className="h-5 w-5 sm:h-4 sm:w-4" />
+                <span>Location</span>
+              </Label>
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => handleInputChange('location', e.target.value)}
+                placeholder="Enter event location (optional)"
+                className="h-12 sm:h-10 text-base sm:text-sm"
+              />
+            </div>
+
+            {/* Date and Time */}
+            <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-1 sm:md:grid-cols-2 sm:gap-4">
+              <div className="space-y-3 sm:space-y-2">
+                <Label htmlFor="start_time" className="text-base sm:text-sm">Start Date & Time *</Label>
+                <Input
+                  id="start_time"
+                  type="datetime-local"
+                  value={formatDateTimeLocal(formData.start_time)}
+                  onChange={(e) => handleInputChange('start_time', e.target.value)}
+                  className={`h-12 sm:h-10 text-base sm:text-sm ${errors.start_time ? 'border-red-500' : ''}`}
+                />
+                {errors.start_time && (
+                  <p className="text-sm text-red-500">{errors.start_time}</p>
+                )}
+              </div>
+
+              <div className="space-y-3 sm:space-y-2">
+                <Label htmlFor="end_time" className="text-base sm:text-sm">End Date & Time *</Label>
+                <Input
+                  id="end_time"
+                  type="datetime-local"
+                  value={formatDateTimeLocal(formData.end_time)}
+                  onChange={(e) => handleInputChange('end_time', e.target.value)}
+                  className={`h-12 sm:h-10 text-base sm:text-sm ${errors.end_time ? 'border-red-500' : ''}`}
+                />
+                {errors.end_time && (
+                  <p className="text-sm text-red-500">{errors.end_time}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Budget */}
+            <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-1 sm:md:grid-cols-2 sm:gap-4">
+              <div className="space-y-3 sm:space-y-2">
+                <Label htmlFor="budget_label" className="flex items-center space-x-2 text-base sm:text-sm">
+                  <DollarSign className="h-5 w-5 sm:h-4 sm:w-4" />
+                  <span>Budget Label</span>
+                </Label>
+                <Input
+                  id="budget_label"
+                  value={formData.budget_label}
+                  onChange={(e) => handleInputChange('budget_label', e.target.value)}
+                  placeholder="e.g., Food, Venue, Entertainment"
+                  className="h-12 sm:h-10 text-base sm:text-sm"
+                />
+              </div>
+
+              <div className="space-y-3 sm:space-y-2">
+                <Label htmlFor="budget_amount" className="text-base sm:text-sm">Budget Amount</Label>
+                <Input
+                  id="budget_amount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.budget_amount || ''}
+                  onChange={(e) => handleInputChange('budget_amount', e.target.value ? parseFloat(e.target.value) : undefined)}
+                  placeholder="0.00"
+                  className={`h-12 sm:h-10 text-base sm:text-sm ${errors.budget_amount ? 'border-red-500' : ''}`}
+                />
+                {errors.budget_amount && (
+                  <p className="text-sm text-red-500">{errors.budget_amount}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Spacer for bottom padding */}
+            <div className="h-20 sm:h-16"></div>
+          </form>
+        </CardContent>
+      </div>
+
+      {/* Fixed Action Buttons */}
+      <div className="rounded-lg flex-shrink-0 bg-white border-t border-gray-100 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={loading}
+            className="h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={loading}
+            className="bg-orange-600 hover:bg-orange-700 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+            onClick={handleSubmit}
+          >
+            {loading ? 'Saving...' : (event ? 'Update Event' : 'Create Event')}
+          </Button>
+        </div>
+      </div>
     </Card>
   );
 }
