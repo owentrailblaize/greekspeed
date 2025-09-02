@@ -29,6 +29,7 @@ export const RoleSelect = React.forwardRef<HTMLDivElement, RoleSelectProps>(
     const [dropdownPosition, setDropdownPosition] = React.useState({ top: 0, left: 0, width: 0 });
     const [isMobile, setIsMobile] = React.useState(false);
     const selectRef = React.useRef<HTMLDivElement>(null);
+    const dropdownRef = React.useRef<HTMLDivElement>(null);
     
     const selectedOption = options.find(option => option.value === value);
     
@@ -54,7 +55,11 @@ export const RoleSelect = React.forwardRef<HTMLDivElement, RoleSelectProps>(
 
     React.useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
-        if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
+        const target = event.target as Node;
+        const isClickInSelect = selectRef.current?.contains(target);
+        const isClickInDropdown = dropdownRef.current?.contains(target);
+        
+        if (!isClickInSelect && !isClickInDropdown) {
           setIsOpen(false);
         }
       };
@@ -110,6 +115,7 @@ export const RoleSelect = React.forwardRef<HTMLDivElement, RoleSelectProps>(
 
         {isOpen && typeof window !== 'undefined' && createPortal(
           <div 
+            ref={dropdownRef}
             className="fixed z-[99999] max-h-60 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg"
             style={{
               top: dropdownPosition.top + (isMobile ? 0 : 8), // Add spacing only on desktop
