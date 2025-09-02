@@ -418,7 +418,7 @@ export function SocialChairDashboard() {
 
     // Empty cells for days before month starts
     for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="h-24"></div>);
+      days.push(<div key={`empty-${i}`} className="h-16 md:h-24"></div>);
     }
 
     // Days of the month
@@ -428,11 +428,11 @@ export function SocialChairDashboard() {
       const isToday = date.toDateString() === new Date().toDateString();
 
       days.push(
-        <div key={day} className={`h-24 border border-gray-200 p-1 ${isToday ? 'bg-orange-50 border-orange-300' : 'bg-white'}`}>
+        <div key={day} className={`h-16 md:h-24 border border-gray-200 p-1 ${isToday ? 'bg-orange-50 border-orange-300' : 'bg-white'}`}>
           <div className={`text-sm font-medium mb-1 ${isToday ? 'text-orange-600' : 'text-gray-900'}`}>
             {day}
           </div>
-          <div className="space-y-1">
+          <div className="space-y-0.5 md:space-y-1">
             {events.slice(0, 2).map(event => (
               <div key={event.id} className={`text-xs px-1 py-0.5 rounded truncate ${getEventTypeColor('meeting')}`}>
                 {event.title}
@@ -449,8 +449,8 @@ export function SocialChairDashboard() {
     return (
       <div className="bg-white rounded-lg border border-gray-200">
         {/* Calendar Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 className="font-semibold text-lg">
+        <div className="flex items-center justify-between p-3 md:p-4 border-b border-gray-200">
+          <h3 className="font-semibold text-base md:text-lg">
             {monthNames[calendarDate.getMonth()]} {calendarDate.getFullYear()}
           </h3>
           <div className="flex space-x-2">
@@ -458,15 +458,17 @@ export function SocialChairDashboard() {
               size="sm"
               variant="outline"
               onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1))}
+              className="h-7 md:h-10 px-2 md:px-4"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3 w-3 md:h-4 md:w-4" />
             </Button>
             <Button
               size="sm"
               variant="outline"
               onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1))}
+              className="h-7 md:h-10 px-2 md:px-4"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
             </Button>
           </div>
         </div>
@@ -474,7 +476,7 @@ export function SocialChairDashboard() {
         {/* Days of week header */}
         <div className="grid grid-cols-7 border-b border-gray-200">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div key={day} className="p-3 text-center font-medium text-gray-600 border-r border-gray-200 last:border-r-0">
+            <div key={day} className="p-2 md:p-3 text-center font-medium text-gray-600 border-r border-gray-200 last:border-r-0 text-xs md:text-sm">
               {day}
             </div>
           ))}
@@ -643,47 +645,68 @@ export function SocialChairDashboard() {
 
       {/* Tab Navigation */}
       <div className="mb-6">
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+        {/* Desktop Tab Navigation */}
+        <div className="hidden md:flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
           {[
             { value: "overview", label: "Overview" },
-            { value: "social", label: "Social Feed" },
             { value: "calendar", label: "Calendar" },
             { value: "contacts", label: "Contacts" },
-            { value: "budget", label: "Budget" },
-            { value: "lore", label: "Social Lore", locked: true }
+            { value: "budget", label: "Budget" }
           ].map((tab) => (
             <button
               key={tab.value}
-              onClick={() => !tab.locked && setSelectedTab(tab.value)}
+              onClick={() => setSelectedTab(tab.value)}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                 selectedTab === tab.value
                   ? "bg-white text-navy-600 shadow-sm"
-                  : tab.locked
-                  ? "text-gray-400 cursor-not-allowed opacity-60"
                   : "text-gray-600 hover:text-gray-900"
               }`}
-              disabled={tab.locked}
             >
               {tab.label}
-              {tab.locked && <Lock className="h-3 w-3 ml-2 inline" />}
             </button>
           ))}
+        </div>
+
+        {/* Mobile Tab Navigation */}
+        <div className="md:hidden">
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-full">
+            {[
+              { value: "overview", label: "Overview", mobileLabel: "Overview" },
+              { value: "calendar", label: "Calendar", mobileLabel: "Calendar" },
+              { value: "contacts", label: "Contacts", mobileLabel: "Contacts" },
+              { value: "budget", label: "Budget", mobileLabel: "Budget" }
+            ].map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setSelectedTab(tab.value)}
+                className={`flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+                  selectedTab === tab.value
+                    ? "bg-white text-navy-600 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                <span className="truncate">
+                  {tab.mobileLabel}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Tab Content */}
       {selectedTab === "overview" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
           {/* Budget Summary Card */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
+            <CardHeader className="pb-2 md:pb-6">
+              <CardTitle className="flex items-center text-lg md:text-xl">
                 <DollarSign className="h-5 w-5 mr-2 text-green-600" />
                 Budget Overview
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="pt-2 md:pt-6">
+              <div className="space-y-3 md:space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Starting Budget</span>
                   <span className="font-semibold">${budgetData.startingBudget?.toLocaleString() || '12,000'}</span>
@@ -711,16 +734,16 @@ export function SocialChairDashboard() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Upcoming Events</CardTitle>
+            <CardHeader className="pb-2 md:pb-6">
+              <CardTitle className="text-lg md:text-xl">Upcoming Events</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-2 md:pt-6">
               {eventsLoading ? (
-                <div className="text-center py-8">
+                <div className="text-center py-6 md:py-8">
                   <p className="text-gray-500">Loading events...</p>
                 </div>
               ) : eventsError ? (
-                <div className="text-center py-8">
+                <div className="text-center py-6 md:py-8">
                   <p className="text-red-500">Error loading events: {eventsError}</p>
                   <Button 
                     variant="outline" 
@@ -732,7 +755,7 @@ export function SocialChairDashboard() {
                   </Button>
                 </div>
               ) : displayEvents.length === 0 ? (
-                <div className="text-center py-8">
+                <div className="text-center py-6 md:py-8">
                   <p className="text-gray-500">No upcoming events</p>
                   <Button 
                     variant="outline" 
@@ -744,9 +767,9 @@ export function SocialChairDashboard() {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 md:space-y-4">
                   {displayEvents.map((event, index) => (
-                    <div key={index} className="p-4 border border-gray-200 rounded-lg">
+                    <div key={index} className="p-3 md:p-4 border border-gray-200 rounded-lg">
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-medium">{event.name}</h4>
                         <div className="flex items-center space-x-2">
@@ -790,11 +813,12 @@ export function SocialChairDashboard() {
             </CardContent>
           </Card>
 
+          {/* Quick Actions */}
           <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+            <CardHeader className="pb-2 md:pb-6">
+              <CardTitle className="text-lg md:text-xl">Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="pt-2 md:pt-6 space-y-2 md:space-y-3">
               <Button 
                 className="w-full justify-start bg-orange-600 hover:bg-orange-700"
                 onClick={() => setShowEventForm(true)}
@@ -837,77 +861,295 @@ export function SocialChairDashboard() {
               </Button>
             </CardContent>
           </Card>
-
-          {/* Social Feed Card */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle>Chapter Social Feed</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SocialFeed chapterId={profile?.chapter_id || ''} />
-            </CardContent>
-          </Card>
         </div>
       )}
 
-      {selectedTab === "social" && (
+      {selectedTab === "calendar" && (
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Chapter Social Feed</CardTitle>
-              <p className="text-sm text-gray-600">
-                Share updates, announcements, and connect with your chapter members.
-              </p>
-            </CardHeader>
-            <CardContent>
-              <SocialFeed chapterId={profile?.chapter_id || ''} />
-            </CardContent>
-          </Card>
+          {/* Calendar Controls */}
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold whitespace-nowrap">Event Calendar</h3>
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowEventForm(true)}
+                className="text-xs md:text-sm h-8 md:h-10 px-2 md:px-4"
+              >
+                <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">Add Event</span>
+                <span className="sm:hidden">Event</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="opacity-60 cursor-not-allowed text-xs md:text-sm h-8 md:h-10 px-2 md:px-4" 
+                disabled
+              >
+                <span className="hidden sm:inline">Export Calendar</span>
+                <span className="sm:hidden">Export</span>
+                <Lock className="h-2.5 w-2.5 md:h-3 md:w-3 ml-1 md:ml-2 text-gray-400" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Calendar */}
+            <div className="lg:col-span-3">
+              {renderCalendar()}
+            </div>
+
+            {/* Event List */}
+            <div className="space-y-3 md:space-y-4">
+              <Card>
+                <CardHeader className="pb-2 md:pb-0">
+                  <CardTitle className="text-base">Upcoming Events</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-2 md:pt-6">
+                  <div className="space-y-2 md:space-y-3">
+                    {events
+                      .filter(event => new Date(event.start_time) >= new Date())
+                      .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+                      .slice(0, 5)
+                      .map(event => (
+                        <div key={event.id} className="p-2 md:p-3 border border-gray-200 rounded-lg">
+                          <h4 className="font-medium text-sm">{event.title}</h4>
+                          <p className="text-xs text-gray-600 mt-1">
+                            {formatEventDate(event.start_time)} at {formatEventTime(event.start_time)}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                             {event.location || 'TBD'}
+                          </p>
+                          <Badge className={`mt-2 text-xs ${getEventTypeColor('meeting')}`}>
+                            {event.status}
+                          </Badge>
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
+      )}
+
+      {selectedTab === "contacts" && (
+        <Card>
+          <CardHeader className="pb-2 md:pb-6">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-lg md:text-xl">Vendor Contacts</CardTitle>
+              <Button 
+                className="bg-orange-600 hover:bg-orange-700 text-xs md:text-sm h-8 md:h-10 px-2 md:px-4"
+                onClick={() => setShowVendorForm(true)}
+              >
+                <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">Add Vendor</span>
+                <span className="sm:hidden">Vendor</span>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-2 md:pt-6">
+            {vendorsLoading ? (
+              <div className="text-center py-6 md:py-8">
+                <p className="text-gray-500 text-sm md:text-base">Loading vendors...</p>
+              </div>
+            ) : vendorsError ? (
+              <div className="text-center py-6 md:py-8">
+                <p className="text-red-500 text-sm md:text-base">Error loading vendors: {vendorsError}</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => window.location.reload()}
+                  className="mt-2"
+                >
+                  Retry
+                </Button>
+              </div>
+            ) : vendors.length === 0 ? (
+              <div className="text-center py-6 md:py-8">
+                <p className="text-gray-500 text-base md:text-lg font-medium mb-2">No vendor contacts found</p>
+                <p className="text-xs md:text-sm text-gray-400 mb-4">No vendors have been added to your chapter yet.</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowVendorForm(true)}
+                  className="mt-2"
+                >
+                  Add First Vendor
+                </Button>
+              </div>
+            ) : (
+              <>
+                {/* Desktop Table */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Vendor Name</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Contact Person</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Rating</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {vendors.map((vendor) => (
+                        <TableRow key={vendor.id}>
+                          <TableCell className="font-medium">{vendor.name}</TableCell>
+                          <TableCell>{vendor.type}</TableCell>
+                          <TableCell>{vendor.contact_person || '-'}</TableCell>
+                          <TableCell>{vendor.phone || '-'}</TableCell>
+                          <TableCell>{vendor.email || '-'}</TableCell>
+                          <TableCell>
+                            {vendor.rating ? (
+                              <div className="flex items-center">
+                                <span className="text-yellow-500">★</span>
+                                <span className="ml-1">{vendor.rating}</span>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleEditVendor(vendor)}
+                              >
+                                <Edit className="h-3 w-3 mr-1" />
+                                Edit
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleDeleteVendor(vendor.id)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Table with Horizontal Scroll */}
+                <div className="md:hidden">
+                  <div className="overflow-x-auto">
+                    <div className="min-w-[800px]">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs">Vendor Name</TableHead>
+                            <TableHead className="text-xs">Type</TableHead>
+                            <TableHead className="text-xs">Contact Person</TableHead>
+                            <TableHead className="text-xs">Phone</TableHead>
+                            <TableHead className="text-xs">Email</TableHead>
+                            <TableHead className="text-xs">Rating</TableHead>
+                            <TableHead className="text-xs">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {vendors.map((vendor) => (
+                            <TableRow key={vendor.id}>
+                              <TableCell className="font-medium text-xs">{vendor.name}</TableCell>
+                              <TableCell className="text-xs">{vendor.type}</TableCell>
+                              <TableCell className="text-xs">{vendor.contact_person || '-'}</TableCell>
+                              <TableCell className="text-xs">{vendor.phone || '-'}</TableCell>
+                              <TableCell className="text-xs">{vendor.email || '-'}</TableCell>
+                              <TableCell className="text-xs">
+                                {vendor.rating ? (
+                                  <div className="flex items-center">
+                                    <span className="text-yellow-500">★</span>
+                                    <span className="ml-1">{vendor.rating}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400">-</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-xs">
+                                <div className="flex space-x-1">
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => handleEditVendor(vendor)}
+                                    className="h-6 px-2"
+                                  >
+                                    <Edit className="h-3 w-3 mr-1" />
+                                    Edit
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => handleDeleteVendor(vendor.id)}
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 h-6 px-2"
+                                  >
+                                    <Trash2 className="h-3 w-3 mr-1" />
+                                    Delete
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {selectedTab === "budget" && (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {/* Budget Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Budget Allocated</p>
-                    <p className="text-2xl font-semibold text-gray-900">
+                    <p className="text-xl md:text-2xl font-semibold text-gray-900">
                       ${budgetData.totalAllocated.toLocaleString()}
                     </p>
                   </div>
-                  <DollarSign className="h-8 w-8 text-blue-600" />
+                  <DollarSign className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
                 </div>
               </CardContent>
             </Card>
             
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Events with Budgets</p>
-                    <p className="text-2xl font-semibold text-blue-600">
+                    <p className="text-xl md:text-2xl font-semibold text-blue-600">
                       {budgetData.eventsWithBudget.length}
                     </p>
                   </div>
-                  <Calendar className="h-8 w-8 text-blue-600" />
+                  <Calendar className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
                 </div>
               </CardContent>
             </Card>
             
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Events</p>
-                    <p className="text-2xl font-semibold text-gray-600">
+                    <p className="text-xl md:text-2xl font-semibold text-gray-600">
                       {events?.length || 0}
                     </p>
                   </div>
-                  <Users className="h-8 w-8 text-gray-600" />
+                  <Users className="h-6 w-6 md:h-8 md:w-8 text-gray-600" />
                 </div>
               </CardContent>
             </Card>
@@ -915,16 +1157,16 @@ export function SocialChairDashboard() {
 
           {/* Budget Breakdown */}
           <Card>
-            <CardHeader>
-              <CardTitle>Budget Breakdown by Category</CardTitle>
+            <CardHeader className="pb-2 md:pb-6">
+              <CardTitle className="text-lg md:text-xl">Budget Breakdown by Category</CardTitle>
               <p className="text-sm text-gray-600">
                 Budgets are calculated from events with budget amounts. Create events with budget labels to organize spending.
               </p>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-2 md:pt-6">
               {budgetData.categories.length === 0 ? (
-                <div className="text-center py-8">
-                  <DollarSign className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <div className="text-center py-6 md:py-8">
+                  <DollarSign className="h-8 w-8 md:h-12 md:w-12 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-500 mb-2">No budget data available</p>
                   <p className="text-sm text-gray-400">
                     Create events with budget amounts and labels to start tracking your chapter's spending.
@@ -938,9 +1180,9 @@ export function SocialChairDashboard() {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-4 md:space-y-6">
                   {budgetData.categories.map((category, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <div key={index} className="border border-gray-200 rounded-lg p-3 md:p-4">
                       <div className="flex justify-between items-center mb-3">
                         <h4 className="font-medium">{category.category}</h4>
                         <div className="text-right">
@@ -988,10 +1230,10 @@ export function SocialChairDashboard() {
 
           {/* All Events Budget Summary */}
           <Card>
-            <CardHeader>
-              <CardTitle>All Events Budget Summary</CardTitle>
+            <CardHeader className="pb-2 md:pb-6">
+              <CardTitle className="text-lg md:text-xl">All Events Budget Summary</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-2 md:pt-6">
               <div className="space-y-2">
                 {events?.map((event, index) => (
                   <div key={event.id || index} className="flex justify-between items-center p-2 border-b border-gray-100 last:border-b-0">
@@ -1016,253 +1258,28 @@ export function SocialChairDashboard() {
 
           {/* Quick Budget Actions */}
           <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+            <CardHeader className="pb-2 md:pb-6">
+              <CardTitle className="text-lg md:text-xl">Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="flex space-x-4">
+            <CardContent className="pt-2 md:pt-6">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                 <Button 
                   onClick={() => setShowEventForm(true)}
-                  className="bg-orange-600 hover:bg-orange-700"
+                  className="bg-orange-600 hover:bg-orange-700 text-xs md:text-sm h-8 md:h-10 px-2 md:px-4"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Event with Budget
+                  <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">Add Event with Budget</span>
+                  <span className="sm:hidden">Event</span>
                 </Button>
-                <Button variant="outline" disabled>
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Track Expenses (Coming Soon)
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {selectedTab === "calendar" && (
-        <div className="space-y-6">
-          {/* Calendar Controls */}
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Event Calendar</h3>
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setShowEventForm(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Event
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="opacity-60 cursor-not-allowed" 
-                disabled
-              >
-                Export Calendar
-                <Lock className="h-3 w-3 ml-2 text-gray-400" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Calendar */}
-            <div className="lg:col-span-3">
-              {renderCalendar()}
-            </div>
-
-            {/* Event List */}
-            <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Upcoming Events</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {events
-                      .filter(event => new Date(event.start_time) >= new Date())
-                      .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
-                      .slice(0, 5)
-                      .map(event => (
-                        <div key={event.id} className="p-3 border border-gray-200 rounded-lg">
-                          <h4 className="font-medium text-sm">{event.title}</h4>
-                          <p className="text-xs text-gray-600 mt-1">
-                            {formatEventDate(event.start_time)} at {formatEventTime(event.start_time)}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            �� {event.location || 'TBD'}
-                          </p>
-                          <Badge className={`mt-2 text-xs ${getEventTypeColor('meeting')}`}>
-                            {event.status}
-                          </Badge>
-                        </div>
-                      ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {selectedTab === "contacts" && (
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>Vendor Contacts</CardTitle>
-              <Button 
-                className="bg-orange-600 hover:bg-orange-700"
-                onClick={() => setShowVendorForm(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Vendor
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {vendorsLoading ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Loading vendors...</p>
-              </div>
-            ) : vendorsError ? (
-              <div className="text-center py-8">
-                <p className="text-red-500">Error loading vendors: {vendorsError}</p>
                 <Button 
                   variant="outline" 
-                  size="sm" 
-                  onClick={() => window.location.reload()}
-                  className="mt-2"
-                >
-                  Retry
-                </Button>
-              </div>
-            ) : vendors.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No vendor contacts found</p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setShowVendorForm(true)}
-                  className="mt-2"
-                >
-                  Add First Vendor
-                </Button>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Vendor Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Contact Person</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Rating</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {vendors.map((vendor) => (
-                    <TableRow key={vendor.id}>
-                      <TableCell className="font-medium">{vendor.name}</TableCell>
-                      <TableCell>{vendor.type}</TableCell>
-                      <TableCell>{vendor.contact_person || '-'}</TableCell>
-                      <TableCell>{vendor.phone || '-'}</TableCell>
-                      <TableCell>{vendor.email || '-'}</TableCell>
-                      <TableCell>
-                        {vendor.rating ? (
-                          <div className="flex items-center">
-                            <span className="text-yellow-500">★</span>
-                            <span className="ml-1">{vendor.rating}</span>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleEditVendor(vendor)}
-                          >
-                            <Edit className="h-3 w-3 mr-1" />
-                            Edit
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleDeleteVendor(vendor.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-3 w-3 mr-1" />
-                            Delete
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {selectedTab === "lore" && (
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                Add New Social Lore Entry
-                <Lock className="h-4 w-4 ml-2 text-gray-400" />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4 opacity-60">
-                <Input
-                  placeholder="Entry title..."
-                  value={newLoreEntry.title}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewLoreEntry({ ...newLoreEntry, title: e.target.value })}
                   disabled
-                  className="cursor-not-allowed"
-                />
-                <Textarea
-                  placeholder="Share insights, tips, and lessons learned for future social chairs..."
-                  value={newLoreEntry.content}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewLoreEntry({ ...newLoreEntry, content: e.target.value })}
-                  className="min-h-[120px] cursor-not-allowed"
-                  disabled
-                />
-                <Button className="bg-orange-600 hover:bg-orange-700 cursor-not-allowed" disabled>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Entry
-                  <Lock className="h-3 w-3 ml-2" />
+                  className="text-xs md:text-sm h-8 md:h-10 px-2 md:px-4"
+                >
+                  <DollarSign className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">Track Expenses (Coming Soon)</span>
+                  <span className="sm:hidden">Expense</span>
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                Social Lore Archive
-                <Lock className="h-4 w-4 ml-2 text-gray-400" />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4 opacity-60">
-                {socialLoreEntries.map((entry, index) => (
-                  <div key={index} className="p-4 border border-gray-200 rounded-lg">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium">{entry.title}</h4>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500">{entry.date}</p>
-                        <p className="text-xs text-gray-600">{entry.author}</p>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-700 leading-relaxed">{entry.content}</p>
-                  </div>
-                ))}
               </div>
             </CardContent>
           </Card>
