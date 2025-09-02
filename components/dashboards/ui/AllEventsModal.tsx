@@ -109,12 +109,12 @@ export function AllEventsModal({ isOpen, onClose, events, loading, error }: AllE
       
       {/* Modal */}
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col relative">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl md:max-h-[90vh] max-h-[95vh] flex flex-col relative">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
+          <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 flex-shrink-0">
             <div>
-              <h3 className="text-2xl font-bold text-navy-900">All Chapter Events</h3>
-              <p className="text-sm text-gray-500 mt-1">
+              <h3 className="text-lg md:text-2xl font-bold text-navy-900">All Chapter Events</h3>
+              <p className="text-xs md:text-sm text-gray-500 mt-1">
                 {getTimezoneInfo().note}
               </p>
             </div>
@@ -127,7 +127,7 @@ export function AllEventsModal({ isOpen, onClose, events, loading, error }: AllE
           </div>
 
           {/* Content - All Events List */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6">
             {loading ? (
               <div className="text-center py-8">
                 <Calendar className="h-12 w-12 mx-auto mb-3 text-gray-300" />
@@ -154,52 +154,52 @@ export function AllEventsModal({ isOpen, onClose, events, loading, error }: AllE
                 <p className="text-sm">Create your first event to get started!</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 md:space-y-4">
                 {events.map((event) => (
                   <div
                     key={event.id}
-                    className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="p-3 md:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         {/* Event Header */}
-                        <div className="flex items-center gap-3 mb-2">
-                          <Calendar className="h-5 w-5 text-navy-600" />
+                        <div className="flex items-center gap-2 md:gap-3 mb-2">
+                          <Calendar className="h-4 w-4 md:h-5 md:w-5 text-navy-600" />
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-medium text-gray-900 truncate">
+                            <h4 className="font-medium text-gray-900 text-sm md:text-base truncate">
                               {event.title}
                             </h4>
                             {event.description && (
-                              <p className="text-sm text-gray-600 mt-1">
+                              <p className="text-xs md:text-sm text-gray-600 mt-1">
                                 {event.description}
                               </p>
                             )}
                           </div>
-                          <Badge className={getEventStatusColor(event)}>
+                          <Badge className={`text-xs ${getEventStatusColor(event)}`}>
                             {getEventStatusText(event)}
                           </Badge>
                         </div>
 
-                        {/* Event Metadata - Using RAW parsing */}
-                        <div className="space-y-2 text-xs text-gray-500 mb-3">
+                        {/* Event Metadata - Mobile Optimized */}
+                        <div className="space-y-1 md:space-y-2 text-xs text-gray-500 mb-2 md:mb-3">
                           <div className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             <span className="font-medium">Start:</span>
-                            <span>{parseRawDetailedTime(event.start_time)}</span>
+                            <span className="break-words">{parseRawDetailedTime(event.start_time)}</span>
                           </div>
                           
                           {event.end_time && (
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
                               <span className="font-medium">End:</span>
-                              <span>{parseRawDetailedTime(event.end_time)}</span>
+                              <span className="break-words">{parseRawDetailedTime(event.end_time)}</span>
                             </div>
                           )}
                           
                           {event.location && (
                             <div className="flex items-center gap-1">
                               <MapPin className="h-3 w-3" />
-                              <span>{event.location}</span>
+                              <span className="break-words">{event.location}</span>
                             </div>
                           )}
                           <div className="flex items-center gap-1">
@@ -212,10 +212,10 @@ export function AllEventsModal({ isOpen, onClose, events, loading, error }: AllE
 
                         {/* Budget Information */}
                         {event.budget_amount && (
-                          <div className="mb-3">
+                          <div className="mb-2 md:mb-3">
                             <div className="flex items-center gap-2">
                               <Shield className="h-3 w-3 text-gray-400" />
-                              <span className="text-sm font-medium text-gray-700">
+                              <span className="text-xs md:text-sm font-medium text-gray-700">
                                 Budget: ${event.budget_amount}
                               </span>
                               {event.budget_label && (
@@ -226,8 +226,8 @@ export function AllEventsModal({ isOpen, onClose, events, loading, error }: AllE
                         )}
                       </div>
 
-                      {/* Action Buttons */}
-                      <div className="flex items-center gap-2 ml-4">
+                      {/* Action Buttons - Hidden on Mobile */}
+                      <div className="hidden md:flex items-center gap-2 ml-4">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -259,8 +259,8 @@ export function AllEventsModal({ isOpen, onClose, events, loading, error }: AllE
 
             {/* Event Count Footer */}
             {events.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <p className="text-sm text-gray-600 text-center">
+              <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-200">
+                <p className="text-xs md:text-sm text-gray-600 text-center">
                   Showing {events.length} of {events.length} events
                 </p>
               </div>
