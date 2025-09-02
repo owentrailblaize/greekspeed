@@ -190,11 +190,11 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
   return (
     <div className="flex-1 bg-gray-50">
       {/* Dynamic Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-semibold text-gray-900">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
+              <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
                 {activeSection === "members" && "General Members"}
                 {activeSection === "officers" && "Officers & Leadership"}
                 {activeSection === "events" && "Events & Activities"}
@@ -203,7 +203,7 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
                 {activeSection === "settings" && "Chapter Settings"}
               </h1>
               {profile?.chapter && (
-                <span className="text-sm text-gray-500">({profile.chapter})</span>
+                <span className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-0">({profile.chapter})</span>
               )}
             </div>
           </div>
@@ -211,7 +211,7 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {displayMembers.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
             {displayMembers.map((member) => (
