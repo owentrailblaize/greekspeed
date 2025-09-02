@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Calendar, BookOpen, GraduationCap, UserPlus, Settings, Lock, X, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,14 @@ export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebar
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  // Set mobile-specific initial state (following AlumniPipelineLayout pattern)
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768; // md breakpoint
+    if (isMobile) {
+      setSidebarCollapsed(true); // Start collapsed on mobile
+    }
+  }, []);
+
   const sidebarItems = [
     {
       id: "all",
@@ -74,15 +82,6 @@ export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebar
       icon: Calendar,
       count: stats.events,
       description: "Upcoming and past events",
-      locked: true, // Lock this since it's not implemented
-      showForAll: true
-    },
-    {
-      id: "alumni",
-      label: "Alumni Network",
-      icon: UserPlus,
-      count: stats.alumniConnections,
-      description: "Alumni connections",
       locked: true, // Lock this since it's not implemented
       showForAll: true
     },
@@ -122,7 +121,7 @@ export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebar
             <motion.div
               initial={{ width: 0, opacity: 0 }}
               animate={{ 
-                width: sidebarCollapsed ? 64 : 320, 
+                width: sidebarCollapsed ? 64 : (window.innerWidth < 768 ? '100vw' : 320), 
                 opacity: 1 
               }}
               exit={{ width: 0, opacity: 0 }}

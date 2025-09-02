@@ -102,13 +102,13 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
           <Button
             onClick={(e) => handleConnectionAction('connect', e)}
             disabled={isLoading}
-            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-10"
+            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
             variant="outline"
           >
             {isLoading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b border-navy-600 mr-2" />
+              <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b border-navy-600 mr-1 sm:mr-2" />
             ) : (
-              <UserPlus className="h-4 w-4 mr-2" />
+              <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             )}
             Connect
           </Button>
@@ -119,13 +119,13 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
           <Button
             onClick={(e) => handleConnectionAction('cancel', e)}
             disabled={isLoading}
-            className="w-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 transition-colors duration-200 rounded-full font-medium h-10 flex items-center justify-center"
+            className="w-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 transition-colors duration-200 rounded-full font-medium h-8 sm:h-10 flex items-center justify-center text-xs sm:text-sm"
             variant="outline"
           >
             {isLoading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b border-gray-600 mr-2" />
+              <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b border-gray-600 mr-1 sm:mr-2" />
             ) : (
-              <Clock className="h-4 w-4 mr-2" />
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             )}
             Requested
           </Button>
@@ -137,14 +137,14 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
             <Button
               onClick={(e) => handleConnectionAction('accept', e)}
               disabled={isLoading}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-full font-medium h-10"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
             >
               Accept
             </Button>
             <Button
               onClick={(e) => handleConnectionAction('decline', e)}
               disabled={isLoading}
-              className="flex-1 border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 rounded-full font-medium h-10"
+              className="flex-1 border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
               variant="outline"
             >
               Decline
@@ -156,9 +156,9 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
         return (
           <Button
             onClick={handleMessageClick}
-            className="w-full bg-navy-600 hover:bg-navy-700 text-white rounded-full font-medium h-10"
+            className="w-full bg-navy-600 hover:bg-navy-700 text-white rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
           >
-            <MessageCircle className="h-4 w-4 mr-2" />
+            <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             Message
           </Button>
         );
@@ -167,10 +167,10 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
         return (
           <Button
             onClick={(e) => handleConnectionAction('connect', e)}
-            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-10"
+            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
             variant="outline"
           >
-            <UserPlus className="h-4 w-4 mr-2" />
+            <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             Connect
           </Button>
         );
