@@ -61,6 +61,9 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
     if (item.href !== '#') {
       window.location.href = item.href;
     }
+    
+    // Close mobile menu after navigation
+    setIsMobileMenuOpen(false);
   };
 
   return (
@@ -69,7 +72,7 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
       <div className="hidden md:block">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center space-x-2 rounded-2xl hover:bg-gray-50 transition-colors">
+            <button className="flex items-center space-x-2 rounded-2xl hover:bg-gray-50 transition-colors p-2">
               <UserAvatar
                 user={{
                   user_metadata: {
@@ -179,13 +182,13 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
       <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
         <SheetContent 
           side="right" 
-          className="w-80 z-[99999]"
+          className="w-80 z-[99999] max-w-[85vw] bg-white shadow-xl rounded-l-xl border-l border-gray-200"
         >
-          <SheetHeader className="pb-4 border-b border-gray-200">
-            <SheetTitle className="text-left">Account Menu</SheetTitle>
+          <SheetHeader className="pb-4 border-b border-gray-200 bg-white rounded-tl-xl">
+            <SheetTitle className="text-left text-gray-900">Account Menu</SheetTitle>
           </SheetHeader>
 
-          <div className="py-4">
+          <div className="py-4 bg-white rounded-bl-xl">
             {/* Profile Completion Banner */}
             {completionPercent < 100 && (
               <div className="mb-4 p-3 bg-navy-50 rounded-lg border border-navy-200">
@@ -204,13 +207,14 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
             )}
 
             {/* Menu Items */}
-            <div className="space-y-1">
+            <div className="space-y-1 bg-white">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <div
+                  <button
                     key={item.label}
-                    className={`flex items-center space-x-3 px-3 py-3 text-sm rounded-md transition-colors relative ${
+                    onClick={() => handleMenuItemClick(item)}
+                    className={`flex items-center space-x-3 px-3 py-3 text-sm rounded-md transition-colors relative w-full text-left bg-white ${
                       item.locked 
                         ? 'text-gray-400 cursor-not-allowed' 
                         : 'text-gray-700 hover:bg-gray-50 hover:text-navy-700'
@@ -228,18 +232,18 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
                     {item.key === 'notifications' && unreadCount > 0 && (
                       <div className="absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full border border-white shadow-sm" />
                     )}
-                  </div>
+                  </button>
                 );
               })}
             </div>
 
             {/* Divider */}
-            <div className="my-4 border-t border-gray-200" />
+            <div className="my-4 border-t border-gray-200 bg-white" />
 
             {/* Sign Out */}
             <button
               onClick={handleSignOut}
-              className="flex items-center space-x-3 px-3 py-3 text-sm text-red-600 hover:bg-red-50 w-full text-left rounded-md transition-colors"
+              className="flex items-center space-x-3 px-3 py-3 text-sm text-red-600 hover:bg-red-50 w-full text-left rounded-md transition-colors bg-white"
             >
               <LogOut className="w-4" />
               <span>Sign out</span>

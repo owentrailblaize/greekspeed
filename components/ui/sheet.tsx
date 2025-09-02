@@ -72,9 +72,9 @@ export const SheetContent = React.forwardRef<HTMLDivElement, SheetContentProps>(
 
     return (
       <>
-        {/* Backdrop */}
+        {/* Backdrop - Click outside to close */}
         <div
-          className="fixed inset-0 bg-black/50 z-[9998]"
+          className="fixed inset-0 bg-black/50 z-[9998] backdrop-blur-sm"
           onClick={() => context.setIsOpen(false)}
         />
         
