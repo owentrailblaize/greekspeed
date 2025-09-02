@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { createPortal } from 'react-dom';
 import { 
   User, 
   Settings, 
@@ -13,10 +14,10 @@ import {
   LogOut,
   ChevronRight,
   ChevronDown,
-  Lock
+  Lock,
+  X
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { UserAvatar } from './UserAvatar';
 import { Badge } from '@/components/ui/badge';
 import { useProfile } from '@/lib/contexts/ProfileContext';
@@ -38,10 +39,158 @@ const menuItems = [
   { label: 'View Profile', href: '/dashboard/profile', icon: User, locked: false },
   { label: 'Notifications', href: '/dashboard/notifications', icon: Bell, key: 'notifications', locked: false },
   { label: 'Chapter & Role', href: '#', icon: Users, locked: true },
-  { label: 'Account & Security', href: '#', icon: Shield, locked: true },
   { label: 'Documents & Uploads', href: '#', icon: FileText, locked: true },
   { label: 'Help & Support', href: '#', icon: HelpCircle, locked: true },
 ];
+
+// Mobile Menu Component
+function MobileMenu({ 
+  isOpen, 
+  onClose, 
+  user, 
+  completionPercent, 
+  hasUnread, 
+  unreadCount, 
+  onSignOut, 
+  profile 
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  user: any;
+  completionPercent: number;
+  hasUnread: boolean;
+  unreadCount: number;
+  onSignOut: () => void;
+  profile: any;
+}) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleMenuItemClick = (item: any) => {
+    if (item.locked) {
+      return;
+    }
+    
+    if (item.href !== '#') {
+      window.location.href = item.href;
+    }
+    
+    onClose();
+  };
+
+  const handleSignOut = () => {
+    onSignOut();
+    onClose();
+  };
+
+  // Prevent body scroll when menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  if (!mounted || !isOpen) return null;
+
+  const mobileMenuContent = (
+    <>
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/50 z-[9998] backdrop-blur-sm"
+        onClick={onClose}
+      />
+      
+      {/* Mobile Menu Content */}
+      <div className="fixed top-0 right-0 w-80 max-w-[85vw] bg-white shadow-xl z-[9999] rounded-l-xl border-l border-gray-200 max-h-screen overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white rounded-tl-xl sticky top-0">
+          <h2 className="text-lg font-semibold text-gray-900">Account Menu</h2>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-600" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-4">
+          {/* Profile Completion Banner */}
+          {completionPercent < 100 && (
+            <div className="mb-4 p-3 bg-navy-50 rounded-lg border border-navy-200">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-navy-900">
+                    Complete your profile ({completionPercent}%)
+                  </p>
+                  <p className="text-xs text-navy-600 mt-1">
+                    Add missing information to unlock full features
+                  </p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-navy-600" />
+              </div>
+            </div>
+          )}
+
+          {/* Menu Items */}
+          <div className="space-y-1">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.label}
+                  onClick={() => handleMenuItemClick(item)}
+                  className={`flex items-center space-x-3 px-3 py-3 text-sm rounded-md transition-colors relative w-full text-left ${
+                    item.locked 
+                      ? 'text-gray-400 cursor-not-allowed' 
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-navy-700'
+                  }`}
+                >
+                  <Icon className={`w-4 ${item.locked ? 'text-gray-400' : 'text-gray-500'}`} />
+                  <span className={item.locked ? 'line-through' : ''}>{item.label}</span>
+                  
+                  {/* Lock icon for locked items */}
+                  {item.locked && (
+                    <Lock className="w-3 h-3 ml-auto text-gray-400" />
+                  )}
+                  
+                  {/* Tiny red bubble indicator over Notifications item */}
+                  {item.key === 'notifications' && unreadCount > 0 && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full border border-white shadow-sm" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Divider */}
+          <div className="my-4 border-t border-gray-200" />
+
+          {/* Sign Out */}
+          <button
+            onClick={handleSignOut}
+            className="flex items-center space-x-3 px-3 py-3 text-sm text-red-600 hover:bg-red-50 w-full text-left rounded-md transition-colors"
+          >
+            <LogOut className="w-4" />
+            <span>Sign out</span>
+          </button>
+        </div>
+      </div>
+    </>
+  );
+
+  // Use portal to render at the top level
+  return createPortal(mobileMenuContent, document.body);
+}
 
 export function UserDropdown({ user, completionPercent, hasUnread, unreadCount = 0, onSignOut }: UserDropdownProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -178,79 +327,17 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
         </button>
       </div>
 
-      {/* Mobile Sheet */}
-      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-        <SheetContent 
-          side="right" 
-          className="w-80 z-[99999] max-w-[85vw] bg-white shadow-xl rounded-l-xl border-l border-gray-200"
-        >
-          <SheetHeader className="pb-4 border-b border-gray-200 bg-white rounded-tl-xl">
-            <SheetTitle className="text-left text-gray-900">Account Menu</SheetTitle>
-          </SheetHeader>
-
-          <div className="py-4 bg-white rounded-bl-xl">
-            {/* Profile Completion Banner */}
-            {completionPercent < 100 && (
-              <div className="mb-4 p-3 bg-navy-50 rounded-lg border border-navy-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-navy-900">
-                      Complete your profile ({completionPercent}%)
-                    </p>
-                    <p className="text-xs text-navy-600 mt-1">
-                      Add missing information to unlock full features
-                    </p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-navy-600" />
-                </div>
-              </div>
-            )}
-
-            {/* Menu Items */}
-            <div className="space-y-1 bg-white">
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.label}
-                    onClick={() => handleMenuItemClick(item)}
-                    className={`flex items-center space-x-3 px-3 py-3 text-sm rounded-md transition-colors relative w-full text-left bg-white ${
-                      item.locked 
-                        ? 'text-gray-400 cursor-not-allowed' 
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-navy-700'
-                    }`}
-                  >
-                    <Icon className={`w-4 ${item.locked ? 'text-gray-400' : 'text-gray-500'}`} />
-                    <span className={item.locked ? 'line-through' : ''}>{item.label}</span>
-                    
-                    {/* Lock icon for locked items */}
-                    {item.locked && (
-                      <Lock className="w-3 h-3 ml-auto text-gray-400" />
-                    )}
-                    
-                    {/* Tiny red bubble indicator over Notifications item */}
-                    {item.key === 'notifications' && unreadCount > 0 && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full border border-white shadow-sm" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Divider */}
-            <div className="my-4 border-t border-gray-200 bg-white" />
-
-            {/* Sign Out */}
-            <button
-              onClick={handleSignOut}
-              className="flex items-center space-x-3 px-3 py-3 text-sm text-red-600 hover:bg-red-50 w-full text-left rounded-md transition-colors bg-white"
-            >
-              <LogOut className="w-4" />
-              <span>Sign out</span>
-            </button>
-          </div>
-        </SheetContent>
-      </Sheet>
+      {/* Mobile Menu Portal */}
+      <MobileMenu
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        user={user}
+        completionPercent={completionPercent}
+        hasUnread={hasUnread}
+        unreadCount={unreadCount}
+        onSignOut={handleSignOut}
+        profile={profile}
+      />
     </>
   );
 } 
