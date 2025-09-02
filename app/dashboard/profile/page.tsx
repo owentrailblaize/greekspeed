@@ -152,21 +152,35 @@ export default function ProfilePage() {
         {/* Profile Completion Banner - Moved above banner for maximum visibility */}
         {completion && completion.percentage < 100 && (
           <div className="mb-8 p-4 bg-navy-50 rounded-lg border border-navy-200">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-navy-900">
-                    Profile Completion: {completion.percentage}%
-                  </p>
-                  <p className="text-xs text-navy-600 mt-1">
-                    Complete your profile to unlock full features and improve your visibility in the network
-                  </p>
-                </div>
+            {/* Mobile Layout - Badge + Description in Column */}
+            <div className="sm:hidden text-center space-y-2">
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-sm font-medium text-navy-900">Profile Completion:</span>
                 <Badge className="bg-navy-600 text-white">
                   {completion.percentage}% Complete
                 </Badge>
               </div>
+              <p className="text-xs text-navy-600">
+                Complete your profile to unlock full features and improve your visibility in the network
+              </p>
             </div>
-          )}
+            
+            {/* Desktop Layout - Original Structure */}
+            <div className="hidden sm:flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-navy-900">
+                  Profile Completion: {completion.percentage}%
+                </p>
+                <p className="text-xs text-navy-600 mt-1">
+                  Complete your profile to unlock full features and improve your visibility in the network
+                </p>
+              </div>
+              <Badge className="bg-navy-600 text-white">
+                {completion.percentage}% Complete
+              </Badge>
+            </div>
+          </div>
+        )}
 
         {/* Banner Header Section */}
         <div className="relative mb-8 rounded-xl overflow-hidden">
