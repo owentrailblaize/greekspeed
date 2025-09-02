@@ -681,82 +681,147 @@ export function VicePresidentDashboard() {
 
       {selectedTab === "meetings" && (
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-2 md:pb-6">
             <div className="flex justify-between items-center">
-              <CardTitle>Upcoming Events</CardTitle>
-              <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setShowCreateEventModal(true)}>
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule Event
+              <CardTitle className="text-lg md:text-xl">
+                <span className="whitespace-nowrap">Upcoming Events</span>
+              </CardTitle>
+              <Button 
+                className="bg-blue-600 hover:bg-blue-700 text-xs md:text-sm h-8 md:h-10 px-2 md:px-4" 
+                onClick={() => setShowCreateEventModal(true)}
+              >
+                <Calendar className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">Schedule Event</span>
+                <span className="sm:hidden">Schedule</span>
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-2 md:pt-6">
             {eventsLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                <p className="text-gray-600">Loading events...</p>
+              <div className="text-center py-6 md:py-8">
+                <div className="animate-spin rounded-full h-6 w-6 md:h-8 md:w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                <p className="text-gray-600 text-sm md:text-base">Loading events...</p>
               </div>
             ) : chapterEvents.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Calendar className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-lg font-medium mb-2">No upcoming events</p>
-                <p className="text-sm">No events have been scheduled for your chapter yet.</p>
+              <div className="text-center py-6 md:py-8 text-gray-500">
+                <Calendar className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 text-gray-300" />
+                <p className="text-base md:text-lg font-medium mb-2">No upcoming events</p>
+                <p className="text-xs md:text-sm">No events have been scheduled for your chapter yet.</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 md:space-y-4">
                 {chapterEvents.map((event) => (
-                  <div key={event.id} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div key={event.id} className="p-3 md:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                     <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h4 className="font-medium text-lg">{event.title}</h4>
-                          <Badge 
-                            className={
-                              event.status === 'published' ? 'bg-green-100 text-green-800' :
-                              event.status === 'draft' ? 'bg-gray-100 text-gray-800' :
-                              'bg-red-100 text-red-800'
-                            }
-                          >
-                            {event.status}
-                          </Badge>
-                        </div>
-                        
-                        {event.description && (
-                          <p className="text-sm text-gray-600 mb-3">{event.description}</p>
-                        )}
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-2 text-gray-400" />
-                            <span>{formatEventDate(event.start_time)}</span>
+                      <div className="flex-1 min-w-0">
+                        {/* Desktop Layout */}
+                        <div className="hidden md:block">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-medium text-lg">{event.title}</h4>
+                            <Badge 
+                              className={
+                                event.status === 'published' ? 'bg-green-100 text-green-800' :
+                                event.status === 'draft' ? 'bg-gray-100 text-gray-800' :
+                                'bg-red-100 text-red-800'
+                              }
+                            >
+                              {event.status}
+                            </Badge>
                           </div>
                           
-                          {event.location && (
-                            <div className="flex items-center">
-                              <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                              <span>{event.location}</span>
-                            </div>
+                          {event.description && (
+                            <p className="text-sm text-gray-600 mb-3">{event.description}</p>
                           )}
                           
-                          {event.budget_label && event.budget_amount && (
-                            <div className="flex items-center">
-                              <DollarSign className="h-4 w-4 mr-2 text-gray-400" />
-                              <span>{event.budget_label}: ${event.budget_amount.toLocaleString()}</span>
+                          <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                            <div className="flex items-center min-w-0">
+                              <Clock className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0" />
+                              <span>{formatEventDate(event.start_time)}</span>
                             </div>
+                            
+                            {event.location && (
+                              <div className="flex items-center min-w-0">
+                                <MapPin className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0" />
+                                <span>{event.location}</span>
+                              </div>
+                            )}
+                            
+                            {event.budget_label && event.budget_amount && (
+                              <div className="flex items-center min-w-0">
+                                <DollarSign className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0" />
+                                <span>{event.budget_label}: ${event.budget_amount.toLocaleString()}</span>
+                              </div>
+                            )}
+                            
+                            <div className="flex items-center min-w-0">
+                              <Users className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0" />
+                              <span>
+                                {event.attendee_count || 0} attending
+                                {event.maybe_count ? `, ${event.maybe_count} maybe` : ''}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Mobile Layout */}
+                        <div className="md:hidden">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-medium text-md text-gray-900 truncate flex-1 mr-2">
+                              {event.title}
+                            </h4>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="h-7 px-2 text-xs flex-shrink-0"
+                              onClick={() => { setSelectedEvent(event); setIsEditModalOpen(true); }}
+                            >
+                              <Edit className="h-3 w-3 mr-1" />
+                              Edit
+                            </Button>
+                          </div>
+                          
+                          <div className="mb-2">
+                            <Badge 
+                              className={`text-xs px-2 py-1 ${
+                                event.status === 'published' ? 'bg-green-100 text-green-800' :
+                                event.status === 'draft' ? 'bg-gray-100 text-gray-800' :
+                                'bg-red-100 text-red-800'
+                              }`}
+                            >
+                              {event.status}
+                            </Badge>
+                          </div>
+                          
+                          {event.description && (
+                            <p className="text-xs text-gray-600 mb-2 line-clamp-2">{event.description}</p>
                           )}
                           
-                          <div className="flex items-center">
-                            <Users className="h-4 w-4 mr-2 text-gray-400" />
-                            <span>
-                              {event.attendee_count || 0} attending
-                              {event.maybe_count ? `, ${event.maybe_count} maybe` : ''}
-                            </span>
+                          <div className="space-y-1 text-xs text-gray-600">
+                            <div className="flex items-center">
+                              <Clock className="h-3 w-3 mr-1 text-gray-400 flex-shrink-0" />
+                              <span className="truncate">{formatEventDate(event.start_time)}</span>
+                            </div>
+                            
+                            {event.location && (
+                              <div className="flex items-center">
+                                <MapPin className="h-3 w-3 mr-1 text-gray-400 flex-shrink-0" />
+                                <span className="truncate">{event.location}</span>
+                              </div>
+                            )}
+                            
+                            <div className="flex items-center">
+                              <Users className="h-3 w-3 mr-1 text-gray-400 flex-shrink-0" />
+                              <span>
+                                {event.attendee_count || 0} attending
+                                {event.maybe_count ? `, ${event.maybe_count} maybe` : ''}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
                       
-                      <div className="flex space-x-2 ml-4">
-
+                      {/* Desktop Edit Button */}
+                      <div className="hidden md:flex space-x-2 ml-4">
                         <Button size="sm" variant="outline" onClick={() => { setSelectedEvent(event); setIsEditModalOpen(true); }}>
                           <Edit className="h-4 w-4 mr-1" />
                           Edit
