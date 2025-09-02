@@ -135,7 +135,7 @@ export function AlumniPipelineLayout({
             <motion.div
               initial={{ width: 0, opacity: 0 }}
               animate={{ 
-                width: sidebarCollapsed ? 64 : 320, 
+                width: sidebarCollapsed ? 64 : (window.innerWidth < 768 ? '100vw' : 320), 
                 opacity: 1 
               }}
               exit={{ width: 0, opacity: 0 }}
