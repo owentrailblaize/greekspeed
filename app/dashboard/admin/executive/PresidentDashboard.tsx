@@ -421,7 +421,8 @@ export function PresidentDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              {/* Desktop Layout - Preserved */}
+              <div className="hidden md:block space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
                     placeholder="Announcement title..."
@@ -451,7 +452,72 @@ export function PresidentDashboard() {
                   className="min-h-[100px]"
                 />
                 
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={isScheduled}
+                        onChange={(e) => setIsScheduled(e.target.checked)}
+                        className="rounded"
+                      />
+                      <span className="text-sm">Schedule for later</span>
+                    </label>
+                    
+                    {isScheduled && (
+                      <Input
+                        type="datetime-local"
+                        value={scheduledDate}
+                        onChange={(e) => setScheduledDate(e.target.value)}
+                        className="w-auto"
+                      />
+                    )}
+                  </div>
+                  
+                  <Button 
+                    className="bg-purple-600 hover:bg-purple-700"
+                    onClick={handleSendAnnouncement}
+                    disabled={isSubmitting || announcementsLoading}
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    {isSubmitting ? 'Sending...' : 'Send Announcement'}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Mobile Layout */}
+              <div className="md:hidden space-y-4">
+                <div className="space-y-3">
+                  <Input
+                    placeholder="Announcement title..."
+                    value={announcementTitle}
+                    onChange={(e) => setAnnouncementTitle(e.target.value)}
+                    className="w-full"
+                  />
+                  <Select value={announcementType} onValueChange={(value: string) => setAnnouncementType(value as 'general' | 'urgent' | 'event' | 'academic')}>
+                    <SelectItem value="">Select type</SelectItem>
+                    <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                    <SelectItem value="event">Event</SelectItem>
+                    <SelectItem value="academic">Academic</SelectItem>
+                  </Select>
+                  <Select value={announcementPriority} onValueChange={(value: string) => setAnnouncementPriority(value as 'low' | 'normal' | 'high' | 'urgent')}>
+                    <SelectItem value="">Select priority</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                  </Select>
+                </div>
+                
+                <Textarea
+                  placeholder="Write a chapter announcement..."
+                  value={announcement}
+                  onChange={(e) => setAnnouncement(e.target.value)}
+                  className="min-h-[80px] w-full"
+                />
+                
+                <div className="space-y-3">
                   <label className="flex items-center space-x-2">
                     <input
                       type="checkbox"
@@ -467,24 +533,14 @@ export function PresidentDashboard() {
                       type="datetime-local"
                       value={scheduledDate}
                       onChange={(e) => setScheduledDate(e.target.value)}
-                      className="w-auto"
+                      className="w-full"
                     />
                   )}
                 </div>
                 
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-2">
-                    <Button size="sm" variant="outline" disabled>
-                      <Image className="h-4 w-4 mr-2" />
-                      Add Photo
-                    </Button>
-                    <Button size="sm" variant="outline" disabled>
-                      <ClockIcon className="h-4 w-4 mr-2" />
-                      Schedule Send
-                    </Button>
-                  </div>
+                <div className="flex justify-center pt-2">
                   <Button 
-                    className="bg-purple-600 hover:bg-purple-700"
+                    className="bg-purple-600 hover:bg-purple-700 w-full"
                     onClick={handleSendAnnouncement}
                     disabled={isSubmitting || announcementsLoading}
                   >
