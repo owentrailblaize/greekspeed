@@ -133,18 +133,6 @@ export async function POST(req: Request) {
         });
         break;
       
-      case 'pause':
-        updatedSubscription = await stripe.subscriptions.update(subscriptionId, {
-          pause_collection: { behavior: 'void' }
-        });
-        break;
-      
-      case 'resume':
-        updatedSubscription = await stripe.subscriptions.update(subscriptionId, {
-          pause_collection: null
-        });
-        break;
-      
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }

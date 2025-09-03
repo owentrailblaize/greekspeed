@@ -274,27 +274,6 @@ export default function SubscriptionPage() {
                       {actionLoading === 'cancel' ? 'Canceling...' : 'Cancel Subscription'}
                     </Button>
                   )}
-                  
-                  {subscription.status === 'active' && (
-                    <Button
-                      onClick={() => handleSubscriptionAction('pause')}
-                      disabled={actionLoading === 'pause'}
-                      variant="outline"
-                      className="w-full"
-                    >
-                      {actionLoading === 'pause' ? 'Pausing...' : 'Pause Subscription'}
-                    </Button>
-                  )}
-                  
-                  {subscription.status === 'paused' && (
-                    <Button
-                      onClick={() => handleSubscriptionAction('resume')}
-                      disabled={actionLoading === 'resume'}
-                      className="w-full"
-                    >
-                      {actionLoading === 'resume' ? 'Resuming...' : 'Resume Subscription'}
-                    </Button>
-                  )}
                 </div>
                 
                 {subscription.cancelAtPeriodEnd && (
