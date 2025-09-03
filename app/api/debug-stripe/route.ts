@@ -1,7 +1,26 @@
 import { NextResponse } from 'next/server';
 
+interface DebugInfo {
+  timestamp: string;
+  environment: string;
+  stripe: {
+    secretKey: { exists: boolean; length: number; startsWith: string };
+    publishableKey: { exists: boolean; length: number; startsWith: string };
+    webhookSecret: { exists: boolean; length: number; startsWith: string };
+    connection?: { success: boolean; accountId?: string; chargesEnabled?: boolean; payoutsEnabled?: boolean; detailsSubmitted?: boolean; error?: string; code?: string };
+    testCustomer?: { success: boolean; customerId?: string; error?: string };
+    import?: { success: boolean; error: string };
+  };
+  app: { url: string };
+  supabase: {
+    url: { exists: boolean; value: string };
+    anonKey: { exists: boolean; length: number };
+    serviceKey: { exists: boolean; length: number };
+  };
+}
+
 export async function GET() {
-  const debugInfo = {
+  const debugInfo: DebugInfo = {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     stripe: {
