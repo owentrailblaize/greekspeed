@@ -92,7 +92,7 @@ export async function POST(req: Request) {
       payment_method_types: ['card'],
       line_items: [
         {
-          price: 'price_1S3I32HgSlN6wHNZ8AW9Epgm', // Your price ID
+          price: 'price_1S3GQXHgSlN6wHNZ2n1RY63A', // Updated to new price ID
           quantity: 1,
         },
       ],

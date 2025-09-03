@@ -204,7 +204,7 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
             </div>
 
             <div className="text-center mb-8">
-              <div className="text-4xl font-bold text-blue-600">$9.99</div>
+              <div className="text-4xl font-bold text-blue-600">$5.00</div>
               <div className="text-gray-500">per month</div>
             </div>
 
