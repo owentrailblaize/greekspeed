@@ -6,8 +6,11 @@ export async function POST(req: Request) {
     const { userId, email } = await req.json();
 
     if (!userId || !email) {
+      console.error('Missing required fields:', { userId, email });
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    console.log('Creating subscription for:', { userId, email });
 
     // Import Stripe only when needed (runtime)
     const { stripe } = await import('@/lib/stripe-server');
@@ -23,6 +26,7 @@ export async function POST(req: Request) {
     let customerId = profile?.stripe_customer_id;
 
     if (!customerId) {
+      console.log('Creating new Stripe customer for:', email);
       // Create Stripe customer
       const customer = await stripe.customers.create({
         email,
@@ -32,6 +36,7 @@ export async function POST(req: Request) {
       });
 
       customerId = customer.id;
+      console.log('Created customer:', customerId);
 
       // Update profile with Stripe customer ID
       await supabase
@@ -39,6 +44,8 @@ export async function POST(req: Request) {
         .update({ stripe_customer_id: customerId })
         .eq('id', userId);
     }
+
+    console.log('Creating checkout session with customer:', customerId);
 
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
@@ -59,9 +66,13 @@ export async function POST(req: Request) {
       },
     });
 
+    console.log('Created session:', session.id);
     return NextResponse.json({ sessionId: session.id });
   } catch (error) {
     console.error('Error creating subscription:', error);
-    return NextResponse.json({ error: 'Failed to create subscription' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to create subscription',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
