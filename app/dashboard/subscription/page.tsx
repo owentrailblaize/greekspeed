@@ -153,8 +153,8 @@ export default function SubscriptionPage() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Subscription Management</h1>
-          <p className="text-gray-600 mt-2">Manage your Trailblaize Admin Access subscription</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">Subscription Management</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-2">Manage your Trailblaize Admin Access subscription</p>
         </div>
 
         {error && (
@@ -168,13 +168,13 @@ export default function SubscriptionPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Subscription Details */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
+              <CardHeader className="pb-4 sm:pb-0">
+                <CardTitle className="flex items-center text-lg sm:text-xl">
                   <DollarSign className="w-5 h-5 mr-2" />
                   Subscription Details
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-2 sm:space-y-4 pt-0 sm:pt-6">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Status</span>
                   {getStatusBadge(subscription.status)}
@@ -221,13 +221,13 @@ export default function SubscriptionPage() {
 
             {/* Payment Method */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
+              <CardHeader className="pb-4 sm:pb-0">
+                <CardTitle className="flex items-center text-lg sm:text-xl">
                   <CreditCard className="w-5 h-5 mr-2" />
                   Payment Method
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-2 sm:space-y-4 pt-0 sm:pt-6">
                 {subscription.paymentMethod ? (
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
@@ -251,7 +251,7 @@ export default function SubscriptionPage() {
 
             {/* Subscription Actions */}
             <Card className="md:col-span-2">
-              <CardHeader>
+              <CardHeader className="pb-2 sm:pb-0">
                 <CardTitle>Manage Subscription</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
