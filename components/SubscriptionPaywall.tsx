@@ -43,6 +43,8 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
 
   const handleSubscribe = async () => {
     try {
+      console.log('Starting subscription process...');
+      
       const response = await fetch('/api/create-subscription', {
         method: 'POST',
         headers: {
@@ -54,17 +56,35 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
         }),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('API Error:', errorData);
+        throw new Error(errorData.error || 'Failed to create subscription');
+      }
+
       const { sessionId } = await response.json();
+      console.log('Received session ID:', sessionId);
+      
+      if (!sessionId) {
+        throw new Error('No session ID received');
+      }
+
       const stripe = await getStripe();
       
       if (stripe) {
+        console.log('Redirecting to Stripe checkout...');
         const { error } = await stripe.redirectToCheckout({ sessionId });
         if (error) {
-          console.error('Error:', error);
+          console.error('Stripe redirect error:', error);
+          throw error;
         }
+      } else {
+        throw new Error('Stripe failed to load');
       }
     } catch (error) {
       console.error('Error creating subscription:', error);
+      // You could add a user-friendly error message here
+      alert('Failed to start subscription. Please try again.');
     }
   };
 

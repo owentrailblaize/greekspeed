@@ -47,7 +47,7 @@ export async function POST(req: Request) {
 
     console.log('Creating checkout session with customer:', customerId);
 
-    // Create checkout session
+    // Create checkout session with hosted checkout
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
@@ -58,7 +58,10 @@ export async function POST(req: Request) {
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`,
+      payment_method_collection: 'always',
+      allow_promotion_codes: true,
+      billing_address_collection: 'auto',
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?canceled=true`,
       metadata: {
         type: 'subscription',
