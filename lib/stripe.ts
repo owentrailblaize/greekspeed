@@ -1,11 +1,31 @@
-import Stripe from 'stripe';
+import { loadStripe } from '@stripe/stripe-js';
 
-// Client-side Stripe instance only
+let stripePromise: Promise<any> | null = null;
+
 export const getStripe = () => {
-  if (typeof window !== 'undefined') {
-    return new (require('@stripe/stripe-js')).loadStripe(
-      process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-    );
+  if (!stripePromise) {
+    const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+    
+    if (!publishableKey) {
+      console.error('Missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY');
+      return null;
+    }
+    
+    // Check if we're using live keys in development
+    const isLiveInDev = process.env.NODE_ENV === 'development' && publishableKey.startsWith('pk_live_');
+    
+    if (isLiveInDev) {
+      console.warn('⚠️ Using LIVE Stripe keys in DEVELOPMENT mode. This may cause authentication issues.');
+    }
+    
+    // Add additional options to handle potential issues
+    stripePromise = loadStripe(publishableKey, {
+      apiVersion: '2024-12-18.acacia',
+      stripeAccount: undefined, // Don't use connected account
+      // Add locale to prevent module loading issues
+      locale: 'en',
+    });
   }
-  return null;
+  
+  return stripePromise;
 };
