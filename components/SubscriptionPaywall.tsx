@@ -12,6 +12,9 @@ interface SubscriptionPaywallProps {
 export default function SubscriptionPaywall({ children }: SubscriptionPaywallProps) {
   const { user, loading } = useAuth();
   const [isPaywallVisible, setIsPaywallVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sessionUrl, setSessionUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && user) {
@@ -22,28 +25,57 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
   const checkSubscriptionStatus = async () => {
     if (!user) return;
 
-    // Check if user is admin or alumni
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role, subscription_status, billing_unlocked_until')
-      .eq('id', user.id)
-      .single();
+    try {
+      // Check if user is admin or alumni
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role, subscription_status, billing_unlocked_until')
+        .eq('id', user.id)
+        .single();
 
-    if (!profile) return;
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        return;
+      }
 
-    // Check if user needs subscription
-    const needsSubscription = profile.role === 'admin' || profile.role === 'alumni';
-    const hasActiveSubscription = profile.subscription_status === 'active';
-    const hasGracePeriod = profile.billing_unlocked_until && new Date(profile.billing_unlocked_until) > new Date();
+      if (!profile) return;
 
-    if (needsSubscription && !hasActiveSubscription && !hasGracePeriod) {
-      setIsPaywallVisible(true);
+      // Check if user needs subscription
+      const needsSubscription = profile.role === 'admin' || profile.role === 'alumni';
+      const hasActiveSubscription = profile.subscription_status === 'active';
+      const hasGracePeriod = profile.billing_unlocked_until && new Date(profile.billing_unlocked_until) > new Date();
+
+      if (needsSubscription && !hasActiveSubscription && !hasGracePeriod) {
+        setIsPaywallVisible(true);
+      }
+    } catch (error) {
+      console.error('Error checking subscription status:', error);
     }
   };
 
   const handleSubscribe = async () => {
+    if (!user?.id || !user?.email) {
+      setError('User information not available');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setSessionUrl(null);
+
     try {
       console.log('Starting subscription process...');
+      console.log('User ID:', user.id);
+      console.log('User Email:', user.email);
+      
+      // First, let's test the Stripe configuration
+      const debugResponse = await fetch('/api/debug-stripe');
+      const debugData = await debugResponse.json();
+      console.log('Stripe Debug Info:', debugData);
+      
+      if (!debugData.stripe.connection?.success) {
+        throw new Error(`Stripe connection failed: ${debugData.stripe.connection?.error || 'Unknown error'}`);
+      }
       
       const response = await fetch('/api/create-subscription', {
         method: 'POST',
@@ -51,45 +83,90 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: user?.id,
-          email: user?.email,
+          userId: user.id,
+          email: user.email,
         }),
       });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorData = await response.json();
         console.error('API Error:', errorData);
-        throw new Error(errorData.error || 'Failed to create subscription');
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const { sessionId } = await response.json();
+      const responseData = await response.json();
+      console.log('Full response data:', responseData);
+      
+      const { sessionId, sessionUrl: url } = responseData;
       console.log('Received session ID:', sessionId);
+      console.log('Received session URL:', url);
       
       if (!sessionId) {
-        throw new Error('No session ID received');
+        throw new Error('No session ID received from server');
       }
 
-      const stripe = await getStripe();
-      
-      if (stripe) {
-        console.log('Redirecting to Stripe checkout...');
-        const { error } = await stripe.redirectToCheckout({ sessionId });
-        if (error) {
-          console.error('Stripe redirect error:', error);
-          throw error;
+      // Store the session URL for fallback
+      if (url) {
+        setSessionUrl(url);
+      }
+
+      // Try the client-side redirect first
+      try {
+        const stripe = await getStripe();
+        
+        if (!stripe) {
+          throw new Error('Failed to load Stripe. Please check your internet connection.');
         }
-      } else {
-        throw new Error('Stripe failed to load');
+
+        console.log('Stripe loaded successfully, attempting client-side redirect...');
+        
+        // Add a small delay to ensure Stripe is fully loaded
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const { error: stripeError } = await stripe.redirectToCheckout({ 
+          sessionId,
+        });
+        
+        if (stripeError) {
+          console.error('Stripe redirect error:', stripeError);
+          throw stripeError; // Re-throw to try fallback
+        }
+        
+        console.log('Client-side redirect initiated successfully');
+      } catch (stripeError) {
+        console.error('Client-side redirect failed:', stripeError);
+        
+        // Fallback to direct URL redirect
+        if (url) {
+          console.log('Falling back to direct URL redirect:', url);
+          window.location.href = url;
+        } else {
+          throw new Error('Both client-side and server-side redirects failed');
+        }
       }
     } catch (error) {
       console.error('Error creating subscription:', error);
-      // You could add a user-friendly error message here
-      alert('Failed to start subscription. Please try again.');
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDirectRedirect = () => {
+    if (sessionUrl) {
+      window.location.href = sessionUrl;
     }
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
   if (isPaywallVisible) {
@@ -131,12 +208,39 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
               <div className="text-gray-500">per month</div>
             </div>
 
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            )}
+
             <button
               onClick={handleSubscribe}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
+              disabled={isLoading}
+              className={`w-full font-semibold py-3 px-6 rounded-lg transition duration-200 mb-4 ${
+                isLoading 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
             >
-              Start Premium Subscription
+              {isLoading ? (
+                <span className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Processing...
+                </span>
+              ) : (
+                'Start Premium Subscription'
+              )}
             </button>
+
+            {sessionUrl && (
+              <button
+                onClick={handleDirectRedirect}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 mb-4"
+              >
+                Direct Payment Link (Fallback)
+              </button>
+            )}
             
             <p className="text-sm text-gray-500 mt-4">
               Cancel anytime. No commitment required.
