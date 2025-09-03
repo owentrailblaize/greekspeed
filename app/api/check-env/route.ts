@@ -17,8 +17,13 @@ export async function GET() {
     },
   };
 
-  const missingVars = [];
-  const presentVars = [];
+  const missingVars: string[] = [];
+  const presentVars: Array<{
+    key: string;
+    category: string;
+    length: number;
+    preview: string;
+  }> = [];
 
   // Check all environment variables
   Object.entries(requiredEnvVars).forEach(([category, vars]) => {
