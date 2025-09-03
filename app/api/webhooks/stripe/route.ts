@@ -24,6 +24,8 @@ export async function POST(req: Request) {
   const supabase = createServerSupabaseClient();
 
   try {
+    console.log('Webhook received:', event.type);
+    
     switch (event.type) {
       case 'checkout.session.completed':
         await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
@@ -57,6 +59,9 @@ export async function POST(req: Request) {
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
   const supabase = createServerSupabaseClient();
   
+  console.log('Processing checkout session completed:', session.id);
+  console.log('Session metadata:', session.metadata);
+  
   // Handle dues payments
   if (session.metadata?.type === 'dues') {
     await supabase.from('payments_ledger').insert({
@@ -73,11 +78,33 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   
   // Handle subscription payments
   if (session.metadata?.type === 'subscription') {
-    await supabase.from('app_subscriptions').insert({
+    console.log('Processing subscription payment for user:', session.metadata.user_id);
+    
+    // Insert into app_subscriptions table
+    const { error: subscriptionError } = await supabase.from('app_subscriptions').insert({
       user_id: session.metadata.user_id,
       stripe_subscription_id: session.subscription as string,
       status: 'active'
     });
+    
+    if (subscriptionError) {
+      console.error('Error inserting subscription:', subscriptionError);
+    }
+    
+    // Update user profile subscription_status
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ 
+        subscription_status: 'active',
+        billing_unlocked_until: null // Clear grace period
+      })
+      .eq('id', session.metadata.user_id);
+    
+    if (profileError) {
+      console.error('Error updating profile:', profileError);
+    } else {
+      console.log('Successfully updated user profile subscription status');
+    }
   }
 }
 
