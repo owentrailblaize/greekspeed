@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe-server'; // Changed this line
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 
 export async function POST(req: Request) {
@@ -10,6 +9,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Import Stripe only when needed (runtime)
+    const { stripe } = await import('@/lib/stripe-server');
     const supabase = createServerSupabaseClient();
 
     // Get or create Stripe customer
