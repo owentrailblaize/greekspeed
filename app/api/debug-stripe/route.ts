@@ -20,7 +20,7 @@ interface DebugInfo {
 }
 
 export async function GET() {
-  const debugInfo: DebugInfo = {
+  const debugInfo: any = {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     stripe: {
