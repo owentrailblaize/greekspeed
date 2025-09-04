@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectItem } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useProfile } from "@/lib/contexts/ProfileContext";
 import { createClient } from '@supabase/supabase-js';
@@ -99,7 +99,7 @@ export function TreasurerDashboard() {
   const [bulkAssignment, setBulkAssignment] = useState({
     selectedMembers: [] as string[],
     amount: 0,
-    status: 'required' as const,
+    status: 'required' as 'required' | 'exempt' | 'reduced' | 'waived',
     notes: ''
   });
 
@@ -804,17 +804,12 @@ export function TreasurerDashboard() {
                 value={newAssignment.memberId}
                 onValueChange={(value) => setNewAssignment({ ...newAssignment, memberId: value })}
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Choose a member</SelectItem>
-                  {chapterMembers.map((member) => (
-                    <SelectItem key={member.id} value={member.id}>
-                      {member.full_name} ({member.email})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                <SelectItem value="">Choose a member</SelectItem>
+                {chapterMembers.map((member) => (
+                  <SelectItem key={member.id} value={member.id}>
+                    {member.full_name} ({member.email})
+                  </SelectItem>
+                ))}
               </Select>
             </div>
             <div>
@@ -833,17 +828,11 @@ export function TreasurerDashboard() {
                 value={newAssignment.status}
                 onValueChange={(value: any) => setNewAssignment({ ...newAssignment, status: value })}
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Select status</SelectItem>
-                  <SelectItem value="required">Required</SelectItem>
-                  <SelectItem value="exempt">Exempt</SelectItem>
-                  <SelectItem value="reduced">Reduced</SelectItem>
-                  <SelectItem value="waived">Waived</SelectItem>
-                  <SelectItem value="paid">Paid</SelectItem>
-                </SelectContent>
+                <SelectItem value="required">Required</SelectItem>
+                <SelectItem value="exempt">Exempt</SelectItem>
+                <SelectItem value="reduced">Reduced</SelectItem>
+                <SelectItem value="waived">Waived</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
               </Select>
             </div>
             <div>
@@ -968,27 +957,26 @@ export function TreasurerDashboard() {
                   <Input
                     id="bulkAmount"
                     type="number"
+                    step="5"
+                    min="0"
                     value={bulkAssignment.amount}
                     onChange={(e) => setBulkAssignment({ ...bulkAssignment, amount: parseFloat(e.target.value) || 0 })}
                     placeholder="150.00"
+                    className="w-full"
                   />
                 </div>
                 <div>
                   <Label htmlFor="bulkStatus">Status</Label>
-                  <Select
-                    value={bulkAssignment.status}
-                    onValueChange={(value: any) => setBulkAssignment({ ...bulkAssignment, status: value })}
+                  <Select 
+                    value={bulkAssignment.status} 
+                    onValueChange={(value: string) => setBulkAssignment({ ...bulkAssignment, status: value as 'required' | 'exempt' | 'reduced' | 'waived' })}
+                    placeholder="Select status"
                   >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Select status</SelectItem>
-                      <SelectItem value="required">Required</SelectItem>
-                      <SelectItem value="exempt">Exempt</SelectItem>
-                      <SelectItem value="reduced">Reduced</SelectItem>
-                      <SelectItem value="waived">Waived</SelectItem>
-                    </SelectContent>
+                    <SelectItem value="">Select status</SelectItem>
+                    <SelectItem value="required">Required</SelectItem>
+                    <SelectItem value="exempt">Exempt</SelectItem>
+                    <SelectItem value="reduced">Reduced</SelectItem>
+                    <SelectItem value="waived">Waived</SelectItem>
                   </Select>
                 </div>
                 <div>
@@ -1058,16 +1046,11 @@ export function TreasurerDashboard() {
                     status: value
                   })}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="required">Required</SelectItem>
-                    <SelectItem value="exempt">Exempt</SelectItem>
-                    <SelectItem value="reduced">Reduced</SelectItem>
-                    <SelectItem value="waived">Waived</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
-                  </SelectContent>
+                  <SelectItem value="required">Required</SelectItem>
+                  <SelectItem value="exempt">Exempt</SelectItem>
+                  <SelectItem value="reduced">Reduced</SelectItem>
+                  <SelectItem value="waived">Waived</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
                 </Select>
               </div>
               <div>
