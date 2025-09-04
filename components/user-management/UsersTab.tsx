@@ -180,119 +180,131 @@ export function UsersTab() {
             <div className="text-center py-8">Loading users...</div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b bg-gray-50">
-                    <th className="text-left p-3 font-medium text-sm">User Info</th>
-                    <th className="text-left p-3 font-medium text-sm">Role & Status</th>
-                    <th className="text-left p-3 font-medium text-sm">Chapter</th>
-                    <th className="text-left p-3 font-medium text-sm">Contact</th>
-                    <th className="text-left p-3 font-medium text-sm">Academic</th>
-                    <th className="text-left p-3 font-medium text-sm">Developer</th>
-                    <th className="text-left p-3 font-medium text-sm">Created</th>
-                    <th className="text-left p-3 font-medium text-sm">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredUsers.map((user) => (
-                    <tr key={user.id} className="border-b hover:bg-gray-50">
-                      <td className="p-3">
-                        <div>
-                          <p className="font-medium">{user.full_name || 'N/A'}</p>
-                          <p className="text-sm text-gray-600">{user.email}</p>
-                          
-                        </div>
-                      </td>
-                      <td className="p-3">
-                        <div className="space-y-1">
-                          <Badge variant={getRoleBadgeVariant(user.role)}>
-                            {user.role || 'N/A'}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {user.member_status || 'N/A'}
-                          </Badge>
-                          {user.chapter_role && (
-                            <p className="text-xs text-gray-600">{user.chapter_role}</p>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-3">
-                        <p className="text-sm">{user.chapter || 'N/A'}</p>
-                      </td>
-                      <td className="p-3">
-                        <div className="space-y-1">
-                          {user.phone && <p className="text-sm">{user.phone}</p>}
-                          {user.location && <p className="text-sm">{user.location}</p>}
-                          {!user.phone && !user.location && <p className="text-xs text-gray-500">No contact info</p>}
-                        </div>
-                      </td>
-                      <td className="p-3">
-                        <div className="space-y-1">
-                          {user.major && <p className="text-sm">{user.major}</p>}
-                          {user.grad_year && <p className="text-sm">Class of {user.grad_year}</p>}
-                          {!user.major && !user.grad_year && <p className="text-xs text-gray-500">No academic info</p>}
-                        </div>
-                      </td>
-                      <td className="p-3">
-                        {user.is_developer ? (
-                          <div className="space-y-1">
-                            <Badge variant="secondary">Developer</Badge>
-                            <p className="text-xs text-gray-600">
-                              {user.developer_permissions?.length || 0} permissions
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {user.access_level || 'N/A'} access
-                            </p>
-                          </div>
-                        ) : (
-                          <p className="text-xs text-gray-500">Standard user</p>
-                        )}
-                      </td>
-                      <td className="p-3">
-                        <p className="text-sm">{formatDate(user.created_at)}</p>
-                        <p className="text-xs text-gray-500">Updated: {formatDate(user.updated_at)}</p>
-                      </td>
-                      <td className="p-3">
-                        <div className="flex items-center space-x-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => openViewModal(user)}
-                            className="hover:bg-blue-50 hover:text-blue-600"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          
-                          {/* Edit Button with Lock Indicator */}
-                          <div className="relative">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              disabled
-                              className="h-8 w-8 p-0 bg-gray-50 cursor-not-allowed opacity-60"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <div className="absolute -top-1 -right-1">
-                              <Lock className="h-3 w-3 text-gray-500" />
-                            </div>
-                          </div>
-                          
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                            onClick={() => openDeleteModal(user)}
-                            disabled={deletingUserId === user.id}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
+              {/* Scrollable container with fixed height */}
+              <div className="max-h-[70vh] overflow-y-auto border border-gray-200 rounded-lg">
+                <table className="w-full border-collapse">
+                  <thead className="sticky top-0 bg-gray-50 z-10">
+                    <tr className="border-b">
+                      <th className="text-left p-3 font-medium text-sm bg-gray-50">User Info</th>
+                      <th className="text-left p-3 font-medium text-sm bg-gray-50">Role & Status</th>
+                      <th className="text-left p-3 font-medium text-sm bg-gray-50">Chapter</th>
+                      <th className="text-left p-3 font-medium text-sm bg-gray-50">Contact</th>
+                      <th className="text-left p-3 font-medium text-sm bg-gray-50">Academic</th>
+                      <th className="text-left p-3 font-medium text-sm bg-gray-50">Developer</th>
+                      <th className="text-left p-3 font-medium text-sm bg-gray-50">Created</th>
+                      <th className="text-left p-3 font-medium text-sm bg-gray-50">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map((user) => (
+                      <tr key={user.id} className="border-b hover:bg-gray-50">
+                        <td className="p-3">
+                          <div>
+                            <p className="font-medium">{user.full_name || 'N/A'}</p>
+                            <p className="text-sm text-gray-600">{user.email}</p>
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <div className="space-y-1">
+                            <Badge variant={getRoleBadgeVariant(user.role)}>
+                              {user.role || 'N/A'}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {user.member_status || 'N/A'}
+                            </Badge>
+                            {user.chapter_role && (
+                              <p className="text-xs text-gray-600">{user.chapter_role}</p>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <p className="text-sm">{user.chapter || 'N/A'}</p>
+                        </td>
+                        <td className="p-3">
+                          <div className="space-y-1">
+                            {user.phone && <p className="text-sm">{user.phone}</p>}
+                            {user.location && <p className="text-sm">{user.location}</p>}
+                            {!user.phone && !user.location && <p className="text-xs text-gray-500">No contact info</p>}
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <div className="space-y-1">
+                            {user.major && <p className="text-sm">{user.major}</p>}
+                            {user.grad_year && <p className="text-sm">Class of {user.grad_year}</p>}
+                            {!user.major && !user.grad_year && <p className="text-xs text-gray-500">No academic info</p>}
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          {user.is_developer ? (
+                            <div className="space-y-1">
+                              <Badge variant="secondary">Developer</Badge>
+                              <p className="text-xs text-gray-600">
+                                {user.developer_permissions?.length || 0} permissions
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {user.access_level || 'N/A'} access
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="text-xs text-gray-500">Standard user</p>
+                          )}
+                        </td>
+                        <td className="p-3">
+                          <p className="text-sm">{formatDate(user.created_at)}</p>
+                          <p className="text-xs text-gray-500">Updated: {formatDate(user.updated_at)}</p>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center space-x-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => openViewModal(user)}
+                              className="hover:bg-blue-50 hover:text-blue-600"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            
+                            {/* Edit Button with Lock Indicator */}
+                            <div className="relative">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled
+                                className="h-8 w-8 p-0 bg-gray-50 cursor-not-allowed opacity-60"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <div className="absolute -top-1 -right-1">
+                                <Lock className="h-3 w-3 text-gray-500" />
+                              </div>
+                            </div>
+                            
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                              onClick={() => openDeleteModal(user)}
+                              disabled={deletingUserId === user.id}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Summary Footer */}
+              <div className="mt-4 text-sm text-gray-600">
+                <p>Showing {filteredUsers.length} user records</p>
+                {filteredUsers.length > 1000 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    💡 Tip: Use the search bar above to filter results for better performance
+                  </p>
+                )}
+              </div>
             </div>
           )}
         </CardContent>
