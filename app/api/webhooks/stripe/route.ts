@@ -64,7 +64,10 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   
   // Handle dues payments
   if (session.metadata?.type === 'dues') {
-    await supabase.from('payments_ledger').insert({
+    console.log('Processing dues payment for assignment:', session.metadata.dues_assignment_id);
+    
+    // Insert into payments ledger
+    const { error: ledgerError } = await supabase.from('payments_ledger').insert({
       chapter_id: session.metadata.chapter_id,
       user_id: session.metadata.user_id,
       dues_cycle_id: session.metadata.dues_cycle_id,
@@ -74,6 +77,42 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       status: 'succeeded',
       method: 'card'
     });
+
+    if (ledgerError) {
+      console.error('Error inserting into payments ledger:', ledgerError);
+    }
+
+    // Update dues assignment status
+    const { error: assignmentError } = await supabase
+      .from('dues_assignments')
+      .update({ 
+        status: 'paid',
+        amount_paid: session.amount_total! / 100,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', session.metadata.dues_assignment_id);
+
+    if (assignmentError) {
+      console.error('Error updating dues assignment:', assignmentError);
+    } else {
+      console.log('Successfully updated dues assignment to paid');
+    }
+
+    // Update user profile dues status
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ 
+        current_dues_amount: '0.00',
+        dues_status: 'paid',
+        last_dues_assignment_date: new Date().toISOString()
+      })
+      .eq('id', session.metadata.user_id);
+
+    if (profileError) {
+      console.error('Error updating user profile:', profileError);
+    } else {
+      console.log('Successfully updated user profile dues status');
+    }
   }
   
   // Handle subscription payments

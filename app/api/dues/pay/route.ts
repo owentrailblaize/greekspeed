@@ -6,23 +6,6 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient();
     
-    // Get user session
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Get user profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role, chapter_id, chapter_role, stripe_customer_id, email')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-    }
-
     const body = await request.json();
     const { assignmentId, paymentPlan = false } = body;
 
@@ -30,11 +13,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Assignment ID is required' }, { status: 400 });
     }
 
-    // Get the dues assignment
+    // Get the dues assignment first
     const { data: assignment, error: assignmentError } = await supabase
       .from('dues_assignments')
       .select(`
         *,
+        user:profiles!dues_assignments_user_id_fkey(
+          id,
+          full_name,
+          email,
+          stripe_customer_id,
+          chapter_id
+        ),
         cycle:dues_cycles!dues_assignments_dues_cycle_id_fkey(
           id,
           name,
@@ -43,7 +33,6 @@ export async function POST(request: NextRequest) {
         )
       `)
       .eq('id', assignmentId)
-      .eq('user_id', user.id)
       .single();
 
     if (assignmentError || !assignment) {
@@ -55,13 +44,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Get or create Stripe customer
-    let customerId = profile.stripe_customer_id;
+    let customerId = assignment.user.stripe_customer_id;
     if (!customerId) {
       const customer = await stripe.customers.create({
-        email: profile.email,
+        email: assignment.user.email,
+        name: assignment.user.full_name,
         metadata: {
-          user_id: user.id,
-          chapter_id: profile.chapter_id
+          user_id: assignment.user.id,
+          chapter_id: assignment.user.chapter_id
         }
       });
       customerId = customer.id;
@@ -70,7 +60,7 @@ export async function POST(request: NextRequest) {
       await supabase
         .from('profiles')
         .update({ stripe_customer_id: customerId })
-        .eq('id', user.id);
+        .eq('id', assignment.user.id);
     }
 
     // Create Stripe checkout session with dynamic pricing
@@ -93,8 +83,8 @@ export async function POST(request: NextRequest) {
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/dues?canceled=true`,
       metadata: {
         type: 'dues',
-        user_id: user.id,
-        chapter_id: profile.chapter_id,
+        user_id: assignment.user.id,
+        chapter_id: assignment.user.chapter_id,
         dues_cycle_id: assignment.dues_cycle_id,
         dues_assignment_id: assignment.id,
         payment_plan: paymentPlan.toString()
