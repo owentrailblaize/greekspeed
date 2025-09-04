@@ -84,27 +84,37 @@ export default function DuesClient() {
   const [assignments, setAssignments] = useState<DuesAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingPayment, setProcessingPayment] = useState(false);
+  // Add payment history state
+  const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
+
+  // Add success state
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   useEffect(() => {
     if (profile?.id) {
       loadDuesAssignments();
+      loadPaymentHistory();
     }
   }, [profile?.id]);
 
-  // Add this effect to check for success/cancel parameters
+  // Update the success effect
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const success = urlParams.get('success');
     const canceled = urlParams.get('canceled');
     
     if (success === 'true') {
-      console.log(' Payment successful! Refreshing data...');
-      loadDuesAssignments(); // Refresh the data
+      console.log('✅ Payment successful! Refreshing data...');
+      setShowSuccessMessage(true);
+      loadDuesAssignments();
+      loadPaymentHistory(); // Refresh payment history
       // Clean up the URL
       window.history.replaceState({}, '', '/dashboard/dues');
+      
+      // Hide success message after 5 seconds
+      setTimeout(() => setShowSuccessMessage(false), 5000);
     } else if (canceled === 'true') {
       console.log('❌ Payment canceled');
-      // Clean up the URL
       window.history.replaceState({}, '', '/dashboard/dues');
     }
   }, []);
@@ -136,6 +146,30 @@ export default function DuesClient() {
       console.error('Error loading dues assignments:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Add function to load payment history
+  const loadPaymentHistory = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('payments_ledger')
+        .select(`
+          *,
+          cycle:dues_cycles!payments_ledger_dues_cycle_id_fkey(
+            name,
+            due_date
+          )
+        `)
+        .eq('user_id', profile?.id)
+        .eq('type', 'dues')
+        .eq('status', 'succeeded')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPaymentHistory(data || []);
+    } catch (error) {
+      console.error('Error loading payment history:', error);
     }
   };
 
@@ -175,6 +209,9 @@ export default function DuesClient() {
 
   const currentAssignment = assignments.find(a => a.status !== 'paid' && a.status !== 'exempt' && a.status !== 'waived');
   const totalOutstanding = assignments.reduce((sum, a) => sum + (a.amount_due - a.amount_paid), 0);
+  // Add payment summary calculation
+  const totalPaid = paymentHistory.reduce((sum, payment) => sum + payment.amount, 0);
+  const recentPayment = paymentHistory[0]; // Most recent payment
 
   if (loading) {
     return <div className="flex items-center justify-center h-64">Loading...</div>;
@@ -202,6 +239,11 @@ export default function DuesClient() {
                 >
                   ${totalOutstanding.toFixed(2)}
                 </p>
+                {totalPaid > 0 && (
+                  <p className="text-xs text-gray-500">
+                    Total paid: ${totalPaid.toFixed(2)}
+                  </p>
+                )}
               </div>
               <Badge
                 variant={totalOutstanding === 0 ? "default" : "secondary"}
@@ -213,6 +255,15 @@ export default function DuesClient() {
           </div>
         </div>
       </div>
+
+      {showSuccessMessage && (
+        <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="h-5 w-5" />
+            <span>Payment successful! Your dues have been updated.</span>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -310,37 +361,50 @@ export default function DuesClient() {
             {/* Payment History */}
             <Card>
               <CardHeader>
-                <CardTitle>Payment History</CardTitle>
+                <CardTitle className="flex items-center space-x-2">
+                  <CreditCard className="h-5 w-5 text-navy-600" />
+                  <span>Payment History</span>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {assignments.filter(a => a.amount_paid > 0).map((assignment) => (
-                    <div
-                      key={assignment.id}
-                      className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <div>
-                          <p className="font-medium">{assignment.cycle.name}</p>
-                          <p className="text-sm text-gray-600">
-                            {new Date(assignment.cycle.due_date).toLocaleDateString()} • Credit Card
-                          </p>
+                  {paymentHistory.length > 0 ? (
+                    paymentHistory.map((payment) => (
+                      <div
+                        key={payment.id}
+                        className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <div>
+                            <p className="font-medium">{payment.cycle?.name || 'Chapter Dues'}</p>
+                            <p className="text-sm text-gray-600">
+                              {new Date(payment.created_at).toLocaleDateString()} • Credit Card
+                            </p>
+                            {payment.stripe_payment_intent_id && (
+                              <p className="text-xs text-gray-500">
+                                Transaction: {payment.stripe_payment_intent_id.slice(-8)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">${payment.amount.toFixed(2)}</p>
+                          <Badge
+                            variant="secondary"
+                            className="bg-green-100 text-green-800"
+                          >
+                            Paid
+                          </Badge>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium">${assignment.amount_paid.toFixed(2)}</p>
-                        <Badge
-                          variant="secondary"
-                          className="bg-green-100 text-green-800"
-                        >
-                          Paid
-                        </Badge>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <CreditCard className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                      <p className="text-gray-500">No payment history available</p>
+                      <p className="text-sm text-gray-400">Your completed payments will appear here</p>
                     </div>
-                  ))}
-                  {assignments.filter(a => a.amount_paid > 0).length === 0 && (
-                    <p className="text-center text-gray-500">No payment history available</p>
                   )}
                 </div>
               </CardContent>
