@@ -32,8 +32,7 @@ const roleOptions: RoleOption[] = [
   {
     value: "treasurer",
     label: "Treasurer",
-    description: "Financial management and dues tracking",
-    disabled: true // Lock the treasurer option
+    description: "Financial management and dues tracking"
   }
 ];
 

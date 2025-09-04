@@ -126,7 +126,27 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
   const supabase = createServerSupabaseClient();
   
-  // Handle subscription payments - use type assertion
+  console.log('Processing invoice paid:', invoice.id);
+  console.log('Invoice metadata:', invoice.metadata);
+  
+  // Handle subscription payments for payment plans
+  if (invoice.metadata?.type === 'dues_payment_plan') {
+    const { error } = await supabase
+      .from('dues_assignments')
+      .update({ 
+        amount_paid: invoice.amount_paid / 100,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', invoice.metadata.dues_assignment_id);
+
+    if (error) {
+      console.error('Error updating dues assignment for payment plan:', error);
+    } else {
+      console.log('Successfully updated dues assignment for payment plan');
+    }
+  }
+  
+  // Handle app subscription payments
   const invoiceWithSubscription = invoice as any;
   if (invoiceWithSubscription.subscription) {
     await supabase
@@ -155,9 +175,38 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 async function handleChargeRefunded(charge: Stripe.Charge) {
   const supabase = createServerSupabaseClient();
   
-  // Update payment ledger
-  await supabase
+  console.log('Processing charge refunded:', charge.id);
+  
+  // Update payments ledger
+  const { error } = await supabase
     .from('payments_ledger')
-    .update({ status: 'refunded' })
+    .update({ 
+      status: 'refunded',
+      updated_at: new Date().toISOString()
+    })
     .eq('stripe_charge_id', charge.id);
+
+  if (error) {
+    console.error('Error updating payments ledger for refund:', error);
+  } else {
+    console.log('Successfully updated payments ledger for refund');
+  }
+  
+  // If this was a dues payment, update the assignment
+  if (charge.metadata?.dues_assignment_id) {
+    const { error: assignmentError } = await supabase
+      .from('dues_assignments')
+      .update({ 
+        status: 'required',
+        amount_paid: 0,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', charge.metadata.dues_assignment_id);
+
+    if (assignmentError) {
+      console.error('Error updating dues assignment for refund:', assignmentError);
+    } else {
+      console.log('Successfully updated dues assignment for refund');
+    }
+  }
 }
