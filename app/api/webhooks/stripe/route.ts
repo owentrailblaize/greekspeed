@@ -41,7 +41,13 @@ export async function POST(req: Request) {
       
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
-        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
+        // Check if it's a chapter subscription
+        const subscription = event.data.object as Stripe.Subscription;
+        if (subscription.metadata?.chapter_id) {
+          await handleChapterSubscriptionUpdated(subscription);
+        } else {
+          await handleSubscriptionUpdated(subscription);
+        }
         break;
       
       case 'charge.refunded':
@@ -59,11 +65,61 @@ export async function POST(req: Request) {
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
   const supabase = createServerSupabaseClient();
   
-  console.log('🔄 Processing checkout session completed:', session.id);
-  console.log('📋 Session metadata:', session.metadata);
-  console.log('💰 Amount total:', session.amount_total);
+  console.log('Processing checkout session completed:', session.id);
+  console.log('Session metadata:', session.metadata);
   
-  // Handle dues payments
+  // Handle chapter subscription payments
+  if (session.metadata?.type === 'chapter_subscription') {
+    console.log('Processing chapter subscription payment for chapter:', session.metadata.chapter_id);
+    
+    // Insert into chapter_subscriptions table
+    const { error: subscriptionError } = await supabase.from('chapter_subscriptions').insert({
+      chapter_id: session.metadata.chapter_id,
+      stripe_subscription_id: session.subscription as string,
+      status: 'active',
+      current_period_start: new Date(session.created * 1000),
+      current_period_end: new Date((session.created + 30 * 24 * 60 * 60) * 1000), // 30 days
+    });
+    
+    if (subscriptionError) {
+      console.error('Error inserting chapter subscription:', subscriptionError);
+    } else {
+      console.log('Successfully created chapter subscription');
+    }
+  }
+  
+  // Handle individual subscription payments (keep existing logic)
+  if (session.metadata?.type === 'subscription') {
+    console.log('Processing subscription payment for user:', session.metadata.user_id);
+    
+    // Insert into app_subscriptions table
+    const { error: subscriptionError } = await supabase.from('app_subscriptions').insert({
+      user_id: session.metadata.user_id,
+      stripe_subscription_id: session.subscription as string,
+      status: 'active'
+    });
+    
+    if (subscriptionError) {
+      console.error('Error inserting subscription:', subscriptionError);
+    }
+    
+    // Update user profile subscription_status
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ 
+        subscription_status: 'active',
+        billing_unlocked_until: null // Clear grace period
+      })
+      .eq('id', session.metadata.user_id);
+    
+    if (profileError) {
+      console.error('Error updating profile:', profileError);
+    } else {
+      console.log('Successfully updated user profile subscription status');
+    }
+  }
+  
+  // Handle dues payments (keep existing logic)
   if (session.metadata?.type === 'dues') {
     console.log('💳 Processing dues payment for assignment:', session.metadata.dues_assignment_id);
     
@@ -119,37 +175,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       }
     } catch (error) {
       console.error('❌ Error in dues payment processing:', error);
-    }
-  }
-  
-  // Handle subscription payments
-  if (session.metadata?.type === 'subscription') {
-    console.log('Processing subscription payment for user:', session.metadata.user_id);
-    
-    // Insert into app_subscriptions table
-    const { error: subscriptionError } = await supabase.from('app_subscriptions').insert({
-      user_id: session.metadata.user_id,
-      stripe_subscription_id: session.subscription as string,
-      status: 'active'
-    });
-    
-    if (subscriptionError) {
-      console.error('Error inserting subscription:', subscriptionError);
-    }
-    
-    // Update user profile subscription_status
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({ 
-        subscription_status: 'active',
-        billing_unlocked_until: null // Clear grace period
-      })
-      .eq('id', session.metadata.user_id);
-    
-    if (profileError) {
-      console.error('Error updating profile:', profileError);
-    } else {
-      console.log('Successfully updated user profile subscription status');
     }
   }
 }
@@ -210,6 +235,20 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   
   await supabase
     .from('app_subscriptions')
+    .update({
+      status: subscription.status,
+      current_period_end: new Date((subscription as any).current_period_end * 1000),
+      cancel_at_period_end: subscription.cancel_at_period_end
+    })
+    .eq('stripe_subscription_id', subscription.id);
+}
+
+// Add new handler for chapter subscription updates
+async function handleChapterSubscriptionUpdated(subscription: Stripe.Subscription) {
+  const supabase = createServerSupabaseClient();
+  
+  await supabase
+    .from('chapter_subscriptions')
     .update({
       status: subscription.status,
       current_period_end: new Date((subscription as any).current_period_end * 1000),
