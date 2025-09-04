@@ -71,7 +71,7 @@ export function DashboardHeader() {
     { href: '/dashboard', label: 'Overview', roles: ['admin', 'active_member', 'alumni'], locked: false },
     { href: '/dashboard/alumni', label: 'Alumni', roles: ['admin', 'alumni', 'active_member'], locked: false },
     // ✅ Messages tab removed from here
-    { href: '/dashboard/dues', label: 'Dues', roles: ['active_member', 'alumni'], locked: true }, // Locked for coming soon
+    { href: '/dashboard/dues', label: 'Dues', roles: ['active_member', 'alumni', 'admin'], locked: false }, // Now unlocked for active members and admins
     { href: '/dashboard/admin', label: 'Exec Admin', roles: ['admin'], locked: false }, // Hidden from non-admin
   ];
 

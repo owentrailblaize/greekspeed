@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   CreditCard,
@@ -13,6 +13,7 @@ import {
   Award,
   DollarSign,
   Clock,
+  AlertTriangle,
 } from "lucide-react";
 import {
   Card,
@@ -23,6 +24,13 @@ import {
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
 import { Progress } from "../../../components/ui/progress";
+import { useProfile } from "@/lib/contexts/ProfileContext";
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 const duesCoverage = [
   {
@@ -57,36 +65,120 @@ const duesCoverage = [
   },
 ];
 
-const paymentHistory = [
-  {
-    date: "2024-01-15",
-    amount: "$150.00",
-    status: "Paid",
-    period: "Spring 2024",
-    method: "Credit Card",
-  },
-  {
-    date: "2023-08-15",
-    amount: "$150.00",
-    status: "Paid",
-    period: "Fall 2023",
-    method: "Credit Card",
-  },
-  {
-    date: "2023-01-15",
-    amount: "$150.00",
-    status: "Paid",
-    period: "Spring 2023",
-    method: "Bank Transfer",
-  },
-];
+interface DuesAssignment {
+  id: string;
+  status: 'required' | 'exempt' | 'reduced' | 'waived' | 'paid';
+  amount_assessed: number;
+  amount_due: number;
+  amount_paid: number;
+  cycle: {
+    name: string;
+    due_date: string;
+    allow_payment_plans: boolean;
+    plan_options: any[];
+  };
+}
 
 export default function DuesClient() {
-  const [selectedPlan, setSelectedPlan] = useState("semester");
+  const { profile } = useProfile();
+  const [assignments, setAssignments] = useState<DuesAssignment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processingPayment, setProcessingPayment] = useState(false);
 
-  const currentBalance = 0;
-  const nextDueDate = "August 15, 2025";
-  const nextDueAmount = "$150.00";
+  useEffect(() => {
+    if (profile?.id) {
+      loadDuesAssignments();
+    }
+  }, [profile?.id]);
+
+  // Add this effect to check for success/cancel parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get('success');
+    const canceled = urlParams.get('canceled');
+    
+    if (success === 'true') {
+      console.log(' Payment successful! Refreshing data...');
+      loadDuesAssignments(); // Refresh the data
+      // Clean up the URL
+      window.history.replaceState({}, '', '/dashboard/dues');
+    } else if (canceled === 'true') {
+      console.log('❌ Payment canceled');
+      // Clean up the URL
+      window.history.replaceState({}, '', '/dashboard/dues');
+    }
+  }, []);
+
+  const loadDuesAssignments = async () => {
+    try {
+      setLoading(true);
+      console.log('🔄 Loading dues assignments for user:', profile?.id);
+      
+      const { data, error } = await supabase
+        .from('dues_assignments')
+        .select(`
+          *,
+          cycle:dues_cycles!dues_assignments_dues_cycle_id_fkey(
+            name,
+            due_date,
+            allow_payment_plans,
+            plan_options
+          )
+        `)
+        .eq('user_id', profile?.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      console.log('📊 Loaded assignments:', data);
+      setAssignments(data || []);
+    } catch (error) {
+      console.error('Error loading dues assignments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePayDues = async (assignmentId: string, paymentPlan = false) => {
+    try {
+      setProcessingPayment(true);
+      
+      const response = await fetch('/api/dues/pay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignmentId, paymentPlan })
+      });
+
+      if (response.ok) {
+        const { url } = await response.json();
+        window.location.href = url;
+      } else {
+        console.error('Payment failed');
+      }
+    } catch (error) {
+      console.error('Error processing payment:', error);
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'paid': return 'bg-green-100 text-green-800';
+      case 'required': return 'bg-yellow-100 text-yellow-800';
+      case 'overdue': return 'bg-red-100 text-red-800';
+      case 'exempt': return 'bg-gray-100 text-gray-800';
+      case 'waived': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const currentAssignment = assignments.find(a => a.status !== 'paid' && a.status !== 'exempt' && a.status !== 'waived');
+  const totalOutstanding = assignments.reduce((sum, a) => sum + (a.amount_due - a.amount_paid), 0);
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -102,20 +194,20 @@ export default function DuesClient() {
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <p className="text-sm text-gray-500">Current Balance</p>
+                <p className="text-sm text-gray-500">Outstanding Balance</p>
                 <p
                   className={`font-semibold ${
-                    currentBalance === 0 ? "text-green-600" : "text-red-600"
+                    totalOutstanding === 0 ? "text-green-600" : "text-red-600"
                   }`}
                 >
-                  ${currentBalance.toFixed(2)}
+                  ${totalOutstanding.toFixed(2)}
                 </p>
               </div>
               <Badge
-                variant={currentBalance === 0 ? "default" : "secondary"}
-                className="bg-green-100 text-green-800"
+                variant={totalOutstanding === 0 ? "default" : "secondary"}
+                className={totalOutstanding === 0 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
               >
-                {currentBalance === 0 ? "Paid Up" : "Outstanding"}
+                {totalOutstanding === 0 ? "Paid Up" : "Outstanding"}
               </Badge>
             </div>
           </div>
@@ -132,89 +224,85 @@ export default function DuesClient() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center space-x-2">
                     <Calendar className="h-5 w-5 text-navy-600" />
-                    <span>Next Payment Due</span>
+                    <span>Current Dues Status</span>
                   </CardTitle>
                   <Clock className="h-5 w-5 text-navy-500" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-2xl font-semibold text-navy-900">
-                      {nextDueAmount}
-                    </p>
-                    <p className="text-navy-600">Due on {nextDueDate}</p>
+                {currentAssignment ? (
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-2xl font-semibold text-navy-900">
+                        ${(currentAssignment.amount_due - currentAssignment.amount_paid).toFixed(2)}
+                      </p>
+                      <p className="text-navy-600">Due on {new Date(currentAssignment.cycle.due_date).toLocaleDateString()}</p>
+                      {currentAssignment.cycle.allow_payment_plans && (
+                        <p className="text-sm text-gray-600">Payment plans available</p>
+                      )}
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button 
+                        onClick={() => handlePayDues(currentAssignment.id, false)}
+                        disabled={processingPayment}
+                        className="bg-navy-600 hover:bg-navy-700"
+                      >
+                        <CreditCard className="h-4 w-4 mr-2" /> Pay Now
+                      </Button>
+                      {currentAssignment.cycle.allow_payment_plans && (
+                        <Button 
+                          onClick={() => handlePayDues(currentAssignment.id, true)}
+                          disabled={processingPayment}
+                          variant="outline"
+                        >
+                          <Calendar className="h-4 w-4 mr-2" /> Payment Plan
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <Button className="bg-navy-600 hover:bg-navy-700">
-                    <CreditCard className="h-4 w-4 mr-2" /> Pay Now
-                  </Button>
-                </div>
-                <Progress value={75} className="mb-2" />
-                <p className="text-sm text-gray-600">
-                  75% of semester completed
-                </p>
+                ) : (
+                  <div className="text-center text-green-600">
+                    <CheckCircle className="h-12 w-12 mx-auto mb-2" />
+                    <p className="text-lg font-semibold">All dues are current!</p>
+                    <p className="text-sm text-gray-600">No outstanding payments required.</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Payment Options */}
+            {/* Payment Information */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <DollarSign className="h-5 w-5 text-navy-600" />
-                  <span>Payment Plans</span>
+                  <span>Payment Information</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <motion.div
-                    className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 ${
-                      selectedPlan === "semester"
-                        ? "border-navy-500 bg-navy-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                    onClick={() => setSelectedPlan("semester")}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-medium">Semester Plan</h3>
-                      <Badge variant="secondary">Popular</Badge>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium">Payment Methods</p>
+                      <p className="text-sm text-gray-600">Credit/Debit Cards via Stripe</p>
                     </div>
-                    <p className="text-2xl font-semibold text-navy-900 mb-1">
-                      $150
-                    </p>
-                    <p className="text-sm text-gray-600 mb-3">Per semester</p>
-                    <ul className="text-sm text-gray-600 space-y-1">
-                      <li>• Full semester access</li>
-                      <li>• Payment flexibility</li>
-                      <li>• Automatic renewal</li>
-                    </ul>
-                  </motion.div>
-
-                  <motion.div
-                    className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 ${
-                      selectedPlan === "annual"
-                        ? "border-navy-500 bg-navy-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                    onClick={() => setSelectedPlan("annual")}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-medium">Annual Plan</h3>
-                      <Badge className="bg-green-100 text-green-800">Save 10%</Badge>
+                    <CreditCard className="h-5 w-5 text-navy-600" />
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium">Security</p>
+                      <p className="text-sm text-gray-600">PCI compliant, encrypted payments</p>
                     </div>
-                    <p className="text-2xl font-semibold text-navy-900 mb-1">
-                      $270
-                    </p>
-                    <p className="text-sm text-gray-600 mb-3">Per year</p>
-                    <ul className="text-sm text-gray-600 space-y-1">
-                      <li>• Full year access</li>
-                      <li>• 10% discount</li>
-                      <li>• Priority support</li>
-                    </ul>
-                  </motion.div>
+                    <Shield className="h-5 w-5 text-green-600" />
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium">Receipts</p>
+                      <p className="text-sm text-gray-600">Automatically sent to your email</p>
+                    </div>
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -226,31 +314,34 @@ export default function DuesClient() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {paymentHistory.map((payment, index) => (
+                  {assignments.filter(a => a.amount_paid > 0).map((assignment) => (
                     <div
-                      key={index}
+                      key={assignment.id}
                       className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0"
                     >
                       <div className="flex items-center space-x-3">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         <div>
-                          <p className="font-medium">{payment.period}</p>
+                          <p className="font-medium">{assignment.cycle.name}</p>
                           <p className="text-sm text-gray-600">
-                            {payment.date} • {payment.method}
+                            {new Date(assignment.cycle.due_date).toLocaleDateString()} • Credit Card
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">{payment.amount}</p>
+                        <p className="font-medium">${assignment.amount_paid.toFixed(2)}</p>
                         <Badge
                           variant="secondary"
                           className="bg-green-100 text-green-800"
                         >
-                          {payment.status}
+                          Paid
                         </Badge>
                       </div>
                     </div>
                   ))}
+                  {assignments.filter(a => a.amount_paid > 0).length === 0 && (
+                    <p className="text-center text-gray-500">No payment history available</p>
+                  )}
                 </div>
               </CardContent>
             </Card>

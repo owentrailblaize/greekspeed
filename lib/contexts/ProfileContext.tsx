@@ -3,20 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { supabase } from '@/lib/supabase/client';
-
-interface Profile {
-  id: string;
-  email: string;
-  full_name: string;
-  first_name: string;
-  last_name: string;
-  avatar_url: string | null;
-  banner_url?: string | null;
-  chapter: string;
-  role: string;
-  bio: string | null;
-  // ... other profile fields
-}
+import { Profile } from '@/types/profile'; // Import the correct Profile type
 
 interface ProfileContextType {
   profile: Profile | null;
