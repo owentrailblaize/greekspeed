@@ -14,6 +14,7 @@ import {
   DollarSign,
   Clock,
   AlertTriangle,
+  Download,
 } from "lucide-react";
 import {
   Card,
@@ -207,8 +208,19 @@ export default function DuesClient() {
     }
   };
 
+  // Update the outstanding balance calculation
   const currentAssignment = assignments.find(a => a.status !== 'paid' && a.status !== 'exempt' && a.status !== 'waived');
-  const totalOutstanding = assignments.reduce((sum, a) => sum + (a.amount_due - a.amount_paid), 0);
+  const totalOutstanding = assignments.reduce((sum, a) => {
+    // Only count outstanding dues (not paid, exempt, or waived)
+    if (a.status !== 'paid' && a.status !== 'exempt' && a.status !== 'waived') {
+      return sum + (a.amount_due - a.amount_paid);
+    }
+    return sum;
+  }, 0);
+
+  // Add this to ensure the header reflects the correct status
+  const isPaidUp = totalOutstanding === 0 && assignments.length > 0;
+
   // Add payment summary calculation
   const totalPaid = paymentHistory.reduce((sum, payment) => sum + payment.amount, 0);
   const recentPayment = paymentHistory[0]; // Most recent payment
@@ -267,9 +279,9 @@ export default function DuesClient() {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Payment Section */}
+          {/* Left Column - Reorder the cards */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Current Status Card */}
+            {/* Current Status Card - Keep at top */}
             <Card className="bg-gradient-to-br from-navy-50 to-blue-50 border-navy-200">
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -321,49 +333,18 @@ export default function DuesClient() {
               </CardContent>
             </Card>
 
-            {/* Payment Information */}
+            {/* Payment History - Move to second position */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <DollarSign className="h-5 w-5 text-navy-600" />
-                  <span>Payment Information</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">Payment Methods</p>
-                      <p className="text-sm text-gray-600">Credit/Debit Cards via Stripe</p>
-                    </div>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
                     <CreditCard className="h-5 w-5 text-navy-600" />
+                    <span>Payment History</span>
                   </div>
-                  
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">Security</p>
-                      <p className="text-sm text-gray-600">PCI compliant, encrypted payments</p>
-                    </div>
-                    <Shield className="h-5 w-5 text-green-600" />
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">Receipts</p>
-                      <p className="text-sm text-gray-600">Automatically sent to your email</p>
-                    </div>
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Payment History */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <CreditCard className="h-5 w-5 text-navy-600" />
-                  <span>Payment History</span>
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Receipts
+                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -409,10 +390,48 @@ export default function DuesClient() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Payment Information - Move to third position */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <DollarSign className="h-5 w-5 text-navy-600" />
+                  <span>Payment Information</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium">Payment Methods</p>
+                      <p className="text-sm text-gray-600">Credit/Debit Cards via Stripe</p>
+                    </div>
+                    <CreditCard className="h-5 w-5 text-navy-600" />
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium">Security</p>
+                      <p className="text-sm text-gray-600">PCI compliant, encrypted payments</p>
+                    </div>
+                    <Shield className="h-5 w-5 text-green-600" />
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium">Receipts</p>
+                      <p className="text-sm text-gray-600">Automatically sent to your email</p>
+                    </div>
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Benefits Sidebar */}
+          {/* Right Column - Remove Quick Actions */}
           <div className="space-y-6">
+            {/* Your Membership Includes - Keep this */}
             <Card>
               <CardHeader>
                 <CardTitle>Your Membership Includes</CardTitle>
@@ -449,25 +468,7 @@ export default function DuesClient() {
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start">
-                  <CreditCard className="h-4 w-4 mr-2" /> Update Payment Method
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Calendar className="h-4 w-4 mr-2" /> Change Payment Schedule
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Shield className="h-4 w-4 mr-2" /> Download Receipt
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Support */}
+            {/* Support - Keep this */}
             <Card className="bg-gradient-to-br from-blue-50 to-navy-50">
               <CardContent className="pt-6">
                 <div className="text-center">
