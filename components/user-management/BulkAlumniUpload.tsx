@@ -318,14 +318,11 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
             )}
           </Button>
 
-          {/* Progress Bar */}
+          {/* Loading Spinner */}
           {isUploading && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Upload Progress</span>
-                <span>{progress}%</span>
-              </div>
-              <Progress value={progress} className="w-full" />
+            <div className="flex flex-col items-center justify-center py-8 space-y-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <p className="text-sm text-gray-600">Processing alumni upload...</p>
             </div>
           )}
 
