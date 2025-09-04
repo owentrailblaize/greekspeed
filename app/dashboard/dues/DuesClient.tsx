@@ -91,9 +91,29 @@ export default function DuesClient() {
     }
   }, [profile?.id]);
 
+  // Add this effect to check for success/cancel parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get('success');
+    const canceled = urlParams.get('canceled');
+    
+    if (success === 'true') {
+      console.log(' Payment successful! Refreshing data...');
+      loadDuesAssignments(); // Refresh the data
+      // Clean up the URL
+      window.history.replaceState({}, '', '/dashboard/dues');
+    } else if (canceled === 'true') {
+      console.log('❌ Payment canceled');
+      // Clean up the URL
+      window.history.replaceState({}, '', '/dashboard/dues');
+    }
+  }, []);
+
   const loadDuesAssignments = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Loading dues assignments for user:', profile?.id);
+      
       const { data, error } = await supabase
         .from('dues_assignments')
         .select(`
@@ -109,6 +129,8 @@ export default function DuesClient() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      
+      console.log('📊 Loaded assignments:', data);
       setAssignments(data || []);
     } catch (error) {
       console.error('Error loading dues assignments:', error);

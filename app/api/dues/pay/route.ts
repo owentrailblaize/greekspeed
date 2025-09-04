@@ -63,16 +63,18 @@ export async function POST(request: NextRequest) {
         .eq('id', assignment.user.id);
     }
 
-    // Create Stripe checkout session with existing product
+    // Create Stripe checkout session with dynamic pricing (no product ID needed)
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
       line_items: [{
-        // Use the existing "Chapter Dues" product instead of dynamic pricing
         price_data: {
           currency: 'usd',
-          product: 'prod_1S3iYtHgS1N6wHNZ', // Replace with your actual Chapter Dues product ID
-          unit_amount: Math.round(assignment.amount_due * 100), // Dynamic amount
+          product_data: {
+            name: `${assignment.cycle.name} Dues`,
+            description: `Chapter dues for ${assignment.cycle.name}`,
+          },
+          unit_amount: Math.round(assignment.amount_due * 100), // Convert to cents
         },
         quantity: 1,
       }],
