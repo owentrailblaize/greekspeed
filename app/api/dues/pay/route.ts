@@ -63,24 +63,24 @@ export async function POST(request: NextRequest) {
         .eq('id', assignment.user.id);
     }
 
-    // Create Stripe checkout session with dynamic pricing
+    // Create Stripe checkout session with existing product
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
       line_items: [{
+        // Use the existing "Chapter Dues" product instead of dynamic pricing
         price_data: {
           currency: 'usd',
-          product_data: {
-            name: `${assignment.cycle.name} Dues`,
-            description: `Chapter dues for ${assignment.cycle.name}`,
-          },
-          unit_amount: Math.round(assignment.amount_due * 100), // Convert to cents
+          product: 'prod_1S3iYtHgS1N6wHNZ', // Replace with your actual Chapter Dues product ID
+          unit_amount: Math.round(assignment.amount_due * 100), // Dynamic amount
         },
         quantity: 1,
       }],
       mode: paymentPlan ? 'subscription' : 'payment',
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/dues?success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/dues?canceled=true`,
+      allow_promotion_codes: true,
+      billing_address_collection: 'auto',
       metadata: {
         type: 'dues',
         user_id: assignment.user.id,
