@@ -96,13 +96,14 @@ export async function POST(req: Request) {
       customer: customerId,
       line_items: [
         {
-          price: process.env.STRIPE_CHAPTER_PRICE_ID, // You'll need to create this price in Stripe
+          price: process.env.STRIPE_CHAPTER_PRICE_ID,
           quantity: 1,
         },
       ],
       mode: 'subscription',
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?canceled=true`,
+      allow_promotion_codes: true, // This enables coupon code input on checkout
       metadata: {
         type: 'chapter_subscription',
         chapter_id: chapterId,
