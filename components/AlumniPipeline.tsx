@@ -62,6 +62,10 @@ export function AlumniPipeline() {
       if (filterParams.state) params.append('state', filterParams.state);
       if (filterParams.activelyHiring) params.append('activelyHiring', 'true');
       
+      // CRITICAL FIX: Add unlimited limit parameter
+      params.append('limit', '50000'); // Request all alumni
+      params.append('page', '1');
+      
       // Add chapter filtering logic - only filter by user's chapter if showAllAlumni is false
       if (!filterParams.showAllAlumni && profile?.chapter) {
         params.append('userChapter', profile.chapter);
