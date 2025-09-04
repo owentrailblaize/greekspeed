@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectItem } from "@/components/ui/select";
+import { Select, SelectItem, SelectContent } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useProfile } from "@/lib/contexts/ProfileContext";
 import { createClient } from '@supabase/supabase-js';
@@ -98,6 +98,7 @@ export function TreasurerDashboard() {
   });
   const [bulkAssignment, setBulkAssignment] = useState({
     selectedMembers: [] as string[],
+    cycleId: '' as string,
     amount: 0,
     status: 'required' as 'required' | 'exempt' | 'reduced' | 'waived',
     notes: ''
@@ -230,6 +231,14 @@ export function TreasurerDashboard() {
   const handleBulkAssignDues = async () => {
     try {
       console.log(' Starting bulk dues assignment for', bulkAssignment.selectedMembers.length, 'members');
+      console.log('📋 Selected cycle ID:', bulkAssignment.cycleId);
+      
+      // Check if we have a valid cycle selected
+      if (!bulkAssignment.cycleId) {
+        console.error('❌ No dues cycle selected. Please select a cycle first.');
+        alert('Please select a dues cycle first.');
+        return;
+      }
       
       const promises = bulkAssignment.selectedMembers.map(memberId => 
         fetch('/api/dues/assignments', {
@@ -240,7 +249,7 @@ export function TreasurerDashboard() {
             amount: bulkAssignment.amount,
             status: bulkAssignment.status,
             notes: bulkAssignment.notes,
-            cycleId: cycles[0]?.id
+            cycleId: bulkAssignment.cycleId
           })
         })
       );
@@ -250,7 +259,7 @@ export function TreasurerDashboard() {
 
       if (allSuccessful) {
         setShowBulkAssignDues(false);
-        setBulkAssignment({ selectedMembers: [], amount: 0, status: 'required', notes: '' });
+        setBulkAssignment({ selectedMembers: [], cycleId: '', amount: 0, status: 'required', notes: '' });
         loadDuesData();
         loadChapterMembers();
         console.log('✅ Bulk dues assignment completed successfully');
@@ -952,6 +961,28 @@ export function TreasurerDashboard() {
 
               {/* Assignment Details */}
               <div className="border-t pt-4 space-y-4">
+                {/* Add Cycle Selection */}
+                <div>
+                  <Label htmlFor="bulkCycle">Dues Cycle</Label>
+                  <Select 
+                    value={bulkAssignment.cycleId || ''} 
+                    onValueChange={(value: string) => setBulkAssignment({ ...bulkAssignment, cycleId: value })}
+                    placeholder="Select a dues cycle"
+                  >
+                    <SelectItem value="">Select a dues cycle</SelectItem>
+                    {cycles.map((cycle) => (
+                      <SelectItem key={cycle.id} value={cycle.id}>
+                        {cycle.name} - ${cycle.base_amount} (Due: {new Date(cycle.due_date).toLocaleDateString()})
+                      </SelectItem>
+                    ))}
+                  </Select>
+                  {cycles.length === 0 && (
+                    <p className="text-sm text-red-600 mt-1">
+                      No dues cycles available. Please create a cycle first.
+                    </p>
+                  )}
+                </div>
+                
                 <div>
                   <Label htmlFor="bulkAmount">Dues Amount ($)</Label>
                   <Input
@@ -1004,7 +1035,7 @@ export function TreasurerDashboard() {
               <Button 
                 onClick={handleBulkAssignDues} 
                 className="bg-purple-600 hover:bg-purple-700"
-                disabled={bulkAssignment.selectedMembers.length === 0}
+                disabled={bulkAssignment.selectedMembers.length === 0 || !bulkAssignment.cycleId}
               >
                 Assign Dues to {bulkAssignment.selectedMembers.length} Members
               </Button>

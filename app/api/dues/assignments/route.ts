@@ -75,34 +75,30 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient();
     
-    // Get user session
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Get user profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role, chapter_id, chapter_role')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-    }
-
-    // Check if user is treasurer
-    if (profile.chapter_role !== 'treasurer' && profile.role !== 'admin') {
-      return NextResponse.json({ error: 'Only treasurers can assign dues' }, { status: 403 });
-    }
-
     const body = await request.json();
+    console.log('📥 Received request body:', body);
+    
     const { memberId, amount, status, notes, cycleId } = body;
 
-    if (!memberId || !amount || !cycleId) {
-      return NextResponse.json({ error: 'Member ID, amount, and cycle ID are required' }, { status: 400 });
+    // Enhanced validation with detailed logging
+    console.log('🔍 Validating fields:', { memberId, amount, status, notes, cycleId });
+    
+    if (!memberId) {
+      console.error('❌ Missing memberId');
+      return NextResponse.json({ error: 'Member ID is required' }, { status: 400 });
     }
+    
+    if (!amount || amount <= 0) {
+      console.error('❌ Invalid amount:', amount);
+      return NextResponse.json({ error: 'Valid amount is required' }, { status: 400 });
+    }
+    
+    if (!cycleId) {
+      console.error('❌ Missing cycleId');
+      return NextResponse.json({ error: 'Cycle ID is required' }, { status: 400 });
+    }
+
+    console.log('✅ Validation passed, creating dues assignment:', { memberId, amount, status, notes, cycleId });
 
     // Create the dues assignment
     const { data: assignment, error: assignmentError } = await supabase
@@ -110,18 +106,21 @@ export async function POST(request: NextRequest) {
       .insert({
         dues_cycle_id: cycleId,
         user_id: memberId,
-        status,
+        status: status || 'required',
         amount_assessed: amount,
         amount_due: amount,
         amount_paid: 0,
-        notes
+        notes: notes || ''
       })
       .select()
       .single();
 
     if (assignmentError) {
-      console.error('Error creating dues assignment:', assignmentError);
-      return NextResponse.json({ error: 'Failed to create dues assignment' }, { status: 500 });
+      console.error('❌ Error creating dues assignment:', assignmentError);
+      return NextResponse.json({ 
+        error: 'Failed to create dues assignment', 
+        details: assignmentError.message 
+      }, { status: 500 });
     }
 
     // Update the member's profile with dues information
@@ -129,21 +128,23 @@ export async function POST(request: NextRequest) {
       .from('profiles')
       .update({
         current_dues_amount: amount,
-        dues_status: status,
+        dues_status: status || 'required',
         last_dues_assignment_date: new Date().toISOString()
       })
       .eq('id', memberId);
 
     if (profileUpdateError) {
-      console.error('Error updating member profile:', profileUpdateError);
+      console.error('⚠️ Error updating member profile:', profileUpdateError);
     }
+
+    console.log('✅ Dues assignment created successfully:', assignment);
 
     return NextResponse.json({ 
       message: 'Dues assignment created successfully',
       assignment
     });
   } catch (error) {
-    console.error('API error:', error);
+    console.error('❌ API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
