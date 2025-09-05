@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { DollarSign, TrendingUp, Users, AlertTriangle, CheckCircle, Download, Mail, Plus, Calendar, Edit, Eye, UserPlus, X } from "lucide-react";
+import { DollarSign, TrendingUp, Users, AlertTriangle, CheckCircle, Download, Mail, Plus, Calendar, Edit, Eye, UserPlus, X, Lock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -63,14 +63,62 @@ interface ChapterMember {
   chapter_role: string;
 }
 
-const budgetCategories = [
-  { name: "Social Events", allocated: 12000, spent: 8500, remaining: 3500 },
-  { name: "Chapter Operations", allocated: 8000, spent: 6200, remaining: 1800 },
-  { name: "Professional Development", allocated: 5000, spent: 3200, remaining: 1800 },
-  { name: "Alumni Relations", allocated: 4000, spent: 2800, remaining: 1200 },
-  { name: "Recruitment", allocated: 6000, spent: 4200, remaining: 1800 },
-  { name: "Emergency Fund", allocated: 10000, spent: 3850, remaining: 6150 }
-];
+// Add CSV export function for dues data
+const exportDuesToCSV = (assignments: DuesAssignment[], filename: string = "dues-export.csv") => {
+  // Define the CSV headers
+  const headers = [
+    "Member Name",
+    "Email", 
+    "Class",
+    "Amount Due",
+    "Amount Paid",
+    "Status",
+    "Due Date",
+    "Cycle Name",
+    "Notes"
+  ];
+
+  // Convert assignments data to CSV rows
+  const csvRows = assignments.map(assignment => [
+    assignment.user.full_name || "",
+    assignment.user.email || "",
+    assignment.user.member_status || "",
+    assignment.amount_due || 0,
+    assignment.amount_paid || 0,
+    assignment.status || "",
+    new Date(assignment.cycle.due_date).toLocaleDateString(),
+    assignment.cycle.name || "",
+    assignment.notes || ""
+  ]);
+
+  // Combine headers and data
+  const csvContent = [headers, ...csvRows]
+    .map(row => 
+      row.map(field => {
+        // Escape quotes and wrap in quotes if contains comma, newline, or quote
+        const escaped = String(field).replace(/"/g, '""');
+        if (escaped.includes(',') || escaped.includes('\n') || escaped.includes('"')) {
+          return `"${escaped}"`;
+        }
+        return escaped;
+      }).join(',')
+    )
+    .join('\n');
+
+  // Create and download the file
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+};
 
 export function TreasurerDashboard() {
   const { profile } = useProfile();
@@ -168,7 +216,7 @@ export function TreasurerDashboard() {
           chapter_role
         `)
         .eq('chapter_id', profile?.chapter_id)
-        .in('role', ['admin', 'active_member', 'alumni'])
+        .in('role', ['admin', 'active_member']) // ✅ FIXED: Only fetch admin and active_member roles
         .order('full_name');
 
       if (error) {
@@ -298,6 +346,32 @@ export function TreasurerDashboard() {
     }
   };
 
+  const handleDeleteAssignment = async (assignmentId: string) => {
+    if (!confirm('Are you sure you want to delete this dues assignment? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/dues/assignments', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignmentId })
+      });
+
+      if (response.ok) {
+        loadDuesData();
+        loadChapterMembers();
+        console.log('✅ Dues assignment deleted successfully');
+      } else {
+        console.error('❌ Error deleting dues assignment');
+        alert('Failed to delete dues assignment. Please try again.');
+      }
+    } catch (error) {
+      console.error('❌ Error deleting dues assignment:', error);
+      alert('Failed to delete dues assignment. Please try again.');
+    }
+  };
+
   const handleMemberSelection = (memberId: string, checked: boolean) => {
     if (checked) {
       setBulkAssignment(prev => ({
@@ -332,10 +406,59 @@ export function TreasurerDashboard() {
     totalOutstanding: assignments.reduce((sum, a) => sum + (a.amount_due - a.amount_paid), 0),
     collectionRate: assignments.length > 0 ? 
       (assignments.reduce((sum, a) => sum + a.amount_paid, 0) / 
-       assignments.reduce((sum, a) => sum + a.amount_assessed, 0)) * 100 : 0,
-    totalBudget: 45000, // This could be configurable
-    spentBudget: 28750  // This could be calculated from other sources
+       assignments.reduce((sum, a) => sum + a.amount_assessed, 0)) * 100 : 0
   };
+
+  // NEW: Calculate dues collection progress for current cycle
+  const getCurrentCycle = () => {
+    // Get the most recent active cycle
+    return cycles.find(cycle => cycle.status === 'active') || cycles[0];
+  };
+
+  const getDuesCollectionProgress = () => {
+    const currentCycle = getCurrentCycle();
+    if (!currentCycle) {
+      return {
+        cycleName: 'No Active Cycle',
+        paid: 0,
+        pending: 0,
+        overdue: 0,
+        total: 0,
+        collectionRate: 0
+      };
+    }
+
+    // Filter assignments for current cycle
+    const currentCycleAssignments = assignments.filter(
+      assignment => assignment.cycle.name === currentCycle.name
+    );
+
+    const now = new Date();
+    const dueDate = new Date(currentCycle.due_date);
+
+    // Calculate counts
+    const paid = currentCycleAssignments.filter(a => a.status === 'paid').length;
+    const pending = currentCycleAssignments.filter(a => 
+      a.status === 'required' && now <= dueDate
+    ).length;
+    const overdue = currentCycleAssignments.filter(a => 
+      a.status === 'required' && now > dueDate
+    ).length;
+
+    const total = currentCycleAssignments.length;
+    const collectionRate = total > 0 ? (paid / total) * 100 : 0;
+
+    return {
+      cycleName: currentCycle.name,
+      paid,
+      pending,
+      overdue,
+      total,
+      collectionRate
+    };
+  };
+
+  const duesProgress = getDuesCollectionProgress();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -353,35 +476,15 @@ export function TreasurerDashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Treasurer Dashboard</h1>
-          <p className="text-gray-600">Manage chapter finances and dues collection</p>
-        </div>
-        <div className="flex space-x-3">
-          <Button onClick={() => setShowBulkAssignDues(true)} className="bg-purple-600 hover:bg-purple-700">
-            <Users className="h-4 w-4 mr-2" />
-            Bulk Assign Dues
-          </Button>
-          <Button onClick={() => setShowAssignDues(true)} className="bg-blue-600 hover:bg-blue-700">
-            <UserPlus className="h-4 w-4 mr-2" />
-            Assign Dues
-          </Button>
-          <Button onClick={() => setShowCreateCycle(true)} className="bg-green-600 hover:bg-green-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Dues Cycle
-          </Button>
-        </div>
-      </div>
-
+    <div className="max-w-7xl mx-auto px-6 py-0 sm:py-8">
       {/* Financial Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-8">
+        {/* Desktop Layout - Preserved */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
+          className="hidden md:block"
         >
           <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
             <CardContent className="p-6">
@@ -400,6 +503,7 @@ export function TreasurerDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
+          className="hidden md:block"
         >
           <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
             <CardContent className="p-6">
@@ -418,6 +522,7 @@ export function TreasurerDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
+          className="hidden md:block"
         >
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
             <CardContent className="p-6">
@@ -431,22 +536,45 @@ export function TreasurerDashboard() {
             </CardContent>
           </Card>
         </motion.div>
+      </div>
 
+      {/* Mobile Layout - Single Row */}
+      <div className="md:hidden mb-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-3 gap-2"
         >
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-600 text-sm font-medium">Budget Used</p>
-                  <p className="text-2xl font-semibold text-purple-900">
-                    {((financialOverview.spentBudget / financialOverview.totalBudget) * 100).toFixed(1)}%
-                  </p>
-                </div>
-                <DollarSign className="h-8 w-8 text-purple-600" />
+          {/* Total Collected */}
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <p className="text-base font-semibold text-green-900">${financialOverview.totalCollected.toLocaleString()}</p>
+                <p className="text-green-600 text-xs font-medium">Collected</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Outstanding */}
+          <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+                <p className="text-base font-semibold text-red-900">${financialOverview.totalOutstanding.toLocaleString()}</p>
+                <p className="text-red-600 text-xs font-medium">Outstanding</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Collection Rate */}
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <TrendingUp className="h-5 w-5 text-blue-600" />
+                <p className="text-base font-semibold text-blue-900">{financialOverview.collectionRate.toFixed(1)}%</p>
+                <p className="text-blue-600 text-xs font-medium">Rate</p>
               </div>
             </CardContent>
           </Card>
@@ -454,13 +582,12 @@ export function TreasurerDashboard() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
           {[
             { value: "overview", label: "Overview" },
             { value: "dues", label: "Member Dues" },
-            { value: "members", label: "All Members" },
-            { value: "budget", label: "Budget Tracking" }
+            { value: "members", label: "All Members" }
           ].map((tab) => (
             <button
               key={tab.value}
@@ -479,35 +606,36 @@ export function TreasurerDashboard() {
 
       {/* Tab Content */}
       {selectedTab === "overview" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+          {/* Desktop Layout - Dues Collection Progress (2/3 width) */}
+          <Card className="hidden lg:block lg:col-span-2">
             <CardHeader>
               <CardTitle>Dues Collection Progress</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span>Spring 2024 Collection</span>
-                  <span className="font-medium">{financialOverview.collectionRate.toFixed(1)}%</span>
+                  <span>{duesProgress.cycleName}</span>
+                  <span className="font-medium">{duesProgress.collectionRate.toFixed(1)}%</span>
                 </div>
-                <Progress value={financialOverview.collectionRate} className="h-3" />
+                <Progress value={duesProgress.collectionRate} className="h-3" />
                 
                 <div className="grid grid-cols-3 gap-4 mt-6">
                   <div className="text-center">
                     <p className="text-2xl font-semibold text-green-600">
-                      {assignments.filter(a => a.status === 'paid').length}
+                      {duesProgress.paid}
                     </p>
                     <p className="text-sm text-gray-600">Paid</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-semibold text-yellow-600">
-                      {assignments.filter(a => a.status === 'required').length}
+                      {duesProgress.pending}
                     </p>
                     <p className="text-sm text-gray-600">Pending</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-semibold text-red-600">
-                      {assignments.filter(a => a.status === 'required' && new Date(a.cycle.due_date) < new Date()).length}
+                      {duesProgress.overdue}
                     </p>
                     <p className="text-sm text-gray-600">Overdue</p>
                   </div>
@@ -516,26 +644,131 @@ export function TreasurerDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Desktop Layout - Quick Actions Sidebar (1/3 width) */}
+          <Card className="hidden lg:block lg:col-span-1">
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full justify-start bg-green-600 hover:bg-green-700">
+              <Button 
+                onClick={() => setShowBulkAssignDues(true)} 
+                className="w-full justify-start bg-purple-600 hover:bg-purple-700"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Bulk Assign Dues
+              </Button>
+              <Button 
+                onClick={() => setShowAssignDues(true)} 
+                className="w-full justify-start bg-blue-600 hover:bg-blue-700"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Assign Dues
+              </Button>
+              <Button 
+                onClick={() => setShowCreateCycle(true)} 
+                className="w-full justify-start bg-green-600 hover:bg-green-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Dues Cycle
+              </Button>
+              <Button 
+                onClick={() => exportDuesToCSV(assignments, `financial-report-${new Date().toISOString().split('T')[0]}.csv`)}
+                className="w-full justify-start bg-green-600 hover:bg-green-700"
+              >
                 <Download className="h-4 w-4 mr-2" />
                 Export Financial Report
               </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Mail className="h-4 w-4 mr-2" />
-                Send Overdue Reminders
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Users className="h-4 w-4 mr-2" />
-                Bulk Payment Processing
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start opacity-60 cursor-not-allowed" 
+                disabled
+              >
                 <DollarSign className="h-4 w-4 mr-2" />
-                Update Payment Plans
+                Create Payment Plans
+                <Lock className="h-3 w-3 ml-2 text-gray-400" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Mobile Layout - Dues Collection Progress */}
+          <Card className="lg:hidden">
+            <CardHeader className="pb-2">
+              <CardTitle>Dues Collection Progress</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">{duesProgress.cycleName}</span>
+                  <span className="text-sm font-medium">{duesProgress.collectionRate.toFixed(1)}%</span>
+                </div>
+                <Progress value={duesProgress.collectionRate} className="h-2" />
+                
+                <div className="grid grid-cols-3 gap-2 mt-3">
+                  <div className="text-center">
+                    <p className="text-lg font-semibold text-green-600">
+                      {duesProgress.paid}
+                    </p>
+                    <p className="text-xs text-gray-600">Paid</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-semibold text-yellow-600">
+                      {duesProgress.pending}
+                    </p>
+                    <p className="text-xs text-gray-600">Pending</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-semibold text-red-600">
+                      {duesProgress.overdue}
+                    </p>
+                    <p className="text-xs text-gray-600">Overdue</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Mobile Layout - Quick Actions */}
+          <Card className="lg:hidden">
+            <CardHeader className="pb-2">
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-2 space-y-2">
+              <Button 
+                onClick={() => setShowBulkAssignDues(true)} 
+                className="w-full justify-start bg-purple-600 hover:bg-purple-700 text-sm py-2"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Bulk Assign Dues
+              </Button>
+              <Button 
+                onClick={() => setShowAssignDues(true)} 
+                className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-sm py-2"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Assign Dues
+              </Button>
+              <Button 
+                onClick={() => setShowCreateCycle(true)} 
+                className="w-full justify-start bg-green-600 hover:bg-green-700 text-sm py-2"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Dues Cycle
+              </Button>
+              <Button 
+                onClick={() => exportDuesToCSV(assignments, `financial-report-${new Date().toISOString().split('T')[0]}.csv`)}
+                className="w-full justify-start bg-green-600 hover:bg-green-700 text-sm py-2"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export Financial Report
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start opacity-60 cursor-not-allowed text-sm py-2" 
+                disabled
+              >
+                <DollarSign className="h-4 w-4 mr-2" />
+                Create Payment Plans
+                <Lock className="h-3 w-3 ml-2 text-gray-400" />
               </Button>
             </CardContent>
           </Card>
@@ -544,88 +777,228 @@ export function TreasurerDashboard() {
 
       {selectedTab === "dues" && (
         <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
+          <CardHeader className="pb-2 sm:pb-6">
+            {/* Desktop Layout - Preserved */}
+            <div className="hidden sm:flex justify-between items-center">
               <CardTitle>Member Dues Status</CardTitle>
               <div className="flex space-x-2">
-                <Button size="sm" variant="outline">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => exportDuesToCSV(assignments, `dues-export-${new Date().toISOString().split('T')[0]}.csv`)}
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Export
                 </Button>
-                <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                <Button 
+                  size="sm" 
+                  className="bg-green-600 hover:bg-green-700 opacity-60 cursor-not-allowed" 
+                  disabled
+                >
                   <Mail className="h-4 w-4 mr-2" />
                   Send Reminders
+                  <Lock className="h-3 w-3 ml-2 text-gray-400" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Mobile Layout */}
+            <div className="sm:hidden">
+              <CardTitle className="text-lg mb-3">Member Dues Status</CardTitle>
+              <div className="flex space-x-2">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => exportDuesToCSV(assignments, `dues-export-${new Date().toISOString().split('T')[0]}.csv`)}
+                  className="flex-1 justify-center text-sm py-2"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="bg-green-600 hover:bg-green-700 opacity-60 cursor-not-allowed flex-1 justify-center text-sm py-2" 
+                  disabled
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Remind
+                  <Lock className="h-3 w-3 ml-2 text-gray-400" />
                 </Button>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Member Name</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {assignments.map((assignment) => (
-                  <TableRow key={assignment.id}>
-                    <TableCell className="font-medium">{assignment.user.full_name}</TableCell>
-                    <TableCell>{assignment.user.member_status}</TableCell>
-                    <TableCell>${assignment.amount_due.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(assignment.status)}>
-                        {assignment.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(assignment.cycle.due_date).toLocaleDateString()}
-                      {assignment.status === 'required' && new Date(assignment.cycle.due_date) < new Date() && (
-                        <span className="text-red-600 text-sm ml-2">
-                          (Overdue)
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedAssignment(assignment);
-                            setShowEditAssignment(true);
-                          }}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedAssignment(assignment);
-                            setShowEditAssignment(true);
-                          }}
-                        >
-                          <Eye className="h-3 w-3" />
-                        </Button>
+          <CardContent className="pt-2 sm:pt-6">
+            {assignments.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <DollarSign className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <p className="text-lg font-medium mb-2">No dues assignments</p>
+                <p className="text-sm">No dues have been assigned to chapter members yet.</p>
+              </div>
+            ) : (
+              <>
+                {/* Desktop Table */}
+                <div className="hidden md:block">
+                  <div className="overflow-x-auto">
+                    <div className="max-h-[70vh] overflow-y-auto border border-gray-200 rounded-lg">
+                      <table className="w-full border-collapse">
+                        <thead className="sticky top-0 bg-gray-50 z-10">
+                          <tr className="border-b">
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Member Name</th>
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Class</th>
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Amount</th>
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Status</th>
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Due Date</th>
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {assignments.map((assignment) => (
+                            <tr key={assignment.id} className="border-b hover:bg-gray-50">
+                              <td className="p-3">
+                                <div>
+                                  <p className="font-medium">{assignment.user.full_name}</p>
+                                  <p className="text-sm text-gray-600">{assignment.user.email}</p>
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <Badge variant="outline">{assignment.user.member_status}</Badge>
+                              </td>
+                              <td className="p-3">
+                                <p className="font-medium">${assignment.amount_due.toFixed(2)}</p>
+                                {assignment.amount_paid > 0 && (
+                                  <p className="text-sm text-gray-600">Paid: ${assignment.amount_paid.toFixed(2)}</p>
+                                )}
+                              </td>
+                              <td className="p-3">
+                                <Badge className={getStatusColor(assignment.status)}>
+                                  {assignment.status}
+                                </Badge>
+                              </td>
+                              <td className="p-3">
+                                <div>
+                                  <p className="text-sm">{new Date(assignment.cycle.due_date).toLocaleDateString()}</p>
+                                  {assignment.status === 'required' && new Date(assignment.cycle.due_date) < new Date() && (
+                                    <p className="text-xs text-red-600 font-medium">Overdue</p>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <div className="flex items-center space-x-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedAssignment(assignment);
+                                      setShowEditAssignment(true);
+                                    }}
+                                    className="hover:bg-blue-50 hover:text-blue-600"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => handleDeleteAssignment(assignment.id)}
+                                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  
+                  {/* Summary Footer */}
+                  <div className="mt-4 text-sm text-gray-600">
+                    <p>Showing {assignments.length} dues assignments</p>
+                  </div>
+                </div>
+
+                {/* Mobile Card Layout */}
+                <div className="md:hidden space-y-3">
+                  {assignments.map((assignment) => (
+                    <div key={assignment.id} className="border border-gray-200 rounded-lg p-3 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm text-gray-900 truncate">
+                            {assignment.user.full_name}
+                          </h4>
+                          <p className="text-xs text-gray-600 mt-1">
+                            {assignment.user.email}
+                          </p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <Badge variant="outline" className="text-xs px-2 py-1">
+                              {assignment.user.member_status}
+                            </Badge>
+                            <Badge className={`text-xs px-2 py-1 ${getStatusColor(assignment.status)}`}>
+                              {assignment.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end space-y-1 ml-2">
+                          <p className="text-sm font-medium text-gray-900">
+                            ${assignment.amount_due.toFixed(2)}
+                          </p>
+                          {assignment.amount_paid > 0 && (
+                            <p className="text-xs text-gray-600">
+                              Paid: ${assignment.amount_paid.toFixed(2)}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                        <div className="text-xs text-gray-600">
+                          <span>Due: {new Date(assignment.cycle.due_date).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric'
+                          })}</span>
+                          {assignment.status === 'required' && new Date(assignment.cycle.due_date) < new Date() && (
+                            <span className="text-red-600 font-medium ml-2">(Overdue)</span>
+                          )}
+                        </div>
+                        
+                        <div className="flex space-x-1">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedAssignment(assignment);
+                              setShowEditAssignment(true);
+                            }}
+                            className="h-7 px-2 text-xs"
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            Edit
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleDeleteAssignment(assignment.id)}
+                            className="h-7 px-2 text-xs text-red-600 hover:bg-red-50 hover:text-red-700"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}
 
       {selectedTab === "members" && (
         <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
+          <CardHeader className="pb-2 sm:pb-6">
+            {/* Desktop Layout - Preserved */}
+            <div className="hidden sm:flex justify-between items-center">
               <CardTitle>All Chapter Members ({chapterMembers.length})</CardTitle>
               <div className="flex space-x-2">
                 <Button onClick={() => setShowBulkAssignDues(true)} className="bg-purple-600 hover:bg-purple-700">
@@ -638,108 +1011,181 @@ export function TreasurerDashboard() {
                 </Button>
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Member Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Current Dues</TableHead>
-                  <TableHead>Dues Status</TableHead>
-                  <TableHead>Last Assignment</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {chapterMembers.map((member) => (
-                  <TableRow key={member.id}>
-                    <TableCell className="font-medium">{member.full_name}</TableCell>
-                    <TableCell>{member.email}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{member.chapter_role || member.role}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{member.member_status}</Badge>
-                    </TableCell>
-                    <TableCell>${member.current_dues_amount.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(member.dues_status)}>
-                        {member.dues_status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {member.last_dues_assignment_date 
-                        ? new Date(member.last_dues_assignment_date).toLocaleDateString()
-                        : 'Never'
-                      }
-                    </TableCell>
-                    <TableCell>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => {
-                          setNewAssignment({
-                            memberId: member.id,
-                            amount: member.current_dues_amount,
-                            status: 'required',
-                            notes: ''
-                          });
-                          setShowAssignDues(true);
-                        }}
-                      >
-                        <DollarSign className="h-3 w-3 mr-1" />
-                        Assign Dues
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
 
-      {selectedTab === "budget" && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Budget Tracking by Category</CardTitle>
+            {/* Mobile Layout */}
+            <div className="sm:hidden">
+              <CardTitle className="text-lg mb-3">All Chapter Members ({chapterMembers.length})</CardTitle>
+              <div className="flex space-x-2">
+                <Button 
+                  onClick={() => setShowBulkAssignDues(true)} 
+                  className="bg-purple-600 hover:bg-purple-700 flex-1 justify-center text-sm py-2"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Bulk Assign
+                </Button>
+                <Button 
+                  onClick={() => setShowAssignDues(true)} 
+                  className="bg-blue-600 hover:bg-blue-700 flex-1 justify-center text-sm py-2"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Assign Dues
+                </Button>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {budgetCategories.map((category, index) => (
-                <div key={index} className="p-4 border border-gray-200 rounded-lg">
-                  <div className="flex justify-between items-center mb-3">
-                    <h4 className="font-medium">{category.name}</h4>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-600">
-                        ${category.spent.toLocaleString()} / ${category.allocated.toLocaleString()}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        ${category.remaining.toLocaleString()} remaining
-                      </p>
+          <CardContent className="pt-2 sm:pt-6">
+            {chapterMembers.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <p className="text-lg font-medium mb-2">No chapter members</p>
+                <p className="text-sm">No active members found in this chapter.</p>
+              </div>
+            ) : (
+              <>
+                {/* Desktop Table */}
+                <div className="hidden md:block">
+                  <div className="overflow-x-auto">
+                    <div className="max-h-[70vh] overflow-y-auto border border-gray-200 rounded-lg">
+                      <table className="w-full border-collapse">
+                        <thead className="sticky top-0 bg-gray-50 z-10">
+                          <tr className="border-b">
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Member Info</th>
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Role & Status</th>
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Dues Information</th>
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Last Assignment</th>
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {chapterMembers.map((member) => (
+                            <tr key={member.id} className="border-b hover:bg-gray-50">
+                              <td className="p-3">
+                                <div>
+                                  <p className="font-medium">{member.full_name}</p>
+                                  <p className="text-sm text-gray-600">{member.email}</p>
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <div className="space-y-1">
+                                  <Badge variant="secondary">{member.chapter_role || member.role}</Badge>
+                                  <Badge variant="outline">{member.member_status}</Badge>
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <div className="space-y-1">
+                                  <p className="font-medium">${member.current_dues_amount.toFixed(2)}</p>
+                                  <Badge className={getStatusColor(member.dues_status)}>
+                                    {member.dues_status}
+                                  </Badge>
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <p className="text-sm text-gray-600">
+                                  {member.last_dues_assignment_date 
+                                    ? new Date(member.last_dues_assignment_date).toLocaleDateString()
+                                    : 'Never'
+                                  }
+                                </p>
+                              </td>
+                              <td className="p-3">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => {
+                                    setNewAssignment({
+                                      memberId: member.id,
+                                      amount: member.current_dues_amount,
+                                      status: 'required',
+                                      notes: ''
+                                    });
+                                    setShowAssignDues(true);
+                                  }}
+                                  className="hover:bg-green-50 hover:text-green-600"
+                                >
+                                  <DollarSign className="h-4 w-4 mr-1" />
+                                  Assign Dues
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
-                  <Progress 
-                    value={(category.spent / category.allocated) * 100} 
-                    className="h-2"
-                  />
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-xs text-gray-500">
-                      {((category.spent / category.allocated) * 100).toFixed(1)}% used
-                    </span>
-                    <Badge 
-                      variant={category.remaining > 0 ? "default" : "destructive"}
-                      className="text-xs"
-                    >
-                      {category.remaining > 0 ? "On Track" : "Over Budget"}
-                    </Badge>
+                  
+                  {/* Summary Footer */}
+                  <div className="mt-4 text-sm text-gray-600">
+                    <p>Showing {chapterMembers.length} chapter members</p>
                   </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Mobile Card Layout */}
+                <div className="md:hidden space-y-3">
+                  {chapterMembers.map((member) => (
+                    <div key={member.id} className="border border-gray-200 rounded-lg p-3 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm text-gray-900 truncate">
+                            {member.full_name}
+                          </h4>
+                          <p className="text-xs text-gray-600 mt-1">
+                            {member.email}
+                          </p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <Badge variant="secondary" className="text-xs px-2 py-1">
+                              {member.chapter_role || member.role}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs px-2 py-1">
+                              {member.member_status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end space-y-1 ml-2">
+                          <p className="text-sm font-medium text-gray-900">
+                            ${member.current_dues_amount.toFixed(2)}
+                          </p>
+                          <Badge className={`text-xs px-2 py-1 ${getStatusColor(member.dues_status)}`}>
+                            {member.dues_status}
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                        <div className="text-xs text-gray-600">
+                          <span>
+                            Last assigned: {member.last_dues_assignment_date 
+                              ? new Date(member.last_dues_assignment_date).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric'
+                                })
+                              : 'Never'
+                            }
+                          </span>
+                        </div>
+                        
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setNewAssignment({
+                              memberId: member.id,
+                              amount: member.current_dues_amount,
+                              status: 'required',
+                              notes: ''
+                            });
+                            setShowAssignDues(true);
+                          }}
+                          className="h-7 px-2 text-xs hover:bg-green-50 hover:text-green-600"
+                        >
+                          <DollarSign className="h-3 w-3 mr-1" />
+                          Assign
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}
