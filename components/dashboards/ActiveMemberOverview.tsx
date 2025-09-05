@@ -6,6 +6,7 @@ import { MyTasksCard } from './ui/MyTasksCard';
 import { UpcomingEventsCard } from './ui/UpcomingEventsCard';
 import { AnnouncementsCard } from './ui/AnnouncementsCard';
 import { DocsCompliancePanel } from './ui/DocsCompliancePanel';
+import { CompactCalendarCard } from './ui/CompactCalendarCard';
 import { useProfile } from '@/lib/hooks/useProfile';
 
 export function ActiveMemberOverview() {
@@ -42,11 +43,12 @@ export function ActiveMemberOverview() {
 
         {/* Desktop Layout: Three Column Grid (Preserved) */}
         <div className="hidden sm:grid sm:grid-cols-12 sm:gap-6">
-          {/* Left Sidebar - Dues, Tasks & Documents */}
+          {/* Left Sidebar - Dues, Tasks, Calendar & Documents */}
           <div className="col-span-3">
             <div className="sticky top-6 space-y-6">
               <AnnouncementsCard />
-              <MyTasksCard />              
+              <MyTasksCard />
+              <CompactCalendarCard />
             </div>
           </div>
 
