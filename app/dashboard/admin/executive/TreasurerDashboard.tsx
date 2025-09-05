@@ -63,15 +63,6 @@ interface ChapterMember {
   chapter_role: string;
 }
 
-const budgetCategories = [
-  { name: "Social Events", allocated: 12000, spent: 8500, remaining: 3500 },
-  { name: "Chapter Operations", allocated: 8000, spent: 6200, remaining: 1800 },
-  { name: "Professional Development", allocated: 5000, spent: 3200, remaining: 1800 },
-  { name: "Alumni Relations", allocated: 4000, spent: 2800, remaining: 1200 },
-  { name: "Recruitment", allocated: 6000, spent: 4200, remaining: 1800 },
-  { name: "Emergency Fund", allocated: 10000, spent: 3850, remaining: 6150 }
-];
-
 export function TreasurerDashboard() {
   const { profile } = useProfile();
   const [selectedTab, setSelectedTab] = useState("overview");
@@ -332,9 +323,7 @@ export function TreasurerDashboard() {
     totalOutstanding: assignments.reduce((sum, a) => sum + (a.amount_due - a.amount_paid), 0),
     collectionRate: assignments.length > 0 ? 
       (assignments.reduce((sum, a) => sum + a.amount_paid, 0) / 
-       assignments.reduce((sum, a) => sum + a.amount_assessed, 0)) * 100 : 0,
-    totalBudget: 45000, // This could be configurable
-    spentBudget: 28750  // This could be calculated from other sources
+       assignments.reduce((sum, a) => sum + a.amount_assessed, 0)) * 100 : 0
   };
 
   // NEW: Calculate dues collection progress for current cycle
@@ -428,7 +417,7 @@ export function TreasurerDashboard() {
       </div>
 
       {/* Financial Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -482,26 +471,6 @@ export function TreasurerDashboard() {
             </CardContent>
           </Card>
         </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-600 text-sm font-medium">Budget Used</p>
-                  <p className="text-2xl font-semibold text-purple-900">
-                    {((financialOverview.spentBudget / financialOverview.totalBudget) * 100).toFixed(1)}%
-                  </p>
-                </div>
-                <DollarSign className="h-8 w-8 text-purple-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
       </div>
 
       {/* Tab Navigation */}
@@ -510,8 +479,7 @@ export function TreasurerDashboard() {
           {[
             { value: "overview", label: "Overview" },
             { value: "dues", label: "Member Dues" },
-            { value: "members", label: "All Members" },
-            { value: "budget", label: "Budget Tracking" }
+            { value: "members", label: "All Members" }
           ].map((tab) => (
             <button
               key={tab.value}
@@ -749,48 +717,6 @@ export function TreasurerDashboard() {
                 ))}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
-      )}
-
-      {selectedTab === "budget" && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Budget Tracking by Category</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {budgetCategories.map((category, index) => (
-                <div key={index} className="p-4 border border-gray-200 rounded-lg">
-                  <div className="flex justify-between items-center mb-3">
-                    <h4 className="font-medium">{category.name}</h4>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-600">
-                        ${category.spent.toLocaleString()} / ${category.allocated.toLocaleString()}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        ${category.remaining.toLocaleString()} remaining
-                      </p>
-                    </div>
-                  </div>
-                  <Progress 
-                    value={(category.spent / category.allocated) * 100} 
-                    className="h-2"
-                  />
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-xs text-gray-500">
-                      {((category.spent / category.allocated) * 100).toFixed(1)}% used
-                    </span>
-                    <Badge 
-                      variant={category.remaining > 0 ? "default" : "destructive"}
-                      className="text-xs"
-                    >
-                      {category.remaining > 0 ? "On Track" : "Over Budget"}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
           </CardContent>
         </Card>
       )}
