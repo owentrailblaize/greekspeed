@@ -168,7 +168,7 @@ export function TreasurerDashboard() {
           chapter_role
         `)
         .eq('chapter_id', profile?.chapter_id)
-        .in('role', ['admin', 'active_member', 'alumni'])
+        .in('role', ['admin', 'active_member']) // ✅ FIXED: Only fetch admin and active_member roles
         .order('full_name');
 
       if (error) {
