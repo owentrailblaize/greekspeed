@@ -802,62 +802,168 @@ export function TreasurerDashboard() {
             </div>
           </CardHeader>
           <CardContent className="pt-2 sm:pt-6">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Member Name</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {assignments.map((assignment) => (
-                  <TableRow key={assignment.id}>
-                    <TableCell className="font-medium">{assignment.user.full_name}</TableCell>
-                    <TableCell>{assignment.user.member_status}</TableCell>
-                    <TableCell>${assignment.amount_due.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(assignment.status)}>
-                        {assignment.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(assignment.cycle.due_date).toLocaleDateString()}
-                      {assignment.status === 'required' && new Date(assignment.cycle.due_date) < new Date() && (
-                        <span className="text-red-600 text-sm ml-2">
-                          (Overdue)
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedAssignment(assignment);
-                            setShowEditAssignment(true);
-                          }}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleDeleteAssignment(assignment.id)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
+            {assignments.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <DollarSign className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <p className="text-lg font-medium mb-2">No dues assignments</p>
+                <p className="text-sm">No dues have been assigned to chapter members yet.</p>
+              </div>
+            ) : (
+              <>
+                {/* Desktop Table */}
+                <div className="hidden md:block">
+                  <div className="overflow-x-auto">
+                    <div className="max-h-[70vh] overflow-y-auto border border-gray-200 rounded-lg">
+                      <table className="w-full border-collapse">
+                        <thead className="sticky top-0 bg-gray-50 z-10">
+                          <tr className="border-b">
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Member Name</th>
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Class</th>
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Amount</th>
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Status</th>
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Due Date</th>
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {assignments.map((assignment) => (
+                            <tr key={assignment.id} className="border-b hover:bg-gray-50">
+                              <td className="p-3">
+                                <div>
+                                  <p className="font-medium">{assignment.user.full_name}</p>
+                                  <p className="text-sm text-gray-600">{assignment.user.email}</p>
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <Badge variant="outline">{assignment.user.member_status}</Badge>
+                              </td>
+                              <td className="p-3">
+                                <p className="font-medium">${assignment.amount_due.toFixed(2)}</p>
+                                {assignment.amount_paid > 0 && (
+                                  <p className="text-sm text-gray-600">Paid: ${assignment.amount_paid.toFixed(2)}</p>
+                                )}
+                              </td>
+                              <td className="p-3">
+                                <Badge className={getStatusColor(assignment.status)}>
+                                  {assignment.status}
+                                </Badge>
+                              </td>
+                              <td className="p-3">
+                                <div>
+                                  <p className="text-sm">{new Date(assignment.cycle.due_date).toLocaleDateString()}</p>
+                                  {assignment.status === 'required' && new Date(assignment.cycle.due_date) < new Date() && (
+                                    <p className="text-xs text-red-600 font-medium">Overdue</p>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <div className="flex items-center space-x-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedAssignment(assignment);
+                                      setShowEditAssignment(true);
+                                    }}
+                                    className="hover:bg-blue-50 hover:text-blue-600"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => handleDeleteAssignment(assignment.id)}
+                                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  
+                  {/* Summary Footer */}
+                  <div className="mt-4 text-sm text-gray-600">
+                    <p>Showing {assignments.length} dues assignments</p>
+                  </div>
+                </div>
+
+                {/* Mobile Card Layout */}
+                <div className="md:hidden space-y-3">
+                  {assignments.map((assignment) => (
+                    <div key={assignment.id} className="border border-gray-200 rounded-lg p-3 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm text-gray-900 truncate">
+                            {assignment.user.full_name}
+                          </h4>
+                          <p className="text-xs text-gray-600 mt-1">
+                            {assignment.user.email}
+                          </p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <Badge variant="outline" className="text-xs px-2 py-1">
+                              {assignment.user.member_status}
+                            </Badge>
+                            <Badge className={`text-xs px-2 py-1 ${getStatusColor(assignment.status)}`}>
+                              {assignment.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end space-y-1 ml-2">
+                          <p className="text-sm font-medium text-gray-900">
+                            ${assignment.amount_due.toFixed(2)}
+                          </p>
+                          {assignment.amount_paid > 0 && (
+                            <p className="text-xs text-gray-600">
+                              Paid: ${assignment.amount_paid.toFixed(2)}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                        <div className="text-xs text-gray-600">
+                          <span>Due: {new Date(assignment.cycle.due_date).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric'
+                          })}</span>
+                          {assignment.status === 'required' && new Date(assignment.cycle.due_date) < new Date() && (
+                            <span className="text-red-600 font-medium ml-2">(Overdue)</span>
+                          )}
+                        </div>
+                        
+                        <div className="flex space-x-1">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedAssignment(assignment);
+                              setShowEditAssignment(true);
+                            }}
+                            className="h-7 px-2 text-xs"
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            Edit
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleDeleteAssignment(assignment.id)}
+                            className="h-7 px-2 text-xs text-red-600 hover:bg-red-50 hover:text-red-700"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}
@@ -880,64 +986,158 @@ export function TreasurerDashboard() {
             </div>
           </CardHeader>
           <CardContent className="pt-2 sm:pt-6">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Member Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Current Dues</TableHead>
-                  <TableHead>Dues Status</TableHead>
-                  <TableHead>Last Assignment</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {chapterMembers.map((member) => (
-                  <TableRow key={member.id}>
-                    <TableCell className="font-medium">{member.full_name}</TableCell>
-                    <TableCell>{member.email}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{member.chapter_role || member.role}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{member.member_status}</Badge>
-                    </TableCell>
-                    <TableCell>${member.current_dues_amount.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(member.dues_status)}>
-                        {member.dues_status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {member.last_dues_assignment_date 
-                        ? new Date(member.last_dues_assignment_date).toLocaleDateString()
-                        : 'Never'
-                      }
-                    </TableCell>
-                    <TableCell>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => {
-                          setNewAssignment({
-                            memberId: member.id,
-                            amount: member.current_dues_amount,
-                            status: 'required',
-                            notes: ''
-                          });
-                          setShowAssignDues(true);
-                        }}
-                      >
-                        <DollarSign className="h-3 w-3 mr-1" />
-                        Assign Dues
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            {chapterMembers.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <p className="text-lg font-medium mb-2">No chapter members</p>
+                <p className="text-sm">No active members found in this chapter.</p>
+              </div>
+            ) : (
+              <>
+                {/* Desktop Table */}
+                <div className="hidden md:block">
+                  <div className="overflow-x-auto">
+                    <div className="max-h-[70vh] overflow-y-auto border border-gray-200 rounded-lg">
+                      <table className="w-full border-collapse">
+                        <thead className="sticky top-0 bg-gray-50 z-10">
+                          <tr className="border-b">
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Member Info</th>
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Role & Status</th>
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Dues Information</th>
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Last Assignment</th>
+                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {chapterMembers.map((member) => (
+                            <tr key={member.id} className="border-b hover:bg-gray-50">
+                              <td className="p-3">
+                                <div>
+                                  <p className="font-medium">{member.full_name}</p>
+                                  <p className="text-sm text-gray-600">{member.email}</p>
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <div className="space-y-1">
+                                  <Badge variant="secondary">{member.chapter_role || member.role}</Badge>
+                                  <Badge variant="outline">{member.member_status}</Badge>
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <div className="space-y-1">
+                                  <p className="font-medium">${member.current_dues_amount.toFixed(2)}</p>
+                                  <Badge className={getStatusColor(member.dues_status)}>
+                                    {member.dues_status}
+                                  </Badge>
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <p className="text-sm text-gray-600">
+                                  {member.last_dues_assignment_date 
+                                    ? new Date(member.last_dues_assignment_date).toLocaleDateString()
+                                    : 'Never'
+                                  }
+                                </p>
+                              </td>
+                              <td className="p-3">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => {
+                                    setNewAssignment({
+                                      memberId: member.id,
+                                      amount: member.current_dues_amount,
+                                      status: 'required',
+                                      notes: ''
+                                    });
+                                    setShowAssignDues(true);
+                                  }}
+                                  className="hover:bg-green-50 hover:text-green-600"
+                                >
+                                  <DollarSign className="h-4 w-4 mr-1" />
+                                  Assign Dues
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  
+                  {/* Summary Footer */}
+                  <div className="mt-4 text-sm text-gray-600">
+                    <p>Showing {chapterMembers.length} chapter members</p>
+                  </div>
+                </div>
+
+                {/* Mobile Card Layout */}
+                <div className="md:hidden space-y-3">
+                  {chapterMembers.map((member) => (
+                    <div key={member.id} className="border border-gray-200 rounded-lg p-3 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm text-gray-900 truncate">
+                            {member.full_name}
+                          </h4>
+                          <p className="text-xs text-gray-600 mt-1">
+                            {member.email}
+                          </p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <Badge variant="secondary" className="text-xs px-2 py-1">
+                              {member.chapter_role || member.role}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs px-2 py-1">
+                              {member.member_status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end space-y-1 ml-2">
+                          <p className="text-sm font-medium text-gray-900">
+                            ${member.current_dues_amount.toFixed(2)}
+                          </p>
+                          <Badge className={`text-xs px-2 py-1 ${getStatusColor(member.dues_status)}`}>
+                            {member.dues_status}
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                        <div className="text-xs text-gray-600">
+                          <span>
+                            Last assigned: {member.last_dues_assignment_date 
+                              ? new Date(member.last_dues_assignment_date).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric'
+                                })
+                              : 'Never'
+                            }
+                          </span>
+                        </div>
+                        
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setNewAssignment({
+                              memberId: member.id,
+                              amount: member.current_dues_amount,
+                              status: 'required',
+                              notes: ''
+                            });
+                            setShowAssignDues(true);
+                          }}
+                          className="h-7 px-2 text-xs hover:bg-green-50 hover:text-green-600"
+                        >
+                          <DollarSign className="h-3 w-3 mr-1" />
+                          Assign
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}
