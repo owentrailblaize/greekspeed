@@ -194,55 +194,94 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
 
   if (isPaywallVisible) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8">
+      <div className="bg-gradient-to-br from-white to-gray-50 flex items-start justify-center p-4 pt-2 sm:pt-4">
+        <div className="max-w-lg w-full bg-white rounded-lg shadow-xl p-6 mt-2 sm:mt-4">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">
               Chapter Access Required
             </h1>
             
             {userChapter && (
-              <div className="bg-blue-50 rounded-lg p-4 mb-6">
-                <h2 className="text-lg font-semibold text-blue-900 mb-2">
+              <div className="bg-blue-50 rounded-lg p-3 mb-4">
+                <h2 className="text-base font-semibold text-blue-900 mb-1">
                   {userChapter.national_fraternity} - {userChapter.chapter_name}
                 </h2>
-                <p className="text-blue-700 text-sm">
+                <p className="text-blue-700 text-xs">
                   {userChapter.name}
                 </p>
               </div>
             )}
             
-            <p className="text-gray-600 mb-8">
+            <p className="text-gray-600 text-sm mb-4">
               Your chapter needs an active subscription to access GreekSpeed. 
               Only one admin payment unlocks access for all chapter members.
             </p>
             
-            <div className="bg-blue-50 rounded-lg p-6 mb-8">
-              <h2 className="text-xl font-semibold text-blue-900 mb-4">Chapter Benefits:</h2>
-              <ul className="text-left space-y-3">
-                <li className="flex items-center">
+            <div className="bg-blue-50 rounded-lg p-4 mb-4">
+              <h2 className="text-lg font-semibold text-blue-900 mb-3">Chapter Benefits:</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                <div className="flex items-center">
                   <span className="text-green-500 mr-2">✓</span>
-                  Full dashboard access for all members
-                </li>
-                <li className="flex items-center">
+                  Full dashboard access
+                </div>
+                <div className="flex items-center">
                   <span className="text-green-500 mr-2">✓</span>
-                  Event management & communication
-                </li>
-                <li className="flex items-center">
+                  Alumni networking
+                </div>
+                <div className="flex items-center">
                   <span className="text-green-500 mr-2">✓</span>
-                  Alumni networking platform
-                </li>
-                <li className="flex items-center">
+                  Event management
+                </div>
+                <div className="flex items-center">
                   <span className="text-green-500 mr-2">✓</span>
-                  Advanced analytics & reporting
-                </li>
-              </ul>
+                  Advanced analytics
+                </div>
+              </div>
             </div>
 
-            <div className="text-center mb-8">
-              <div className="text-4xl font-bold text-blue-600">$25.00</div>
-              <div className="text-gray-500">per month per chapter</div>
-              <div className="text-sm text-gray-400 mt-2">Unlocks access for all chapter members</div>
+            {/* Pricing and Action Row */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+              {/* Pricing Section */}
+              <div className="text-center sm:text-left">
+                <div className="text-3xl font-bold text-blue-600">$25.00</div>
+                <div className="text-gray-500 text-sm">per month per chapter</div>
+              </div>
+
+              {/* Admin Action Section */}
+              {userRole === 'admin' ? (
+                <div className="w-full sm:w-auto">
+                  <button
+                    onClick={handleSubscribe}
+                    disabled={isLoading}
+                    className={`w-full sm:w-auto font-semibold py-2 px-6 rounded-lg transition duration-200 ${
+                      isLoading 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Processing...
+                      </span>
+                    ) : (
+                      'Activate Subscription'
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 w-full sm:w-auto">
+                  <div className="flex items-center justify-center">
+                    <svg className="w-4 h-4 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-yellow-800 font-medium text-sm">Admin Action Required</span>
+                  </div>
+                  <p className="text-yellow-700 text-xs mt-1 text-center">
+                    Contact your chapter admin to enable access.
+                  </p>
+                </div>
+              )}
             </div>
 
             {error && (
@@ -251,53 +290,16 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
               </div>
             )}
 
-            {/* Only show payment button for admin users */}
-            {userRole === 'admin' ? (
-              <>
-                <button
-                  onClick={handleSubscribe}
-                  disabled={isLoading}
-                  className={`w-full font-semibold py-3 px-6 rounded-lg transition duration-200 mb-4 ${
-                    isLoading 
-                      ? 'bg-gray-400 cursor-not-allowed' 
-                      : 'bg-blue-600 hover:bg-blue-700 text-white'
-                  }`}
-                >
-                  {isLoading ? (
-                    <span className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Processing...
-                    </span>
-                  ) : (
-                    'Activate Chapter Subscription'
-                  )}
-                </button>
-
-                {sessionUrl && (
-                  <button
-                    onClick={handleDirectRedirect}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 mb-4"
-                  >
-                    Direct Payment Link (Fallback)
-                  </button>
-                )}
-              </>
-            ) : (
-              /* Show different message for non-admin users */
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-yellow-800 font-medium">Admin Action Required</span>
-                </div>
-                <p className="text-yellow-700 text-sm mt-1">
-                  Only chapter administrators can activate the subscription. Please contact your chapter admin to enable access.
-                </p>
-              </div>
+            {sessionUrl && userRole === 'admin' && (
+              <button
+                onClick={handleDirectRedirect}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200 mb-4 text-sm"
+              >
+                Direct Payment Link (Fallback)
+              </button>
             )}
             
-            <p className="text-sm text-gray-500 mt-4">
+            <p className="text-xs text-gray-500">
               One payment unlocks access for all chapter members. Cancel anytime.
             </p>
           </div>
