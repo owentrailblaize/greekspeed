@@ -42,13 +42,15 @@ export function OperationsFeed() {
     }
   }, [profile?.chapter_id]);
 
-  // Fetch 5 most recent activities for the feed
+  // Fetch responsive number of recent activities for the feed
   const fetchRecentActivities = async () => {
     if (!profile?.chapter_id) return;
 
     try {
       setLoading(true);
-      const activities = await fetchActivitiesFromDatabase(5);
+      // Fetch 3 on mobile, 5 on desktop
+      const limit = window.innerWidth < 640 ? 3 : 5;
+      const activities = await fetchActivitiesFromDatabase(limit);
       setActivities(activities);
     } catch (error) {
       console.error('Error fetching recent activities:', error);
