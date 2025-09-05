@@ -337,6 +337,57 @@ export function TreasurerDashboard() {
     spentBudget: 28750  // This could be calculated from other sources
   };
 
+  // NEW: Calculate dues collection progress for current cycle
+  const getCurrentCycle = () => {
+    // Get the most recent active cycle
+    return cycles.find(cycle => cycle.status === 'active') || cycles[0];
+  };
+
+  const getDuesCollectionProgress = () => {
+    const currentCycle = getCurrentCycle();
+    if (!currentCycle) {
+      return {
+        cycleName: 'No Active Cycle',
+        paid: 0,
+        pending: 0,
+        overdue: 0,
+        total: 0,
+        collectionRate: 0
+      };
+    }
+
+    // Filter assignments for current cycle
+    const currentCycleAssignments = assignments.filter(
+      assignment => assignment.cycle.name === currentCycle.name
+    );
+
+    const now = new Date();
+    const dueDate = new Date(currentCycle.due_date);
+
+    // Calculate counts
+    const paid = currentCycleAssignments.filter(a => a.status === 'paid').length;
+    const pending = currentCycleAssignments.filter(a => 
+      a.status === 'required' && now <= dueDate
+    ).length;
+    const overdue = currentCycleAssignments.filter(a => 
+      a.status === 'required' && now > dueDate
+    ).length;
+
+    const total = currentCycleAssignments.length;
+    const collectionRate = total > 0 ? (paid / total) * 100 : 0;
+
+    return {
+      cycleName: currentCycle.name,
+      paid,
+      pending,
+      overdue,
+      total,
+      collectionRate
+    };
+  };
+
+  const duesProgress = getDuesCollectionProgress();
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "paid": return "bg-green-100 text-green-800";
@@ -487,27 +538,27 @@ export function TreasurerDashboard() {
             <CardContent>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span>Spring 2024 Collection</span>
-                  <span className="font-medium">{financialOverview.collectionRate.toFixed(1)}%</span>
+                  <span>{duesProgress.cycleName}</span>
+                  <span className="font-medium">{duesProgress.collectionRate.toFixed(1)}%</span>
                 </div>
-                <Progress value={financialOverview.collectionRate} className="h-3" />
+                <Progress value={duesProgress.collectionRate} className="h-3" />
                 
                 <div className="grid grid-cols-3 gap-4 mt-6">
                   <div className="text-center">
                     <p className="text-2xl font-semibold text-green-600">
-                      {assignments.filter(a => a.status === 'paid').length}
+                      {duesProgress.paid}
                     </p>
                     <p className="text-sm text-gray-600">Paid</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-semibold text-yellow-600">
-                      {assignments.filter(a => a.status === 'required').length}
+                      {duesProgress.pending}
                     </p>
                     <p className="text-sm text-gray-600">Pending</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-semibold text-red-600">
-                      {assignments.filter(a => a.status === 'required' && new Date(a.cycle.due_date) < new Date()).length}
+                      {duesProgress.overdue}
                     </p>
                     <p className="text-sm text-gray-600">Overdue</p>
                   </div>
