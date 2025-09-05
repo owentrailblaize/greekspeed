@@ -348,7 +348,7 @@ export function OperationsFeed() {
                   View All
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden bg-white">
+              <DialogContent className="rounded-lg max-h-[80vh] overflow-hidden bg-white sm:max-w-2xl max-w-[calc(100vw-2rem)] mx-auto sm:mx-0">
                 <DialogHeader>
                   <DialogTitle className="flex items-center space-x-2">
                     <Clock className="h-5 w-5 text-navy-600" />
