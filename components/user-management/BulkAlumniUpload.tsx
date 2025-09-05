@@ -300,27 +300,15 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
           {/* Upload Options */}
           <div className="space-y-4">
             <Label>Upload Options</Label>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="generate-passwords"
-                  checked={options.generatePasswords}
-                  onCheckedChange={(checked) => 
-                    setOptions(prev => ({ ...prev, generatePasswords: !!checked }))
-                  }
-                />
-                <Label htmlFor="generate-passwords">Generate secure passwords</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="welcome-emails"
-                  checked={options.sendWelcomeEmails}
-                  onCheckedChange={(checked) => 
-                    setOptions(prev => ({ ...prev, sendWelcomeEmails: !!checked }))
-                  }
-                />
-                <Label htmlFor="welcome-emails">Send welcome emails</Label>
-              </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="generate-passwords"
+                checked={options.generatePasswords}
+                onCheckedChange={(checked) => 
+                  setOptions(prev => ({ ...prev, generatePasswords: !!checked }))
+                }
+              />
+              <Label htmlFor="generate-passwords">Generate secure passwords</Label>
             </div>
             {!options.generatePasswords && (
               <div className="space-y-2">
