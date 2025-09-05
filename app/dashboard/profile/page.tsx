@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, Mail, MapPin, Building, Shield, FileText, Phone, MessageCircle, Users, Calendar, Settings, Edit, UserCheck, UserPlus, Clock, Lock, Upload } from 'lucide-react';
+import { User, Mail, MapPin, Building, Shield, FileText, Phone, MessageCircle, Users, Calendar, Settings, Edit, UserCheck, UserPlus, Clock, Lock, Upload, Heart, Trash2 } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useConnections } from '@/lib/hooks/useConnections';
 import { useAuth } from '@/lib/supabase/auth-context';
@@ -19,6 +19,9 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { AvatarService } from '@/lib/services/avatarService';
 import { BannerService } from '@/lib/services/bannerService';
+import { useUserPosts } from '@/lib/hooks/useUserPosts';
+import { formatDistanceToNow } from 'date-fns';
+import { DeletePostModal } from '@/components/social/DeletePostModal';
 
 export default function ProfilePage() {
   const { profile, loading, refreshProfile } = useProfile();
@@ -27,6 +30,9 @@ export default function ProfilePage() {
   const [connectionLoading, setConnectionLoading] = useState<string | null>(null);
   const router = useRouter();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Calculate completion percentage
   const completion = profile ? ProfileService.calculateCompletion(profile) : null;
@@ -104,6 +110,41 @@ export default function ProfilePage() {
       console.log('Role value:', profile.role);
     }
   }, [profile]);
+
+  const { posts: userPosts, loading: postsLoading, deletePost } = useUserPosts(profile?.id || '');
+
+  const formatTimestamp = (timestamp: string) => {
+    try {
+      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+    } catch {
+      return 'recently';
+    }
+  };
+
+  const handleDeleteClick = (postId: string) => {
+    setPostToDelete(postId);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!postToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await deletePost(postToDelete);
+      setDeleteModalOpen(false);
+      setPostToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModalOpen(false);
+    setPostToDelete(null);
+  };
 
   if (loading) {
     return (
@@ -290,10 +331,8 @@ export default function ProfilePage() {
                     <TabsTrigger value="connected" className="text-sm">Connected</TabsTrigger>
                     <TabsTrigger 
                       value="posts" 
-                      className="text-sm opacity-50 cursor-not-allowed" 
-                      disabled
+                      className="text-sm"
                     >
-                      <Lock className="w-3 h-3 mr-1" />
                       Posts
                     </TabsTrigger>
                   </TabsList>
@@ -400,11 +439,105 @@ export default function ProfilePage() {
                   </TabsContent>
                   
                   <TabsContent value="posts" className="mt-4">
-                    <div className="text-center py-8 text-gray-500">
-                      <Lock className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                      <p className="text-lg font-medium">Posts Feature</p>
-                      <p className="text-sm mt-1">Coming soon! Users will be able to share updates and content.</p>
-                    </div>
+                    {postsLoading ? (
+                      <div className="text-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600 mx-auto mb-4"></div>
+                        <p className="text-gray-500">Loading your posts...</p>
+                      </div>
+                    ) : userPosts.length > 0 ? (
+                      <div className="space-y-4">
+                        {userPosts.map((post) => (
+                          <Card key={post.id} className="bg-white">
+                            <CardContent className="p-4 sm:p-6">
+                              {/* Post Header */}
+                              <div className="flex items-start space-x-3 sm:space-x-4 mb-4 sm:mb-3">
+                                <div className="w-12 h-12 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
+                                  {post.author?.avatar_url || post.author?.first_name?.charAt(0) || 'U'}
+                                </div>
+                                
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                                    <h4 className="font-medium text-gray-900 text-base sm:text-sm break-words">
+                                      {post.author?.full_name || 'Unknown User'}
+                                    </h4>
+                                    <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                      {post.post_type.replace('_', ' ')}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                                    {post.author?.chapter_role && (
+                                      <span className="text-xs text-gray-600 break-words">
+                                        {post.author.chapter_role}
+                                      </span>
+                                    )}
+                                    {post.author?.member_status && (
+                                      <span className="text-xs text-gray-600 break-words">
+                                        {post.author.member_status}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-gray-500">
+                                    {formatTimestamp(post.created_at)}
+                                  </p>
+                                </div>
+                                
+                                <div className="flex items-center space-x-1">
+                                  {post.is_author && (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      onClick={() => handleDeleteClick(post.id)}
+                                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 sm:p-1"
+                                      title="Delete post"
+                                    >
+                                      <Trash2 className="h-5 w-5 sm:h-4 sm:w-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Post Content */}
+                              <div className="mb-4 sm:mb-4">
+                                {post.content && (
+                                  <p className="text-gray-900 text-base sm:text-sm leading-relaxed mb-3 break-words">{post.content}</p>
+                                )}
+                                {post.image_url && (
+                                  <img 
+                                    src={post.image_url} 
+                                    alt="Post content" 
+                                    className="w-full max-h-96 object-cover rounded-lg"
+                                  />
+                                )}
+                              </div>
+
+                              {/* Post Stats */}
+                              <div className="flex items-center justify-between pt-4 sm:pt-3 border-t border-gray-100">
+                                <div className="flex items-center space-x-4 sm:space-x-6">
+                                  <div className="flex items-center space-x-1 text-gray-500">
+                                    <Heart className="h-5 w-5 sm:h-4 sm:w-4" />
+                                    <span className="text-sm sm:text-xs">{post.likes_count}</span>
+                                  </div>
+                                  <div className="flex items-center space-x-1 text-gray-500">
+                                    <MessageCircle className="h-5 w-5 sm:h-4 sm:w-4" />
+                                    <span className="text-sm sm:text-xs">{post.comments_count}</span>
+                                  </div>
+                                  <div className="flex items-center space-x-1 text-gray-500">
+                                    <Calendar className="h-5 w-5 sm:h-4 sm:w-4" />
+                                    <span className="text-sm sm:text-xs">{new Date(post.created_at).toLocaleDateString()}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <MessageCircle className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                        <p className="text-lg font-medium">No posts yet</p>
+                        <p className="text-sm mt-1">You haven't shared any posts yet. Start sharing updates with your chapter!</p>
+                      </div>
+                    )}
                   </TabsContent>
                 </Tabs>
               </CardHeader>
@@ -525,6 +658,14 @@ export default function ProfilePage() {
           onClose={() => setIsEditModalOpen(false)}
           profile={profile}
           onUpdate={handleProfileUpdate}
+        />
+        {/* Delete Confirmation Modal */}
+        <DeletePostModal
+          isOpen={deleteModalOpen}
+          onClose={handleDeleteCancel}
+          onConfirm={handleDeleteConfirm}
+          post={userPosts.find(p => p.id === postToDelete) || null}
+          isDeleting={isDeleting}
         />
       </div>
     </div>
