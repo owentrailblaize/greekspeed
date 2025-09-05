@@ -70,7 +70,11 @@ export async function POST(request: NextRequest) {
 
           if (result.success) {
             results.successful++;
-            results.createdUsers.push(result.user);
+            results.createdUsers.push({
+              ...result.user,
+              password: result.password,
+              email: result.user?.email || alumni.email
+            });
           } else {
             results.failed++;
             results.errors.push({

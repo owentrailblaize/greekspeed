@@ -112,6 +112,22 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
     });
   };
 
+  const downloadTemplate = () => {
+    const template = [
+      ['email', 'first_name', 'last_name', 'chapter', 'industry', 'graduation_year', 'company', 'job_title', 'phone', 'location', 'description', 'pledge_class', 'major', 'hometown'],
+      ['john.doe@example.com', 'John', 'Doe', 'Sigma Chi', 'Technology', '2020', 'Microsoft', 'Software Engineer', '(555) 123-4567', 'Seattle, WA', 'Passionate about technology', 'Fall 2016', 'Computer Science', 'Seattle, WA']
+    ];
+
+    const csvContent = template.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'alumni_bulk_upload_template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   const handleUpload = async () => {
     if (!file) return;
 
@@ -155,6 +171,12 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
       setResults(result.results);
       setProgress(100);
 
+      // Auto-download Excel file with email/password pairs if passwords were generated OR default password used
+      if (result.results.createdUsers.length > 0) {
+        console.log('📥 Auto-downloading Excel file with credentials...');
+        downloadCredentialsExcel(result.results.createdUsers);
+      }
+
     } catch (error) {
       console.error('❌ Upload error:', error);
       alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -163,20 +185,39 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
     }
   };
 
-  const downloadTemplate = () => {
-    const template = [
-      ['email', 'first_name', 'last_name', 'chapter', 'industry', 'graduation_year', 'company', 'job_title', 'phone', 'location', 'description', 'pledge_class', 'major', 'hometown'],
-      ['john.doe@example.com', 'John', 'Doe', 'Sigma Chi', 'Technology', '2020', 'Microsoft', 'Software Engineer', '(555) 123-4567', 'Seattle, WA', 'Passionate about technology', 'Fall 2016', 'Computer Science', 'Seattle, WA']
+  // New function to download Excel file with credentials
+  const downloadCredentialsExcel = (createdUsers: any[]) => {
+    // Filter users that have passwords (newly created users)
+    const usersWithPasswords = createdUsers.filter(user => user.password);
+    
+    if (usersWithPasswords.length === 0) {
+      console.log('No users with passwords to download');
+      return;
+    }
+
+    // Create Excel data
+    const excelData = [
+      ['Email', 'Password'], // Header row
+      ...usersWithPasswords.map(user => [user.email, user.password])
     ];
 
-    const csvContent = template.map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    // Convert to CSV format (Excel can open CSV files)
+    const csvContent = excelData.map(row => 
+      row.map(cell => `"${cell}"`).join(',')
+    ).join('\n');
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'alumni_bulk_upload_template.csv';
+    a.download = `alumni_credentials_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+    
+    console.log(`📥 Downloaded credentials for ${usersWithPasswords.length} users`);
   };
 
   const downloadResults = () => {
@@ -188,7 +229,7 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
         user.email,
         'success',
         '',
-        showPasswords ? user.password || 'N/A' : 'Hidden'
+        user.password || 'N/A' // Always show actual passwords, not 'Hidden'
       ]),
       ...results.errors.map((error: any) => [
         error.email,
@@ -259,27 +300,15 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
           {/* Upload Options */}
           <div className="space-y-4">
             <Label>Upload Options</Label>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="generate-passwords"
-                  checked={options.generatePasswords}
-                  onCheckedChange={(checked) => 
-                    setOptions(prev => ({ ...prev, generatePasswords: !!checked }))
-                  }
-                />
-                <Label htmlFor="generate-passwords">Generate secure passwords</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="welcome-emails"
-                  checked={options.sendWelcomeEmails}
-                  onCheckedChange={(checked) => 
-                    setOptions(prev => ({ ...prev, sendWelcomeEmails: !!checked }))
-                  }
-                />
-                <Label htmlFor="welcome-emails">Send welcome emails</Label>
-              </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="generate-passwords"
+                checked={options.generatePasswords}
+                onCheckedChange={(checked) => 
+                  setOptions(prev => ({ ...prev, generatePasswords: !!checked }))
+                }
+              />
+              <Label htmlFor="generate-passwords">Generate secure passwords</Label>
             </div>
             {!options.generatePasswords && (
               <div className="space-y-2">
@@ -318,14 +347,11 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
             )}
           </Button>
 
-          {/* Progress Bar */}
+          {/* Loading Spinner */}
           {isUploading && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Upload Progress</span>
-                <span>{progress}%</span>
-              </div>
-              <Progress value={progress} className="w-full" />
+            <div className="flex flex-col items-center justify-center py-8 space-y-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <p className="text-sm text-gray-600">Processing alumni upload...</p>
             </div>
           )}
 
@@ -351,6 +377,16 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
                     <Download className="h-4 w-4 mr-2" />
                     Download Results
                   </Button>
+                  {options.generatePasswords && results.createdUsers.some((user: any) => user.password) && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => downloadCredentialsExcel(results.createdUsers)}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download Credentials
+                    </Button>
+                  )}
                 </div>
               </div>
 

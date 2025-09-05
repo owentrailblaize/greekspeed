@@ -250,113 +250,74 @@ export function AlumniPipelineLayout({
         )}
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Enhanced Toolbar */}
-        {viewMode === 'table' && (
-          <AlumniToolbar
-            selectedCount={selectedAlumni.length}
-            totalCount={totalAlumni}
-            onBulkAction={handleBulkAction}
-            onSaveSearch={handleSaveSearch}
-            onExport={handleExport}
-          />
-        )}
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Toolbar */}
+        <AlumniToolbar
+          selectedCount={selectedAlumni.length}
+          totalCount={totalAlumni}
+          onBulkAction={handleBulkAction}
+          onSaveSearch={handleSaveSearch}
+          onExport={handleExport}
+        />
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto">
+        {/* Content with scrollable container */}
+        <div className="flex-1 overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600">Loading alumni...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading alumni...</p>
               </div>
             </div>
           ) : error ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
-                <div className="text-red-600 mb-4">
-                  <p className="font-medium">Error loading alumni</p>
-                  <p className="text-sm">{error}</p>
-                </div>
-                <Button 
-                  onClick={onRetry}
-                  variant="outline"
-                  className="bg-navy-600 text-white hover:bg-navy-700"
-                >
+                <p className="text-red-600 mb-4">{error}</p>
+                <Button onClick={onRetry} variant="outline">
                   Try Again
                 </Button>
               </div>
             </div>
+          ) : viewMode === 'table' ? (
+            <div className="h-full overflow-y-auto">
+              <AlumniTableView 
+                alumni={displayAlumni}
+                selectedAlumni={selectedAlumni}
+                onSelectionChange={onSelectionChange}
+              />
+            </div>
           ) : (
-            <div className={viewMode === 'table' ? 'h-full' : 'p-6'}>
-              {/* Only show search results message for table view */}
-              {viewMode === 'table' && alumni.length > 0 && filters.searchTerm && (
-                <div className="px-6 py-2 bg-blue-50 border-b border-blue-200">
-                  <p className="text-sm text-blue-700">
-                    Found {alumni.length} alumni matching "{filters.searchTerm}"
-                  </p>
-                </div>
-              )}
+            <div className="h-full overflow-y-auto p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {displayAlumni.map((alumniItem: Alumni, index: number) => (
+                  <motion.div
+                    key={alumniItem.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.05 }}
+                  >
+                    <EnhancedAlumniCard
+                      alumni={alumniItem}
+                      onClick={handleAlumniClick}
+                    />
+                  </motion.div>
+                ))}
+              </div>
               
-              {alumni.length === 0 ? (
-                <div className="text-center py-12">
-                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No alumni found</h3>
-                  <p className="text-gray-600 mb-4">
-                    Try adjusting your search criteria or filters to find more alumni.
+              {/* Summary footer for large datasets */}
+              {displayAlumni.length > 1000 && (
+                <div className="mt-8 text-center text-sm text-gray-600">
+                  <p>Showing {displayAlumni.length} alumni records</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                     Use the search and filters above to narrow down results
                   </p>
-                  <Button variant="outline" onClick={onClearFilters}>
-                    Clear all filters
-                  </Button>
-                </div>
-              ) : viewMode === 'table' ? (
-                <div className="h-full overflow-y-auto">
-                  <AlumniTableView 
-                    alumni={displayAlumni}
-                    selectedAlumni={selectedAlumni}
-                    onSelectionChange={onSelectionChange}
-                  />
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {displayAlumni.map((alumniItem: Alumni, index: number) => (
-                    <motion.div
-                      key={alumniItem.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.05 }}
-                    >
-                      <EnhancedAlumniCard
-                        alumni={alumniItem}
-                        onClick={handleAlumniClick}
-                      />
-                    </motion.div>
-                  ))}
                 </div>
               )}
             </div>
           )}
         </div>
       </div>
-
-      {/* Alumni Detail Sheet */}
-      <AlumniDetailSheet
-        alumni={selectedAlumniDetail}
-        isOpen={detailSheetOpen}
-        onClose={() => {
-          setDetailSheetOpen(false);
-          setSelectedAlumniDetail(null);
-        }}
-      />
-
-      {selectedAlumniDetail && (
-        <AlumniProfileModal
-          alumni={selectedAlumniDetail}
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-        />
-      )}
     </div>
   );
 } 

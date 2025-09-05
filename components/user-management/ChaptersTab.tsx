@@ -181,106 +181,119 @@ export function ChaptersTab() {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left p-3 font-medium text-sm">Chapter Info</th>
-                  <th className="text-left p-3 font-medium text-sm">Location & University</th>
-                  <th className="text-left p-3 font-medium text-sm">National Fraternity</th>
-                  <th className="text-left p-3 font-medium text-sm">Members & Founded</th>
-                  <th className="text-left p-3 font-medium text-sm">Status</th>
-                  <th className="text-left p-3 font-medium text-sm">Created</th>
-                  <th className="text-left p-3 font-medium text-sm">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredChapters.map((chapter) => (
-                  <tr key={chapter.id} className="border-b hover:bg-gray-50">
-                    <td className="p-3">
-                      <div>
-                        <p className="font-medium">{chapter.name}</p>
-                        <p className="text-sm text-gray-600">{chapter.chapter_name}</p>
-                        <p className="text-xs text-gray-500">{chapter.slug}</p>
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="h-4 w-4 text-gray-400" />
+            {/* Scrollable container with fixed height */}
+            <div className="max-h-[70vh] overflow-y-auto border border-gray-200 rounded-lg">
+              <table className="w-full border-collapse">
+                <thead className="sticky top-0 bg-gray-50 z-10">
+                  <tr className="border-b">
+                    <th className="text-left p-3 font-medium text-sm bg-gray-50">Chapter Info</th>
+                    <th className="text-left p-3 font-medium text-sm bg-gray-50">Location & University</th>
+                    <th className="text-left p-3 font-medium text-sm bg-gray-50">National Fraternity</th>
+                    <th className="text-left p-3 font-medium text-sm bg-gray-50">Members & Founded</th>
+                    <th className="text-left p-3 font-medium text-sm bg-gray-50">Status</th>
+                    <th className="text-left p-3 font-medium text-sm bg-gray-50">Created</th>
+                    <th className="text-left p-3 font-medium text-sm bg-gray-50">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredChapters.map((chapter) => (
+                    <tr key={chapter.id} className="border-b hover:bg-gray-50">
+                      <td className="p-3">
                         <div>
-                          <p className="font-medium">{chapter.location}</p>
-                          <p className="text-sm text-gray-600">{chapter.university}</p>
+                          <p className="font-medium">{chapter.name}</p>
+                          <p className="text-sm text-gray-600">{chapter.chapter_name}</p>
+                          <p className="text-xs text-gray-500">{chapter.slug}</p>
                         </div>
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <div>
-                        <p className="font-medium">{chapter.national_fraternity}</p>
-                        <p className="text-sm text-gray-600">{chapter.school}</p>
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex items-center space-x-2">
-                        <Users className="h-4 w-4 text-gray-400" />
-                        <span className="font-medium">{chapter.member_count}</span>
-                        <span className="text-gray-400">|</span>
-                        <Calendar className="h-4 w-4 text-gray-400" />
-                        <span>{chapter.founded_year}</span>
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <Badge 
-                        variant={chapter.chapter_status === 'active' ? 'default' : 'secondary'}
-                        className="capitalize"
-                      >
-                        {chapter.chapter_status}
-                      </Badge>
-                    </td>
-                    <td className="p-3">
-                      <div className="text-sm text-gray-600">
-                        {new Date(chapter.created_at).toLocaleDateString()}
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex items-center space-x-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleViewChapter(chapter)}
-                          className="hover:bg-blue-50 hover:text-blue-600"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        
-                        {/* Edit Button with Lock Indicator */}
-                        <div className="relative">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            disabled
-                            className="h-8 w-8 p-0 bg-gray-50 cursor-not-allowed opacity-60"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <div className="absolute -top-1 -right-1">
-                            <Lock className="h-3 w-3 text-gray-500" />
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="h-4 w-4 text-gray-400" />
+                          <div>
+                            <p className="font-medium">{chapter.location}</p>
+                            <p className="text-sm text-gray-600">{chapter.university}</p>
                           </div>
                         </div>
-                        
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                          onClick={() => openDeleteModal(chapter)}
-                          disabled={deletingChapterId === chapter.id}
+                      </td>
+                      <td className="p-3">
+                        <div>
+                          <p className="font-medium">{chapter.national_fraternity}</p>
+                          <p className="text-sm text-gray-600">{chapter.school}</p>
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center space-x-2">
+                          <Users className="h-4 w-4 text-gray-400" />
+                          <span className="font-medium">{chapter.member_count}</span>
+                          <span className="text-gray-400">|</span>
+                          <Calendar className="h-4 w-4 text-gray-400" />
+                          <span>{chapter.founded_year}</span>
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <Badge 
+                          variant={chapter.chapter_status === 'active' ? 'default' : 'secondary'}
+                          className="capitalize"
                         >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                          {chapter.chapter_status}
+                        </Badge>
+                      </td>
+                      <td className="p-3">
+                        <div className="text-sm text-gray-600">
+                          {new Date(chapter.created_at).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center space-x-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleViewChapter(chapter)}
+                            className="hover:bg-blue-50 hover:text-blue-600"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          
+                          {/* Edit Button with Lock Indicator */}
+                          <div className="relative">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled
+                              className="h-8 w-8 p-0 bg-gray-50 cursor-not-allowed opacity-60"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <div className="absolute -top-1 -right-1">
+                              <Lock className="h-3 w-3 text-gray-500" />
+                            </div>
+                          </div>
+                          
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                            onClick={() => openDeleteModal(chapter)}
+                            disabled={deletingChapterId === chapter.id}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Summary Footer */}
+            <div className="mt-4 text-sm text-gray-600">
+              <p>Showing {filteredChapters.length} chapter records</p>
+              {filteredChapters.length > 1000 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 Tip: Use the search bar above to filter results for better performance
+                </p>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
