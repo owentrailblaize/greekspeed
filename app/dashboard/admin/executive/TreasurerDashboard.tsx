@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { DollarSign, TrendingUp, Users, AlertTriangle, CheckCircle, Download, Mail, Plus, Calendar, Edit, Eye, UserPlus, X } from "lucide-react";
+import { DollarSign, TrendingUp, Users, AlertTriangle, CheckCircle, Download, Mail, Plus, Calendar, Edit, Eye, UserPlus, X, Lock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,6 +62,63 @@ interface ChapterMember {
   role: string;
   chapter_role: string;
 }
+
+// Add CSV export function for dues data
+const exportDuesToCSV = (assignments: DuesAssignment[], filename: string = "dues-export.csv") => {
+  // Define the CSV headers
+  const headers = [
+    "Member Name",
+    "Email", 
+    "Class",
+    "Amount Due",
+    "Amount Paid",
+    "Status",
+    "Due Date",
+    "Cycle Name",
+    "Notes"
+  ];
+
+  // Convert assignments data to CSV rows
+  const csvRows = assignments.map(assignment => [
+    assignment.user.full_name || "",
+    assignment.user.email || "",
+    assignment.user.member_status || "",
+    assignment.amount_due || 0,
+    assignment.amount_paid || 0,
+    assignment.status || "",
+    new Date(assignment.cycle.due_date).toLocaleDateString(),
+    assignment.cycle.name || "",
+    assignment.notes || ""
+  ]);
+
+  // Combine headers and data
+  const csvContent = [headers, ...csvRows]
+    .map(row => 
+      row.map(field => {
+        // Escape quotes and wrap in quotes if contains comma, newline, or quote
+        const escaped = String(field).replace(/"/g, '""');
+        if (escaped.includes(',') || escaped.includes('\n') || escaped.includes('"')) {
+          return `"${escaped}"`;
+        }
+        return escaped;
+      }).join(',')
+    )
+    .join('\n');
+
+  // Create and download the file
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+};
 
 export function TreasurerDashboard() {
   const { profile } = useProfile();
@@ -593,13 +650,22 @@ export function TreasurerDashboard() {
             <div className="flex justify-between items-center">
               <CardTitle>Member Dues Status</CardTitle>
               <div className="flex space-x-2">
-                <Button size="sm" variant="outline">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => exportDuesToCSV(assignments, `dues-export-${new Date().toISOString().split('T')[0]}.csv`)}
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Export
                 </Button>
-                <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                <Button 
+                  size="sm" 
+                  className="bg-green-600 hover:bg-green-700 opacity-60 cursor-not-allowed" 
+                  disabled
+                >
                   <Mail className="h-4 w-4 mr-2" />
                   Send Reminders
+                  <Lock className="h-3 w-3 ml-2 text-gray-400" />
                 </Button>
               </div>
             </div>
