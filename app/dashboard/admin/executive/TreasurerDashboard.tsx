@@ -289,6 +289,32 @@ export function TreasurerDashboard() {
     }
   };
 
+  const handleDeleteAssignment = async (assignmentId: string) => {
+    if (!confirm('Are you sure you want to delete this dues assignment? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/dues/assignments', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignmentId })
+      });
+
+      if (response.ok) {
+        loadDuesData();
+        loadChapterMembers();
+        console.log('✅ Dues assignment deleted successfully');
+      } else {
+        console.error('❌ Error deleting dues assignment');
+        alert('Failed to delete dues assignment. Please try again.');
+      }
+    } catch (error) {
+      console.error('❌ Error deleting dues assignment:', error);
+      alert('Failed to delete dues assignment. Please try again.');
+    }
+  };
+
   const handleMemberSelection = (memberId: string, checked: boolean) => {
     if (checked) {
       setBulkAssignment(prev => ({
@@ -624,12 +650,10 @@ export function TreasurerDashboard() {
                         <Button 
                           size="sm" 
                           variant="outline"
-                          onClick={() => {
-                            setSelectedAssignment(assignment);
-                            setShowEditAssignment(true);
-                          }}
+                          onClick={() => handleDeleteAssignment(assignment.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
-                          <Eye className="h-3 w-3" />
+                          <X className="h-3 w-3" />
                         </Button>
                       </div>
                     </TableCell>
