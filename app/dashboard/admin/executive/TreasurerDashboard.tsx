@@ -778,7 +778,8 @@ export function TreasurerDashboard() {
       {selectedTab === "dues" && (
         <Card>
           <CardHeader className="pb-2 sm:pb-6">
-            <div className="flex justify-between items-center">
+            {/* Desktop Layout - Preserved */}
+            <div className="hidden sm:flex justify-between items-center">
               <CardTitle>Member Dues Status</CardTitle>
               <div className="flex space-x-2">
                 <Button 
@@ -796,6 +797,31 @@ export function TreasurerDashboard() {
                 >
                   <Mail className="h-4 w-4 mr-2" />
                   Send Reminders
+                  <Lock className="h-3 w-3 ml-2 text-gray-400" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Mobile Layout */}
+            <div className="sm:hidden">
+              <CardTitle className="text-lg mb-3">Member Dues Status</CardTitle>
+              <div className="flex space-x-2">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => exportDuesToCSV(assignments, `dues-export-${new Date().toISOString().split('T')[0]}.csv`)}
+                  className="flex-1 justify-center text-sm py-2"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="bg-green-600 hover:bg-green-700 opacity-60 cursor-not-allowed flex-1 justify-center text-sm py-2" 
+                  disabled
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Remind
                   <Lock className="h-3 w-3 ml-2 text-gray-400" />
                 </Button>
               </div>
@@ -971,7 +997,8 @@ export function TreasurerDashboard() {
       {selectedTab === "members" && (
         <Card>
           <CardHeader className="pb-2 sm:pb-6">
-            <div className="flex justify-between items-center">
+            {/* Desktop Layout - Preserved */}
+            <div className="hidden sm:flex justify-between items-center">
               <CardTitle>All Chapter Members ({chapterMembers.length})</CardTitle>
               <div className="flex space-x-2">
                 <Button onClick={() => setShowBulkAssignDues(true)} className="bg-purple-600 hover:bg-purple-700">
@@ -979,6 +1006,27 @@ export function TreasurerDashboard() {
                   Bulk Assign Dues
                 </Button>
                 <Button onClick={() => setShowAssignDues(true)} className="bg-blue-600 hover:bg-blue-700">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Assign Dues
+                </Button>
+              </div>
+            </div>
+
+            {/* Mobile Layout */}
+            <div className="sm:hidden">
+              <CardTitle className="text-lg mb-3">All Chapter Members ({chapterMembers.length})</CardTitle>
+              <div className="flex space-x-2">
+                <Button 
+                  onClick={() => setShowBulkAssignDues(true)} 
+                  className="bg-purple-600 hover:bg-purple-700 flex-1 justify-center text-sm py-2"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Bulk Assign
+                </Button>
+                <Button 
+                  onClick={() => setShowAssignDues(true)} 
+                  className="bg-blue-600 hover:bg-blue-700 flex-1 justify-center text-sm py-2"
+                >
                   <UserPlus className="h-4 w-4 mr-2" />
                   Assign Dues
                 </Button>
