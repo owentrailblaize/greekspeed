@@ -483,20 +483,6 @@ export function TreasurerDashboard() {
           <h1 className="text-2xl font-bold text-gray-900">Treasurer Dashboard</h1>
           <p className="text-gray-600">Manage chapter finances and dues collection</p>
         </div>
-        <div className="flex space-x-3">
-          <Button onClick={() => setShowBulkAssignDues(true)} className="bg-purple-600 hover:bg-purple-700">
-            <Users className="h-4 w-4 mr-2" />
-            Bulk Assign Dues
-          </Button>
-          <Button onClick={() => setShowAssignDues(true)} className="bg-blue-600 hover:bg-blue-700">
-            <UserPlus className="h-4 w-4 mr-2" />
-            Assign Dues
-          </Button>
-          <Button onClick={() => setShowCreateCycle(true)} className="bg-green-600 hover:bg-green-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Dues Cycle
-          </Button>
-        </div>
       </div>
 
       {/* Financial Overview */}
@@ -623,21 +609,42 @@ export function TreasurerDashboard() {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full justify-start bg-green-600 hover:bg-green-700">
+              <Button 
+                onClick={() => setShowBulkAssignDues(true)} 
+                className="w-full justify-start bg-purple-600 hover:bg-purple-700"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Bulk Assign Dues
+              </Button>
+              <Button 
+                onClick={() => setShowAssignDues(true)} 
+                className="w-full justify-start bg-blue-600 hover:bg-blue-700"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Assign Dues
+              </Button>
+              <Button 
+                onClick={() => setShowCreateCycle(true)} 
+                className="w-full justify-start bg-green-600 hover:bg-green-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Dues Cycle
+              </Button>
+              <Button 
+                onClick={() => exportDuesToCSV(assignments, `dues-export-${new Date().toISOString().split('T')[0]}.csv`)}
+                className="w-full justify-start bg-green-600 hover:bg-green-700"
+              >
                 <Download className="h-4 w-4 mr-2" />
                 Export Financial Report
               </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Mail className="h-4 w-4 mr-2" />
-                Send Overdue Reminders
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Users className="h-4 w-4 mr-2" />
-                Bulk Payment Processing
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start opacity-60 cursor-not-allowed" 
+                disabled
+              >
                 <DollarSign className="h-4 w-4 mr-2" />
-                Update Payment Plans
+                Create Payment Plans
+                <Lock className="h-3 w-3 ml-2 text-gray-400" />
               </Button>
             </CardContent>
           </Card>
