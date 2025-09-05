@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, MessageSquare, Clock, AlertTriangle, GraduationCap, Calendar, AlertCircle, TrendingUp, Minus } from 'lucide-react';
+import { X, MessageSquare, Clock, AlertTriangle, GraduationCap, Calendar, AlertCircle, TrendingUp } from 'lucide-react';
 import { useAnnouncements } from '@/lib/hooks/useAnnouncements';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { Announcement, CreateAnnouncementData } from '@/types/announcements';
@@ -20,22 +20,6 @@ const getAnnouncementTypeConfig = (type: string) => {
       return { icon: GraduationCap, color: 'text-green-600', bgColor: 'bg-green-100' };
     default:
       return { icon: MessageSquare, color: 'text-purple-600', bgColor: 'bg-purple-100' };
-  }
-};
-
-// Update the priority helper function to return icons instead of text
-const getPriorityIcon = (priority: string) => {
-  switch (priority) {
-    case 'urgent':
-      return { icon: AlertTriangle, color: 'text-red-600' };
-    case 'high':
-      return { icon: TrendingUp, color: 'text-orange-600' };
-    case 'normal':
-      return { icon: Minus, color: 'text-blue-600' };
-    case 'low':
-      return { icon: Minus, color: 'text-gray-600' };
-    default:
-      return { icon: Minus, color: 'text-gray-600' };
   }
 };
 
@@ -151,14 +135,6 @@ export function AnnouncementsCard() {
                         <h4 className="font-medium text-gray-900 text-base sm:text-sm line-clamp-2 break-words">
                           {announcement.title}
                         </h4>
-                        {/* Priority icon */}
-                        {(() => {
-                          const priorityConfig = getPriorityIcon(announcement.priority);
-                          const PriorityIcon = priorityConfig.icon;
-                          return (
-                            <PriorityIcon className={`h-4 w-4 sm:h-3 sm:w-3 ${priorityConfig.color} shrink-0`} />
-                          );
-                        })()}
                       </div>
                     </div>
                     

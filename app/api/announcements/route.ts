@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const body = await request.json();
-    const { title, content, announcement_type, priority, is_scheduled, scheduled_at, metadata, send_sms } = body;
+    const { title, content, announcement_type, is_scheduled, scheduled_at, metadata, send_sms } = body;
 
     // Get authenticated user
     const authHeader = request.headers.get('authorization');
@@ -144,7 +144,6 @@ export async function POST(request: NextRequest) {
         title,
         content,
         announcement_type,
-        priority,
         is_scheduled: is_scheduled || false,
         scheduled_at: scheduled_at || null,
         metadata: metadata || {},
@@ -211,7 +210,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-
 async function createRecipientRecords(announcementId: string, chapterId: string, supabase: any) {
   try {
     // Get all active members of the chapter
@@ -243,3 +241,4 @@ async function createRecipientRecords(announcementId: string, chapterId: string,
     console.error('Error creating recipient records:', error);
   }
 }
+

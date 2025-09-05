@@ -5,7 +5,6 @@ export interface Announcement {
   title: string;
   content: string;
   announcement_type: 'general' | 'urgent' | 'event' | 'academic';
-  priority: 'low' | 'normal' | 'high' | 'urgent';
   is_scheduled: boolean;
   scheduled_at?: string;
   is_sent: boolean;
@@ -63,7 +62,6 @@ export interface CreateAnnouncementData {
   title: string;
   content: string;
   announcement_type: 'general' | 'urgent' | 'event' | 'academic';
-  priority: 'low' | 'normal' | 'high' | 'urgent';
   is_scheduled?: boolean;
   scheduled_at?: string;
   metadata?: Record<string, any>;
