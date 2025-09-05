@@ -37,6 +37,10 @@ export function ActiveMemberOverview() {
           </div>
 
           <div className="w-full">
+            <CompactCalendarCard />
+          </div>
+
+          <div className="w-full">
             <DuesStatusCard />
           </div>
         </div>
