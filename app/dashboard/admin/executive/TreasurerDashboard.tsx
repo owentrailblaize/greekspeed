@@ -476,21 +476,15 @@ export function TreasurerDashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Treasurer Dashboard</h1>
-          <p className="text-gray-600">Manage chapter finances and dues collection</p>
-        </div>
-      </div>
-
+    <div className="max-w-7xl mx-auto px-6 py-0 sm:py-8">
       {/* Financial Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-8">
+        {/* Desktop Layout - Preserved */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
+          className="hidden md:block"
         >
           <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
             <CardContent className="p-6">
@@ -509,6 +503,7 @@ export function TreasurerDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
+          className="hidden md:block"
         >
           <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
             <CardContent className="p-6">
@@ -527,6 +522,7 @@ export function TreasurerDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
+          className="hidden md:block"
         >
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
             <CardContent className="p-6">
@@ -542,8 +538,51 @@ export function TreasurerDashboard() {
         </motion.div>
       </div>
 
+      {/* Mobile Layout - Single Row */}
+      <div className="md:hidden mb-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-3 gap-2"
+        >
+          {/* Total Collected */}
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <p className="text-base font-semibold text-green-900">${financialOverview.totalCollected.toLocaleString()}</p>
+                <p className="text-green-600 text-xs font-medium">Collected</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Outstanding */}
+          <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+                <p className="text-base font-semibold text-red-900">${financialOverview.totalOutstanding.toLocaleString()}</p>
+                <p className="text-red-600 text-xs font-medium">Outstanding</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Collection Rate */}
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+            <CardContent className="p-2">
+              <div className="flex flex-col items-center text-center space-y-1">
+                <TrendingUp className="h-5 w-5 text-blue-600" />
+                <p className="text-base font-semibold text-blue-900">{financialOverview.collectionRate.toFixed(1)}%</p>
+                <p className="text-blue-600 text-xs font-medium">Rate</p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
       {/* Tab Navigation */}
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
           {[
             { value: "overview", label: "Overview" },
@@ -567,8 +606,9 @@ export function TreasurerDashboard() {
 
       {/* Tab Content */}
       {selectedTab === "overview" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+          {/* Desktop Layout - Preserved */}
+          <Card className="hidden lg:block">
             <CardHeader>
               <CardTitle>Dues Collection Progress</CardTitle>
             </CardHeader>
@@ -604,7 +644,45 @@ export function TreasurerDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Mobile Layout - Dues Collection Progress */}
+          <Card className="lg:hidden">
+            <CardHeader className="pb-2">
+              <CardTitle>Dues Collection Progress</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">{duesProgress.cycleName}</span>
+                  <span className="text-sm font-medium">{duesProgress.collectionRate.toFixed(1)}%</span>
+                </div>
+                <Progress value={duesProgress.collectionRate} className="h-2" />
+                
+                <div className="grid grid-cols-3 gap-2 mt-3">
+                  <div className="text-center">
+                    <p className="text-lg font-semibold text-green-600">
+                      {duesProgress.paid}
+                    </p>
+                    <p className="text-xs text-gray-600">Paid</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-semibold text-yellow-600">
+                      {duesProgress.pending}
+                    </p>
+                    <p className="text-xs text-gray-600">Pending</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-semibold text-red-600">
+                      {duesProgress.overdue}
+                    </p>
+                    <p className="text-xs text-gray-600">Overdue</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Desktop Layout - Preserved */}
+          <Card className="hidden lg:block">
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
@@ -648,12 +726,58 @@ export function TreasurerDashboard() {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Mobile Layout - Quick Actions */}
+          <Card className="lg:hidden">
+            <CardHeader className="pb-2">
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-2 space-y-2">
+              <Button 
+                onClick={() => setShowBulkAssignDues(true)} 
+                className="w-full justify-start bg-purple-600 hover:bg-purple-700 text-sm py-2"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Bulk Assign Dues
+              </Button>
+              <Button 
+                onClick={() => setShowAssignDues(true)} 
+                className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-sm py-2"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Assign Dues
+              </Button>
+              <Button 
+                onClick={() => setShowCreateCycle(true)} 
+                className="w-full justify-start bg-green-600 hover:bg-green-700 text-sm py-2"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Dues Cycle
+              </Button>
+              <Button 
+                onClick={() => exportDuesToCSV(assignments, `dues-export-${new Date().toISOString().split('T')[0]}.csv`)}
+                className="w-full justify-start bg-green-600 hover:bg-green-700 text-sm py-2"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export Financial Report
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start opacity-60 cursor-not-allowed text-sm py-2" 
+                disabled
+              >
+                <DollarSign className="h-4 w-4 mr-2" />
+                Create Payment Plans
+                <Lock className="h-3 w-3 ml-2 text-gray-400" />
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       )}
 
       {selectedTab === "dues" && (
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-2 sm:pb-6">
             <div className="flex justify-between items-center">
               <CardTitle>Member Dues Status</CardTitle>
               <div className="flex space-x-2">
@@ -677,7 +801,7 @@ export function TreasurerDashboard() {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-2 sm:pt-6">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -740,7 +864,7 @@ export function TreasurerDashboard() {
 
       {selectedTab === "members" && (
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-2 sm:pb-6">
             <div className="flex justify-between items-center">
               <CardTitle>All Chapter Members ({chapterMembers.length})</CardTitle>
               <div className="flex space-x-2">
@@ -755,7 +879,7 @@ export function TreasurerDashboard() {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-2 sm:pt-6">
             <Table>
               <TableHeader>
                 <TableRow>
