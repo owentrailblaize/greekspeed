@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Users, DollarSign, FileText, Megaphone, CheckCircle } from 'lucide-react';
+import { Clock, Users, DollarSign, FileText, Megaphone, CheckCircle, Lock } from 'lucide-react';
 
 // Mock data for operations feed
 const operationsFeed = [
@@ -73,7 +73,16 @@ export function OperationsFeed() {
   };
 
   return (
-    <Card className="bg-white">
+    <Card className="bg-white relative">
+      {/* Coming Soon Overlay */}
+      <div className="absolute inset-0 bg-white bg-opacity-90 z-10 flex items-center justify-center rounded-lg">
+        <div className="text-center">
+          <Lock className="h-10 w-10 sm:h-8 sm:w-8 text-gray-400 mx-auto mb-3 sm:mb-2" />
+          <p className="text-base sm:text-sm font-medium text-gray-600">Operations Feed</p>
+          <p className="text-sm sm:text-xs text-gray-500">Coming Soon</p>
+        </div>
+      </div>
+      
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center space-x-2">
           <Clock className="h-5 w-5 text-navy-600" />
@@ -106,7 +115,13 @@ export function OperationsFeed() {
         </div>
         
         <div className="pt-4 border-t border-gray-100">
-          <Button variant="outline" className="w-full text-navy-600 border-navy-600 hover:bg-navy-50">
+          <Button 
+            variant="outline" 
+            className="w-full text-navy-600 border-navy-600 hover:bg-navy-50 opacity-60 cursor-not-allowed"
+            disabled
+            title="Operations feed coming soon!"
+          >
+            <Lock className="h-4 w-4 mr-2 text-gray-400" />
             View All Activity
           </Button>
         </div>

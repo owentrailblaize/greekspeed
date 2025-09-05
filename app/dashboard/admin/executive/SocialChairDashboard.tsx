@@ -699,13 +699,13 @@ export function SocialChairDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
           {/* Budget Summary Card */}
           <Card>
-            <CardHeader className="pb-2 md:pb-6">
+            <CardHeader className="pb-2 md:pb-2">
               <CardTitle className="flex items-center text-lg md:text-xl">
                 <DollarSign className="h-5 w-5 mr-2 text-green-600" />
                 Budget Overview
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-2 md:pt-6">
+            <CardContent className="pt-2 md:pt-2">
               <div className="space-y-3 md:space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Starting Budget</span>
@@ -734,10 +734,10 @@ export function SocialChairDashboard() {
           </Card>
 
           <Card>
-            <CardHeader className="pb-2 md:pb-6">
+            <CardHeader className="pb-2 md:pb-2">
               <CardTitle className="text-lg md:text-xl">Upcoming Events</CardTitle>
             </CardHeader>
-            <CardContent className="pt-2 md:pt-6">
+            <CardContent className="pt-2 md:pt-2">
               {eventsLoading ? (
                 <div className="text-center py-6 md:py-8">
                   <p className="text-gray-500">Loading events...</p>
@@ -815,10 +815,10 @@ export function SocialChairDashboard() {
 
           {/* Quick Actions */}
           <Card>
-            <CardHeader className="pb-2 md:pb-6">
+            <CardHeader className="pb-2 md:pb-2">
               <CardTitle className="text-lg md:text-xl">Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="pt-2 md:pt-6 space-y-2 md:space-y-3">
+            <CardContent className="pt-2 md:pt-2 space-y-2 md:space-y-3">
               <Button 
                 className="w-full justify-start bg-orange-600 hover:bg-orange-700"
                 onClick={() => setShowEventForm(true)}
@@ -858,6 +858,14 @@ export function SocialChairDashboard() {
               >
                 <DollarSign className="h-4 w-4 mr-2" />
                 Budget Report
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start opacity-60 cursor-not-allowed"
+                disabled
+              >
+                <Lock className="h-4 w-4 mr-2 text-gray-400" />
+                Book Feti
               </Button>
             </CardContent>
           </Card>

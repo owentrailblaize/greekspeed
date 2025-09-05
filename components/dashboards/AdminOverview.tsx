@@ -8,8 +8,10 @@ import { EventsPanel } from './ui/EventsPanel';
 import { TasksPanel } from './ui/TasksPanel';
 import { DocsCompliancePanel } from './ui/DocsCompliancePanel';
 import { AlertsStrip } from './ui/AlertsStrip';
+import { CompactCalendarCard } from './ui/CompactCalendarCard';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { SocialFeed } from './ui/SocialFeed';
+import { DuesStatusCard } from './ui/DuesStatusCard';
 
 export function AdminOverview() {
   const { profile } = useProfile();
@@ -37,7 +39,7 @@ export function AdminOverview() {
           </div>
 
           <div className="w-full">
-            <DuesSnapshot />
+            <DuesStatusCard />
           </div>
 
           <div className="w-full">
@@ -51,6 +53,10 @@ export function AdminOverview() {
           <div className="w-full">
             <DocsCompliancePanel />
           </div>
+
+          <div className="w-full">
+            <CompactCalendarCard />
+          </div>
         </div>
 
         {/* Desktop Layout: Three Column Grid (Preserved) */}
@@ -58,7 +64,7 @@ export function AdminOverview() {
           {/* Left Column - 3 columns wide */}
           <div className="col-span-3 space-y-6">
             <QuickActions />
-            <DuesSnapshot />
+            <DuesStatusCard />
             <OperationsFeed />
           </div>
           
@@ -71,6 +77,7 @@ export function AdminOverview() {
           <div className="col-span-3 space-y-6">
             {chapterId && <TasksPanel chapterId={chapterId} />}
             <DocsCompliancePanel />
+            <CompactCalendarCard />
           </div>
         </div>
       </div>
