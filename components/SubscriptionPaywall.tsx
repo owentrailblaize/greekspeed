@@ -194,7 +194,7 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
 
   if (isPaywallVisible) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-start justify-center p-4 pt-2 sm:pt-4">
+      <div className="min-h-screen bg-gradient-to-br from-white to-gray-50 flex items-start justify-center p-4 pt-2 sm:pt-4">
         <div className="max-w-lg w-full bg-white rounded-lg shadow-xl p-6 mt-2 sm:mt-4">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-3">
