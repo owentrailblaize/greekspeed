@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { NotificationService } from '@/lib/services/notificationService';
+import { AnnouncementPostService } from '@/lib/services/announcementPostService';
 
 export async function GET(request: NextRequest) {
   try {
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const body = await request.json();
-    const { title, content, announcement_type, is_scheduled, scheduled_at, metadata, send_sms } = body;
+    const { title, content, announcement_type, is_scheduled, scheduled_at, metadata, send_sms, create_as_pinned_post } = body;
 
     // Get authenticated user
     const authHeader = request.headers.get('authorization');
@@ -148,7 +149,9 @@ export async function POST(request: NextRequest) {
         scheduled_at: scheduled_at || null,
         metadata: metadata || {},
         is_sent: !is_scheduled, // If not scheduled, mark as sent
-        sent_at: !is_scheduled ? new Date().toISOString() : null
+        sent_at: !is_scheduled ? new Date().toISOString() : null,
+        is_pinned_post: create_as_pinned_post || false,
+        auto_unpin_at: create_as_pinned_post ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() : null // Auto-unpin after 7 days
       })
       .select(`
         *,
@@ -171,6 +174,14 @@ export async function POST(request: NextRequest) {
     if (!is_scheduled) {
       await createRecipientRecords(announcement.id, profile.chapter_id, supabase);
       
+      // Create pinned post if requested
+      if (create_as_pinned_post) {
+        const postId = await AnnouncementPostService.createPinnedPostFromAnnouncement(announcement);
+        if (postId) {
+          console.log('Created pinned post for announcement:', postId);
+        }
+      }
+      
       // Send SMS notifications if requested
       if (send_sms) {
         try {
@@ -183,7 +194,6 @@ export async function POST(request: NextRequest) {
           
           console.log('SMS notification result:', smsResult);
           
-          // Optionally store SMS result in announcement metadata
           if (smsResult.success) {
             await supabase
               .from('announcements')
@@ -199,7 +209,6 @@ export async function POST(request: NextRequest) {
           }
         } catch (smsError) {
           console.error('SMS notification error:', smsError);
-          // Don't fail the announcement creation if SMS fails
         }
       }
     }

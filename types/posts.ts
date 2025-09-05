@@ -11,14 +11,17 @@ export interface Post {
   shares_count: number;
   created_at: string;
   updated_at: string;
+  // New fields for announcement integration
+  is_announcement?: boolean;
+  announcement_id?: string;
+  is_pinned?: boolean;
+  pinned_until?: string;
   author?: {
     id: string;
     full_name: string;
     first_name: string | null;
     last_name: string | null;
     avatar_url: string | null;
-    chapter_role?: string;
-    member_status?: string;
   };
   is_liked?: boolean;
   is_author?: boolean;

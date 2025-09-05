@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, MessageSquare, Clock, AlertTriangle, GraduationCap, Calendar, AlertCircle, TrendingUp } from 'lucide-react';
+import { X, MessageSquare, Clock, AlertTriangle, GraduationCap, Calendar, AlertCircle } from 'lucide-react';
 import { useAnnouncements } from '@/lib/hooks/useAnnouncements';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { Announcement, CreateAnnouncementData } from '@/types/announcements';
@@ -55,8 +55,8 @@ export function AnnouncementsCard() {
     }
   };
 
-  // No need for dismissedAnnouncements state anymore
-  // The hook automatically filters out read announcements
+  // Filter out announcements that are pinned as posts
+  const nonPinnedAnnouncements = announcements.filter(announcement => !announcement.is_pinned_post);
 
   if (loading) {
     return (
@@ -76,7 +76,7 @@ export function AnnouncementsCard() {
     );
   }
 
-  if (announcements.length === 0) {
+  if (nonPinnedAnnouncements.length === 0) {
     return (
       <Card className="bg-white">
         <CardHeader className="pb-3">
@@ -104,16 +104,16 @@ export function AnnouncementsCard() {
         <CardTitle className="text-lg flex items-center space-x-2">
           <MessageSquare className="h-5 w-5 text-navy-600" />
           <span>Chapter Announcements</span>
-          {announcements.length > 0 && (
+          {nonPinnedAnnouncements.length > 0 && (
             <Badge variant="secondary" className="ml-2 bg-navy-100 text-navy-800">
-              {announcements.length}
+              {nonPinnedAnnouncements.length}
             </Badge>
           )}
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-3">
-          {announcements.map((announcement) => {
+          {nonPinnedAnnouncements.map((announcement) => {
             const typeConfig = getAnnouncementTypeConfig(announcement.announcement_type);
             const TypeIcon = typeConfig.icon;
             
@@ -129,7 +129,7 @@ export function AnnouncementsCard() {
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    {/* Header with title and priority icon */}
+                    {/* Header with title */}
                     <div className="flex items-start justify-between mb-2 sm:mb-1">
                       <div className="flex items-center space-x-2 flex-1 min-w-0">
                         <h4 className="font-medium text-gray-900 text-base sm:text-sm line-clamp-2 break-words">
@@ -170,7 +170,7 @@ export function AnnouncementsCard() {
           })}
         </div>
         
-        {announcements.length > 0 && (
+        {nonPinnedAnnouncements.length > 0 && (
           <div className="pt-4 border-t border-gray-100">
             <Button 
               variant="outline" 

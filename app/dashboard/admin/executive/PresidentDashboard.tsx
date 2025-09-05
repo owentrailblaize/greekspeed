@@ -18,6 +18,7 @@ import { CreateAnnouncementData } from '@/types/announcements';
 import { EventForm } from '@/components/ui/EventForm';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
+import { AnnouncementPostService } from '@/lib/services/announcementPostService';
 
 export function PresidentDashboard() {
   const [announcement, setAnnouncement] = useState("");
@@ -46,6 +47,8 @@ export function PresidentDashboard() {
   // Add state for alumni count
   const [alumniCount, setAlumniCount] = useState<number | null>(null);
   const [loadingAlumniCount, setLoadingAlumniCount] = useState(false);
+
+  const [createAsPinnedPost, setCreateAsPinnedPost] = useState(false);
 
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
@@ -177,7 +180,8 @@ export function PresidentDashboard() {
         is_scheduled: isScheduled,
         scheduled_at: isScheduled ? scheduledDate : undefined,
         metadata: {},
-        send_sms: sendSMS
+        send_sms: sendSMS,
+        create_as_pinned_post: createAsPinnedPost
       };
 
       await createAnnouncement(announcementData);
@@ -189,6 +193,7 @@ export function PresidentDashboard() {
       setIsScheduled(false);
       setScheduledDate("");
       setSendSMS(false);
+      setCreateAsPinnedPost(false);
       
       toast.success('Announcement sent successfully!');
     } catch (error) {
@@ -466,6 +471,16 @@ export function PresidentDashboard() {
                       />
                       <span className="text-sm">Send SMS notification</span>
                     </label>
+
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={createAsPinnedPost}
+                        onChange={(e) => setCreateAsPinnedPost(e.target.checked)}
+                        className="rounded"
+                      />
+                      <span className="text-sm">Pin as post in social feed</span>
+                    </label>
                     
                     {isScheduled && (
                       <Input
@@ -488,7 +503,7 @@ export function PresidentDashboard() {
                 </div>
               </div>
 
-              {/* Mobile Layout */}
+              {/* Mobile Layout - add the same checkbox */}
               <div className="md:hidden space-y-4">
                 <div className="space-y-3">
                   <Input
@@ -532,6 +547,16 @@ export function PresidentDashboard() {
                       className="rounded"
                     />
                     <span className="text-sm">Send SMS notification</span>
+                  </label>
+
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={createAsPinnedPost}
+                      onChange={(e) => setCreateAsPinnedPost(e.target.checked)}
+                      className="rounded"
+                    />
+                    <span className="text-sm">Pin as post in social feed</span>
                   </label>
                   
                   {isScheduled && (

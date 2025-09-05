@@ -12,6 +12,10 @@ export interface Announcement {
   metadata?: Record<string, any>;
   created_at: string;
   updated_at: string;
+  // New fields for post integration
+  is_pinned_post?: boolean;
+  pinned_post_id?: string;
+  auto_unpin_at?: string;
   sender?: {
     id: string;
     full_name: string;
@@ -66,4 +70,6 @@ export interface CreateAnnouncementData {
   scheduled_at?: string;
   metadata?: Record<string, any>;
   send_sms?: boolean;
+  // New field for post integration
+  create_as_pinned_post?: boolean;
 }
