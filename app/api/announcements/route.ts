@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { NotificationService } from '@/lib/services/notificationService';
 
 export async function GET(request: NextRequest) {
   try {
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const body = await request.json();
-    const { title, content, announcement_type, priority, is_scheduled, scheduled_at, metadata } = body;
+    const { title, content, announcement_type, priority, is_scheduled, scheduled_at, metadata, send_sms } = body;
 
     // Get authenticated user
     const authHeader = request.headers.get('authorization');
@@ -120,7 +121,7 @@ export async function POST(request: NextRequest) {
     // Get user profile to verify chapter and role
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('chapter_id, chapter_role')
+      .select('chapter_id, chapter_role, full_name')
       .eq('id', user.id)
       .single();
 
@@ -170,7 +171,38 @@ export async function POST(request: NextRequest) {
     // If announcement is not scheduled, create recipient records and send notifications
     if (!is_scheduled) {
       await createRecipientRecords(announcement.id, profile.chapter_id, supabase);
-      // TODO: Send notifications (SMS, email, push)
+      
+      // Send SMS notifications if requested
+      if (send_sms) {
+        try {
+          const smsResult = await NotificationService.sendAnnouncementSMS(
+            profile.chapter_id,
+            title,
+            content,
+            profile.full_name || 'Chapter Officer'
+          );
+          
+          console.log('SMS notification result:', smsResult);
+          
+          // Optionally store SMS result in announcement metadata
+          if (smsResult.success) {
+            await supabase
+              .from('announcements')
+              .update({
+                metadata: {
+                  ...announcement.metadata,
+                  sms_sent: true,
+                  sms_sent_count: smsResult.sentCount,
+                  sms_errors: smsResult.errors
+                }
+              })
+              .eq('id', announcement.id);
+          }
+        } catch (smsError) {
+          console.error('SMS notification error:', smsError);
+          // Don't fail the announcement creation if SMS fails
+        }
+      }
     }
 
     return NextResponse.json({ announcement });

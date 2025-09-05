@@ -67,4 +67,5 @@ export interface CreateAnnouncementData {
   is_scheduled?: boolean;
   scheduled_at?: string;
   metadata?: Record<string, any>;
+  send_sms?: boolean;
 }

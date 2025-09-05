@@ -27,6 +27,7 @@ export function PresidentDashboard() {
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduledDate, setScheduledDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sendSMS, setSendSMS] = useState(false);
   
   // New state for event modal
   const [showEventModal, setShowEventModal] = useState(false);
@@ -177,7 +178,8 @@ export function PresidentDashboard() {
         priority: announcementPriority,
         is_scheduled: isScheduled,
         scheduled_at: isScheduled ? scheduledDate : undefined,
-        metadata: {}
+        metadata: {},
+        send_sms: sendSMS
       };
 
       await createAnnouncement(announcementData);
@@ -189,6 +191,7 @@ export function PresidentDashboard() {
       setAnnouncementPriority('normal');
       setIsScheduled(false);
       setScheduledDate("");
+      setSendSMS(false);
       
       toast.success('Announcement sent successfully!');
     } catch (error) {
@@ -464,6 +467,16 @@ export function PresidentDashboard() {
                       <span className="text-sm">Schedule for later</span>
                     </label>
                     
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={sendSMS}
+                        onChange={(e) => setSendSMS(e.target.checked)}
+                        className="rounded"
+                      />
+                      <span className="text-sm">Send SMS notification</span>
+                    </label>
+                    
                     {isScheduled && (
                       <Input
                         type="datetime-local"
@@ -526,6 +539,16 @@ export function PresidentDashboard() {
                       className="rounded"
                     />
                     <span className="text-sm">Schedule for later</span>
+                  </label>
+                  
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={sendSMS}
+                      onChange={(e) => setSendSMS(e.target.checked)}
+                      className="rounded"
+                    />
+                    <span className="text-sm">Send SMS notification</span>
                   </label>
                   
                   {isScheduled && (
