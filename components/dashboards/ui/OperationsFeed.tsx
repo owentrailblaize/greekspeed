@@ -346,7 +346,7 @@ export function OperationsFeed() {
                   View All
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden bg-white">
                 <DialogHeader>
                   <DialogTitle className="flex items-center space-x-2">
                     <Clock className="h-5 w-5 text-navy-600" />
@@ -375,6 +375,13 @@ export function OperationsFeed() {
                       )}
                     </div>
                   )}
+                </div>
+
+                {/* Footer with activity count */}
+                <div className="border-t border-gray-200 pt-3 mt-4">
+                  <p className="text-center text-sm text-gray-500">
+                    Showing {allActivities.length} of {allActivities.length} activities
+                  </p>
                 </div>
               </DialogContent>
             </Dialog>
