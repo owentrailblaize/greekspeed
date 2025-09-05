@@ -252,24 +252,24 @@ export function OperationsFeed() {
   const renderActivityItem = (item: ActivityItem) => {
     const IconComponent = item.icon;
     return (
-      <div key={item.id} className="flex items-start space-x-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-        <div className="w-8 h-8 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 shrink-0">
-          <IconComponent className="h-4 w-4" />
+      <div key={item.id} className="flex items-start space-x-3 p-2 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+        <div className="w-6 h-6 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 shrink-0">
+          <IconComponent className="h-3 w-3" />
         </div>
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-2 mb-1">
-            <h4 className="font-medium text-gray-900 text-sm">{item.title}</h4>
-            <Badge className={getTypeColor(item.type)}>
-              {getTypeLabel(item.type)}
-            </Badge>
+            <h4 className="font-medium text-gray-900 text-sm whitespace-nowrap">{item.title}</h4>
+            <IconComponent className="h-3 w-3 text-gray-500" />
           </div>
-          <p className="text-xs text-gray-600 mb-1">{item.meta}</p>
           <div className="flex items-center justify-between">
-            <p className="text-xs text-gray-500">{formatTimeAgo(item.createdAt)}</p>
-            {item.user && (
-              <p className="text-xs text-gray-500">by {item.user.full_name || `${item.user.first_name} ${item.user.last_name}`}</p>
-            )}
+            <p className="text-xs text-gray-600 flex-1 truncate mr-2">{item.meta}</p>
+            <div className="flex items-center space-x-2 text-xs text-gray-500 shrink-0">
+              <span>{formatTimeAgo(item.createdAt)}</span>
+              {item.user && (
+                <span>by {item.user.full_name || `${item.user.first_name} ${item.user.last_name}`}</span>
+              )}
+            </div>
           </div>
         </div>
       </div>
