@@ -2,20 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, Users } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { Event } from '@/types/events';
+import { parseRawTime } from '@/lib/utils/timezoneUtils';
 
 export function CompactCalendarCard() {
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hoveredEvent, setHoveredEvent] = useState<Event | null>(null);
+  const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
   
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
 
-  // Fetch events for the calendar
+  // Fetch events for the calendar - ONLY for this chapter
   useEffect(() => {
     const fetchEvents = async () => {
       if (!chapterId) return;
@@ -24,14 +27,17 @@ export function CompactCalendarCard() {
         setLoading(true);
         setError(null);
         
+        console.log('CompactCalendarCard - Fetching events for chapter:', chapterId);
         const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=all`);
         if (!response.ok) {
           throw new Error('Failed to fetch events');
         }
         
         const data = await response.json();
+        console.log('CompactCalendarCard - Fetched events:', data);
         setEvents(data);
       } catch (err) {
+        console.error('CompactCalendarCard - Error fetching events:', err);
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
         setLoading(false);
@@ -58,16 +64,16 @@ export function CompactCalendarCard() {
     });
   };
 
-  const getEventTypeColor = (type: string): string => {
-    switch (type) {
-      case 'formal': return 'bg-purple-100 text-purple-800';
-      case 'alumni': return 'bg-blue-100 text-blue-800';
-      case 'brotherhood': return 'bg-green-100 text-green-800';
-      case 'recruitment': return 'bg-orange-100 text-orange-800';
-      case 'meeting': return 'bg-gray-100 text-gray-800';
-      case 'planning': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const handleEventHover = (event: Event, mouseEvent: React.MouseEvent) => {
+    setHoveredEvent(event);
+    setHoverPosition({
+      x: mouseEvent.clientX,
+      y: mouseEvent.clientY
+    });
+  };
+
+  const handleEventLeave = () => {
+    setHoveredEvent(null);
   };
 
   const renderCompactCalendar = () => {
@@ -79,36 +85,44 @@ export function CompactCalendarCard() {
 
     // Empty cells for days before month starts
     for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="h-8"></div>);
+      days.push(<div key={`empty-${i}`} className="h-8 md:h-12"></div>);
     }
 
     // Days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), day);
-      const events = getEventsForDate(date);
+      const dayEvents = getEventsForDate(date);
       const isToday = date.toDateString() === new Date().toDateString();
 
       days.push(
-        <div key={day} className={`h-8 border border-gray-200 p-1 ${isToday ? 'bg-orange-50 border-orange-300' : 'bg-white'}`}>
+        <div key={day} className={`h-8 md:h-12 border border-gray-200 p-1 relative ${isToday ? 'bg-orange-50 border-orange-300' : 'bg-white'}`}>
           <div className={`text-xs font-medium mb-1 ${isToday ? 'text-orange-600' : 'text-gray-900'}`}>
             {day}
           </div>
-          <div className="space-y-0.5">
-            {events.slice(0, 1).map(event => (
-              <div key={event.id} className={`text-xs px-1 py-0.5 rounded truncate ${getEventTypeColor('meeting')}`}>
-                {event.title}
-              </div>
-            ))}
-            {events.length > 1 && (
-              <div className="text-xs text-gray-500">+{events.length - 1}</div>
-            )}
-          </div>
+          
+          {/* Event dots positioned near the date number - all blue */}
+          {dayEvents.length > 0 && (
+            <div className="absolute top-1 right-1 flex space-x-0.5">
+              {dayEvents.slice(0, 3).map((event, index) => (
+                <div
+                  key={event.id}
+                  className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full cursor-pointer hover:scale-125 transition-transform bg-blue-500"
+                  onMouseEnter={(e) => handleEventHover(event, e)}
+                  onMouseLeave={handleEventLeave}
+                  title={event.title}
+                />
+              ))}
+              {dayEvents.length > 3 && (
+                <div className="text-xs text-gray-500 ml-0.5">+{dayEvents.length - 3}</div>
+              )}
+            </div>
+          )}
         </div>
       );
     }
 
     return (
-      <div className="bg-white rounded-lg border border-gray-200 w-full">
+      <div className="bg-white rounded-lg border border-gray-200 w-full relative">
         {/* Calendar Title - Now inside the calendar */}
         <div className="flex items-center justify-center p-2 border-b border-gray-200">
           <div className="flex items-center space-x-2">
@@ -123,22 +137,18 @@ export function CompactCalendarCard() {
             {monthNames[calendarDate.getMonth()]} {calendarDate.getFullYear()}
           </h3>
           <div className="flex space-x-1">
-            <Button
-              size="sm"
-              variant="outline"
+            <button
               onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1))}
-              className="h-6 w-6 p-0 flex items-center justify-center"
+              className="h-6 w-6 border border-gray-300 rounded hover:bg-gray-50 flex items-center justify-center"
             >
-              <ChevronLeft className="h-3 w-3" />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
+              <ChevronLeft className="h-3 w-3 text-gray-700" />
+            </button>
+            <button
               onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1))}
-              className="h-6 w-6 p-0 flex items-center justify-center"
+              className="h-6 w-6 border border-gray-300 rounded hover:bg-gray-50 flex items-center justify-center"
             >
-              <ChevronRight className="h-3 w-3" />
-            </Button>
+              <ChevronRight className="h-3 w-3 text-gray-700" />
+            </button>
           </div>
         </div>
 
@@ -155,6 +165,45 @@ export function CompactCalendarCard() {
         <div className="grid grid-cols-7">
           {days}
         </div>
+
+        {/* Event Hover Popup */}
+        {hoveredEvent && (
+          <div 
+            className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 max-w-xs pointer-events-none"
+            style={{
+              left: `${hoverPosition.x + 10}px`,
+              top: `${hoverPosition.y - 10}px`,
+              transform: 'translateY(-100%)'
+            }}
+          >
+            <div className="space-y-2">
+              <h4 className="font-semibold text-sm text-gray-900">{hoveredEvent.title}</h4>
+              
+              <div className="space-y-1 text-xs text-gray-600">
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-3 w-3" />
+                  <span>{parseRawTime(hoveredEvent.start_time)}</span>
+                </div>
+                {hoveredEvent.location && (
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="h-3 w-3" />
+                    <span>{hoveredEvent.location}</span>
+                  </div>
+                )}
+                <div className="flex items-center space-x-2">
+                  <Users className="h-3 w-3" />
+                  <span>{hoveredEvent.attendee_count || 0} attending</span>
+                </div>
+              </div>
+              
+              {hoveredEvent.description && (
+                <p className="text-xs text-gray-500 mt-2 line-clamp-2">
+                  {hoveredEvent.description}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
