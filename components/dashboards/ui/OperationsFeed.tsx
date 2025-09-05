@@ -319,64 +319,66 @@ export function OperationsFeed() {
           )}
         </div>
         
-        <div className="pt-4 border-t border-gray-100 space-y-2">
-          {/* Refresh Button */}
-          <Button 
-            variant="outline" 
-            className="w-full text-navy-600 border-navy-600 hover:bg-navy-50"
-            onClick={fetchRecentActivities}
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh Activity
-          </Button>
+        <div className="pt-4 border-t border-gray-100">
+          {/* Refresh and View All buttons on same row */}
+          <div className="flex space-x-2">
+            {/* Refresh Button - Square with icon only */}
+            <button 
+              className="w-8 h-8 border border-navy-600 rounded-md flex items-center justify-center text-navy-600 hover:bg-navy-50 hover:text-navy-700 transition-colors"
+              onClick={fetchRecentActivities}
+            >
+              <RefreshCw className="h-4 w-4" />
+            </button>
 
-          {/* View All Activities Modal Button */}
-          <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                variant="outline" 
-                className="w-full text-navy-600 border-navy-600 hover:bg-navy-50"
-                onClick={() => {
-                  setModalOpen(true);
-                  fetchAllActivities();
-                }}
-              >
-                <Clock className="h-4 w-4 mr-2" />
-                View All Activity
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
-              <DialogHeader>
-                <DialogTitle className="flex items-center space-x-2">
-                  <Clock className="h-5 w-5 text-navy-600" />
-                  <span>All Chapter Activity</span>
-                </DialogTitle>
-              </DialogHeader>
-              
-              <div className="overflow-y-auto max-h-[60vh]">
-                {modalLoading ? (
-                  <div className="space-y-4">
-                    {[...Array(5)].map((_, i) => (
-                      <div key={i} className="animate-pulse">
-                        <div className="h-16 bg-gray-200 rounded-lg"></div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {allActivities.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
-                        <Clock className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                        <p>No activity found</p>
-                      </div>
-                    ) : (
-                      allActivities.map(renderActivityItem)
-                    )}
-                  </div>
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
+            {/* View All Activities Modal Button - Takes remaining space */}
+            <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex-1 text-navy-600 border-navy-600 hover:bg-navy-50"
+                  onClick={() => {
+                    setModalOpen(true);
+                    fetchAllActivities();
+                  }}
+                >
+                  <Clock className="h-4 w-4 mr-2" />
+                  View All
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center space-x-2">
+                    <Clock className="h-5 w-5 text-navy-600" />
+                    <span>All Chapter Activity</span>
+                  </DialogTitle>
+                </DialogHeader>
+                
+                <div className="overflow-y-auto max-h-[60vh]">
+                  {modalLoading ? (
+                    <div className="space-y-4">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="animate-pulse">
+                          <div className="h-16 bg-gray-200 rounded-lg"></div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {allActivities.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          <Clock className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                          <p>No activity found</p>
+                        </div>
+                      ) : (
+                        allActivities.map(renderActivityItem)
+                      )}
+                    </div>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </CardContent>
     </Card>
