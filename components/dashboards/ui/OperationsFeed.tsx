@@ -159,7 +159,7 @@ export function OperationsFeed() {
           meta: announcement.title,
           createdAt: announcement.created_at,
           icon: Megaphone,
-          user: announcement.sender
+          user: Array.isArray(announcement.sender) ? announcement.sender[0] : announcement.sender
         });
       });
     }
@@ -174,7 +174,7 @@ export function OperationsFeed() {
           meta: task.title,
           createdAt: task.created_at,
           icon: CheckCircle,
-          user: task.assigner
+          user: Array.isArray(task.assigner) ? task.assigner[0] : task.assigner
         });
       });
     }
@@ -189,7 +189,7 @@ export function OperationsFeed() {
           meta: doc.title,
           createdAt: doc.created_at,
           icon: FileText,
-          user: doc.owner
+          user: Array.isArray(doc.owner) ? doc.owner[0] : doc.owner
         });
       });
     }
@@ -197,21 +197,23 @@ export function OperationsFeed() {
     // Process Dues Payments
     if (duesResult.data) {
       duesResult.data.forEach(dues => {
+        const user = Array.isArray(dues.user) ? dues.user[0] : dues.user;
         allActivities.push({
           id: `dues-${dues.id}`,
           type: 'payment',
           title: 'Dues Payment Received',
-          meta: `${dues.user?.full_name || 'Member'} paid $${dues.amount_paid}`,
+          meta: `${user?.full_name || 'Member'} paid $${dues.amount_paid}`,
           createdAt: dues.updated_at,
           icon: DollarSign,
-          user: dues.user
+          user: user
         });
       });
     }
 
-    // Sort by creation date and return
+    // Sort by creation date and return ONLY the requested limit
     return allActivities
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, limit);
   };
 
   const getTypeColor = (type: string) => {
