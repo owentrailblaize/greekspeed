@@ -606,9 +606,9 @@ export function TreasurerDashboard() {
 
       {/* Tab Content */}
       {selectedTab === "overview" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
-          {/* Desktop Layout - Preserved */}
-          <Card className="hidden lg:block">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+          {/* Desktop Layout - Dues Collection Progress (2/3 width) */}
+          <Card className="hidden lg:block lg:col-span-2">
             <CardHeader>
               <CardTitle>Dues Collection Progress</CardTitle>
             </CardHeader>
@@ -641,6 +641,52 @@ export function TreasurerDashboard() {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Desktop Layout - Quick Actions Sidebar (1/3 width) */}
+          <Card className="hidden lg:block lg:col-span-1">
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button 
+                onClick={() => setShowBulkAssignDues(true)} 
+                className="w-full justify-start bg-purple-600 hover:bg-purple-700"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Bulk Assign Dues
+              </Button>
+              <Button 
+                onClick={() => setShowAssignDues(true)} 
+                className="w-full justify-start bg-blue-600 hover:bg-blue-700"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Assign Dues
+              </Button>
+              <Button 
+                onClick={() => setShowCreateCycle(true)} 
+                className="w-full justify-start bg-green-600 hover:bg-green-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Dues Cycle
+              </Button>
+              <Button 
+                onClick={() => exportDuesToCSV(assignments, `financial-report-${new Date().toISOString().split('T')[0]}.csv`)}
+                className="w-full justify-start bg-green-600 hover:bg-green-700"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export Financial Report
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start opacity-60 cursor-not-allowed" 
+                disabled
+              >
+                <DollarSign className="h-4 w-4 mr-2" />
+                Create Payment Plans
+                <Lock className="h-3 w-3 ml-2 text-gray-400" />
+              </Button>
             </CardContent>
           </Card>
 
@@ -681,52 +727,6 @@ export function TreasurerDashboard() {
             </CardContent>
           </Card>
 
-          {/* Desktop Layout - Preserved */}
-          <Card className="hidden lg:block">
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button 
-                onClick={() => setShowBulkAssignDues(true)} 
-                className="w-full justify-start bg-purple-600 hover:bg-purple-700"
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Bulk Assign Dues
-              </Button>
-              <Button 
-                onClick={() => setShowAssignDues(true)} 
-                className="w-full justify-start bg-blue-600 hover:bg-blue-700"
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Assign Dues
-              </Button>
-              <Button 
-                onClick={() => setShowCreateCycle(true)} 
-                className="w-full justify-start bg-green-600 hover:bg-green-700"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Dues Cycle
-              </Button>
-              <Button 
-                onClick={() => exportDuesToCSV(assignments, `dues-export-${new Date().toISOString().split('T')[0]}.csv`)}
-                className="w-full justify-start bg-green-600 hover:bg-green-700"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export Financial Report
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start opacity-60 cursor-not-allowed" 
-                disabled
-              >
-                <DollarSign className="h-4 w-4 mr-2" />
-                Create Payment Plans
-                <Lock className="h-3 w-3 ml-2 text-gray-400" />
-              </Button>
-            </CardContent>
-          </Card>
-
           {/* Mobile Layout - Quick Actions */}
           <Card className="lg:hidden">
             <CardHeader className="pb-2">
@@ -755,7 +755,7 @@ export function TreasurerDashboard() {
                 Create Dues Cycle
               </Button>
               <Button 
-                onClick={() => exportDuesToCSV(assignments, `dues-export-${new Date().toISOString().split('T')[0]}.csv`)}
+                onClick={() => exportDuesToCSV(assignments, `financial-report-${new Date().toISOString().split('T')[0]}.csv`)}
                 className="w-full justify-start bg-green-600 hover:bg-green-700 text-sm py-2"
               >
                 <Download className="h-4 w-4 mr-2" />
