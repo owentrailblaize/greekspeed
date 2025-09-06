@@ -211,77 +211,74 @@ export function MobileEventsPage() {
 
         {/* Events List */}
         {filteredEvents.length === 0 ? (
-          <Card>
-            <CardContent className="p-8">
-              <div className="text-center">
-                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg mb-2">
-                  {activeFilter === 'all' ? 'No upcoming events' : `No events marked as ${activeFilter}`}
-                </p>
-                <p className="text-gray-400 text-sm">
-                  {activeFilter === 'all' ? 'Check back later for new events!' : 'Try a different filter'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="text-center py-12">
+            <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500 text-lg mb-2">
+              {activeFilter === 'all' ? 'No upcoming events' : `No events marked as ${activeFilter}`}
+            </p>
+            <p className="text-gray-400 text-sm">
+              {activeFilter === 'all' ? 'Check back later for new events!' : 'Try a different filter'}
+            </p>
+          </div>
         ) : (
-          <div className="space-y-4">
-            {filteredEvents.map((event) => (
-              <Card key={event.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <h4 className="font-medium text-gray-900 text-lg mb-3 break-words">{event.title}</h4>
-                  
-                  <div className="space-y-2 text-sm text-gray-600 mb-4">
-                    <div className="flex items-center space-x-2">
-                      <Clock className="h-4 w-4" />
-                      <span className="break-words">{parseRawTime(event.start_time)}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="h-4 w-4" />
-                      <span className="break-words">{event.location || 'TBD'}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Users className="h-4 w-4" />
-                      <span>{event.attendee_count || 0} attending</span>
-                    </div>
+          <div className="space-y-0">
+            {filteredEvents.map((event, index) => (
+              <div 
+                key={event.id} 
+                className={`px-4 py-4 ${index !== filteredEvents.length - 1 ? 'border-b border-gray-100' : ''}`}
+              >
+                <h4 className="font-medium text-gray-900 text-sm mb-2 break-words">{event.title}</h4>
+                
+                <div className="space-y-1 text-xs text-gray-600 mb-3">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-3 w-3" />
+                    <span className="break-words">{parseRawTime(event.start_time)}</span>
                   </div>
-                  
-                  {event.description && (
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-3">{event.description}</p>
-                  )}
-                  
-                  {/* RSVP Buttons */}
-                  <div className="flex space-x-2">
-                    <Button 
-                      size="sm" 
-                      variant={getRSVPButtonVariant(event.id, 'attending')}
-                      onClick={() => handleRSVP(event.id, 'attending')}
-                      className="flex-1 text-sm h-9"
-                    >
-                      <Users className="h-4 w-4 mr-1" />
-                      Going
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant={getRSVPButtonVariant(event.id, 'maybe')}
-                      onClick={() => handleRSVP(event.id, 'maybe')}
-                      className="flex-1 text-sm h-9"
-                    >
-                      <HelpCircle className="h-4 w-4 mr-1" />
-                      Maybe
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant={getRSVPButtonVariant(event.id, 'not_attending')}
-                      onClick={() => handleRSVP(event.id, 'not_attending')}
-                      className="flex-1 text-sm h-9"
-                    >
-                      <X className="h-4 w-4 mr-1" />
-                      Not
-                    </Button>
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="h-3 w-3" />
+                    <span className="break-words">{event.location || 'TBD'}</span>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-3 w-3" />
+                    <span>{event.attendee_count || 0} attending</span>
+                  </div>
+                </div>
+                
+                {event.description && (
+                  <p className="text-xs text-gray-600 mb-3 line-clamp-2">{event.description}</p>
+                )}
+                
+                {/* RSVP Buttons */}
+                <div className="flex space-x-1">
+                  <Button 
+                    size="sm" 
+                    variant={getRSVPButtonVariant(event.id, 'attending')}
+                    onClick={() => handleRSVP(event.id, 'attending')}
+                    className="flex-1 text-xs h-7"
+                  >
+                    <Users className="h-3 w-3 mr-1" />
+                    Going
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant={getRSVPButtonVariant(event.id, 'maybe')}
+                    onClick={() => handleRSVP(event.id, 'maybe')}
+                    className="flex-1 text-xs h-7"
+                  >
+                    <HelpCircle className="h-3 w-3 mr-1" />
+                    Maybe
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant={getRSVPButtonVariant(event.id, 'not_attending')}
+                    onClick={() => handleRSVP(event.id, 'not_attending')}
+                    className="flex-1 text-xs h-7"
+                  >
+                    <X className="h-3 w-3 mr-1" />
+                    Not
+                  </Button>
+                </div>
+              </div>
             ))}
           </div>
         )}
