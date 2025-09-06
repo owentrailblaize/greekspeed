@@ -71,7 +71,7 @@ export function CreatePostModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-w-[95vw] max-h-[90vh] sm:max-h-[80vh] overflow-y-auto p-4 sm:p-6">
+      <DialogContent className="sm:max-w-[600px] max-w-[85vw] max-h-[90vh] sm:max-h-[80vh] overflow-y-auto p-4  sm:p-6 bg-white">
         <DialogHeader className="pb-4 sm:pb-6">
           <DialogTitle className="text-xl sm:text-lg">
             Create a post
@@ -137,7 +137,7 @@ export function CreatePostModal({
                 className="text-gray-500 hover:text-gray-700 h-12 sm:h-8 px-4 sm:px-2"
               >
                 <Image className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1" />
-                <span className="text-base sm:text-sm">Photo</span>
+                <span className="hidden sm:inline text-base sm:text-sm">Photo</span>
               </Button>
               <Button
                 variant="ghost"
@@ -147,7 +147,7 @@ export function CreatePostModal({
                 title="Emoji functionality coming soon"
               >
                 <Smile className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1" />
-                <span className="text-base sm:text-sm">Emoji</span>
+                <span className="hidden sm:inline text-base sm:text-sm">Emoji</span>
                 <Lock className="h-4 w-4 sm:h-3 sm:w-3 ml-1 text-gray-400" />
               </Button>
               <Button
@@ -158,7 +158,7 @@ export function CreatePostModal({
                 title="Schedule functionality coming soon"
               >
                 <Clock className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1" />
-                <span className="text-base sm:text-sm">Schedule</span>
+                <span className="hidden sm:inline text-base sm:text-sm">Schedule</span>
                 <Lock className="h-4 w-4 sm:h-3 sm:w-3 ml-1 text-gray-400" />
               </Button>
             </div>
