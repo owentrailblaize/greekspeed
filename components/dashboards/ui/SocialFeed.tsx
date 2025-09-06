@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import { usePosts } from '@/lib/hooks/usePosts';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { CreatePostModal } from '@/components/social/CreatePostModal';
@@ -61,44 +62,54 @@ export function SocialFeed({ chapterId }: SocialFeedProps) {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Create Post Card */}
-      <Card className="bg-white">
-        <CardContent className="p-4 sm:p-6">
-          <div className="flex items-start space-x-3 sm:space-x-4">
-            <div className="w-12 h-12 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
-              {profile?.avatar_url || profile?.first_name?.charAt(0) || 'U'}
+    <>
+      <div className="space-y-4">
+        {/* Create Post Card - Desktop Only */}
+        <Card className="bg-white hidden sm:block">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-start space-x-3 sm:space-x-4">
+              <div className="w-12 h-12 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
+                {profile?.avatar_url || profile?.first_name?.charAt(0) || 'U'}
+              </div>
+              <div className="flex-1">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-gray-500 hover:text-gray-700 hover:bg-gray-50 h-12 sm:h-10 text-left px-4"
+                  onClick={() => setIsCreateModalOpen(true)}
+                >
+                  Start a post...
+                </Button>
+              </div>
             </div>
-            <div className="flex-1">
-              <Button
-                variant="outline"
-                className="w-full justify-start text-gray-500 hover:text-gray-700 hover:bg-gray-50 h-12 sm:h-10 text-left px-4"
-                onClick={() => setIsCreateModalOpen(true)}
-              >
-                Start a post...
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Posts */}
-      {posts.length === 0 ? (
-        <div className="text-center py-8 sm:py-12">
-          <p className="text-gray-500 text-lg sm:text-base">No posts yet</p>
-          <p className="text-sm text-gray-400 mt-2">Be the first to share something!</p>
-        </div>
-      ) : (
-        posts.map((post: Post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            onLike={likePost}
-            onDelete={handleDeletePost}
-            onCommentAdded={handleCommentAdded}
-          />
-        ))
-      )}
+        {/* Posts */}
+        {posts.length === 0 ? (
+          <div className="text-center py-8 sm:py-12">
+            <p className="text-gray-500 text-lg sm:text-base">No posts yet</p>
+            <p className="text-sm text-gray-400 mt-2">Be the first to share something!</p>
+          </div>
+        ) : (
+          posts.map((post: Post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              onLike={likePost}
+              onDelete={handleDeletePost}
+              onCommentAdded={handleCommentAdded}
+            />
+          ))
+        )}
+      </div>
+
+      {/* Mobile Floating Action Button */}
+      <div
+        onClick={() => setIsCreateModalOpen(true)}
+        className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 sm:hidden flex items-center justify-center cursor-pointer"
+      >
+        <Plus className="h-6 w-6 text-white" />
+      </div>
 
       {/* Create Post Modal */}
       <CreatePostModal
@@ -108,6 +119,6 @@ export function SocialFeed({ chapterId }: SocialFeedProps) {
         userAvatar={profile?.avatar_url || undefined}
         userName={profile?.full_name || undefined}
       />
-    </div>
+    </>
   );
 } 
