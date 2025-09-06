@@ -204,9 +204,11 @@ export default function SignUpPage() {
                       onClick={handleGoogleSignUp}
                       disabled={loading}
                     >
-                      <div className="w-5 h-5 bg-red-500 rounded-full mr-4 flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">G</span>
-                      </div>
+                      <img 
+                        src="https://developers.google.com/identity/images/g-logo.png" 
+                        alt="Google" 
+                        className="w-5 h-5 mr-4"
+                      />
                       Continue with Google
                     </Button>
                     
