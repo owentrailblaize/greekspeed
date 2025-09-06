@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, MessageCircle, Share, MoreHorizontal, Trash2, Lock } from 'lucide-react';
+import { Heart, MessageCircle, Share, Trash2, Lock } from 'lucide-react';
 import { Post } from '@/types/posts';
 import { formatDistanceToNow } from 'date-fns';
 import { CommentModal } from './CommentModal';
@@ -111,9 +111,6 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
                   <Trash2 className="h-4 w-4" />
                 </Button>
               )}
-              <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-600 p-1">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
             </div>
           </div>
 
@@ -221,9 +218,6 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
                   <Trash2 className="h-5 w-5 sm:h-4 sm:w-4" />
                 </Button>
               )}
-              <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-600 p-2 sm:p-1">
-                <MoreHorizontal className="h-5 w-5 sm:h-4 sm:w-4" />
-              </Button>
             </div>
           </div>
 
