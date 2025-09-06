@@ -64,7 +64,118 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
 
   return (
     <>
-      <Card className="bg-white">
+      {/* Mobile Layout - Card-less Feed */}
+      <div className="sm:hidden">
+        <div className="px-4 py-4 border-b border-gray-100 last:border-b-0">
+          {/* Post Header */}
+          <div className="flex items-start space-x-3 mb-3">
+            <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
+              {post.author?.avatar_url || post.author?.first_name?.charAt(0) || 'U'}
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h4 className="font-medium text-gray-900 text-sm break-words">
+                  {post.author?.full_name || 'Unknown User'}
+                </h4>
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                  {post.post_type.replace('_', ' ')}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 mb-1">
+                {post.author?.chapter_role && (
+                  <span className="text-xs text-gray-600 break-words">
+                    {post.author.chapter_role}
+                  </span>
+                )}
+                {post.author?.member_status && (
+                  <span className="text-xs text-gray-600 break-words">
+                    {post.author.member_status}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-gray-500">
+                {formatTimestamp(post.created_at)}
+              </p>
+            </div>
+            
+            <div className="flex items-center space-x-1">
+              {post.is_author && onDelete && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleDeleteClick}
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1"
+                  title="Delete post"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-600 p-1">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Post Content */}
+          <div className="mb-3">
+            {post.content && (
+              <p className="text-gray-900 text-sm leading-relaxed mb-3 break-words">{post.content}</p>
+            )}
+            {post.image_url && (
+              <div className="-mx-4">
+                <img 
+                  src={post.image_url} 
+                  alt="Post content" 
+                  className="w-full max-h-80 object-cover"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Post Actions */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => onLike(post.id)}
+                className={`${
+                  post.is_liked 
+                    ? 'text-red-500 hover:text-red-700 hover:bg-red-50' 
+                    : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
+                } h-8 px-2`}
+              >
+                <Heart className={`h-4 w-4 mr-1 ${post.is_liked ? 'fill-current' : ''}`} />
+                <span className="text-xs">{post.likes_count}</span>
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setIsCommentModalOpen(true)}
+                className="text-gray-500 hover:text-blue-500 hover:bg-blue-50 h-8 px-2"
+              >
+                <MessageCircle className="h-4 w-4 mr-1" />
+                <span className="text-xs">{post.comments_count}</span>
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                disabled
+                className="text-gray-400 hover:text-gray-400 cursor-not-allowed h-8 px-2"
+                title="Share functionality coming soon"
+              >
+                <Share className="h-4 w-4 mr-1" />
+                <span className="text-xs">{post.shares_count}</span>
+                <Lock className="h-3 w-3 ml-1 text-gray-400" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Layout - Preserved Card Design */}
+      <Card className="bg-white hidden sm:block">
         <CardContent className="p-4 sm:p-6">
           {/* Post Header */}
           <div className="flex items-start space-x-3 sm:space-x-4 mb-4 sm:mb-3">
