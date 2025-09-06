@@ -157,58 +157,55 @@ export function MobileTasksPage() {
 
         {/* Tasks List */}
         {tasks.length === 0 ? (
-          <Card>
-            <CardContent className="p-8">
-              <div className="text-center">
-                <ListTodo className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg mb-2">You're all caught up! 🎉</p>
-                <p className="text-gray-400 text-sm">No tasks assigned to you yet</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="text-center py-12">
+            <ListTodo className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500 text-lg mb-2">You're all caught up! 🎉</p>
+            <p className="text-gray-400 text-sm">No tasks assigned to you yet</p>
+          </div>
         ) : (
-          <div className="space-y-3">
-            {tasks.map((task) => (
-              <Card key={task.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-start space-x-3">
-                    <Checkbox
-                      checked={task.status === 'completed'}
-                      onCheckedChange={() => handleTaskToggle(task.id, task.status)}
-                      className="mt-1"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className={`text-base break-words ${task.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-                        {task.title}
+          <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
+            {tasks.map((task, index) => (
+              <div 
+                key={task.id} 
+                className={`px-4 py-4 ${index !== tasks.length - 1 ? 'border-b border-gray-100' : ''}`}
+              >
+                <div className="flex items-start space-x-3">
+                  <Checkbox
+                    checked={task.status === 'completed'}
+                    onCheckedChange={() => handleTaskToggle(task.id, task.status)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className={`text-sm break-words ${task.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                      {task.title}
+                    </div>
+                    {task.description && (
+                      <div className={`text-xs break-words mt-1 ${task.status === 'completed' ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {task.description}
                       </div>
-                      {task.description && (
-                        <div className={`text-sm break-words mt-1 ${task.status === 'completed' ? 'text-gray-400' : 'text-gray-600'}`}>
-                          {task.description}
-                        </div>
-                      )}
-                      {task.due_date && (
-                        <div className={`text-sm mt-2 ${task.status === 'completed' ? 'text-gray-400' : 'text-gray-500'}`}>
-                          Due: {new Date(task.due_date).toLocaleDateString('en-US', { 
-                            month: 'long', 
-                            day: 'numeric', 
-                            year: 'numeric' 
-                          })}
-                        </div>
-                      )}
-                      <div className="mt-2">
-                        <span className={`inline-block px-3 py-1 text-sm rounded-full ${
-                          task.priority === 'urgent' ? 'bg-red-100 text-red-800' :
-                          task.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-                          task.priority === 'medium' ? 'bg-blue-100 text-blue-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {task.priority}
-                        </span>
+                    )}
+                    {task.due_date && (
+                      <div className={`text-xs mt-2 ${task.status === 'completed' ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Due: {new Date(task.due_date).toLocaleDateString('en-US', { 
+                          month: 'long', 
+                          day: 'numeric', 
+                          year: 'numeric' 
+                        })}
                       </div>
+                    )}
+                    <div className="mt-2">
+                      <span className={`inline-block px-2 py-0.5 text-xs rounded-full ${
+                        task.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                        task.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                        task.priority === 'medium' ? 'bg-blue-100 text-blue-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {task.priority}
+                      </span>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         )}

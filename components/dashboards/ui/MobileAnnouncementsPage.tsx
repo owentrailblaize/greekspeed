@@ -110,77 +110,74 @@ export function MobileAnnouncementsPage() {
 
         {/* Announcements List */}
         {announcements.length === 0 ? (
-          <Card>
-            <CardContent className="p-8">
-              <div className="text-center">
-                <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg mb-2">No new announcements</p>
-                <p className="text-gray-400 text-sm">You're all caught up!</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="text-center py-12">
+            <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500 text-lg mb-2">No new announcements</p>
+            <p className="text-gray-400 text-sm">You're all caught up!</p>
+          </div>
         ) : (
-          <div className="space-y-4">
-            {announcements.map((announcement) => {
+          <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
+            {announcements.map((announcement, index) => {
               const typeConfig = getAnnouncementTypeConfig(announcement.announcement_type);
               const TypeIcon = typeConfig.icon;
               
               return (
-                <Card key={announcement.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-start space-x-3">
-                      {/* Type icon */}
-                      <div className={`w-10 h-10 ${typeConfig.bgColor} rounded-full flex items-center justify-center shrink-0`}>
-                        <TypeIcon className={`h-5 w-5 ${typeConfig.color}`} />
+                <div 
+                  key={announcement.id} 
+                  className={`px-4 py-4 ${index !== announcements.length - 1 ? 'border-b border-gray-100' : ''}`}
+                >
+                  <div className="flex items-start space-x-3">
+                    {/* Type icon */}
+                    <div className={`w-8 h-8 ${typeConfig.bgColor} rounded-full flex items-center justify-center shrink-0`}>
+                      <TypeIcon className={`h-4 w-4 ${typeConfig.color}`} />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      {/* Header with title and priority icon */}
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center space-x-2 flex-1 min-w-0">
+                          <h4 className="font-medium text-gray-900 text-sm line-clamp-2 break-words">
+                            {announcement.title}
+                          </h4>
+                          {/* Priority icon */}
+                          {(() => {
+                            const priorityConfig = getPriorityIcon(announcement.priority);
+                            const PriorityIcon = priorityConfig.icon;
+                            return (
+                              <PriorityIcon className={`h-3 w-3 ${priorityConfig.color} shrink-0`} />
+                            );
+                          })()}
+                        </div>
                       </div>
                       
-                      <div className="flex-1 min-w-0">
-                        {/* Header with title and priority icon */}
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-center space-x-2 flex-1 min-w-0">
-                            <h4 className="font-medium text-gray-900 text-base line-clamp-2 break-words">
-                              {announcement.title}
-                            </h4>
-                            {/* Priority icon */}
-                            {(() => {
-                              const priorityConfig = getPriorityIcon(announcement.priority);
-                              const PriorityIcon = priorityConfig.icon;
-                              return (
-                                <PriorityIcon className={`h-4 w-4 ${priorityConfig.color} shrink-0`} />
-                              );
-                            })()}
-                          </div>
+                      {/* Content */}
+                      <p className="text-xs text-gray-600 mb-3 line-clamp-2 break-words">
+                        {announcement.content}
+                      </p>
+                      
+                      {/* Footer with sender and time */}
+                      <div className="flex flex-col space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-xs text-gray-500 break-words">
+                            {announcement.sender?.full_name || 'Unknown'}
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            {formatRelativeTime(announcement.created_at)}
+                          </span>
                         </div>
                         
-                        {/* Content */}
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-3 break-words">
-                          {announcement.content}
-                        </p>
-                        
-                        {/* Footer with sender and time */}
-                        <div className="flex flex-col space-y-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-sm text-gray-500 break-words">
-                              {announcement.sender?.full_name || 'Unknown'}
-                            </span>
-                            <span className="text-sm text-gray-400">
-                              {formatRelativeTime(announcement.created_at)}
-                            </span>
-                          </div>
-                          
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleMarkAsRead(announcement.id)}
-                            className="text-navy-600 border-navy-600 hover:bg-navy-50 text-sm h-8 w-full"
-                          >
-                            Mark Read
-                          </Button>
-                        </div>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleMarkAsRead(announcement.id)}
+                          className="text-navy-600 border-navy-600 hover:bg-navy-50 text-xs h-7 w-full"
+                        >
+                          Mark Read
+                        </Button>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               );
             })}
           </div>
