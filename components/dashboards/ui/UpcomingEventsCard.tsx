@@ -228,30 +228,33 @@ export function UpcomingEventsCard() {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col space-y-2">
+                  <div className="flex space-x-1">
                     <Button 
                       size="sm" 
                       variant={getRSVPButtonVariant(event.id, 'attending')}
                       onClick={() => handleRSVP(event.id, 'attending')}
-                      className="text-sm h-10 px-4"
+                      className="flex-1 h-8 flex items-center justify-center"
+                      title="Going"
                     >
-                      Going
+                      <Users className="h-4 w-4" />
                     </Button>
                     <Button 
                       size="sm" 
                       variant={getRSVPButtonVariant(event.id, 'maybe')}
                       onClick={() => handleRSVP(event.id, 'maybe')}
-                      className="text-sm h-10 px-4"
+                      className="flex-1 h-8 flex items-center justify-center"
+                      title="Maybe"
                     >
-                      Maybe
+                      <HelpCircle className="h-4 w-4" />
                     </Button>
                     <Button 
                       size="sm" 
                       variant={getRSVPButtonVariant(event.id, 'not_attending')}
                       onClick={() => handleRSVP(event.id, 'not_attending')}
-                      className="text-sm h-10 px-4"
+                      className="flex-1 h-8 flex items-center justify-center"
+                      title="Not Going"
                     >
-                      Not going
+                      <X className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
