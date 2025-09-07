@@ -55,9 +55,9 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
       
       {/* Modal */}
       <div className="rounded-lg flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-        <div className="relative transform overflow-visible rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 w-full max-w-[95vw] sm:max-w-lg">
-          {/* Header */}
-          <div className="rounded-lg bg-white px-6 pt-6 pb-4 sm:p-6 sm:pb-4">
+        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 w-full max-w-[95vw] sm:max-w-lg h-[75vh] sm:h-auto flex flex-col">
+          {/* Header - Fixed */}
+          <div className="rounded-t-lg bg-white px-6 pt-6 pb-4 sm:p-6 sm:pb-4 flex-shrink-0 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h3 className="text-xl sm:text-lg font-medium leading-6 text-gray-900">
                 Create New Task
@@ -71,8 +71,8 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
             </div>
           </div>
 
-          {/* Body */}
-          <div className="bg-white px-6 pt-4 pb-6 sm:p-6 sm:pb-4">
+          {/* Body - Scrollable */}
+          <div className="bg-white px-6 pt-4 pb-6 sm:p-6 sm:pb-4 overflow-y-auto flex-1">
             <div className="space-y-6 sm:space-y-4">
               <div>
                 <Label htmlFor="title" className="block text-base sm:text-sm font-medium text-gray-700 mb-2 sm:mb-1">
@@ -149,26 +149,26 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="rounded-lg bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse sm:px-6">
+          {/* Footer - Fixed */}
+          <div className="rounded-b-lg bg-gray-50 px-6 py-3 sm:flex sm:flex-row-reverse sm:px-6 sm:py-4 flex-shrink-0 border-t border-gray-200">
             <div className="flex flex-row space-x-3 sm:space-x-0 sm:ml-3">
               <Button
                 type="button"
                 onClick={handleSubmit}
                 disabled={creating || !newTask.title || !newTask.assignee_id}
-                className="mr-3 x-1 sm:flex-none inline-flex justify-center rounded-md border border-transparent bg-navy-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 h-12 sm:h-10 sm:text-sm"
+                className="mr-3 x-1 sm:flex-none inline-flex justify-center rounded-md border border-transparent bg-navy-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 h-10 sm:h-10 sm:text-sm"
               >
-                {creating ? <Loader2 className="h-5 w-5 sm:h-4 sm:w-4 animate-spin mr-2" /> : null}
-                <span className="text-base sm:text-sm">Create Task</span>
+                {creating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                <span className="text-sm">Create Task</span>
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
                 disabled={creating}
-                className="flex-1 sm:flex-none inline-flex justify-center rounded-md border border-gray-300 bg-white px-6 py-3 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 h-12 sm:h-10 sm:text-sm"
+                className="flex-1 sm:flex-none inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 h-10 sm:h-10 sm:text-sm"
               >
-                <span className="text-base sm:text-sm">Cancel</span>
+                <span className="text-sm">Cancel</span>
               </Button>
             </div>
           </div>
