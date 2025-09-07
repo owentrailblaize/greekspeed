@@ -102,16 +102,18 @@ export function AdminOverview() {
         onTabChange={setActiveMobileTab} 
       />
 
-      {/* Quick Actions Floating Action Button - Stacked above Post Button */}
-      <div
-        onClick={() => setShowQuickActionsModal(true)}
-        className="fixed bottom-40 right-4 z-40 h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 sm:hidden flex items-center justify-center cursor-pointer"
-        title="Quick Actions"
-      >
-        <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-      </div>
+      {/* Quick Actions Floating Action Button - Only on Home Page */}
+      {activeMobileTab === 'home' && (
+        <div
+          onClick={() => setShowQuickActionsModal(true)}
+          className="fixed bottom-40 right-4 z-40 h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 sm:hidden flex items-center justify-center cursor-pointer"
+          title="Quick Actions"
+        >
+          <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+      )}
 
       {/* Quick Actions Modal */}
       {showQuickActionsModal && (
