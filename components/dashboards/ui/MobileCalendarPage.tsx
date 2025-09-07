@@ -177,11 +177,14 @@ export function MobileCalendarPage() {
             <p>No events scheduled</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {dayEvents.map((event) => (
-              <div key={event.id} className="bg-white border border-gray-200 rounded-lg p-4">
+          <div className="space-y-0">
+            {dayEvents.map((event, index) => (
+              <div 
+                key={event.id} 
+                className={`px-4 py-4 ${index !== dayEvents.length - 1 ? 'border-b border-gray-100' : ''}`}
+              >
                 <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-medium text-gray-900 text-base">{event.title}</h4>
+                  <h4 className="font-medium text-gray-900 text-sm">{event.title}</h4>
                   <button
                     onClick={() => setExpandedEvent(expandedEvent === event.id ? null : event.id)}
                     className="text-gray-400 hover:text-gray-600"
@@ -190,26 +193,26 @@ export function MobileCalendarPage() {
                   </button>
                 </div>
                 
-                <div className="space-y-2 text-sm text-gray-600">
+                <div className="space-y-1 text-xs text-gray-600 mb-3">
                   <div className="flex items-center space-x-2">
-                    <Clock className="h-4 w-4" />
+                    <Clock className="h-3 w-3" />
                     <span>{parseRawTime(event.start_time)}</span>
                   </div>
                   {event.location && (
                     <div className="flex items-center space-x-2">
-                      <MapPin className="h-4 w-4" />
+                      <MapPin className="h-3 w-3" />
                       <span>{event.location}</span>
                     </div>
                   )}
                   <div className="flex items-center space-x-2">
-                    <Users className="h-4 w-4" />
+                    <Users className="h-3 w-3" />
                     <span>{event.attendee_count || 0} attending</span>
                   </div>
                 </div>
                 
                 {expandedEvent === event.id && event.description && (
                   <div className="mt-3 pt-3 border-t border-gray-100">
-                    <p className="text-sm text-gray-600">{event.description}</p>
+                    <p className="text-xs text-gray-600">{event.description}</p>
                   </div>
                 )}
               </div>
