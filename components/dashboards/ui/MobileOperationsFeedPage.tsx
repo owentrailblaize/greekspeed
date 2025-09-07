@@ -1,162 +1,257 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Activity, AlertCircle, CheckCircle, Clock, Users, DollarSign, Calendar } from 'lucide-react';
+import { Activity, AlertCircle, CheckCircle, Clock, Users, DollarSign, Calendar, FileText, Megaphone } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
+import { createClient } from '@supabase/supabase-js';
 
-interface Operation {
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+// Use the same interface as OperationsFeed
+interface ActivityItem {
   id: string;
+  type: 'event' | 'announcement' | 'task' | 'document' | 'payment';
   title: string;
-  description: string;
-  type: 'financial' | 'membership' | 'events' | 'compliance' | 'system';
-  status: 'completed' | 'in_progress' | 'pending' | 'failed';
-  timestamp: string;
-  user: string;
-  priority: 'high' | 'medium' | 'low';
+  meta: string;
+  createdAt: string;
+  icon: any;
+  user?: {
+    full_name: string;
+    first_name: string;
+    last_name: string;
+  };
 }
 
 export function MobileOperationsFeedPage() {
-  const [operations, setOperations] = useState<Operation[]>([]);
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'completed' | 'in_progress' | 'pending' | 'failed'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'event' | 'announcement' | 'task' | 'document' | 'payment'>('all');
   
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
 
-  // Mock operations data - replace with actual API call
+  // Load activities on component mount
   useEffect(() => {
-    const mockOperations: Operation[] = [
-      {
-        id: '1',
-        title: 'Monthly Dues Collection',
-        description: 'Processed dues payments for 45 members',
-        type: 'financial',
-        status: 'completed',
-        timestamp: '2024-01-15T10:30:00Z',
-        user: 'Treasurer',
-        priority: 'high'
-      },
-      {
-        id: '2',
-        title: 'New Member Onboarding',
-        description: 'Added 3 new members to the chapter roster',
-        type: 'membership',
-        status: 'completed',
-        timestamp: '2024-01-14T14:20:00Z',
-        user: 'Membership Chair',
-        priority: 'medium'
-      },
-      {
-        id: '3',
-        title: 'Event Registration System',
-        description: 'Setting up registration for Spring Formal',
-        type: 'events',
-        status: 'in_progress',
-        timestamp: '2024-01-13T09:15:00Z',
-        user: 'Social Chair',
-        priority: 'medium'
-      },
-      {
-        id: '4',
-        title: 'Compliance Document Review',
-        description: 'Reviewing updated bylaws for approval',
-        type: 'compliance',
-        status: 'pending',
-        timestamp: '2024-01-12T16:45:00Z',
-        user: 'Secretary',
-        priority: 'high'
-      },
-      {
-        id: '5',
-        title: 'System Backup',
-        description: 'Automated backup failed - manual intervention required',
-        type: 'system',
-        status: 'failed',
-        timestamp: '2024-01-11T02:00:00Z',
-        user: 'System',
-        priority: 'high'
-      },
-      {
-        id: '6',
-        title: 'Budget Planning Meeting',
-        description: 'Scheduled quarterly budget review meeting',
-        type: 'financial',
-        status: 'completed',
-        timestamp: '2024-01-10T11:00:00Z',
-        user: 'Treasurer',
-        priority: 'low'
+    if (profile?.chapter_id) {
+      fetchActivities();
+    }
+  }, [profile?.chapter_id]);
+
+  // Core function to fetch activities from database
+  const fetchActivities = async () => {
+    if (!profile?.chapter_id) return;
+
+    try {
+      setLoading(true);
+      
+      const [eventsResult, announcementsResult, tasksResult, documentsResult, duesResult] = await Promise.all([
+        // Recent Events
+        supabase
+          .from('events')
+          .select('id, title, created_at, created_by')
+          .eq('chapter_id', profile.chapter_id)
+          .order('created_at', { ascending: false })
+          .limit(20),
+
+        // Recent Announcements  
+        supabase
+          .from('announcements')
+          .select(`
+            id, title, created_at, sender_id,
+            sender:profiles!sender_id(full_name, first_name, last_name)
+          `)
+          .eq('chapter_id', profile.chapter_id)
+          .order('created_at', { ascending: false })
+          .limit(20),
+
+        // Recent Tasks
+        supabase
+          .from('tasks')
+          .select(`
+            id, title, status, created_at, assigned_by,
+            assigner:profiles!assigned_by(full_name, first_name, last_name)
+          `)
+          .eq('chapter_id', profile.chapter_id)
+          .order('created_at', { ascending: false })
+          .limit(20),
+
+        // Recent Documents
+        supabase
+          .from('documents')
+          .select(`
+            id, title, created_at, owner_id,
+            owner:profiles!owner_id(full_name, first_name, last_name)
+          `)
+          .eq('chapter_id', profile.chapter_id)
+          .order('created_at', { ascending: false })
+          .limit(20),
+
+        // Recent Dues Payments
+        supabase
+          .from('dues_assignments')
+          .select(`
+            id, status, amount_paid, updated_at, user_id,
+            user:profiles!user_id(full_name, first_name, last_name),
+            cycle:dues_cycles(name)
+          `)
+          .eq('cycle.chapter_id', profile.chapter_id)
+          .eq('status', 'paid')
+          .order('updated_at', { ascending: false })
+          .limit(20)
+      ]);
+
+      // Transform data into unified activity format
+      const allActivities: ActivityItem[] = [];
+
+      // Process Events
+      if (eventsResult.data) {
+        eventsResult.data.forEach(event => {
+          allActivities.push({
+            id: `event-${event.id}`,
+            type: 'event',
+            title: 'New Event Created',
+            meta: event.title,
+            createdAt: event.created_at,
+            icon: Calendar
+          });
+        });
       }
-    ];
 
-    setTimeout(() => {
-      setOperations(mockOperations);
+      // Process Announcements
+      if (announcementsResult.data) {
+        announcementsResult.data.forEach(announcement => {
+          allActivities.push({
+            id: `announcement-${announcement.id}`,
+            type: 'announcement',
+            title: 'Announcement Sent',
+            meta: announcement.title,
+            createdAt: announcement.created_at,
+            icon: Megaphone,
+            user: Array.isArray(announcement.sender) ? announcement.sender[0] : announcement.sender
+          });
+        });
+      }
+
+      // Process Tasks
+      if (tasksResult.data) {
+        tasksResult.data.forEach(task => {
+          allActivities.push({
+            id: `task-${task.id}`,
+            type: 'task',
+            title: `Task ${task.status === 'completed' ? 'Completed' : 'Created'}`,
+            meta: task.title,
+            createdAt: task.created_at,
+            icon: CheckCircle,
+            user: Array.isArray(task.assigner) ? task.assigner[0] : task.assigner
+          });
+        });
+      }
+
+      // Process Documents
+      if (documentsResult.data) {
+        documentsResult.data.forEach(doc => {
+          allActivities.push({
+            id: `document-${doc.id}`,
+            type: 'document',
+            title: 'Document Uploaded',
+            meta: doc.title,
+            createdAt: doc.created_at,
+            icon: FileText,
+            user: Array.isArray(doc.owner) ? doc.owner[0] : doc.owner
+          });
+        });
+      }
+
+      // Process Dues Payments
+      if (duesResult.data) {
+        duesResult.data.forEach(dues => {
+          const user = Array.isArray(dues.user) ? dues.user[0] : dues.user;
+          allActivities.push({
+            id: `dues-${dues.id}`,
+            type: 'payment',
+            title: 'Dues Payment Received',
+            meta: `${user?.full_name || 'Member'} paid $${dues.amount_paid}`,
+            createdAt: dues.updated_at,
+            icon: DollarSign,
+            user: user
+          });
+        });
+      }
+
+      // Sort by creation date
+      const sortedActivities = allActivities
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      setActivities(sortedActivities);
+    } catch (error) {
+      console.error('Error fetching activities:', error);
+      setActivities([]);
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, [chapterId]);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'text-green-600 bg-green-50';
-      case 'in_progress': return 'text-blue-600 bg-blue-50';
-      case 'pending': return 'text-yellow-600 bg-yellow-50';
-      case 'failed': return 'text-red-600 bg-red-50';
-      default: return 'text-gray-600 bg-gray-50';
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed': return CheckCircle;
-      case 'in_progress': return Clock;
-      case 'pending': return Clock;
-      case 'failed': return AlertCircle;
-      default: return Activity;
+  // Helper functions from OperationsFeed
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'event': return 'bg-blue-100 text-blue-800';
+      case 'payment': return 'bg-green-100 text-green-800';
+      case 'task': return 'bg-purple-100 text-purple-800';
+      case 'document': return 'bg-orange-100 text-orange-800';
+      case 'announcement': return 'bg-indigo-100 text-indigo-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'event': return 'Event';
+      case 'payment': return 'Payment';
+      case 'task': return 'Task';
+      case 'document': return 'Document';
+      case 'announcement': return 'Announcement';
+      default: return 'Other';
     }
   };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'financial': return DollarSign;
-      case 'membership': return Users;
-      case 'events': return Calendar;
-      case 'compliance': return AlertCircle;
-      case 'system': return Activity;
+      case 'event': return Calendar;
+      case 'payment': return DollarSign;
+      case 'task': return CheckCircle;
+      case 'document': return FileText;
+      case 'announcement': return Megaphone;
       default: return Activity;
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'text-red-600';
-      case 'medium': return 'text-yellow-600';
-      case 'low': return 'text-green-600';
-      default: return 'text-gray-600';
-    }
+  const formatTimeAgo = (dateString: string) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+    return `${Math.floor(diffInMinutes / 1440)}d ago`;
   };
 
-  const filteredOperations = operations.filter(op => {
+  const filteredActivities = activities.filter(activity => {
     if (activeFilter === 'all') return true;
-    return op.status === activeFilter;
+    return activity.type === activeFilter;
   });
 
   const filterButtons = [
-    { id: 'all' as const, label: 'All', count: operations.length },
-    { id: 'completed' as const, label: 'Completed', count: operations.filter(o => o.status === 'completed').length },
-    { id: 'in_progress' as const, label: 'In Progress', count: operations.filter(o => o.status === 'in_progress').length },
-    { id: 'pending' as const, label: 'Pending', count: operations.filter(o => o.status === 'pending').length },
-    { id: 'failed' as const, label: 'Failed', count: operations.filter(o => o.status === 'failed').length }
+    { id: 'all' as const, label: 'All', count: activities.length },
+    { id: 'event' as const, label: 'Events', count: activities.filter(a => a.type === 'event').length },
+    { id: 'announcement' as const, label: 'Announcements', count: activities.filter(a => a.type === 'announcement').length },
+    { id: 'task' as const, label: 'Tasks', count: activities.filter(a => a.type === 'task').length },
+    { id: 'document' as const, label: 'Documents', count: activities.filter(a => a.type === 'document').length },
+    { id: 'payment' as const, label: 'Payments', count: activities.filter(a => a.type === 'payment').length }
   ];
-
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    if (diffInHours < 48) return 'Yesterday';
-    return date.toLocaleDateString();
-  };
 
   if (loading) {
     return (
@@ -207,7 +302,7 @@ export function MobileOperationsFeedPage() {
         </div>
 
         {/* Operations List */}
-        {filteredOperations.length === 0 ? (
+        {filteredActivities.length === 0 ? (
           <div className="text-center py-12">
             <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500 text-lg mb-2">
@@ -219,37 +314,36 @@ export function MobileOperationsFeedPage() {
           </div>
         ) : (
           <div className="space-y-0">
-            {filteredOperations.map((operation, index) => {
-              const StatusIcon = getStatusIcon(operation.status);
-              const TypeIcon = getTypeIcon(operation.type);
+            {filteredActivities.map((activity, index) => {
+              const TypeIcon = getTypeIcon(activity.type);
+              const ActivityIcon = activity.icon;
               return (
                 <div 
-                  key={operation.id} 
-                  className={`px-4 py-4 ${index !== filteredOperations.length - 1 ? 'border-b border-gray-100' : ''}`}
+                  key={activity.id} 
+                  className={`px-4 py-4 ${index !== filteredActivities.length - 1 ? 'border-b border-gray-100' : ''}`}
                 >
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0">
-                      <TypeIcon className={`h-5 w-5 ${getPriorityColor(operation.priority)}`} />
+                      <TypeIcon className="h-5 w-5 text-navy-600" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between mb-1">
-                        <h3 className="font-medium text-gray-900 text-sm">{operation.title}</h3>
-                        <StatusIcon className="h-4 w-4 text-gray-400 flex-shrink-0 ml-2" />
+                        <h3 className="font-medium text-gray-900 text-sm">{activity.title}</h3>
+                        <ActivityIcon className="h-4 w-4 text-gray-400 flex-shrink-0 ml-2" />
                       </div>
-                      <p className="text-xs text-gray-600 mb-2">{operation.description}</p>
+                      <p className="text-xs text-gray-600 mb-2">{activity.meta}</p>
                       
                       <div className="flex items-center space-x-2 mb-2">
-                        <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(operation.status)}`}>
-                          {operation.status.replace('_', ' ')}
-                        </span>
-                        <span className={`text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600`}>
-                          {operation.type}
+                        <span className={`text-xs px-2 py-1 rounded-full ${getTypeColor(activity.type)}`}>
+                          {getTypeLabel(activity.type)}
                         </span>
                       </div>
                       
                       <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>{formatTimestamp(operation.timestamp)}</span>
-                        <span>By: {operation.user}</span>
+                        <span>{formatTimeAgo(activity.createdAt)}</span>
+                        {activity.user && (
+                          <span>By: {activity.user.full_name || `${activity.user.first_name} ${activity.user.last_name}`}</span>
+                        )}
                       </div>
                     </div>
                   </div>
