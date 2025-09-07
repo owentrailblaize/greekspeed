@@ -97,15 +97,12 @@ export function MobileAnnouncementsPage() {
               </Badge>
             )}
           </div>
-          <Button 
-            size="sm" 
-            variant="outline"
+          <div 
             onClick={refresh}
-            className="text-navy-600 border-navy-600 hover:bg-navy-50"
+            className="h-8 w-8 rounded-full border border-navy-600 text-navy-600 hover:bg-navy-50 flex items-center justify-center cursor-pointer transition-colors"
           >
-            <RefreshCw className="h-4 w-4 mr-1" />
-            Refresh
-          </Button>
+            <RefreshCw className="h-4 w-4" />
+          </div>
         </div>
 
         {/* Announcements List */}

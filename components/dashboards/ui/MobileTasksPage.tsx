@@ -126,15 +126,9 @@ export function MobileTasksPage() {
     <div className="min-h-screen bg-gray-50 pt-4 pb-20 px-4">
       <div className="max-w-md mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-2">
-            <ListTodo className="h-6 w-6 text-navy-600" />
-            <h1 className="text-xl font-semibold text-gray-900">My Tasks</h1>
-          </div>
-          <Button size="sm" className="bg-navy-600 hover:bg-navy-700">
-            <Plus className="h-4 w-4 mr-1" />
-            Add Task
-          </Button>
+        <div className="flex items-center space-x-2 mb-6">
+          <ListTodo className="h-6 w-6 text-navy-600" />
+          <h1 className="text-xl font-semibold text-gray-900">My Tasks</h1>
         </div>
 
         {/* Progress Card */}
