@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { QuickActions } from './ui/QuickActions';
 import { DuesSnapshot } from './ui/DuesSnapshot';
 import { ComplianceSnapshot } from './ui/ComplianceSnapshot';
@@ -12,10 +13,53 @@ import { CompactCalendarCard } from './ui/CompactCalendarCard';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { SocialFeed } from './ui/SocialFeed';
 import { DuesStatusCard } from './ui/DuesStatusCard';
+import { AdminMobileBottomNavigation } from './ui/AdminMobileBottomNavigation';
+import { MobileQuickActionsPage } from './ui/MobileQuickActionsPage';
+import { MobileAdminTasksPage } from './ui/MobileAdminTasksPage';
+import { MobileDocsCompliancePage } from './ui/MobileDocsCompliancePage';
+import { MobileOperationsFeedPage } from './ui/MobileOperationsFeedPage';
+import { MobileCalendarPage } from './ui/MobileCalendarPage';
 
 export function AdminOverview() {
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id; // Get the chapter_id from profile
+  const [activeMobileTab, setActiveMobileTab] = useState('home');
+
+  const renderMobileContent = () => {
+    switch (activeMobileTab) {
+      case 'home':
+        return (
+          <div className="space-y-4">
+            {/* Dues Status - At the top for quick access */}
+            <div className="w-full">
+              <DuesStatusCard />
+            </div>
+            {/* Primary Feature: Social Feed */}
+            <div className="w-full">
+              <SocialFeed chapterId={chapterId || ''} />
+            </div>
+          </div>
+        );
+      case 'quick-actions':
+        return <MobileQuickActionsPage />;
+      case 'tasks':
+        return <MobileAdminTasksPage />;
+      case 'docs':
+        return <MobileDocsCompliancePage />;
+      case 'operations':
+        return <MobileOperationsFeedPage />;
+      case 'calendar':
+        return <MobileCalendarPage />;
+      default:
+        return (
+          <div className="space-y-4">
+            <div className="w-full">
+              <SocialFeed chapterId={chapterId || ''} />
+            </div>
+          </div>
+        );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -26,37 +70,9 @@ export function AdminOverview() {
 
       {/* Main Content - Mobile-First Layout */}
       <div className="max-w-full mx-auto px-4 sm:px-6 py-4 sm:py-6">
-        {/* Mobile Layout: Single Column Stack */}
-        <div className="flex flex-col space-y-4 sm:hidden">
-          {/* Primary Feature: Social Feed */}
-          <div className="w-full">
-            <SocialFeed chapterId={chapterId || ''} />
-          </div>
-
-          {/* Secondary Components Stacked */}
-          <div className="w-full">
-            <QuickActions />
-          </div>
-
-          <div className="w-full">
-            <DuesStatusCard />
-          </div>
-
-          <div className="w-full">
-            <OperationsFeed />
-          </div>
-
-          <div className="w-full">
-            {chapterId && <TasksPanel chapterId={chapterId} />}
-          </div>
-
-          <div className="w-full">
-            <DocsCompliancePanel />
-          </div>
-
-          <div className="w-full">
-            <CompactCalendarCard />
-          </div>
+        {/* Mobile Layout: Tab-Based Navigation */}
+        <div className="sm:hidden">
+          {renderMobileContent()}
         </div>
 
         {/* Desktop Layout: Three Column Grid (Preserved) */}
@@ -81,6 +97,12 @@ export function AdminOverview() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <AdminMobileBottomNavigation 
+        activeTab={activeMobileTab} 
+        onTabChange={setActiveMobileTab} 
+      />
     </div>
   );
 } 
