@@ -254,28 +254,28 @@ export function MobileEventsPage() {
                     size="sm" 
                     variant={getRSVPButtonVariant(event.id, 'attending')}
                     onClick={() => handleRSVP(event.id, 'attending')}
-                    className="flex-1 text-xs h-7"
+                    className="flex-1 h-8 flex items-center justify-center"
+                    title="Going"
                   >
-                    <Users className="h-3 w-3 mr-1" />
-                    Going
+                    <Users className="h-4 w-4" />
                   </Button>
                   <Button 
                     size="sm" 
                     variant={getRSVPButtonVariant(event.id, 'maybe')}
                     onClick={() => handleRSVP(event.id, 'maybe')}
-                    className="flex-1 text-xs h-7"
+                    className="flex-1 h-8 flex items-center justify-center"
+                    title="Maybe"
                   >
-                    <HelpCircle className="h-3 w-3 mr-1" />
-                    Maybe
+                    <HelpCircle className="h-4 w-4" />
                   </Button>
                   <Button 
                     size="sm" 
                     variant={getRSVPButtonVariant(event.id, 'not_attending')}
                     onClick={() => handleRSVP(event.id, 'not_attending')}
-                    className="flex-1 text-xs h-7"
+                    className="flex-1 h-8 flex items-center justify-center"
+                    title="Not Going"
                   >
-                    <X className="h-3 w-3 mr-1" />
-                    Not
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
