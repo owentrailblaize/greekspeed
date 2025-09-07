@@ -14,7 +14,6 @@ import { useProfile } from '@/lib/hooks/useProfile';
 import { SocialFeed } from './ui/SocialFeed';
 import { DuesStatusCard } from './ui/DuesStatusCard';
 import { AdminMobileBottomNavigation } from './ui/AdminMobileBottomNavigation';
-import { MobileQuickActionsPage } from './ui/MobileQuickActionsPage';
 import { MobileAdminTasksPage } from './ui/MobileAdminTasksPage';
 import { MobileDocsCompliancePage } from './ui/MobileDocsCompliancePage';
 import { MobileOperationsFeedPage } from './ui/MobileOperationsFeedPage';
@@ -24,6 +23,7 @@ export function AdminOverview() {
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id; // Get the chapter_id from profile
   const [activeMobileTab, setActiveMobileTab] = useState('home');
+  const [showQuickActionsModal, setShowQuickActionsModal] = useState(false);
 
   const renderMobileContent = () => {
     switch (activeMobileTab) {
@@ -40,8 +40,6 @@ export function AdminOverview() {
             </div>
           </div>
         );
-      case 'quick-actions':
-        return <MobileQuickActionsPage />;
       case 'tasks':
         return <MobileAdminTasksPage />;
       case 'docs':
@@ -103,6 +101,42 @@ export function AdminOverview() {
         activeTab={activeMobileTab} 
         onTabChange={setActiveMobileTab} 
       />
+
+      {/* Quick Actions Floating Action Button - Stacked above Post Button */}
+      <div
+        onClick={() => setShowQuickActionsModal(true)}
+        className="fixed bottom-40 right-4 z-40 h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 sm:hidden flex items-center justify-center cursor-pointer"
+        title="Quick Actions"
+      >
+        <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+
+      {/* Quick Actions Modal */}
+      {showQuickActionsModal && (
+        <div className="fixed inset-0 z-50 sm:hidden">
+          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowQuickActionsModal(false)} />
+          <div className="relative flex items-center justify-center min-h-screen p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-sm w-full mx-4">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+                  <button
+                    onClick={() => setShowQuickActionsModal(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <QuickActions />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

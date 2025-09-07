@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Zap, CheckSquare, FileText, Activity, Calendar } from 'lucide-react';
+import { Home, CheckSquare, FileText, Activity, Calendar } from 'lucide-react';
 
 interface AdminMobileBottomNavigationProps {
   activeTab: string;
@@ -10,7 +10,6 @@ interface AdminMobileBottomNavigationProps {
 export function AdminMobileBottomNavigation({ activeTab, onTabChange }: AdminMobileBottomNavigationProps) {
   const tabs = [
     { id: 'home', label: 'Home', icon: Home },
-    { id: 'quick-actions', label: 'Actions', icon: Zap },
     { id: 'tasks', label: 'Tasks', icon: CheckSquare },
     { id: 'docs', label: 'Docs', icon: FileText },
     { id: 'operations', label: 'Ops', icon: Activity },
@@ -19,7 +18,7 @@ export function AdminMobileBottomNavigation({ activeTab, onTabChange }: AdminMob
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 sm:hidden">
-      <div className="grid grid-cols-6 h-16">
+      <div className="grid grid-cols-5 h-16">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
