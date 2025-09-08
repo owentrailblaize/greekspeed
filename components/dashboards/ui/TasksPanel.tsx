@@ -117,23 +117,51 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
         // Personal tasks only (for the main panel)
         supabase
           .from('tasks')
-          .select('*')
+          .select(`
+            *,
+            assignee:profiles!tasks_assignee_id_fkey(full_name),
+            assigned_by:profiles!tasks_assigned_by_fkey(full_name),
+            chapter:chapters!tasks_chapter_id_fkey(name)
+          `)
           .eq('chapter_id', chapterId!)
           .eq('assignee_id', profile!.id)
           .order('due_date', { ascending: true }),
         
-        // All chapter tasks (for the modal)
+        // All chapter tasks (for the modal) - Updated with proper joins
         supabase
           .from('tasks')
-          .select('*')
+          .select(`
+            *,
+            assignee:profiles!tasks_assignee_id_fkey(full_name),
+            assigned_by:profiles!tasks_assigned_by_fkey(full_name),
+            chapter:chapters!tasks_chapter_id_fkey(name)
+          `)
           .eq('chapter_id', chapterId!)
           .order('due_date', { ascending: true }),
         
         getChapterMembers(chapterId!)
       ]);
       
-      setTasks(personalTasksData.data || []); // Personal tasks
-      setAllChapterTasks(allTasksData.data || []); // All chapter tasks
+      // Transform personal tasks
+      const transformedPersonalTasks = (personalTasksData.data || []).map(task => ({
+        ...task,
+        assignee_name: task.assignee?.full_name || 'Unassigned',
+        assigned_by_name: task.assigned_by?.full_name || 'Unknown',
+        chapter_name: task.chapter?.name || 'Unknown Chapter',
+        is_overdue: task.due_date && task.status !== 'completed' && new Date(task.due_date) < new Date()
+      }));
+      
+      // Transform all chapter tasks
+      const transformedAllTasks = (allTasksData.data || []).map(task => ({
+        ...task,
+        assignee_name: task.assignee?.full_name || 'Unassigned',
+        assigned_by_name: task.assigned_by?.full_name || 'Unknown',
+        chapter_name: task.chapter?.name || 'Unknown Chapter',
+        is_overdue: task.due_date && task.status !== 'completed' && new Date(task.due_date) < new Date()
+      }));
+      
+      setTasks(transformedPersonalTasks); // Personal tasks
+      setAllChapterTasks(transformedAllTasks); // All chapter tasks
       setChapterMembers(membersData);
     } catch (error) {
       console.error('Error loading data:', error);

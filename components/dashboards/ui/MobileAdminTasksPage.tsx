@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { CheckSquare, Clock, AlertCircle, Users, Calendar, FileText, Plus, Loader2, X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { Task, TaskStatus, TaskPriority, CreateTaskRequest } from '@/types/operations';
 import { getTasksByChapter, updateTask, getChapterMembers } from '@/lib/services/taskService';
@@ -83,13 +82,27 @@ export function MobileAdminTasksPage() {
       const [allTasksData, membersData] = await Promise.all([
         supabase
           .from('tasks')
-          .select('*')
+          .select(`
+            *,
+            assignee:profiles!tasks_assignee_id_fkey(full_name),
+            assigned_by:profiles!tasks_assigned_by_fkey(full_name),
+            chapter:chapters!tasks_chapter_id_fkey(name)
+          `)
           .eq('chapter_id', chapterId!)
           .order('due_date', { ascending: true }),
         getChapterMembers(chapterId!)
       ]);
       
-      setTasks(allTasksData.data || []);
+      // Transform the data to include assignee names
+      const transformedTasks = (allTasksData.data || []).map(task => ({
+        ...task,
+        assignee_name: task.assignee?.full_name || 'Unassigned',
+        assigned_by_name: task.assigned_by?.full_name || 'Unknown',
+        chapter_name: task.chapter?.name || 'Unknown Chapter',
+        is_overdue: task.due_date && task.status !== 'completed' && new Date(task.due_date) < new Date()
+      }));
+      
+      setTasks(transformedTasks);
       setChapterMembers(membersData);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -140,33 +153,6 @@ export function MobileAdminTasksPage() {
       console.error('Error creating task:', error);
     } finally {
       setCreating(false);
-    }
-  };
-
-  const handleStatusChange = async (taskId: string, newStatus: string) => {
-    try {
-      await updateTask(taskId, { status: newStatus as TaskStatus });
-      // Real-time update will handle the UI update
-    } catch (error) {
-      console.error('Error updating task status:', error);
-    }
-  };
-
-  const handlePriorityChange = async (taskId: string, newPriority: string) => {
-    try {
-      await updateTask(taskId, { priority: newPriority as TaskPriority });
-      // Real-time update will handle the UI update
-    } catch (error) {
-      console.error('Error updating task priority:', error);
-    }
-  };
-
-  const handleReassign = async (taskId: string, newAssigneeId: string) => {
-    try {
-      await updateTask(taskId, { assignee_id: newAssigneeId });
-      // Real-time update will handle the UI update
-    } catch (error) {
-      console.error('Error reassigning task:', error);
     }
   };
 
@@ -354,9 +340,19 @@ export function MobileAdminTasksPage() {
                 )}
                 
                 <div className="space-y-1 text-xs text-gray-600 mb-3">
-                  <div className="flex items-center space-x-2">
-                    <Users className="h-3 w-3" />
-                    <span>{task.assignee_name || 'Unassigned'}</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Users className="h-3 w-3" />
+                      <span>{task.assignee_name || 'Unassigned'}</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDeleteTask(task.id)}
+                      className="h-6 px-2 text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-3 w-3" />
@@ -369,63 +365,6 @@ export function MobileAdminTasksPage() {
                   </div>
                 </div>
                 
-                <div className="flex space-x-1">
-                  <Select 
-                    value={task.status} 
-                    onValueChange={(value) => handleStatusChange(task.id, value)}
-                  >
-                    <SelectTrigger className="h-7 text-xs flex-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="overdue">Overdue</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  <Select
-                    value={task.priority}
-                    onValueChange={(value) => handlePriorityChange(task.id, value)}
-                  >
-                    <SelectTrigger className="h-7 text-xs flex-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="urgent">Urgent</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  <Select
-                    value={task.assignee_id}
-                    onValueChange={(value) => handleReassign(task.id, value)}
-                  >
-                    <SelectTrigger className="h-7 text-xs flex-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {chapterMembers.map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {member.full_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  {task.status === 'completed' && (
-                    <Button
-                      size="sm"
-                      onClick={() => handleDeleteTask(task.id)}
-                      className="h-7 px-2"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  )}
-                </div>
               </div>
             ))}
           </div>
