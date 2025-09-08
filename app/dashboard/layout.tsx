@@ -3,7 +3,7 @@
 import SubscriptionPaywall from '@/components/SubscriptionPaywall';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { useProfile } from '@/lib/hooks/useProfile';
-import { Clock } from 'lucide-react';
+import { Clock, AlertCircle } from 'lucide-react';
 import { WelcomeModal } from '@/components/WelcomeModal';
 import { useState, useEffect } from 'react';
 
@@ -23,6 +23,25 @@ export default function DashboardLayout({
 
   const handleWelcomeClose = () => {
     setShowWelcome(false);
+  };
+
+  const handleResubmit = async () => {
+    if (!profile?.id) return;
+    
+    try {
+      const response = await fetch('/api/profile/resubmit-membership', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: profile.id })
+      });
+
+      if (response.ok) {
+        // Refresh the page to update the profile status
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error resubmitting membership:', error);
+    }
   };
 
   // Show loading state
@@ -54,6 +73,38 @@ export default function DashboardLayout({
               This process typically takes 1-3 business days.
             </p>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show declined members screen
+  if (profile?.member_status === 'declined') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="mb-6">
+            <AlertCircle className="h-16 w-16 mx-auto text-red-500 mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Membership Declined</h2>
+            <p className="text-gray-600 mb-4">
+              Unfortunately, your membership application to {profile?.chapter || 'the chapter'} was not approved at this time.
+            </p>
+            <p className="text-gray-600 mb-6">
+              This could be due to various factors such as incomplete information, chapter capacity, or other considerations.
+            </p>
+          </div>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-red-800">
+              <strong>What can you do?</strong><br />
+              You can resubmit your application for reconsideration. Make sure to provide complete and accurate information.
+            </p>
+          </div>
+          <button
+            onClick={handleResubmit}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+          >
+            Resubmit Application
+          </button>
         </div>
       </div>
     );

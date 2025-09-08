@@ -11,13 +11,13 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServerSupabaseClient();
     
-    // Update member status to declined and remove from chapter
+    // Update member status to declined but keep them in the chapter for potential resubmission
     const { error } = await supabase
       .from('profiles')
       .update({ 
         member_status: 'declined',
         role: 'declined_member',
-        chapter_id: null, // Remove from chapter
+        declined_at: new Date().toISOString(), // Track when they were declined
         updated_at: new Date().toISOString()
       })
       .eq('id', memberId)

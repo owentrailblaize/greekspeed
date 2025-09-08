@@ -63,6 +63,7 @@ export interface Profile {
   updated_at: string;
   approved_at: string | null; // When they were approved
   welcome_seen: boolean; // Whether they've seen the welcome modal
+  declined_at: string | null; // When they were declined
 }
 
 export interface ProfileFormData {
