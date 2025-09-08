@@ -1,4 +1,4 @@
-export type SystemRole = 'admin' | 'active_member' | 'alumni' | 'developer';
+export type SystemRole = 'admin' | 'active_member' | 'alumni' | 'developer' | 'pending_member' | 'declined_member';
 
 export type ChapterRole = 
   | 'president'
@@ -13,12 +13,7 @@ export type ChapterRole =
   | 'member'
   | 'pledge';
 
-export type MemberStatus = 
-  | 'active'
-  | 'inactive'
-  | 'probation'
-  | 'suspended'
-  | 'graduated';
+export type MemberStatus = 'active' | 'inactive' | 'probation' | 'suspended' | 'graduated' | 'alumni' | 'pending' | 'declined';
 
 export type DeveloperPermission = 
   | 'view_users'
@@ -34,30 +29,40 @@ export type AccessLevel = 'standard' | 'elevated' | 'admin';
 export interface Profile {
   id: string;
   email: string;
-  full_name: string;
+  full_name: string | null;
   first_name: string | null;
   last_name: string | null;
-  chapter: string | null;
-  chapter_id: string | null; // Add this field
-  role: "admin" | "alumni" | "active_member" | null;
-  chapter_role: ChapterRole | null;
-  member_status: MemberStatus | null;
-  pledge_class?: string;
-  grad_year?: number;
-  major?: string;
-  minor?: string;
-  gpa?: number;
-  hometown?: string;
   bio: string | null;
   phone: string | null;
   location: string | null;
   avatar_url: string | null;
-  banner_url?: string | null;
+  chapter: string | null;
+  chapter_role: string | null;
+  member_status: MemberStatus;
+  pledge_class: string | null;
+  grad_year: number | null;
+  major: string | null;
+  minor: string | null;
+  hometown: string | null;
+  gpa: number | null;
+  chapter_id: string | null;
+  role: SystemRole;
+  is_developer: boolean;
+  developer_permissions: string[];
+  access_level: string | null;
+  banner_url: string | null;
+  stripe_customer_id: string | null;
+  billing_unlocked_until: string | null;
+  subscription_status: string;
+  subscription_tier: string;
+  current_dues_amount: string;
+  dues_status: string;
+  last_dues_assignment_date: string | null;
+  dues_notes: string | null;
   created_at: string;
   updated_at: string;
-  is_developer?: boolean;
-  developer_permissions?: DeveloperPermission[];
-  access_level?: AccessLevel;
+  approved_at: string | null; // When they were approved
+  welcome_seen: boolean; // Whether they've seen the welcome modal
 }
 
 export interface ProfileFormData {

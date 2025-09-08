@@ -10,7 +10,7 @@ interface ProfileData {
   firstName: string;
   lastName: string;
   chapter: string;
-  role: 'Admin / Executive' | 'Active Member' | 'Alumni';
+  role: string;
 }
 
 interface AuthContextType {
@@ -181,122 +181,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, profileData?: ProfileData) => {
-    
     try {
-      // First, sign up the user
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+          data: profileData
         }
       });
-      
-      if (error) {
-        console.error('❌ AuthContext: Sign up failed:', error);
-        throw error;
-      }
 
-      // If signup successful and user exists, create profile
+      if (error) throw error;
+
       if (data.user) {
-        console.log('🔍 AuthContext: Creating profile for user:', data.user.id);
-        
-        try {
-          const fullName = profileData 
-            ? `${profileData.firstName} ${profileData.lastName}`
-            : data.user.email?.split('@')[0] || 'User';
-
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .upsert({
-              id: data.user.id,
-              email: data.user.email,
-              full_name: fullName,
-              first_name: profileData?.firstName || null,
-              last_name: profileData?.lastName || null,
-              chapter: profileData?.chapter || null,
-              role: profileData?.role || null,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }, {
-              onConflict: 'id'
-            });
-
-          if (profileError) {
-            console.error('❌ AuthContext: Profile creation failed:', profileError);
-          } else {
-            console.log('✅ AuthContext: Profile created successfully with data:', {
-              fullName,
-              chapter: profileData?.chapter,
-              role: profileData?.role
-            });
-
-            // NEW CODE: If role is "Alumni", also create an alumni record
-            if (profileData?.role?.toLowerCase() === 'alumni') {
-              console.log('🔍 AuthContext: Creating alumni record for user:', data.user.id);
-              
-              try {
-                const { error: alumniError } = await supabase
-                  .from('alumni')
-                  .insert({
-                    user_id: data.user.id,
-                    first_name: profileData.firstName,
-                    last_name: profileData.lastName,
-                    full_name: fullName,
-                    chapter: profileData.chapter,
-                    industry: 'Not specified', // Default value
-                    graduation_year: new Date().getFullYear(), // Default to current year
-                    company: 'Not specified', // Default value
-                    job_title: 'Not specified', // Default value
-                    email: data.user.email,
-                    phone: null,
-                    location: 'Not specified', // Default value
-                    description: `Alumni from ${profileData.chapter}`,
-                    avatar_url: null,
-                    verified: false,
-                    is_actively_hiring: false,
-                    last_contact: null,
-                    tags: null,
-                    mutual_connections: [], // Empty array for new alumni
-                  });
-
-                if (alumniError) {
-                  console.error('❌ AuthContext: Alumni record creation failed:', alumniError);
-                  // Don't throw here - profile was created successfully
-                  // We can handle alumni creation later if needed
-                } else {
-                  console.log('✅ AuthContext: Alumni record created successfully');
-                }
-              } catch (alumniError) {
-                console.error('❌ AuthContext: Alumni record creation exception:', alumniError);
-                // Don't throw here - profile was created successfully
-              }
-            }
-          }
-        } catch (profileError) {
-          console.error('❌ AuthContext: Profile creation exception:', profileError);
-        }
-
-        // Auto sign-in after successful sign-up
-        console.log('🔍 AuthContext: Attempting auto sign-in...');
-        
-        try {
-          const { error: signInError } = await supabase.auth.signInWithPassword({ 
-            email, 
-            password 
+        // Create profile with pending status
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            email: data.user.email,
+            full_name: profileData?.fullName || '',
+            first_name: profileData?.firstName || '',
+            last_name: profileData?.lastName || '',
+            chapter: profileData?.chapter || null,
+            member_status: 'pending', // Set to pending instead of active
+            role: 'pending_member', // New role for pending users
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           });
-          
-          if (signInError) {
-            console.error('❌ AuthContext: Auto sign-in failed:', signInError);
-          } else {
-            console.log('✅ AuthContext: Auto sign-in successful');
-          }
-        } catch (signInError) {
-          console.error('❌ AuthContext: Auto sign-in exception:', signInError);
+
+        if (profileError) {
+          console.error('❌ Profile creation error:', profileError);
+          throw profileError;
         }
+        
+        console.log('✅ Profile created with pending status for user:', data.user.id);
       }
-      
-      console.log('✅ AuthContext: Sign up process completed');
     } catch (error) {
       console.error('❌ AuthContext: Sign up exception:', error);
       throw error;

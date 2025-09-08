@@ -18,6 +18,7 @@ import { CreateAnnouncementData } from '@/types/announcements';
 import { EventForm } from '@/components/ui/EventForm';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
+import { PendingMembersPanel } from '@/components/dashboards/ui/PendingMembersPanel';
 
 export function PresidentDashboard() {
   const [announcement, setAnnouncement] = useState("");
@@ -601,6 +602,11 @@ export function PresidentDashboard() {
               chapterId={chapterId} 
               className="w-full"
             />
+          )}
+
+          {/* NEW: Pending Members Panel */}
+          {chapterId && (
+            <PendingMembersPanel chapterId={chapterId} />
           )}
         </div>
 
