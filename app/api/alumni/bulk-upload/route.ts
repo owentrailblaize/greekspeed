@@ -339,7 +339,7 @@ async function processAlumniRecordSimple(
 
       const { error: alumniError } = await supabase
         .from('alumni')
-        .insert({
+        .upsert({
           user_id: authUser.id,
           first_name: alumniData.first_name,
           last_name: alumniData.last_name,
@@ -362,6 +362,9 @@ async function processAlumniRecordSimple(
           mutual_connections: [],
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id', // Handle conflicts on user_id
+          ignoreDuplicates: false // Update if exists, insert if not
         });
 
       if (alumniError) {
