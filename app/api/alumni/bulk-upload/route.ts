@@ -234,6 +234,8 @@ async function processAlumniRecordSimple(
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
           console.log(`🔄 Profile creation attempt ${attempt} for: ${email}`);
+          const chapterId = await getChapterIdFromName(supabase, alumniData.chapter);
+
           const { error: profileError } = await supabase
             .from('profiles')
             .insert({
@@ -242,8 +244,8 @@ async function processAlumniRecordSimple(
               full_name: `${alumniData.first_name} ${alumniData.last_name}`,
               first_name: alumniData.first_name,
               last_name: alumniData.last_name,
-              chapter: alumniData.chapter,
-              chapter_id: alumniData.chapter,
+              chapter: alumniData.chapter, // Use chapter name directly
+              chapter_id: chapterId, // Look up UUID from name
               role: 'alumni',
               member_status: 'alumni',
               pledge_class: alumniData.pledge_class || null,
@@ -298,14 +300,16 @@ async function processAlumniRecordSimple(
     // Step 4: Update profile with complete data from Excel file
     try {
       console.log(`📝 Updating profile with complete data for: ${email}`);
+      const chapterId = await getChapterIdFromName(supabase, alumniData.chapter);
+      
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
           first_name: alumniData.first_name,
           last_name: alumniData.last_name,
           full_name: `${alumniData.first_name} ${alumniData.last_name}`,
-          chapter: alumniData.chapter,
-          chapter_id: alumniData.chapter,
+          chapter: alumniData.chapter, // Use chapter name directly
+          chapter_id: chapterId, // Look up UUID from name
           role: 'alumni',
           member_status: 'alumni',
           pledge_class: alumniData.pledge_class || null,
@@ -331,6 +335,8 @@ async function processAlumniRecordSimple(
     // Step 5: Create alumni record
     try {
       console.log(`📝 Creating alumni record for: ${email}`);
+      const chapterId = await getChapterIdFromName(supabase, alumniData.chapter);
+
       const { error: alumniError } = await supabase
         .from('alumni')
         .insert({
@@ -338,7 +344,8 @@ async function processAlumniRecordSimple(
           first_name: alumniData.first_name,
           last_name: alumniData.last_name,
           full_name: `${alumniData.first_name} ${alumniData.last_name}`,
-          chapter: alumniData.chapter,
+          chapter: alumniData.chapter, // Use chapter name directly
+          chapter_id: chapterId, // Look up UUID from name
           industry: alumniData.industry || 'Not specified',
           graduation_year: alumniData.graduation_year || new Date().getFullYear(),
           company: alumniData.company || 'Not specified',
@@ -381,6 +388,16 @@ async function processAlumniRecordSimple(
       error: error instanceof Error ? error.message : 'Unknown error' 
     };
   }
+}
+
+async function getChapterIdFromName(supabase: any, chapterName: string): Promise<string | null> {
+  const { data: chapter } = await supabase
+    .from('chapters')
+    .select('id')
+    .eq('name', chapterName)
+    .single();
+  
+  return chapter?.id || null;
 }
 
 function generateSecurePassword(): string {
