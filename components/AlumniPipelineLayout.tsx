@@ -10,6 +10,7 @@ import { EnhancedAlumniCard } from "@/components/EnhancedAlumniCard";
 import { AlumniToolbar } from "@/components/AlumniToolbar";
 import { AlumniDetailSheet } from "@/components/AlumniDetailSheet";
 import { Alumni } from "@/lib/mockAlumni";
+import { AlumniWithCompleteness } from "@/lib/utils/profileCompleteness";
 import { exportAlumniToCSV, exportSelectedAlumniToCSV } from "@/lib/csvExport";
 import { AlumniProfileModal } from "./AlumniProfileModal";
 import { AlumniSubHeader } from "@/components/AlumniSubHeader";
@@ -32,7 +33,7 @@ interface FilterState {
 }
 
 interface AlumniPipelineLayoutProps {
-  alumni: Alumni[];
+  alumni: AlumniWithCompleteness[];
   loading: boolean;
   error: string | null;
   viewMode: 'table' | 'card';

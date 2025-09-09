@@ -22,12 +22,13 @@ import {
   Calendar
 } from "lucide-react";
 import { Alumni } from "@/lib/mockAlumni";
+import { AlumniWithCompleteness } from "@/lib/utils/profileCompleteness";
 import { AlumniProfileModal } from "@/components/AlumniProfileModal";
 import { useRouter } from 'next/navigation';
 import { ClickableField } from './ClickableField';
 
 interface AlumniTableViewProps {
-  alumni: Alumni[];
+  alumni: AlumniWithCompleteness[];
   selectedAlumni: string[];
   onSelectionChange: (selectedIds: string[]) => void;
 }

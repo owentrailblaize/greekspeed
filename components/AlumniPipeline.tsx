@@ -6,6 +6,7 @@ import { AlumniSubHeader } from "@/components/AlumniSubHeader";
 import { Alumni } from "@/lib/mockAlumni";
 import { AlumniProfileModal } from "./AlumniProfileModal";
 import { useProfile } from "@/lib/hooks/useProfile";
+import { sortAlumniByCompleteness, AlumniWithCompleteness } from "@/lib/utils/profileCompleteness";
 
 interface FilterState {
   searchTerm: string;
@@ -20,6 +21,7 @@ interface FilterState {
 export function AlumniPipeline() {
   const { profile, loading: profileLoading } = useProfile();
   const [alumni, setAlumni] = useState<Alumni[]>([]);
+  const [sortedAlumni, setSortedAlumni] = useState<AlumniWithCompleteness[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
@@ -86,7 +88,17 @@ export function AlumniPipeline() {
       
       const data = await response.json();
       console.log('✅ Received alumni data:', data);
-      setAlumni(data.alumni || []);
+      const alumniData = data.alumni || [];
+      setAlumni(alumniData);
+      
+      // Sort alumni by completeness score (highest first)
+      const sortedByCompleteness = sortAlumniByCompleteness(alumniData);
+      setSortedAlumni(sortedByCompleteness);
+      console.log('📊 Alumni sorted by completeness:', sortedByCompleteness.slice(0, 3).map(a => ({
+        name: a.fullName,
+        score: a.completenessScore.percentage,
+        priority: a.completenessScore.priority
+      })));
     } catch (err) {
       console.error('❌ Error fetching alumni:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -163,7 +175,7 @@ export function AlumniPipeline() {
 
       {/* Main Layout */}
       <AlumniPipelineLayout
-        alumni={alumni}
+        alumni={sortedAlumni}
         loading={loading}
         error={error}
         viewMode={viewMode}
