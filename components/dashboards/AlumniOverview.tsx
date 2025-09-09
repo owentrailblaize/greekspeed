@@ -4,77 +4,18 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users } from 'lucide-react';
+import { Users, UserPlus } from 'lucide-react';
 import { PersonalAlumniProfile } from './ui/PersonalAlumniProfile';
 import { SocialFeed } from './ui/SocialFeed';
 import { useProfile } from '@/lib/hooks/useProfile';
-
-// Mock data for networking spotlight
-const networkingSpotlight = [
-  {
-    id: 1,
-    name: "Dr. Michael Chen",
-    chapter: "Delta Gamma",
-    gradYear: 2018,
-    jobTitle: "Senior Software Engineer",
-    company: "TechCorp",
-    isActivelyHiring: true,
-    location: "San Francisco, CA",
-    avatar: "MC",
-    mutualConnections: 12
-  },
-  {
-    id: 2,
-    name: "Jennifer Rodriguez",
-    chapter: "Delta Gamma",
-    gradYear: 2020,
-    jobTitle: "Marketing Manager",
-    company: "Global Brands Inc.",
-    isActivelyHiring: false,
-    location: "New York, NY",
-    avatar: "JR",
-    mutualConnections: 8
-  },
-  {
-    id: 3,
-    name: "Alex Thompson",
-    chapter: "Delta Gamma",
-    gradYear: 2019,
-    jobTitle: "Financial Analyst",
-    company: "Merchant Bank",
-    isActivelyHiring: true,
-    location: "Chicago, IL",
-    avatar: "AT",
-    mutualConnections: 15
-  },
-  {
-    id: 4,
-    name: "Sarah Kim",
-    chapter: "Delta Gamma",
-    gradYear: 2021,
-    jobTitle: "UX Designer",
-    company: "Creative Studios",
-    isActivelyHiring: false,
-    location: "Austin, TX",
-    avatar: "SK",
-    mutualConnections: 6
-  },
-  {
-    id: 5,
-    name: "Robert Davis",
-    chapter: "Delta Gamma",
-    gradYear: 2017,
-    jobTitle: "Product Manager",
-    company: "Innovation Labs",
-    isActivelyHiring: true,
-    location: "Seattle, WA",
-    avatar: "RD",
-    mutualConnections: 20
-  }
-];
+import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
+import { useConnections } from '@/lib/hooks/useConnections';
+import { useRouter } from 'next/navigation';
+import React from 'react';
+import { ChapterMemberData } from '@/types/chapter';
 
 interface Profile {
-  id: number;
+  id: string;
   name: string;
   avatar: string;
   chapter: string;
@@ -88,13 +29,72 @@ interface Profile {
 
 export function AlumniOverview() {
   const { profile } = useProfile();
+  const { members: chapterMembers, loading: membersLoading } = useChapterMembers(profile?.chapter_id || undefined);
+  const { connections, sendConnectionRequest } = useConnections();
+  const router = useRouter();
   const [connectModalOpen, setConnectModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+  const [connectionLoading, setConnectionLoading] = useState<string | null>(null);
 
-  const handleConnect = (profile: Profile) => {
-    setSelectedProfile(profile);
-    setConnectModalOpen(true);
-    console.log('Connect with:', profile.name);
+  // Get networking spotlight members from same chapter
+  const getNetworkingSpotlight = () => {
+    if (!chapterMembers || !profile) return [];
+    
+    // Get IDs of users the current user is already connected with
+    const connectedUserIds = new Set(
+      connections
+        .filter(conn => 
+          conn.status === 'accepted' && 
+          (conn.requester_id === profile.id || conn.recipient_id === profile.id)
+        )
+        .map(conn => 
+          conn.requester_id === profile.id ? conn.recipient_id : conn.requester_id
+        )
+    );
+    
+    // Filter out current user and already connected users
+    const availableMembers = chapterMembers.filter(member => 
+      member.id !== profile.id && 
+      !connectedUserIds.has(member.id)
+    );
+    
+    // Prioritize alumni and active members, then randomly shuffle and return up to 5
+    const alumniMembers = availableMembers.filter(member => member.role === 'alumni');
+    const activeMembers = availableMembers.filter(member => member.role === 'active_member');
+    const otherMembers = availableMembers.filter(member => 
+      member.role !== 'alumni' && member.role !== 'active_member'
+    );
+    
+    // Combine with priority order: alumni first, then active members, then others
+    const prioritizedMembers = [
+      ...alumniMembers.sort(() => Math.random() - 0.5),
+      ...activeMembers.sort(() => Math.random() - 0.5),
+      ...otherMembers.sort(() => Math.random() - 0.5)
+    ];
+    
+    return prioritizedMembers.slice(0, 5);
+  };
+
+  const networkingSpotlight = getNetworkingSpotlight();
+
+  const handleConnect = async (member: ChapterMemberData) => {
+    if (!profile) return;
+    
+    setConnectionLoading(member.id);
+    try {
+      await sendConnectionRequest(member.id);
+      console.log('Connection request sent to:', member.full_name);
+      // You could show a success toast here
+    } catch (error) {
+      console.error('Failed to send connection request:', error);
+      // You could show an error toast here
+    } finally {
+      setConnectionLoading(null);
+    }
+  };
+
+  const handleBrowseMore = () => {
+    router.push('/dashboard/alumni');
   };
 
   return (
@@ -114,47 +114,91 @@ export function AlumniOverview() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <div className="space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
-                    {networkingSpotlight.map((profile) => (
-                      <div key={profile.id} className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-                        <div className="flex items-start space-x-3">
-                          {/* Simple Avatar using div instead of Avatar component */}
-                          <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
-                            {profile.avatar}
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-start mb-1">
-                              <h4 className="font-medium text-gray-900 text-sm truncate">{profile.name}</h4>
-                              {profile.isActivelyHiring && (
-                                <Badge className="bg-green-100 text-green-800 text-xs">
-                                  Hiring
-                                </Badge>
+                  {membersLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-navy-600 mx-auto mb-2"></div>
+                      <p className="text-xs text-gray-500">Loading members...</p>
+                    </div>
+                  ) : networkingSpotlight.length > 0 ? (
+                    <div className="space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+                      {networkingSpotlight.map((member) => (
+                        <div key={member.id} className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="flex items-start space-x-3">
+                            {/* Avatar */}
+                            <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
+                              {member.avatar_url ? (
+                                <img 
+                                  src={member.avatar_url} 
+                                  alt={member.full_name}
+                                  className="w-full h-full rounded-full object-cover"
+                                />
+                              ) : (
+                                member.full_name?.charAt(0) || member.first_name?.charAt(0) || 'U'
                               )}
                             </div>
                             
-                            <p className="text-xs text-gray-600 mb-1 truncate">{profile.jobTitle} at {profile.company}</p>
-                            <p className="text-xs text-gray-500 mb-2">{profile.location}</p>
-                            
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs text-gray-500">{profile.mutualConnections} mutual</span>
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => handleConnect(profile)}
-                                className="text-navy-600 border-navy-600 hover:bg-navy-50 text-xs h-7 px-2"
-                              >
-                                Connect
-                              </Button>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex justify-between items-start mb-1">
+                                <h4 className="font-medium text-gray-900 text-sm truncate">
+                                  {member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member'}
+                                </h4>
+                                {member.role === 'alumni' && (
+                                  <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                    Alumni
+                                  </Badge>
+                                )}
+                              </div>
+                              
+                              <p className="text-xs text-gray-600 mb-1 truncate">
+                                {member.chapter_role && member.chapter_role !== 'member' ? 
+                                  member.chapter_role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 
+                                  member.role === 'alumni' ? 'Alumni' : 'Member'
+                                }
+                              </p>
+                              <p className="text-xs text-gray-500 mb-2">
+                                {member.location || 'Location not specified'}
+                              </p>
+                              
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs text-gray-500">
+                                  {member.grad_year ? `Class of ${member.grad_year}` : 'Recent'}
+                                </span>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleConnect(member)}
+                                  disabled={connectionLoading === member.id}
+                                  className="text-navy-600 border-navy-600 hover:bg-navy-50 text-xs h-7 px-2"
+                                >
+                                  {connectionLoading === member.id ? (
+                                    <div className="w-3 h-3 border border-navy-600 border-t-transparent rounded-full animate-spin" />
+                                  ) : (
+                                    <>
+                                      <UserPlus className="w-3 h-3 mr-1" />
+                                      Connect
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Users className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                      <p className="text-sm">No new connections available</p>
+                      <p className="text-xs mt-1">You may already be connected with everyone!</p>
+                    </div>
+                  )}
                   
                   <div className="pt-4 border-t border-gray-100">
-                    <Button variant="outline" className="w-full text-navy-600 border-navy-600 hover:bg-navy-50">
+                    <Button 
+                      variant="outline" 
+                      className="w-full text-navy-600 border-navy-600 hover:bg-navy-50"
+                      onClick={handleBrowseMore}
+                    >
                       Browse More Profiles
                     </Button>
                   </div>
