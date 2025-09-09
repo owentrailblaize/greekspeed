@@ -1,0 +1,316 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { EditProfileModal } from '@/components/EditProfileModal';
+import { useProfile } from '@/lib/hooks/useProfile';
+import { supabase } from '@/lib/supabase/client';
+import { 
+  User, 
+  MapPin, 
+  Phone, 
+  Mail, 
+  Building2, 
+  Briefcase, 
+  GraduationCap,
+  Calendar,
+  Edit3,
+  Loader2,
+  Linkedin
+} from 'lucide-react';
+
+interface AlumniData {
+  id: string;
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  chapter: string;
+  industry: string;
+  graduation_year: number;
+  company: string;
+  job_title: string;
+  email: string;
+  phone: string | null;
+  location: string;
+  description: string;
+  avatar_url: string | null;
+  verified: boolean;
+  is_actively_hiring: boolean;
+  created_at: string;
+  updated_at: string;
+  linkedin_url: string | null;
+}
+
+export function PersonalAlumniProfile() {
+  const { profile, loading: profileLoading, updateProfile } = useProfile();
+  const [alumniData, setAlumniData] = useState<AlumniData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (profile && profile.role === 'alumni') {
+      loadAlumniData();
+    } else {
+      setLoading(false);
+    }
+  }, [profile]);
+
+  const loadAlumniData = async () => {
+    if (!profile?.id) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { data: alumni, error: alumniError } = await supabase
+        .from('alumni')
+        .select('*')
+        .eq('user_id', profile.id)
+        .single();
+
+      if (alumniError) {
+        console.error('Error fetching alumni data:', alumniError);
+        setError('Failed to load alumni profile');
+        return;
+      }
+
+      setAlumniData(alumni);
+    } catch (err) {
+      console.error('Error loading alumni data:', err);
+      setError('Failed to load alumni profile');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditProfile = () => {
+    setEditModalOpen(true);
+  };
+
+  const handleProfileUpdate = async (updatedProfile: any) => {
+    try {
+      // Update the profile using ProfileContext
+      await updateProfile(updatedProfile);
+      
+      // Refresh alumni data after profile update
+      await loadAlumniData();
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  if (profileLoading || loading) {
+    return (
+      <div className="sticky top-6">
+        <Card className="bg-white">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+              <span className="ml-2 text-gray-600">Loading profile...</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="sticky top-6">
+        <Card className="bg-white">
+          <CardContent className="p-6">
+            <div className="text-center text-red-600">
+              <p>{error}</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={loadAlumniData}
+                className="mt-2"
+              >
+                Try Again
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!profile || profile.role !== 'alumni' || !alumniData) {
+    return (
+      <div className="sticky top-6">
+        <Card className="bg-white">
+          <CardContent className="p-6">
+            <div className="text-center text-gray-600">
+              <User className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+              <p>No alumni profile found</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="sticky top-6">
+        <Card className="bg-white overflow-hidden">
+          {/* Header with backdrop and avatar */}
+          <div className="relative h-24 bg-gradient-to-r from-blue-600 to-purple-600">
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
+              <div className="w-16 h-16 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                {alumniData.avatar_url ? (
+                  <img 
+                    src={alumniData.avatar_url} 
+                    alt={alumniData.full_name}
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="text-navy-600 font-bold text-lg">
+                    {getInitials(alumniData.full_name)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <CardContent className="pt-8 pb-4">
+            {/* Profile Information */}
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                {alumniData.full_name}
+              </h3>
+              
+              <div className="flex items-center justify-center mb-2">
+                <Badge className="bg-blue-100 text-blue-800 text-xs">
+                  {alumniData.graduation_year}
+                </Badge>
+              </div>
+
+              <p className="text-sm text-blue-600 font-medium mb-3">
+                {alumniData.chapter}
+              </p>
+
+              {alumniData.is_actively_hiring && (
+                <Badge className="bg-green-100 text-green-800 text-xs mb-3">
+                  Actively Hiring
+                </Badge>
+              )}
+            </div>
+
+            {/* Contact Information */}
+            <div className="space-y-3 mb-4">
+              {alumniData.job_title && alumniData.company && (
+                <div className="flex items-center text-sm text-gray-600">
+                  <Briefcase className="h-4 w-4 mr-2 text-gray-400" />
+                  <span>{alumniData.job_title} at {alumniData.company}</span>
+                </div>
+              )}
+
+              {alumniData.industry && alumniData.industry !== 'Not specified' && (
+                <div className="flex items-center text-sm text-gray-600">
+                  <Building2 className="h-4 w-4 mr-2 text-gray-400" />
+                  <span>{alumniData.industry}</span>
+                </div>
+              )}
+
+              {alumniData.location && alumniData.location !== 'Not specified' && (
+                <div className="flex items-center text-sm text-gray-600">
+                  <MapPin className="h-4 w-4 mr-2 text-gray-400" />
+                  <span>{alumniData.location}</span>
+                </div>
+              )}
+
+              {alumniData.phone && (
+                <div className="flex items-center text-sm text-gray-600">
+                  <Phone className="h-4 w-4 mr-2 text-gray-400" />
+                  <span>{alumniData.phone}</span>
+                </div>
+              )}
+
+              {alumniData.email && (
+                <div className="flex items-center text-sm text-gray-600">
+                  <Mail className="h-4 w-4 mr-2 text-gray-400" />
+                  <span className="truncate">{alumniData.email}</span>
+                </div>
+              )}
+
+              {alumniData.linkedin_url && (
+                <div className="flex items-center text-sm text-gray-600">
+                  <Linkedin className="h-4 w-4 mr-2 text-gray-400" />
+                  <a 
+                    href={alumniData.linkedin_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 truncate"
+                  >
+                    LinkedIn Profile
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* Bio */}
+            {alumniData.description && alumniData.description !== `Alumni from ${alumniData.chapter}` && (
+              <div className="mb-4">
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {alumniData.description}
+                </p>
+              </div>
+            )}
+
+            {/* Profile Stats */}
+            <div className="border-t border-gray-100 pt-3 mb-4">
+              <div className="flex items-center justify-center text-xs text-gray-500">
+                <Calendar className="h-3 w-3 mr-1" />
+                <span>Joined {formatDate(alumniData.created_at)}</span>
+              </div>
+            </div>
+
+            {/* Edit Button */}
+            <Button 
+              onClick={handleEditProfile}
+              variant="outline" 
+              className="w-full text-navy-600 border-navy-600 hover:bg-navy-50"
+              size="sm"
+            >
+              <Edit3 className="h-4 w-4 mr-2" />
+              Edit Profile
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Edit Profile Modal */}
+      {editModalOpen && (
+        <EditProfileModal
+          isOpen={editModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          profile={profile}
+          onUpdate={handleProfileUpdate}
+        />
+      )}
+    </>
+  );
+}

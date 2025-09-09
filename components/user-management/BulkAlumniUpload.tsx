@@ -377,16 +377,6 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
                     <Download className="h-4 w-4 mr-2" />
                     Download Results
                   </Button>
-                  {options.generatePasswords && results.createdUsers.some((user: any) => user.password) && (
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => downloadCredentialsExcel(results.createdUsers)}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Download Credentials
-                    </Button>
-                  )}
                 </div>
               </div>
 

@@ -72,7 +72,7 @@ export function DashboardHeader() {
   const navigationTabs = [
     { href: '/dashboard', label: 'Overview', roles: ['admin', 'active_member', 'alumni'], locked: false },
     { href: '/dashboard/alumni', label: 'Alumni', roles: ['admin', 'alumni', 'active_member'], locked: false },
-    { href: '/dashboard/dues', label: 'Dues', roles: ['active_member', 'alumni', 'admin'], locked: false },
+    { href: '/dashboard/dues', label: 'Dues', roles: ['active_member', 'admin'], locked: false },
     { href: '/dashboard/admin', label: 'Exec Admin', roles: ['admin'], locked: false },
   ];
 

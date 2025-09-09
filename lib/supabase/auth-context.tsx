@@ -238,7 +238,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               try {
                 const { error: alumniError } = await supabase
                   .from('alumni')
-                  .insert({
+                  .upsert({
                     user_id: data.user.id,
                     first_name: profileData.firstName,
                     last_name: profileData.lastName,
@@ -258,6 +258,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     last_contact: null,
                     tags: null,
                     mutual_connections: [], // Empty array for new alumni
+                  }, {
+                    onConflict: 'user_id', // Handle conflicts on user_id
+                    ignoreDuplicates: false // Update if exists, insert if not
                   });
 
                 if (alumniError) {
@@ -265,7 +268,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   // Don't throw here - profile was created successfully
                   // We can handle alumni creation later if needed
                 } else {
-                  console.log('✅ AuthContext: Alumni record created successfully');
+                  console.log('✅ AuthContext: Alumni record created/updated successfully');
                 }
               } catch (alumniError) {
                 console.error('❌ AuthContext: Alumni record creation exception:', alumniError);

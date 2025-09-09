@@ -106,14 +106,238 @@ export async function GET(request: NextRequest) {
     if (userChapter) {
       const chapterId = await getChapterId(supabase, userChapter);
       if (chapterId) {
-        query = query.eq('chapter', chapterId);
-        console.log(`🔍 Filtering by user's chapter ID: ${chapterId}`);
+        // Create two separate queries and apply ALL filters to both
+        let chapterNameQuery = supabase
+          .from('alumni')
+          .select('*')
+          .eq('chapter', userChapter);
+        
+        let chapterIdQuery = supabase
+          .from('alumni')
+          .select('*')
+          .eq('chapter_id', chapterId);
+        
+        // Apply all other filters to both queries
+        if (search) {
+          const searchTerm = search.toLowerCase().trim()
+          const searchTerms = searchTerm.split(/\s+/)
+          const searchConditions = searchTerms.map(term => 
+            `full_name.ilike.%${term}%,company.ilike.%${term}%,job_title.ilike.%${term}%,industry.ilike.%${term}%,chapter.ilike.%${term}%`
+          ).join(',')
+          
+          chapterNameQuery = chapterNameQuery.or(searchConditions);
+          chapterIdQuery = chapterIdQuery.or(searchConditions);
+        }
+        
+        if (industry) {
+          chapterNameQuery = chapterNameQuery.eq('industry', industry);
+          chapterIdQuery = chapterIdQuery.eq('industry', industry);
+        }
+        
+        if (location) {
+          chapterNameQuery = chapterNameQuery.eq('location', location);
+          chapterIdQuery = chapterIdQuery.eq('location', location);
+        }
+        
+        if (state) {
+          chapterNameQuery = chapterNameQuery.ilike('location', `%, ${state}`);
+          chapterIdQuery = chapterIdQuery.ilike('location', `%, ${state}`);
+        }
+        
+        if (graduationYear && graduationYear !== 'All Years') {
+          if (graduationYear === 'older') {
+            chapterNameQuery = chapterNameQuery.lte('graduation_year', 2019);
+            chapterIdQuery = chapterIdQuery.lte('graduation_year', 2019);
+          } else {
+            chapterNameQuery = chapterNameQuery.eq('graduation_year', parseInt(graduationYear));
+            chapterIdQuery = chapterIdQuery.eq('graduation_year', parseInt(graduationYear));
+          }
+        }
+        
+        if (activelyHiring) {
+          chapterNameQuery = chapterNameQuery.eq('is_actively_hiring', true);
+          chapterIdQuery = chapterIdQuery.eq('is_actively_hiring', true);
+        }
+        
+        // Apply pagination to both queries
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        
+        chapterNameQuery = chapterNameQuery.range(from, to).order('created_at', { ascending: false });
+        chapterIdQuery = chapterIdQuery.range(from, to).order('created_at', { ascending: false });
+        
+        // Execute both queries and combine results
+        const [chapterNameResult, chapterIdResult] = await Promise.all([
+          chapterNameQuery,
+          chapterIdQuery
+        ]);
+        
+        // Combine and deduplicate results
+        const combinedResults = [
+          ...(chapterNameResult.data || []),
+          ...(chapterIdResult.data || [])
+        ];
+        
+        // Remove duplicates based on id
+        const uniqueResults = combinedResults.filter((alumni, index, self) => 
+          index === self.findIndex(a => a.id === alumni.id)
+        );
+        
+        console.log(`🔍 Found ${uniqueResults.length} alumni for chapter: ${userChapter} (ID: ${chapterId})`);
+        
+        // Transform data to match your interface
+        const transformedAlumni = uniqueResults?.map(alumni => ({
+          id: alumni.user_id || alumni.id,
+          alumniId: alumni.id,
+          firstName: alumni.first_name,
+          lastName: alumni.last_name,
+          fullName: alumni.full_name,
+          chapter: alumni.chapter,
+          industry: alumni.industry,
+          graduationYear: alumni.graduation_year,
+          company: alumni.company,
+          jobTitle: alumni.job_title,
+          email: alumni.email,
+          phone: alumni.phone,
+          location: alumni.location,
+          description: alumni.description || `Experienced professional in ${alumni.industry}.`,
+          mutualConnections: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections : [],
+          mutualConnectionsCount: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections.length : 0,
+          avatar: alumni.avatar_url,
+          verified: alumni.verified,
+          isActivelyHiring: alumni.is_actively_hiring,
+          lastContact: alumni.last_contact,
+          tags: alumni.tags || [],
+          hasProfile: !!alumni.user_id
+        })) || [];
+
+        return NextResponse.json({
+          alumni: transformedAlumni,
+          total: transformedAlumni.length,
+          page,
+          limit,
+          message: `Retrieved ${transformedAlumni.length} alumni records`
+        });
+      } else {
+        // Fallback: just filter by chapter name
+        query = query.eq('chapter', userChapter);
+        console.log(`🔍 Filtering by user's chapter name only: ${userChapter}`);
       }
     } else if (chapter) {
       const chapterId = await getChapterId(supabase, chapter);
       if (chapterId) {
-        query = query.eq('chapter', chapterId);
-        console.log(`🔍 Filtering by selected chapter ID: ${chapterId}`);
+        // Similar logic for selected chapter filter - apply ALL filters
+        let chapterNameQuery = supabase
+          .from('alumni')
+          .select('*')
+          .eq('chapter', chapter);
+        
+        let chapterIdQuery = supabase
+          .from('alumni')
+          .select('*')
+          .eq('chapter_id', chapterId);
+        
+        // Apply all other filters to both queries (same logic as above)
+        if (search) {
+          const searchTerm = search.toLowerCase().trim()
+          const searchTerms = searchTerm.split(/\s+/)
+          const searchConditions = searchTerms.map(term => 
+            `full_name.ilike.%${term}%,company.ilike.%${term}%,job_title.ilike.%${term}%,industry.ilike.%${term}%,chapter.ilike.%${term}%`
+          ).join(',')
+          
+          chapterNameQuery = chapterNameQuery.or(searchConditions);
+          chapterIdQuery = chapterIdQuery.or(searchConditions);
+        }
+        
+        if (industry) {
+          chapterNameQuery = chapterNameQuery.eq('industry', industry);
+          chapterIdQuery = chapterIdQuery.eq('industry', industry);
+        }
+        
+        if (location) {
+          chapterNameQuery = chapterNameQuery.eq('location', location);
+          chapterIdQuery = chapterIdQuery.eq('location', location);
+        }
+        
+        if (state) {
+          chapterNameQuery = chapterNameQuery.ilike('location', `%, ${state}`);
+          chapterIdQuery = chapterIdQuery.ilike('location', `%, ${state}`);
+        }
+        
+        if (graduationYear && graduationYear !== 'All Years') {
+          if (graduationYear === 'older') {
+            chapterNameQuery = chapterNameQuery.lte('graduation_year', 2019);
+            chapterIdQuery = chapterIdQuery.lte('graduation_year', 2019);
+          } else {
+            chapterNameQuery = chapterNameQuery.eq('graduation_year', parseInt(graduationYear));
+            chapterIdQuery = chapterIdQuery.eq('graduation_year', parseInt(graduationYear));
+          }
+        }
+        
+        if (activelyHiring) {
+          chapterNameQuery = chapterNameQuery.eq('is_actively_hiring', true);
+          chapterIdQuery = chapterIdQuery.eq('is_actively_hiring', true);
+        }
+        
+        // Apply pagination
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        
+        chapterNameQuery = chapterNameQuery.range(from, to).order('created_at', { ascending: false });
+        chapterIdQuery = chapterIdQuery.range(from, to).order('created_at', { ascending: false });
+        
+        const [chapterNameResult, chapterIdResult] = await Promise.all([
+          chapterNameQuery,
+          chapterIdQuery
+        ]);
+        
+        const combinedResults = [
+          ...(chapterNameResult.data || []),
+          ...(chapterIdResult.data || [])
+        ];
+        
+        const uniqueResults = combinedResults.filter((alumni, index, self) => 
+          index === self.findIndex(a => a.id === alumni.id)
+        );
+        
+        console.log(`🔍 Found ${uniqueResults.length} alumni for selected chapter: ${chapter} (ID: ${chapterId})`);
+        
+        // Transform data to match your interface
+        const transformedAlumni = uniqueResults?.map(alumni => ({
+          id: alumni.user_id || alumni.id,
+          alumniId: alumni.id,
+          firstName: alumni.first_name,
+          lastName: alumni.last_name,
+          fullName: alumni.full_name,
+          chapter: alumni.chapter,
+          industry: alumni.industry,
+          graduationYear: alumni.graduation_year,
+          company: alumni.company,
+          jobTitle: alumni.job_title,
+          email: alumni.email,
+          phone: alumni.phone,
+          location: alumni.location,
+          description: alumni.description || `Experienced professional in ${alumni.industry}.`,
+          mutualConnections: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections : [],
+          mutualConnectionsCount: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections.length : 0,
+          avatar: alumni.avatar_url,
+          verified: alumni.verified,
+          isActivelyHiring: alumni.is_actively_hiring,
+          lastContact: alumni.last_contact,
+          tags: alumni.tags || [],
+          hasProfile: !!alumni.user_id
+        })) || [];
+
+        return NextResponse.json({
+          alumni: transformedAlumni,
+          total: transformedAlumni.length,
+          page,
+          limit,
+          message: `Retrieved ${transformedAlumni.length} alumni records`
+        });
+      } else {
+        query = query.eq('chapter', chapter);
+        console.log(`🔍 Filtering by selected chapter name only: ${chapter}`);
       }
     } else {
       console.log('🌍 No chapter filter applied - showing all chapters')

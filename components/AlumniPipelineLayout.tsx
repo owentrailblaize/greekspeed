@@ -10,6 +10,7 @@ import { EnhancedAlumniCard } from "@/components/EnhancedAlumniCard";
 import { AlumniToolbar } from "@/components/AlumniToolbar";
 import { AlumniDetailSheet } from "@/components/AlumniDetailSheet";
 import { Alumni } from "@/lib/mockAlumni";
+import { AlumniWithCompleteness } from "@/lib/utils/profileCompleteness";
 import { exportAlumniToCSV, exportSelectedAlumniToCSV } from "@/lib/csvExport";
 import { AlumniProfileModal } from "./AlumniProfileModal";
 import { AlumniSubHeader } from "@/components/AlumniSubHeader";
@@ -32,7 +33,7 @@ interface FilterState {
 }
 
 interface AlumniPipelineLayoutProps {
-  alumni: Alumni[];
+  alumni: AlumniWithCompleteness[];
   loading: boolean;
   error: string | null;
   viewMode: 'table' | 'card';
@@ -290,7 +291,7 @@ export function AlumniPipelineLayout({
           ) : (
             <div className="h-full overflow-y-auto p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {displayAlumni.map((alumniItem: Alumni, index: number) => (
+                {displayAlumni.map((alumniItem: AlumniWithCompleteness, index: number) => (
                   <motion.div
                     key={alumniItem.id}
                     initial={{ opacity: 0, y: 20 }}

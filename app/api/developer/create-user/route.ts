@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
       try {
         const { error: alumniError } = await supabase
           .from('alumni')
-          .insert({
+          .upsert({
             user_id: newUserAuth.user.id,
             first_name: firstName,
             last_name: lastName,
@@ -166,6 +166,9 @@ export async function POST(request: NextRequest) {
             last_contact: null,
             tags: null,
             mutual_connections: []
+          }, {
+            onConflict: 'user_id', // Handle conflicts on user_id
+            ignoreDuplicates: false // Update if exists, insert if not
           });
 
         if (alumniError) {
