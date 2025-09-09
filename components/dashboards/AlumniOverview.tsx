@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Users, MapPin, Clock, Heart, MessageCircle, Share, MoreHorizontal } from 'lucide-react';
+import { Heart, MessageCircle, Share, MoreHorizontal, Users } from 'lucide-react';
+import { PersonalAlumniProfile } from './ui/PersonalAlumniProfile';
 
 // Mock data for social feed (LinkedIn-style posts)
 const socialFeed = [
@@ -90,50 +91,6 @@ const socialFeed = [
   }
 ];
 
-// Mock data for upcoming events
-const upcomingEvents = [
-  {
-    id: 1,
-    title: "Alumni Mixer & Networking",
-    date: "March 22, 2024",
-    time: "6:00 PM - 9:00 PM",
-    location: "Downtown Conference Center",
-    rsvpStatus: "open",
-    attendees: 45,
-    image: "🎉"
-  },
-  {
-    id: 2,
-    title: "Chapter 50th Anniversary Celebration",
-    date: "April 15, 2024",
-    time: "2:00 PM - 8:00 PM",
-    location: "Chapter House & Campus",
-    rsvpStatus: "open",
-    attendees: 120,
-    image: "🎂"
-  },
-  {
-    id: 3,
-    title: "Professional Development Workshop",
-    date: "April 28, 2024",
-    time: "10:00 AM - 2:00 PM",
-    location: "Business School Auditorium",
-    rsvpStatus: "open",
-    attendees: 35,
-    image: "📚"
-  },
-  {
-    id: 4,
-    title: "Summer BBQ & Networking",
-    date: "May 10, 2024",
-    time: "4:00 PM - 8:00 PM",
-    location: "Riverside Park",
-    rsvpStatus: "open",
-    attendees: 78,
-    image: "🍖"
-  }
-];
-
 // Mock data for networking spotlight
 const networkingSpotlight = [
   {
@@ -198,21 +155,9 @@ const networkingSpotlight = [
   }
 ];
 
-interface Event {
-  id: number;
-  title: string;
-  date: string;
-  time: string;
-  location: string;
-  rsvpStatus: string;
-  attendees: number;
-  image: string;
-}
-
 interface Profile {
   id: number;
   name: string;
-  // Remove title property since it's not in networkingSpotlight data
   avatar: string;
   chapter: string;
   gradYear: number;
@@ -224,16 +169,8 @@ interface Profile {
 }
 
 export function AlumniOverview() {
-  const [rsvpModalOpen, setRsvpModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [connectModalOpen, setConnectModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
-
-  const handleRSVP = (event: Event) => {
-    setSelectedEvent(event);
-    setRsvpModalOpen(true);
-    console.log('RSVP for event:', event.title);
-  };
 
   const handleConnect = (profile: Profile) => {
     setSelectedProfile(profile);
@@ -424,81 +361,14 @@ export function AlumniOverview() {
             </div>
           </div>
 
-          {/* Right Sidebar - Upcoming Events */}
+          {/* Right Sidebar - Personal Alumni Profile */}
           <div className="col-span-3">
-            <div className="sticky top-6">
-              <Card className="bg-white">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center space-x-2">
-                    <Calendar className="h-5 w-5 text-navy-600" />
-                    <span>Upcoming Events</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
-                    {upcomingEvents.map((event) => (
-                      <div key={event.id} className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-                        <div className="text-center mb-3">
-                          <div className="text-3xl mb-2">{event.image}</div>
-                          <h4 className="font-medium text-gray-900 text-sm mb-1">{event.title}</h4>
-                        </div>
-                        
-                        <div className="space-y-2 text-xs text-gray-600 mb-3">
-                          <div className="flex items-center space-x-2">
-                            <Clock className="h-3 w-3" />
-                            <span>{event.date} • {event.time}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <MapPin className="h-3 w-3" />
-                            <span className="truncate">{event.location}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Users className="h-3 w-3" />
-                            <span>{event.attendees} attending</span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex justify-between items-center">
-                          <Badge className="bg-green-100 text-green-800 text-xs">
-                            {event.rsvpStatus === 'open' ? 'Open' : 'Closed'}
-                          </Badge>
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleRSVP(event)}
-                            className="bg-navy-600 hover:bg-navy-700 text-white text-xs h-7 px-3"
-                          >
-                            RSVP
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="pt-4 border-t border-gray-100">
-                    <Button variant="outline" className="w-full text-navy-600 border-navy-600 hover:bg-navy-50">
-                      View All Events
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <PersonalAlumniProfile />
           </div>
         </div>
       </div>
 
       {/* Modals */}
-      {rsvpModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">RSVP for {selectedEvent?.title}</h3>
-            <p className="text-gray-600 mb-4">RSVP functionality coming soon!</p>
-            <div className="flex space-x-2">
-              <Button onClick={() => setRsvpModalOpen(false)}>Close</Button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {connectModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">

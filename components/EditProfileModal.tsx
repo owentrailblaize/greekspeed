@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, User, Mail, Building, Shield, FileText, Phone, MapPin, GraduationCap, Home, Calculator, Image, Upload } from 'lucide-react';
+import { X, User, Mail, Building, Shield, FileText, Phone, MapPin, GraduationCap, Home, Calculator, Image, Upload, Linkedin, Briefcase, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { AvatarService } from '@/lib/services/avatarService';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { BannerService } from '@/lib/services/bannerService';
+import { Checkbox } from '@/components/ui/checkbox';
+import { supabase } from '@/lib/supabase/client';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -34,7 +36,14 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
     major: '',
     minor: '',
     hometown: '',
-    gpa: ''
+    gpa: '',
+    linkedin_url: '',
+    industry: '',
+    company: '',
+    job_title: '',
+    is_actively_hiring: false,
+    description: '',
+    tags: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -65,7 +74,14 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
         major: profile.major || profile.major_field || '',
         minor: profile.minor || profile.minor_field || '',
         hometown: profile.hometown || profile.birth_place || '',
-        gpa: profile.gpa || profile.grade_point_average || ''
+        gpa: profile.gpa || profile.grade_point_average || '',
+        linkedin_url: profile.linkedin_url || '',
+        industry: profile.industry || '',
+        company: profile.company || '',
+        job_title: profile.job_title || '',
+        is_actively_hiring: profile.is_actively_hiring || false,
+        description: profile.description || '',
+        tags: profile.tags || ''
       });
       if (profile.avatar_url) {
         setAvatarPreview(profile.avatar_url);
@@ -86,6 +102,13 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
   const validateGPA = (gpa: string): boolean => {
     const gpaNum = parseFloat(gpa);
     return !isNaN(gpaNum) && gpaNum >= 0.0 && gpaNum <= 4.0;
+  };
+
+  // Add LinkedIn URL validation function after the existing validation functions
+  const validateLinkedInURL = (url: string): boolean => {
+    if (!url) return true; // Optional field
+    const linkedinRegex = /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/;
+    return linkedinRegex.test(url);
   };
 
   // Phone number formatting
@@ -125,6 +148,13 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
     if (field === 'gpa' && value) {
       if (!validateGPA(value)) {
         setErrors(prev => ({ ...prev, gpa: 'GPA must be between 0.0 and 4.0' }));
+      }
+    }
+
+    // Add LinkedIn validation
+    if (field === 'linkedin_url' && value) {
+      if (!validateLinkedInURL(value)) {
+        setErrors(prev => ({ ...prev, linkedin_url: 'Please enter a valid LinkedIn URL (e.g., https://linkedin.com/in/username)' }));
       }
     }
   };
@@ -260,6 +290,9 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
     if (formData.gpa && !validateGPA(formData.gpa)) {
       newErrors.gpa = 'GPA must be between 0.0 and 4.0';
     }
+    if (formData.linkedin_url && !validateLinkedInURL(formData.linkedin_url)) {
+      newErrors.linkedin_url = 'Please enter a valid LinkedIn URL';
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -268,7 +301,76 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
 
     setLoading(true);
     try {
-      await onUpdate(formData);
+      // Update profile data (ONLY fields that exist in profiles table)
+      const profileUpdates = {
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        email: formData.email,
+        bio: formData.bio,
+        phone: formData.phone,
+        location: formData.location,
+        grad_year: formData.grad_year,
+        major: formData.major,
+        minor: formData.minor,
+        hometown: formData.hometown,
+        gpa: formData.gpa,
+        linkedin_url: formData.linkedin_url
+        // REMOVE: industry, company, job_title, description, is_actively_hiring, tags
+      };
+
+      console.log('🚀 Updating profile with:', profileUpdates);
+      await onUpdate(profileUpdates);
+
+      // If user is alumni, also update alumni table
+      if (profile?.role === 'alumni') {
+        console.log('🎓 Updating alumni data...');
+        // Update alumni-specific data
+        const updateAlumniData = async () => {
+          if (!profile?.id || profile.role !== 'alumni') return;
+
+          try {
+            const alumniUpdates = {
+              first_name: formData.first_name || null,
+              last_name: formData.last_name || null,
+              full_name: `${formData.first_name} ${formData.last_name}`,
+              email: formData.email || null,
+              chapter: profile.chapter, // Include chapter from profile to satisfy not-null constraint
+              graduation_year: formData.grad_year || null, // Include graduation_year to satisfy not-null constraint
+              industry: formData.industry || null,
+              company: formData.company || null,
+              job_title: formData.job_title || null,
+              phone: formData.phone || null,
+              location: formData.location || null,
+              description: formData.bio || null, // Use bio from main profile instead of separate description
+              is_actively_hiring: formData.is_actively_hiring || false,
+              tags: formData.tags || null
+            };
+
+            console.log('🎓 Alumni updates:', alumniUpdates);
+
+            const { data, error } = await supabase
+              .from('alumni')
+              .upsert({
+                user_id: profile.id,
+                ...alumniUpdates
+              }, {
+                onConflict: 'user_id'
+              })
+              .select();
+
+            if (error) {
+              console.error('❌ Error updating alumni data:', error);
+              throw error;
+            }
+
+            console.log('✅ Alumni data updated successfully:', data);
+          } catch (error) {
+            console.error('❌ Error updating alumni data:', error);
+            throw error;
+          }
+        };
+        await updateAlumniData();
+      }
       onClose();
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -580,6 +682,27 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
                     maxLength={14}
                   />
                 </div>
+                
+                {/* Add LinkedIn field here for all users */}
+                <div>
+                  <Label htmlFor="linkedin_url" className="flex items-center gap-2">
+                    <Linkedin className="w-4 h-4" />
+                    LinkedIn URL
+                    <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Optional</Badge>
+                  </Label>
+                  <Input
+                    id="linkedin_url"
+                    value={formData.linkedin_url}
+                    onChange={(e) => handleInputChange('linkedin_url', e.target.value)}
+                    className={`mt-1 ${errors.linkedin_url ? 'border-red-500 focus:border-red-500' : ''}`}
+                    placeholder="https://linkedin.com/in/yourprofile"
+                    type="url"
+                  />
+                  {errors.linkedin_url && (
+                    <p className="text-xs text-red-500 mt-1">{errors.linkedin_url}</p>
+                  )}
+                </div>
+                
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="location" className="flex items-center gap-2">
@@ -630,6 +753,94 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
                 />
               </CardContent>
             </Card>
+
+            {/* Alumni-Specific Fields - Only show for alumni users */}
+            {profile?.role === 'alumni' && (
+              <>
+                {/* Professional Information */}
+                <Card>
+                  <CardHeader className="pb-0">
+                    <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
+                      <Briefcase className="w-5 h-5" />
+                      Professional Information
+                      <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Alumni</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="industry">Industry</Label>
+                        <Input
+                          id="industry"
+                          value={formData.industry}
+                          onChange={(e) => handleInputChange('industry', e.target.value)}
+                          className="mt-1"
+                          placeholder="Technology, Finance, Healthcare..."
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="company">Company</Label>
+                        <Input
+                          id="company"
+                          value={formData.company}
+                          onChange={(e) => handleInputChange('company', e.target.value)}
+                          className="mt-1"
+                          placeholder="Google, Microsoft, Amazon..."
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="job_title">Job Title</Label>
+                        <Input
+                          id="job_title"
+                          value={formData.job_title}
+                          onChange={(e) => handleInputChange('job_title', e.target.value)}
+                          className="mt-1"
+                          placeholder="Software Engineer..."
+                        />
+                      </div>
+                      <div className="flex items-center space-x-2 mt-6">
+                        <Checkbox
+                          id="is_actively_hiring"
+                          checked={formData.is_actively_hiring}
+                          onCheckedChange={(checked) => 
+                            setFormData(prev => ({ ...prev, is_actively_hiring: checked as boolean }))
+                          }
+                        />
+                        <Label htmlFor="is_actively_hiring" className="text-sm">
+                          Actively hiring
+                        </Label>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Social & Additional Info */}
+                <Card>
+                  <CardHeader className="pb-0">
+                    <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
+                      <HelpCircle className="w-5 h-5" />
+                      Additional Information
+                      <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Optional</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="tags">Tags</Label>
+                      <Input
+                        id="tags"
+                        value={formData.tags}
+                        onChange={(e) => handleInputChange('tags', e.target.value)}
+                        className="mt-1"
+                        placeholder="mentor, startup, consulting, remote work..."
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Separate tags with commas</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </form>
         </div>
 
