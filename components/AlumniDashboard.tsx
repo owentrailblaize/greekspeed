@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AlumniPipeline } from "@/components/AlumniPipeline";
 import { ActivelyHiringPage } from "@/components/ActivelyHiringPage";
 import { MyChapterPage } from "@/components/MyChapterPage";
-import { Lock, ChevronDown, ChevronUp } from "lucide-react"; // Added Chevron icons
+import { Lock, ChevronDown, ChevronUp } from "lucide-react";
+import { useProfile } from "@/lib/hooks/useProfile";
 
 const pageTransition = {
   initial: { opacity: 0, y: 20, scale: 0.98 },
@@ -14,23 +15,28 @@ const pageTransition = {
 };
 
 export function AlumniDashboard() {
+  const { profile } = useProfile();
   const [active, setActive] = useState("pipeline");
   const [isMobileHeaderCollapsed, setIsMobileHeaderCollapsed] = useState(false);
   
+  // Function to get the correct label based on user role
+  const getChapterLabel = () => {
+    return profile?.role === 'alumni' ? "Active Members" : "My Chapter";
+  };
+  
   const tabs = [
     { id: "pipeline", label: "Alumni Pipeline", component: AlumniPipeline },
-    { id: "chapter", label: "My Chapter", component: MyChapterPage },
+    { id: "chapter", label: getChapterLabel(), component: MyChapterPage },
     { 
       id: "hiring", 
       label: "Actively Hiring", 
       component: ActivelyHiringPage,
-      disabled: true // Add disabled state
+      disabled: true
     }
   ];
 
   const handleTabClick = (tabId: string, disabled: boolean = false) => {
     if (disabled) {
-      // Optional: Add a toast or console log for locked features
       console.log("Actively Hiring - Feature coming soon!");
       return;
     }
@@ -53,7 +59,7 @@ export function AlumniDashboard() {
                 {/* Mobile: Show full text for pipeline, shortened for others */}
                 <span className="sm:hidden">
                   {active === "pipeline" && "Alumni Pipeline"}
-                  {active === "chapter" && "Chapter"}
+                  {active === "chapter" && (profile?.role === 'alumni' ? "Members" : "Chapter")}
                   {active === "hiring" && "Hiring"}
                 </span>
                 <span className="hidden sm:inline">
@@ -103,7 +109,7 @@ export function AlumniDashboard() {
                       {/* Mobile: Short text, Desktop: Full text */}
                       <span className="sm:hidden">
                         {t.id === "pipeline" && "Pipeline"}
-                        {t.id === "chapter" && "Chapter"}
+                        {t.id === "chapter" && (profile?.role === 'alumni' ? "Members" : "Chapter")}
                         {t.id === "hiring" && "Hiring"}
                       </span>
                       <span className="hidden sm:inline">{t.label}</span>
