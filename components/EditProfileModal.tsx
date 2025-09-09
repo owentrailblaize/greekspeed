@@ -55,16 +55,45 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [bannerUploading, setBannerUploading] = useState(false);
 
+  // Add alumni data state
+  const [alumniData, setAlumniData] = useState<any>(null);
+  const [loadingAlumni, setLoadingAlumni] = useState(false);
+
   const { updateProfile, refreshProfile } = useProfile();
 
-  // Initialize form data when profile changes
+  // Add loadAlumniData function
+  const loadAlumniData = async () => {
+    if (!profile?.id || profile.role !== 'alumni') return;
+    
+    setLoadingAlumni(true);
+    try {
+      const { data, error } = await supabase
+        .from('alumni')
+        .select('*')
+        .eq('user_id', profile.id)
+        .single();
+
+      if (error) {
+        console.error('Error loading alumni data:', error);
+        return;
+      }
+
+      setAlumniData(data);
+      console.log('📊 Loaded alumni data:', data);
+    } catch (error) {
+      console.error('Error loading alumni data:', error);
+    } finally {
+      setLoadingAlumni(false);
+    }
+  };
+
+  // Update the useEffect to load alumni data
   useEffect(() => {
     if (profile) {
       setFormData({
         first_name: profile.first_name || profile.full_name?.split(' ')[0] || '',
         last_name: profile.last_name || profile.full_name?.split(' ')[1] || '',
         email: profile.email || '',
-        // Map to whatever field names your API actually returns
         chapter: profile.chapter || profile.chapter_name || profile.chapter_name || 'Not set',
         role: profile.role || profile.user_role || profile.role_name || 'Not set',
         bio: profile.bio || profile.description || '',
@@ -76,21 +105,45 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate }: EditPro
         hometown: profile.hometown || profile.birth_place || '',
         gpa: profile.gpa || profile.grade_point_average || '',
         linkedin_url: profile.linkedin_url || '',
-        industry: profile.industry || '',
-        company: profile.company || '',
-        job_title: profile.job_title || '',
-        is_actively_hiring: profile.is_actively_hiring || false,
-        description: profile.description || '',
-        tags: profile.tags || ''
+        industry: '',
+        company: '',
+        job_title: '',
+        is_actively_hiring: false,
+        description: '',
+        tags: ''
       });
+      
       if (profile.avatar_url) {
         setAvatarPreview(profile.avatar_url);
       }
       if (profile.banner_url) {
         setBannerPreview(profile.banner_url);
       }
+
+      // Load alumni data if user is alumni
+      if (profile.role === 'alumni') {
+        loadAlumniData();
+      }
     }
   }, [profile]);
+
+  // Add another useEffect to update formData when alumniData loads
+  useEffect(() => {
+    if (alumniData) {
+      setFormData(prev => ({
+        ...prev,
+        industry: alumniData.industry || '',
+        company: alumniData.company || '',
+        job_title: alumniData.job_title || '',
+        is_actively_hiring: alumniData.is_actively_hiring || false,
+        description: alumniData.description || '',
+        tags: alumniData.tags || '',
+        grad_year: alumniData.graduation_year || prev.grad_year,
+        phone: alumniData.phone || prev.phone,
+        location: alumniData.location || prev.location
+      }));
+    }
+  }, [alumniData]);
 
   // Email validation regex
   const validateEmail = (email: string): boolean => {
