@@ -33,7 +33,7 @@ interface AlumniTableViewProps {
   onSelectionChange: (selectedIds: string[]) => void;
 }
 
-type SortField = 'name' | 'company' | 'industry' | 'graduationYear' | 'location' | 'jobTitle' | 'chapter' | 'lastContact' | 'isActivelyHiring';
+type SortField = 'name' | 'company' | 'industry' | 'graduationYear' | 'location' | 'jobTitle' | 'chapter' | 'lastContact' | 'isActivelyHiring' | 'completeness';
 type SortDirection = 'asc' | 'desc';
 
 const getChapterName = (chapterId: string): string => {
@@ -59,8 +59,8 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
     getConnectionId
   } = useConnections();
   
-  const [sortField, setSortField] = useState<SortField>('name');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [sortField, setSortField] = useState<SortField>('completeness');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [accessedEmails, setAccessedEmails] = useState<Set<string>>(new Set());
   const [accessedPhones, setAccessedPhones] = useState<Set<string>>(new Set());
   const [selectedAlumniForPopup, setSelectedAlumniForPopup] = useState<Alumni | null>(null);
@@ -312,6 +312,10 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
       case 'isActivelyHiring':
         aValue = a.isActivelyHiring ? 1 : 0;
         bValue = b.isActivelyHiring ? 1 : 0;
+        break;
+      case 'completeness':
+        aValue = a.completenessScore.totalScore;
+        bValue = b.completenessScore.totalScore;
         break;
       default:
         aValue = a.fullName;
