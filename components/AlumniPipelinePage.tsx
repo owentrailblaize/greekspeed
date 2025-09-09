@@ -17,6 +17,166 @@ import {
 import { LinkedInStyleAlumniCard } from "./LinkedInStyleAlumniCard";
 import { motion } from "framer-motion";
 
+// Mock data for alumni
+const mockAlumniData = [
+  {
+    id: "1",
+    name: "Connor McMullan",
+    description:
+      "Recently graduated from the University of Mississippi with a degree in Business Administration",
+    mutualConnections: [
+      { name: "Luke", avatar: undefined },
+      { name: "Sarah", avatar: undefined },
+      { name: "Mike", avatar: undefined },
+    ],
+    mutualConnectionsCount: 38,
+    avatar: undefined,
+    verified: false,
+  },
+  {
+    id: "2",
+    name: "Brett Ashy",
+    description:
+      "University of Mississippi Graduate specializing in Engineering",
+    mutualConnections: [
+      { name: "Luke", avatar: undefined },
+      { name: "Emily", avatar: undefined },
+    ],
+    mutualConnectionsCount: 30,
+    avatar: undefined,
+    verified: true,
+  },
+  {
+    id: "3",
+    name: "Margaret Dye",
+    description:
+      "Honors Student at the University of Mississippi pursuing Psychology",
+    mutualConnections: [
+      { name: "Victoria", avatar: undefined },
+      { name: "James", avatar: undefined },
+    ],
+    mutualConnectionsCount: 17,
+    avatar: undefined,
+    verified: false,
+  },
+  {
+    id: "4",
+    name: "Rush Bland",
+    description:
+      "Student at University of Mississippi studying Computer Science",
+    mutualConnections: [
+      { name: "Josh", avatar: undefined },
+      { name: "Alex", avatar: undefined },
+    ],
+    mutualConnectionsCount: 12,
+    avatar: undefined,
+    verified: true,
+  },
+  {
+    id: "5",
+    name: "Kinkead Dent",
+    description:
+      "Business major at University of Mississippi with focus on Finance",
+    mutualConnections: [
+      { name: "William", avatar: undefined },
+      { name: "Bryan", avatar: undefined },
+    ],
+    mutualConnectionsCount: 50,
+    avatar: undefined,
+    verified: false,
+  },
+  {
+    id: "6",
+    name: "Victor Razi",
+    description:
+      "First Year Dental Student at The University of Mississippi Medical Center",
+    mutualConnections: [
+      { name: "Worth", avatar: undefined },
+      { name: "Michael", avatar: undefined },
+    ],
+    mutualConnectionsCount: 110,
+    avatar: undefined,
+    verified: false,
+  },
+  {
+    id: "7",
+    name: "Anabel McCraney",
+    description:
+      "Honors Student at University of Mississippi majoring in International Studies",
+    mutualConnections: [
+      { name: "Jane", avatar: undefined },
+      { name: "Emma", avatar: undefined },
+    ],
+    mutualConnectionsCount: 6,
+    avatar: undefined,
+    verified: false,
+  },
+  {
+    id: "8",
+    name: "Denton Smith",
+    description:
+      "Customer Service Representative / Parts Specialist with automotive experience",
+    mutualConnections: [
+      { name: "John", avatar: undefined },
+      { name: "Kennedy", avatar: undefined },
+    ],
+    mutualConnectionsCount: 134,
+    avatar: undefined,
+    verified: true,
+  },
+  {
+    id: "9",
+    name: "Sarah Chen",
+    description:
+      "Software Engineer at Google with expertise in Full-Stack Development",
+    mutualConnections: [
+      { name: "David", avatar: undefined },
+      { name: "Lisa", avatar: undefined },
+    ],
+    mutualConnectionsCount: 25,
+    avatar: undefined,
+    verified: true,
+  },
+  {
+    id: "10",
+    name: "Michael Rodriguez",
+    description:
+      "Product Manager at Microsoft focusing on cloud solutions",
+    mutualConnections: [
+      { name: "Jessica", avatar: undefined },
+      { name: "Ryan", avatar: undefined },
+    ],
+    mutualConnectionsCount: 43,
+    avatar: undefined,
+    verified: false,
+  },
+  {
+    id: "11",
+    name: "Emily Johnson",
+    description:
+      "Data Scientist at Netflix specializing in Machine Learning algorithms",
+    mutualConnections: [
+      { name: "Kevin", avatar: undefined },
+      { name: "Amanda", avatar: undefined },
+    ],
+    mutualConnectionsCount: 31,
+    avatar: undefined,
+    verified: true,
+  },
+  {
+    id: "12",
+    name: "David Kim",
+    description:
+      "Engineering Manager at Stripe leading fintech innovation",
+    mutualConnections: [
+      { name: "Rachel", avatar: undefined },
+      { name: "Marcus", avatar: undefined },
+    ],
+    mutualConnectionsCount: 67,
+    avatar: undefined,
+    verified: true,
+  },
+];
 
 export function AlumniPipelinePage() {
   const [searchTerm, setSearchTerm] = useState("");
