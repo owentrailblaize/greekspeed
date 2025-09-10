@@ -9,6 +9,7 @@ import { useProfile } from '@/lib/hooks/useProfile';
 import { CreatePostModal } from '@/components/social/CreatePostModal';
 import { PostCard } from '@/components/social/PostCard';
 import { Post, CreatePostRequest } from '@/types/posts';
+import ImageWithFallback from "../../figma/ImageWithFallback";
 
 interface SocialFeedProps {
   chapterId: string;
@@ -68,8 +69,18 @@ export function SocialFeed({ chapterId }: SocialFeedProps) {
         <Card className="bg-white hidden sm:block">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-start space-x-3 sm:space-x-4">
-              <div className="w-12 h-12 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
-                {profile?.avatar_url || profile?.first_name?.charAt(0) || 'U'}
+              <div className="w-12 h-12 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0 overflow-hidden">
+                {profile?.avatar_url ? (
+                  <ImageWithFallback 
+                    src={profile.avatar_url} 
+                    alt={profile.full_name || 'User'} 
+                    width={48} 
+                    height={48} 
+                    className="w-full h-full object-cover" 
+                  />
+                ) : (
+                  profile?.first_name?.charAt(0) || 'U'
+                )}
               </div>
               <div className="flex-1">
                 <Button
