@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useConnections } from "@/lib/hooks/useConnections";
 import { useAuth } from "@/lib/supabase/auth-context";
+import ImageWithFallback from "./figma/ImageWithFallback";
 import { 
   ChevronDown, 
   ChevronUp, 
@@ -19,9 +20,15 @@ import {
   Clock,
   MessageCircle,
   GraduationCap,
-  Calendar
+  Calendar,
+  Building2,
+  Mail,
+  Eye,
+  EyeOff,
+  Shield,
+  UserX,
+  AlertCircle
 } from "lucide-react";
-import { Alumni } from "@/lib/mockAlumni";
 import { AlumniWithCompleteness } from "@/lib/utils/profileCompleteness";
 import { AlumniProfileModal } from "@/components/AlumniProfileModal";
 import { useRouter } from 'next/navigation';
@@ -63,7 +70,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [accessedEmails, setAccessedEmails] = useState<Set<string>>(new Set());
   const [accessedPhones, setAccessedPhones] = useState<Set<string>>(new Set());
-  const [selectedAlumniForPopup, setSelectedAlumniForPopup] = useState<Alumni | null>(null);
+  const [selectedAlumniForPopup, setSelectedAlumniForPopup] = useState<AlumniWithCompleteness | null>(null);
   const [popupOpen, setPopupOpen] = useState(false);
   const [connectionLoading, setConnectionLoading] = useState<string | null>(null);
 
@@ -103,7 +110,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
     setAccessedPhones(prev => new Set([...prev, alumniId]));
   };
 
-  const handleAlumniNameClick = (alumni: Alumni) => {
+  const handleAlumniNameClick = (alumni: AlumniWithCompleteness) => {
     setSelectedAlumniForPopup(alumni);
     setPopupOpen(true);
   };
@@ -532,11 +539,21 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   {/* Name Column - Allow names to wrap and prevent truncation */}
                   <TableCell className="bg-white border-r border-gray-200">
                     <div className="flex items-start space-x-3">
-                      {/* Avatar - Fixed width */}
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center flex-shrink-0">
-                        <span className="text-white text-sm font-medium">
-                          {alumni.firstName?.[0] || ''}{alumni.lastName?.[0] || ''}
-                        </span>
+                      {/* Avatar - Fixed width with proper image support */}
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {alumni.avatar ? (
+                          <ImageWithFallback 
+                            src={alumni.avatar} 
+                            alt={alumni.fullName} 
+                            width={32} 
+                            height={32} 
+                            className="w-full h-full object-cover" 
+                          />
+                        ) : (
+                          <span className="text-white text-sm font-medium">
+                            {alumni.firstName?.[0] || ''}{alumni.lastName?.[0] || ''}
+                          </span>
+                        )}
                       </div>
                       
                       {/* Name and Badge Container - Flexible width */}
