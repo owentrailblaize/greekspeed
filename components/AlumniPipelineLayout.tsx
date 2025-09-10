@@ -111,8 +111,13 @@ export function AlumniPipelineLayout({
   };
 
   const handleAlumniClick = (alumni: Alumni) => {
-    setSelectedAlumniDetail(alumni);
-    setIsModalOpen(true);
+    // Use the parent's handler if provided, otherwise use local state
+    if (onAlumniClick) {
+      onAlumniClick(alumni);
+    } else {
+      setSelectedAlumniDetail(alumni);
+      setIsModalOpen(true);
+    }
   };
 
   const handleCloseModal = () => {
@@ -319,6 +324,13 @@ export function AlumniPipelineLayout({
           )}
         </div>
       </div>
+      {!onAlumniClick && selectedAlumniDetail && (
+        <AlumniProfileModal
+          alumni={selectedAlumniDetail}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+        />
+      )}
     </div>
   );
 } 
