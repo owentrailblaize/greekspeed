@@ -20,6 +20,7 @@ import {
   Loader2,
   Linkedin
 } from 'lucide-react';
+import ImageWithFallback from "../../figma/ImageWithFallback";
 
 interface AlumniData {
   id: string;
@@ -72,7 +73,12 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
 
       const { data: alumni, error: alumniError } = await supabase
         .from('alumni')
-        .select('*')
+        .select(`
+          *,
+          profile:profiles!user_id(
+            avatar_url
+          )
+        `)
         .eq('user_id', profile.id)
         .single();
 
@@ -82,7 +88,13 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
         return;
       }
 
-      setAlumniData(alumni);
+      // Merge the profile avatar_url into the alumni data
+      const alumniWithAvatar = {
+        ...alumni,
+        avatar_url: alumni.avatar_url || alumni.profile?.avatar_url
+      };
+
+      setAlumniData(alumniWithAvatar);
     } catch (err) {
       console.error('Error loading alumni data:', err);
       setError('Failed to load alumni profile');
@@ -184,12 +196,14 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
           {/* Header with backdrop and avatar */}
           <div className="relative h-32 bg-gradient-to-r from-blue-600 to-purple-600">
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
-              <div className="w-20 h-20 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+              <div className="w-20 h-20 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center overflow-hidden">
                 {alumniData.avatar_url ? (
-                  <img 
+                  <ImageWithFallback 
                     src={alumniData.avatar_url} 
                     alt={alumniData.full_name}
-                    className="w-full h-full rounded-full object-cover"
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-cover"
                   />
                 ) : (
                   <span className="text-navy-600 font-bold text-xl">
@@ -328,12 +342,14 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
           {/* Header with backdrop and avatar */}
           <div className="relative h-24 bg-gradient-to-r from-blue-600 to-purple-600">
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
-              <div className="w-16 h-16 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+              <div className="w-16 h-16 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center overflow-hidden">
                 {alumniData.avatar_url ? (
-                  <img 
+                  <ImageWithFallback 
                     src={alumniData.avatar_url} 
                     alt={alumniData.full_name}
-                    className="w-full h-full rounded-full object-cover"
+                    width={64}
+                    height={64}
+                    className="w-full h-full object-cover"
                   />
                 ) : (
                   <span className="text-navy-600 font-bold text-lg">

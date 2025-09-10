@@ -81,7 +81,12 @@ export async function GET(request: NextRequest) {
     // Build the query - start simple
     let query = supabase
       .from('alumni')
-      .select('*')
+      .select(`
+        *,
+        profile:profiles!user_id(
+          avatar_url
+        )
+      `)
 
     // Apply filters
     if (search) {
@@ -109,12 +114,22 @@ export async function GET(request: NextRequest) {
         // Create two separate queries and apply ALL filters to both
         let chapterNameQuery = supabase
           .from('alumni')
-          .select('*')
+          .select(`
+            *,
+            profile:profiles!user_id(
+              avatar_url
+            )
+          `)
           .eq('chapter', userChapter);
         
         let chapterIdQuery = supabase
           .from('alumni')
-          .select('*')
+          .select(`
+            *,
+            profile:profiles!user_id(
+              avatar_url
+            )
+          `)
           .eq('chapter_id', chapterId);
         
         // Apply all other filters to both queries
@@ -203,7 +218,7 @@ export async function GET(request: NextRequest) {
           description: alumni.description || `Experienced professional in ${alumni.industry}.`,
           mutualConnections: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections : [],
           mutualConnectionsCount: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections.length : 0,
-          avatar: alumni.avatar_url,
+          avatar: alumni.avatar_url || alumni.profile?.avatar_url,
           verified: alumni.verified,
           isActivelyHiring: alumni.is_actively_hiring,
           lastContact: alumni.last_contact,
@@ -229,12 +244,22 @@ export async function GET(request: NextRequest) {
         // Similar logic for selected chapter filter - apply ALL filters
         let chapterNameQuery = supabase
           .from('alumni')
-          .select('*')
+          .select(`
+            *,
+            profile:profiles!user_id(
+              avatar_url
+            )
+          `)
           .eq('chapter', chapter);
         
         let chapterIdQuery = supabase
           .from('alumni')
-          .select('*')
+          .select(`
+            *,
+            profile:profiles!user_id(
+              avatar_url
+            )
+          `)
           .eq('chapter_id', chapterId);
         
         // Apply all other filters to both queries (same logic as above)
@@ -320,7 +345,7 @@ export async function GET(request: NextRequest) {
           description: alumni.description || `Experienced professional in ${alumni.industry}.`,
           mutualConnections: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections : [],
           mutualConnectionsCount: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections.length : 0,
-          avatar: alumni.avatar_url,
+          avatar: alumni.avatar_url || alumni.profile?.avatar_url,
           verified: alumni.verified,
           isActivelyHiring: alumni.is_actively_hiring,
           lastContact: alumni.last_contact,
@@ -411,7 +436,7 @@ export async function GET(request: NextRequest) {
       description: alumni.description || `Experienced professional in ${alumni.industry}.`,
       mutualConnections: alumni.mutual_connections || [],
       mutualConnectionsCount: alumni.mutual_connections?.length || 0,
-      avatar: alumni.avatar_url,
+      avatar: alumni.avatar_url || alumni.profile?.avatar_url,
       verified: alumni.verified,
       isActivelyHiring: alumni.is_actively_hiring,
       lastContact: alumni.last_contact,

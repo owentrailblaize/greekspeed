@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { X, Image, Smile, Clock, Lock } from 'lucide-react';
 import { CreatePostRequest } from '@/types/posts';
+import ImageWithFallback from "../figma/ImageWithFallback";
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -81,8 +82,18 @@ export function CreatePostModal({
         <div className="space-y-6 sm:space-y-4">
           {/* User Info */}
           <div className="flex items-start space-x-4 sm:space-x-3">
-            <div className="w-12 h-12 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-base sm:text-sm font-semibold shrink-0">
-              {userAvatar || userName?.charAt(0) || 'U'}
+            <div className="w-12 h-12 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-base sm:text-sm font-semibold shrink-0 overflow-hidden">
+              {userAvatar ? (
+                <ImageWithFallback 
+                  src={userAvatar} 
+                  alt={userName || 'User'} 
+                  width={48} 
+                  height={48} 
+                  className="w-full h-full object-cover" 
+                />
+              ) : (
+                userName?.charAt(0) || 'U'
+              )}
             </div>
             <div className="flex-1">
               <p className="font-medium text-gray-900 text-base sm:text-sm">{userName || 'You'}</p>
