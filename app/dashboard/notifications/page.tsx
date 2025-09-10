@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +20,18 @@ export default function NotificationsPage() {
   } = useConnections();
   
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Filter connections by status
   const pendingRequests = connections.filter(conn => 
@@ -101,7 +113,7 @@ export default function NotificationsPage() {
       
       <div className="max-w-7xl mx-auto px-6 py-6">
         {/* Connection Management */}
-        <ConnectionManagement variant="desktop" />
+        <ConnectionManagement variant={isMobile ? "mobile" : "desktop"} />
 
         {/* Future Notification Types Placeholder */}
         <div className="mt-8">
