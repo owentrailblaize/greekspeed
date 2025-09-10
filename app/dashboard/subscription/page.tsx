@@ -52,7 +52,7 @@ export default function SubscriptionPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user && (profile?.role === 'admin' || profile?.role === 'alumni')) {
+    if (user && profile?.role === 'admin') {
       fetchSubscription();
     }
   }, [user, profile]);
@@ -134,7 +134,7 @@ export default function SubscriptionPage() {
     );
   }
 
-  if (!user || (profile?.role !== 'admin' && profile?.role !== 'alumni')) {
+  if (!user || profile?.role !== 'admin') {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-4xl mx-auto">

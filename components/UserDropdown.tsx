@@ -57,13 +57,14 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
       label: 'Subscription Management',
       href: '/dashboard/subscription',
       icon: DollarSign,
-      show: profile?.role === 'admin' || profile?.role === 'alumni'
+      show: profile?.role === 'admin'
     },
   ];
 
   // Filter menuItems based on show condition
+  // Show items that either don't have a show property OR have show: true
   const visibleMenuItems = menuItems.filter(item => 
-    !item.show || item.show === true
+    item.show === undefined || item.show === true
   );
 
   const handleSignOut = () => {
