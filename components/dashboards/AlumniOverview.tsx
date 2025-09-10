@@ -7,6 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Users, UserPlus } from 'lucide-react';
 import { PersonalAlumniProfile } from './ui/PersonalAlumniProfile';
 import { SocialFeed } from './ui/SocialFeed';
+import { AlumniMobileBottomNavigation } from './ui/AlumniMobileBottomNavigation';
+import { MobileNetworkPage } from './ui/MobileNetworkPage';
+import { MobileProfilePage } from './ui/MobileProfilePage';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { useConnections } from '@/lib/hooks/useConnections';
@@ -35,6 +38,7 @@ export function AlumniOverview() {
   const [connectModalOpen, setConnectModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [connectionLoading, setConnectionLoading] = useState<string | null>(null);
+  const [activeMobileTab, setActiveMobileTab] = useState('home');
 
   // Get networking spotlight members from same chapter
   const getNetworkingSpotlight = () => {
@@ -97,10 +101,38 @@ export function AlumniOverview() {
     router.push('/dashboard/alumni');
   };
 
+  const renderMobileContent = () => {
+    switch (activeMobileTab) {
+      case 'home':
+        return (
+          <div className="space-y-4">
+            {/* Social Feed - Primary feature for alumni */}
+            <div className="w-full">
+              <SocialFeed chapterId={profile?.chapter_id || ''} />
+            </div>
+          </div>
+        );
+      case 'network':
+        return <MobileNetworkPage />;
+      case 'profile':
+        return <MobileProfilePage />;
+      default:
+        return (
+          <div className="space-y-4">
+            <div className="w-full">
+              <SocialFeed chapterId={profile?.chapter_id || ''} />
+            </div>
+          </div>
+        );
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Main Content - Three Column Layout */}
-      <div className="max-w-full mx-auto px-6 py-6">
+      {/* Desktop Layout - Hidden on mobile */}
+      <div className="hidden sm:block">
+        {/* Main Content - Three Column Layout */}
+        <div className="max-w-full mx-auto px-6 py-6">
         <div className="grid grid-cols-12 gap-6">
           
           {/* Left Sidebar - Networking Spotlight */}
@@ -217,6 +249,20 @@ export function AlumniOverview() {
             <PersonalAlumniProfile />
           </div>
         </div>
+      </div>
+      </div>
+
+      {/* Mobile Layout - Visible only on mobile */}
+      <div className="sm:hidden">
+        <div className="min-h-screen bg-gray-50 pt-4 pb-20 px-4">
+          <div className="max-w-md mx-auto">
+            {renderMobileContent()}
+          </div>
+        </div>
+        <AlumniMobileBottomNavigation 
+          activeTab={activeMobileTab} 
+          onTabChange={setActiveMobileTab} 
+        />
       </div>
 
       {/* Modals */}

@@ -44,7 +44,11 @@ interface AlumniData {
   linkedin_url: string | null;
 }
 
-export function PersonalAlumniProfile() {
+interface PersonalAlumniProfileProps {
+  variant?: 'desktop' | 'mobile';
+}
+
+export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniProfileProps) {
   const { profile, loading: profileLoading, updateProfile } = useProfile();
   const [alumniData, setAlumniData] = useState<AlumniData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -172,6 +176,140 @@ export function PersonalAlumniProfile() {
     );
   }
 
+  // Mobile Layout
+  if (variant === 'mobile') {
+    return (
+      <>
+        <div className="h-screen w-screen bg-white -m-4">
+          {/* Header with backdrop and avatar */}
+          <div className="relative h-32 bg-gradient-to-r from-blue-600 to-purple-600">
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
+              <div className="w-20 h-20 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                {alumniData.avatar_url ? (
+                  <img 
+                    src={alumniData.avatar_url} 
+                    alt={alumniData.full_name}
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="text-navy-600 font-bold text-xl">
+                    {getInitials(alumniData.full_name)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Profile Content */}
+          <div className="px-4 pt-12 pb-20">
+            {/* Profile Information */}
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                {alumniData.full_name}
+              </h3>
+              
+              <div className="flex items-center justify-center mb-3">
+                <Badge className="bg-blue-100 text-blue-800 text-sm px-3 py-1">
+                  {alumniData.graduation_year}
+                </Badge>
+              </div>
+
+              <p className="text-base text-blue-600 font-medium mb-4">
+                {alumniData.chapter}
+              </p>
+
+              {alumniData.is_actively_hiring && (
+                <Badge className="bg-green-100 text-green-800 text-sm px-3 py-1 mb-4">
+                  Actively Hiring
+                </Badge>
+              )}
+            </div>
+
+            {/* Contact Information */}
+            <div className="space-y-4 mb-6">
+              {alumniData.job_title && alumniData.company && (
+                <div className="flex items-center text-sm text-gray-600">
+                  <Briefcase className="h-5 w-5 mr-3 text-gray-400" />
+                  <span>{alumniData.job_title} at {alumniData.company}</span>
+                </div>
+              )}
+
+              {alumniData.industry && alumniData.industry !== 'Not specified' && (
+                <div className="flex items-center text-sm text-gray-600">
+                  <Building2 className="h-5 w-5 mr-3 text-gray-400" />
+                  <span>{alumniData.industry}</span>
+                </div>
+              )}
+
+              {alumniData.location && alumniData.location !== 'Not specified' && (
+                <div className="flex items-center text-sm text-gray-600">
+                  <MapPin className="h-5 w-5 mr-3 text-gray-400" />
+                  <span>{alumniData.location}</span>
+                </div>
+              )}
+
+              {alumniData.phone && (
+                <div className="flex items-center text-sm text-gray-600">
+                  <Phone className="h-5 w-5 mr-3 text-gray-400" />
+                  <span>{alumniData.phone}</span>
+                </div>
+              )}
+
+              {alumniData.email && (
+                <div className="flex items-center text-sm text-gray-600">
+                  <Mail className="h-5 w-5 mr-3 text-gray-400" />
+                  <span className="truncate">{alumniData.email}</span>
+                </div>
+              )}
+
+              {alumniData.linkedin_url && (
+                <div className="flex items-center text-sm text-gray-600">
+                  <Linkedin className="h-5 w-5 mr-3 text-gray-400" />
+                  <a 
+                    href={alumniData.linkedin_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 truncate"
+                  >
+                    LinkedIn Profile
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* Bio */}
+            {alumniData.description && alumniData.description !== `Alumni from ${alumniData.chapter}` && (
+              <div className="mb-6">
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {alumniData.description}
+                </p>
+              </div>
+            )}
+
+            {/* Profile Stats */}
+            <div className="border-t border-gray-100 pt-4 mb-6">
+              <div className="flex items-center justify-center text-sm text-gray-500">
+                <Calendar className="h-4 w-4 mr-2" />
+                <span>Joined {formatDate(alumniData.created_at)}</span>
+              </div>
+            </div>
+
+            {/* Edit Button */}
+            <Button 
+              onClick={handleEditProfile}
+              variant="outline" 
+              className="w-full text-navy-600 border-navy-600 hover:bg-navy-50 h-12 text-base"
+            >
+              <Edit3 className="h-5 w-5 mr-2" />
+              Edit Profile
+            </Button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Desktop Layout (Original)
   return (
     <>
       <div className="sticky top-6">
