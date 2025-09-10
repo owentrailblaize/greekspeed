@@ -70,7 +70,15 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
           {/* Post Header */}
           <div className="flex items-start space-x-3 mb-3">
             <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
-              {post.author?.avatar_url || post.author?.first_name?.charAt(0) || 'U'}
+              {post.author?.avatar_url ? (
+                <img 
+                  src={post.author.avatar_url} 
+                  alt={post.author.full_name || 'User'}
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                post.author?.first_name?.charAt(0) || 'U'
+              )}
             </div>
             
             <div className="flex-1 min-w-0">
@@ -177,7 +185,15 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
           {/* Post Header */}
           <div className="flex items-start space-x-3 sm:space-x-4 mb-4 sm:mb-3">
             <div className="w-12 h-12 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
-              {post.author?.avatar_url || post.author?.first_name?.charAt(0) || 'U'}
+              {post.author?.avatar_url ? (
+                <img 
+                  src={post.author.avatar_url} 
+                  alt={post.author.full_name || 'User'}
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                post.author?.first_name?.charAt(0) || 'U'
+              )}
             </div>
             
             <div className="flex-1 min-w-0">
