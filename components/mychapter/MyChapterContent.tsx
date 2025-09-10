@@ -91,10 +91,6 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
         return generalMembers; // Show only general members
       case "officers":
         return officers; // Show only officers
-      case "events":
-      case "alumni":
-      case "resources":
-        return []; // Show empty state for unimplemented sections
       default:
         return filteredMembers; // Default to all members
     }
@@ -197,10 +193,6 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
               <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
                 {activeSection === "members" && "General Members"}
                 {activeSection === "officers" && "Officers & Leadership"}
-                {activeSection === "events" && "Events & Activities"}
-                {activeSection === "alumni" && "Alumni Network"}
-                {activeSection === "resources" && "Chapter Resources"}
-                {activeSection === "settings" && "Chapter Settings"}
               </h1>
               {profile?.chapter && (
                 <span className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-0">({profile.chapter})</span>
@@ -225,10 +217,7 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
           <div className="text-center py-12">
             <h3 className="text-lg font-medium text-gray-900 mb-2">No members found</h3>
             <p className="text-gray-500">
-              {activeSection === "events" && "Events functionality coming soon."}
-              {activeSection === "alumni" && "Alumni network functionality coming soon."}
-              {activeSection === "resources" && "Resources functionality coming soon."}
-              {activeSection === "settings" && "Settings functionality coming soon."}
+              {/* No placeholder text needed since all sections are functional */}
             </p>
           </div>
         )}

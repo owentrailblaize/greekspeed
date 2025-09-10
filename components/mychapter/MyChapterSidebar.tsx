@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Calendar, BookOpen, GraduationCap, UserPlus, Settings, Lock, X, ChevronRight } from "lucide-react";
+import { Users, GraduationCap, UserPlus, Calendar, Lock, X, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
-import { AddMemberForm } from '@/components/chapter/AddMemberForm'; // Add this import
+import { AddMemberForm } from '@/components/chapter/AddMemberForm';
+import { EventForm } from '@/components/ui/EventForm'; // Add this import
 
 interface MyChapterSidebarProps {
   onNavigate: (section: string) => void;
@@ -15,8 +16,9 @@ interface MyChapterSidebarProps {
 }
 
 export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebarProps) {
-  // Add state for the modal
+  // Add state for both modals
   const [showAddMemberForm, setShowAddMemberForm] = useState(false);
+  const [showCreateEventForm, setShowCreateEventForm] = useState(false);
   
   // Get current user's profile to check role and chapter
   const { profile } = useProfile();
@@ -31,9 +33,7 @@ export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebar
   const stats = {
     totalMembers: members.length,
     activeMembers: members.filter(m => m.member_status === 'active').length,
-    officers: members.filter(m => m.chapter_role && m.chapter_role !== 'member' && m.chapter_role !== 'pledge').length,
-    events: 12, // This could be fetched from a separate API endpoint
-    alumniConnections: 45 // This could be fetched from a separate API endpoint
+    officers: members.filter(m => m.chapter_role && m.chapter_role !== 'member' && m.chapter_role !== 'pledge').length
   };
 
   // Collapsible sidebar state (following AlumniPipelineLayout pattern)
@@ -75,41 +75,23 @@ export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebar
       description: "Chapter leadership team",
       locked: false,
       showForAll: true
-    },
-    {
-      id: "events",
-      label: "Events & Activities",
-      icon: Calendar,
-      count: stats.events,
-      description: "Upcoming and past events",
-      locked: true, // Lock this since it's not implemented
-      showForAll: true
-    },
-    {
-      id: "resources",
-      label: "Resources",
-      icon: BookOpen,
-      count: null,
-      description: "Chapter resources & documents",
-      locked: true,
-      showForAll: true
-    },
-    {
-      id: "settings",
-      label: "Chapter Settings",
-      icon: Settings,
-      count: null,
-      description: "Manage chapter settings",
-      locked: false,
-      showForAll: false,
-      adminOnly: true
     }
   ];
 
-  // Filter items based on user role (hide admin-only items for non-admins)
-  const visibleItems = sidebarItems.filter(item => 
-    item.showForAll || (item.adminOnly && isAdmin)
-  );
+  // Remove the filter since we no longer have adminOnly items
+  const visibleItems = sidebarItems;
+
+  // Handle event creation
+  const handleCreateEvent = async (eventData: any) => {
+    try {
+      // TODO: Implement actual event creation API call
+      console.log('Creating event:', eventData);
+      setShowCreateEventForm(false);
+      // Optionally refresh events or navigate to events section
+    } catch (error) {
+      console.error('Error creating event:', error);
+    }
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -254,7 +236,7 @@ export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebar
                               variant="outline" 
                               size="sm" 
                               className="w-full"
-                              onClick={() => setShowAddMemberForm(true)} // Direct modal open
+                              onClick={() => setShowAddMemberForm(true)}
                             >
                               <UserPlus className="h-4 w-4 mr-2" />
                               Add New Member
@@ -263,7 +245,7 @@ export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebar
                               variant="outline" 
                               size="sm" 
                               className="w-full"
-                              onClick={() => onNavigate('create-event')}
+                              onClick={() => setShowCreateEventForm(true)} // Direct modal open
                             >
                               <Calendar className="h-4 w-4 mr-2" />
                               Create Event
@@ -303,14 +285,13 @@ export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebar
         {/* Content will be rendered by MyChapterContent component */}
       </div>
 
-      {/* Add Member Modal - Render at sidebar level */}
+      {/* Add Member Modal */}
       {showAddMemberForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <AddMemberForm
             onClose={() => setShowAddMemberForm(false)}
             onSuccess={() => {
               setShowAddMemberForm(false);
-              // Optionally refresh member list or navigate back to members section
               onNavigate('all');
             }}
             chapterContext={{
@@ -318,6 +299,16 @@ export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebar
               chapterName: profile?.chapter || 'Phi Delta Theta',
               isChapterAdmin: true
             }}
+          />
+        </div>
+      )}
+
+      {/* Create Event Modal */}
+      {showCreateEventForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <EventForm
+            onSubmit={handleCreateEvent}
+            onCancel={() => setShowCreateEventForm(false)}
           />
         </div>
       )}
