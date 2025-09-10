@@ -21,8 +21,8 @@ export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebar
   // Get current user's profile to check role and chapter
   const { profile } = useProfile();
   
-  // Fetch chapter members to calculate stats dynamically
-  const { members, loading: membersLoading } = useChapterMembers(profile?.chapter_id || undefined);
+  // Fetch chapter members to calculate stats dynamically, excluding alumni
+  const { members, loading: membersLoading } = useChapterMembers(profile?.chapter_id || undefined, true);
   
   // Check if user is admin (same pattern as other components)
   const isAdmin = profile?.role === 'admin';

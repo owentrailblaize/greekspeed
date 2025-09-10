@@ -19,8 +19,8 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
   // Get current user's profile and chapter
   const { profile, loading: profileLoading } = useProfile();
   
-  // Fetch chapter members based on user's chapter
-  const { members, loading: membersLoading, error } = useChapterMembers(profile?.chapter_id || undefined);
+  // Fetch chapter members based on user's chapter, excluding alumni
+  const { members, loading: membersLoading, error } = useChapterMembers(profile?.chapter_id || undefined, true);
   
   // Role checking
   const { hasChapterRoleAccess } = useChapterRoleAccess(CHAPTER_ADMIN_ROLES);

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { ChapterMemberData } from '@/types/chapter';
 
-export function useChapterMembers(chapterId?: string | null) {
+export function useChapterMembers(chapterId?: string | null, excludeAlumni: boolean = false) {
   const [members, setMembers] = useState<ChapterMemberData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,11 +21,17 @@ export function useChapterMembers(chapterId?: string | null) {
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
         );
 
-        const { data, error } = await supabase
+        let query = supabase
           .from('chapter_members_view')
           .select('*')
-          .eq('chapter_id', chapterId)
-          .order('created_at', { ascending: false });
+          .eq('chapter_id', chapterId);
+
+        // Only exclude alumni if explicitly requested
+        if (excludeAlumni) {
+          query = query.neq('role', 'alumni');
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
 
         if (error) throw error;
 
@@ -38,7 +44,7 @@ export function useChapterMembers(chapterId?: string | null) {
     };
 
     fetchMembers();
-  }, [chapterId]);
+  }, [chapterId, excludeAlumni]);
 
   return { members, loading, error };
 } 
