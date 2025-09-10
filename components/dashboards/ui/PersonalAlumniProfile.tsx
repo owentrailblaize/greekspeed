@@ -305,6 +305,17 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
             </Button>
           </div>
         </div>
+
+        {/* Edit Profile Modal */}
+        {editModalOpen && (
+          <EditProfileModal
+            isOpen={editModalOpen}
+            onClose={() => setEditModalOpen(false)}
+            profile={profile}
+            onUpdate={handleProfileUpdate}
+            variant="mobile"
+          />
+        )}
       </>
     );
   }
