@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, UserPlus } from 'lucide-react';
+import { Users, UserPlus, GraduationCap } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { useConnections } from '@/lib/hooks/useConnections';
@@ -12,6 +12,7 @@ import { ConnectionManagement } from '@/components/ui/ConnectionManagement';
 import { ChapterMemberData } from '@/types/chapter';
 
 export function MobileNetworkPage() {
+  const router = useRouter();
   const { profile } = useProfile();
   const { members: chapterMembers, loading: membersLoading } = useChapterMembers(profile?.chapter_id || undefined);
   const { 
@@ -97,21 +98,25 @@ export function MobileNetworkPage() {
         {/* Connection Management */}
         <ConnectionManagement variant="mobile" className="mb-6" />
 
-        {/* Suggestions Section */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center space-x-2">
-              <UserPlus className="h-5 w-5 text-navy-600" />
-              <span>Suggestions</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            {unconnectedMembers.length > 0 ? (
-              <div className="space-y-3">
-                {unconnectedMembers.map((member) => (
-                  <div key={member.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold">
+        {/* Suggestions Section - Cardless Layout */}
+        <div className="mb-6">
+          {/* Section Header */}
+          <div className="flex items-center space-x-2 mb-4">
+            <UserPlus className="h-5 w-5 text-navy-600" />
+            <h2 className="text-lg font-semibold text-gray-900">Suggestions</h2>
+          </div>
+
+          {/* Suggestions List */}
+          {unconnectedMembers.length > 0 ? (
+            <div className="space-y-0">
+              {unconnectedMembers.map((member, index) => (
+                <div 
+                  key={member.id} 
+                  className={`px-4 py-4 ${index !== unconnectedMembers.length - 1 ? 'border-b border-gray-100' : ''}`}
+                >
+                  <div className="flex items-start space-x-3 mb-3">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold">
                         {member.avatar_url ? (
                           <img 
                             src={member.avatar_url} 
@@ -122,56 +127,69 @@ export function MobileNetworkPage() {
                           member.full_name?.charAt(0) || member.first_name?.charAt(0) || 'U'
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h4 className="font-medium text-gray-900 text-sm truncate">
-                            {member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member'}
-                          </h4>
-                          {member.role === 'alumni' && (
-                            <Badge className="bg-blue-100 text-blue-800 text-xs">
-                              Alumni
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-600 mb-1 truncate">
-                          {member.chapter_role && member.chapter_role !== 'member' ? 
-                            member.chapter_role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 
-                            member.role === 'alumni' ? 'Alumni' : 'Member'
-                          }
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {member.grad_year ? `Class of ${member.grad_year}` : 'Recent'}
-                        </p>
-                      </div>
                     </div>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleConnect(member)}
-                      disabled={connectionLoading === member.id}
-                      className="text-navy-600 border-navy-600 hover:bg-navy-50 text-xs h-7 px-2"
-                    >
-                      {connectionLoading === member.id ? (
-                        <div className="w-3 h-3 border border-navy-600 border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <>
-                          <UserPlus className="w-3 h-3 mr-1" />
-                          Connect
-                        </>
-                      )}
-                    </Button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h3 className="font-medium text-gray-900 text-sm">
+                          {member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member'}
+                        </h3>
+                        {member.role === 'alumni' && (
+                          <Badge className="bg-blue-100 text-blue-800 text-xs">
+                            Alumni
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-600 mb-1">
+                        {member.chapter_role && member.chapter_role !== 'member' ? 
+                          member.chapter_role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 
+                          member.role === 'alumni' ? 'Alumni' : 'Member'
+                        }
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {member.grad_year ? `Class of ${member.grad_year}` : 'Recent'}
+                      </p>
+                    </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-6 text-gray-500">
-                <Users className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                <p className="text-sm">You're connected with everyone!</p>
-                <p className="text-xs text-gray-400 mt-1">All chapter members are already connected</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  
+                  {/* Full-width Connect Button */}
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleConnect(member)}
+                    disabled={connectionLoading === member.id}
+                    className="w-full h-8 text-sm text-navy-600 border-navy-600 hover:bg-navy-50"
+                  >
+                    {connectionLoading === member.id ? (
+                      <div className="w-4 h-4 border border-navy-600 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Connect
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg mb-2">You're connected with everyone!</p>
+              <p className="text-gray-400 text-sm">All chapter members are already connected</p>
+            </div>
+          )}
+        </div>
+
+        {/* Alumni Dashboard Button */}
+        <div className="mt-8">
+          <Button 
+            onClick={() => router.push('/dashboard/alumni')}
+            className="w-full h-12 bg-navy-600 hover:bg-navy-700 text-white text-base font-medium"
+          >
+            <GraduationCap className="w-5 h-5 mr-2" />
+            View Alumni Dashboard
+          </Button>
+        </div>
       </div>
     </div>
   );
