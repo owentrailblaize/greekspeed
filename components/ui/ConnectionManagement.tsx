@@ -100,49 +100,29 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
       <CardContent className={isMobile ? 'pt-0' : 'pt-2'}>
         <Tabs defaultValue="pending" className="w-full">
           {isMobile ? (
-            // Mobile: Custom horizontal scrollable tabs
+            // Mobile: Wrap TabsList in overflow container
             <div className="mb-4 overflow-x-auto">
-              <div className="flex space-x-2 min-w-max pb-2">
-                <button
-                  onClick={() => {/* Handle tab change */}}
-                  className={`flex items-center space-x-1 px-3 py-2 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
-                    true ? 'bg-navy-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
+              <TabsList className="flex w-max min-w-full">
+                <TabsTrigger value="pending" className={`flex items-center space-x-1 ${tabTextSize} flex-shrink-0`}>
                   <Clock className={iconSize} />
                   <span>Pending ({pendingRequests.length})</span>
-                </button>
-                <button
-                  onClick={() => {/* Handle tab change */}}
-                  className={`flex items-center space-x-1 px-3 py-2 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
-                    false ? 'bg-navy-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
+                </TabsTrigger>
+                <TabsTrigger value="sent" className={`flex items-center space-x-1 ${tabTextSize} flex-shrink-0`}>
                   <UserPlus className={iconSize} />
                   <span>Sent ({sentRequests.length})</span>
-                </button>
-                <button
-                  onClick={() => {/* Handle tab change */}}
-                  className={`flex items-center space-x-1 px-3 py-2 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
-                    false ? 'bg-navy-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
+                </TabsTrigger>
+                <TabsTrigger value="connected" className={`flex items-center space-x-1 ${tabTextSize} flex-shrink-0`}>
                   <Users className={iconSize} />
                   <span>Connected ({acceptedConnections.length})</span>
-                </button>
-                <button
-                  onClick={() => {/* Handle tab change */}}
-                  className={`flex items-center space-x-1 px-3 py-2 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
-                    false ? 'bg-navy-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
+                </TabsTrigger>
+                <TabsTrigger value="declined" className={`flex items-center space-x-1 ${tabTextSize} flex-shrink-0`}>
                   <UserX className={iconSize} />
                   <span>Declined ({declinedConnections.length})</span>
-                </button>
-              </div>
+                </TabsTrigger>
+              </TabsList>
             </div>
           ) : (
-            // Desktop: Original Radix tabs
+            // Desktop: Original grid layout
             <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="pending" className={`flex items-center space-x-1 ${tabTextSize}`}>
                 <Clock className={iconSize} />
