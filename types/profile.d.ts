@@ -38,7 +38,7 @@ export interface Profile {
   first_name: string | null;
   last_name: string | null;
   chapter: string | null;
-  chapter_id: string | null; // Add this field
+  chapter_id: string | null;
   role: "admin" | "alumni" | "active_member" | null;
   chapter_role: ChapterRole | null;
   member_status: MemberStatus | null;
@@ -53,6 +53,7 @@ export interface Profile {
   location: string | null;
   avatar_url: string | null;
   banner_url?: string | null;
+  linkedin_url?: string | null; // Add this field
   created_at: string;
   updated_at: string;
   is_developer?: boolean;

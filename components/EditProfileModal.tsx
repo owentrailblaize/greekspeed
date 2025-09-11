@@ -355,22 +355,28 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
 
     setLoading(true);
     try {
-      // Update profile data (ONLY fields that exist in profiles table)
-      const profileUpdates = {
+      // Update profile data - only include fields that exist in profiles table
+      const profileUpdates: any = {
         first_name: formData.first_name,
         last_name: formData.last_name,
         email: formData.email,
-        bio: formData.bio,
-        phone: formData.phone,
-        location: formData.location,
-        grad_year: formData.grad_year,
-        major: formData.major,
-        minor: formData.minor,
-        hometown: formData.hometown,
-        gpa: formData.gpa,
-        linkedin_url: formData.linkedin_url
-        // REMOVE: industry, company, job_title, description, is_actively_hiring, tags
+        bio: formData.bio || null,
+        phone: formData.phone || null,
+        location: formData.location || null,
+        grad_year: formData.grad_year ? parseInt(formData.grad_year) : null,
+        major: formData.major || null,
+        minor: formData.minor || null,
+        hometown: formData.hometown || null,
+        gpa: formData.gpa ? parseFloat(formData.gpa) : null,
+        linkedin_url: formData.linkedin_url || null
       };
+
+      // Remove undefined values to avoid overwriting with null
+      Object.keys(profileUpdates).forEach(key => {
+        if (profileUpdates[key] === undefined) {
+          delete profileUpdates[key];
+        }
+      });
 
       console.log('🚀 Updating profile with:', profileUpdates);
       await onUpdate(profileUpdates);
