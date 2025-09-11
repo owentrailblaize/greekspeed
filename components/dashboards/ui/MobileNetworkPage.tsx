@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, UserPlus, GraduationCap } from 'lucide-react';
+import { Users, UserPlus } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { useConnections } from '@/lib/hooks/useConnections';
@@ -178,17 +178,6 @@ export function MobileNetworkPage() {
               <p className="text-gray-400 text-sm">All chapter members are already connected</p>
             </div>
           )}
-        </div>
-
-        {/* Alumni Dashboard Button */}
-        <div className="mt-8">
-          <Button 
-            onClick={() => router.push('/dashboard/alumni')}
-            className="w-full h-12 bg-navy-600 hover:bg-navy-700 text-white text-base font-medium"
-          >
-            <GraduationCap className="w-5 h-5 mr-2" />
-            View Alumni Dashboard
-          </Button>
         </div>
       </div>
     </div>
