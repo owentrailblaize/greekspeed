@@ -9,8 +9,8 @@ export async function POST(request: NextRequest) {
       firstName, 
       lastName, 
       chapter, 
-      role = 'active_member',
-      chapter_role = 'member', // Add this field
+      role = 'active_member', // Only allow 'admin' or 'active_member'
+      chapter_role = 'member',
       is_developer = false, 
       developer_permissions = [],
       member_status = 'active'
@@ -23,16 +23,46 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Add role validation
+    if (!['admin', 'active_member'].includes(role)) {
+      return NextResponse.json({ 
+        error: 'Invalid role. Only admin and active_member are allowed.' 
+      }, { status: 400 });
+    }
+
     // Create server-side Supabase client with service role key
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
+    // Resolve chapter ID to chapter name
+    let chapterName = chapter;
+    let chapterId = chapter;
+    
+    // If chapter is a UUID, resolve it to the chapter name
+    if (chapter.length === 36 && chapter.includes('-')) {
+      const { data: chapterData, error: chapterError } = await supabase
+        .from('chapters')
+        .select('id, name')
+        .eq('id', chapter)
+        .single();
+      
+      if (chapterError || !chapterData) {
+        console.error('❌ Chapter not found:', chapter);
+        return NextResponse.json({ 
+          error: `Chapter not found: ${chapter}` 
+        }, { status: 400 });
+      }
+      
+      chapterName = chapterData.name;
+      chapterId = chapterData.id;
+      console.log('✅ Resolved chapter:', { id: chapterId, name: chapterName });
+    }
+
     // Generate a secure temporary password
     const tempPassword = generateTempPassword();
     
-
     // 1. Create user in Supabase Auth
     const { data: newUserAuth, error: authError } = await supabase.auth.admin.createUser({
       email,
@@ -42,7 +72,7 @@ export async function POST(request: NextRequest) {
         full_name: `${firstName} ${lastName}`,
         first_name: firstName,
         last_name: lastName,
-        chapter: chapter,
+        chapter: chapterName, // Store the chapter name, not UUID
         role: role
       }
     });
@@ -58,7 +88,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create auth user' }, { status: 500 });
     }
 
-
     // 2. Create profile in profiles table - Use upsert to handle existing records
     const { data: newProfile, error: profileError } = await supabase
       .from('profiles')
@@ -68,10 +97,10 @@ export async function POST(request: NextRequest) {
         full_name: `${firstName} ${lastName}`,
         first_name: firstName,
         last_name: lastName,
-        chapter: chapter,
-        chapter_id: chapter,
+        chapter: chapterName, // Store the chapter name, not UUID
+        chapter_id: chapterId, // Store the chapter ID separately
         role: role,
-        chapter_role: chapter_role, // Add this field
+        chapter_role: chapter_role,
         member_status: member_status,
         is_developer: is_developer,
         developer_permissions: developer_permissions,
@@ -79,8 +108,8 @@ export async function POST(request: NextRequest) {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }, {
-        onConflict: 'id', // Handle conflicts by updating existing record
-        ignoreDuplicates: false // Update if exists, insert if not
+        onConflict: 'id',
+        ignoreDuplicates: false
       })
       .select()
       .single();
@@ -105,8 +134,8 @@ export async function POST(request: NextRequest) {
             full_name: `${firstName} ${lastName}`,
             first_name: firstName,
             last_name: lastName,
-            chapter: chapter,
-            chapter_id: chapter,
+            chapter: chapterName, // Store the chapter name, not UUID
+            chapter_id: chapterId, // Store the chapter ID separately
             role: role,
             chapter_role: chapter_role,
             member_status: member_status,
@@ -141,46 +170,6 @@ export async function POST(request: NextRequest) {
       console.log('✅ New profile created:', newProfile.id);
     }
 
-    // 3. If role is alumni, create alumni record
-    if (role.toLowerCase() === 'alumni') {
-      try {
-        const { error: alumniError } = await supabase
-          .from('alumni')
-          .upsert({
-            user_id: newUserAuth.user.id,
-            first_name: firstName,
-            last_name: lastName,
-            full_name: `${firstName} ${lastName}`,
-            chapter: chapter,
-            industry: 'Not specified',
-            graduation_year: new Date().getFullYear(),
-            company: 'Not specified',
-            job_title: 'Not specified',
-            email: email,
-            phone: null,
-            location: 'Not specified',
-            description: `Alumni from ${chapter}`,
-            avatar_url: null,
-            verified: false,
-            is_actively_hiring: false,
-            last_contact: null,
-            tags: null,
-            mutual_connections: []
-          }, {
-            onConflict: 'user_id', // Handle conflicts on user_id
-            ignoreDuplicates: false // Update if exists, insert if not
-          });
-
-        if (alumniError) {
-          console.error('⚠️ Alumni record creation failed (non-critical):', alumniError);
-        } else {
-          console.log('✅ Alumni record created');
-        }
-      } catch (alumniError) {
-        console.error('⚠️ Alumni record creation exception (non-critical):', alumniError);
-      }
-    }
-
     return NextResponse.json({ 
       success: true,
       message: 'User created successfully', 
@@ -188,7 +177,7 @@ export async function POST(request: NextRequest) {
         id: newUserAuth.user.id,
         email: newUserAuth.user.email,
         full_name: `${firstName} ${lastName}`,
-        chapter: chapter,
+        chapter: chapterName, // Return the chapter name, not UUID
         role: role
       },
       tempPassword: tempPassword,
