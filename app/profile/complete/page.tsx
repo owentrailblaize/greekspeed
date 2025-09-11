@@ -98,8 +98,8 @@ export default function ProfileCompletePage() {
       <Card className="w-full max-w-5xl shadow-xl border-0">
         <CardContent className="p-0">
           <div className="flex min-h-[500px]">
-            {/* Left Column - Introduction */}
-            <div className="w-full lg:w-1/2 bg-gradient-to-br from-navy-50 to-blue-50 p-8 flex flex-col justify-center">
+            {/* Left Column - Introduction - Hidden on mobile */}
+            <div className="hidden lg:block w-full lg:w-1/2 bg-gradient-to-br from-navy-50 to-blue-50 p-8 flex flex-col justify-center">
               <div className="text-center lg:text-left">
                 <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
                   Complete Your Profile
@@ -133,125 +133,136 @@ export default function ProfileCompletePage() {
             </div>
 
             {/* Right Column - Profile Form */}
-            <div className="w-full lg:w-1/2 p-8 flex flex-col justify-center text-center">
-              {/* Logo - Centered */}
-              <div className="flex items-center justify-center space-x-3 mb-6">
-                <div className="w-8 h-8 bg-navy-600 rounded-lg flex items-center justify-center">
-                  <Star className="h-5 w-5 text-white" />
+            <div className="w-full lg:w-1/2 p-6 lg:p-8 flex flex-col justify-center min-h-screen lg:min-h-0">
+              <div className="w-full max-w-md mx-auto">
+                {/* Mobile Header - Only show on mobile */}
+                <div className="lg:hidden text-center mb-8">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-2">Complete Your Profile</h1>
+                  <p className="text-sm text-gray-600">Let's get to know you better</p>
                 </div>
-                <span className="font-semibold text-xl text-gray-900">Trailblaize</span>
-              </div>
 
-              {/* Heading - Centered */}
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Complete Your Profile</h2>
-
-              {/* Form - Left-aligned for better form UX */}
-              <div className="text-left">
-                <form onSubmit={handleSubmit} className="space-y-3">
-                  {/* Name Fields */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">First Name</Label>
-                      <Input
-                        id="firstName"
-                        type="text"
-                        placeholder="First Name"
-                        value={formData.firstName}
-                        onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                        required
-                        disabled={loading}
-                        className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
-                      />
+                {/* Desktop Header - Only show on desktop */}
+                <div className="hidden lg:block text-center">
+                  {/* Logo - Centered */}
+                  <div className="flex items-center justify-center space-x-3 mb-6">
+                    <div className="w-8 h-8 bg-navy-600 rounded-lg flex items-center justify-center">
+                      <Star className="h-5 w-5 text-white" />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">Last Name</Label>
-                      <Input
-                        id="lastName"
-                        type="text"
-                        placeholder="Last Name"
-                        value={formData.lastName}
-                        onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                        required
-                        disabled={loading}
-                        className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
-                      />
-                    </div>
+                    <span className="font-semibold text-xl text-gray-900">Trailblaize</span>
                   </div>
 
-                  {/* Email Field */}
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={formData.email}
-                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                      required
-                      disabled={loading}
-                      className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
-                    />
-                  </div>
+                  {/* Heading - Centered */}
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Complete Your Profile</h2>
+                </div>
 
-                  {/* Chapter Selection */}
-                  <div className="space-y-2">
-                    <Label htmlFor="chapter" className="text-sm font-medium text-gray-700">Chapter</Label>
-                    <Select 
-                      value={formData.chapter} 
-                      onValueChange={(value: string) => setFormData(prev => ({ ...prev, chapter: value }))}
-                    >
-                      <SelectItem value="">{chaptersLoading ? 'Loading chapters...' : 'Select your chapter'}</SelectItem>
-                      {chapters.map((chapterData) => (
-                        <SelectItem key={chapterData.id} value={chapterData.name}>
-                          {chapterData.name}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                    {chaptersError && (
-                      <p className="text-red-500 text-xs">Failed to load chapters. Please refresh the page.</p>
-                    )}
-                    {chapters.length === 0 && !chaptersLoading && (
-                      <p className="text-yellow-500 text-xs">No chapters available. Please contact support.</p>
-                    )}
-                  </div>
-
-                  {/* Role Selection */}
-                  <div className="space-y-2">
-                    <Label htmlFor="role" className="text-sm font-medium text-gray-700">Role</Label>
-                    <Select 
-                      value={formData.role} 
-                      onValueChange={(value: string) => setFormData(prev => ({ ...prev, role: value as 'Admin / Executive' | 'Active Member' | 'Alumni' }))}
-                    >
-                      <SelectItem value="">Select your role</SelectItem>
-                      {userRoles.map((userRole) => (
-                        <SelectItem key={userRole.value} value={userRole.value}>
-                          {userRole.label}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                  </div>
-
-                  {/* Error Messages */}
-                  {error && (
-                    <div className="text-red-500 text-sm bg-red-50 border border-red-200 rounded-lg p-3">{error}</div>
-                  )}
-
-                  {/* Submit Button */}
-                  <Button
-                    type="submit"
-                    className="w-full h-12 bg-navy-600 hover:bg-navy-700 text-white font-medium"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Completing Profile...
+                {/* Form - Left-aligned for better form UX */}
+                <div className="text-left">
+                  <form onSubmit={handleSubmit} className="space-y-3">
+                    {/* Name Fields */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">First Name</Label>
+                        <Input
+                          id="firstName"
+                          type="text"
+                          placeholder="First Name"
+                          value={formData.firstName}
+                          onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                          required
+                          disabled={loading}
+                          className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+                        />
                       </div>
-                    ) : (
-                      'Complete Profile'
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">Last Name</Label>
+                        <Input
+                          id="lastName"
+                          type="text"
+                          placeholder="Last Name"
+                          value={formData.lastName}
+                          onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                          required
+                          disabled={loading}
+                          className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Email Field */}
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={formData.email}
+                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        required
+                        disabled={loading}
+                        className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+                      />
+                    </div>
+
+                    {/* Chapter Selection */}
+                    <div className="space-y-2">
+                      <Label htmlFor="chapter" className="text-sm font-medium text-gray-700">Chapter</Label>
+                      <Select 
+                        value={formData.chapter} 
+                        onValueChange={(value: string) => setFormData(prev => ({ ...prev, chapter: value }))}
+                      >
+                        <SelectItem value="">{chaptersLoading ? 'Loading chapters...' : 'Select your chapter'}</SelectItem>
+                        {chapters.map((chapterData) => (
+                          <SelectItem key={chapterData.id} value={chapterData.name}>
+                            {chapterData.name}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                      {chaptersError && (
+                        <p className="text-red-500 text-xs">Failed to load chapters. Please refresh the page.</p>
+                      )}
+                      {chapters.length === 0 && !chaptersLoading && (
+                        <p className="text-yellow-500 text-xs">No chapters available. Please contact support.</p>
+                      )}
+                    </div>
+
+                    {/* Role Selection */}
+                    <div className="space-y-2">
+                      <Label htmlFor="role" className="text-sm font-medium text-gray-700">Role</Label>
+                      <Select 
+                        value={formData.role} 
+                        onValueChange={(value: string) => setFormData(prev => ({ ...prev, role: value as 'Admin / Executive' | 'Active Member' | 'Alumni' }))}
+                      >
+                        <SelectItem value="">Select your role</SelectItem>
+                        {userRoles.map((userRole) => (
+                          <SelectItem key={userRole.value} value={userRole.value}>
+                            {userRole.label}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                    </div>
+
+                    {/* Error Messages */}
+                    {error && (
+                      <div className="text-red-500 text-sm bg-red-50 border border-red-200 rounded-lg p-3">{error}</div>
                     )}
-                  </Button>
-                </form>
+
+                    {/* Submit Button */}
+                    <Button
+                      type="submit"
+                      className="w-full h-12 bg-navy-600 hover:bg-navy-700 text-white font-medium"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Completing Profile...
+                        </div>
+                      ) : (
+                        'Complete Profile'
+                      )}
+                    </Button>
+                  </form>
+                </div>
               </div>
             </div>
           </div>
