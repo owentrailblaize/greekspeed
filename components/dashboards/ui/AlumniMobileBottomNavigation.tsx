@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Users, User } from 'lucide-react';
+import { Home, Users, User, Search } from 'lucide-react';
 
 interface AlumniMobileBottomNavigationProps {
   activeTab: string;
@@ -11,12 +11,13 @@ export function AlumniMobileBottomNavigation({ activeTab, onTabChange }: AlumniM
   const tabs = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'network', label: 'Network', icon: Users },
+    { id: 'pipeline', label: 'Pipeline', icon: Search },
     { id: 'profile', label: 'Profile', icon: User }
   ];
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 sm:hidden">
-      <div className="grid grid-cols-3 h-16">
+      <div className="grid grid-cols-4 h-16">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;

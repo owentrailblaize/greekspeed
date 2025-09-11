@@ -93,6 +93,9 @@ export function DashboardHeader() {
     }
   };
 
+  // Check if user is alumni on mobile - hide navigation elements
+  const isAlumniOnMobile = userRole === 'alumni';
+
   return (
     <header className="border-b border-gray-200 bg-white/80 backdrop-blur z-50">
       <div className="w-full px-4 sm:px-6 h-14 flex items-center justify-between">
@@ -105,15 +108,17 @@ export function DashboardHeader() {
             ))}
           </div>
 
-          {/* Mobile Navigation - Hamburger Menu (All Roles) */}
-          <div className="sm:hidden">
-            <button 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-              className="p-2 text-gray-700 hover:text-navy-700 hover:bg-gray-50 rounded-md transition-colors duration-200"
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-          </div>
+          {/* Mobile Navigation - Hamburger Menu (Hidden for Alumni) */}
+          {!isAlumniOnMobile && (
+            <div className="sm:hidden">
+              <button 
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+                className="p-2 text-gray-700 hover:text-navy-700 hover:bg-gray-50 rounded-md transition-colors duration-200"
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Right side - Messages icon and User dropdown */}
@@ -141,35 +146,37 @@ export function DashboardHeader() {
         </div>
       </div>
 
-      {/* Mobile Menu - Expanding Header (All Roles) */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="sm:hidden bg-white border-t border-gray-200"
-          >
-            <div className="px-4 py-4 space-y-3">
-              {visibleTabs.map((tab) => (
-                <Link
-                  key={tab.href}
-                  href={tab.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    'block w-full text-left px-3 py-2 text-sm font-medium transition-colors duration-200 rounded-md',
-                    pathname === tab.href 
-                      ? 'bg-navy-50 text-navy-700' 
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-navy-700'
-                  )}
-                >
-                  {tab.label}
-                </Link>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Mobile Menu - Expanding Header (Hidden for Alumni) */}
+      {!isAlumniOnMobile && (
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="sm:hidden bg-white border-t border-gray-200"
+            >
+              <div className="px-4 py-4 space-y-3">
+                {visibleTabs.map((tab) => (
+                  <Link
+                    key={tab.href}
+                    href={tab.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      'block w-full text-left px-3 py-2 text-sm font-medium transition-colors duration-200 rounded-md',
+                      pathname === tab.href 
+                        ? 'bg-navy-50 text-navy-700' 
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-navy-700'
+                    )}
+                  >
+                    {tab.label}
+                  </Link>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
     </header>
   );
 } 
