@@ -12,7 +12,7 @@ export function AlumniMobileBottomNavigation({ activeTab, onTabChange }: AlumniM
     { id: 'home', label: 'Home', icon: Home },
     { id: 'network', label: 'Network', icon: Users },
     { id: 'pipeline', label: 'Pipeline', icon: Search },
-    { id: 'chapter', label: 'Chapter', icon: Building2 },
+    { id: 'chapter', label: 'Members', icon: Building2 },
     { id: 'profile', label: 'Profile', icon: User }
   ];
 

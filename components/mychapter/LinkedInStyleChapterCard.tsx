@@ -102,7 +102,7 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
           <Button
             onClick={(e) => handleConnectionAction('connect', e)}
             disabled={isLoading}
-            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
+            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-7 sm:h-10 text-xs sm:text-sm"
             variant="outline"
           >
             {isLoading ? (
@@ -119,7 +119,7 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
           <Button
             onClick={(e) => handleConnectionAction('cancel', e)}
             disabled={isLoading}
-            className="w-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 transition-colors duration-200 rounded-full font-medium h-8 sm:h-10 flex items-center justify-center text-xs sm:text-sm"
+            className="w-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 transition-colors duration-200 rounded-full font-medium h-7 sm:h-10 flex items-center justify-center text-xs sm:text-sm"
             variant="outline"
           >
             {isLoading ? (
@@ -137,14 +137,14 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
             <Button
               onClick={(e) => handleConnectionAction('accept', e)}
               disabled={isLoading}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-full font-medium h-7 sm:h-10 text-xs sm:text-sm"
             >
               Accept
             </Button>
             <Button
               onClick={(e) => handleConnectionAction('decline', e)}
               disabled={isLoading}
-              className="flex-1 border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
+              className="flex-1 border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 rounded-full font-medium h-7 sm:h-10 text-xs sm:text-sm"
               variant="outline"
             >
               Decline
@@ -156,7 +156,7 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
         return (
           <Button
             onClick={handleMessageClick}
-            className="w-full bg-navy-600 hover:bg-navy-700 text-white rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
+            className="w-full bg-navy-600 hover:bg-navy-700 text-white rounded-full font-medium h-7 sm:h-10 text-xs sm:text-sm"
           >
             <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             Message
@@ -167,7 +167,7 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
         return (
           <Button
             onClick={(e) => handleConnectionAction('connect', e)}
-            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
+            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-7 sm:h-10 text-xs sm:text-sm"
             variant="outline"
           >
             <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
@@ -181,12 +181,12 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
     <Card className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 overflow-hidden group h-full flex flex-col">
       <CardContent className="!p-0 flex flex-col h-full">
         {/* Header Banner */}
-        <div className="h-16 bg-gradient-to-r from-navy-100 to-blue-100" />
+        <div className="h-8 sm:h-16 bg-gradient-to-r from-navy-100 to-blue-100" />
 
-        <div className="px-4 pb-4 -mt-8 relative flex-1 flex flex-col">
+        <div className="px-1 sm:px-4 pb-1 sm:pb-4 -mt-4 sm:-mt-8 relative flex-1 flex flex-col">
           {/* Avatar */}
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden relative">
+          <div className="flex justify-center mb-1 sm:mb-4">
+            <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full border-2 sm:border-4 border-white bg-white shadow-sm overflow-hidden relative">
               {avatar ? (
                 <img 
                   src={avatar} 
@@ -195,7 +195,7 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
-                  <span className="text-white font-medium text-lg">
+                  <span className="text-white font-medium text-xs sm:text-lg">
                     {name
                       ?.split(" ")
                       ?.map((n) => n[0])
@@ -206,31 +206,49 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
             </div>
           </div>
 
-          {/* Name and Verification */}
-          <div className="text-center mb-3">
-            <h3 className="font-semibold text-gray-900 inline-flex items-center gap-1 text-lg leading-tight">
-              {name}
-              {verified && (
-                <Badge className="bg-blue-500 text-white text-xs p-1 ml-1 flex-shrink-0">
+          {/* Name */}
+          <div className="text-center mb-1 sm:mb-3">
+            <h3 className="font-semibold text-gray-900 text-xs sm:text-lg leading-tight">
+              <span className="break-words">{name}</span>
+            </h3>
+            {/* Verification Badge - Only show on desktop */}
+            {verified && (
+              <div className="hidden sm:block mt-1">
+                <Badge className="bg-blue-500 text-white text-xs p-1 flex-shrink-0">
                   <Shield className="h-3 w-4" />
                 </Badge>
-              )}
-            </h3>
+              </div>
+            )}
+          </div>
+
+          {/* Year Badge - Only show on mobile */}
+          <div className="text-center mb-1 sm:hidden">
+            {year && (
+              <Badge 
+                variant="secondary" 
+                className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-1 py-0.5 flex-shrink-0"
+              >
+                {year}
+              </Badge>
+            )}
           </div>
 
           {/* Position and Description */}
-          <div className="text-center mb-4">
+          <div className="text-center mb-1 sm:mb-4">
             {position && position !== 'Member' && (
-              <p className="text-sm font-medium text-navy-600 mb-2 leading-tight">{position}</p>
+              <p className="hidden sm:block text-xs sm:text-sm font-medium text-navy-600 mb-0.5 sm:mb-2 leading-tight truncate">{position}</p>
             )}
-            <p className="text-sm text-gray-600 leading-relaxed">{memberDescription}</p>
+            {/* Bio - Show on mobile, hide on desktop */}
+            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed sm:hidden">{memberDescription}</p>
+            {/* Position - Show on desktop */}
+            <p className="hidden sm:block text-xs sm:text-sm text-gray-600 leading-relaxed">{memberDescription}</p>
           </div>
 
           {/* Mutual Connections */}
-          <div className="flex items-center justify-center space-x-3 mb-6">
+          <div className="flex flex-col items-center justify-center space-y-1 sm:space-y-2 mb-2 sm:mb-6">
             <div className="flex -space-x-1">
               {connections.slice(0, 3).map((c, i) => (
-                <div key={i} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
+                <div key={i} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
                   {c.avatar ? (
                     <img 
                       src={c.avatar} 
@@ -250,7 +268,7 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
                 </div>
               ))}
             </div>
-            <span className="text-sm text-gray-600 leading-tight">
+            <span className="text-xs sm:text-sm text-gray-600 leading-tight hidden sm:block">
               {connections.length > 0 
                 ? `${connections[0]?.name || 'Unknown'} and ${connectionsCount - 1} other connections`
                 : 'Chapter member'
