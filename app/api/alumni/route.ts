@@ -20,16 +20,11 @@ const getChapterId = async (supabase: any, chapterIdentifier: string): Promise<s
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('🚀 Alumni API called')
     
     // Check environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     
-    console.log('Environment check:', {
-      hasUrl: !!supabaseUrl,
-      hasServiceKey: !!supabaseServiceKey
-    })
     
     if (!supabaseUrl || !supabaseServiceKey) {
       console.error('Missing environment variables')
@@ -55,7 +50,7 @@ export async function GET(request: NextRequest) {
     // Get query parameters
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const limit = parseInt(searchParams.get('limit') || '1000') // Default to 1000 (Supabase max)
     const search = searchParams.get('search') || ''
     const industry = searchParams.get('industry') || ''
     const chapter = searchParams.get('chapter') || ''
@@ -67,18 +62,8 @@ export async function GET(request: NextRequest) {
     // Chapter filtering parameter
     const userChapter = searchParams.get('userChapter') || ''
 
-    console.log('📋 Query params:', { 
-      search, 
-      industry, 
-      chapter, 
-      location, 
-      graduationYear, 
-      activelyHiring, 
-      state,
-      userChapter 
-    })
 
-    // Build the query - start simple
+    // Build the query - start simple with count
     let query = supabase
       .from('alumni')
       .select(`
@@ -86,7 +71,7 @@ export async function GET(request: NextRequest) {
         profile:profiles!user_id(
           avatar_url
         )
-      `)
+      `, { count: 'exact' })
 
     // Apply filters
     if (search) {
@@ -119,7 +104,7 @@ export async function GET(request: NextRequest) {
             profile:profiles!user_id(
               avatar_url
             )
-          `)
+          `, { count: 'exact' })
           .eq('chapter', userChapter);
         
         let chapterIdQuery = supabase
@@ -129,7 +114,7 @@ export async function GET(request: NextRequest) {
             profile:profiles!user_id(
               avatar_url
             )
-          `)
+          `, { count: 'exact' })
           .eq('chapter_id', chapterId);
         
         // Apply all other filters to both queries
@@ -198,7 +183,9 @@ export async function GET(request: NextRequest) {
           index === self.findIndex(a => a.id === alumni.id)
         );
         
-        console.log(`🔍 Found ${uniqueResults.length} alumni for chapter: ${userChapter} (ID: ${chapterId})`);
+        // Calculate total count (approximate for combined queries)
+        const totalCount = Math.max(chapterNameResult.count || 0, chapterIdResult.count || 0);
+        
         
         // Transform data to match your interface
         const transformedAlumni = uniqueResults?.map(alumni => ({
@@ -226,17 +213,23 @@ export async function GET(request: NextRequest) {
           hasProfile: !!alumni.user_id
         })) || [];
 
+        const totalPages = Math.ceil(totalCount / limit);
+
         return NextResponse.json({
           alumni: transformedAlumni,
-          total: transformedAlumni.length,
-          page,
-          limit,
-          message: `Retrieved ${transformedAlumni.length} alumni records`
+          pagination: {
+            page,
+            limit,
+            total: totalCount,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1
+          },
+          message: `Retrieved ${transformedAlumni.length} alumni records (page ${page} of ${totalPages})`
         });
       } else {
         // Fallback: just filter by chapter name
         query = query.eq('chapter', userChapter);
-        console.log(`🔍 Filtering by user's chapter name only: ${userChapter}`);
       }
     } else if (chapter) {
       const chapterId = await getChapterId(supabase, chapter);
@@ -249,7 +242,7 @@ export async function GET(request: NextRequest) {
             profile:profiles!user_id(
               avatar_url
             )
-          `)
+          `, { count: 'exact' })
           .eq('chapter', chapter);
         
         let chapterIdQuery = supabase
@@ -259,7 +252,7 @@ export async function GET(request: NextRequest) {
             profile:profiles!user_id(
               avatar_url
             )
-          `)
+          `, { count: 'exact' })
           .eq('chapter_id', chapterId);
         
         // Apply all other filters to both queries (same logic as above)
@@ -304,7 +297,7 @@ export async function GET(request: NextRequest) {
           chapterIdQuery = chapterIdQuery.eq('is_actively_hiring', true);
         }
         
-        // Apply pagination
+        // Apply pagination to both queries
         const from = (page - 1) * limit;
         const to = from + limit - 1;
         
@@ -325,7 +318,8 @@ export async function GET(request: NextRequest) {
           index === self.findIndex(a => a.id === alumni.id)
         );
         
-        console.log(`🔍 Found ${uniqueResults.length} alumni for selected chapter: ${chapter} (ID: ${chapterId})`);
+        const totalCount = Math.max(chapterNameResult.count || 0, chapterIdResult.count || 0);
+        
         
         // Transform data to match your interface
         const transformedAlumni = uniqueResults?.map(alumni => ({
@@ -353,19 +347,24 @@ export async function GET(request: NextRequest) {
           hasProfile: !!alumni.user_id
         })) || [];
 
+        const totalPages = Math.ceil(totalCount / limit);
+
         return NextResponse.json({
           alumni: transformedAlumni,
-          total: transformedAlumni.length,
-          page,
-          limit,
-          message: `Retrieved ${transformedAlumni.length} alumni records`
+          pagination: {
+            page,
+            limit,
+            total: totalCount,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1
+          },
+          message: `Retrieved ${transformedAlumni.length} alumni records (page ${page} of ${totalPages})`
         });
       } else {
         query = query.eq('chapter', chapter);
-        console.log(`🔍 Filtering by selected chapter name only: ${chapter}`);
       }
     } else {
-      console.log('🌍 No chapter filter applied - showing all chapters')
     }
     
     if (location) {
@@ -392,11 +391,9 @@ export async function GET(request: NextRequest) {
     const from = (page - 1) * limit
     const to = from + limit - 1
     
-    console.log('🔍 Final query being executed...')
+    query = query.range(from, to).order('created_at', { ascending: false })
 
     const { data: alumni, error, count } = await query
-      .range(from, to)
-      .order('created_at', { ascending: false })
 
     if (error) {
       console.error('❌ Supabase error:', error)
@@ -413,10 +410,6 @@ export async function GET(request: NextRequest) {
       }, { status: 500 })
     }
 
-    console.log('✅ Query successful, alumni count:', alumni?.length || 0)
-    if (alumni && alumni.length > 0) {
-      console.log('📊 Sample alumni chapters:', alumni.slice(0, 3).map(a => a.chapter))
-    }
 
     // Transform data to match your interface
     const transformedAlumni = alumni?.map(alumni => ({
@@ -444,12 +437,19 @@ export async function GET(request: NextRequest) {
       hasProfile: !!alumni.user_id // This will now be true for all alumni
     })) || []
 
+    const totalPages = Math.ceil((count || 0) / limit);
+
     return NextResponse.json({
       alumni: transformedAlumni,
-      total: count,
-      page,
-      limit,
-      message: `Retrieved ${transformedAlumni.length} alumni records`
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      },
+      message: `Retrieved ${transformedAlumni.length} alumni records (page ${page} of ${totalPages})`
     })
 
   } catch (error) {
