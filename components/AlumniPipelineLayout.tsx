@@ -13,6 +13,7 @@ import { Alumni } from "@/lib/mockAlumni";
 import { AlumniWithCompleteness } from "@/lib/utils/profileCompleteness";
 import { exportAlumniToCSV, exportSelectedAlumniToCSV } from "@/lib/csvExport";
 import { AlumniProfileModal } from "./AlumniProfileModal";
+import { AlumniPagination } from "./AlumniPagination";
 import { AlumniSubHeader } from "@/components/AlumniSubHeader";
 import { ViewToggle } from "./ViewToggle";
 import { Badge } from "./ui/badge";
@@ -32,6 +33,15 @@ interface FilterState {
   showAllAlumni: boolean; // Changed from myChapter to showAllAlumni
 }
 
+interface PaginationState {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
 interface AlumniPipelineLayoutProps {
   alumni: AlumniWithCompleteness[];
   loading: boolean;
@@ -44,6 +54,8 @@ interface AlumniPipelineLayoutProps {
   onFiltersChange: (filters: FilterState) => void;
   onClearFilters: () => void;
   onAlumniClick?: (alumni: Alumni) => void;
+  pagination: PaginationState;
+  onPageChange: (page: number) => void;
 }
 
 export function AlumniPipelineLayout({
@@ -57,7 +69,9 @@ export function AlumniPipelineLayout({
   filters,
   onFiltersChange,
   onClearFilters,
-  onAlumniClick
+  onAlumniClick,
+  pagination,
+  onPageChange
 }: AlumniPipelineLayoutProps) {
   // Mobile-first state management
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -75,8 +89,6 @@ export function AlumniPipelineLayout({
   }, []);
 
   const handleBulkAction = (action: string) => {
-    console.log(`Bulk action: ${action} for ${selectedAlumni.length} alumni`);
-    
     switch (action) {
       case 'export':
         if (selectedAlumni.length > 0) {
@@ -85,24 +97,21 @@ export function AlumniPipelineLayout({
         }
         break;
       case 'email':
-        console.log('Sending email to selected alumni');
         // TODO: Implement email functionality
         break;
       case 'message':
-        console.log('Sending message to selected alumni');
         // TODO: Implement message functionality
         break;
       case 'tag':
-        console.log('Adding tags to selected alumni');
         // TODO: Implement tag functionality
         break;
       default:
-        console.log(`Unknown bulk action: ${action}`);
+        break;
     }
   };
 
   const handleSaveSearch = () => {
-    console.log('Saving search with filters:', filters);
+    // TODO: Implement save search functionality
   };
 
   const handleExport = () => {
@@ -286,11 +295,21 @@ export function AlumniPipelineLayout({
               </div>
             </div>
           ) : viewMode === 'table' ? (
-            <div className="h-full overflow-y-auto">
-              <AlumniTableView 
-                alumni={displayAlumni}
-                selectedAlumni={selectedAlumni}
-                onSelectionChange={onSelectionChange}
+            <div className="h-full flex flex-col">
+              <div className="flex-1 overflow-y-auto">
+                <AlumniTableView 
+                  alumni={displayAlumni}
+                  selectedAlumni={selectedAlumni}
+                  onSelectionChange={onSelectionChange}
+                />
+              </div>
+              {/* Pagination Controls for Table View */}
+              <AlumniPagination
+                currentPage={pagination.page}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.total}
+                itemsPerPage={pagination.limit}
+                onPageChange={onPageChange}
               />
             </div>
           ) : (
@@ -311,15 +330,14 @@ export function AlumniPipelineLayout({
                 ))}
               </div>
               
-              {/* Summary footer for large datasets */}
-              {displayAlumni.length > 1000 && (
-                <div className="mt-8 text-center text-sm text-gray-600">
-                  <p>Showing {displayAlumni.length} alumni records</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                     Use the search and filters above to narrow down results
-                  </p>
-                </div>
-              )}
+              {/* Pagination Controls */}
+              <AlumniPagination
+                currentPage={pagination.page}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.total}
+                itemsPerPage={pagination.limit}
+                onPageChange={onPageChange}
+              />
             </div>
           )}
         </div>

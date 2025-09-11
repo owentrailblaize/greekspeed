@@ -18,6 +18,15 @@ interface FilterState {
   showAllAlumni: boolean;
 }
 
+interface PaginationState {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
 export function AlumniPipeline() {
   const { profile, loading: profileLoading } = useProfile();
   const [alumni, setAlumni] = useState<Alumni[]>([]);
@@ -26,6 +35,14 @@ export function AlumniPipeline() {
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
   const [selectedAlumni, setSelectedAlumni] = useState<string[]>([]);
+  const [pagination, setPagination] = useState<PaginationState>({
+    page: 1,
+    limit: 1000,
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false
+  });
   const [filters, setFilters] = useState<FilterState>({
     searchTerm: "",
     graduationYear: "",
@@ -48,12 +65,13 @@ export function AlumniPipeline() {
     setSelectedAlumniForModal(null);
   };
 
-  const fetchAlumni = useCallback(async (currentFilters?: FilterState) => {
+  const fetchAlumni = useCallback(async (currentFilters?: FilterState, currentPage?: number) => {
     try {
       setLoading(true);
       setError(null);
 
       const filterParams = currentFilters || filters;
+      const pageToFetch = currentPage || pagination.page;
       const params = new URLSearchParams();
 
       // Add all filter parameters including state
@@ -64,21 +82,15 @@ export function AlumniPipeline() {
       if (filterParams.state) params.append('state', filterParams.state);
       if (filterParams.activelyHiring) params.append('activelyHiring', 'true');
       
-      // CRITICAL FIX: Add unlimited limit parameter
-      params.append('limit', '50000'); // Request all alumni
-      params.append('page', '1');
+      // Add pagination parameters
+      params.append('limit', pagination.limit.toString());
+      params.append('page', pageToFetch.toString());
       
       // Add chapter filtering logic - only filter by user's chapter if showAllAlumni is false
       if (!filterParams.showAllAlumni && profile?.chapter) {
         params.append('userChapter', profile.chapter);
-        console.log(`🔍 Filtering by user's chapter: ${profile.chapter}`);
-      } else if (filterParams.showAllAlumni) {
-        console.log('🌍 Showing all alumni from all chapters');
-      } else {
-        console.log('⚠️ No profile chapter found, showing all alumni');
       }
         
-      console.log('📡 Fetching alumni with params...', params.toString());
       const response = await fetch(`/api/alumni?${params.toString()}`);
       
       if (!response.ok) {
@@ -87,30 +99,28 @@ export function AlumniPipeline() {
       }
       
       const data = await response.json();
-      console.log('✅ Received alumni data:', data);
       const alumniData = data.alumni || [];
       setAlumni(alumniData);
+      
+      // Update pagination state
+      if (data.pagination) {
+        setPagination(data.pagination);
+      }
       
       // Sort alumni by completeness score (highest first)
       const sortedByCompleteness = sortAlumniByCompleteness(alumniData);
       setSortedAlumni(sortedByCompleteness);
-      console.log('📊 Alumni sorted by completeness:', sortedByCompleteness.slice(0, 3).map(a => ({
-        name: a.fullName,
-        score: a.completenessScore.percentage,
-        priority: a.completenessScore.priority
-      })));
     } catch (err) {
       console.error('❌ Error fetching alumni:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
-  }, [filters, profile]);
+  }, [filters, profile, pagination.page, pagination.limit]);
 
   // Only fetch alumni when profile is loaded and not loading
   useEffect(() => {
     if (!profileLoading && profile !== undefined) {
-      console.log('👤 Profile loaded, fetching alumni...', { profile: profile?.chapter });
       fetchAlumni();
     }
   }, [profile, profileLoading, fetchAlumni]);
@@ -120,7 +130,6 @@ export function AlumniPipeline() {
     if (!profileLoading && profile !== undefined && Object.values(filters).some(value => 
       typeof value === 'boolean' ? value : value !== ''
     )) {
-      console.log('🔧 Filters changed, refetching alumni...');
       fetchAlumni();
     }
   }, [filters, profile, profileLoading, fetchAlumni]);
@@ -130,13 +139,11 @@ export function AlumniPipeline() {
   };
 
   const handleFiltersChange = (newFilters: FilterState) => {
-    console.log('🔧 Filters changing:', newFilters);
     setFilters(newFilters);
     // Don't call fetchAlumni here - let the useEffect handle it
   };
 
   const handleClearFilters = () => {
-    console.log('🧹 Clearing filters...');
     setFilters({
       searchTerm: "",
       graduationYear: "",
@@ -146,6 +153,13 @@ export function AlumniPipeline() {
       activelyHiring: false,
       showAllAlumni: false, // Reset to default (only user's chapter)
     });
+    // Reset to first page when clearing filters
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
+    fetchAlumni(filters, newPage);
   };
 
   // Show loading state while profile is loading
@@ -167,7 +181,7 @@ export function AlumniPipeline() {
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         selectedCount={selectedAlumni.length}
-        totalCount={alumni.length}
+        totalCount={pagination.total}
         onClearSelection={handleClearSelection}
         userChapter={profile?.chapter}
         showAllAlumni={filters.showAllAlumni}
@@ -186,6 +200,8 @@ export function AlumniPipeline() {
         onFiltersChange={handleFiltersChange}
         onClearFilters={handleClearFilters}
         onAlumniClick={handleAlumniClick}
+        pagination={pagination}
+        onPageChange={handlePageChange}
       />
 
       {/* Alumni Profile Modal */}
