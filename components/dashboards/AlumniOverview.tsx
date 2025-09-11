@@ -11,6 +11,7 @@ import { AlumniMobileBottomNavigation } from './ui/AlumniMobileBottomNavigation'
 import { MobileNetworkPage } from './ui/MobileNetworkPage';
 import { MobileProfilePage } from './ui/MobileProfilePage';
 import { AlumniPipeline } from '@/components/AlumniPipeline';
+import { MyChapterPage } from '@/components/MyChapterPage';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { useConnections } from '@/lib/hooks/useConnections';
@@ -255,10 +256,18 @@ export function AlumniOverview() {
 
       {/* Mobile Layout - Visible only on mobile */}
       <div className="sm:hidden">
-        {/* Special handling for Pipeline tab - render full screen */}
+        {/* Special handling for Pipeline and Chapter tabs - render full screen */}
         {activeMobileTab === 'pipeline' ? (
           <>
             <AlumniPipeline />
+            <AlumniMobileBottomNavigation 
+              activeTab={activeMobileTab} 
+              onTabChange={setActiveMobileTab} 
+            />
+          </>
+        ) : activeMobileTab === 'chapter' ? (
+          <>
+            <MyChapterPage />
             <AlumniMobileBottomNavigation 
               activeTab={activeMobileTab} 
               onTabChange={setActiveMobileTab} 
