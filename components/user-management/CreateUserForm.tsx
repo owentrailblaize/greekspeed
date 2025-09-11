@@ -26,7 +26,7 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
     firstName: '',
     lastName: '',
     chapter: chapterContext?.chapterId || '',
-    role: 'active_member' as 'admin' | 'active_member' | 'alumni',
+    role: 'active_member' as 'admin' | 'active_member',
     chapter_role: 'member' as 'member' | 'president' | 'vice_president' | 'social_chair' | 'treasurer',
     is_developer: false,
     developer_permissions: [] as string[]
@@ -253,14 +253,11 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
               <Label htmlFor="role">Role *</Label>
               <Select 
                 value={formData.role} 
-                onValueChange={(value: string) => setFormData({ ...formData, role: value as 'admin' | 'active_member' | 'alumni' })}
+                onValueChange={(value: string) => setFormData({ ...formData, role: value as 'admin' | 'active_member' })}
               >
                 <SelectItem value="active_member">Active Member</SelectItem>
                 <SelectItem value="admin">Admin / Executive</SelectItem>
-                {/* Only show Alumni option when NOT in chapter context (i.e., on User Management page) */}
-                {!chapterContext?.isChapterAdmin && (
-                  <SelectItem value="alumni">Alumni</SelectItem>
-                )}
+                {/* Alumni option completely removed */}
               </Select>
             </div>
             <div>
