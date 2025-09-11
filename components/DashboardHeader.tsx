@@ -68,10 +68,10 @@ export function DashboardHeader() {
   const completionPercent = 72; // Mock profile completion percentage
   const hasUnread = pendingConnections > 0; // Now based on actual pending connections
 
-  // Define navigation tabs with role-based access (Messages removed)
+  // Define navigation tabs with role-based access
   const navigationTabs = [
     { href: '/dashboard', label: 'Overview', roles: ['admin', 'active_member', 'alumni'], locked: false },
-    { href: '/dashboard/alumni', label: 'Alumni', roles: ['admin', 'alumni', 'active_member'], locked: false },
+    { href: '/dashboard/alumni', label: 'Alumni', roles: ['admin', 'active_member', 'alumni'], locked: false },
     { href: '/dashboard/dues', label: 'Dues', roles: ['active_member', 'admin'], locked: false },
     { href: '/dashboard/admin', label: 'Exec Admin', roles: ['admin'], locked: false },
   ];
@@ -80,6 +80,14 @@ export function DashboardHeader() {
   const visibleTabs = navigationTabs.filter(tab => 
     tab.roles.includes(userRole || '')
   );
+
+  // For mobile menu, filter out Alumni tab for alumni users only
+  const mobileVisibleTabs = visibleTabs.filter(tab => {
+    if (tab.href === '/dashboard/alumni' && userRole === 'alumni') {
+      return false; // Hide Alumni tab on mobile for alumni
+    }
+    return true; // Show all other tabs
+  });
 
   const handleSignOut = async () => {
     try {
@@ -93,32 +101,27 @@ export function DashboardHeader() {
     }
   };
 
-  // Check if user is alumni on mobile - hide navigation elements
-  const isAlumniOnMobile = userRole === 'alumni';
-
   return (
     <header className="border-b border-gray-200 bg-white/80 backdrop-blur z-50">
       <div className="w-full px-4 sm:px-6 h-14 flex items-center justify-between">
         {/* Left side - Navigation tabs */}
         <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-          {/* Desktop Navigation - All Roles */}
+          {/* Desktop Navigation - All Roles (including Alumni tab for alumni) */}
           <div className="hidden sm:flex items-center space-x-1 sm:space-x-2">
             {visibleTabs.map((tab) => (
               <NavLink key={tab.href} href={tab.href} label={tab.label} locked={tab.locked} />
             ))}
           </div>
 
-          {/* Mobile Navigation - Hamburger Menu (Hidden for Alumni) */}
-          {!isAlumniOnMobile && (
-            <div className="sm:hidden">
-              <button 
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-                className="p-2 text-gray-700 hover:text-navy-700 hover:bg-gray-50 rounded-md transition-colors duration-200"
-              >
-                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
-            </div>
-          )}
+          {/* Mobile Navigation - Hamburger Menu (All Roles) */}
+          <div className="sm:hidden">
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+              className="p-2 text-gray-700 hover:text-navy-700 hover:bg-gray-50 rounded-md transition-colors duration-200"
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
 
         {/* Right side - Messages icon and User dropdown */}
@@ -146,37 +149,35 @@ export function DashboardHeader() {
         </div>
       </div>
 
-      {/* Mobile Menu - Expanding Header (Hidden for Alumni) */}
-      {!isAlumniOnMobile && (
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="sm:hidden bg-white border-t border-gray-200"
-            >
-              <div className="px-4 py-4 space-y-3">
-                {visibleTabs.map((tab) => (
-                  <Link
-                    key={tab.href}
-                    href={tab.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cn(
-                      'block w-full text-left px-3 py-2 text-sm font-medium transition-colors duration-200 rounded-md',
-                      pathname === tab.href 
-                        ? 'bg-navy-50 text-navy-700' 
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-navy-700'
-                    )}
-                  >
-                    {tab.label}
-                  </Link>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      )}
+      {/* Mobile Menu - Expanding Header (All Roles, but Alumni tab hidden for alumni) */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="sm:hidden bg-white border-t border-gray-200"
+          >
+            <div className="px-4 py-4 space-y-3">
+              {mobileVisibleTabs.map((tab) => (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(
+                    'block w-full text-left px-3 py-2 text-sm font-medium transition-colors duration-200 rounded-md',
+                    pathname === tab.href 
+                      ? 'bg-navy-50 text-navy-700' 
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-navy-700'
+                  )}
+                >
+                  {tab.label}
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 } 
