@@ -597,26 +597,131 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="email" className="flex items-center gap-2">
-                    <Mail className="w-4 h-4" />
-                    Email
-                    <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Required</Badge>
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    className={`mt-1 ${errors.email ? 'border-red-500 focus:border-red-500' : ''}`}
-                    required
-                  />
-                  {errors.email && (
-                    <p className="text-xs text-red-500 mt-1">{errors.email}</p>
+                {/* Email and Graduation Year in same row for alumni */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="email" className="flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
+                      Email
+                      <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Required</Badge>
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      className={`mt-1 ${errors.email ? 'border-red-500 focus:border-red-500' : ''}`}
+                      required
+                    />
+                    {errors.email && (
+                      <p className="text-xs text-red-500 mt-1">{errors.email}</p>
+                    )}
+                  </div>
+                  
+                  {/* Graduation year for alumni only */}
+                  {profile?.role === 'alumni' && (
+                    <div>
+                      <Label htmlFor="grad_year">Graduation Year</Label>
+                      <Input
+                        id="grad_year"
+                        value={formData.grad_year}
+                        onChange={(e) => handleInputChange('grad_year', e.target.value)}
+                        className="mt-1"
+                        placeholder="2024"
+                      />
+                    </div>
                   )}
                 </div>
               </CardContent>
             </Card>
+
+            {/* Alumni-Specific Fields - Only show for alumni users, moved right after Personal Information */}
+            {profile?.role === 'alumni' && (
+              <>
+                {/* Professional Information - Moved up for alumni */}
+                <Card>
+                  <CardHeader className="pb-0">
+                    <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
+                      <Briefcase className="w-5 h-5" />
+                      Professional Information
+                      <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Alumni</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="industry">Industry</Label>
+                        <Input
+                          id="industry"
+                          value={formData.industry}
+                          onChange={(e) => handleInputChange('industry', e.target.value)}
+                          className="mt-1"
+                          placeholder="Technology, Finance, Healthcare..."
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="company">Company</Label>
+                        <Input
+                          id="company"
+                          value={formData.company}
+                          onChange={(e) => handleInputChange('company', e.target.value)}
+                          className="mt-1"
+                          placeholder="Google, Microsoft, Amazon..."
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="job_title">Job Title</Label>
+                        <Input
+                          id="job_title"
+                          value={formData.job_title}
+                          onChange={(e) => handleInputChange('job_title', e.target.value)}
+                          className="mt-1"
+                          placeholder="Software Engineer..."
+                        />
+                      </div>
+                      <div className="flex items-center space-x-2 mt-6">
+                        <Checkbox
+                          id="is_actively_hiring"
+                          checked={formData.is_actively_hiring}
+                          onCheckedChange={(checked) => 
+                            setFormData(prev => ({ ...prev, is_actively_hiring: checked as boolean }))
+                          }
+                        />
+                        <Label htmlFor="is_actively_hiring" className="text-sm">
+                          Actively hiring
+                        </Label>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Social & Additional Info */}
+                <Card>
+                  <CardHeader className="pb-0">
+                    <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
+                      <HelpCircle className="w-5 h-5" />
+                      Additional Information
+                      <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Optional</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="tags">Tags</Label>
+                      <Input
+                        id="tags"
+                        value={formData.tags}
+                        onChange={(e) => handleInputChange('tags', e.target.value)}
+                        className="mt-1"
+                        placeholder="mentor, startup, consulting, remote work..."
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Separate tags with commas</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
 
             {/* Chapter & Role */}
             <Card>
@@ -658,68 +763,70 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
               </CardContent>
             </Card>
 
-            {/* Academic Information */}
-            <Card>
-              <CardHeader className="pb-0">
-                <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
-                  <GraduationCap className="w-5 h-5" />
-                  Academic Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="grad_year">Graduation Year</Label>
-                    <Input
-                      id="grad_year"
-                      value={formData.grad_year}
-                      onChange={(e) => handleInputChange('grad_year', e.target.value)}
-                      className="mt-1"
-                      placeholder="2024"
-                    />
+            {/* Academic Information - Only show for non-alumni users */}
+            {profile?.role !== 'alumni' && (
+              <Card>
+                <CardHeader className="pb-0">
+                  <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
+                    <GraduationCap className="w-5 h-5" />
+                    Academic Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="grad_year">Graduation Year</Label>
+                      <Input
+                        id="grad_year"
+                        value={formData.grad_year}
+                        onChange={(e) => handleInputChange('grad_year', e.target.value)}
+                        className="mt-1"
+                        placeholder="2024"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="gpa">GPA</Label>
+                      <Input
+                        id="gpa"
+                        value={formData.gpa}
+                        onChange={(e) => handleInputChange('gpa', e.target.value)}
+                        className={`mt-1 ${errors.gpa ? 'border-red-500 focus:border-red-500' : ''}`}
+                        placeholder="3.8"
+                        type="number"
+                        step="0.1"
+                        min="0.0"
+                        max="4.0"
+                      />
+                      {errors.gpa && (
+                        <p className="text-xs text-red-500 mt-1">{errors.gpa}</p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="gpa">GPA</Label>
-                    <Input
-                      id="gpa"
-                      value={formData.gpa}
-                      onChange={(e) => handleInputChange('gpa', e.target.value)}
-                      className={`mt-1 ${errors.gpa ? 'border-red-500 focus:border-red-500' : ''}`}
-                      placeholder="3.8"
-                      type="number"
-                      step="0.1"
-                      min="0.0"
-                      max="4.0"
-                    />
-                    {errors.gpa && (
-                      <p className="text-xs text-red-500 mt-1">{errors.gpa}</p>
-                    )}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="major">Major</Label>
+                      <Input
+                        id="major"
+                        value={formData.major}
+                        onChange={(e) => handleInputChange('major', e.target.value)}
+                        className="mt-1"
+                        placeholder="Computer Science"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="minor">Minor</Label>
+                      <Input
+                        id="minor"
+                        value={formData.minor}
+                        onChange={(e) => handleInputChange('minor', e.target.value)}
+                        className="mt-1"
+                        placeholder="Mathematics"
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="major">Major</Label>
-                    <Input
-                      id="major"
-                      value={formData.major}
-                      onChange={(e) => handleInputChange('major', e.target.value)}
-                      className="mt-1"
-                      placeholder="Computer Science"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="minor">Minor</Label>
-                    <Input
-                      id="minor"
-                      value={formData.minor}
-                      onChange={(e) => handleInputChange('minor', e.target.value)}
-                      className="mt-1"
-                      placeholder="Mathematics"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Contact & Location */}
             <Card>
@@ -816,93 +923,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
               </CardContent>
             </Card>
 
-            {/* Alumni-Specific Fields - Only show for alumni users */}
-            {profile?.role === 'alumni' && (
-              <>
-                {/* Professional Information */}
-                <Card>
-                  <CardHeader className="pb-0">
-                    <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
-                      <Briefcase className="w-5 h-5" />
-                      Professional Information
-                      <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Alumni</Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="industry">Industry</Label>
-                        <Input
-                          id="industry"
-                          value={formData.industry}
-                          onChange={(e) => handleInputChange('industry', e.target.value)}
-                          className="mt-1"
-                          placeholder="Technology, Finance, Healthcare..."
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="company">Company</Label>
-                        <Input
-                          id="company"
-                          value={formData.company}
-                          onChange={(e) => handleInputChange('company', e.target.value)}
-                          className="mt-1"
-                          placeholder="Google, Microsoft, Amazon..."
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="job_title">Job Title</Label>
-                        <Input
-                          id="job_title"
-                          value={formData.job_title}
-                          onChange={(e) => handleInputChange('job_title', e.target.value)}
-                          className="mt-1"
-                          placeholder="Software Engineer..."
-                        />
-                      </div>
-                      <div className="flex items-center space-x-2 mt-6">
-                        <Checkbox
-                          id="is_actively_hiring"
-                          checked={formData.is_actively_hiring}
-                          onCheckedChange={(checked) => 
-                            setFormData(prev => ({ ...prev, is_actively_hiring: checked as boolean }))
-                          }
-                        />
-                        <Label htmlFor="is_actively_hiring" className="text-sm">
-                          Actively hiring
-                        </Label>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Social & Additional Info */}
-                <Card>
-                  <CardHeader className="pb-0">
-                    <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
-                      <HelpCircle className="w-5 h-5" />
-                      Additional Information
-                      <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Optional</Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label htmlFor="tags">Tags</Label>
-                      <Input
-                        id="tags"
-                        value={formData.tags}
-                        onChange={(e) => handleInputChange('tags', e.target.value)}
-                        className="mt-1"
-                        placeholder="mentor, startup, consulting, remote work..."
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Separate tags with commas</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </>
-            )}
+            {/* Remove the old alumni-specific sections that were at the bottom */}
           </form>
         </div>
 
