@@ -395,7 +395,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
               full_name: `${formData.first_name} ${formData.last_name}`,
               email: formData.email || null,
               chapter: profile.chapter, // Include chapter from profile to satisfy not-null constraint
-              graduation_year: formData.grad_year || null, // Include graduation_year to satisfy not-null constraint
+              graduation_year: formData.grad_year ? parseInt(formData.grad_year) : null, // Include graduation_year to satisfy not-null constraint
               industry: formData.industry || null,
               company: formData.company || null,
               job_title: formData.job_title || null,
@@ -403,7 +403,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
               location: formData.location || null,
               description: formData.bio || null, // Use bio from main profile instead of separate description
               is_actively_hiring: formData.is_actively_hiring || false,
-              tags: formData.tags || null
+              tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : null
             };
 
             console.log('🎓 Alumni updates:', alumniUpdates);
