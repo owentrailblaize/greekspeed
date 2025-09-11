@@ -403,7 +403,9 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
               location: formData.location || null,
               description: formData.bio || null, // Use bio from main profile instead of separate description
               is_actively_hiring: formData.is_actively_hiring || false,
-              tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : null
+              tags: formData.tags && typeof formData.tags === 'string' 
+                ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+                : null
             };
 
             console.log('🎓 Alumni updates:', alumniUpdates);

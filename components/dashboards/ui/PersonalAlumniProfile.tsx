@@ -267,10 +267,10 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
                 </div>
               )}
 
-              {alumniData.location && alumniData.location !== 'Not specified' && (
+              {profile.location && profile.location !== 'Not specified' && (
                 <div className="flex items-center text-sm text-gray-600">
                   <MapPin className="h-5 w-5 mr-3 text-gray-400" />
-                  <span>{alumniData.location}</span>
+                  <span>{profile.location}</span>
                 </div>
               )}
 
@@ -421,10 +421,10 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
                 </div>
               )}
 
-              {alumniData.location && alumniData.location !== 'Not specified' && (
+              {profile.location && profile.location !== 'Not specified' && (
                 <div className="flex items-center text-sm text-gray-600">
                   <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                  <span>{alumniData.location}</span>
+                  <span>{profile.location}</span>
                 </div>
               )}
 
