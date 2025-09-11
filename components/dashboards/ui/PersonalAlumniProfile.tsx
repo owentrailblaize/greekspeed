@@ -38,6 +38,7 @@ interface AlumniData {
   location: string;
   description: string;
   avatar_url: string | null;
+  banner_url: string | null; // Add this line
   verified: boolean;
   is_actively_hiring: boolean;
   created_at: string;
@@ -76,7 +77,8 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
         .select(`
           *,
           profile:profiles!user_id(
-            avatar_url
+            avatar_url,
+            banner_url
           )
         `)
         .eq('user_id', profile.id)
@@ -88,13 +90,14 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
         return;
       }
 
-      // Merge the profile avatar_url into the alumni data
-      const alumniWithAvatar = {
+      // Merge the profile avatar_url and banner_url into the alumni data
+      const alumniWithProfile = {
         ...alumni,
-        avatar_url: alumni.avatar_url || alumni.profile?.avatar_url
+        avatar_url: alumni.avatar_url || alumni.profile?.avatar_url,
+        banner_url: alumni.banner_url || alumni.profile?.banner_url
       };
 
-      setAlumniData(alumniWithAvatar);
+      setAlumniData(alumniWithProfile);
     } catch (err) {
       console.error('Error loading alumni data:', err);
       setError('Failed to load alumni profile');
@@ -195,6 +198,15 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
         <div className="h-screen w-screen bg-white -m-4">
           {/* Header with backdrop and avatar */}
           <div className="relative h-32 bg-gradient-to-r from-blue-600 to-purple-600">
+            {alumniData.banner_url ? (
+              <img 
+                src={alumniData.banner_url} 
+                alt={`${alumniData.full_name} banner`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-r from-blue-600 to-purple-600" />
+            )}
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
               <div className="w-20 h-20 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center overflow-hidden">
                 {alumniData.avatar_url ? (
@@ -341,6 +353,15 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
         <Card className="bg-white overflow-hidden">
           {/* Header with backdrop and avatar */}
           <div className="relative h-24 bg-gradient-to-r from-blue-600 to-purple-600">
+            {alumniData.banner_url ? (
+              <img 
+                src={alumniData.banner_url} 
+                alt={`${alumniData.full_name} banner`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-r from-blue-600 to-purple-600" />
+            )}
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
               <div className="w-16 h-16 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center overflow-hidden">
                 {alumniData.avatar_url ? (
