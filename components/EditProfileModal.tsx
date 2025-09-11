@@ -138,10 +138,12 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
         job_title: alumniData.job_title || '',
         is_actively_hiring: alumniData.is_actively_hiring || false,
         description: alumniData.description || '',
-        tags: alumniData.tags || '',
+        tags: Array.isArray(alumniData.tags) 
+          ? alumniData.tags.join(', ') 
+          : alumniData.tags || '',
         grad_year: alumniData.graduation_year || prev.grad_year,
         phone: alumniData.phone || prev.phone,
-        location: alumniData.location || prev.location
+        // Remove location from alumni data mapping - only use profile location
       }));
     }
   }, [alumniData]);
@@ -403,8 +405,8 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
               location: formData.location || null,
               description: formData.bio || null, // Use bio from main profile instead of separate description
               is_actively_hiring: formData.is_actively_hiring || false,
-              tags: formData.tags && typeof formData.tags === 'string' 
-                ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+              tags: formData.tags && formData.tags.trim() 
+                ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
                 : null
             };
 
