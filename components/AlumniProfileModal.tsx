@@ -27,7 +27,7 @@ interface AlumniProfileModalProps {
   onClose: () => void;
 }
 
-const getChapterName = (chapterId: string): string => {
+const getChapterName = (chapterId: string, isMobile: boolean = false): string => {
   // This maps the UUIDs from your database to readable chapter names
   const chapterMap: Record<string, string> = {
     "404e65ab-1123-44a0-81c7-e8e75118e741": "Sigma Chi Eta (Ole Miss)",
@@ -36,7 +36,14 @@ const getChapterName = (chapterId: string): string => {
     "ff740e3f-c45c-4728-a5d5-22088c19d847": "Kappa Sigma Delta-Xi (Ole Miss)"
   };
   
-  return chapterMap[chapterId] || chapterId; // Fallback to ID if not found
+  const fullName = chapterMap[chapterId] || chapterId;
+  
+  // For mobile, remove parenthetical information to save space
+  if (isMobile) {
+    return fullName.replace(/\s*\([^)]*\)/g, '');
+  }
+  
+  return fullName;
 };
 
 export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileModalProps) {

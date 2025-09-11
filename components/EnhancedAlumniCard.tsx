@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { ClickableField } from './ClickableField';
 
 // Add this function at the top of the file, outside the component
-const getChapterName = (chapterId: string): string => {
+const getChapterName = (chapterId: string, isMobile: boolean = false): string => {
   // This maps the UUIDs from your database to readable chapter names
   const chapterMap: Record<string, string> = {
     "404e65ab-1123-44a0-81c7-e8e75118e741": "Sigma Chi Eta (Ole Miss)",
@@ -21,7 +21,14 @@ const getChapterName = (chapterId: string): string => {
     "ff740e3f-c45c-4728-a5d5-22088c19d847": "Kappa Sigma Delta-Xi (Ole Miss)"
   };
   
-  return chapterMap[chapterId] || chapterId; // Fallback to ID if not found
+  const fullName = chapterMap[chapterId] || chapterId;
+  
+  // For mobile, remove parenthetical information to save space
+  if (isMobile) {
+    return fullName.replace(/\s*\([^)]*\)/g, '');
+  }
+  
+  return fullName;
 };
 
 interface EnhancedAlumniCardProps {
@@ -112,13 +119,13 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
           <Button
             onClick={(e) => handleConnectionAction('connect', e)}
             disabled={isLoading}
-            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-10"
+            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
             variant="outline"
           >
             {isLoading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b border-navy-600 mr-2" />
+              <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b border-navy-600 mr-1 sm:mr-2" />
             ) : (
-              <UserPlus className="h-4 w-4 mr-2" />
+              <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             )}
             Connect
           </Button>
@@ -129,13 +136,13 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
           <Button
             onClick={(e) => handleConnectionAction('cancel', e)}
             disabled={isLoading}
-            className="w-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 transition-colors duration-200 rounded-full font-medium h-10 flex items-center justify-center"
+            className="w-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 transition-colors duration-200 rounded-full font-medium h-8 sm:h-10 flex items-center justify-center text-xs sm:text-sm"
             variant="outline"
           >
             {isLoading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b border-gray-600 mr-2" />
+              <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b border-gray-600 mr-1 sm:mr-2" />
             ) : (
-              <Clock className="h-4 w-4 mr-2" /> // Add Clock icon for pending state
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> // Add Clock icon for pending state
             )}
             Requested
           </Button>
@@ -145,9 +152,9 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
         return (
           <Button
             onClick={(e) => handleMessageClick(e)}
-            className="w-full bg-green-600 hover:bg-green-700 text-white rounded-full font-medium h-10"
+            className="w-full bg-green-600 hover:bg-green-700 text-white rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
           >
-            <MessageCircle className="h-4 w-4 mr-2" />
+            <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             Connected
           </Button>
         );
@@ -179,12 +186,12 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
     <Card className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 overflow-hidden group h-full flex flex-col cursor-pointer" onClick={handleCardClick}>
       <CardContent className="!p-0 flex flex-col h-full">
         {/* Header Banner - Remove any margins/padding to touch edges */}
-        <div className="h-16 bg-gradient-to-r from-navy-100 to-blue-100" />
+        <div className="h-8 sm:h-16 bg-gradient-to-r from-navy-100 to-blue-100" />
 
-        <div className="px-4 pb-4 -mt-8 relative flex-1 flex flex-col">
+        <div className="px-1 sm:px-4 pb-1 sm:pb-4 -mt-4 sm:-mt-8 relative flex-1 flex flex-col">
           {/* Avatar */}
-          <div className="flex justify-center mb-3">
-            <div className="w-16 h-16 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden relative">
+          <div className="flex justify-center mb-1 sm:mb-3">
+            <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full border-2 sm:border-4 border-white bg-white shadow-sm overflow-hidden relative">
               {alumni.avatar ? (
                 <ImageWithFallback 
                   src={alumni.avatar} 
@@ -195,7 +202,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
-                  <span className="text-white font-medium text-lg">
+                  <span className="text-white font-medium text-xs sm:text-lg">
                     {alumni.firstName?.[0] || ''}{alumni.lastName?.[0] || ''}
                   </span>
                 </div>
@@ -204,20 +211,20 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
           </div>
 
           {/* Name and Verification - Stack badges below name in row */}
-          <div className="text-center mb-2">
-            <h3 className="font-semibold text-gray-900 text-lg leading-tight mb-2">
+          <div className="text-center mb-1 sm:mb-2">
+            <h3 className="font-semibold text-gray-900 text-xs sm:text-lg leading-tight mb-0.5 sm:mb-2 truncate">
               {alumni.fullName}
             </h3>
             
             {/* Badges in row below name */}
-            <div className="flex flex-row items-center justify-center gap-1">
+            <div className="flex flex-row items-center justify-center gap-0.5 sm:gap-1">
               {alumni.verified && (
-                <Badge className="bg-blue-500 text-white text-xs p-1 flex-shrink-0">
-                  <Shield className="h-3 w-3" />
+                <Badge className="bg-blue-500 text-white text-xs p-0.5 sm:p-1 flex-shrink-0">
+                  <Shield className="h-2 w-2 sm:h-3 sm:w-3" />
                 </Badge>
               )}
               {alumni.isActivelyHiring && (
-                <Badge className="bg-gradient-to-r from-gray-600 to-gray-700 text-white text-xs p-1 flex-shrink-0">
+                <Badge className="bg-gradient-to-r from-gray-600 to-gray-700 text-white text-xs p-0.5 sm:p-1 flex-shrink-0">
                   Hiring
                 </Badge>
               )}
@@ -227,12 +234,12 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
           {/* Job Title and Company - Only show if data exists and is not "Not specified" */}
           {((alumni.jobTitle && alumni.jobTitle !== "Not specified") || 
             (alumni.company && alumni.company !== "Not specified")) && (
-            <div className="text-center mb-3">
+            <div className="text-center mb-1 sm:mb-3">
               {isValidField(alumni.jobTitle) && (
-                <p className="text-sm font-medium text-navy-600 mb-1 leading-tight">{alumni.jobTitle}</p>
+                <p className="text-xs sm:text-sm font-medium text-navy-600 mb-0.5 sm:mb-1 leading-tight truncate">{alumni.jobTitle}</p>
               )}
               {isValidField(alumni.company) && (
-                <div className="flex items-center justify-center space-x-2 text-gray-500 text-sm">
+                <div className="hidden sm:flex items-center justify-center space-x-2 text-gray-500 text-sm">
                   <Building2 className="h-3 w-3" />
                   <ClickableField 
                     value={alumni.company} 
@@ -245,11 +252,12 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
           )}
 
           {/* Professional Tags - Only show tags that have valid data */}
-          <div className="flex flex-wrap justify-center gap-2 mb-3">
+          <div className="flex flex-wrap justify-center gap-0.5 sm:gap-2 mb-1 sm:mb-3">
+            {/* Industry - Hidden on mobile */}
             {isValidField(alumni.industry) && (
               <Badge 
                 variant="secondary" 
-                className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
+                className="hidden sm:block text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-1 sm:px-2 py-0.5 sm:py-1 flex-shrink-0"
               >
                 {alumni.industry}
               </Badge>
@@ -257,27 +265,45 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
             {isValidField(alumni.graduationYear) && (
               <Badge 
                 variant="secondary" 
-                className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1 flex-shrink-0"
+                className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-1 sm:px-2 py-0.5 sm:py-1 flex-shrink-0"
               >
                 {alumni.graduationYear}
+              </Badge>
+            )}
+            {/* Location - Hidden on mobile */}
+            {isValidField(alumni.location) && (
+              <Badge 
+                variant="secondary" 
+                className="hidden sm:block text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-1 sm:px-2 py-0.5 sm:py-1 flex-shrink-0"
+              >
+                {alumni.location}
               </Badge>
             )}
           </div>
 
           {/* Chapter - Display chapter name instead of ID */}
           {isValidField(alumni.chapter) && (
-            <div className="text-center mb-4">
-              <div className="text-sm font-medium text-navy-600 px-3 py-1 rounded-full border border-navy-200 bg-navy-50">
-                {getChapterName(alumni.chapter)}
+            <div className="text-center mb-1 sm:mb-4">
+              {/* Mobile version - shorter text, no parentheses */}
+              <div className="sm:hidden">
+                <div className="text-xs font-medium text-navy-600 px-1 py-0.5 rounded-full border border-navy-200 bg-navy-50 truncate max-w-full">
+                  {getChapterName(alumni.chapter, true)}
+                </div>
+              </div>
+              {/* Desktop version - full text */}
+              <div className="hidden sm:block">
+                <div className="text-sm font-medium text-navy-600 px-3 py-1 rounded-full border border-navy-200 bg-navy-50">
+                  {getChapterName(alumni.chapter, false)}
+                </div>
               </div>
             </div>
           )}
 
           {/* Mutual Connections - Ensure perfect centering */}
-          <div className="flex flex-col items-center justify-center space-y-2 mb-4">
+          <div className="flex flex-col items-center justify-center space-y-0.5 sm:space-y-2 mb-1 sm:mb-4">
             <div className="flex -space-x-1">
               {Array.isArray(alumni.mutualConnections) && alumni.mutualConnections.slice(0, 3).map((c, i) => (
-                <div key={i} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
+                <div key={i} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
                   {c.avatar ? (
                     <ImageWithFallback 
                       src={c.avatar} 
@@ -299,7 +325,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
                 </div>
               ))}
             </div>
-            <span className="text-sm text-gray-600 leading-tight text-center">
+            <span className="text-xs sm:text-sm text-gray-600 leading-tight text-center hidden sm:block">
               {Array.isArray(alumni.mutualConnections) && alumni.mutualConnections.length > 0 
                 ? `${alumni.mutualConnections[0]?.name || 'Unknown'} and ${alumni.mutualConnectionsCount - 1} other connections`
                 : 'No mutual connections'
