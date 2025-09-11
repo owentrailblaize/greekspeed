@@ -10,6 +10,7 @@ import { SocialFeed } from './ui/SocialFeed';
 import { AlumniMobileBottomNavigation } from './ui/AlumniMobileBottomNavigation';
 import { MobileNetworkPage } from './ui/MobileNetworkPage';
 import { MobileProfilePage } from './ui/MobileProfilePage';
+import { AlumniPipeline } from '@/components/AlumniPipeline';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { useConnections } from '@/lib/hooks/useConnections';
@@ -254,15 +255,28 @@ export function AlumniOverview() {
 
       {/* Mobile Layout - Visible only on mobile */}
       <div className="sm:hidden">
-        <div className="min-h-screen bg-gray-50 pt-4 pb-20 px-4">
-          <div className="max-w-md mx-auto">
-            {renderMobileContent()}
-          </div>
-        </div>
-        <AlumniMobileBottomNavigation 
-          activeTab={activeMobileTab} 
-          onTabChange={setActiveMobileTab} 
-        />
+        {/* Special handling for Pipeline tab - render full screen */}
+        {activeMobileTab === 'pipeline' ? (
+          <>
+            <AlumniPipeline />
+            <AlumniMobileBottomNavigation 
+              activeTab={activeMobileTab} 
+              onTabChange={setActiveMobileTab} 
+            />
+          </>
+        ) : (
+          <>
+            <div className="min-h-screen bg-gray-50 pt-4 pb-20 px-4">
+              <div className="max-w-md mx-auto">
+                {renderMobileContent()}
+              </div>
+            </div>
+            <AlumniMobileBottomNavigation 
+              activeTab={activeMobileTab} 
+              onTabChange={setActiveMobileTab} 
+            />
+          </>
+        )}
       </div>
 
       {/* Modals */}
