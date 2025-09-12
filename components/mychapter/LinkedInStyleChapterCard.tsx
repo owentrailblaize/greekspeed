@@ -36,7 +36,7 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
   } = member;
 
   // Generate description if not provided
-  const memberDescription = description || 'Chapter Member';
+  const memberDescription = description || '';
   
   // Generate mutual connections data if not provided
   const connections = [
@@ -211,18 +211,11 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
             <h3 className="font-semibold text-gray-900 text-xs sm:text-lg leading-tight">
               <span className="break-words">{name}</span>
             </h3>
-            {/* Verification Badge - Only show on desktop */}
-            {verified && (
-              <div className="hidden sm:block mt-1">
-                <Badge className="bg-blue-500 text-white text-xs p-1 flex-shrink-0">
-                  <Shield className="h-3 w-4" />
-                </Badge>
-              </div>
-            )}
+            {/* Verification Badge removed */}
           </div>
 
-          {/* Year Badge - Only show on mobile */}
-          <div className="text-center mb-1 sm:hidden">
+          {/* Year Badge - Only show on desktop */}
+          <div className="text-center mb-1 hidden sm:block">
             {year && (
               <Badge 
                 variant="secondary" 
@@ -246,7 +239,7 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
 
           {/* Mutual Connections */}
           <div className="flex flex-col items-center justify-center space-y-1 sm:space-y-2 mb-2 sm:mb-6">
-            <div className="flex -space-x-1">
+            <div className="flex -space-x-1 justify-center">
               {connections.slice(0, 3).map((c, i) => (
                 <div key={i} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
                   {c.avatar ? (
@@ -268,10 +261,10 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
                 </div>
               ))}
             </div>
-            <span className="text-xs sm:text-sm text-gray-600 leading-tight hidden sm:block">
+            <span className="text-xs sm:text-sm text-gray-600 leading-tight text-center">
               {connections.length > 0 
-                ? `${connections[0]?.name || 'Unknown'} and ${connectionsCount - 1} other connections`
-                : 'Chapter member'
+                ? `${connectionsCount} connections`
+                : 'No connections'
               }
             </span>
           </div>
