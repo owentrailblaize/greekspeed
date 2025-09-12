@@ -211,7 +211,6 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
             <h3 className="font-semibold text-gray-900 text-xs sm:text-lg leading-tight">
               <span className="break-words">{name}</span>
             </h3>
-            {/* Verification Badge removed */}
           </div>
 
           {/* Year Badge - Only show on desktop */}

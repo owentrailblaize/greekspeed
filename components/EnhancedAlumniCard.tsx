@@ -218,11 +218,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
             
             {/* Badges in row below name */}
             <div className="flex flex-row items-center justify-center gap-0.5 sm:gap-1">
-              {alumni.verified && (
-                <Badge className="bg-blue-500 text-white text-xs p-0.5 sm:p-1 flex-shrink-0">
-                  <Shield className="h-2 w-2 sm:h-3 sm:w-3" />
-                </Badge>
-              )}
+              {/* Verification Badge removed */}
               {alumni.isActivelyHiring && (
                 <Badge className="bg-gradient-to-r from-gray-600 to-gray-700 text-white text-xs p-0.5 sm:p-1 flex-shrink-0">
                   Hiring
@@ -239,7 +235,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
                 <p className="text-xs sm:text-sm font-medium text-navy-600 mb-0.5 sm:mb-1 leading-tight truncate">{alumni.jobTitle}</p>
               )}
               {isValidField(alumni.company) && (
-                <div className="hidden sm:flex items-center justify-center space-x-2 text-gray-500 text-sm">
+                <div className="flex items-center justify-center space-x-2 text-gray-500 text-xs sm:text-sm">
                   <Building2 className="h-3 w-3" />
                   <ClickableField 
                     value={alumni.company} 
@@ -265,20 +261,13 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
             {isValidField(alumni.graduationYear) && (
               <Badge 
                 variant="secondary" 
-                className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-1 sm:px-2 py-0.5 sm:py-1 flex-shrink-0"
+                className="hidden sm:block text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-1 sm:px-2 py-0.5 sm:py-1 flex-shrink-0"
               >
                 {alumni.graduationYear}
               </Badge>
             )}
             {/* Location - Hidden on mobile */}
-            {isValidField(alumni.location) && (
-              <Badge 
-                variant="secondary" 
-                className="hidden sm:block text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-1 sm:px-2 py-0.5 sm:py-1 flex-shrink-0"
-              >
-                {alumni.location}
-              </Badge>
-            )}
+            {/* Location Badge removed */}
           </div>
 
           {/* Chapter - Display chapter name instead of ID */}
