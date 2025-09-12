@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, UserPlus } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
-import { useConnections } from '@/lib/hooks/useConnections';
+import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { ConnectionManagement } from '@/components/ui/ConnectionManagement';
 import { ChapterMemberData } from '@/types/chapter';
 

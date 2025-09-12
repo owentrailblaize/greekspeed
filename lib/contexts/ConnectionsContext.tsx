@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
 
 export interface Connection {
@@ -30,14 +30,28 @@ export interface Connection {
   };
 }
 
-export function useConnections() {
+interface ConnectionsContextType {
+  connections: Connection[];
+  loading: boolean;
+  error: string | null;
+  sendConnectionRequest: (recipientId: string, message?: string) => Promise<any>;
+  updateConnectionStatus: (connectionId: string, status: 'accepted' | 'declined' | 'blocked') => Promise<any>;
+  cancelConnectionRequest: (connectionId: string) => Promise<void>;
+  getConnectionStatus: (otherUserId: string) => 'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'declined' | 'blocked';
+  getConnectionId: (otherUserId: string) => string | null;
+  refreshConnections: () => Promise<void>;
+}
+
+const ConnectionsContext = createContext<ConnectionsContextType | undefined>(undefined);
+
+export function ConnectionsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchConnections = useCallback(async () => {
-    if (!user) return;
+    if (!user?.id) return;
     
     try {
       setLoading(true);
@@ -55,7 +69,7 @@ export function useConnections() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user?.id]);
 
   const sendConnectionRequest = async (recipientId: string, message?: string) => {
     if (!user) throw new Error('User not authenticated');
@@ -151,12 +165,12 @@ export function useConnections() {
   };
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       fetchConnections();
     }
-  }, [user, fetchConnections]);
+  }, [user?.id, fetchConnections]);
 
-  return {
+  const value = {
     connections,
     loading,
     error,
@@ -167,4 +181,18 @@ export function useConnections() {
     getConnectionId,
     refreshConnections: fetchConnections
   };
-} 
+
+  return (
+    <ConnectionsContext.Provider value={value}>
+      {children}
+    </ConnectionsContext.Provider>
+  );
+}
+
+export function useConnections() {
+  const context = useContext(ConnectionsContext);
+  if (context === undefined) {
+    throw new Error('useConnections must be used within a ConnectionsProvider');
+  }
+  return context;
+}

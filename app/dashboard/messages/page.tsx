@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect, Suspense } from 'react';
-import { useConnections } from '@/lib/hooks/useConnections';
+import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { MessagesSidebar } from '@/components/messaging/MessagesSidebar';
 import { MessagesMainChat } from '@/components/messaging/MessagesMainChat';
 import { Button } from '@/components/ui/button';

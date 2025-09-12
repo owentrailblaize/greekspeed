@@ -14,7 +14,7 @@ import { AlumniPipeline } from '@/components/AlumniPipeline';
 import { MyChapterPage } from '@/components/MyChapterPage';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
-import { useConnections } from '@/lib/hooks/useConnections';
+import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 import { ChapterMemberData } from '@/types/chapter';

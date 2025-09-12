@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Connection } from '@/lib/hooks/useConnections';
+import { Connection } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { UserAvatar } from '@/components/UserAvatar';
 import { Input } from '@/components/ui/input';

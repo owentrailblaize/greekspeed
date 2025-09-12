@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ChapterMember } from "@/types/chapter"; // Use the main types file
 import { MessageCircle, UserPlus, Clock, Shield } from "lucide-react";
-import { useConnections } from "@/lib/hooks/useConnections";
+import { useConnections } from "@/lib/contexts/ConnectionsContext";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
