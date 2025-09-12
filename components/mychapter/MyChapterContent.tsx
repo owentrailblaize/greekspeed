@@ -133,7 +133,7 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
         </div>
 
         {/* Content - Original Layout */}
-        <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 py-6">
           {/* Officers Section */}
           {officers.length > 0 && (
             <div className="mb-8">
@@ -141,7 +141,7 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
                 <h2 className="text-lg font-medium text-gray-900">Officers & Leadership</h2>
                 <span className="text-sm text-gray-500">({officers.length})</span>
               </div>
-              <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 items-start">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 items-start">
                 {officers.map((member) => (
                   <LinkedInStyleChapterCard 
                     key={member.id} 
@@ -159,7 +159,7 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
                 <h2 className="text-lg font-medium text-gray-900">General Members</h2>
                 <span className="text-sm text-gray-500">({generalMembers.length})</span>
               </div>
-              <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 items-start">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 items-start">
                 {generalMembers.map((member) => (
                   <LinkedInStyleChapterCard 
                     key={member.id} 
@@ -203,9 +203,9 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 py-6">
         {displayMembers.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 items-start">
             {displayMembers.map((member) => (
               <LinkedInStyleChapterCard 
                 key={member.id} 

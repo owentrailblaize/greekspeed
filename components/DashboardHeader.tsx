@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { UserDropdown } from './UserDropdown';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useProfile } from '@/lib/hooks/useProfile';
-import { useConnections } from '@/lib/hooks/useConnections';
+import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle, Lock, Menu, X } from 'lucide-react';
 import { useState } from 'react';

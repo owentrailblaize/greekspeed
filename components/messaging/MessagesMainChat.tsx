@@ -1,6 +1,6 @@
 'use client';
 
-import { Connection } from '@/lib/hooks/useConnections';
+import { Connection } from '@/lib/contexts/ConnectionsContext';
 import { ConnectionChat } from './ConnectionChat';
 import { MessageSquare, Users, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';

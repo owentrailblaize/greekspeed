@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMessages } from '@/lib/hooks/useMessages';
-import { useConnections, Connection } from '@/lib/hooks/useConnections';
+import { useConnections, Connection } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { ChatWindow } from './ChatWindow';
 import { Button } from '@/components/ui/button';

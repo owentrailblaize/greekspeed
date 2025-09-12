@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { User, Mail, MapPin, Building, Shield, FileText, Phone, MessageCircle, Users, Calendar, Settings, Edit, UserCheck, UserPlus, Clock, Lock, Upload, Heart, Trash2 } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
-import { useConnections } from '@/lib/hooks/useConnections';
+import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { UserAvatar } from '@/components/UserAvatar';
 import { ProfileService } from '@/lib/services/profileService';

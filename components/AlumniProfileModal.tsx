@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Alumni } from "@/lib/mockAlumni";
 import ImageWithFallback from "./figma/ImageWithFallback";
-import { useConnections } from "@/lib/hooks/useConnections";
+import { useConnections } from "@/lib/contexts/ConnectionsContext";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { useState } from "react";
 import { useRouter } from 'next/navigation';
