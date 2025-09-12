@@ -313,8 +313,8 @@ export function AlumniPipelineLayout({
               />
             </div>
           ) : (
-            <div className="h-full overflow-y-auto p-6">
-              <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+            <div className="h-full overflow-y-auto p-2 sm:p-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                 {displayAlumni.map((alumniItem: AlumniWithCompleteness, index: number) => (
                   <motion.div
                     key={alumniItem.id}
