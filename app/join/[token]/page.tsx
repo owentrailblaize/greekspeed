@@ -1,0 +1,262 @@
+'use client';
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { AlertCircle, Users, Shield, Calendar, CheckCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { JoinForm } from '@/components/join/JoinForm';
+import { ApprovalPending } from '@/components/join/ApprovalPending';
+import { Invitation } from '@/types/invitations';
+
+export default function JoinPage() {
+  const params = useParams();
+  const router = useRouter();
+  const [invitation, setInvitation] = useState<Invitation | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showJoinForm, setShowJoinForm] = useState(false);
+  const [showApprovalPending, setShowApprovalPending] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
+
+  const token = params.token as string;
+
+  useEffect(() => {
+    const validateInvitation = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/join/${token}`);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Invalid invitation');
+        }
+
+        const data = await response.json();
+        
+        if (!data.valid) {
+          throw new Error(data.error || 'Invalid invitation');
+        }
+
+        setInvitation(data.invitation);
+      } catch (error) {
+        console.error('Error validating invitation:', error);
+        setError(error instanceof Error ? error.message : 'Failed to validate invitation');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) {
+      validateInvitation();
+    }
+  }, [token]);
+
+  const handleJoinSuccess = (userData: any) => {
+    setSignupSuccess(true);
+    
+    if (userData.needs_approval) {
+      setShowApprovalPending(true);
+    } else {
+      // Redirect to dashboard after successful signup
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 2000);
+    }
+  };
+
+  const handleStartJoin = () => {
+    setShowJoinForm(true);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="p-6">
+            <div className="animate-pulse space-y-4">
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error || !invitation) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-red-600">
+              <AlertCircle className="h-5 w-5" />
+              <span>Invalid Invitation</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-gray-600">
+              {error || 'This invitation link is invalid or has expired.'}
+            </p>
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500">Possible reasons:</p>
+              <ul className="text-sm text-gray-500 list-disc list-inside space-y-1">
+                <li>The invitation has expired</li>
+                <li>The invitation has been deactivated</li>
+                <li>The invitation has reached its usage limit</li>
+                <li>The link was copied incorrectly</li>
+              </ul>
+            </div>
+            <Button
+              onClick={() => router.push('/')}
+              className="w-full bg-purple-600 hover:bg-purple-700"
+            >
+              Return to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (showApprovalPending) {
+    return (
+      <ApprovalPending 
+        invitation={invitation}
+        onClose={() => router.push('/')}
+      />
+    );
+  }
+
+  if (signupSuccess && !invitation.approval_mode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-green-600">
+              <CheckCircle className="h-5 w-5" />
+              <span>Welcome to {invitation.chapter_name}!</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-gray-600">
+              Your account has been created successfully. You can now access the chapter dashboard.
+            </p>
+            <Button
+              onClick={() => router.push('/dashboard')}
+              className="w-full bg-purple-600 hover:bg-purple-700"
+            >
+              Go to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (showJoinForm) {
+    return (
+      <JoinForm
+        invitation={invitation}
+        onSuccess={handleJoinSuccess}
+        onCancel={() => setShowJoinForm(false)}
+      />
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-lg w-full"
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-center text-2xl">
+              Join {invitation.chapter_name}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="text-center">
+              <p className="text-gray-600 mb-6">
+                You've been invited to join {invitation.chapter_name}. 
+                Create your account to get started.
+              </p>
+            </div>
+
+            {/* Invitation Details */}
+            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+              <h3 className="font-medium text-gray-900">Invitation Details</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center space-x-2">
+                  <Users className="h-4 w-4 text-gray-500" />
+                  <span className="text-gray-600">
+                    {invitation.usage_count} people have already joined
+                    {invitation.max_uses && ` (${invitation.max_uses} max)`}
+                  </span>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Shield className="h-4 w-4 text-gray-500" />
+                  <span className="text-gray-600">
+                    {invitation.approval_mode === 'auto' ? 'Auto-approved' : 'Requires admin approval'}
+                  </span>
+                </div>
+                
+                {invitation.expires_at && (
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <span className="text-gray-600">
+                      Expires {new Date(invitation.expires_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+                
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-gray-600">
+                    Open to all email domains
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Important Note */}
+            {invitation.single_use && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start space-x-2">
+                  <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-blue-900">Single-Use Per Email</h4>
+                    <p className="text-sm text-blue-800 mt-1">
+                      Each email address can only use this invitation once. Make sure to use your correct email address.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <Button
+              onClick={handleStartJoin}
+              className="w-full bg-purple-600 hover:bg-purple-700"
+              size="lg"
+            >
+              Create Account & Join Chapter
+            </Button>
+
+            <div className="text-center">
+              <button
+                onClick={() => router.push('/')}
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                Return to Home
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  );
+}

@@ -10,13 +10,22 @@ export class ProfileService {
 
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          chapters!left(name)
+        `)
         .eq('id', user.id)
         .single();
 
       if (error) {
         console.error('Error fetching profile:', error);
         return null;
+      }
+
+      // Transform the data to include chapter name
+      if (profile) {
+        profile.chapter = profile.chapters?.name || null;
+        delete profile.chapters; // Remove the nested chapters object
       }
 
       return profile;
@@ -62,12 +71,21 @@ export class ProfileService {
         .from('profiles')
         .update(updateData)
         .eq('id', user.id)
-        .select()
+        .select(`
+          *,
+          chapters!left(name)
+        `)
         .single();
 
       if (error) {
         console.error('Error updating profile:', error);
         throw error;
+      }
+
+      // Transform the data to include chapter name
+      if (profile) {
+        profile.chapter = profile.chapters?.name || null;
+        delete profile.chapters; // Remove the nested chapters object
       }
 
       console.log('Profile updated successfully:', profile);

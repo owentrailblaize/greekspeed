@@ -1,0 +1,74 @@
+export type ApprovalMode = 'auto' | 'pending';
+export type InvitationStatus = 'active' | 'expired' | 'deactivated';
+
+export interface Invitation {
+  id: string;
+  token: string;
+  chapter_id: string;
+  created_by: string;
+  email_domain_allowlist: string[] | null;
+  approval_mode: ApprovalMode;
+  single_use: boolean;
+  expires_at: string | null;
+  usage_count: number;
+  max_uses: number | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InvitationUsage {
+  id: string;
+  invitation_id: string;
+  email: string;
+  user_id: string | null;
+  used_at: string;
+}
+
+export interface CreateInvitationData {
+  chapter_id: string;
+  email_domain_allowlist?: string[];
+  approval_mode?: ApprovalMode;
+  single_use?: boolean;
+  expires_at?: string | null;
+  max_uses?: number | null;
+}
+
+export interface UpdateInvitationData {
+  email_domain_allowlist?: string[];
+  approval_mode?: ApprovalMode;
+  single_use?: boolean;
+  expires_at?: string | null;
+  max_uses?: number | null;
+  is_active?: boolean;
+}
+
+export interface InvitationWithUsage extends Invitation {
+  usage: InvitationUsage[];
+  chapter_name?: string;
+  created_by_name?: string;
+}
+
+export interface JoinFormData {
+  email: string;
+  password: string;
+  full_name: string;
+  first_name?: string;
+  last_name?: string;
+}
+
+export interface InvitationValidationResult {
+  valid: boolean;
+  invitation?: Invitation;
+  error?: string;
+  chapter_name?: string;
+}
+
+export interface InvitationStats {
+  total_invitations: number;
+  active_invitations: number;
+  total_usage: number;
+  pending_approvals: number;
+  recent_invitations: InvitationWithUsage[];
+}
+
