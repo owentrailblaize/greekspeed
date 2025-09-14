@@ -197,6 +197,20 @@ export async function POST(
 
     console.log('✅ Invitation Accept: Process completed successfully');
 
+    // CRITICAL FIX: Sign in the user after account creation
+    console.log('🔍 Invitation Accept: Signing in user...');
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email: email.toLowerCase(),
+      password
+    });
+
+    if (signInError) {
+      console.error('❌ Invitation Accept: Auto sign-in failed:', signInError);
+      // Don't fail the entire process, just log the error
+    } else {
+      console.log('✅ Invitation Accept: User signed in successfully');
+    }
+
     return NextResponse.json({
       success: true,
       user: {
@@ -204,7 +218,7 @@ export async function POST(
         email: authData.user.email,
         full_name,
         chapter_id: invitation.chapter_id,
-        chapter: validation.chapter_name, // FIX: Include chapter name in response
+        chapter: validation.chapter_name,
         role: 'active_member',
         member_status: invitation.approval_mode === 'pending' ? 'probation' : 'active',
         needs_approval: invitation.approval_mode === 'pending'
