@@ -210,7 +210,7 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
             </Button>
             <Button
               type="submit"
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-blue-600 hover:bg-blue-700"
               disabled={loading}
             >
               {loading ? 'Saving...' : invitation ? 'Update Invitation' : 'Create Invitation'}

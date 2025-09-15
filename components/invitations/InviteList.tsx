@@ -127,7 +127,7 @@ export function InviteList({ chapterId, onEdit, onDelete, className }: InviteLis
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Link className="h-5 w-5 text-purple-600" />
+            <Link className="h-5 w-5 text-blue-600" />
             <span>Active Invitations</span>
             <Badge variant="secondary">{invitations.length}</Badge>
           </CardTitle>
@@ -223,7 +223,7 @@ export function InviteList({ chapterId, onEdit, onDelete, className }: InviteLis
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleCopyLink(invitation.invitation_url)}
+                      onClick={() => invitation.invitation_url && handleCopyLink(invitation.invitation_url)}
                       title="Copy invitation link"
                     >
                       <Copy className="h-4 w-4" />

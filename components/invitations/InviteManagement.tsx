@@ -235,7 +235,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
               </Button>
               <Button
                 onClick={() => setShowCreateModal(true)}
-                className="bg-purple-600 hover:bg-purple-700 h-9"
+                className="bg-blue-600 hover:bg-blue-700 h-9"
                 size="sm"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -264,7 +264,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
               </Button>
               <Button
                 onClick={() => setShowCreateModal(true)}
-                className="bg-purple-600 hover:bg-purple-700 h-9 flex-1"
+                className="bg-blue-600 hover:bg-blue-700 h-9 flex-1"
                 size="sm"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -284,7 +284,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
               </p>
               <Button
                 onClick={() => setShowCreateModal(true)}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-blue-600 hover:bg-blue-700"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Create Invitation
@@ -541,7 +541,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
             <div className="flex justify-end p-4 md:p-6 border-t flex-shrink-0">
               <Button 
                 onClick={() => setShowUsageModal(null)} 
-                className="bg-purple-600 hover:bg-purple-700 w-full md:w-auto"
+                className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto"
                 size="sm"
               >
                 Close

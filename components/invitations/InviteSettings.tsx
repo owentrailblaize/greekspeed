@@ -60,7 +60,7 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
           </Button>
         </div>
 
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] space-y-6">
+        <div className="p-4 md:p-6 overflow-y-auto max-h-[calc(90vh-120px)] space-y-4">
           {/* Statistics Overview */}
           {loading ? (
             <div className="animate-pulse space-y-4">
@@ -70,29 +70,29 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
             </div>
           ) : stats ? (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Info className="h-5 w-5 text-blue-600" />
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center space-x-2 text-base">
+                  <Info className="h-4 w-4 text-blue-600" />
                   <span>Invitation Statistics</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <CardContent className="pt-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">{stats.total_invitations}</div>
-                    <div className="text-sm text-gray-600">Total Invitations</div>
+                    <div className="text-xl md:text-2xl font-bold text-gray-700">{stats.total_invitations}</div>
+                    <div className="text-xs md:text-sm text-gray-600">Total Invitations</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">{stats.active_invitations}</div>
-                    <div className="text-sm text-gray-600">Active</div>
+                    <div className="text-xl md:text-2xl font-bold text-green-600">{stats.active_invitations}</div>
+                    <div className="text-xs md:text-sm text-gray-600">Active</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">{stats.total_usage}</div>
-                    <div className="text-sm text-gray-600">Total Signups</div>
+                    <div className="text-xl md:text-2xl font-bold text-gray-700">{stats.total_usage}</div>
+                    <div className="text-xs md:text-sm text-gray-600">Total Signups</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-600">{stats.pending_approvals}</div>
-                    <div className="text-sm text-gray-600">Pending Approval</div>
+                    <div className="text-xl md:text-2xl font-bold text-red-600">{stats.pending_approvals}</div>
+                    <div className="text-xs md:text-sm text-gray-600">Pending Approval</div>
                   </div>
                 </div>
               </CardContent>
@@ -100,30 +100,30 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
           ) : null}
 
           {/* Information Cards */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Info className="h-5 w-5 text-blue-600" />
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center space-x-2 text-base">
+                  <Info className="h-4 w-4 text-blue-600" />
                   <span>How Invitations Work</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2">
-                  <h4 className="font-medium">Single-Use Per Email</h4>
-                  <p className="text-sm text-gray-600">
+              <CardContent className="pt-2 space-y-2">
+                <div className="space-y-1">
+                  <h4 className="font-medium text-sm">Single-Use Per Email</h4>
+                  <p className="text-xs md:text-sm text-gray-600">
                     Each email address can only use each invitation link once. This prevents duplicate signups while allowing multiple people to use the same invitation with different emails.
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <h4 className="font-medium">Auto-Approval</h4>
-                  <p className="text-sm text-gray-600">
+                <div className="space-y-1">
+                  <h4 className="font-medium text-sm">Auto-Approval</h4>
+                  <p className="text-xs md:text-sm text-gray-600">
                     All invitations use auto-approval. New members gain immediate access after signup.
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <h4 className="font-medium">Open Email Access</h4>
-                  <p className="text-sm text-gray-600">
+                <div className="space-y-1">
+                  <h4 className="font-medium text-sm">Open Email Access</h4>
+                  <p className="text-xs md:text-sm text-gray-600">
                     All invitations accept any email address from any domain. This allows maximum flexibility for chapter members to join using their preferred email address.
                   </p>
                 </div>
@@ -131,25 +131,25 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <AlertTriangle className="h-5 w-5 text-orange-600" />
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center space-x-2 text-base">
+                  <AlertTriangle className="h-4 w-4 text-orange-600" />
                   <span>Security Best Practices</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2">
-                  <h4 className="font-medium">Invitation Security</h4>
-                  <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
+              <CardContent className="pt-2 space-y-2">
+                <div className="space-y-1">
+                  <h4 className="font-medium text-sm">Invitation Security</h4>
+                  <ul className="text-xs md:text-sm text-gray-600 space-y-1 list-disc list-inside">
                     <li>Each invitation generates a unique, secure token</li>
                     <li>Invitations can be deactivated at any time</li>
                     <li>Usage is tracked to prevent abuse</li>
                     <li>Expiration dates help limit exposure</li>
                   </ul>
                 </div>
-                <div className="space-y-2">
-                  <h4 className="font-medium">Recommendations</h4>
-                  <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
+                <div className="space-y-1">
+                  <h4 className="font-medium text-sm">Recommendations</h4>
+                  <ul className="text-xs md:text-sm text-gray-600 space-y-1 list-disc list-inside">
                     <li>Set reasonable expiration dates for invitations</li>
                     <li>Monitor invitation usage regularly</li>
                     <li>Deactivate unused invitations periodically</li>
@@ -160,16 +160,16 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Info className="h-5 w-5 text-green-600" />
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center space-x-2 text-base">
+                  <Info className="h-4 w-4 text-green-600" />
                   <span>Workflow Summary</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2">
-                  <h4 className="font-medium">Step-by-Step Process</h4>
-                  <ol className="text-sm text-gray-600 space-y-1 list-decimal list-inside">
+              <CardContent className="pt-2 space-y-2">
+                <div className="space-y-1">
+                  <h4 className="font-medium text-sm">Step-by-Step Process</h4>
+                  <ol className="text-xs md:text-sm text-gray-600 space-y-1 list-decimal list-inside">
                     <li>Admin creates an invitation with desired settings</li>
                     <li>System generates a secure invitation link</li>
                     <li>Admin shares the same link with multiple chapter members</li>
@@ -178,8 +178,8 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
                     <li>Member is assigned to the chapter with appropriate role and status</li>
                   </ol>
                 </div>
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-sm text-blue-800">
+                <div className="bg-blue-50 p-2 md:p-3 rounded-lg">
+                  <p className="text-xs md:text-sm text-blue-800">
                     <strong>Key Point:</strong> One invitation link can be used by multiple people with different email addresses, but each email can only use each invitation once.
                   </p>
                 </div>
@@ -188,8 +188,8 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
           </div>
 
           {/* Close Button */}
-          <div className="flex justify-end pt-4 border-t">
-            <Button onClick={onClose} className="bg-purple-600 hover:bg-purple-700">
+          <div className="flex justify-end pt-3 border-t">
+            <Button onClick={onClose} className="bg-blue-600 hover:bg-blue-700">
               Close
             </Button>
           </div>
