@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, Settings, Info, AlertTriangle } from 'lucide-react';
+import { X, Settings, Info, AlertTriangle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -63,11 +63,17 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
         <div className="p-4 md:p-6 overflow-y-auto max-h-[calc(90vh-120px)] space-y-4">
           {/* Statistics Overview */}
           {loading ? (
-            <div className="animate-pulse space-y-4">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-            </div>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center space-y-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                  <div className="text-center">
+                    <h3 className="text-sm font-medium text-gray-900">Loading Statistics</h3>
+                    <p className="text-xs text-gray-600">Fetching invitation data...</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           ) : stats ? (
             <Card>
               <CardHeader className="pb-2">

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Copy, Eye, Edit, Trash2, Users, Calendar, Shield, Link, AlertCircle, X, Table } from 'lucide-react';
+import { Plus, Copy, Eye, Edit, Trash2, Users, Calendar, Shield, Link, AlertCircle, X, Table, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -203,10 +203,12 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
     return (
       <Card className={className}>
         <CardContent className="p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+          <div className="flex flex-col items-center space-y-4">
+            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+            <div className="text-center">
+              <h3 className="text-sm font-medium text-gray-900">Loading Invitations</h3>
+              <p className="text-xs text-gray-600">Fetching your invitation data...</p>
+            </div>
           </div>
         </CardContent>
       </Card>
