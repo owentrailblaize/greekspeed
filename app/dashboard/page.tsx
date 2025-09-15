@@ -7,6 +7,7 @@ import { ProfileService } from '@/lib/services/profileService';
 import { Profile } from '@/types/profile';
 import { DashboardOverview } from '@/components/DashboardOverview';
 import { useRouter } from 'next/navigation';
+import { WelcomeModal } from '@/components/WelcomeModal';
 
 export default function DashboardPage() {
   console.log('🔍 DashboardPage: Component rendering');
@@ -15,6 +16,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -22,6 +24,11 @@ export default function DashboardPage() {
         try {
           const profileData = await ProfileService.getCurrentProfile();
           setProfile(profileData);
+          
+          // Check if this is a new user who hasn't seen the welcome modal
+          if (profileData && !profileData.welcome_seen && !isDeveloper) {
+            setShowWelcomeModal(true);
+          }
           
           // Check if profile is incomplete and redirect if needed
           // Skip this check for developers
@@ -63,6 +70,14 @@ export default function DashboardPage() {
     <div>
       <div style={{ display: 'none' }}>Dashboard Page Wrapper</div>
       <DashboardOverview userRole={profile?.role || null} />
+      
+      {/* Welcome Modal for New Users */}
+      {showWelcomeModal && profile && (
+        <WelcomeModal
+          profile={profile}
+          onClose={() => setShowWelcomeModal(false)}
+        />
+      )}
     </div>
   );
 } 
