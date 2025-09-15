@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { AlertCircle, Users, Shield, Calendar, CheckCircle } from 'lucide-react';
+import { AlertCircle, Users, Shield, Calendar, CheckCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { JoinForm } from '@/components/join/JoinForm';
@@ -57,10 +57,10 @@ export default function JoinPage() {
     if (userData.needs_approval) {
       setShowApprovalPending(true);
     } else {
-      // Redirect to dashboard after successful signup
+      // Show success message before redirect
       setTimeout(() => {
         router.push('/dashboard');
-      }, 2000);
+      }, 1500); // Reduced from 2000ms
     }
   };
 
@@ -73,10 +73,12 @@ export default function JoinPage() {
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
           <CardContent className="p-6">
-            <div className="animate-pulse space-y-4">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+            <div className="flex flex-col items-center space-y-4">
+              <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+              <div className="text-center">
+                <h3 className="text-sm font-medium text-gray-900">Loading Statistics</h3>
+                <p className="text-xs text-gray-600">Fetching invitation data...</p>
+              </div>
             </div>
           </CardContent>
         </Card>

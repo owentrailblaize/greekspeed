@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Eye, EyeOff, AlertCircle, CheckCircle, Users, Shield } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, AlertCircle, CheckCircle, Users, Shield, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -233,7 +233,14 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                 className="w-full bg-blue-600 hover:bg-blue-700 h-8 md:h-9"
                 disabled={loading}
               >
-                {loading ? 'Creating Account...' : 'Create Account & Join Chapter'}
+                {loading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Creating Account...</span>
+                  </div>
+                ) : (
+                  'Create Account & Join Chapter'
+                )}
               </Button>
 
               <div className="text-center">

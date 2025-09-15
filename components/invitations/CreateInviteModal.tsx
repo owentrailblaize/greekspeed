@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Copy, Calendar, Shield, Users, Mail, Clock, CheckCircle } from 'lucide-react';
+import { X, Copy, Calendar, Shield, Users, Mail, Clock, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -213,7 +213,14 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
               className="bg-blue-600 hover:bg-blue-700"
               disabled={loading}
             >
-              {loading ? 'Saving...' : invitation ? 'Update Invitation' : 'Create Invitation'}
+              {loading ? (
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Saving...</span>
+                </div>
+              ) : (
+                invitation ? 'Update Invitation' : 'Create Invitation'
+              )}
             </Button>
           </div>
         </form>
