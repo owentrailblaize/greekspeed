@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, TrendingUp, Calendar, MessageSquare, AlertCircle, CheckCircle, Clock, Crown, Send, Image, Clock as ClockIcon, Lock, X } from "lucide-react";
+import { Users, TrendingUp, Calendar, MessageSquare, AlertCircle, CheckCircle, Clock, Crown, Send, Image, Clock as ClockIcon, Lock, X, UserPlus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectItem } from "@/components/ui/select";
 import { TasksPanel } from '@/components/dashboards/ui/TasksPanel';
 import { ChapterDocumentManager } from '@/components/dashboards/ui/ChapterDocumentManager';
+import { InviteManagement } from '@/components/invitations/InviteManagement';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useAnnouncements } from '@/lib/hooks/useAnnouncements';
 import { UpcomingEventsCard } from '@/components/dashboards/ui/UpcomingEventsCard';
@@ -602,6 +603,16 @@ export function PresidentDashboard() {
               className="w-full"
             />
           )}
+
+          {/* NEW: Invitation Management */}
+          {chapterId && (
+            <div id="invitations">
+              <InviteManagement 
+                chapterId={chapterId} 
+                className="w-full"
+              />
+            </div>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -630,6 +641,14 @@ export function PresidentDashboard() {
               >
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Send Message
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => window.location.href = '#invitations'}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Manage Invitations
               </Button>
               <Button 
                 variant="outline" 
