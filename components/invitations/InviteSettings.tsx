@@ -5,7 +5,6 @@ import { X, Settings, Info, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getInvitationStats } from '@/lib/utils/invitationUtils';
 import { InvitationStats } from '@/types/invitations';
 
 interface InviteSettingsProps {
@@ -21,7 +20,13 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        const statsData = await getInvitationStats(chapterId);
+        const response = await fetch(`/api/invitations/stats?chapter_id=${chapterId}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch stats');
+        }
+        
+        const statsData = await response.json();
         setStats(statsData);
       } catch (error) {
         console.error('Error fetching invitation stats:', error);

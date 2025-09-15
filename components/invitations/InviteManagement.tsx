@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Copy, Eye, Edit, Trash2, Users, Calendar, Shield, Link, AlertCircle } from 'lucide-react';
+import { Plus, Copy, Eye, Edit, Trash2, Users, Calendar, Shield, Link, AlertCircle, X, Table } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingInvitation, setEditingInvitation] = useState<InvitationWithUsage | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showUsageModal, setShowUsageModal] = useState<InvitationWithUsage | null>(null);
 
   const fetchInvitations = async () => {
     try {
@@ -215,7 +216,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
   return (
     <div className={className}>
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center space-x-2">
               <Users className="h-5 w-5 text-purple-600" />
@@ -226,13 +227,15 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
                 variant="outline"
                 size="sm"
                 onClick={() => setShowSettings(true)}
+                className="h-9"
               >
                 <Shield className="h-4 w-4 mr-2" />
                 Settings
               </Button>
               <Button
                 onClick={() => setShowCreateModal(true)}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-purple-600 hover:bg-purple-700 h-9"
+                size="sm"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Create Invitation
@@ -240,7 +243,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-2">
           {invitations.length === 0 ? (
             <div className="text-center py-8">
               <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -257,7 +260,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
               </Button>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {invitations.map((invitation) => (
                 <motion.div
                   key={invitation.id}
@@ -267,15 +270,15 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
+                      <div className="flex items-center space-x-3 mb-3">
                         <h4 className="font-medium text-gray-900">
                           Invitation #{invitation.token.slice(0, 8)}...
                         </h4>
                         {getStatusBadge(invitation)}
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                        <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-6 text-sm text-gray-600 mb-2">
+                        <div className="flex items-center space-x-1">
                           <Users className="h-4 w-4" />
                           <span>{invitation.usage_count} uses</span>
                           {invitation.max_uses && (
@@ -283,14 +286,14 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
                           )}
                         </div>
                         
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-1">
                           <Shield className="h-4 w-4" />
                           <span>
                             {invitation.approval_mode === 'auto' ? 'Auto-approve' : 'Manual approval'}
                           </span>
                         </div>
                         
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-1">
                           <Calendar className="h-4 w-4" />
                           <span>
                             {invitation.expires_at 
@@ -301,34 +304,30 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
                         </div>
                       </div>
                       
-                      <div className="mt-2 text-sm text-green-600">
-                        <span className="font-medium">Open invitation:</span> Accepts any email domain
+                      <div className="flex items-center justify-between text-sm text-green-600 mb-2">
+                        <div>
+                          <span className="font-medium">Open invitation:</span> Accepts any email domain
+                        </div>
+                        {invitation.usage.length > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowUsageModal(invitation)}
+                            className="text-blue-600 hover:text-blue-700 p-0 h-auto text-sm"
+                          >
+                            <Table className="h-4 w-4 mr-1" />
+                            View all {invitation.usage.length} usage records
+                          </Button>
+                        )}
                       </div>
                       
-                      {invitation.usage.length > 0 && (
-                        <div className="mt-3">
-                          <h5 className="text-sm font-medium text-gray-700 mb-2">Recent Usage:</h5>
-                          <div className="space-y-1">
-                            {invitation.usage.slice(0, 3).map((usage) => (
-                              <div key={usage.id} className="text-sm text-gray-600">
-                                {usage.user_name || usage.email} - {formatDate(usage.used_at)}
-                              </div>
-                            ))}
-                            {invitation.usage.length > 3 && (
-                              <div className="text-sm text-gray-500">
-                                +{invitation.usage.length - 3} more...
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
                     </div>
                     
-                    <div className="flex items-center space-x-2 ml-4">
+                    <div className="flex items-center space-x-1 ml-4">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleCopyLink(invitation.invitation_url)}
+                        onClick={() => invitation.invitation_url && handleCopyLink(invitation.invitation_url)}
                         title="Copy invitation link"
                       >
                         <Copy className="h-4 w-4" />
@@ -358,6 +357,84 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
           )}
         </CardContent>
       </Card>
+
+      {/* Usage Details Modal */}
+      {showUsageModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col"
+          >
+            <div className="flex items-center justify-between p-6 border-b flex-shrink-0">
+              <h2 className="text-xl font-semibold flex items-center space-x-2">
+                <Table className="h-5 w-5" />
+                <span>Invitation Usage Details</span>
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowUsageModal(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <div className="p-6 flex-shrink-0">
+                <h3 className="text-lg font-medium mb-2">
+                  Invitation #{showUsageModal.token.slice(0, 8)}...
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Total usage: {showUsageModal.usage_count} records
+                </p>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto px-6 pb-6">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          User
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Email
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Used At
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {showUsageModal.usage.map((usage) => (
+                        <tr key={usage.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {usage.user_name || 'Unknown User'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {usage.email}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {formatDate(usage.used_at)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end p-6 border-t flex-shrink-0">
+              <Button onClick={() => setShowUsageModal(null)} className="bg-purple-600 hover:bg-purple-700">
+                Close
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Create Invitation Modal */}
       {showCreateModal && (

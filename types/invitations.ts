@@ -23,6 +23,7 @@ export interface InvitationUsage {
   email: string;
   user_id: string | null;
   used_at: string;
+  user_name?: string;
 }
 
 export interface CreateInvitationData {
@@ -47,6 +48,7 @@ export interface InvitationWithUsage extends Invitation {
   usage: InvitationUsage[];
   chapter_name?: string;
   created_by_name?: string;
+  invitation_url?: string;
 }
 
 export interface JoinFormData {
