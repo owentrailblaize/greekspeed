@@ -59,6 +59,7 @@ export interface Profile {
   is_developer?: boolean;
   developer_permissions?: DeveloperPermission[];
   access_level?: AccessLevel;
+  welcome_seen?: boolean; // Add this field
 }
 
 export interface ProfileFormData {
@@ -77,6 +78,7 @@ export interface ProfileFormData {
   gpa?: string;
   avatar_url?: string;
   banner_url?: string;
+  welcome_seen?: boolean; // Add this field
 }
 
 export interface ProfileCompletion {

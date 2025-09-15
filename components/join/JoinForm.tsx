@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Invitation, JoinFormData } from '@/types/invitations';
 import { toast } from 'react-toastify';
+import { supabase } from '@/lib/supabase/client';
 
 interface JoinFormProps {
   invitation: Invitation;
@@ -77,6 +78,24 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
       }
 
       const data = await response.json();
+      
+      // CRITICAL FIX: Ensure client-side session is established
+      try {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: formData.email.toLowerCase(),
+          password: formData.password
+        });
+
+        if (signInError) {
+          console.error('Client-side sign-in failed:', signInError);
+          // Don't fail the entire process, but log the error
+        } else {
+          console.log('Client-side session established successfully');
+        }
+      } catch (signInError) {
+        console.error('Client-side sign-in error:', signInError);
+      }
+
       toast.success('Account created successfully!');
       onSuccess(data.user);
     } catch (error) {

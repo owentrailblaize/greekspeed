@@ -97,21 +97,19 @@ export async function POST(
       console.log('🔍 Invitation Accept: Setting chapter_id to:', invitation.chapter_id);
       console.log('🔍 Invitation Accept: Setting chapter to:', validation.chapter_name);
       
-      // Update the existing profile with invitation-specific data
-      const { error: updateError } = await supabase
+      // Update the profile with invitation data
+      const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
         .update({
-          email: email.toLowerCase(),
-          full_name,
-          first_name: first_name || full_name.split(' ')[0],
-          last_name: last_name || full_name.split(' ').slice(1).join(' '),
           chapter_id: invitation.chapter_id,
-          chapter: validation.chapter_name, // FIX: Set the chapter name
+          chapter: validation.chapter_name,
           role: 'active_member',
-          member_status: 'active', // Always set to active
-          updated_at: new Date().toISOString()
+          member_status: 'active',
+          welcome_seen: false // New users should see welcome modal
         })
-        .eq('id', authData.user.id);
+        .eq('id', authData.user.id)
+        .select()
+        .single();
 
       if (updateError) {
         console.error('❌ Invitation Accept: Profile update error:', updateError);
@@ -134,7 +132,7 @@ export async function POST(
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Verify the update worked
-      const { data: updatedProfile, error: verifyError } = await supabase
+      const { data: verifiedProfile, error: verifyError } = await supabase
         .from('profiles')
         .select('id, chapter_id, chapter, role, member_status')
         .eq('id', authData.user.id)
@@ -143,10 +141,10 @@ export async function POST(
       if (verifyError) {
         console.error('❌ Invitation Accept: Error verifying profile update:', verifyError);
       } else {
-        console.log('✅ Invitation Accept: Profile verification - chapter_id:', updatedProfile?.chapter_id);
-        console.log('✅ Invitation Accept: Profile verification - chapter:', updatedProfile?.chapter);
-        console.log('✅ Invitation Accept: Profile verification - role:', updatedProfile?.role);
-        console.log('✅ Invitation Accept: Profile verification - member_status:', updatedProfile?.member_status);
+        console.log('✅ Invitation Accept: Profile verification - chapter_id:', verifiedProfile?.chapter_id);
+        console.log('✅ Invitation Accept: Profile verification - chapter:', verifiedProfile?.chapter);
+        console.log('✅ Invitation Accept: Profile verification - role:', verifiedProfile?.role);
+        console.log('✅ Invitation Accept: Profile verification - member_status:', verifiedProfile?.member_status);
       }
     } else {
       console.log('🔍 Invitation Accept: No auto-profile found, creating manually...');

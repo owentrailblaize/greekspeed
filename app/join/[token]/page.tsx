@@ -57,10 +57,11 @@ export default function JoinPage() {
     if (userData.needs_approval) {
       setShowApprovalPending(true);
     } else {
-      // Show success message before redirect
+      // Show success message and ensure session is ready before redirect
       setTimeout(() => {
-        router.push('/dashboard');
-      }, 1500); // Reduced from 2000ms
+        // Force a page reload to ensure session is properly established
+        window.location.href = '/dashboard';
+      }, 1000); // Reduced delay
     }
   };
 
