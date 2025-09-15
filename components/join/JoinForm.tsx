@@ -120,7 +120,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
         className="max-w-md w-full"
       >
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <div className="flex items-center space-x-3">
               <Button
                 variant="ghost"
@@ -130,52 +130,52 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <CardTitle>Create Your Account</CardTitle>
+              <CardTitle className="text-lg">Create Your Account</CardTitle>
             </div>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <CardContent className="pt-2">
+            <form onSubmit={handleSubmit} className="space-y-3">
               {/* Full Name */}
-              <div className="space-y-2">
-                <Label htmlFor="full_name">Full Name *</Label>
+              <div className="space-y-1">
+                <Label htmlFor="full_name" className="text-sm">Full Name *</Label>
                 <Input
                   id="full_name"
                   type="text"
                   value={formData.full_name}
                   onChange={(e) => handleInputChange('full_name', e.target.value)}
                   placeholder="Enter your full name"
-                  className={errors.full_name ? 'border-red-500' : ''}
+                  className={`h-9 ${errors.full_name ? 'border-red-500' : ''}`}
                 />
                 {errors.full_name && (
-                  <p className="text-sm text-red-600 flex items-center space-x-1">
-                    <AlertCircle className="h-4 w-4" />
+                  <p className="text-xs text-red-600 flex items-center space-x-1">
+                    <AlertCircle className="h-3 w-3" />
                     <span>{errors.full_name}</span>
                   </p>
                 )}
               </div>
 
               {/* Email */}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address *</Label>
+              <div className="space-y-1">
+                <Label htmlFor="email" className="text-sm">Email Address *</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   placeholder="Enter your email address"
-                  className={errors.email ? 'border-red-500' : ''}
+                  className={`h-9 ${errors.email ? 'border-red-500' : ''}`}
                 />
                 {errors.email && (
-                  <p className="text-sm text-red-600 flex items-center space-x-1">
-                    <AlertCircle className="h-4 w-4" />
+                  <p className="text-xs text-red-600 flex items-center space-x-1">
+                    <AlertCircle className="h-3 w-3" />
                     <span>{errors.email}</span>
                   </p>
                 )}
               </div>
 
               {/* Password */}
-              <div className="space-y-2">
-                <Label htmlFor="password">Password *</Label>
+              <div className="space-y-1">
+                <Label htmlFor="password" className="text-sm">Password *</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -183,7 +183,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
                     placeholder="Create a password"
-                    className={errors.password ? 'border-red-500 pr-10' : 'pr-10'}
+                    className={`h-9 pr-10 ${errors.password ? 'border-red-500' : ''}`}
                   />
                   <button
                     type="button"
@@ -194,34 +194,34 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-sm text-red-600 flex items-center space-x-1">
-                    <AlertCircle className="h-4 w-4" />
+                  <p className="text-xs text-red-600 flex items-center space-x-1">
+                    <AlertCircle className="h-3 w-3" />
                     <span>{errors.password}</span>
                   </p>
                 )}
-                <p className="text-sm text-gray-500">
+                <p className="text-xs text-gray-500">
                   Password must be at least 6 characters long
                 </p>
               </div>
 
               {/* Chapter Info */}
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-2">
-                <h4 className="font-medium text-purple-900">You're joining:</h4>
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 space-y-1">
+                <h4 className="font-medium text-purple-900 text-sm">You're joining:</h4>
                 <div className="flex items-center space-x-2">
-                  <Users className="h-4 w-4 text-purple-600" />
-                  <span className="text-purple-800">{invitation.chapter_name}</span>
+                  <Users className="h-3 w-3 text-purple-600" />
+                  <span className="text-purple-800 text-sm">{invitation.chapter_name}</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Shield className="h-4 w-4 text-purple-600" />
-                  <span className="text-purple-800">
-                    {invitation.approval_mode === 'auto' ? 'Auto-approved' : 'Requires approval'}
+                  <Shield className="h-3 w-3 text-purple-600" />
+                  <span className="text-purple-800 text-sm">
+                    Auto-approved
                   </span>
                 </div>
               </div>
 
               {/* Terms and Privacy */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-600">
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-xs text-gray-600">
                   By creating an account, you agree to join {invitation.chapter_name} and abide by the chapter's rules and policies.
                   Your account will be created with the role of "Active Member" and appropriate status based on the invitation settings.
                 </p>
@@ -230,9 +230,8 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full bg-purple-600 hover:bg-purple-700"
+                className="w-full bg-purple-600 hover:bg-purple-700 h-9"
                 disabled={loading}
-                size="lg"
               >
                 {loading ? 'Creating Account...' : 'Create Account & Join Chapter'}
               </Button>
@@ -241,7 +240,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                 <button
                   type="button"
                   onClick={onCancel}
-                  className="text-sm text-gray-500 hover:text-gray-700"
+                  className="text-xs text-gray-500 hover:text-gray-700"
                 >
                   Back to invitation details
                 </button>

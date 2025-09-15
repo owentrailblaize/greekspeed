@@ -7,7 +7,7 @@ export interface Invitation {
   chapter_id: string;
   created_by: string;
   email_domain_allowlist: string[] | null;
-  approval_mode: ApprovalMode;
+  approval_mode: 'auto'; // Change from ApprovalMode to just 'auto'
   single_use: boolean;
   expires_at: string | null;
   usage_count: number;
@@ -15,6 +15,7 @@ export interface Invitation {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  chapter_name?: string; // Add this optional property
 }
 
 export interface InvitationUsage {

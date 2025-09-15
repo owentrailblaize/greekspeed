@@ -288,9 +288,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
                         
                         <div className="flex items-center space-x-1">
                           <Shield className="h-4 w-4" />
-                          <span>
-                            {invitation.approval_mode === 'auto' ? 'Auto-approve' : 'Manual approval'}
-                          </span>
+                          <span>Auto-approve</span>
                         </div>
                         
                         <div className="flex items-center space-x-1">

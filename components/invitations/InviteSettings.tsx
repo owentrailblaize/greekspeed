@@ -116,17 +116,10 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <h4 className="font-medium">Approval Modes</h4>
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="default">Auto-approve</Badge>
-                      <span className="text-sm text-gray-600">Immediate access after signup</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="secondary">Manual approval</Badge>
-                      <span className="text-sm text-gray-600">Requires admin approval before access</span>
-                    </div>
-                  </div>
+                  <h4 className="font-medium">Auto-Approval</h4>
+                  <p className="text-sm text-gray-600">
+                    All invitations use auto-approval. New members gain immediate access after signup.
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <h4 className="font-medium">Open Email Access</h4>

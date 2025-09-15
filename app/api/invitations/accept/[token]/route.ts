@@ -108,7 +108,7 @@ export async function POST(
           chapter_id: invitation.chapter_id,
           chapter: validation.chapter_name, // FIX: Set the chapter name
           role: 'active_member',
-          member_status: invitation.approval_mode === 'pending' ? 'probation' : 'active',
+          member_status: 'active', // Always set to active
           updated_at: new Date().toISOString()
         })
         .eq('id', authData.user.id);
@@ -163,7 +163,7 @@ export async function POST(
           chapter_id: invitation.chapter_id,
           chapter: validation.chapter_name, // FIX: Set the chapter name
           role: 'active_member',
-          member_status: invitation.approval_mode === 'pending' ? 'probation' : 'active',
+          member_status: 'active', // Always set to active
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         });
@@ -220,8 +220,8 @@ export async function POST(
         chapter_id: invitation.chapter_id,
         chapter: validation.chapter_name,
         role: 'active_member',
-        member_status: invitation.approval_mode === 'pending' ? 'probation' : 'active',
-        needs_approval: invitation.approval_mode === 'pending'
+        member_status: 'active', // Always set to active
+        needs_approval: false // Always false for auto-approval
       }
     });
   } catch (error) {

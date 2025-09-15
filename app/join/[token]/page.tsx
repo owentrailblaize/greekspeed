@@ -6,7 +6,6 @@ import { AlertCircle, Users, Shield, Calendar, CheckCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { JoinForm } from '@/components/join/JoinForm';
-import { ApprovalPending } from '@/components/join/ApprovalPending';
 import { Invitation } from '@/types/invitations';
 
 export default function JoinPage() {
@@ -117,15 +116,6 @@ export default function JoinPage() {
           </CardContent>
         </Card>
       </div>
-    );
-  }
-
-  if (showApprovalPending) {
-    return (
-      <ApprovalPending 
-        invitation={invitation}
-        onClose={() => router.push('/')}
-      />
     );
   }
 

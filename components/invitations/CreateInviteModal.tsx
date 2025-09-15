@@ -21,7 +21,6 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
   const [formData, setFormData] = useState({
     email_domain_allowlist: [], // Always empty - no restrictions
     approval_mode: invitation?.approval_mode || 'auto',
-    single_use: invitation?.single_use || false,
     expires_at: invitation?.expires_at ? new Date(invitation.expires_at).toISOString().slice(0, 16) : '',
     max_uses: invitation?.max_uses?.toString() || '',
     is_active: invitation?.is_active ?? true
@@ -36,7 +35,6 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
       const submitData = {
         email_domain_allowlist: [], // Always empty - no email restrictions
         approval_mode: formData.approval_mode,
-        single_use: formData.single_use,
         expires_at: formData.expires_at || null,
         max_uses: formData.max_uses ? parseInt(formData.max_uses) : null,
         is_active: formData.is_active
@@ -83,22 +81,12 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] space-y-6">
           {/* Approval Mode */}
           <div className="space-y-2">
-            <Label htmlFor="approval_mode" className="flex items-center space-x-2">
-              <Shield className="h-4 w-4" />
-              <span>Approval Mode</span>
+            <Label className="flex items-center space-x-2">
+              <Shield className="h-4 w-4 text-green-600" />
+              <span>Auto-Approval Enabled</span>
             </Label>
-            <Select
-              value={formData.approval_mode}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, approval_mode: value as 'auto' | 'pending' }))}
-            >
-              <SelectItem value="auto">Auto-approve (Immediate access)</SelectItem>
-              <SelectItem value="pending">Manual approval (Requires admin approval)</SelectItem>
-            </Select>
-            <p className="text-sm text-gray-500">
-              {formData.approval_mode === 'auto' 
-                ? 'New members will be automatically approved and can access the platform immediately.'
-                : 'New members will need admin approval before they can access the platform.'
-              }
+            <p className="text-sm text-gray-600">
+              All new members will be automatically approved and gain immediate access to the chapter dashboard.
             </p>
           </div>
 
@@ -158,21 +146,24 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
             </div>
           </div>
 
-          {/* Single Use */}
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="single_use"
-              checked={formData.single_use}
-              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, single_use: !!checked }))}
-            />
-            <Label htmlFor="single_use" className="flex items-center space-x-2">
-              <Clock className="h-4 w-4" />
-              <span>Single-use per email</span>
+          {/* Email Uniqueness Info */}
+          <div className="space-y-2">
+            <Label className="flex items-center space-x-2">
+              <CheckCircle className="h-4 w-4 text-blue-600" />
+              <span>Email Uniqueness</span>
             </Label>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start space-x-2">
+                <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-blue-900">One Account Per Email</h4>
+                  <p className="text-sm text-blue-800 mt-1">
+                    Each email address can only create one account across the entire system. If someone tries to use an email that already has an account, they'll be prompted to sign in instead.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="text-sm text-gray-500 ml-6">
-            Each email address can only use this invitation once. Multiple people can still use the same invitation with different emails.
-          </p>
 
           {/* Active Status (only for editing) */}
           {invitation && (
