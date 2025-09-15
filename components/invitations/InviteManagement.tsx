@@ -217,7 +217,8 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
     <div className={className}>
       <Card>
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
+          {/* Desktop Layout */}
+          <div className="hidden md:flex items-center justify-between">
             <CardTitle className="flex items-center space-x-2">
               <Users className="h-5 w-5 text-purple-600" />
               <span>Invitation Management</span>
@@ -239,6 +240,36 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Create Invitation
+              </Button>
+            </div>
+          </div>
+          
+          {/* Mobile Layout */}
+          <div className="md:hidden">
+            <div className="flex items-center space-x-3 mb-3">
+              <Users className="h-6 w-6 text-purple-600 flex-shrink-0" />
+              <CardTitle className="text-lg whitespace-nowrap overflow-hidden text-ellipsis">
+                Invitation Management
+              </CardTitle>
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSettings(true)}
+                className="h-9 flex-1"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
+              <Button
+                onClick={() => setShowCreateModal(true)}
+                className="bg-purple-600 hover:bg-purple-700 h-9 flex-1"
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                <span className="md:hidden">Invite</span>
+                <span className="hidden md:inline">Create Invitation</span>
               </Button>
             </div>
           </div>
