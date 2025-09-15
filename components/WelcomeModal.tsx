@@ -58,48 +58,48 @@ export function WelcomeModal({ profile, onClose }: WelcomeModalProps) {
         exit={{ opacity: 0, scale: 0.95 }}
         className="bg-white rounded-lg max-w-2xl w-full max-h-[95vh] md:max-h-[90vh] overflow-hidden"
       >
-        <Card className="border-0 shadow-none">
-          <CardHeader className="relative pb-3 md:pb-4">
-            <div className="flex items-center justify-center mb-3 md:mb-4">
-              <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <Sparkles className="h-6 w-6 md:h-8 md:w-8 text-white" />
+        <Card className="border-0 shadow-none h-full flex flex-col">
+          <CardHeader className="relative pb-2 md:pb-3 flex-shrink-0">
+            <div className="flex items-center justify-center mb-2 md:mb-3">
+              <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <Sparkles className="h-5 w-5 md:h-7 md:w-7 text-white" />
               </div>
             </div>
-            <CardTitle className="text-center text-lg md:text-2xl font-bold text-gray-900">
+            <CardTitle className="text-center text-base md:text-xl font-bold text-gray-900">
               Welcome to {profile?.chapter || 'Your Chapter'}!
             </CardTitle>
-            <p className="text-center text-sm md:text-base text-gray-600 mt-1 md:mt-2">
+            <p className="text-center text-xs md:text-sm text-gray-600 mt-1">
               We're excited to have you join our community. Here's what you can do:
             </p>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleClose}
-              className="absolute top-2 md:top-4 right-2 md:right-4 p-1 md:p-2"
+              className="absolute top-2 md:top-3 right-2 md:right-3 p-1"
             >
               <X className="h-4 w-4" />
             </Button>
           </CardHeader>
           
-          <CardContent className="pt-0 px-3 md:px-6">
-            {/* Features Grid - 2x2 on mobile, 2x2 on desktop */}
-            <div className="grid grid-cols-2 gap-2 md:gap-4 mb-4 md:mb-6">
+          <CardContent className="pt-0 px-3 md:px-4 pb-3 md:pb-4 flex-1 flex flex-col">
+            {/* Features Grid - Compact spacing */}
+            <div className="grid grid-cols-2 gap-2 md:gap-3 mb-3 md:mb-4">
               {features.map((feature, index) => (
                 <motion.div
                   key={feature.title}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="flex flex-col items-center text-center p-2 md:p-3 rounded-lg bg-gray-50"
+                  className="flex flex-col items-center text-center p-2 rounded-lg bg-gray-50"
                 >
-                  <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-2 md:mb-3">
-                    <feature.icon className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
+                  <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-100 rounded-lg flex items-center justify-center mb-1 md:mb-2">
+                    <feature.icon className="h-3 w-3 md:h-4 md:w-4 text-blue-600" />
                   </div>
-                  <div className="space-y-1">
-                    <h4 className="font-medium text-xs md:text-sm text-gray-900 leading-tight">
+                  <div className="space-y-0.5">
+                    <h4 className="font-medium text-xs text-gray-900 leading-tight">
                       {feature.title}
                     </h4>
-                    <p className="text-xs md:text-sm text-gray-600 leading-tight">
+                    <p className="text-xs text-gray-600 leading-tight">
                       {feature.description}
                     </p>
                   </div>
@@ -107,13 +107,13 @@ export function WelcomeModal({ profile, onClose }: WelcomeModalProps) {
               ))}
             </div>
 
-            {/* Get Started Section */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
-              <div className="flex items-start space-x-2 md:space-x-3">
-                <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+            {/* Get Started Section - Compact */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 md:p-3 mb-3 md:mb-4">
+              <div className="flex items-start space-x-2">
+                <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h4 className="font-medium text-sm md:text-base text-blue-900 mb-1">Get Started</h4>
-                  <p className="text-xs md:text-sm text-blue-800 leading-relaxed">
+                  <h4 className="font-medium text-xs md:text-sm text-blue-900 mb-0.5">Get Started</h4>
+                  <p className="text-xs text-blue-800 leading-relaxed">
                     Complete your profile to unlock all features and connect with other members. 
                     You can always update your information later.
                   </p>
@@ -121,11 +121,11 @@ export function WelcomeModal({ profile, onClose }: WelcomeModalProps) {
               </div>
             </div>
 
-            {/* Button */}
-            <div className="flex justify-center">
+            {/* Button - Always at bottom */}
+            <div className="flex justify-center mt-auto">
               <Button
                 onClick={handleClose}
-                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 md:px-8 md:py-3 text-sm md:text-base"
+                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 md:px-6 md:py-2 text-xs md:text-sm font-medium"
                 size="sm"
               >
                 Let's Get Started!
