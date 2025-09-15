@@ -113,15 +113,15 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-2 md:p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-md w-full"
       >
         <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center space-x-3">
+          <CardHeader className="pb-2 md:pb-4">
+            <div className="flex items-center space-x-2 md:space-x-3">
               <Button
                 variant="ghost"
                 size="sm"
@@ -130,13 +130,13 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <CardTitle className="text-lg">Create Your Account</CardTitle>
+              <CardTitle className="text-lg md:text-xl">Create Your Account</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="pt-2">
-            <form onSubmit={handleSubmit} className="space-y-3">
+          <CardContent className="pt-1 md:pt-2">
+            <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
               {/* Full Name */}
-              <div className="space-y-1">
+              <div className="space-y-1 md:space-y-2">
                 <Label htmlFor="full_name" className="text-sm">Full Name *</Label>
                 <Input
                   id="full_name"
@@ -144,7 +144,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                   value={formData.full_name}
                   onChange={(e) => handleInputChange('full_name', e.target.value)}
                   placeholder="Enter your full name"
-                  className={`h-9 ${errors.full_name ? 'border-red-500' : ''}`}
+                  className={`h-8 md:h-9 ${errors.full_name ? 'border-red-500' : ''}`}
                 />
                 {errors.full_name && (
                   <p className="text-xs text-red-600 flex items-center space-x-1">
@@ -155,7 +155,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
               </div>
 
               {/* Email */}
-              <div className="space-y-1">
+              <div className="space-y-1 md:space-y-2">
                 <Label htmlFor="email" className="text-sm">Email Address *</Label>
                 <Input
                   id="email"
@@ -163,7 +163,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   placeholder="Enter your email address"
-                  className={`h-9 ${errors.email ? 'border-red-500' : ''}`}
+                  className={`h-8 md:h-9 ${errors.email ? 'border-red-500' : ''}`}
                 />
                 {errors.email && (
                   <p className="text-xs text-red-600 flex items-center space-x-1">
@@ -174,7 +174,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
               </div>
 
               {/* Password */}
-              <div className="space-y-1">
+              <div className="space-y-1 md:space-y-2">
                 <Label htmlFor="password" className="text-sm">Password *</Label>
                 <div className="relative">
                   <Input
@@ -183,7 +183,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
                     placeholder="Create a password"
-                    className={`h-9 pr-10 ${errors.password ? 'border-red-500' : ''}`}
+                    className={`h-8 md:h-9 pr-10 ${errors.password ? 'border-red-500' : ''}`}
                   />
                   <button
                     type="button"
@@ -205,14 +205,14 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
               </div>
 
               {/* Chapter Info */}
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 space-y-1">
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 md:p-3 space-y-1 md:space-y-2">
                 <h4 className="font-medium text-purple-900 text-sm">You're joining:</h4>
                 <div className="flex items-center space-x-2">
-                  <Users className="h-3 w-3 text-purple-600" />
+                  <Users className="h-3 w-3 md:h-4 md:w-4 text-purple-600" />
                   <span className="text-purple-800 text-sm">{invitation.chapter_name}</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Shield className="h-3 w-3 text-purple-600" />
+                  <Shield className="h-3 w-3 md:h-4 md:w-4 text-purple-600" />
                   <span className="text-purple-800 text-sm">
                     Auto-approved
                   </span>
@@ -220,7 +220,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
               </div>
 
               {/* Terms and Privacy */}
-              <div className="bg-gray-50 rounded-lg p-3">
+              <div className="bg-gray-50 rounded-lg p-2 md:p-3">
                 <p className="text-xs text-gray-600">
                   By creating an account, you agree to join {invitation.chapter_name} and abide by the chapter's rules and policies.
                   Your account will be created with the role of "Active Member" and appropriate status based on the invitation settings.
@@ -230,7 +230,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full bg-purple-600 hover:bg-purple-700 h-9"
+                className="w-full bg-blue-600 hover:bg-blue-700 h-8 md:h-9"
                 disabled={loading}
               >
                 {loading ? 'Creating Account...' : 'Create Account & Join Chapter'}
