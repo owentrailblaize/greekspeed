@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, TrendingUp, Calendar, MessageSquare, AlertCircle, CheckCircle, Clock, Crown, Send, Image, Clock as ClockIcon, Lock, X, UserPlus } from "lucide-react";
+import { Users, TrendingUp, Calendar, MessageSquare, AlertCircle, CheckCircle, Clock, Crown, Send, Image, Clock as ClockIcon, Lock, X, UserPlus, Smartphone } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +47,11 @@ export function PresidentDashboard() {
   // Add state for alumni count
   const [alumniCount, setAlumniCount] = useState<number | null>(null);
   const [loadingAlumniCount, setLoadingAlumniCount] = useState(false);
+
+  // Add SMS-related state variables
+  const [sendSMS, setSendSMS] = useState(false);
+  const [smsTestMode, setSmsTestMode] = useState(true);
+  const [smsLoading, setSmsLoading] = useState(false);
 
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
@@ -235,6 +240,44 @@ export function PresidentDashboard() {
     } catch (error) {
       toast.error('Failed to schedule meeting');
       console.error('Error creating event:', error);
+    }
+  };
+
+  // Add SMS function
+  const handleSendSMSAnnouncement = async () => {
+    if (!announcementTitle.trim() || !announcement.trim()) {
+      toast.error('Please fill in both title and content');
+      return;
+    }
+
+    setSmsLoading(true);
+    try {
+      const smsMessage = `📢 ${announcementTitle}\n\n${announcement}\n\n- ${profile?.full_name || 'Chapter Leadership'}`;
+      
+      const response = await fetch('/api/sms/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chapterId: chapterId,
+          message: smsMessage,
+          testMode: smsTestMode,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send SMS');
+      }
+
+      toast.success(result.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to send SMS');
+      console.error('Error sending SMS:', error);
+    } finally {
+      setSmsLoading(false);
     }
   };
 
@@ -465,6 +508,28 @@ export function PresidentDashboard() {
                       <span className="text-sm">Schedule for later</span>
                     </label>
                     
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={sendSMS}
+                        onChange={(e) => setSendSMS(e.target.checked)}
+                        className="rounded"
+                      />
+                      <span className="text-sm">Send SMS notification</span>
+                    </label>
+                    
+                    {sendSMS && (
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={smsTestMode}
+                          onChange={(e) => setSmsTestMode(e.target.checked)}
+                          className="rounded"
+                        />
+                        <span className="text-sm">Test mode (first 3 members)</span>
+                      </label>
+                    )}
+                    
                     {isScheduled && (
                       <Input
                         type="datetime-local"
@@ -475,14 +540,27 @@ export function PresidentDashboard() {
                     )}
                   </div>
                   
-                  <Button 
-                    className="bg-purple-600 hover:bg-purple-700"
-                    onClick={handleSendAnnouncement}
-                    disabled={isSubmitting || announcementsLoading}
-                  >
-                    <Send className="h-4 w-4 mr-2" />
-                    {isSubmitting ? 'Sending...' : 'Send Announcement'}
-                  </Button>
+                  <div className="flex space-x-2">
+                    {sendSMS && (
+                      <Button 
+                        className="bg-green-600 hover:bg-green-700"
+                        onClick={handleSendSMSAnnouncement}
+                        disabled={smsLoading || announcementsLoading}
+                      >
+                        <Smartphone className="h-4 w-4 mr-2" />
+                        {smsLoading ? 'Sending SMS...' : 'Send SMS'}
+                      </Button>
+                    )}
+                    
+                    <Button 
+                      className="bg-purple-600 hover:bg-purple-700"
+                      onClick={handleSendAnnouncement}
+                      disabled={isSubmitting || announcementsLoading}
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      {isSubmitting ? 'Sending...' : 'Send Announcement'}
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -529,6 +607,28 @@ export function PresidentDashboard() {
                     <span className="text-sm">Schedule for later</span>
                   </label>
                   
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={sendSMS}
+                      onChange={(e) => setSendSMS(e.target.checked)}
+                      className="rounded"
+                    />
+                    <span className="text-sm">Send SMS notification</span>
+                  </label>
+                  
+                  {sendSMS && (
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={smsTestMode}
+                        onChange={(e) => setSmsTestMode(e.target.checked)}
+                        className="rounded"
+                      />
+                      <span className="text-sm">Test mode (first 3 members)</span>
+                    </label>
+                  )}
+                  
                   {isScheduled && (
                     <Input
                       type="datetime-local"
@@ -539,7 +639,18 @@ export function PresidentDashboard() {
                   )}
                 </div>
                 
-                <div className="flex justify-center pt-2">
+                <div className="flex flex-col space-y-2 pt-2">
+                  {sendSMS && (
+                    <Button 
+                      className="bg-green-600 hover:bg-green-700 w-full"
+                      onClick={handleSendSMSAnnouncement}
+                      disabled={smsLoading || announcementsLoading}
+                    >
+                      <Smartphone className="h-4 w-4 mr-2" />
+                      {smsLoading ? 'Sending SMS...' : 'Send SMS'}
+                    </Button>
+                  )}
+                  
                   <Button 
                     className="bg-purple-600 hover:bg-purple-700 w-full"
                     onClick={handleSendAnnouncement}
