@@ -9,13 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Star, User, Building2, GraduationCap, MapPin, Briefcase } from 'lucide-react';
+import { Star, User, Building2, GraduationCap, MapPin, Briefcase, Info, Users } from 'lucide-react';
 import { useChapters } from '@/lib/hooks/useChapters';
 
-// User roles for the dropdown
+// User roles for the dropdown - Only Alumni allowed for public signup
 const userRoles = [
-  { value: 'admin', label: 'Admin / Executive' },
-  { value: 'active_member', label: 'Active Member' },
   { value: 'alumni', label: 'Alumni' }
 ];
 
@@ -94,27 +92,27 @@ export default function ProfileCompletePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <Card className="w-full max-w-5xl shadow-xl border-0">
+    <div className="min-h-screen bg-white flex items-center justify-center p-1 sm:p-2">
+      <Card className="w-full max-w-4xl shadow-xl border-0">
         <CardContent className="p-0">
           <div className="flex min-h-[500px]">
-            {/* Left Column - Introduction - Hidden on mobile */}
-            <div className="hidden lg:block w-full lg:w-1/2 bg-gradient-to-br from-navy-50 to-blue-50 p-8 flex flex-col justify-center">
-              <div className="text-center lg:text-left">
-                <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+            {/* Left Column - Introduction - Hidden on mobile, centered on desktop */}
+            <div className="hidden lg:block w-full lg:w-1/2 bg-gradient-to-br from-navy-50 to-blue-50 p-4 lg:p-6 flex flex-col justify-center items-center">
+              <div className="text-center max-w-sm">
+                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">
                   Complete Your Profile
                 </h1>
-                <p className="text-lg text-gray-700 mb-6 leading-relaxed">
+                <p className="text-base text-gray-700 mb-6 leading-relaxed">
                   Let's get to know you better to personalize your Trailblaize experience
                 </p>
                 
-                {/* Network Visualization - Smaller */}
-                <div className="relative w-48 h-48 mx-auto lg:mx-0">
+                {/* Network Visualization - Centered */}
+                <div className="relative w-40 h-40 mx-auto">
                   <div className="absolute inset-0 bg-gradient-to-br from-navy-200 to-blue-200 rounded-full opacity-20"></div>
                   <div className="absolute inset-4 bg-gradient-to-br from-navy-300 to-blue-300 rounded-full opacity-30"></div>
                   <div className="absolute inset-8 bg-gradient-to-br from-navy-400 to-blue-400 rounded-full opacity-40"></div>
                   
-                  {/* Network Nodes */}
+                  {/* Network Nodes - Restored size */}
                   <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-white rounded-full border-2 border-navy-500 shadow-lg"></div>
                   <div className="absolute top-12 left-8 w-6 h-6 bg-white rounded-full border-2 border-navy-400 shadow-md"></div>
                   <div className="absolute top-16 right-12 w-7 h-7 bg-white rounded-full border-2 border-navy-500 shadow-md"></div>
@@ -122,46 +120,54 @@ export default function ProfileCompletePage() {
                   <div className="absolute bottom-8 right-8 w-6 h-6 bg-white rounded-full border-2 border-navy-500 shadow-md"></div>
                   
                   {/* Connection Lines */}
-                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 256 256">
-                    <line x1="128" y1="32" x2="96" y2="96" stroke="#1e40af" strokeWidth="2" opacity="0.3"/>
-                    <line x1="128" y1="32" x2="160" y2="128" stroke="#1e40af" strokeWidth="2" opacity="0.3"/>
-                    <line x1="96" y1="96" x2="64" y2="160" stroke="#1e40af" strokeWidth="2" opacity="0.3"/>
-                    <line x1="160" y1="128" x2="192" y2="160" stroke="#1e40af" strokeWidth="2" opacity="0.3"/>
+                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 160 160">
+                    <line x1="80" y1="32" x2="64" y2="96" stroke="#1e40af" strokeWidth="2" opacity="0.3"/>
+                    <line x1="80" y1="32" x2="96" y2="128" stroke="#1e40af" strokeWidth="2" opacity="0.3"/>
+                    <line x1="64" y1="96" x2="48" y2="128" stroke="#1e40af" strokeWidth="2" opacity="0.3"/>
+                    <line x1="96" y1="128" x2="128" y2="128" stroke="#1e40af" strokeWidth="2" opacity="0.3"/>
                   </svg>
                 </div>
               </div>
             </div>
 
-            {/* Right Column - Profile Form */}
-            <div className="w-full lg:w-1/2 p-6 lg:p-8 flex flex-col justify-center min-h-screen lg:min-h-0">
-              <div className="w-full max-w-md mx-auto">
-                {/* Mobile Header - Only show on mobile */}
-                <div className="lg:hidden text-center mb-8">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">Complete Your Profile</h1>
-                  <p className="text-sm text-gray-600">Let's get to know you better</p>
+            {/* Right Column - Profile Form - Dynamic height */}
+            <div className="w-full lg:w-1/2 p-2 sm:p-3 lg:p-4 flex flex-col justify-center">
+              <div className="w-full max-w-sm mx-auto">
+                {/* Mobile Header - Compact */}
+                <div className="lg:hidden text-center mb-3">
+                  <h1 className="text-lg font-bold text-gray-900 mb-1">Complete Your Profile</h1>
+                  <p className="text-xs text-gray-600">Let's get to know you better</p>
                 </div>
 
-                {/* Desktop Header - Only show on desktop */}
-                <div className="hidden lg:block text-center">
-                  {/* Logo - Centered */}
-                  <div className="flex items-center justify-center space-x-3 mb-6">
-                    <div className="w-8 h-8 bg-navy-600 rounded-lg flex items-center justify-center">
-                      <Star className="h-5 w-5 text-white" />
+                {/* Desktop Header - Only "Complete Your Profile" */}
+                <div className="hidden lg:block text-center mb-3">
+                  <h2 className="text-lg font-bold text-gray-900">Complete Your Profile</h2>
+                </div>
+
+                {/* Information Banner - Compact */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
+                  <div className="flex items-start space-x-2">
+                    <Info className="h-3 w-3 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h3 className="font-medium text-blue-900 text-xs mb-1">Alumni Profile Only</h3>
+                      <p className="text-xs text-blue-800 mb-1">
+                        This profile completion is for alumni only. Active members must be invited by chapter administrators.
+                      </p>
+                      <div className="flex items-center space-x-1 text-xs text-blue-700">
+                        <Users className="h-3 w-3" />
+                        <span>Need to join as an active member? Contact your chapter admin for an invitation.</span>
+                      </div>
                     </div>
-                    <span className="font-semibold text-xl text-gray-900">Trailblaize</span>
                   </div>
-
-                  {/* Heading - Centered */}
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Complete Your Profile</h2>
                 </div>
 
-                {/* Form - Left-aligned for better form UX */}
+                {/* Form - Compact and optimized */}
                 <div className="text-left">
-                  <form onSubmit={handleSubmit} className="space-y-3">
-                    {/* Name Fields */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">First Name</Label>
+                  <form onSubmit={handleSubmit} className="space-y-1.5">
+                    {/* Name Fields - Compact */}
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <div className="space-y-1">
+                        <Label htmlFor="firstName" className="text-xs font-medium text-gray-700">First Name</Label>
                         <Input
                           id="firstName"
                           type="text"
@@ -170,11 +176,11 @@ export default function ProfileCompletePage() {
                           onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
                           required
                           disabled={loading}
-                          className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+                          className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">Last Name</Label>
+                      <div className="space-y-1">
+                        <Label htmlFor="lastName" className="text-xs font-medium text-gray-700">Last Name</Label>
                         <Input
                           id="lastName"
                           type="text"
@@ -183,14 +189,14 @@ export default function ProfileCompletePage() {
                           onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
                           required
                           disabled={loading}
-                          className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+                          className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
                         />
                       </div>
                     </div>
 
-                    {/* Email Field */}
-                    <div className="space-y-2">
-                      <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
+                    {/* Email Field - Compact */}
+                    <div className="space-y-1">
+                      <Label htmlFor="email" className="text-xs font-medium text-gray-700">Email</Label>
                       <Input
                         id="email"
                         type="email"
@@ -199,13 +205,13 @@ export default function ProfileCompletePage() {
                         onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                         required
                         disabled={loading}
-                        className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+                        className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
                       />
                     </div>
 
-                    {/* Chapter Selection */}
-                    <div className="space-y-2">
-                      <Label htmlFor="chapter" className="text-sm font-medium text-gray-700">Chapter</Label>
+                    {/* Chapter Selection - Compact */}
+                    <div className="space-y-1">
+                      <Label htmlFor="chapter" className="text-xs font-medium text-gray-700">Chapter</Label>
                       <Select 
                         value={formData.chapter} 
                         onValueChange={(value: string) => setFormData(prev => ({ ...prev, chapter: value }))}
@@ -225,12 +231,12 @@ export default function ProfileCompletePage() {
                       )}
                     </div>
 
-                    {/* Role Selection */}
-                    <div className="space-y-2">
-                      <Label htmlFor="role" className="text-sm font-medium text-gray-700">Role</Label>
+                    {/* Role Selection - Compact - Only Alumni */}
+                    <div className="space-y-1">
+                      <Label htmlFor="role" className="text-xs font-medium text-gray-700">Role</Label>
                       <Select 
                         value={formData.role} 
-                        onValueChange={(value: string) => setFormData(prev => ({ ...prev, role: value as 'Admin / Executive' | 'Active Member' | 'Alumni' }))}
+                        onValueChange={(value: string) => setFormData(prev => ({ ...prev, role: value as 'Alumni' }))}
                       >
                         <SelectItem value="">Select your role</SelectItem>
                         {userRoles.map((userRole) => (
@@ -239,28 +245,33 @@ export default function ProfileCompletePage() {
                           </SelectItem>
                         ))}
                       </Select>
+                      <p className="text-xs text-gray-500">
+                        Alumni accounts can access the alumni network and connect with other graduates.
+                      </p>
                     </div>
 
-                    {/* Error Messages */}
+                    {/* Error Messages - Compact */}
                     {error && (
-                      <div className="text-red-500 text-sm bg-red-50 border border-red-200 rounded-lg p-3">{error}</div>
+                      <div className="text-red-500 text-xs bg-red-50 border border-red-200 rounded-lg p-2">{error}</div>
                     )}
 
-                    {/* Submit Button */}
-                    <Button
-                      type="submit"
-                      className="w-full h-12 bg-navy-600 hover:bg-navy-700 text-white font-medium"
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <div className="flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Completing Profile...
-                        </div>
-                      ) : (
-                        'Complete Profile'
-                      )}
-                    </Button>
+                    {/* Submit Button - Reduced spacing */}
+                    <div className="mt-1">
+                      <Button
+                        type="submit"
+                        className="w-full h-7 bg-navy-600 hover:bg-navy-700 text-white font-medium text-sm"
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <div className="flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
+                            Completing Profile...
+                          </div>
+                        ) : (
+                          'Complete Profile'
+                        )}
+                      </Button>
+                    </div>
                   </form>
                 </div>
               </div>
