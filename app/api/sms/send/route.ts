@@ -118,8 +118,11 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // In test mode, only send to first 3 members
-    const recipientsToUse = testMode 
+    // In sandbox mode or test mode, only send to first 3 members
+    const isSandbox = SMSService.isInSandboxMode();
+    const shouldUseTestMode = testMode || isSandbox;
+    
+    const recipientsToUse = shouldUseTestMode 
       ? validMembers.slice(0, 3)
       : validMembers;
 
@@ -146,17 +149,16 @@ export async function POST(request: NextRequest) {
       // Don't fail the request if logging fails
     }
 
-    const isSandbox = SMSService.isInSandboxMode();
     const modeText = isSandbox ? ' (SANDBOX MODE - No actual SMS sent)' : '';
 
     return NextResponse.json({
       success: true,
-      message: `SMS sent to ${result.success} recipients${testMode ? ' (test mode)' : ''}${modeText}`,
+      message: `SMS sent to ${result.success} recipients${shouldUseTestMode ? ' (test mode)' : ''}${modeText}`,
       stats: {
         total: phoneNumbers.length,
         success: result.success,
         failed: result.failed,
-        testMode,
+        testMode: shouldUseTestMode,
         sandboxMode: isSandbox,
       },
     });

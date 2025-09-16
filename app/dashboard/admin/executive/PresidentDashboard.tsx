@@ -50,8 +50,6 @@ export function PresidentDashboard() {
 
   // Add SMS-related state variables
   const [sendSMS, setSendSMS] = useState(false);
-  const [smsTestMode, setSmsTestMode] = useState(true);
-  const [smsLoading, setSmsLoading] = useState(false);
 
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
@@ -244,42 +242,6 @@ export function PresidentDashboard() {
   };
 
   // Add SMS function
-  const handleSendSMSAnnouncement = async () => {
-    if (!announcementTitle.trim() || !announcement.trim()) {
-      toast.error('Please fill in both title and content');
-      return;
-    }
-
-    setSmsLoading(true);
-    try {
-      const smsMessage = `📢 ${announcementTitle}\n\n${announcement}\n\n- ${profile?.full_name || 'Chapter Leadership'}`;
-      
-      const response = await fetch('/api/sms/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chapterId: chapterId,
-          message: smsMessage,
-          testMode: smsTestMode,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to send SMS');
-      }
-
-      toast.success(result.message);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to send SMS');
-      console.error('Error sending SMS:', error);
-    } finally {
-      setSmsLoading(false);
-    }
-  };
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-0 sm:py-8">
@@ -514,21 +476,13 @@ export function PresidentDashboard() {
                         checked={sendSMS}
                         onChange={(e) => setSendSMS(e.target.checked)}
                         className="rounded"
+                        disabled={isScheduled}
                       />
                       <span className="text-sm">Send SMS notification</span>
+                      {isScheduled && (
+                        <span className="text-xs text-gray-500">(SMS not available for scheduled announcements)</span>
+                      )}
                     </label>
-                    
-                    {sendSMS && (
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={smsTestMode}
-                          onChange={(e) => setSmsTestMode(e.target.checked)}
-                          className="rounded"
-                        />
-                        <span className="text-sm">Test mode (first 3 members)</span>
-                      </label>
-                    )}
                     
                     {isScheduled && (
                       <Input
@@ -541,17 +495,6 @@ export function PresidentDashboard() {
                   </div>
                   
                   <div className="flex space-x-2">
-                    {sendSMS && (
-                      <Button 
-                        className="bg-green-600 hover:bg-green-700"
-                        onClick={handleSendSMSAnnouncement}
-                        disabled={smsLoading || announcementsLoading}
-                      >
-                        <Smartphone className="h-4 w-4 mr-2" />
-                        {smsLoading ? 'Sending SMS...' : 'Send SMS'}
-                      </Button>
-                    )}
-                    
                     <Button 
                       className="bg-purple-600 hover:bg-purple-700"
                       onClick={handleSendAnnouncement}
@@ -613,21 +556,13 @@ export function PresidentDashboard() {
                       checked={sendSMS}
                       onChange={(e) => setSendSMS(e.target.checked)}
                       className="rounded"
+                      disabled={isScheduled}
                     />
                     <span className="text-sm">Send SMS notification</span>
+                    {isScheduled && (
+                      <span className="text-xs text-gray-500">(SMS not available for scheduled announcements)</span>
+                    )}
                   </label>
-                  
-                  {sendSMS && (
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={smsTestMode}
-                        onChange={(e) => setSmsTestMode(e.target.checked)}
-                        className="rounded"
-                      />
-                      <span className="text-sm">Test mode (first 3 members)</span>
-                    </label>
-                  )}
                   
                   {isScheduled && (
                     <Input
@@ -640,17 +575,6 @@ export function PresidentDashboard() {
                 </div>
                 
                 <div className="flex flex-col space-y-2 pt-2">
-                  {sendSMS && (
-                    <Button 
-                      className="bg-green-600 hover:bg-green-700 w-full"
-                      onClick={handleSendSMSAnnouncement}
-                      disabled={smsLoading || announcementsLoading}
-                    >
-                      <Smartphone className="h-4 w-4 mr-2" />
-                      {smsLoading ? 'Sending SMS...' : 'Send SMS'}
-                    </Button>
-                  )}
-                  
                   <Button 
                     className="bg-purple-600 hover:bg-purple-700 w-full"
                     onClick={handleSendAnnouncement}

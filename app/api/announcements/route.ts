@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerSupabaseClient } from '@/lib/supabase/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Missing environment variables' }, { status: 500 });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createServerSupabaseClient();
     const { searchParams } = new URL(request.url);
     const chapterId = searchParams.get('chapterId');
     const page = parseInt(searchParams.get('page') || '1');
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing environment variables' }, { status: 500 });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createServerSupabaseClient();
     const body = await request.json();
     const { title, content, announcement_type, priority, is_scheduled, scheduled_at, metadata } = body;
 
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
     // Get user profile to verify chapter and role
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('chapter_id, chapter_role')
+      .select('chapter_id, chapter_role, role')
       .eq('id', user.id)
       .single();
 
@@ -129,9 +129,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user has permission to create announcements
-    const allowedRoles = ['president', 'vice_president', 'secretary', 'treasurer', 'executive_board'];
-    if (!profile.chapter_role || !allowedRoles.includes(profile.chapter_role)) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+    const allowedChapterRoles = ['president', 'vice_president', 'secretary', 'treasurer', 'executive_board'];
+    const isSystemAdmin = profile.role === 'admin';
+    const hasChapterRole = profile.chapter_role && allowedChapterRoles.includes(profile.chapter_role);
+
+    if (!isSystemAdmin && !hasChapterRole) {
+      return NextResponse.json({ 
+        error: 'Insufficient permissions. Only admins, presidents, vice presidents, secretaries, treasurers, and executive board members can create announcements.' 
+      }, { status: 403 });
     }
 
     // Create announcement
