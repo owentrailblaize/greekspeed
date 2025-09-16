@@ -467,19 +467,18 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
 
       {/* Usage Details Modal */}
       {showUsageModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] md:max-h-[80vh] overflow-hidden flex flex-col"
+            className="bg-white rounded-lg max-w-5xl w-full h-[85vh] flex flex-col shadow-xl"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 md:p-6 border-b flex-shrink-0">
-              <h2 className="text-lg md:text-xl font-semibold flex items-center space-x-2">
-                <Table className="h-4 w-4 md:h-5 md:w-5" />
-                <span className="md:hidden">Invitation Usage</span>
-                <span className="hidden md:inline">Invitation Usage Details</span>
+            <div className="flex items-center justify-between p-6 border-b flex-shrink-0">
+              <h2 className="text-xl font-semibold flex items-center space-x-2">
+                <Table className="h-5 w-5" />
+                <span>Invitation Usage Details</span>
               </h2>
               <Button
                 variant="ghost"
@@ -491,59 +490,63 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
               </Button>
             </div>
             
-            <div className="flex-1 overflow-hidden flex flex-col">
-              {/* Summary */}
-              <div className="p-4 md:p-6 flex-shrink-0">
-                <h3 className="text-base md:text-lg font-medium mb-1 md:mb-2">
-                  Invitation #{showUsageModal.token.slice(0, 8)}...
-                </h3>
-                <p className="text-xs md:text-sm text-gray-600">
-                  Total usage: {showUsageModal.usage.length} records
-                </p>
-              </div>
-              
-              {/* Table Container */}
-              <div className="flex-1 overflow-hidden px-2 md:px-6 pb-4 md:pb-6">
-                <div className="overflow-auto h-full">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50 sticky top-0">
-                      <tr>
-                        <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          User
-                        </th>
-                        <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Email
-                        </th>
-                        <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Used At
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {showUsageModal.usage.map((usage) => (
-                        <tr key={usage.id} className="hover:bg-gray-50">
-                          <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-xs md:text-sm font-medium text-gray-900">
+            {/* Summary */}
+            <div className="p-6 flex-shrink-0 border-b">
+              <h3 className="text-lg font-medium mb-2">
+                Invitation #{showUsageModal.token.slice(0, 8)}...
+              </h3>
+              <p className="text-sm text-gray-600">
+                Total usage: {showUsageModal.usage.length} records
+              </p>
+            </div>
+            
+            {/* Table Section - Dynamic height */}
+            <div className="flex-1 p-6 overflow-hidden">
+              <div className="h-full border border-gray-200 rounded-lg overflow-auto bg-white">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50 sticky top-0 z-10">
+                    <tr>
+                      <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[80px] md:min-w-[150px]">
+                        User
+                      </th>
+                      <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px] md:min-w-[200px]">
+                        Email
+                      </th>
+                      <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px] md:min-w-[180px]">
+                        Used At
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {showUsageModal.usage.map((usage) => (
+                      <tr key={usage.id} className="hover:bg-gray-50">
+                        <td className="px-2 md:px-6 py-2 md:py-4 text-xs md:text-sm font-medium text-gray-900 min-w-[80px] md:min-w-[150px]">
+                          <div className="break-words">
                             {usage.user_name || 'Unknown User'}
-                          </td>
-                          <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-500">
+                          </div>
+                        </td>
+                        <td className="px-2 md:px-6 py-2 md:py-4 text-xs md:text-sm text-gray-500 min-w-[120px] md:min-w-[200px]">
+                          <div className="break-all">
                             {usage.email}
-                          </td>
-                          <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-500">
+                          </div>
+                        </td>
+                        <td className="px-2 md:px-6 py-2 md:py-4 text-xs md:text-sm text-gray-500 min-w-[100px] md:min-w-[180px]">
+                          <div className="text-xs md:text-sm">
                             {formatDate(usage.used_at)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
             
             {/* Footer */}
-            <div className="flex justify-end p-4 md:p-6 border-t flex-shrink-0">
+            <div className="flex justify-end p-6 border-t flex-shrink-0">
               <Button 
                 onClick={() => setShowUsageModal(null)} 
-                className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto"
+                className="bg-blue-600 hover:bg-blue-700"
                 size="sm"
               >
                 Close
