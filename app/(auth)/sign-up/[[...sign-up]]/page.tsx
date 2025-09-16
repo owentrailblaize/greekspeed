@@ -131,12 +131,12 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="h-screen bg-white flex items-center justify-center p-1 sm:p-2">
-      <Card className="w-full max-w-4xl shadow-xl border-0 h-[calc(100vh-16px)] sm:h-[calc(100vh-32px)]">
-        <CardContent className="p-0 h-full">
-          <div className="flex h-full">
+    <div className="min-h-screen bg-white flex items-center justify-center p-1 sm:p-2">
+      <Card className="w-full max-w-4xl shadow-xl border-0">
+        <CardContent className="p-0">
+          <div className="flex">
             {/* Left Column - Introduction - Hidden on mobile, centered on desktop */}
-            <div className="hidden lg:block w-full lg:w-1/2 bg-gradient-to-br from-navy-50 to-blue-50 p-4 lg:p-6 flex flex-col justify-center items-center">
+            <div className="hidden lg:block w-full lg:w-1/2 bg-gradient-to-br from-navy-50 to-blue-50 p-4 lg:p-6 flex flex-col justify-center items-center min-h-[500px]">
               <div className="text-center max-w-sm">
                 <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">
                   Welcome to Trailblaize
@@ -169,9 +169,9 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            {/* Right Column - Sign Up - Optimized for no scrolling */}
-            <div className="w-full lg:w-1/2 p-2 sm:p-3 lg:p-4 flex flex-col justify-center h-full overflow-hidden">
-              <div className="w-full max-w-sm mx-auto h-full flex flex-col justify-center">
+            {/* Right Column - Sign Up - Dynamic height */}
+            <div className="w-full lg:w-1/2 p-2 sm:p-3 lg:p-4 flex flex-col justify-center">
+              <div className="w-full max-w-sm mx-auto">
                 {/* Mobile Header - Compact */}
                 <div className="lg:hidden text-center mb-3">
                   <h1 className="text-lg font-bold text-gray-900 mb-1">Welcome to Trailblaize</h1>
@@ -213,8 +213,8 @@ export default function SignUpPage() {
                     </Button>
                   </div>
                 ) : (
-                  /* Email Form - Compact and optimized */
-                  <div className="text-left flex-1 flex flex-col min-h-0">
+                  /* Email Form - Dynamic height */
+                  <div className="text-left">
                     {/* Back Button - Compact */}
                     <button
                       type="button"
@@ -244,122 +244,120 @@ export default function SignUpPage() {
                       </div>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-1.5 flex-1 flex flex-col min-h-0">
-                      <div className="space-y-1.5 flex-1 overflow-y-auto">
-                        {/* Name Fields - Compact */}
-                        <div className="grid grid-cols-2 gap-1.5">
-                          <div className="space-y-1">
-                            <Label htmlFor="firstName" className="text-xs font-medium text-gray-700">First Name</Label>
-                            <Input
-                              id="firstName"
-                              type="text"
-                              placeholder="First Name"
-                              value={firstName}
-                              onChange={(e) => setFirstName(e.target.value)}
-                              required
-                              disabled={loading}
-                              className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label htmlFor="lastName" className="text-xs font-medium text-gray-700">Last Name</Label>
-                            <Input
-                              id="lastName"
-                              type="text"
-                              placeholder="Last Name"
-                              value={lastName}
-                              onChange={(e) => setLastName(e.target.value)}
-                              required
-                              disabled={loading}
-                              className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Email Field - Compact */}
+                    <form onSubmit={handleSubmit} className="space-y-1.5 lg:space-y-3">
+                      {/* Name Fields - Compact */}
+                      <div className="grid grid-cols-2 gap-1.5">
                         <div className="space-y-1">
-                          <Label htmlFor="email" className="text-xs font-medium text-gray-700">Email</Label>
+                          <Label htmlFor="firstName" className="text-xs font-medium text-gray-700">First Name</Label>
                           <Input
-                            id="email"
-                            type="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            id="firstName"
+                            type="text"
+                            placeholder="First Name"
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
                             required
                             disabled={loading}
                             className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
                           />
                         </div>
-
-                        {/* Password Field - Compact */}
                         <div className="space-y-1">
-                          <Label htmlFor="password" className="text-xs font-medium text-gray-700">Password</Label>
+                          <Label htmlFor="lastName" className="text-xs font-medium text-gray-700">Last Name</Label>
                           <Input
-                            id="password"
-                            type="password"
-                            placeholder="Create a password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            id="lastName"
+                            type="text"
+                            placeholder="Last Name"
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
                             required
                             disabled={loading}
                             className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
                           />
                         </div>
+                      </div>
 
-                        {/* Chapter Selection - Compact */}
-                        <div className="space-y-1">
-                          <Label htmlFor="chapter" className="text-xs font-medium text-gray-700">Chapter</Label>
-                          <Select 
-                            value={chapter} 
-                            onValueChange={setChapter}
-                          >
-                            <SelectItem value="">
-                              {chaptersLoading ? 'Loading chapters...' : 'Select your chapter'}
+                      {/* Email Field - Compact */}
+                      <div className="space-y-1">
+                        <Label htmlFor="email" className="text-xs font-medium text-gray-700">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="Enter your email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                          disabled={loading}
+                          className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
+                        />
+                      </div>
+
+                      {/* Password Field - Compact */}
+                      <div className="space-y-1">
+                        <Label htmlFor="password" className="text-xs font-medium text-gray-700">Password</Label>
+                        <Input
+                          id="password"
+                          type="password"
+                          placeholder="Create a password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                          disabled={loading}
+                          className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
+                        />
+                      </div>
+
+                      {/* Chapter Selection - Compact */}
+                      <div className="space-y-1">
+                        <Label htmlFor="chapter" className="text-xs font-medium text-gray-700">Chapter</Label>
+                        <Select 
+                          value={chapter} 
+                          onValueChange={setChapter}
+                        >
+                          <SelectItem value="">
+                            {chaptersLoading ? 'Loading chapters...' : 'Select your chapter'}
+                          </SelectItem>
+                          {chapters.map((chapterData) => (
+                            <SelectItem key={chapterData.id} value={chapterData.name}>
+                              {chapterData.name}
                             </SelectItem>
-                            {chapters.map((chapterData) => (
-                              <SelectItem key={chapterData.id} value={chapterData.name}>
-                                {chapterData.name}
-                              </SelectItem>
-                            ))}
-                          </Select>
-                          {chaptersError && (
-                            <p className="text-red-500 text-xs">Failed to load chapters. Please refresh the page.</p>
-                          )}
-                          {chapters.length === 0 && !chaptersLoading && (
-                            <p className="text-yellow-500 text-xs">No chapters available. Please contact support.</p>
-                          )}
-                        </div>
-
-                        {/* Role Selection - Compact */}
-                        <div className="space-y-1">
-                          <Label htmlFor="role" className="text-xs font-medium text-gray-700">Role</Label>
-                          <Select 
-                            value={role} 
-                            onValueChange={(value: string) => setRole(value as 'Alumni')}
-                          >
-                            <SelectItem value="">Select your role</SelectItem>
-                            {userRoles.map((userRole) => (
-                              <SelectItem key={userRole.value} value={userRole.value}>
-                                {userRole.label}
-                              </SelectItem>
-                            ))}
-                          </Select>
-                          <p className="text-xs text-gray-500">
-                            Alumni accounts can access the alumni network and connect with other graduates.
-                          </p>
-                        </div>
-
-                        {/* Error and Success Messages - Compact */}
-                        {error && (
-                          <div className="text-red-500 text-xs bg-red-50 border border-red-200 rounded-lg p-2">{error}</div>
+                          ))}
+                        </Select>
+                        {chaptersError && (
+                          <p className="text-red-500 text-xs">Failed to load chapters. Please refresh the page.</p>
                         )}
-                        {success && (
-                          <div className="text-green-500 text-xs bg-green-50 border border-green-200 rounded-lg p-2">{success}</div>
+                        {chapters.length === 0 && !chaptersLoading && (
+                          <p className="text-yellow-500 text-xs">No chapters available. Please contact support.</p>
                         )}
                       </div>
 
-                      {/* Submit Button - Fixed at bottom */}
-                      <div className="mt-2">
+                      {/* Role Selection - Compact */}
+                      <div className="space-y-1">
+                        <Label htmlFor="role" className="text-xs font-medium text-gray-700">Role</Label>
+                        <Select 
+                          value={role} 
+                          onValueChange={(value: string) => setRole(value as 'Alumni')}
+                        >
+                          <SelectItem value="">Select your role</SelectItem>
+                          {userRoles.map((userRole) => (
+                            <SelectItem key={userRole.value} value={userRole.value}>
+                              {userRole.label}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                        <p className="text-xs text-gray-500">
+                          Alumni accounts can access the alumni network and connect with other graduates.
+                        </p>
+                      </div>
+
+                      {/* Error and Success Messages - Compact */}
+                      {error && (
+                        <div className="text-red-500 text-xs bg-red-50 border border-red-200 rounded-lg p-2">{error}</div>
+                      )}
+                      {success && (
+                        <div className="text-green-500 text-xs bg-green-50 border border-green-200 rounded-lg p-2">{success}</div>
+                      )}
+
+                      {/* Submit Button */}
+                      <div className="mt-2 lg:mt-1">
                         <Button 
                           type="submit" 
                           className="w-full h-7 bg-navy-600 hover:bg-navy-700 text-white font-medium text-sm" 
@@ -370,7 +368,7 @@ export default function SignUpPage() {
                       </div>
                     </form>
 
-                    {/* Terms and Sign In - Fixed at bottom */}
+                    {/* Terms and Sign In */}
                     <div className="mt-2">
                       <p className="text-xs text-gray-500 text-center mb-1">
                         By proceeding, you agree to our{' '}
