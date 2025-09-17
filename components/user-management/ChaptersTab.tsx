@@ -173,13 +173,13 @@ export function ChaptersTab() {
 
       {/* Chapters Table */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-2">
           <CardTitle className="flex items-center space-x-2">
             <Building2 className="h-5 w-5" />
             <span>All Chapters ({filteredChapters.length})</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4 pt-0">
           <div className="overflow-x-auto">
             {/* Scrollable container with fixed height */}
             <div className="max-h-[70vh] overflow-y-auto border border-gray-200 rounded-lg">
