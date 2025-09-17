@@ -316,31 +316,36 @@ export function AlumniPipelineLayout({
               />
             </div>
           ) : (
-            <div className="h-full overflow-y-auto p-2 sm:p-6">
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-                {displayAlumni.map((alumniItem: AlumniWithCompleteness, index: number) => (
-                  <motion.div
-                    key={alumniItem.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.05 }}
-                  >
-                    <EnhancedAlumniCard
-                      alumni={alumniItem}
-                      onClick={handleAlumniClick}
-                    />
-                  </motion.div>
-                ))}
+            <div className="h-full flex flex-col">
+              {/* Scrollable cards container */}
+              <div className="flex-1 overflow-y-auto p-2 sm:p-6 pb-20">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+                  {displayAlumni.map((alumniItem: AlumniWithCompleteness, index: number) => (
+                    <motion.div
+                      key={alumniItem.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.05 }}
+                    >
+                      <EnhancedAlumniCard
+                        alumni={alumniItem}
+                        onClick={handleAlumniClick}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
               </div>
               
-              {/* Pagination Controls */}
-              <AlumniPagination
-                currentPage={pagination.page}
-                totalPages={pagination.totalPages}
-                totalItems={pagination.total}
-                itemsPerPage={pagination.limit}
-                onPageChange={onPageChange}
-              />
+              {/* Fixed Pagination Controls for Cards View */}
+              <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
+                <AlumniPagination
+                  currentPage={pagination.page}
+                  totalPages={pagination.totalPages}
+                  totalItems={pagination.total}
+                  itemsPerPage={pagination.limit}
+                  onPageChange={onPageChange}
+                />
+              </div>
             </div>
           )}
         </div>
