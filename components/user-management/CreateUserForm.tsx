@@ -174,7 +174,7 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <Card className="w-full max-w-md mx-4">
-        <CardHeader>
+        <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle>Create New User</CardTitle>
             <Button variant="ghost" size="sm" onClick={onClose}>
@@ -182,7 +182,7 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-0">
           {/* Email Field - Full Width */}
           <div>
             <Label htmlFor="email">Email *</Label>
@@ -343,11 +343,18 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
 
           {/* Action Buttons */}
           <div className="flex space-x-2 pt-4">
-            <Button variant="outline" onClick={onClose} className="flex-1">
+            <Button variant="outline" onClick={onClose} className="flex-1" disabled={loading}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit} className="flex-1">
-              Create User
+            <Button onClick={handleSubmit} className="flex-1" disabled={loading}>
+              {loading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Creating...</span>
+                </div>
+              ) : (
+                'Create User'
+              )}
             </Button>
           </div>
         </CardContent>
