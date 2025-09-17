@@ -41,9 +41,30 @@ export function AlumniToolbar({
 
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-3">
-      {/* Desktop Layout - Unchanged */}
+      {/* Desktop Layout */}
       <div className="hidden md:flex items-center justify-between">
         <div className="flex items-center space-x-4">
+          {/* Export - WORKING (MOVED TO FIRST) */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => onExport()}>
+                <Download className="h-4 w-4 mr-2" />
+                Export All to CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem className="opacity-60 cursor-not-allowed" disabled>
+                <Download className="h-4 w-4 mr-2" />
+                Export All to Excel
+                <Lock className="h-3 w-3 ml-auto text-gray-400" />
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* Create Workflow - LOCKED */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -133,27 +154,6 @@ export function AlumniToolbar({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* Export - WORKING */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => onExport()}>
-                <Download className="h-4 w-4 mr-2" />
-                Export All to CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem className="opacity-60 cursor-not-allowed" disabled>
-                <Download className="h-4 w-4 mr-2" />
-                Export All to Excel
-                <Lock className="h-3 w-3 ml-auto text-gray-400" />
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
 
         {selectedCount > 0 && (
@@ -193,9 +193,30 @@ export function AlumniToolbar({
         )}
       </div>
 
-      {/* Mobile Layout - New horizontal scrollable version */}
+      {/* Mobile Layout */}
       <div className="md:hidden">
         <div className="flex items-center space-x-3 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
+          {/* Export - WORKING (MOVED TO FIRST) */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="flex-shrink-0">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => onExport()}>
+                <Download className="h-4 w-4 mr-2" />
+                Export All to CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem className="opacity-60 cursor-not-allowed" disabled>
+                <Download className="h-4 w-4 mr-2" />
+                Export All to Excel
+                <Lock className="h-3 w-3 ml-auto text-gray-400" />
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* Create Workflow - LOCKED */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -281,27 +302,6 @@ export function AlumniToolbar({
               </DropdownMenuItem>
               <DropdownMenuItem className="opacity-60 cursor-not-allowed" disabled>
                 Bulk Import
-                <Lock className="h-3 w-3 ml-auto text-gray-400" />
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Export - WORKING */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex-shrink-0">
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => onExport()}>
-                <Download className="h-4 w-4 mr-2" />
-                Export All to CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem className="opacity-60 cursor-not-allowed" disabled>
-                <Download className="h-4 w-4 mr-2" />
-                Export All to Excel
                 <Lock className="h-3 w-3 ml-auto text-gray-400" />
               </DropdownMenuItem>
             </DropdownMenuContent>
