@@ -65,23 +65,26 @@ export function AlumniPagination({
 
   if (totalPages <= 1) {
     return (
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200">
-        <div className="text-sm text-gray-700">
-          Showing {totalItems} alumni
+      <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 bg-white border-t border-gray-200 gap-2">
+        <div className="text-sm text-gray-700 text-center sm:text-left">
+          Showing {totalItems.toLocaleString()} alumni
+        </div>
+        <div className="text-xs text-gray-500">
+          Optimized for performance • 100 per page
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200">
+    <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 bg-white border-t border-gray-200 gap-3">
       {/* Left side - Item count */}
-      <div className="text-sm text-gray-700">
-        Showing {startItem} to {endItem} of {totalItems} alumni
+      <div className="text-sm text-gray-700 text-center sm:text-left">
+        Showing {startItem} to {endItem} of {totalItems.toLocaleString()} alumni
       </div>
 
       {/* Right side - Pagination controls */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1 sm:space-x-2">
         {/* Previous button */}
         <Button
           variant="outline"
@@ -93,8 +96,8 @@ export function AlumniPagination({
           <ChevronLeft className="h-4 w-4" />
         </Button>
 
-        {/* Page numbers */}
-        <div className="flex items-center space-x-1">
+        {/* Page numbers - Hide on mobile, show on tablet+ */}
+        <div className="hidden sm:flex items-center space-x-1">
           {pageNumbers.map((page, index) => {
             if (page === '...') {
               return (
@@ -123,6 +126,14 @@ export function AlumniPagination({
               </Button>
             );
           })}
+        </div>
+
+        {/* Mobile page indicator */}
+        <div className="sm:hidden flex items-center space-x-1">
+          <span className="text-sm text-gray-600">Page</span>
+          <span className="text-sm font-medium">{currentPage}</span>
+          <span className="text-sm text-gray-600">of</span>
+          <span className="text-sm font-medium">{totalPages}</span>
         </div>
 
         {/* Next button */}
