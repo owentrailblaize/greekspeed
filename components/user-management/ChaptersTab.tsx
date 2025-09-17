@@ -54,18 +54,27 @@ export function ChaptersTab() {
   const [chapterToDelete, setChapterToDelete] = useState<Chapter | null>(null);
   const [deletingChapterId, setDeletingChapterId] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  
+  // Add pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalChapters, setTotalChapters] = useState(0);
+  const [pageSize] = useState(100); // Show 100 chapters per page
 
   useEffect(() => {
     fetchChapters();
-  }, []);
+  }, [currentPage]);
 
   const fetchChapters = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/developer/chapters');
+      const response = await fetch(`/api/developer/chapters?page=${currentPage}&limit=${pageSize}`);
       if (response.ok) {
         const data = await response.json();
-        setChapters(data);
+        setChapters(data.chapters || []);
+        setTotalChapters(data.total || 0);
+        setTotalPages(data.totalPages || 1);
+        console.log(`📊 Fetched page ${currentPage}: ${data.chapters?.length || 0} chapters (Total: ${data.total})`);
       } else {
         console.error('Failed to fetch chapters');
       }
@@ -176,7 +185,7 @@ export function ChaptersTab() {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center space-x-2">
             <Building2 className="h-5 w-5" />
-            <span>All Chapters ({filteredChapters.length})</span>
+            <span>All Chapters ({totalChapters.toLocaleString()})</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 pt-0">
@@ -285,14 +294,38 @@ export function ChaptersTab() {
               </table>
             </div>
             
-            {/* Summary Footer */}
-            <div className="mt-4 text-sm text-gray-600">
-              <p>Showing {filteredChapters.length} chapter records</p>
-              {filteredChapters.length > 1000 && (
-                <p className="text-xs text-gray-500 mt-1">
-                  💡 Tip: Use the search bar above to filter results for better performance
-                </p>
-              )}
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-gray-600">
+                <p>Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalChapters)} of {totalChapters.toLocaleString()} chapters</p>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1 || loading}
+                >
+                  Previous
+                </Button>
+                
+                <div className="flex items-center space-x-1">
+                  <span className="text-sm text-gray-600">Page</span>
+                  <span className="text-sm font-medium">{currentPage}</span>
+                  <span className="text-sm text-gray-600">of</span>
+                  <span className="text-sm font-medium">{totalPages}</span>
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages || loading}
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>

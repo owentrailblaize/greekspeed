@@ -37,7 +37,7 @@ export function AlumniPipeline() {
   const [selectedAlumni, setSelectedAlumni] = useState<string[]>([]);
   const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
-    limit: 1000,
+    limit: 100, // Changed from 1000 to 100 for better performance
     total: 0,
     totalPages: 0,
     hasNextPage: false,
@@ -82,8 +82,8 @@ export function AlumniPipeline() {
       if (filterParams.state) params.append('state', filterParams.state);
       if (filterParams.activelyHiring) params.append('activelyHiring', 'true');
       
-      // Add pagination parameters
-      params.append('limit', pagination.limit.toString());
+      // Add pagination parameters with optimized limit
+      params.append('limit', '100'); // Fixed to 100 for consistent performance
       params.append('page', pageToFetch.toString());
       
       // Add chapter filtering logic - only filter by user's chapter if showAllAlumni is false
@@ -110,13 +110,15 @@ export function AlumniPipeline() {
       // Sort alumni by completeness score (highest first)
       const sortedByCompleteness = sortAlumniByCompleteness(alumniData);
       setSortedAlumni(sortedByCompleteness);
+      
+      console.log(`📊 Alumni Pipeline: Fetched page ${pageToFetch} with ${alumniData.length} alumni (Total: ${data.pagination?.total})`);
     } catch (err) {
       console.error('❌ Error fetching alumni:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
-  }, [filters, profile, pagination.page, pagination.limit]);
+  }, [filters, profile, pagination.page]);
 
   // Only fetch alumni when profile is loaded and not loading
   useEffect(() => {

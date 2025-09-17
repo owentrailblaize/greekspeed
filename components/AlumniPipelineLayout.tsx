@@ -58,6 +58,9 @@ interface AlumniPipelineLayoutProps {
   onPageChange: (page: number) => void;
 }
 
+// Performance optimization: Only render visible items
+const ITEMS_PER_PAGE = 100; // Match the API limit for consistency
+
 export function AlumniPipelineLayout({
   alumni,
   loading,

@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     // Get query parameters
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '1000') // Default to 1000 (Supabase max)
+    const limit = parseInt(searchParams.get('limit') || '100') // Changed from 1000 to 100 for better performance
     const search = searchParams.get('search') || ''
     const industry = searchParams.get('industry') || ''
     const chapter = searchParams.get('chapter') || ''
