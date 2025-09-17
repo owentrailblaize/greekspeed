@@ -2,21 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
-import { hasDeveloperPermission, ACCESS_LEVEL_PERMISSIONS } from '@/lib/developerPermissions';
+import { getUserPermissions } from '@/lib/developerPermissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   Users, 
-  BarChart3, 
-  Code2, // Changed from FileCode to Code2
-  Building2, 
-  Shield, 
-  Activity, 
-  UserPlus,
   Settings,
   Network,
-  Lock
+  ArrowRight,
+  UserCheck,
+  Shield
 } from 'lucide-react';
 
 export function DeveloperOverview() {
@@ -24,11 +20,11 @@ export function DeveloperOverview() {
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalChapters: 0,
-    totalAlumni: 0, // Add totalAlumni
+    totalAlumni: 0,
     systemHealth: 'healthy',
     userGrowthPercentage: '0.0',
     newUsersThisMonth: 0,
-    newAlumniThisMonth: 0, // Add newAlumniThisMonth
+    newAlumniThisMonth: 0,
     newChaptersThisMonth: 0
   });
   const [loading, setLoading] = useState(true);
@@ -53,11 +49,11 @@ export function DeveloperOverview() {
       setStats({
         totalUsers: data.totalUsers || 0,
         totalChapters: data.totalChapters || 0,
-        totalAlumni: data.totalAlumni || 0, // Set totalAlumni
+        totalAlumni: data.totalAlumni || 0,
         systemHealth: data.systemHealth || 'healthy',
         userGrowthPercentage: data.userGrowthPercentage || '0.0',
         newUsersThisMonth: data.newUsersThisMonth || 0,
-        newAlumniThisMonth: data.newAlumniThisMonth || 0, // Set newAlumniThisMonth
+        newAlumniThisMonth: data.newAlumniThisMonth || 0,
         newChaptersThisMonth: data.newChaptersThisMonth || 0
       });
 
@@ -80,10 +76,8 @@ export function DeveloperOverview() {
     );
   }
 
-  const userPermissions = profile?.developer_permissions || [];
+  const userPermissions = getUserPermissions(profile);
   const accessLevel = profile?.access_level || 'standard';
-
-  // Remove the alumni growth percentage calculation since we're not using percentages anymore
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -111,7 +105,7 @@ export function DeveloperOverview() {
       <div className="max-w-7xl mx-auto px-6 py-6">
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {/* Total Users Card - simplified */}
+          {/* Total Users Card */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -125,7 +119,7 @@ export function DeveloperOverview() {
             </CardContent>
           </Card>
 
-          {/* Total Alumni Card - simplified */}
+          {/* Total Alumni Card */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Alumni</CardTitle>
@@ -139,11 +133,11 @@ export function DeveloperOverview() {
             </CardContent>
           </Card>
 
-          {/* Chapters Card - simplified and fixed */}
+          {/* Chapters Card */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Chapters</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <Shield className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalChapters}</div>
@@ -153,7 +147,7 @@ export function DeveloperOverview() {
             </CardContent>
           </Card>
 
-          {/* System Health Card - unchanged */}
+          {/* System Health Card */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">System Health</CardTitle>
@@ -168,121 +162,62 @@ export function DeveloperOverview() {
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {hasDeveloperPermission(userPermissions, 'view_users') && (
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Users className="h-5 w-5 text-blue-600" />
-                  <span>User Management</span>
+        {/* User Management Section - Enhanced and Centered */}
+        <div className="mb-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Developer Tools</h2>
+            <p className="text-gray-600">Development and management tools for Trailblaize Internal. Request new features as needed Deft Point.</p>
+          </div>
+          
+          {/* Single User Management Card - Enhanced */}
+          <div className="max-w-2xl mx-auto">
+            <Card className="hover:shadow-lg transition-all duration-200 border-2 border-blue-100 hover:border-blue-200">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center space-x-3 text-xl">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Users className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <span className="text-gray-900">User Management</span>
+
+                  </div>
                 </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  View and manage all users, roles, and permissions
+                <p className="text-gray-600 mt-2">
+                  Create, delete, and manage chapters and alumni with basic user management functionality.
                 </p>
               </CardHeader>
-              <CardContent>
-                <Button className="w-full" variant="outline" onClick={() => window.location.href = '/dashboard/user-management'}>
-                  Manage Users
-                </Button>
+              <CardContent className="pt-0">
+                <div className="space-y-4">
+                  {/* Feature List */}
+                  <div className="flex items-center justify-center gap-4">
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <UserCheck className="h-4 w-4 text-green-500" />
+                      <span>Create & Delete Users</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Shield className="h-4 w-4 text-green-500" />
+                      <span>Alumni Management</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Users className="h-4 w-4 text-green-500" />
+                      <span>Chapter Assignment</span>
+                    </div>
+                  </div>
+                  
+                  {/* Action Button */}
+                  <div className="pt-2">
+                    <Button 
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
+                      onClick={() => window.location.href = '/dashboard/user-management'}
+                    >
+                      <span>Access User Management</span>
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
-          )}
-
-          {/* Analytics Dashboard - LOCKED */}
-          <Card className="hover:shadow-md transition-shadow cursor-pointer opacity-60">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <BarChart3 className="h-5 w-5 text-green-600" />
-                <span>Analytics Dashboard</span>
-                <Lock className="h-4 w-4 text-gray-400 ml-auto" />
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                View detailed system analytics and user metrics
-              </p>
-            </CardHeader>
-            <CardContent>
-              <Button className="w-full" variant="outline" disabled>
-                View Analytics
-              </Button>
-            </CardContent>
-          </Card>
-
-          {hasDeveloperPermission(userPermissions, 'manage_chapters') && (
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Building2 className="h-5 w-5 text-purple-600" />
-                  <span>Chapter Management</span>
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Create, edit, and manage fraternity chapters
-                </p>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full" variant="outline">
-                  Manage Chapters
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* API Management - LOCKED */}
-          <Card className="hover:shadow-md transition-shadow cursor-pointer opacity-60">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Code2 className="h-5 w-5 text-orange-600" />
-                <span>API Management</span>
-                <Lock className="h-4 w-4 text-gray-400 ml-auto" />
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Create and manage API endpoints and integrations
-              </p>
-            </CardHeader>
-            <CardContent>
-              <Button className="w-full" variant="outline" disabled>
-                Manage APIs
-              </Button>
-            </CardContent>
-          </Card>
-
-          {hasDeveloperPermission(userPermissions, 'manage_permissions') && (
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Shield className="h-5 w-5 text-red-600" />
-                  <span>Permission Management</span>
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Configure user roles and system permissions
-                </p>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full" variant="outline">
-                  Manage Permissions
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {hasDeveloperPermission(userPermissions, 'manage_onboarding') && (
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <UserPlus className="h-5 w-5 text-indigo-600" />
-                  <span>Onboarding Flow</span>
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Configure user onboarding and registration flows
-                </p>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full" variant="outline">
-                  Configure Onboarding
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+          </div>
         </div>
 
         {/* System Information */}
@@ -310,7 +245,7 @@ export function DeveloperOverview() {
                 <h4 className="font-medium mb-2">Access Level</h4>
                 <p className="text-sm text-gray-600 capitalize">{accessLevel}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {ACCESS_LEVEL_PERMISSIONS[accessLevel as keyof typeof ACCESS_LEVEL_PERMISSIONS]?.length || 0} permissions available
+                  {userPermissions.length} permissions available
                 </p>
               </div>
             </div>

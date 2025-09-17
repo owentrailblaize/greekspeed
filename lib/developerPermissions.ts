@@ -16,6 +16,7 @@ export const ACCESS_LEVEL_PERMISSIONS: Record<AccessLevel, DeveloperPermission[]
   admin: ['view_users', 'view_analytics', 'create_endpoints', 'manage_chapters', 'manage_permissions', 'view_system_health', 'manage_onboarding']
 };
 
+// Check if user has developer permission based on access level
 export function hasDeveloperPermission(
   userPermissions: DeveloperPermission[] | undefined,
   requiredPermission: DeveloperPermission
@@ -24,10 +25,29 @@ export function hasDeveloperPermission(
   return userPermissions.includes(requiredPermission);
 }
 
+// NEW: Check permission based on access level
+export function hasDeveloperPermissionByAccessLevel(
+  accessLevel: AccessLevel | undefined,
+  requiredPermission: DeveloperPermission
+): boolean {
+  if (!accessLevel) return false;
+  const levelPermissions = ACCESS_LEVEL_PERMISSIONS[accessLevel];
+  return levelPermissions.includes(requiredPermission);
+}
+
+// Check if user can access developer portal
 export function canAccessDeveloperPortal(profile: any): boolean {
   return profile?.is_developer === true;
 }
 
+// Get developer access level
 export function getDeveloperAccessLevel(profile: any): AccessLevel {
   return profile?.access_level || 'standard';
+}
+
+// Get permissions for a user based on their access level
+export function getUserPermissions(profile: any): DeveloperPermission[] {
+  if (!profile?.is_developer) return [];
+  const accessLevel = (profile.access_level as AccessLevel) || 'standard';
+  return ACCESS_LEVEL_PERMISSIONS[accessLevel];
 }
