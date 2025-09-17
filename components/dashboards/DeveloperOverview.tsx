@@ -219,38 +219,6 @@ export function DeveloperOverview() {
             </Card>
           </div>
         </div>
-
-        {/* System Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Settings className="h-5 w-5" />
-              <span>System Information</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h4 className="font-medium mb-2">Your Permissions</h4>
-                <div className="space-y-2">
-                  {userPermissions.map((permission: string) => (
-                    <div key={permission} className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-sm text-gray-600">{permission.replace(/_/g, ' ')}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h4 className="font-medium mb-2">Access Level</h4>
-                <p className="text-sm text-gray-600 capitalize">{accessLevel}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {userPermissions.length} permissions available
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
