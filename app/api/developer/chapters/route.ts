@@ -8,18 +8,31 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function GET(request: NextRequest) {
   try {
-    // Fetch all chapters from chapters table
-    const { data: chapters, error } = await supabase
+    // Get query parameters for pagination
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '100');
+    const offset = (page - 1) * limit;
+
+    // Fetch chapters with pagination
+    const { data: chapters, error, count } = await supabase
       .from('chapters')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) {
       console.error('Error fetching chapters:', error);
       return NextResponse.json({ error: 'Failed to fetch chapters' }, { status: 500 });
     }
 
-    return NextResponse.json(chapters);
+    return NextResponse.json({ 
+      chapters: chapters || [],
+      total: count || 0,
+      page,
+      limit,
+      totalPages: Math.ceil((count || 0) / limit)
+    });
   } catch (error) {
     console.error('Error in chapters API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

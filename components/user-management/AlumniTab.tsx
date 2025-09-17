@@ -17,7 +17,8 @@ import {
   GraduationCap,
   MapPin,
   Briefcase,
-  Mail
+  Mail,
+  Plus
 } from 'lucide-react';
 import { BulkAlumniUpload } from './BulkAlumniUpload';
 
@@ -50,20 +51,27 @@ export function AlumniTab() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showBulkUpload, setShowBulkUpload] = useState(false);
+  
+  // Add pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalAlumni, setTotalAlumni] = useState(0);
+  const [pageSize] = useState(100); // Show 100 alumni per page
 
   useEffect(() => {
     fetchAlumni();
-  }, []);
+  }, [currentPage]);
 
   const fetchAlumni = async () => {
     try {
       setLoading(true);
-      // Request ALL alumni without any pagination limits
-      const response = await fetch('/api/alumni?limit=50000&page=1');
+      const response = await fetch(`/api/alumni?page=${currentPage}&limit=${pageSize}`);
       if (response.ok) {
         const data = await response.json();
         setAlumni(data.alumni || []);
-        console.log(`📊 Fetched ${data.alumni?.length || 0} alumni out of ${data.total || 0} total`);
+        setTotalAlumni(data.pagination?.total || 0);
+        setTotalPages(data.pagination?.totalPages || 1);
+        console.log(`📊 Fetched page ${currentPage}: ${data.alumni?.length || 0} alumni (Total: ${data.pagination?.total})`);
       } else {
         console.error('Failed to fetch alumni');
       }
@@ -119,7 +127,7 @@ export function AlumniTab() {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center space-x-2">
             <Users className="h-5 w-5" />
-            <span>All Alumni ({filteredAlumni.length})</span>
+            <span>All Alumni ({totalAlumni.toLocaleString()})</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 pt-0">
@@ -259,14 +267,38 @@ export function AlumniTab() {
                 </table>
               </div>
               
-              {/* Summary Footer */}
-              <div className="mt-4 text-sm text-gray-600">
-                <p>Showing {filteredAlumni.length} alumni records</p>
-                {filteredAlumni.length > 1000 && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    💡 Tip: Use the search bar above to filter results for better performance
-                  </p>
-                )}
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-between mt-4">
+                <div className="text-sm text-gray-600">
+                  <p>Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalAlumni)} of {totalAlumni.toLocaleString()} alumni</p>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1 || loading}
+                  >
+                    Previous
+                  </Button>
+                  
+                  <div className="flex items-center space-x-1">
+                    <span className="text-sm text-gray-600">Page</span>
+                    <span className="text-sm font-medium">{currentPage}</span>
+                    <span className="text-sm text-gray-600">of</span>
+                    <span className="text-sm font-medium">{totalPages}</span>
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages || loading}
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
             </div>
           )}
