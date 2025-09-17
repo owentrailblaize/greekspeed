@@ -103,8 +103,8 @@ export async function POST(request: NextRequest) {
         chapter_role: chapter_role,
         member_status: member_status,
         is_developer: is_developer,
-        developer_permissions: developer_permissions,
-        access_level: is_developer ? 'elevated' : 'standard',
+        // REMOVE developer_permissions - column no longer exists
+        access_level: is_developer ? 'admin' : 'standard',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }, {
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
       
       if (existingProfile) {
         console.log('⚠️ Profile already exists, updating instead');
-        // Update existing profile
+        // Update existing profile - REMOVE developer_permissions here too
         const { data: updatedProfile, error: updateError } = await supabase
           .from('profiles')
           .update({
@@ -140,8 +140,8 @@ export async function POST(request: NextRequest) {
             chapter_role: chapter_role,
             member_status: member_status,
             is_developer: is_developer,
-            developer_permissions: developer_permissions,
-            access_level: is_developer ? 'elevated' : 'standard',
+            // REMOVE developer_permissions - column no longer exists
+            access_level: is_developer ? 'admin' : 'standard',
             updated_at: new Date().toISOString()
           })
           .eq('id', newUserAuth.user.id)

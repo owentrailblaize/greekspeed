@@ -116,13 +116,13 @@ export function AlumniTab() {
 
       {/* Alumni Table with Scrollable Container */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-2">
           <CardTitle className="flex items-center space-x-2">
             <Users className="h-5 w-5" />
             <span>All Alumni ({filteredAlumni.length})</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4 pt-0">
           {loading ? (
             <div className="text-center py-8">Loading alumni...</div>
           ) : (

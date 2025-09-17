@@ -9,6 +9,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X } from 'lucide-react';
 import { useChapters } from '@/lib/hooks/useChapters';
+import { DEVELOPER_PERMISSIONS } from '@/lib/developerPermissions';
+import { DeveloperPermission } from '@/types/profile';
 
 interface CreateUserFormProps {
   onClose: () => void;
@@ -28,8 +30,8 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
     chapter: chapterContext?.chapterId || '',
     role: 'active_member' as 'admin' | 'active_member',
     chapter_role: 'member' as 'member' | 'president' | 'vice_president' | 'social_chair' | 'treasurer',
-    is_developer: false,
-    developer_permissions: [] as string[]
+    is_developer: false
+    // Remove developer_permissions from state since it's auto-assigned
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -71,7 +73,7 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
           role: formData.role,
           chapter_role: formData.chapter_role,
           is_developer: formData.is_developer,
-          developer_permissions: formData.developer_permissions
+          // Remove developer_permissions from the body
         })
       });
 
@@ -124,9 +126,7 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
               <p><strong>Chapter:</strong> {createdUser.chapter}</p>
               <p><strong>Role:</strong> {createdUser.role}</p>
               <p><strong>Developer Access:</strong> {createdUser.is_developer ? 'Yes' : 'No'}</p>
-              {createdUser.is_developer && (
-                <p><strong>Permissions:</strong> {createdUser.developer_permissions?.length || 0} permissions</p>
-              )}
+              {/* Remove developer permissions display */}
             </div>
 
             <div className="bg-yellow-50 p-4 rounded-lg">
@@ -174,7 +174,7 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <Card className="w-full max-w-md mx-4">
-        <CardHeader>
+        <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle>Create New User</CardTitle>
             <Button variant="ghost" size="sm" onClick={onClose}>
@@ -182,7 +182,7 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-0">
           {/* Email Field - Full Width */}
           <div>
             <Label htmlFor="email">Email *</Label>
@@ -253,11 +253,18 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
               <Label htmlFor="role">Role *</Label>
               <Select 
                 value={formData.role} 
-                onValueChange={(value: string) => setFormData({ ...formData, role: value as 'admin' | 'active_member' })}
+                onValueChange={(value: string) => {
+                  const newRole = value as 'admin' | 'active_member';
+                  setFormData({ 
+                    ...formData, 
+                    role: newRole,
+                    // Auto-set chapter role to president when admin/executive is selected
+                    chapter_role: newRole === 'admin' ? 'president' : 'member'
+                  });
+                }}
               >
                 <SelectItem value="active_member">Active Member</SelectItem>
                 <SelectItem value="admin">Admin / Executive</SelectItem>
-                {/* Alumni option completely removed */}
               </Select>
             </div>
             <div>
@@ -277,59 +284,57 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
 
           {/* Developer Access - Only show if not chapter context */}
           {!chapterContext?.isChapterAdmin && (
-            <>
+            <div className="space-y-3">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="is_developer"
                   checked={formData.is_developer}
-                  onCheckedChange={(checked) => 
-                    setFormData({ ...formData, is_developer: checked as boolean })
-                  }
+                  onCheckedChange={(checked) => {
+                    const isDev = checked as boolean;
+                    setFormData({ 
+                      ...formData, 
+                      is_developer: isDev,
+                      // Auto-set role to admin when developer access is enabled
+                      role: isDev ? 'admin' : 'active_member'
+                    });
+                  }}
                 />
                 <Label htmlFor="is_developer">Developer Access</Label>
               </div>
 
               {formData.is_developer && (
-                <div>
-                  <Label>Developer Permissions</Label>
-                  <div className="space-y-2">
-                    {['user_management', 'content_management', 'analytics'].map((permission) => (
-                      <div key={permission} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={permission}
-                          checked={formData.developer_permissions.includes(permission)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setFormData({
-                                ...formData,
-                                developer_permissions: [...formData.developer_permissions, permission]
-                              });
-                            } else {
-                              setFormData({
-                                ...formData,
-                                developer_permissions: formData.developer_permissions.filter(p => p !== permission)
-                              });
-                            }
-                          }}
-                        />
-                        <Label htmlFor={permission} className="text-sm capitalize">
-                          {permission.replace('_', ' ')}
-                        </Label>
-                      </div>
-                    ))}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div className="flex items-start space-x-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <div>
+                      <p className="text-sm font-medium text-blue-800">Full Developer Access</p>
+                      <p className="text-xs text-blue-600 mt-1">
+                        This user will have access to all developer permissions.
+                      </p>
+                      <p className="text-xs text-blue-600 mt-1">
+                        Role automatically set to "Admin / Executive" for developer access.
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
-            </>
+            </div>
           )}
 
           {/* Action Buttons */}
           <div className="flex space-x-2 pt-4">
-            <Button variant="outline" onClick={onClose} className="flex-1">
+            <Button variant="outline" onClick={onClose} className="flex-1" disabled={loading}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit} className="flex-1">
-              Create User
+            <Button onClick={handleSubmit} className="flex-1" disabled={loading}>
+              {loading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Creating...</span>
+                </div>
+              ) : (
+                'Create User'
+              )}
             </Button>
           </div>
         </CardContent>
