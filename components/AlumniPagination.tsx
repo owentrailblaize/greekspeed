@@ -69,9 +69,6 @@ export function AlumniPagination({
         <div className="text-sm text-gray-700 text-center sm:text-left">
           Showing {totalItems.toLocaleString()} alumni
         </div>
-        <div className="text-xs text-gray-500">
-          Optimized for performance • 100 per page
-        </div>
       </div>
     );
   }
