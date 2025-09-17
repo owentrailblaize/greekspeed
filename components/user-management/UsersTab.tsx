@@ -48,18 +48,29 @@ export function UsersTab() {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [userToView, setUserToView] = useState<User | null>(null);
+  
+  // Add pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [pageSize] = useState(100); // Show 100 users per page
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [currentPage]);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/developer/users');
+      const response = await fetch(`/api/developer/users?page=${currentPage}&limit=${pageSize}`);
       if (!response.ok) throw new Error('Failed to fetch users');
+      
       const data = await response.json();
       setUsers(data.users || []);
+      setTotalUsers(data.total || 0);
+      setTotalPages(data.totalPages || 1);
+      
+      console.log(`📊 Fetched page ${currentPage}: ${data.users?.length || 0} users (Total: ${data.total})`);
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -172,7 +183,7 @@ export function UsersTab() {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center space-x-2">
             <Users className="h-5 w-5" />
-            <span>All Users ({filteredUsers.length})</span>
+            <span>All Users ({totalUsers.toLocaleString()})</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 pt-0">
@@ -296,14 +307,38 @@ export function UsersTab() {
                 </table>
               </div>
               
-              {/* Summary Footer */}
-              <div className="mt-4 text-sm text-gray-600">
-                <p>Showing {filteredUsers.length} user records</p>
-                {filteredUsers.length > 1000 && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    💡 Tip: Use the search bar above to filter results for better performance
-                  </p>
-                )}
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-between mt-4">
+                <div className="text-sm text-gray-600">
+                  <p>Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalUsers)} of {totalUsers.toLocaleString()} users</p>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1 || loading}
+                  >
+                    Previous
+                  </Button>
+                  
+                  <div className="flex items-center space-x-1">
+                    <span className="text-sm text-gray-600">Page</span>
+                    <span className="text-sm font-medium">{currentPage}</span>
+                    <span className="text-sm text-gray-600">of</span>
+                    <span className="text-sm font-medium">{totalPages}</span>
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages || loading}
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
             </div>
           )}
