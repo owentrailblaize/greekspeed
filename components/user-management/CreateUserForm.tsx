@@ -265,7 +265,6 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
               >
                 <SelectItem value="active_member">Active Member</SelectItem>
                 <SelectItem value="admin">Admin / Executive</SelectItem>
-                {/* Alumni option completely removed */}
               </Select>
             </div>
             <div>
@@ -275,10 +274,30 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
                 onValueChange={(value: string) => setFormData({ ...formData, chapter_role: value as any })}
               >
                 <SelectItem value="member">General Member</SelectItem>
-                <SelectItem value="president">President</SelectItem>
-                <SelectItem value="vice_president">Vice President</SelectItem>
-                <SelectItem value="social_chair">Social Chair</SelectItem>
-                <SelectItem value="treasurer">Treasurer</SelectItem>
+                <SelectItem 
+                  value="president" 
+                  disabled={formData.role === 'active_member'}
+                >
+                  President
+                </SelectItem>
+                <SelectItem 
+                  value="vice_president" 
+                  disabled={formData.role === 'active_member'}
+                >
+                  Vice President
+                </SelectItem>
+                <SelectItem 
+                  value="social_chair" 
+                  disabled={formData.role === 'active_member'}
+                >
+                  Social Chair
+                </SelectItem>
+                <SelectItem 
+                  value="treasurer" 
+                  disabled={formData.role === 'active_member'}
+                >
+                  Treasurer
+                </SelectItem>
               </Select>
             </div>
           </div>
