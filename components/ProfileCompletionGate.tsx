@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { User, AlertCircle, Briefcase, Building2, MapPin, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,42 +35,102 @@ export function ProfileCompletionGate({
   const [loading, setLoading] = useState(false);
   const [completion, setCompletion] = useState<any>(null);
   const [alumniData, setAlumniData] = useState<AlumniData | null>(null);
-  const { updateProfile } = useProfile();
+  const { updateProfile, refreshProfile, profile: contextProfile } = useProfile();
+  
+  // Add refs for better control
+  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastUpdateRef = useRef<number>(0);
 
-  // Load completion data when modal opens
+  // Use the latest profile from context if available
+  const currentProfile = contextProfile || profile;
+
+  // Smart refresh logic - only refresh when modal opens or after profile updates
   useEffect(() => {
-    if (isOpen && profile?.id) {
+    if (isOpen) {
+      console.log('🔄 ProfileCompletionGate: Modal opened, loading fresh data...');
       loadCompletionData();
+    } else {
+      // Clear any pending refreshes when modal closes
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+        refreshTimeoutRef.current = null;
+      }
     }
-  }, [isOpen, profile]);
+  }, [isOpen]);
+
+  // Auto-close when completion is achieved
+  useEffect(() => {
+    if (completion?.isComplete) {
+      console.log('✅ ProfileCompletionGate: Profile is now complete! Auto-closing in 2 seconds...');
+      
+      // Show completion message briefly, then auto-close
+      setTimeout(() => {
+        console.log('✅ ProfileCompletionGate: Auto-closing modal...');
+        onClose();
+      }, 2000);
+    }
+  }, [completion?.isComplete, onClose]);
+
+  // Listen for focus events to refresh when user returns to the modal
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleFocus = () => {
+      const now = Date.now();
+      // Only refresh if it's been more than 5 seconds since last update
+      if (now - lastUpdateRef.current > 5000) {
+        console.log('🔄 ProfileCompletionGate: Window focused, refreshing data...');
+        loadCompletionData();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [isOpen]);
 
   const loadCompletionData = async () => {
-    if (!profile?.id) return;
+    if (!currentProfile?.id) return;
 
     setLoading(true);
     try {
+      console.log('🔄 ProfileCompletionGate: Loading completion data for profile:', currentProfile.id);
+      
+      // Always refresh the profile context first to get latest data
+      console.log('🔄 ProfileCompletionGate: Refreshing profile context...');
+      await refreshProfile();
+      
       // Load alumni data if user is alumni
       let currentAlumniData = null;
-      if (profile.role === 'alumni') {
+      if (currentProfile.role === 'alumni') {
         const { data: alumni, error } = await supabase
           .from('alumni')
           .select('industry, company, job_title, phone, location')
-          .eq('user_id', profile.id)
+          .eq('user_id', currentProfile.id)
           .single();
 
         if (error) {
-          console.error('Error loading alumni data:', error);
+          console.error('❌ ProfileCompletionGate: Error loading alumni data:', error);
         } else {
           currentAlumniData = alumni;
           setAlumniData(alumni);
+          console.log('📊 ProfileCompletionGate: Loaded alumni data:', alumni);
         }
       }
 
-      // Calculate completion
-      const completionData = await calculateProfileCompletion(profile, currentAlumniData);
+      // Calculate completion with the latest profile data
+      const completionData = await calculateProfileCompletion(currentProfile, currentAlumniData);
       setCompletion(completionData);
+      console.log('📊 ProfileCompletionGate: Calculated completion:', completionData);
+      
+      // Update last refresh time
+      lastUpdateRef.current = Date.now();
+      
+      // Log if profile is now complete
+      if (completionData.isComplete) {
+        console.log('✅ ProfileCompletionGate: Profile is complete!', completionData);
+      }
     } catch (error) {
-      console.error('Error loading completion data:', error);
+      console.error('❌ ProfileCompletionGate: Error loading completion data:', error);
     } finally {
       setLoading(false);
     }
@@ -85,10 +145,34 @@ export function ProfileCompletionGate({
     let completedFields = 0;
     const missingFields: string[] = [];
 
+    // Helper function to check if a field is truly completed
+    const isFieldCompleted = (value: any): boolean => {
+      if (!value) return false;
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        return trimmed !== "" && 
+               trimmed !== "Not specified" && 
+               trimmed !== "Not Specified" &&
+               trimmed !== "Not provided" && 
+               trimmed !== "Not Provided" &&
+               trimmed !== "N/A" && 
+               trimmed !== "n/a" &&
+               trimmed !== "Unknown" &&
+               trimmed !== "unknown" &&
+               trimmed !== "Not set" &&
+               trimmed !== "Not Set" &&
+               trimmed !== "TBD" &&
+               trimmed !== "tbd" &&
+               trimmed !== "TBA" &&
+               trimmed !== "tba";
+      }
+      return true;
+    };
+
     // Check regular profile fields
     requiredFields.forEach(field => {
       const value = profile[field];
-      if (value && value.trim() !== '') {
+      if (isFieldCompleted(value)) {
         completedFields++;
       } else {
         missingFields.push(field.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()));
@@ -97,7 +181,7 @@ export function ProfileCompletionGate({
 
     optionalFields.forEach(field => {
       const value = profile[field];
-      if (value && value.trim() !== '' && value !== 'Not specified') {
+      if (isFieldCompleted(value)) {
         completedFields++;
       } else {
         missingFields.push(field.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()));
@@ -110,7 +194,7 @@ export function ProfileCompletionGate({
       
       alumniRequiredFields.forEach(field => {
         const value = alumniData[field as keyof AlumniData];
-        if (value && value.trim() !== '' && value !== 'Not specified') {
+        if (isFieldCompleted(value)) {
           completedFields++;
         } else {
           missingFields.push(field.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()));
@@ -136,17 +220,35 @@ export function ProfileCompletionGate({
 
   const handleProfileUpdate = async (updatedProfile: any) => {
     try {
+      console.log(' ProfileCompletionGate: Starting profile update...');
+      
+      // Update the profile first
       await updateProfile(updatedProfile);
-      // Refresh completion data after profile update
-      await loadCompletionData();
+      
+      // Close the edit modal
       setEditModalOpen(false);
+      
+      // Wait a moment for the database to be updated
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Force immediate refresh of completion data
+      console.log('🔄 ProfileCompletionGate: Force refreshing completion data after update...');
+      await loadCompletionData();
+      
+      console.log('✅ ProfileCompletionGate: Profile update completed successfully');
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('❌ ProfileCompletionGate: Error updating profile:', error);
     }
   };
 
+  // Add a manual refresh function that can be called when needed
+  const handleManualRefresh = async () => {
+    console.log('🔄 ProfileCompletionGate: Manual refresh triggered...');
+    await loadCompletionData();
+  };
+
   const getRoleSpecificMessage = () => {
-    if (profile?.role === 'alumni') {
+    if (currentProfile?.role === 'alumni') {
       return 'Complete your professional information to access the alumni pipeline.';
     }
     return 'Complete your profile information to access all features.';
@@ -192,15 +294,17 @@ export function ProfileCompletionGate({
                         <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
                         <div className="flex-1">
                           <h4 className="font-medium text-sm mb-1 text-red-900">
-                            Profile Incomplete - Access Restricted
+                            {completion.isComplete ? 'Profile Complete!' : 'Profile Incomplete - Access Restricted'}
                           </h4>
                           <div className="flex items-center space-x-2 mt-2">
-                            <Badge className="bg-red-100 text-red-800 text-xs">
+                            <Badge className={`text-xs ${completion.isComplete ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                               {completion.percentage}% Complete
                             </Badge>
-                            <span className="text-xs text-red-700">
-                              Need {requiredCompletionPercentage}%
-                            </span>
+                            {!completion.isComplete && (
+                              <span className="text-xs text-red-700">
+                                Need {requiredCompletionPercentage}%
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -210,7 +314,7 @@ export function ProfileCompletionGate({
                   {completion.missingFields.length > 0 && (
                     <div className="mb-4">
                       <h4 className="font-medium text-sm text-gray-900 mb-3">
-                        {profile?.role === 'alumni' ? 'Required Professional Information:' : 'Missing Information:'}
+                        {currentProfile?.role === 'alumni' ? 'Required Professional Information:' : 'Missing Information:'}
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
                         {completion.missingFields.slice(0, 8).map((field: string, index: number) => (
@@ -237,10 +341,10 @@ export function ProfileCompletionGate({
                   {/* Benefits Section - Simplified */}
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                     <h4 className="font-medium text-sm text-blue-900 mb-2">
-                      {profile?.role === 'alumni' ? 'Why Complete Your Professional Profile?' : 'Why Complete Your Profile?'}
+                      {currentProfile?.role === 'alumni' ? 'Why Complete Your Professional Profile?' : 'Why Complete Your Profile?'}
                     </h4>
                     <div className="space-y-2">
-                      {profile?.role === 'alumni' ? (
+                      {currentProfile?.role === 'alumni' ? (
                         <>
                           <div className="flex items-start space-x-2">
                             <Building2 className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
@@ -283,14 +387,24 @@ export function ProfileCompletionGate({
 
             {/* Fixed Footer with Action Button */}
             <div className="rounded-b-lg flex-shrink-0 border-t border-gray-200 px-6 py-3 bg-white">
-              <Button
-                onClick={handleEditProfile}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 text-sm font-medium w-full"
-                size="sm"
-              >
-                <User className="h-4 w-4 mr-2" />
-                Complete Profile
-              </Button>
+              <div className="flex space-x-2">
+                <Button
+                  onClick={handleEditProfile}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 text-sm font-medium flex-1"
+                  size="sm"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Complete Profile
+                </Button>
+                <Button
+                  onClick={handleManualRefresh}
+                  variant="outline"
+                  className="px-3 py-2.5 text-sm"
+                  size="sm"
+                >
+                  ↻
+                </Button>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -301,7 +415,7 @@ export function ProfileCompletionGate({
         <EditProfileModal
           isOpen={editModalOpen}
           onClose={() => setEditModalOpen(false)}
-          profile={profile}
+          profile={currentProfile}
           onUpdate={handleProfileUpdate}
         />
       )}

@@ -312,10 +312,21 @@ function isValidField(value: any): boolean {
     const trimmed = value.trim();
     return trimmed !== "" && 
            trimmed !== "Not specified" && 
+           trimmed !== "Not Specified" &&  // Add capital S version
+           trimmed !== "Not provided" &&    // Add Not provided
+           trimmed !== "Not Provided" &&    // Add capital P version
            trimmed !== "N/A" && 
+           trimmed !== "n/a" &&             // Add lowercase version
            trimmed !== "Unknown" &&
+           trimmed !== "unknown" &&         // Add lowercase version
            trimmed !== "null" &&
-           trimmed !== "undefined";
+           trimmed !== "undefined" &&
+           trimmed !== "Not set" &&         // Add Not set variations
+           trimmed !== "Not Set" &&
+           trimmed !== "TBD" &&             // Add To Be Determined
+           trimmed !== "tbd" &&
+           trimmed !== "TBA" &&             // Add To Be Announced
+           trimmed !== "tba";
   }
   if (typeof value === 'number') {
     return !isNaN(value) && value > 0;

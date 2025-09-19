@@ -392,25 +392,26 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
 
           try {
             const alumniUpdates = {
-              first_name: formData.first_name || null,
-              last_name: formData.last_name || null,
-              full_name: `${formData.first_name} ${formData.last_name}`,
-              email: formData.email || null,
-              chapter: profile.chapter, // Include chapter from profile to satisfy not-null constraint
-              graduation_year: formData.grad_year ? parseInt(formData.grad_year) : null, // Include graduation_year to satisfy not-null constraint
-              industry: formData.industry || null,
-              company: formData.company || null,
-              job_title: formData.job_title || null,
-              phone: formData.phone || null,
-              location: formData.location || null,
-              description: formData.bio || null, // Use bio from main profile instead of separate description
+              first_name: formData.first_name || '',
+              last_name: formData.last_name || '',
+              full_name: `${formData.first_name || ''} ${formData.last_name || ''}`.trim(),
+              email: formData.email || '',
+              chapter: profile.chapter || 'Unknown',
+              graduation_year: formData.grad_year ? parseInt(formData.grad_year) : new Date().getFullYear(),
+              // Handle field deletion with Not Specified defaults for NOT NULL fields
+              industry: formData.industry?.trim() || 'Not Specified',
+              company: formData.company?.trim() || 'Not Specified', 
+              job_title: formData.job_title?.trim() || 'Not Specified',
+              phone: formData.phone?.trim() || 'Not Specified',
+              location: formData.location?.trim() || 'Not Specified',
+              description: formData.bio?.trim() || null, // This one can be null
               is_actively_hiring: formData.is_actively_hiring || false,
               tags: formData.tags && formData.tags.trim() 
-                ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
+                ? formData.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0)
                 : null
             };
 
-            console.log('🎓 Alumni updates:', alumniUpdates);
+            console.log(' Alumni updates:', alumniUpdates);
 
             const { data, error } = await supabase
               .from('alumni')
