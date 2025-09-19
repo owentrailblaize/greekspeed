@@ -1,8 +1,7 @@
-'use client';
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, User, AlertCircle, Briefcase, Building2, MapPin, Phone } from 'lucide-react';
+import { User, AlertCircle, Briefcase, Building2, MapPin, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -131,11 +130,6 @@ export function ProfileCompletionGate({
     };
   };
 
-  const handleClose = async () => {
-    setIsClosing(true);
-    onClose();
-  };
-
   const handleEditProfile = () => {
     setEditModalOpen(true);
   };
@@ -170,7 +164,7 @@ export function ProfileCompletionGate({
           className="bg-white rounded-lg max-w-lg w-full my-8 shadow-2xl"
         >
           <div className="flex flex-col">
-            <div className="relative pb-4 flex-shrink-0 px-6 pt-6">
+            <div className="pb-4 flex-shrink-0 px-6 pt-6">
               <div className="flex items-center justify-center mb-4">
                 <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-orange-600 rounded-full flex items-center justify-center">
                   <AlertCircle className="h-6 w-6 text-white" />
@@ -182,14 +176,6 @@ export function ProfileCompletionGate({
               <p className="text-center text-sm text-gray-600 mt-2">
                 {getRoleSpecificMessage()}
               </p>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClose}
-                className="absolute top-4 right-4 p-1"
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </div>
             
             <div className="pt-0 px-6 pb-1">
@@ -295,26 +281,16 @@ export function ProfileCompletionGate({
               )}
             </div>
 
-            {/* Fixed Footer with Action Buttons */}
+            {/* Fixed Footer with Action Button */}
             <div className="rounded-b-lg flex-shrink-0 border-t border-gray-200 px-6 py-3 bg-white">
-              <div className="flex flex-col gap-3">
-                <Button
-                  onClick={handleEditProfile}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 text-sm font-medium w-full"
-                  size="sm"
-                >
-                  <User className="h-4 w-4 mr-2" />
-                  Complete Profile
-                </Button>
-                <Button
-                  onClick={handleClose}
-                  variant="outline"
-                  className="px-4 py-2.5 text-sm font-medium w-full border-gray-300 hover:bg-gray-50"
-                  size="sm"
-                >
-                  Cancel
-                </Button>
-              </div>
+              <Button
+                onClick={handleEditProfile}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 text-sm font-medium w-full"
+                size="sm"
+              >
+                <User className="h-4 w-4 mr-2" />
+                Complete Profile
+              </Button>
             </div>
           </div>
         </motion.div>
