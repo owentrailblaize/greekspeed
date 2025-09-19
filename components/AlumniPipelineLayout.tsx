@@ -30,7 +30,6 @@ interface FilterState {
   chapter: string;
   state: string;
   activelyHiring: boolean;
-  showAllAlumni: boolean; // Changed from myChapter to showAllAlumni
 }
 
 interface PaginationState {

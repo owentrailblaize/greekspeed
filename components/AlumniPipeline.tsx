@@ -15,7 +15,6 @@ interface FilterState {
   chapter: string;
   state: string;
   activelyHiring: boolean;
-  showAllAlumni: boolean;
 }
 
 interface PaginationState {
@@ -50,7 +49,6 @@ export function AlumniPipeline() {
     chapter: "",
     state: "",
     activelyHiring: false,
-    showAllAlumni: false, // Default to false (only show user's chapter)
   });
   const [selectedAlumniForModal, setSelectedAlumniForModal] = useState<Alumni | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -86,8 +84,8 @@ export function AlumniPipeline() {
       params.append('limit', '100'); // Fixed to 100 for consistent performance
       params.append('page', pageToFetch.toString());
       
-      // Add chapter filtering logic - only filter by user's chapter if showAllAlumni is false
-      if (!filterParams.showAllAlumni && profile?.chapter) {
+      // Always filter by user's chapter - pipeline now only shows current user's chapter alumni
+      if (profile?.chapter) {
         params.append('userChapter', profile.chapter);
       }
         
@@ -153,7 +151,6 @@ export function AlumniPipeline() {
       chapter: "",
       state: "",
       activelyHiring: false,
-      showAllAlumni: false, // Reset to default (only user's chapter)
     });
     // Reset to first page when clearing filters
     setPagination(prev => ({ ...prev, page: 1 }));
@@ -186,7 +183,6 @@ export function AlumniPipeline() {
         totalCount={pagination.total}
         onClearSelection={handleClearSelection}
         userChapter={profile?.chapter}
-        showAllAlumni={filters.showAllAlumni}
       />
 
       {/* Main Layout */}
