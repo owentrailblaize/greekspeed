@@ -11,7 +11,6 @@ interface AlumniSubHeaderProps {
   totalCount: number;
   onClearSelection: () => void;
   userChapter?: string | null; // Add this prop
-  showAllAlumni?: boolean; // Add this prop
 }
 
 export function AlumniSubHeader({
@@ -20,8 +19,7 @@ export function AlumniSubHeader({
   selectedCount,
   totalCount,
   onClearSelection,
-  userChapter,
-  showAllAlumni
+  userChapter
 }: AlumniSubHeaderProps) {
   return (
     <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
@@ -33,14 +31,9 @@ export function AlumniSubHeader({
         </p>
         
         {/* Chapter filter badge - underneath the count */}
-        {userChapter && !showAllAlumni && (
+        {userChapter && (
           <Badge variant="outline" className="bg-navy-50 border-navy-200 text-navy-700 text-xs">
             Filtered by {userChapter}
-          </Badge>
-        )}
-        {showAllAlumni && (
-          <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700 text-xs">
-            All Chapters
           </Badge>
         )}
         
@@ -60,14 +53,9 @@ export function AlumniSubHeader({
           <p className="text-gray-600 text-sm">
             {totalCount} alumni found • {selectedCount} selected
           </p>
-          {userChapter && !showAllAlumni && (
+          {userChapter && (
             <Badge variant="outline" className="bg-navy-50 border-navy-200 text-navy-700 text-xs">
               Filtered by {userChapter}
-            </Badge>
-          )}
-          {showAllAlumni && (
-            <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700 text-xs">
-              All Chapters
             </Badge>
           )}
         </div>

@@ -1,4 +1,4 @@
-import { Search, X, Building2, Users, Globe } from "lucide-react";
+import { Search, X, Building2, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,6 @@ interface FilterState {
   chapter: string;
   state: string;
   activelyHiring: boolean;
-  showAllAlumni: boolean; // Changed from myChapter to showAllAlumni
 }
 
 interface AlumniFilterBarProps {
@@ -69,15 +68,6 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
             >
               <Building2 className="h-4 w-4 mr-2" />
               Actively Hiring
-            </Button>
-            <Button
-              variant={filters.showAllAlumni ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleFilterChange('showAllAlumni', !filters.showAllAlumni)}
-              className="justify-start"
-            >
-              <Globe className="h-4 w-4 mr-2" />
-              {filters.showAllAlumni ? "My Chapter" : "All Alumni"}
             </Button>
           </div>
         </div>
@@ -209,15 +199,6 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                   />
                 </Badge>
               )}
-              {filters.showAllAlumni && (
-                <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
-                  All Alumni
-                  <X 
-                    className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
-                    onClick={() => handleFilterChange('showAllAlumni', false)}
-                  />
-                </Badge>
-                )}
             </div>
           </motion.div>
         )}
@@ -253,15 +234,6 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
             >
               <Building2 className="h-4 w-4" />
               <span>Actively Hiring</span>
-            </Button>
-            <Button
-              variant={filters.showAllAlumni ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleFilterChange('showAllAlumni', !filters.showAllAlumni)}
-              className="flex items-center space-x-2"
-            >
-              <Globe className="h-4 w-4" />
-              <span>{filters.showAllAlumni ? "All Alumni" : "My Chapter"}</span>
             </Button>
 
             {/* State Filter */}
@@ -394,15 +366,6 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                 <X 
                   className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
                   onClick={() => handleFilterChange('activelyHiring', false)}
-                />
-              </Badge>
-            )}
-            {filters.showAllAlumni && (
-              <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
-                All Alumni
-                <X 
-                  className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
-                  onClick={() => handleFilterChange('showAllAlumni', false)}
                 />
               </Badge>
             )}
