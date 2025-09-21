@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, MessageSquare, Clock, AlertTriangle, GraduationCap, Calendar, AlertCircle, TrendingUp, Minus, Check } from 'lucide-react';
+import { X, MessageSquare, Clock, AlertTriangle, GraduationCap, Calendar, AlertCircle, TrendingUp, Minus, Check, Loader2 } from 'lucide-react';
 import { useAnnouncements } from '@/lib/hooks/useAnnouncements';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { Announcement, CreateAnnouncementData } from '@/types/announcements';
@@ -59,8 +59,13 @@ export function AnnouncementsCard() {
   const chapterId = profile?.chapter_id || null;
   const { announcements, loading, markAsRead, refresh } = useAnnouncements(chapterId);
 
+  // Add state for tracking which announcement is being marked as read
+  const [markingAsRead, setMarkingAsRead] = useState<string | null>(null);
+
+  // Update the handleMarkAsRead function
   const handleMarkAsRead = async (announcementId: string) => {
     try {
+      setMarkingAsRead(announcementId); // Set loading state
       const success = await markAsRead(announcementId);
       if (success) {
         // The announcement will automatically be removed from the list
@@ -68,6 +73,8 @@ export function AnnouncementsCard() {
       }
     } catch (error) {
       console.error('Failed to mark announcement as read:', error);
+    } finally {
+      setMarkingAsRead(null); // Clear loading state
     }
   };
 
@@ -174,10 +181,15 @@ export function AnnouncementsCard() {
                         size="sm" 
                         variant="outline"
                         onClick={() => handleMarkAsRead(announcement.id)}
+                        disabled={markingAsRead === announcement.id}
                         className="text-navy-600 border-navy-600 hover:bg-navy-50 h-8 sm:h-6 px-2 sm:px-1 w-auto shrink-0"
                         title="Mark as read"
                       >
-                        <Check className="h-4 w-4 sm:h-3 sm:w-3" />
+                        {markingAsRead === announcement.id ? (
+                          <Loader2 className="h-4 w-4 sm:h-3 sm:w-3 animate-spin" />
+                        ) : (
+                          <Check className="h-4 w-4 sm:h-3 sm:w-3" />
+                        )}
                       </Button>
                     </div>
                   </div>
