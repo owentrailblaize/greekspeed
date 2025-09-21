@@ -83,7 +83,7 @@ export class EmailService {
           },
           cta: {
             label: 'Read Full Announcement',
-            url: `${process.env.NEXT_PUBLIC_APP_URL}/announcements/${announcementId}`
+            url: 'https://www.trailblaize.net/' 
           },
           unsubscribe: `{{unsubscribe}}`,
           unsubscribe_preferences: `{{unsubscribe_preferences}}`
