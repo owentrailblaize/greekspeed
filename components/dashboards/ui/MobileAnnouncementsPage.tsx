@@ -136,14 +136,6 @@ export function MobileAnnouncementsPage() {
                           <h4 className="font-medium text-gray-900 text-sm line-clamp-2 break-words">
                             {announcement.title}
                           </h4>
-                          {/* Priority icon */}
-                          {(() => {
-                            const priorityConfig = getPriorityIcon(announcement.priority);
-                            const PriorityIcon = priorityConfig.icon;
-                            return (
-                              <PriorityIcon className={`h-3 w-3 ${priorityConfig.color} shrink-0`} />
-                            );
-                          })()}
                         </div>
                       </div>
                       
