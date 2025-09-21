@@ -12,6 +12,7 @@
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-tabs": "^1.1.12",
+    "@sendgrid/mail": "^8.1.6",
     "@stripe/stripe-js": "^7.9.0",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.6.1",
@@ -19,6 +20,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.2.2",
     "framer-motion": "^12.23.12",
     "is-number": "^7.0.0",
     "lucide-react": "^0.542.0",
@@ -28,6 +30,7 @@
     "react-toastify": "^11.0.5",
     "stripe": "^18.5.0",
     "tailwind-merge": "^3.3.1",
+    "twilio": "^5.9.0",
     "us-state-codes": "^1.1.2",
     "xlsx": "^0.18.5"
   },

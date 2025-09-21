@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerSupabaseClient } from '@/lib/supabase/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Missing environment variables' }, { status: 500 });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createServerSupabaseClient();
     const { searchParams } = new URL(request.url);
     const chapterId = searchParams.get('chapterId');
     const page = parseInt(searchParams.get('page') || '1');
@@ -100,9 +100,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing environment variables' }, { status: 500 });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createServerSupabaseClient();
     const body = await request.json();
-    const { title, content, announcement_type, priority, is_scheduled, scheduled_at, metadata } = body;
+    const { title, content, announcement_type, is_scheduled, scheduled_at, metadata } = body;
 
     // Get authenticated user
     const authHeader = request.headers.get('authorization');
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
     // Get user profile to verify chapter and role
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('chapter_id, chapter_role')
+      .select('chapter_id, chapter_role, role')
       .eq('id', user.id)
       .single();
 
@@ -129,9 +129,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user has permission to create announcements
-    const allowedRoles = ['president', 'vice_president', 'secretary', 'treasurer', 'executive_board'];
-    if (!profile.chapter_role || !allowedRoles.includes(profile.chapter_role)) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+    const allowedChapterRoles = ['president', 'vice_president', 'secretary', 'treasurer', 'executive_board'];
+    const isSystemAdmin = profile.role === 'admin';
+    const hasChapterRole = profile.chapter_role && allowedChapterRoles.includes(profile.chapter_role);
+
+    if (!isSystemAdmin && !hasChapterRole) {
+      return NextResponse.json({ 
+        error: 'Insufficient permissions. Only admins, presidents, vice presidents, secretaries, treasurers, and executive board members can create announcements.' 
+      }, { status: 403 });
     }
 
     // Create announcement
@@ -143,7 +148,6 @@ export async function POST(request: NextRequest) {
         title,
         content,
         announcement_type,
-        priority,
         is_scheduled: is_scheduled || false,
         scheduled_at: scheduled_at || null,
         metadata: metadata || {},
@@ -170,7 +174,73 @@ export async function POST(request: NextRequest) {
     // If announcement is not scheduled, create recipient records and send notifications
     if (!is_scheduled) {
       await createRecipientRecords(announcement.id, profile.chapter_id, supabase);
-      // TODO: Send notifications (SMS, email, push)
+      
+      // Send email notifications directly
+      try {
+        console.log('📧 Starting email notification process...');
+        
+        // Get chapter name first
+        const { data: chapter, error: chapterError } = await supabase
+          .from('chapters')
+          .select('name')
+          .eq('id', profile.chapter_id)
+          .single();
+
+        const chapterName = chapter?.name || 'Your Chapter';
+        
+        // Get chapter members for email - FIXED QUERY
+        const { data: members, error: membersError } = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            email,
+            first_name,
+            last_name,
+            chapter_id,
+            role
+          `)
+          .eq('chapter_id', profile.chapter_id)
+          .in('role', ['active_member', 'admin'])
+          .not('email', 'is', null);
+
+        if (membersError) {
+          console.error('❌ Failed to fetch chapter members:', membersError);
+        } else if (!members || members.length === 0) {
+          console.log('⚠️ No chapter members found for email notifications');
+        } else {
+          console.log('📊 Chapter members found:', members.length);
+          
+          // Map to recipients - no email_preferences filtering since column doesn't exist
+          const recipients = members.map(member => ({
+            email: member.email,
+            firstName: member.first_name || 'Member',
+            chapterName: chapterName
+          }));
+
+          console.log(' Recipients prepared:', recipients.length);
+          console.log(' Recipient emails:', recipients.map(r => r.email));
+
+          if (recipients.length > 0) {
+            const { EmailService } = await import('@/lib/services/emailService');
+            
+            const result = await EmailService.sendAnnouncementToChapter(
+              recipients,
+              {
+                title: announcement.title,
+                summary: '',
+                content: announcement.content,
+                announcementId: announcement.id,
+                announcementType: announcement.announcement_type
+              }
+            );
+
+            console.log('✅ Email sending result:', result);
+          }
+        }
+      } catch (emailError) {
+        console.error('❌ Error sending announcement emails:', emailError);
+        // Don't fail the announcement creation if email fails
+      }
     }
 
     return NextResponse.json({ announcement });

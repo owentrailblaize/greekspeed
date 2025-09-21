@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, TrendingUp, Calendar, MessageSquare, AlertCircle, CheckCircle, Clock, Crown, Send, Image, Clock as ClockIcon, Lock, X, UserPlus } from "lucide-react";
+import { Users, TrendingUp, Calendar, MessageSquare, AlertCircle, CheckCircle, Clock, Crown, Send, Image, Clock as ClockIcon, Lock, X, UserPlus, Smartphone } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +24,6 @@ export function PresidentDashboard() {
   const [announcement, setAnnouncement] = useState("");
   const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementType, setAnnouncementType] = useState<'general' | 'urgent' | 'event' | 'academic'>('general');
-  const [announcementPriority, setAnnouncementPriority] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal');
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduledDate, setScheduledDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,6 +46,9 @@ export function PresidentDashboard() {
   // Add state for alumni count
   const [alumniCount, setAlumniCount] = useState<number | null>(null);
   const [loadingAlumniCount, setLoadingAlumniCount] = useState(false);
+
+  // Add SMS-related state variables
+  const [sendSMS, setSendSMS] = useState(false);
 
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
@@ -175,7 +177,6 @@ export function PresidentDashboard() {
         title: announcementTitle.trim(),
         content: announcement.trim(),
         announcement_type: announcementType,
-        priority: announcementPriority,
         is_scheduled: isScheduled,
         scheduled_at: isScheduled ? scheduledDate : undefined,
         metadata: {}
@@ -187,7 +188,6 @@ export function PresidentDashboard() {
       setAnnouncement("");
       setAnnouncementTitle("");
       setAnnouncementType('general');
-      setAnnouncementPriority('normal');
       setIsScheduled(false);
       setScheduledDate("");
       
@@ -438,13 +438,6 @@ export function PresidentDashboard() {
                     <SelectItem value="event">Event</SelectItem>
                     <SelectItem value="academic">Academic</SelectItem>
                   </Select>
-                  <Select value={announcementPriority} onValueChange={(value: string) => setAnnouncementPriority(value as 'low' | 'normal' | 'high' | 'urgent')}>
-                    <SelectItem value="">Select priority</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
-                  </Select>
                 </div>
                 <Textarea
                   placeholder="Write a chapter announcement..."
@@ -465,6 +458,18 @@ export function PresidentDashboard() {
                       <span className="text-sm">Schedule for later</span>
                     </label>
                     
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={false} // Always false
+                        onChange={() => {}} // No-op function
+                        className="rounded"
+                        disabled={true} // Disable the checkbox
+                      />
+                      <span className="text-sm text-gray-400">Send SMS notification</span>
+                      <span className="text-xs text-gray-400">(Coming Soon)</span>
+                    </label>
+                    
                     {isScheduled && (
                       <Input
                         type="datetime-local"
@@ -475,14 +480,16 @@ export function PresidentDashboard() {
                     )}
                   </div>
                   
-                  <Button 
-                    className="bg-purple-600 hover:bg-purple-700"
-                    onClick={handleSendAnnouncement}
-                    disabled={isSubmitting || announcementsLoading}
-                  >
-                    <Send className="h-4 w-4 mr-2" />
-                    {isSubmitting ? 'Sending...' : 'Send Announcement'}
-                  </Button>
+                  <div className="flex space-x-2">
+                    <Button 
+                      className="bg-purple-600 hover:bg-purple-700"
+                      onClick={handleSendAnnouncement}
+                      disabled={isSubmitting || announcementsLoading}
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      {isSubmitting ? 'Sending...' : 'Send Announcement'}
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -501,13 +508,6 @@ export function PresidentDashboard() {
                     <SelectItem value="urgent">Urgent</SelectItem>
                     <SelectItem value="event">Event</SelectItem>
                     <SelectItem value="academic">Academic</SelectItem>
-                  </Select>
-                  <Select value={announcementPriority} onValueChange={(value: string) => setAnnouncementPriority(value as 'low' | 'normal' | 'high' | 'urgent')}>
-                    <SelectItem value="">Select priority</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
                   </Select>
                 </div>
                 
@@ -529,6 +529,18 @@ export function PresidentDashboard() {
                     <span className="text-sm">Schedule for later</span>
                   </label>
                   
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={false} // Always false
+                      onChange={() => {}} // No-op function
+                      className="rounded"
+                      disabled={true} // Disable the checkbox
+                    />
+                    <span className="text-sm text-gray-400">Send SMS notification</span>
+                    <span className="text-xs text-gray-400">(Coming Soon)</span>
+                  </label>
+                  
                   {isScheduled && (
                     <Input
                       type="datetime-local"
@@ -539,7 +551,7 @@ export function PresidentDashboard() {
                   )}
                 </div>
                 
-                <div className="flex justify-center pt-2">
+                <div className="flex flex-col space-y-2 pt-2">
                   <Button 
                     className="bg-purple-600 hover:bg-purple-700 w-full"
                     onClick={handleSendAnnouncement}
