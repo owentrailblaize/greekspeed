@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Users, DollarSign, BookOpen, Clock, Plus, Edit, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Trash2, X, Lock } from "lucide-react";
+import { Calendar, Users, DollarSign, BookOpen, Clock, Plus, Edit, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Trash2, X, Lock, Bell } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -73,6 +73,10 @@ export function SocialChairDashboard() {
   const [showVendorForm, setShowVendorForm] = useState(false);
   const [editingVendor, setEditingVendor] = useState<VendorContact | null>(null);
   const [isSubmittingVendor, setIsSubmittingVendor] = useState(false);
+  
+  // Add reminder management state
+  const [sendingReminder, setSendingReminder] = useState<string | null>(null);
+  const [reminderSuccess, setReminderSuccess] = useState<string | null>(null);
   
   // Get user profile and chapter ID
   const { profile } = useProfile();
@@ -282,6 +286,39 @@ export function SocialChairDashboard() {
       await handleUpdateVendor(data as UpdateVendorRequest);
     } else {
       await handleCreateVendor(data as CreateVendorRequest);
+    }
+  };
+
+  // Event reminder functions
+  const handleSendReminder = async (eventId: string) => {
+    setSendingReminder(eventId);
+    
+    try {
+      const response = await fetch('/api/events/send-reminder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventId,
+          chapterId
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Reminder emails sent:', result);
+        setReminderSuccess(eventId);
+        // Clear success state after 2 seconds
+        setTimeout(() => setReminderSuccess(null), 2000);
+      } else {
+        const error = await response.json();
+        console.error('❌ Failed to send reminder emails:', error);
+      }
+    } catch (error) {
+      console.error('Error sending reminder emails:', error);
+    } finally {
+      setSendingReminder(null);
     }
   };
 
@@ -797,14 +834,33 @@ export function SocialChairDashboard() {
                         <span className="text-sm text-gray-600">
                           Budget: ${event.budget} • {event.attendees} attendees
                         </span>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleEditEvent(upcomingEvents[index])}
-                        >
-                          <Edit className="h-3 w-3 mr-1" />
-                          Edit
-                        </Button>
+                        <div className="flex items-center space-x-2">
+                          {/* NEW: Send Reminder Button */}
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleSendReminder(upcomingEvents[index].id)}
+                            disabled={sendingReminder === upcomingEvents[index].id}
+                            className={`${
+                              reminderSuccess === upcomingEvents[index].id
+                                ? 'text-green-600 border-green-200 bg-green-50'
+                                : sendingReminder === upcomingEvents[index].id 
+                                  ? 'text-orange-600 border-orange-200 bg-orange-50' 
+                                  : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200'
+                            } transition-colors duration-200`}
+                            title={reminderSuccess === upcomingEvents[index].id ? 'Reminders sent successfully!' : sendingReminder === upcomingEvents[index].id ? 'Sending reminders...' : 'Send reminder to members who haven\'t RSVP\'d'}
+                          >
+                            <Bell className="h-3 w-3" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleEditEvent(upcomingEvents[index])}
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            Edit
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
