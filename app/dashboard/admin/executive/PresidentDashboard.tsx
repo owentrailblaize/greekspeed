@@ -24,7 +24,6 @@ export function PresidentDashboard() {
   const [announcement, setAnnouncement] = useState("");
   const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementType, setAnnouncementType] = useState<'general' | 'urgent' | 'event' | 'academic'>('general');
-  const [announcementPriority, setAnnouncementPriority] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal');
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduledDate, setScheduledDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -178,7 +177,6 @@ export function PresidentDashboard() {
         title: announcementTitle.trim(),
         content: announcement.trim(),
         announcement_type: announcementType,
-        priority: announcementPriority,
         is_scheduled: isScheduled,
         scheduled_at: isScheduled ? scheduledDate : undefined,
         metadata: {}
@@ -190,7 +188,6 @@ export function PresidentDashboard() {
       setAnnouncement("");
       setAnnouncementTitle("");
       setAnnouncementType('general');
-      setAnnouncementPriority('normal');
       setIsScheduled(false);
       setScheduledDate("");
       
@@ -443,13 +440,6 @@ export function PresidentDashboard() {
                     <SelectItem value="event">Event</SelectItem>
                     <SelectItem value="academic">Academic</SelectItem>
                   </Select>
-                  <Select value={announcementPriority} onValueChange={(value: string) => setAnnouncementPriority(value as 'low' | 'normal' | 'high' | 'urgent')}>
-                    <SelectItem value="">Select priority</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
-                  </Select>
                 </div>
                 <Textarea
                   placeholder="Write a chapter announcement..."
@@ -522,13 +512,6 @@ export function PresidentDashboard() {
                     <SelectItem value="urgent">Urgent</SelectItem>
                     <SelectItem value="event">Event</SelectItem>
                     <SelectItem value="academic">Academic</SelectItem>
-                  </Select>
-                  <Select value={announcementPriority} onValueChange={(value: string) => setAnnouncementPriority(value as 'low' | 'normal' | 'high' | 'urgent')}>
-                    <SelectItem value="">Select priority</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
                   </Select>
                 </div>
                 

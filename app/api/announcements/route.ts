@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServerSupabaseClient();
     const body = await request.json();
-    const { title, content, announcement_type, priority, is_scheduled, scheduled_at, metadata } = body;
+    const { title, content, announcement_type, is_scheduled, scheduled_at, metadata } = body;
 
     // Get authenticated user
     const authHeader = request.headers.get('authorization');
@@ -148,7 +148,6 @@ export async function POST(request: NextRequest) {
         title,
         content,
         announcement_type,
-        priority,
         is_scheduled: is_scheduled || false,
         scheduled_at: scheduled_at || null,
         metadata: metadata || {},
@@ -175,7 +174,73 @@ export async function POST(request: NextRequest) {
     // If announcement is not scheduled, create recipient records and send notifications
     if (!is_scheduled) {
       await createRecipientRecords(announcement.id, profile.chapter_id, supabase);
-      // TODO: Send notifications (SMS, email, push)
+      
+      // Send email notifications directly
+      try {
+        console.log('📧 Starting email notification process...');
+        
+        // Get chapter name first
+        const { data: chapter, error: chapterError } = await supabase
+          .from('chapters')
+          .select('name')
+          .eq('id', profile.chapter_id)
+          .single();
+
+        const chapterName = chapter?.name || 'Your Chapter';
+        
+        // Get chapter members for email - FIXED QUERY
+        const { data: members, error: membersError } = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            email,
+            first_name,
+            last_name,
+            chapter_id,
+            role
+          `)
+          .eq('chapter_id', profile.chapter_id)
+          .in('role', ['active_member', 'admin'])
+          .not('email', 'is', null);
+
+        if (membersError) {
+          console.error('❌ Failed to fetch chapter members:', membersError);
+        } else if (!members || members.length === 0) {
+          console.log('⚠️ No chapter members found for email notifications');
+        } else {
+          console.log('📊 Chapter members found:', members.length);
+          
+          // Map to recipients - no email_preferences filtering since column doesn't exist
+          const recipients = members.map(member => ({
+            email: member.email,
+            firstName: member.first_name || 'Member',
+            chapterName: chapterName
+          }));
+
+          console.log(' Recipients prepared:', recipients.length);
+          console.log(' Recipient emails:', recipients.map(r => r.email));
+
+          if (recipients.length > 0) {
+            const { EmailService } = await import('@/lib/services/emailService');
+            
+            const result = await EmailService.sendAnnouncementToChapter(
+              recipients,
+              {
+                title: announcement.title,
+                summary: '',
+                content: announcement.content,
+                announcementId: announcement.id,
+                announcementType: announcement.announcement_type
+              }
+            );
+
+            console.log('✅ Email sending result:', result);
+          }
+        }
+      } catch (emailError) {
+        console.error('❌ Error sending announcement emails:', emailError);
+        // Don't fail the announcement creation if email fails
+      }
     }
 
     return NextResponse.json({ announcement });
