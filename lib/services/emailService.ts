@@ -611,5 +611,144 @@ export class EmailService {
       This email was sent from a notification-only address that cannot accept incoming email.
     `;
   }
+
+  /**
+   * Send event reminder emails to users who haven't RSVP'd
+   */
+  static async sendEventReminderToChapter(
+    recipients: Array<{ email: string; firstName: string; chapterName: string }>,
+    eventData: {
+      eventTitle: string;
+      eventDescription?: string;
+      eventLocation?: string;
+      eventStartTime: string;
+      eventEndTime: string;
+      eventId: string;
+      startAtRelative?: string;
+    }
+  ): Promise<{ successful: number; failed: number }> {
+    const results = await Promise.allSettled(
+      recipients.map(recipient => 
+        this.sendEventReminder({
+          to: recipient.email,
+          firstName: recipient.firstName,
+          chapterName: recipient.chapterName,
+          ...eventData
+        })
+      )
+    );
+
+    const successful = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.filter(r => r.status === 'rejected').length;
+
+    return { successful, failed };
+  }
+
+  /**
+   * Send individual event reminder email
+   */
+  static async sendEventReminder({
+    to,
+    firstName,
+    chapterName,
+    eventTitle,
+    eventDescription,
+    eventLocation,
+    eventStartTime,
+    eventEndTime,
+    eventId,
+    startAtRelative
+  }: {
+    to: string;
+    firstName: string;
+    chapterName: string;
+    eventTitle: string;
+    eventDescription?: string;
+    eventLocation?: string;
+    eventStartTime: string;
+    eventEndTime: string;
+    eventId: string;
+    startAtRelative?: string;
+  }): Promise<boolean> {
+    try {
+      const startDate = new Date(eventStartTime);
+      const endDate = new Date(eventEndTime);
+      
+      const formatDateTime = (date: Date) => {
+        return date.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          timeZoneName: 'short'
+        });
+      };
+
+      const msg = {
+        to,
+        from: {
+          email: this.fromEmail,
+          name: this.fromName,
+        },
+        subject: `Event Reminder: ${eventTitle}`,
+        templateId: process.env.SENDGRID_EVENT_REMINDER_TEMPLATE_ID!,
+        dynamicTemplateData: {
+          recipient: {
+            first_name: firstName
+          },
+          chapter: {
+            name: chapterName
+          },
+          payload: {
+            event: {
+              title: eventTitle,
+              description: eventDescription || '',
+              location: eventLocation || '',
+              start_at_human: formatDateTime(startDate),
+              start_at_relative: startAtRelative || this.getRelativeTime(startDate)
+            }
+          },
+          cta: {
+            url: 'https://www.trailblaize.net'
+          },
+          unsubscribe: `{{unsubscribe}}`,
+          unsubscribe_preferences: `{{unsubscribe_preferences}}`
+        }
+      };
+
+      await sgMail.send(msg);
+      console.log(`✅ Event reminder email sent successfully to: ${to}`);
+      return true;
+    } catch (error) {
+      console.error(`❌ Failed to send event reminder email to: ${to}`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Get relative time string (e.g., "in 2 hours", "tomorrow")
+   */
+  private static getRelativeTime(date: Date): string {
+    const now = new Date();
+    const diffMs = date.getTime() - now.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays === 0) {
+      if (diffHours <= 0) {
+        return 'now';
+      } else if (diffHours === 1) {
+        return 'in 1 hour';
+      } else {
+        return `in ${diffHours} hours`;
+      }
+    } else if (diffDays === 1) {
+      return 'tomorrow';
+    } else {
+      return `in ${diffDays} days`;
+    }
+  }
 }
 
