@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { EmailService } from '@/lib/services/emailService';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -100,6 +101,63 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Error creating event:', error);
       return NextResponse.json({ error: 'Failed to create event' }, { status: 500 });
+    }
+
+    // NEW: Send email notifications if event is published
+    if (newEvent.status === 'published') {
+      console.log('📧 Event is published, attempting to send email notifications...');
+      console.log('📧 Event details:', {
+        id: newEvent.id,
+        title: newEvent.title,
+        chapter_id: newEvent.chapter_id,
+        status: newEvent.status
+      });
+      
+      try {
+        const baseUrl = process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:3000' 
+        : process.env.NEXT_PUBLIC_APP_URL || 'https://www.trailblaize.net';
+        const emailUrl = `${baseUrl}/api/events/send-email`;
+        console.log('📧 Calling email API:', emailUrl);
+        console.log('📧 Request payload:', {
+          eventId: newEvent.id,
+          chapterId: newEvent.chapter_id
+        });
+        
+        // Trigger email sending asynchronously
+        const emailResponse = await fetch(emailUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            eventId: newEvent.id,
+            chapterId: newEvent.chapter_id
+          })
+        });
+
+        console.log('📧 Email API response status:', emailResponse.status);
+        console.log('📧 Email API response ok:', emailResponse.ok);
+
+        if (emailResponse.ok) {
+          const emailResult = await emailResponse.json();
+          console.log('✅ Event notification emails sent:', emailResult);
+        } else {
+          const errorText = await emailResponse.text();
+          console.error('❌ Failed to send event notification emails');
+          console.error('❌ Response status:', emailResponse.status);
+          console.error('❌ Response text:', errorText);
+        }
+      } catch (emailError) {
+        console.error('❌ Error sending event notification emails:', emailError);
+        console.error('❌ Error details:', {
+          message: emailError instanceof Error ? emailError.message : 'Unknown error',
+          stack: emailError instanceof Error ? emailError.stack : 'No stack trace'
+        });
+        // Don't fail the event creation if email fails
+      }
+    } else {
+      console.log('📧 Event status is not published, skipping email notifications:', newEvent.status);
     }
 
     return NextResponse.json({ 
