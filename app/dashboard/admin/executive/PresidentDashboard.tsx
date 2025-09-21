@@ -461,15 +461,13 @@ export function PresidentDashboard() {
                     <label className="flex items-center space-x-2">
                       <input
                         type="checkbox"
-                        checked={sendSMS}
-                        onChange={(e) => setSendSMS(e.target.checked)}
+                        checked={false} // Always false
+                        onChange={() => {}} // No-op function
                         className="rounded"
-                        disabled={isScheduled}
+                        disabled={true} // Disable the checkbox
                       />
-                      <span className="text-sm">Send SMS notification</span>
-                      {isScheduled && (
-                        <span className="text-xs text-gray-500">(SMS not available for scheduled announcements)</span>
-                      )}
+                      <span className="text-sm text-gray-400">Send SMS notification</span>
+                      <span className="text-xs text-gray-400">(Coming Soon)</span>
                     </label>
                     
                     {isScheduled && (
@@ -534,15 +532,13 @@ export function PresidentDashboard() {
                   <label className="flex items-center space-x-2">
                     <input
                       type="checkbox"
-                      checked={sendSMS}
-                      onChange={(e) => setSendSMS(e.target.checked)}
+                      checked={false} // Always false
+                      onChange={() => {}} // No-op function
                       className="rounded"
-                      disabled={isScheduled}
+                      disabled={true} // Disable the checkbox
                     />
-                    <span className="text-sm">Send SMS notification</span>
-                    {isScheduled && (
-                      <span className="text-xs text-gray-500">(SMS not available for scheduled announcements)</span>
-                    )}
+                    <span className="text-sm text-gray-400">Send SMS notification</span>
+                    <span className="text-xs text-gray-400">(Coming Soon)</span>
                   </label>
                   
                   {isScheduled && (
