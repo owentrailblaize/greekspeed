@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, MessageSquare, Clock, AlertTriangle, GraduationCap, Calendar, AlertCircle, TrendingUp, Minus } from 'lucide-react';
+import { X, MessageSquare, Clock, AlertTriangle, GraduationCap, Calendar, AlertCircle, TrendingUp, Minus, Check } from 'lucide-react';
 import { useAnnouncements } from '@/lib/hooks/useAnnouncements';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { Announcement, CreateAnnouncementData } from '@/types/announcements';
@@ -151,14 +151,6 @@ export function AnnouncementsCard() {
                         <h4 className="font-medium text-gray-900 text-base sm:text-sm line-clamp-2 break-words">
                           {announcement.title}
                         </h4>
-                        {/* Priority icon */}
-                        {(() => {
-                          const priorityConfig = getPriorityIcon(announcement.priority);
-                          const PriorityIcon = priorityConfig.icon;
-                          return (
-                            <PriorityIcon className={`h-4 w-4 sm:h-3 sm:w-3 ${priorityConfig.color} shrink-0`} />
-                          );
-                        })()}
                       </div>
                     </div>
                     
@@ -182,9 +174,10 @@ export function AnnouncementsCard() {
                         size="sm" 
                         variant="outline"
                         onClick={() => handleMarkAsRead(announcement.id)}
-                        className="text-navy-600 border-navy-600 hover:bg-navy-50 text-sm sm:text-xs h-8 sm:h-6 px-3 sm:px-2 w-full sm:w-auto"
+                        className="text-navy-600 border-navy-600 hover:bg-navy-50 h-8 sm:h-6 px-2 sm:px-1 w-auto shrink-0"
+                        title="Mark as read"
                       >
-                        Mark Read
+                        <Check className="h-4 w-4 sm:h-3 sm:w-3" />
                       </Button>
                     </div>
                   </div>
