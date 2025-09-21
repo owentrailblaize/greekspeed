@@ -120,7 +120,7 @@ export function EventForm({ event, onSubmit, onCancel, loading = false }: EventF
       {/* Scrollable Content Area */}
       <div className="rounded-lg flex-1 overflow-y-auto min-h-0">
         <CardContent className="p-4 sm:p-6">
-          <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Title */}
             <div className="space-y-3 sm:space-y-2">
               <Label htmlFor="title" className="flex items-center space-x-2 text-base sm:text-sm">
@@ -231,9 +231,17 @@ export function EventForm({ event, onSubmit, onCancel, loading = false }: EventF
                 )}
               </div>
             </div>
+            
+            {/* Email Notification Info */}
+            <div className="space-y-3 sm:space-y-2">
+              <div className="flex items-center space-x-2 text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span>
+                  <strong>Email notifications</strong> will be sent to all active chapter members when this event is published.
+                </span>
+              </div>
+            </div>
 
-            {/* Spacer for bottom padding */}
-            <div className="h-20 sm:h-16"></div>
           </form>
         </CardContent>
       </div>

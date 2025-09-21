@@ -42,6 +42,19 @@ export interface ChapterAnnouncementEmail {
   announcementType: 'general' | 'urgent' | 'event' | 'academic';
 }
 
+// NEW: Event notification interface
+export interface EventNotificationEmail {
+  to: string;
+  firstName: string;
+  chapterName: string;
+  eventTitle: string;
+  eventDescription?: string;
+  eventLocation?: string;
+  eventStartTime: string;
+  eventEndTime: string;
+  eventId: string;
+}
+
 export class EmailService {
   private static fromEmail = process.env.SENDGRID_FROM_EMAIL || 'devin@trailblaize.net';
   private static fromName = process.env.SENDGRID_FROM_NAME || 'GreekSpeed';
@@ -136,6 +149,128 @@ export class EmailService {
           firstName: recipient.firstName,
           chapterName: recipient.chapterName,
           ...announcementData
+        })
+      )
+    );
+
+    const successful = results.filter(result => result.status === 'fulfilled').length;
+    const failed = results.length - successful;
+
+    return { successful, failed };
+  }
+
+  /**
+   * NEW: Send an event notification email using dynamic template
+   */
+  static async sendEventNotification({
+    to,
+    firstName,
+    chapterName,
+    eventTitle,
+    eventDescription,
+    eventLocation,
+    eventStartTime,
+    eventEndTime,
+    eventId
+  }: EventNotificationEmail): Promise<boolean> {
+    try {
+      // Format the start time for display
+      const startDate = new Date(eventStartTime);
+      const endDate = new Date(eventEndTime);
+      
+      const formatDateTime = (date: Date) => {
+        return date.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          timeZoneName: 'short'
+        });
+      };
+
+      const msg = {
+        to,
+        from: {
+          email: this.fromEmail,
+          name: this.fromName,
+        },
+        subject: `New Event: ${eventTitle}`,
+        templateId: process.env.SENDGRID_EVENT_TEMPLATE_ID!, // NEW: Event template ID
+        dynamicTemplateData: {
+          payload: {
+            event: {
+              title: eventTitle,
+              description: eventDescription || '',
+              location: eventLocation || '',
+              start_at_human: formatDateTime(startDate),
+              end_at_human: formatDateTime(endDate),
+              event_id: eventId
+            }
+          },
+          recipient: {
+            first_name: firstName,
+            email: to
+          },
+          chapter: {
+            name: chapterName
+          },
+          cta: {
+            label: 'View Event',
+            url: 'https://www.trailblaize.net/' // Link to main app
+          },
+          unsubscribe: `{{unsubscribe}}`,
+          unsubscribe_preferences: `{{unsubscribe_preferences}}`
+        }
+      };
+
+      await sgMail.send(msg);
+      console.log('✅ Event notification email sent successfully to:', to);
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to send event notification email:', error);
+      // Add detailed error logging
+      if (error && typeof error === 'object' && 'response' in error) {
+        const sgError = error as any;
+        console.error('SendGrid Response Body:', JSON.stringify(sgError.response?.body, null, 2));
+        console.error('SendGrid Response Headers:', sgError.response?.headers);
+      }
+      console.error('Error details:', {
+        to,
+        templateId: process.env.SENDGRID_EVENT_TEMPLATE_ID,
+        fromEmail: this.fromEmail,
+        hasApiKey: !!process.env.SENDGRID_API_KEY
+      });
+      return false;
+    }
+  }
+
+  /**
+   * NEW: Send event notification to multiple recipients
+   */
+  static async sendEventToChapter(
+    recipients: Array<{
+      email: string;
+      firstName: string;
+      chapterName: string;
+    }>,
+    eventData: {
+      eventTitle: string;
+      eventDescription?: string;
+      eventLocation?: string;
+      eventStartTime: string;
+      eventEndTime: string;
+      eventId: string;
+    }
+  ): Promise<{ successful: number; failed: number }> {
+    const results = await Promise.allSettled(
+      recipients.map(recipient => 
+        this.sendEventNotification({
+          to: recipient.email,
+          firstName: recipient.firstName,
+          chapterName: recipient.chapterName,
+          ...eventData
         })
       )
     );
