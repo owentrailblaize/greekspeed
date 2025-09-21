@@ -238,8 +238,6 @@ export function PresidentDashboard() {
     }
   };
 
-  // Add SMS function
-
   return (
     <div className="max-w-7xl mx-auto px-6 py-0 sm:py-8">
       {/* Quick Stats */}

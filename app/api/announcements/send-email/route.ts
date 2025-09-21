@@ -140,12 +140,6 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('📊 Chapter members found:', members?.length || 0);
-    console.log(' Members details:', members?.map(m => ({ 
-      email: m.email, 
-      role: m.role, 
-      firstName: m.first_name,
-      emailPreferences: m.email_preferences
-    })));
 
     // Filter members who have opted into announcements
     const recipients = members
@@ -163,7 +157,6 @@ export async function POST(request: NextRequest) {
       }));
 
     console.log('📧 Recipients after filtering:', recipients.length);
-    console.log('📧 Recipient emails:', recipients.map(r => r.email));
 
     if (recipients.length === 0) {
       return NextResponse.json(
@@ -173,11 +166,6 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('🚀 About to send emails to:', recipients.length, 'recipients');
-    console.log('🔧 Environment check:', {
-      SENDGRID_API_KEY: process.env.SENDGRID_API_KEY ? 'SET' : 'MISSING',
-      SENDGRID_ANNOUNCEMENT_TEMPLATE_ID: process.env.SENDGRID_ANNOUNCEMENT_TEMPLATE_ID || 'MISSING',
-      SENDGRID_FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL || 'MISSING'
-    });
 
     // Send announcements
     const result = await EmailService.sendAnnouncementToChapter(
@@ -191,7 +179,7 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    console.log(' Email sending result:', result);
+    console.log('✅ Email sending result:', result);
 
     // Update announcement to mark emails as sent
     await supabase
