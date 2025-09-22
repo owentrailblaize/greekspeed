@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { User, AlertCircle, Briefcase, Building2, MapPin, Phone } from 'lucide-react';
+import { User, AlertCircle, Briefcase, Building2, MapPin, Phone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -266,7 +266,16 @@ export function ProfileCompletionGate({
           className="bg-white rounded-lg max-w-lg w-full my-8 shadow-2xl"
         >
           <div className="flex flex-col">
-            <div className="pb-4 flex-shrink-0 px-6 pt-6">
+            <div className="pb-4 flex-shrink-0 px-6 pt-6 relative">
+              {/* Close Button */}
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Close modal"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+              
               <div className="flex items-center justify-center mb-4">
                 <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-orange-600 rounded-full flex items-center justify-center">
                   <AlertCircle className="h-6 w-6 text-white" />

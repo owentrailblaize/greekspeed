@@ -11,13 +11,15 @@ export default function Page() {
   const { profile } = useProfile();
   const [showProfileCompletionGate, setShowProfileCompletionGate] = useState(false);
   const [profileCompletionChecked, setProfileCompletionChecked] = useState(false);
+  const [profileCompletionPercentage, setProfileCompletionPercentage] = useState(0);
+  const [userManuallyClosed, setUserManuallyClosed] = useState(false);
 
   // Check profile completion when component mounts and profile loads
   useEffect(() => {
-    if (profile && !profileCompletionChecked) {
+    if (profile && !profileCompletionChecked && !userManuallyClosed) {
       checkProfileCompletion();
     }
-  }, [profile, profileCompletionChecked]);
+  }, [profile, profileCompletionChecked, userManuallyClosed]);
 
   const checkProfileCompletion = async () => {
     if (!profile?.id) return;
@@ -42,7 +44,10 @@ export default function Page() {
       // Calculate completion
       const completion = await calculateProfileCompletion(profile, alumniData);
       
-      // Show gate if completion is less than 80%
+      // Store the completion percentage
+      setProfileCompletionPercentage(completion.percentage);
+      
+      // Always show gate if completion is less than 80%
       if (completion.percentage < 80) {
         setShowProfileCompletionGate(true);
       }
@@ -109,12 +114,16 @@ export default function Page() {
 
   const handleProfileCompletionClose = () => {
     setShowProfileCompletionGate(false);
+    setUserManuallyClosed(true);
+    // Don't reset profileCompletionChecked - let it stay checked until next page visit
   };
 
   const handleProfileUpdate = async (updatedProfile: any) => {
     // After profile update, recheck completion
     setProfileCompletionChecked(false);
     setShowProfileCompletionGate(false);
+    setUserManuallyClosed(false); // Reset manual close flag so modal can show again if needed
+    // The useEffect will trigger checkProfileCompletion again
   };
 
   return (
