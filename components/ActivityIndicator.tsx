@@ -112,6 +112,34 @@ interface ActivityStatusTextProps {
 }
 
 export function ActivityStatusText({ lastActiveAt, className = '' }: ActivityStatusTextProps) {
+  const getActivityStatus = (lastActiveAt?: string | null) => {
+    if (!lastActiveAt) {
+      return { status: 'cold' as const, color: 'bg-gray-400', text: 'No Activity', timeAgo: 'No Activity', isOnline: false }
+    }
+
+    const lastActiveDate = new Date(lastActiveAt)
+    const now = new Date()
+    const diffMs = now.getTime() - lastActiveDate.getTime()
+    const diffHours = diffMs / (1000 * 60 * 60)
+
+    if (diffHours < 1) {
+      return { status: 'hot' as const, color: 'bg-green-500', text: 'Active Now', timeAgo: 'Active Now', isOnline: true }
+    } else if (diffHours < 24) {
+      return { status: 'warm' as const, color: 'bg-blue-500', text: 'Recently Active', timeAgo: 'Recently Active', isOnline: false }
+    } else {
+      return { status: 'cold' as const, color: 'bg-gray-400', text: 'Not Active', timeAgo: 'Not Active', isOnline: false }
+    }
+  }
+
+  const getActivityColor = (status: 'hot' | 'warm' | 'cold') => {
+    const colors = {
+      hot: 'text-green-600',
+      warm: 'text-blue-600',
+      cold: 'text-gray-500'
+    }
+    return colors[status]
+  }
+
   const activityInfo = getActivityStatus(lastActiveAt);
   
   return (

@@ -30,6 +30,7 @@ interface FilterState {
   state: string;
   activelyHiring: boolean;
   activityStatus: string; // New activity filter
+  showActiveOnly: boolean; 
 }
 
 interface PaginationState {

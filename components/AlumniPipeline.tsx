@@ -110,7 +110,7 @@ export function AlumniPipeline() {
         activityStatus: filterParams.activityStatus,
         showActiveOnly: filterParams.showActiveOnly,
         totalAlumni: alumniData.length,
-        sampleActivityData: alumniData.slice(0, 3).map(a => ({
+        sampleActivityData: alumniData.slice(0, 3).map((a: Alumni) => ({
           name: a.fullName,
           lastActiveAt: a.lastActiveAt,
           hasProfile: a.hasProfile
