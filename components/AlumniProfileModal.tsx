@@ -17,9 +17,10 @@ import { Alumni } from "@/lib/mockAlumni";
 import ImageWithFallback from "./figma/ImageWithFallback";
 import { useConnections } from "@/lib/contexts/ConnectionsContext";
 import { useAuth } from "@/lib/supabase/auth-context";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils";
+import { trackActivity, ActivityTypes } from "@/lib/utils/activityUtils";
 
 interface AlumniProfileModalProps {
   alumni: Alumni | null;
@@ -48,6 +49,19 @@ const getChapterName = (chapterId: string, isMobile: boolean = false): string =>
 
 export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileModalProps) {
   const { user } = useAuth();
+  
+  // Track profile view when modal opens
+  useEffect(() => {
+    if (isOpen && alumni && user && user.id !== alumni.id) {
+      trackActivity(user.id, ActivityTypes.PROFILE_VIEW, {
+        viewedProfileId: alumni.id,
+        viewedProfileName: alumni.fullName,
+        timestamp: new Date().toISOString()
+      }).catch(error => {
+        console.error('Failed to track profile view:', error);
+      });
+    }
+  }, [isOpen, alumni, user]);
   const router = useRouter();
   const { 
     sendConnectionRequest, 

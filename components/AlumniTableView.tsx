@@ -29,18 +29,20 @@ import {
   UserX,
   AlertCircle
 } from "lucide-react";
-import { AlumniWithCompleteness } from "@/lib/utils/profileCompleteness";
 import { AlumniProfileModal } from "@/components/AlumniProfileModal";
+import { Alumni } from "@/lib/mockAlumni";
 import { useRouter } from 'next/navigation';
 import { ClickableField } from './ClickableField';
+import { ActivityIndicator } from './ActivityIndicator';
+import { calculateAlumniCompleteness, getCompletenessBadgeColor } from '@/lib/utils/profileCompleteness';
 
 interface AlumniTableViewProps {
-  alumni: AlumniWithCompleteness[];
+  alumni: Alumni[];
   selectedAlumni: string[];
   onSelectionChange: (selectedIds: string[]) => void;
 }
 
-type SortField = 'name' | 'company' | 'industry' | 'graduationYear' | 'location' | 'jobTitle' | 'chapter' | 'lastContact' | 'isActivelyHiring' | 'completeness';
+type SortField = 'name' | 'company' | 'industry' | 'graduationYear' | 'location' | 'jobTitle' | 'chapter' | 'lastContact' | 'isActivelyHiring' | 'activity' | 'completeness';
 type SortDirection = 'asc' | 'desc';
 
 const getChapterName = (chapterId: string): string => {
@@ -66,11 +68,11 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
     getConnectionId
   } = useConnections();
   
-  const [sortField, setSortField] = useState<SortField>('completeness');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [sortField, setSortField] = useState<SortField>('activity'); 
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); 
   const [accessedEmails, setAccessedEmails] = useState<Set<string>>(new Set());
   const [accessedPhones, setAccessedPhones] = useState<Set<string>>(new Set());
-  const [selectedAlumniForPopup, setSelectedAlumniForPopup] = useState<AlumniWithCompleteness | null>(null);
+  const [selectedAlumniForPopup, setSelectedAlumniForPopup] = useState<Alumni | null>(null);
   const [popupOpen, setPopupOpen] = useState(false);
   const [connectionLoading, setConnectionLoading] = useState<string | null>(null);
 
@@ -110,7 +112,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
     setAccessedPhones(prev => new Set([...prev, alumniId]));
   };
 
-  const handleAlumniNameClick = (alumni: AlumniWithCompleteness) => {
+  const handleAlumniNameClick = (alumni: Alumni) => {
     setSelectedAlumniForPopup(alumni);
     setPopupOpen(true);
   };
@@ -280,7 +282,74 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
     }
   };
 
+  // Helper function to get activity priority (lower number = higher priority)
+  const getActivityPriority = (lastActiveAt?: string | null): number => {
+    if (!lastActiveAt) return 4; // No activity - lowest priority
+    
+    const lastActive = new Date(lastActiveAt);
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    
+    if (lastActive >= oneHourAgo) return 1; // Active within 1 hour - highest priority
+    if (lastActive >= oneDayAgo) return 2; // Active within 24 hours - medium priority
+    return 3; // Active but older than 24 hours - low priority
+  };
+
+  // Fix the sorting logic - the issue is in the activity priority comparison
   const sortedAlumni = [...alumni].sort((a, b) => {
+    // For activity sorting, use the exact same hybrid logic as the card view
+    if (sortField === 'activity') {
+      // 1. Primary sort by activity priority
+      const aActivityPriority = getActivityPriority(a.lastActiveAt);
+      const bActivityPriority = getActivityPriority(b.lastActiveAt);
+      
+      if (aActivityPriority !== bActivityPriority) {
+        // FIXED: For activity, we want lower priority numbers (more active) to come first
+        // So we always do aActivityPriority - bActivityPriority regardless of sortDirection
+        return aActivityPriority - bActivityPriority;
+      }
+      
+      // 2. Secondary sort by completeness (within same activity level)
+      const aCompleteness = calculateAlumniCompleteness(a).totalScore;
+      const bCompleteness = calculateAlumniCompleteness(b).totalScore;
+      
+      if (aCompleteness !== bCompleteness) {
+        return bCompleteness - aCompleteness; // Higher completeness first
+      }
+      
+      // 3. Tertiary sort by most recent activity time
+      if (a.lastActiveAt && b.lastActiveAt) {
+        const aTime = new Date(a.lastActiveAt).getTime();
+        const bTime = new Date(b.lastActiveAt).getTime();
+        return bTime - aTime; // More recent first (always)
+      }
+      
+      // 4. Fallback to name
+      return a.fullName.localeCompare(b.fullName);
+    }
+    
+    // For completeness sorting, also use hybrid logic (completeness + activity)
+    if (sortField === 'completeness') {
+      const aCompleteness = calculateAlumniCompleteness(a).totalScore;
+      const bCompleteness = calculateAlumniCompleteness(b).totalScore;
+      
+      if (aCompleteness !== bCompleteness) {
+        return sortDirection === 'asc' ? aCompleteness - bCompleteness : bCompleteness - aCompleteness;
+      }
+      
+      // Secondary sort by activity
+      const aActivityPriority = getActivityPriority(a.lastActiveAt);
+      const bActivityPriority = getActivityPriority(b.lastActiveAt);
+      
+      if (aActivityPriority !== bActivityPriority) {
+        return aActivityPriority - bActivityPriority; // More active first
+      }
+      
+      return a.fullName.localeCompare(b.fullName);
+    }
+    
+    // For all other fields, use existing logic
     let aValue: string | number, bValue: string | number;
     
     switch (sortField) {
@@ -320,15 +389,12 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
         aValue = a.isActivelyHiring ? 1 : 0;
         bValue = b.isActivelyHiring ? 1 : 0;
         break;
-      case 'completeness':
-        aValue = a.completenessScore.totalScore;
-        bValue = b.completenessScore.totalScore;
-        break;
       default:
         aValue = a.fullName;
         bValue = b.fullName;
     }
 
+    // For non-activity sorting, use the original logic
     if (sortDirection === 'asc') {
       return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
     } else {
@@ -506,6 +572,24 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                     <SortIcon field="lastContact" />
                   </div>
                 </TableHead>
+                <TableHead 
+                  className="bg-gray-50 text-gray-900 font-medium cursor-pointer hover:bg-gray-100 transition-colors min-w-[120px]"
+                  onClick={() => handleSort('activity')}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span>ACTIVITY</span>
+                    <SortIcon field="activity" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="bg-gray-50 text-gray-900 font-medium cursor-pointer hover:bg-gray-100 transition-colors min-w-[120px]"
+                  onClick={() => handleSort('completeness')}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span>COMPLETENESS</span>
+                    <SortIcon field="completeness" />
+                  </div>
+                </TableHead>
                 <TableHead className="bg-gray-50 text-gray-900 font-medium min-w-[120px]">
                   <div className="flex items-center space-x-2">
                     <span>CONNECTION</span>
@@ -556,23 +640,31 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                         )}
                       </div>
                       
-                      {/* Name and Badge Container - Flexible width */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          {/* Name - Allow wrapping, no truncation */}
+                      {/* Name and Activity Container - Fixed width for consistent alignment */}
+                      <div className="flex-1 min-w-0 flex items-center">
+                        {/* Name Container - Reduced padding */}
+                        <div className="flex-1 min-w-0">
                           <span 
-                            className="font-medium text-gray-900 underline cursor-pointer hover:text-navy-600 transition-colors break-words"
+                            className="font-medium text-gray-900 underline cursor-pointer hover:text-navy-600 transition-colors break-words whitespace-nowrap"
                             onClick={() => handleAlumniNameClick(alumni)}
                           >
                             {alumni.fullName}
                           </span>
-                          
-                          {/* Badge - Right-aligned */}
-                          <div className="ml-2 flex-shrink-0">
-                            {alumni.verified && (
-                              <Badge className="bg-navy-600 text-white text-xs px-1">✓</Badge>
-                            )}
-                          </div>
+                        </div>
+                        
+                        {/* Activity Indicator - Closer to name */}
+                        <div className="flex-shrink-0 w-4 flex justify-center">
+                          <ActivityIndicator 
+                            lastActiveAt={alumni.lastActiveAt} 
+                            size="sm"
+                          />
+                        </div>
+                        
+                        {/* Verification Badge - Fixed position */}
+                        <div className="flex-shrink-0">
+                          {alumni.verified && (
+                            <Badge className="bg-navy-600 text-white text-xs px-1">✓</Badge>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -607,7 +699,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   
                   {/* Industry Column */}
                   <TableCell className="bg-white">
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-xs whitespace-nowrap">
                       {alumni.industry || 'N/A'}
                     </Badge>
                   </TableCell>
@@ -700,6 +792,26 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                     <div className="flex items-center space-x-2">
                       <Calendar className="h-4 w-4 text-gray-400" />
                       <span className="text-gray-900 text-sm">{formatDate(alumni.lastContact)}</span>
+                    </div>
+                  </TableCell>
+
+                  {/* Activity Column */}
+                  <TableCell className="bg-white">
+                    <ActivityIndicator 
+                      lastActiveAt={alumni.lastActiveAt} 
+                      size="sm"
+                    />
+                  </TableCell>
+                  
+                  {/* Completeness Column */}
+                  <TableCell className="bg-white">
+                    <div className="flex items-center space-x-2">
+                      <Badge 
+                        className={`text-xs px-2 py-1 ${getCompletenessBadgeColor(calculateAlumniCompleteness(alumni).percentage)}`}
+                        title={`Profile ${calculateAlumniCompleteness(alumni).percentage}% complete`}
+                      >
+                        {calculateAlumniCompleteness(alumni).percentage}%
+                      </Badge>
                     </div>
                   </TableCell>
                   

@@ -21,6 +21,9 @@ export interface Alumni {
   lastContact?: string;
   tags: string[];
   hasProfile?: boolean; // Indicates if this alumni has a linked profile
+  // Simplified activity data - from profiles table
+  lastActiveAt?: string;
+  lastLoginAt?: string;
 }
 
 export interface MutualConnection {

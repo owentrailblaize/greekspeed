@@ -20,11 +20,9 @@ const getChapterId = async (supabase: any, chapterIdentifier: string): Promise<s
 
 export async function GET(request: NextRequest) {
   try {
-    
     // Check environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    
     
     if (!supabaseUrl || !supabaseServiceKey) {
       console.error('Missing environment variables')
@@ -33,14 +31,7 @@ export async function GET(request: NextRequest) {
         details: {
           hasUrl: !!supabaseUrl,
           hasServiceKey: !!supabaseServiceKey
-        },
-        instructions: [
-          'Create a .env.local file in your project root',
-          'Add your Supabase credentials:',
-          'NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co',
-          'SUPABASE_SERVICE_ROLE_KEY=your-service-role-key',
-          'Restart your development server after adding the file'
-        ]
+        }
       }, { status: 500 })
     }
     
@@ -50,7 +41,7 @@ export async function GET(request: NextRequest) {
     // Get query parameters
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '100') // Changed from 1000 to 100 for better performance
+    const limit = parseInt(searchParams.get('limit') || '100')
     const search = searchParams.get('search') || ''
     const industry = searchParams.get('industry') || ''
     const chapter = searchParams.get('chapter') || ''
@@ -58,29 +49,28 @@ export async function GET(request: NextRequest) {
     const graduationYear = searchParams.get('graduationYear') || ''
     const activelyHiring = searchParams.get('activelyHiring') || ''
     const state = searchParams.get('state') || ''
-    
+    const activityStatus = searchParams.get('activityStatus') || ''
+    const showActiveOnly = searchParams.get('showActiveOnly') || '' // 🔥 NEW
+
     // Chapter filtering parameter
     const userChapter = searchParams.get('userChapter') || ''
 
-
-    // Build the query - start simple with count
+    // 🔥 KEY CHANGE: Use main branch query structure (alumni → profiles) with activity fields
     let query = supabase
       .from('alumni')
       .select(`
         *,
         profile:profiles!user_id(
-          avatar_url
+          avatar_url,
+          last_active_at,
+          last_login_at
         )
       `, { count: 'exact' })
 
-    // Apply filters
+    // Apply filters (same logic as main branch)
     if (search) {
       const searchTerm = search.toLowerCase().trim()
-      
-      // Split search terms for multi-word searches
       const searchTerms = searchTerm.split(/\s+/)
-      
-      // Build dynamic OR conditions for each search term
       const searchConditions = searchTerms.map(term => 
         `full_name.ilike.%${term}%,company.ilike.%${term}%,job_title.ilike.%${term}%,industry.ilike.%${term}%,chapter.ilike.%${term}%`
       ).join(',')
@@ -92,17 +82,18 @@ export async function GET(request: NextRequest) {
       query = query.eq('industry', industry)
     }
     
-    // Handle chapter filtering - apply user's chapter filter if provided
+    // Handle chapter filtering (same logic as main branch)
     if (userChapter) {
       const chapterId = await getChapterId(supabase, userChapter);
       if (chapterId) {
-        // Create two separate queries and apply ALL filters to both
         let chapterNameQuery = supabase
           .from('alumni')
           .select(`
             *,
             profile:profiles!user_id(
-              avatar_url
+              avatar_url,
+              last_active_at,
+              last_login_at
             )
           `, { count: 'exact' })
           .eq('chapter', userChapter);
@@ -112,7 +103,9 @@ export async function GET(request: NextRequest) {
           .select(`
             *,
             profile:profiles!user_id(
-              avatar_url
+              avatar_url,
+              last_active_at,
+              last_login_at
             )
           `, { count: 'exact' })
           .eq('chapter_id', chapterId);
@@ -183,11 +176,10 @@ export async function GET(request: NextRequest) {
           index === self.findIndex(a => a.id === alumni.id)
         );
         
-        // Calculate total count (approximate for combined queries)
+        // Calculate total count
         const totalCount = Math.max(chapterNameResult.count || 0, chapterIdResult.count || 0);
         
-        
-        // Transform data to match your interface
+        // 🔥 KEY CHANGE: Use main branch transformation with activity fields
         const transformedAlumni = uniqueResults?.map(alumni => ({
           id: alumni.user_id || alumni.id,
           alumniId: alumni.id,
@@ -195,28 +187,114 @@ export async function GET(request: NextRequest) {
           lastName: alumni.last_name,
           fullName: alumni.full_name,
           chapter: alumni.chapter,
-          industry: alumni.industry,
+          industry: alumni.industry,                    // ✅ Direct from alumni table
           graduationYear: alumni.graduation_year,
-          company: alumni.company,
-          jobTitle: alumni.job_title,
+          company: alumni.company,                      // ✅ Direct from alumni table
+          jobTitle: alumni.job_title,                   // ✅ Direct from alumni table
           email: alumni.email,
           phone: alumni.phone,
-          location: alumni.location,
+          location: alumni.location,                    // ✅ Direct from alumni table
           description: alumni.description || `Experienced professional in ${alumni.industry}.`,
           mutualConnections: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections : [],
           mutualConnectionsCount: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections.length : 0,
           avatar: alumni.avatar_url || alumni.profile?.avatar_url,
           verified: alumni.verified,
-          isActivelyHiring: alumni.is_actively_hiring,
+          isActivelyHiring: alumni.is_actively_hiring,  // ✅ Direct from alumni table
           lastContact: alumni.last_contact,
           tags: alumni.tags || [],
-          hasProfile: !!alumni.user_id
+          hasProfile: !!alumni.user_id,
+          // 🔥 NEW: Activity data from profiles table
+          lastActiveAt: alumni.profile?.last_active_at,
+          lastLoginAt: alumni.profile?.last_login_at
         })) || [];
+
+        // 🔥 ADD: Activity filtering and sorting logic
+        let filteredAlumni = transformedAlumni
+
+        // Apply activity status filter
+        if (activityStatus) {
+          const now = new Date()
+          
+          filteredAlumni = transformedAlumni.filter(alumni => {
+            if (!alumni.lastActiveAt) {
+              return activityStatus === 'cold'
+            }
+
+            const lastActiveDate = new Date(alumni.lastActiveAt)
+            const diffMs = now.getTime() - lastActiveDate.getTime()
+            const diffHours = diffMs / (1000 * 60 * 60)
+
+            switch (activityStatus) {
+              case 'hot':
+                return diffHours < 1
+              case 'warm':
+                return diffHours >= 1 && diffHours < 24
+              case 'cold':
+                return diffHours >= 24
+              default:
+                return true
+            }
+          })
+        }
+
+        // 🔥 ADD: Activity sorting logic
+        filteredAlumni.sort((a, b) => {
+          const aActive = a.lastActiveAt ? new Date(a.lastActiveAt) : null
+          const bActive = b.lastActiveAt ? new Date(b.lastActiveAt) : null
+          const now = new Date()
+          
+          // Define activity thresholds
+          const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
+          const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+          
+          // Helper function to get activity priority (lower number = higher priority)
+          const getActivityPriority = (lastActive: Date | null) => {
+            if (!lastActive) return 4 // No activity - lowest priority
+            if (lastActive >= oneHourAgo) return 1 // Active within 1 hour - highest priority
+            if (lastActive >= oneDayAgo) return 2 // Active within 24 hours - medium priority
+            return 3 // Active but older than 24 hours - low priority
+          }
+          
+          const aPriority = getActivityPriority(aActive)
+          const bPriority = getActivityPriority(bActive)
+          
+          // First sort by activity priority
+          if (aPriority !== bPriority) {
+            return aPriority - bPriority
+          }
+          
+          // If same priority, sort by most recent activity
+          if (aActive && bActive) {
+            return bActive.getTime() - aActive.getTime()
+          }
+          
+          // If only one has activity, prioritize it
+          if (aActive && !bActive) return -1
+          if (!aActive && bActive) return 1
+          
+          // If neither has activity, sort by name
+          return a.fullName.localeCompare(b.fullName)
+        })
+
+        // 🔥 NEW: Apply showActiveOnly filter
+        if (showActiveOnly) {
+          const now = new Date()
+          const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+          
+          filteredAlumni = filteredAlumni.filter(alumni => {
+            if (!alumni.lastActiveAt) {
+              return false // Exclude alumni with no activity data
+            }
+
+            const lastActiveDate = new Date(alumni.lastActiveAt)
+            return lastActiveDate >= oneDayAgo // Only show alumni active within last 24 hours
+          })
+        }
 
         const totalPages = Math.ceil(totalCount / limit);
 
         return NextResponse.json({
-          alumni: transformedAlumni,
+          alumni: filteredAlumni,
           pagination: {
             page,
             limit,
@@ -225,22 +303,23 @@ export async function GET(request: NextRequest) {
             hasNextPage: page < totalPages,
             hasPrevPage: page > 1
           },
-          message: `Retrieved ${transformedAlumni.length} alumni records (page ${page} of ${totalPages})`
+          message: `Retrieved ${filteredAlumni.length} alumni records (page ${page} of ${totalPages})`
         });
       } else {
-        // Fallback: just filter by chapter name
         query = query.eq('chapter', userChapter);
       }
     } else if (chapter) {
       const chapterId = await getChapterId(supabase, chapter);
       if (chapterId) {
-        // Similar logic for selected chapter filter - apply ALL filters
+        // Similar logic for selected chapter filter
         let chapterNameQuery = supabase
           .from('alumni')
           .select(`
             *,
             profile:profiles!user_id(
-              avatar_url
+              avatar_url,
+              last_active_at,
+              last_login_at
             )
           `, { count: 'exact' })
           .eq('chapter', chapter);
@@ -250,7 +329,9 @@ export async function GET(request: NextRequest) {
           .select(`
             *,
             profile:profiles!user_id(
-              avatar_url
+              avatar_url,
+              last_active_at,
+              last_login_at
             )
           `, { count: 'exact' })
           .eq('chapter_id', chapterId);
@@ -320,7 +401,6 @@ export async function GET(request: NextRequest) {
         
         const totalCount = Math.max(chapterNameResult.count || 0, chapterIdResult.count || 0);
         
-        
         // Transform data to match your interface
         const transformedAlumni = uniqueResults?.map(alumni => ({
           id: alumni.user_id || alumni.id,
@@ -344,13 +424,92 @@ export async function GET(request: NextRequest) {
           isActivelyHiring: alumni.is_actively_hiring,
           lastContact: alumni.last_contact,
           tags: alumni.tags || [],
-          hasProfile: !!alumni.user_id
+          hasProfile: !!alumni.user_id,
+          // Activity data from profiles table
+          lastActiveAt: alumni.profile?.last_active_at,
+          lastLoginAt: alumni.profile?.last_login_at
         })) || [];
+
+        // Apply activity filtering and sorting logic
+        let filteredAlumni = transformedAlumni
+
+        if (activityStatus) {
+          const now = new Date()
+          
+          filteredAlumni = transformedAlumni.filter(alumni => {
+            if (!alumni.lastActiveAt) {
+              return activityStatus === 'cold'
+            }
+
+            const lastActiveDate = new Date(alumni.lastActiveAt)
+            const diffMs = now.getTime() - lastActiveDate.getTime()
+            const diffHours = diffMs / (1000 * 60 * 60)
+
+            switch (activityStatus) {
+              case 'hot':
+                return diffHours < 1
+              case 'warm':
+                return diffHours >= 1 && diffHours < 24
+              case 'cold':
+                return diffHours >= 24
+              default:
+                return true
+            }
+          })
+        }
+
+        // Activity sorting logic
+        filteredAlumni.sort((a, b) => {
+          const aActive = a.lastActiveAt ? new Date(a.lastActiveAt) : null
+          const bActive = b.lastActiveAt ? new Date(b.lastActiveAt) : null
+          const now = new Date()
+          
+          const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
+          const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+          
+          const getActivityPriority = (lastActive: Date | null) => {
+            if (!lastActive) return 4
+            if (lastActive >= oneHourAgo) return 1
+            if (lastActive >= oneDayAgo) return 2
+            return 3
+          }
+          
+          const aPriority = getActivityPriority(aActive)
+          const bPriority = getActivityPriority(bActive)
+          
+          if (aPriority !== bPriority) {
+            return aPriority - bPriority
+          }
+          
+          if (aActive && bActive) {
+            return bActive.getTime() - aActive.getTime()
+          }
+          
+          if (aActive && !bActive) return -1
+          if (!aActive && bActive) return 1
+          
+          return a.fullName.localeCompare(b.fullName)
+        })
+
+        // 🔥 NEW: Apply showActiveOnly filter
+        if (showActiveOnly) {
+          const now = new Date()
+          const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+          
+          filteredAlumni = filteredAlumni.filter(alumni => {
+            if (!alumni.lastActiveAt) {
+              return false // Exclude alumni with no activity data
+            }
+
+            const lastActiveDate = new Date(alumni.lastActiveAt)
+            return lastActiveDate >= oneDayAgo // Only show alumni active within last 24 hours
+          })
+        }
 
         const totalPages = Math.ceil(totalCount / limit);
 
         return NextResponse.json({
-          alumni: transformedAlumni,
+          alumni: filteredAlumni,
           pagination: {
             page,
             limit,
@@ -359,12 +518,11 @@ export async function GET(request: NextRequest) {
             hasNextPage: page < totalPages,
             hasPrevPage: page > 1
           },
-          message: `Retrieved ${transformedAlumni.length} alumni records (page ${page} of ${totalPages})`
+          message: `Retrieved ${filteredAlumni.length} alumni records (page ${page} of ${totalPages})`
         });
       } else {
         query = query.eq('chapter', chapter);
       }
-    } else {
     }
     
     if (location) {
@@ -400,47 +558,126 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ 
         error: 'Database query failed',
         details: error.message,
-        code: error.code,
-        suggestions: [
-          'Check if your alumni table exists in Supabase',
-          'Verify your table has the correct column names',
-          'Check if RLS policies are blocking access',
-          'Try running: ALTER TABLE alumni DISABLE ROW LEVEL SECURITY; in Supabase SQL editor'
-        ]
+        code: error.code
       }, { status: 500 })
     }
 
-
-    // Transform data to match your interface
+    // 🔥 KEY CHANGE: Use main branch transformation with activity fields
     const transformedAlumni = alumni?.map(alumni => ({
-      id: alumni.user_id || alumni.id, // Use user_id for connection functionality
-      alumniId: alumni.id, // Keep original alumni ID for reference
+      id: alumni.user_id || alumni.id,
+      alumniId: alumni.id,
       firstName: alumni.first_name,
       lastName: alumni.last_name,
       fullName: alumni.full_name,
       chapter: alumni.chapter,
-      industry: alumni.industry,
+      industry: alumni.industry,                    // ✅ Direct from alumni table
       graduationYear: alumni.graduation_year,
-      company: alumni.company,
-      jobTitle: alumni.job_title,
+      company: alumni.company,                      // ✅ Direct from alumni table
+      jobTitle: alumni.job_title,                   // ✅ Direct from alumni table
       email: alumni.email,
       phone: alumni.phone,
-      location: alumni.location,
+      location: alumni.location,                    // ✅ Direct from alumni table
       description: alumni.description || `Experienced professional in ${alumni.industry}.`,
       mutualConnections: alumni.mutual_connections || [],
       mutualConnectionsCount: alumni.mutual_connections?.length || 0,
       avatar: alumni.avatar_url || alumni.profile?.avatar_url,
       verified: alumni.verified,
-      isActivelyHiring: alumni.is_actively_hiring,
+      isActivelyHiring: alumni.is_actively_hiring,  // ✅ Direct from alumni table
       lastContact: alumni.last_contact,
       tags: alumni.tags || [],
-      hasProfile: !!alumni.user_id // This will now be true for all alumni
+      hasProfile: !!alumni.user_id,
+      // 🔥 NEW: Activity data from profiles table
+      lastActiveAt: alumni.profile?.last_active_at,
+      lastLoginAt: alumni.profile?.last_login_at
     })) || []
+
+    //  ADD: Activity filtering and sorting logic
+    let filteredAlumni = transformedAlumni
+
+    // Apply activity status filter
+    if (activityStatus) {
+      const now = new Date()
+      
+      filteredAlumni = transformedAlumni.filter(alumni => {
+        if (!alumni.lastActiveAt) {
+          return activityStatus === 'cold'
+        }
+
+        const lastActiveDate = new Date(alumni.lastActiveAt)
+        const diffMs = now.getTime() - lastActiveDate.getTime()
+        const diffHours = diffMs / (1000 * 60 * 60)
+
+        switch (activityStatus) {
+          case 'hot':
+            return diffHours < 1
+          case 'warm':
+            return diffHours >= 1 && diffHours < 24
+          case 'cold':
+            return diffHours >= 24
+          default:
+            return true
+        }
+      })
+    }
+
+    // 🔥 ADD: Activity sorting logic
+    filteredAlumni.sort((a, b) => {
+      const aActive = a.lastActiveAt ? new Date(a.lastActiveAt) : null
+      const bActive = b.lastActiveAt ? new Date(b.lastActiveAt) : null
+      const now = new Date()
+      
+      // Define activity thresholds
+      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+      
+      // Helper function to get activity priority (lower number = higher priority)
+      const getActivityPriority = (lastActive: Date | null) => {
+        if (!lastActive) return 4 // No activity - lowest priority
+        if (lastActive >= oneHourAgo) return 1 // Active within 1 hour - highest priority
+        if (lastActive >= oneDayAgo) return 2 // Active within 24 hours - medium priority
+        return 3 // Active but older than 24 hours - low priority
+      }
+      
+      const aPriority = getActivityPriority(aActive)
+      const bPriority = getActivityPriority(bActive)
+      
+      // First sort by activity priority
+      if (aPriority !== bPriority) {
+        return aPriority - bPriority
+      }
+      
+      // If same priority, sort by most recent activity
+      if (aActive && bActive) {
+        return bActive.getTime() - aActive.getTime()
+      }
+      
+      // If only one has activity, prioritize it
+      if (aActive && !bActive) return -1
+      if (!aActive && bActive) return 1
+      
+      // If neither has activity, sort by name
+      return a.fullName.localeCompare(b.fullName)
+    })
+
+    // 🔥 NEW: Apply showActiveOnly filter
+    if (showActiveOnly) {
+      const now = new Date()
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+      
+      filteredAlumni = filteredAlumni.filter(alumni => {
+        if (!alumni.lastActiveAt) {
+          return false // Exclude alumni with no activity data
+        }
+
+        const lastActiveDate = new Date(alumni.lastActiveAt)
+        return lastActiveDate >= oneDayAgo // Only show alumni active within last 24 hours
+      })
+    }
 
     const totalPages = Math.ceil((count || 0) / limit);
 
     return NextResponse.json({
-      alumni: transformedAlumni,
+      alumni: filteredAlumni,
       pagination: {
         page,
         limit,
@@ -449,7 +686,7 @@ export async function GET(request: NextRequest) {
         hasNextPage: page < totalPages,
         hasPrevPage: page > 1
       },
-      message: `Retrieved ${transformedAlumni.length} alumni records (page ${page} of ${totalPages})`
+      message: `Retrieved ${filteredAlumni.length} alumni records (page ${page} of ${totalPages})`
     })
 
   } catch (error) {

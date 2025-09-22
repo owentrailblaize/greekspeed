@@ -1,4 +1,4 @@
-import { Search, X, Building2, Users } from "lucide-react";
+import { Search, X, Building2, Users, Activity } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,9 +11,9 @@ interface FilterState {
   searchTerm: string;
   graduationYear: string;
   industry: string;
-  chapter: string;
   state: string;
   activelyHiring: boolean;
+  showActiveOnly: boolean; // Keep this one
 }
 
 interface AlumniFilterBarProps {
@@ -69,6 +69,16 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
               <Building2 className="h-4 w-4 mr-2" />
               Actively Hiring
             </Button>
+            {/* 🔥 NEW: Active Alumni Button */}
+            <Button
+              variant={filters.showActiveOnly ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleFilterChange('showActiveOnly', !filters.showActiveOnly)}
+              className="justify-start"
+            >
+              <Activity className="h-4 w-4 mr-2" />
+              Active Alumni
+            </Button>
           </div>
         </div>
         
@@ -101,26 +111,14 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
           </Select>
         </div>
 
-        {/* Chapter Filter */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Chapter</label>
-          <Select 
-            value={filters.chapter} 
-            onValueChange={(value) => handleFilterChange('chapter', value)}
-          >
-            <SelectItem value="">All Chapters</SelectItem>
-            {chapters.map((chapter) => (
-              <SelectItem key={chapter} value={chapter}>{chapter}</SelectItem>
-            ))}
-          </Select>
-        </div>
-
         {/* State Filter */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-700">State</label>
           <Select 
             value={filters.state} 
             onValueChange={(value) => handleFilterChange('state', value)}
+            placeholder="All States"
+            className="w-full"
           >
             <SelectItem value="">All States</SelectItem>
             {US_STATES.map((state) => (
@@ -181,21 +179,22 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                   />
                 </Badge>
               )}
-              {filters.chapter && (
-                <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
-                  Chapter: {filters.chapter}
-                  <X 
-                    className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
-                    onClick={() => handleFilterChange('chapter', '')}
-                  />
-                </Badge>
-              )}
               {filters.activelyHiring && (
                 <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
                   Actively Hiring
                   <X 
                     className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
                     onClick={() => handleFilterChange('activelyHiring', false)}
+                  />
+                </Badge>
+              )}
+              {/* 🔥 NEW: Active Alumni Badge */}
+              {filters.showActiveOnly && (
+                <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
+                  Active Alumni
+                  <X 
+                    className="h-3 w-3 ml-1 cursor-pointer hover:text-green-900" 
+                    onClick={() => handleFilterChange('showActiveOnly', false)}
                   />
                 </Badge>
               )}
@@ -234,6 +233,17 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
             >
               <Building2 className="h-4 w-4" />
               <span>Actively Hiring</span>
+            </Button>
+
+            {/* 🔥 NEW: Active Alumni Button */}
+            <Button
+              variant={filters.showActiveOnly ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleFilterChange('showActiveOnly', !filters.showActiveOnly)}
+              className="flex items-center space-x-2"
+            >
+              <Activity className="h-4 w-4" />
+              <span>Active Alumni</span>
             </Button>
 
             {/* State Filter */}
@@ -280,21 +290,6 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                 <SelectItem value="">All Industries</SelectItem>
                 {industries.map((industry) => (
                   <SelectItem key={industry} value={industry}>{industry}</SelectItem>
-                ))}
-              </Select>
-            </div>
-
-            {/* Chapter Filter */}
-            <div className="relative">
-              <Select 
-                value={filters.chapter} 
-                onValueChange={(value) => handleFilterChange('chapter', value)}
-                placeholder="All Chapters"
-                className="w-40"
-              >
-                <SelectItem value="">All Chapters</SelectItem>
-                {chapters.map((chapter) => (
-                  <SelectItem key={chapter} value={chapter}>{chapter}</SelectItem>
                 ))}
               </Select>
             </div>
@@ -351,21 +346,22 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                 />
               </Badge>
             )}
-            {filters.chapter && (
-              <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
-                Chapter: {filters.chapter}
-                <X 
-                  className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
-                  onClick={() => handleFilterChange('chapter', '')}
-                />
-              </Badge>
-            )}
             {filters.activelyHiring && (
               <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
                 Actively Hiring
                 <X 
                   className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
                   onClick={() => handleFilterChange('activelyHiring', false)}
+                />
+              </Badge>
+            )}
+            {/* 🔥 NEW: Active Alumni Badge */}
+            {filters.showActiveOnly && (
+              <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
+                Active Alumni
+                <X 
+                  className="h-3 w-3 ml-1 cursor-pointer hover:text-green-900" 
+                  onClick={() => handleFilterChange('showActiveOnly', false)}
                 />
               </Badge>
             )}
