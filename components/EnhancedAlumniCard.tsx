@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/supabase/auth-context";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ClickableField } from './ClickableField';
+import { ActivityIndicator } from './ActivityIndicator';
 
 // Add this function at the top of the file, outside the component
 const getChapterName = (chapterId: string, isMobile: boolean = false): string => {
@@ -211,9 +212,15 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
 
           {/* Name and Verification - Stack badges below name in row */}
           <div className="text-center mb-1 sm:mb-2">
-            <h3 className="font-semibold text-gray-900 text-xs sm:text-lg leading-tight mb-0.5 sm:mb-2 truncate">
-              {alumni.fullName}
-            </h3>
+            <div className="flex items-center justify-center space-x-2 mb-0.5 sm:mb-2">
+              <h3 className="font-semibold text-gray-900 text-xs sm:text-lg leading-tight truncate">
+                {alumni.fullName}
+              </h3>
+              <ActivityIndicator 
+                lastActiveAt={alumni.lastActiveAt} 
+                size="sm"
+              />
+            </div>
             
             {/* Badges in row below name */}
             <div className="flex flex-row items-center justify-center gap-0.5 sm:gap-1">

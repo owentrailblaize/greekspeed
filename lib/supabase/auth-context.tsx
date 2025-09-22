@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from './client';
 import { canAccessDeveloperPortal } from '@/lib/developerPermissions';
+import { trackActivity, ActivityTypes } from '@/lib/utils/activityUtils';
 
 interface ProfileData {
   fullName: string;
@@ -63,6 +64,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         setLoading(false);
         
+        // Track login activity for automatic logins (session restoration, etc.)
+        if (event === 'SIGNED_IN' && session?.user) {
+          try {
+            await trackActivity(session.user.id, ActivityTypes.LOGIN, {
+              loginMethod: 'session_restore',
+              timestamp: new Date().toISOString()
+            });
+          } catch (activityError) {
+            console.error('Failed to track automatic login activity:', activityError);
+            // Don't throw - auth state change was successful
+          }
+        }
       }
     );
 
@@ -173,6 +186,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!error && data.user) {
         // Sync existing alumni after successful sign in
         await syncExistingAlumni(data.user.id);
+        
+        // Track login activity
+        try {
+          await trackActivity(data.user.id, ActivityTypes.LOGIN, {
+            loginMethod: 'email',
+            timestamp: new Date().toISOString()
+          });
+        } catch (activityError) {
+          console.error('Failed to track login activity:', activityError);
+          // Don't throw - login was successful
+        }
       }
     } catch (error) {
       console.error('❌ AuthContext: Sign in exception:', error);

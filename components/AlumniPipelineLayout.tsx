@@ -29,6 +29,7 @@ interface FilterState {
   chapter: string;
   state: string;
   activelyHiring: boolean;
+  activityStatus: string; // New activity filter
 }
 
 interface PaginationState {

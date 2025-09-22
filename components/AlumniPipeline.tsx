@@ -14,6 +14,7 @@ interface FilterState {
   chapter: string;
   state: string;
   activelyHiring: boolean;
+  activityStatus: string; // New activity filter
 }
 
 interface PaginationState {
@@ -48,6 +49,7 @@ export function AlumniPipeline() {
     chapter: "",
     state: "",
     activelyHiring: false,
+    activityStatus: "", // New activity filter
   });
   const [selectedAlumniForModal, setSelectedAlumniForModal] = useState<Alumni | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -149,6 +151,7 @@ export function AlumniPipeline() {
       chapter: "",
       state: "",
       activelyHiring: false,
+      activityStatus: "", // New activity filter
     });
     // Reset to first page when clearing filters
     setPagination(prev => ({ ...prev, page: 1 }));

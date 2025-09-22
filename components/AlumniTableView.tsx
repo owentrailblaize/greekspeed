@@ -33,6 +33,7 @@ import { AlumniProfileModal } from "@/components/AlumniProfileModal";
 import { Alumni } from "@/lib/mockAlumni";
 import { useRouter } from 'next/navigation';
 import { ClickableField } from './ClickableField';
+import { ActivityIndicator } from './ActivityIndicator';
 
 interface AlumniTableViewProps {
   alumni: Alumni[];
@@ -555,13 +556,19 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                       {/* Name and Badge Container - Flexible width */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          {/* Name - Allow wrapping, no truncation */}
-                          <span 
-                            className="font-medium text-gray-900 underline cursor-pointer hover:text-navy-600 transition-colors break-words"
-                            onClick={() => handleAlumniNameClick(alumni)}
-                          >
-                            {alumni.fullName}
-                          </span>
+                          {/* Name and Activity Indicator */}
+                          <div className="flex items-center space-x-2">
+                            <span 
+                              className="font-medium text-gray-900 underline cursor-pointer hover:text-navy-600 transition-colors break-words"
+                              onClick={() => handleAlumniNameClick(alumni)}
+                            >
+                              {alumni.fullName}
+                            </span>
+                            <ActivityIndicator 
+                              lastActiveAt={alumni.lastActiveAt} 
+                              size="sm"
+                            />
+                          </div>
                           
                           {/* Badge - Right-aligned */}
                           <div className="ml-2 flex-shrink-0">
