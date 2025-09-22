@@ -74,6 +74,16 @@ export interface ConnectionAcceptedEmail {
   connectionId: string;
 }
 
+// NEW: Message notification interface
+export interface MessageNotificationEmail {
+  to: string;
+  firstName: string;
+  chapterName: string;
+  actorFirstName: string;
+  messagePreview: string;
+  connectionId: string;
+}
+
 export class EmailService {
   private static fromEmail = process.env.SENDGRID_FROM_EMAIL || 'devin@trailblaize.net';
   private static fromName = process.env.SENDGRID_FROM_NAME || 'GreekSpeed';
@@ -503,6 +513,58 @@ export class EmailService {
       return true;
     } catch (error) {
       console.error('Error sending connection request email:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Send a new message email notification using dynamic template
+   */
+  static async sendMessageNotification({
+    to,
+    firstName,
+    chapterName,
+    actorFirstName,
+    messagePreview,
+    connectionId
+  }: MessageNotificationEmail): Promise<boolean> {
+    try {
+      const msg = {
+        to,
+        from: {
+          email: this.fromEmail,
+          name: this.fromName,
+        },
+        subject: `New message from ${actorFirstName} on Trailblaize`,
+        templateId: process.env.SENDGRID_MESSAGE_TEMPLATE_ID!,
+        dynamicTemplateData: {
+          payload: {
+            preview: messagePreview
+          },
+          recipient: {
+            first_name: firstName,
+            email: to
+          },
+          actor: {
+            first_name: actorFirstName
+          },
+          chapter: {
+            name: chapterName
+          },
+          cta: {
+            label: 'Open Chat',
+            url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/messages`
+          },
+          unsubscribe: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/unsubscribe?email=${encodeURIComponent(to)}`,
+          unsubscribe_preferences: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/preferences?email=${encodeURIComponent(to)}`
+        },
+      };
+
+      await sgMail.send(msg);
+      console.log(`Message notification email sent successfully to ${to}`);
+      return true;
+    } catch (error) {
+      console.error('Error sending message notification email:', error);
       return false;
     }
   }
