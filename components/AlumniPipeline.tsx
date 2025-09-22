@@ -6,7 +6,6 @@ import { AlumniSubHeader } from "@/components/AlumniSubHeader";
 import { Alumni } from "@/lib/mockAlumni";
 import { AlumniProfileModal } from "./AlumniProfileModal";
 import { useProfile } from "@/lib/hooks/useProfile";
-import { sortAlumniByCompleteness, AlumniWithCompleteness } from "@/lib/utils/profileCompleteness";
 
 interface FilterState {
   searchTerm: string;
@@ -29,7 +28,7 @@ interface PaginationState {
 export function AlumniPipeline() {
   const { profile, loading: profileLoading } = useProfile();
   const [alumni, setAlumni] = useState<Alumni[]>([]);
-  const [sortedAlumni, setSortedAlumni] = useState<AlumniWithCompleteness[]>([]);
+  const [sortedAlumni, setSortedAlumni] = useState<Alumni[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
@@ -105,9 +104,8 @@ export function AlumniPipeline() {
         setPagination(data.pagination);
       }
       
-      // Sort alumni by completeness score (highest first)
-      const sortedByCompleteness = sortAlumniByCompleteness(alumniData);
-      setSortedAlumni(sortedByCompleteness);
+      // Set alumni data without sorting by completeness
+      setSortedAlumni(alumniData);
       
       console.log(`📊 Alumni Pipeline: Fetched page ${pageToFetch} with ${alumniData.length} alumni (Total: ${data.pagination?.total})`);
     } catch (err) {

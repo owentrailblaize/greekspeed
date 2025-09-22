@@ -29,18 +29,18 @@ import {
   UserX,
   AlertCircle
 } from "lucide-react";
-import { AlumniWithCompleteness } from "@/lib/utils/profileCompleteness";
 import { AlumniProfileModal } from "@/components/AlumniProfileModal";
+import { Alumni } from "@/lib/mockAlumni";
 import { useRouter } from 'next/navigation';
 import { ClickableField } from './ClickableField';
 
 interface AlumniTableViewProps {
-  alumni: AlumniWithCompleteness[];
+  alumni: Alumni[];
   selectedAlumni: string[];
   onSelectionChange: (selectedIds: string[]) => void;
 }
 
-type SortField = 'name' | 'company' | 'industry' | 'graduationYear' | 'location' | 'jobTitle' | 'chapter' | 'lastContact' | 'isActivelyHiring' | 'completeness';
+type SortField = 'name' | 'company' | 'industry' | 'graduationYear' | 'location' | 'jobTitle' | 'chapter' | 'lastContact' | 'isActivelyHiring';
 type SortDirection = 'asc' | 'desc';
 
 const getChapterName = (chapterId: string): string => {
@@ -66,11 +66,11 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
     getConnectionId
   } = useConnections();
   
-  const [sortField, setSortField] = useState<SortField>('completeness');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [sortField, setSortField] = useState<SortField>('name');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [accessedEmails, setAccessedEmails] = useState<Set<string>>(new Set());
   const [accessedPhones, setAccessedPhones] = useState<Set<string>>(new Set());
-  const [selectedAlumniForPopup, setSelectedAlumniForPopup] = useState<AlumniWithCompleteness | null>(null);
+  const [selectedAlumniForPopup, setSelectedAlumniForPopup] = useState<Alumni | null>(null);
   const [popupOpen, setPopupOpen] = useState(false);
   const [connectionLoading, setConnectionLoading] = useState<string | null>(null);
 
@@ -110,7 +110,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
     setAccessedPhones(prev => new Set([...prev, alumniId]));
   };
 
-  const handleAlumniNameClick = (alumni: AlumniWithCompleteness) => {
+  const handleAlumniNameClick = (alumni: Alumni) => {
     setSelectedAlumniForPopup(alumni);
     setPopupOpen(true);
   };
@@ -319,10 +319,6 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
       case 'isActivelyHiring':
         aValue = a.isActivelyHiring ? 1 : 0;
         bValue = b.isActivelyHiring ? 1 : 0;
-        break;
-      case 'completeness':
-        aValue = a.completenessScore.totalScore;
-        bValue = b.completenessScore.totalScore;
         break;
       default:
         aValue = a.fullName;

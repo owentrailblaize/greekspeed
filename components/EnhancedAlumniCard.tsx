@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alumni } from "@/lib/mockAlumni";
-import { AlumniWithCompleteness } from "@/lib/utils/profileCompleteness";
 import { MessageCircle, UserPlus, Shield, Building2, MapPin, GraduationCap, Clock } from "lucide-react";
 import ImageWithFallback from "./figma/ImageWithFallback";
 import { useConnections } from "@/lib/contexts/ConnectionsContext";
@@ -32,7 +31,7 @@ const getChapterName = (chapterId: string, isMobile: boolean = false): string =>
 };
 
 interface EnhancedAlumniCardProps {
-  alumni: AlumniWithCompleteness;
+  alumni: Alumni;
   onClick?: (alumni: Alumni) => void;
 }
 

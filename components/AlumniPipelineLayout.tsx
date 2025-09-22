@@ -10,7 +10,6 @@ import { EnhancedAlumniCard } from "@/components/EnhancedAlumniCard";
 import { AlumniToolbar } from "@/components/AlumniToolbar";
 import { AlumniDetailSheet } from "@/components/AlumniDetailSheet";
 import { Alumni } from "@/lib/mockAlumni";
-import { AlumniWithCompleteness } from "@/lib/utils/profileCompleteness";
 import { exportAlumniToCSV, exportSelectedAlumniToCSV } from "@/lib/csvExport";
 import { AlumniProfileModal } from "./AlumniProfileModal";
 import { AlumniPagination } from "./AlumniPagination";
@@ -42,7 +41,7 @@ interface PaginationState {
 }
 
 interface AlumniPipelineLayoutProps {
-  alumni: AlumniWithCompleteness[];
+  alumni: Alumni[];
   loading: boolean;
   error: string | null;
   viewMode: 'table' | 'card';
@@ -319,7 +318,7 @@ export function AlumniPipelineLayout({
               {/* Scrollable cards container */}
               <div className="flex-1 overflow-y-auto p-2 sm:p-6 pb-20">
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-                  {displayAlumni.map((alumniItem: AlumniWithCompleteness, index: number) => (
+                  {displayAlumni.map((alumniItem: Alumni, index: number) => (
                     <motion.div
                       key={alumniItem.id}
                       initial={{ opacity: 0, y: 20 }}
