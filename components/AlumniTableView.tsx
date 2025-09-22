@@ -282,31 +282,32 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
     }
   };
 
+  // Helper function to get activity priority (lower number = higher priority)
+  const getActivityPriority = (lastActiveAt?: string | null): number => {
+    if (!lastActiveAt) return 4; // No activity - lowest priority
+    
+    const lastActive = new Date(lastActiveAt);
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    
+    if (lastActive >= oneHourAgo) return 1; // Active within 1 hour - highest priority
+    if (lastActive >= oneDayAgo) return 2; // Active within 24 hours - medium priority
+    return 3; // Active but older than 24 hours - low priority
+  };
+
+  // Fix the sorting logic - the issue is in the activity priority comparison
   const sortedAlumni = [...alumni].sort((a, b) => {
-    // For activity sorting, use hybrid logic (activity + completeness)
+    // For activity sorting, use the exact same hybrid logic as the card view
     if (sortField === 'activity') {
-      const aActive = a.lastActiveAt ? new Date(a.lastActiveAt) : null;
-      const bActive = b.lastActiveAt ? new Date(b.lastActiveAt) : null;
-      const now = new Date();
-      
-      // Define activity thresholds
-      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      
-      // Helper function to get activity priority (lower number = higher priority)
-      const getActivityPriority = (lastActive: Date | null) => {
-        if (!lastActive) return 4; // No activity - lowest priority
-        if (lastActive >= oneHourAgo) return 1; // Active within 1 hour - highest priority
-        if (lastActive >= oneDayAgo) return 2; // Active within 24 hours - medium priority
-        return 3; // Active but older than 24 hours - low priority
-      };
-      
-      const aPriority = getActivityPriority(aActive);
-      const bPriority = getActivityPriority(bActive);
-      
       // 1. Primary sort by activity priority
-      if (aPriority !== bPriority) {
-        return sortDirection === 'asc' ? aPriority - bPriority : bPriority - aPriority;
+      const aActivityPriority = getActivityPriority(a.lastActiveAt);
+      const bActivityPriority = getActivityPriority(b.lastActiveAt);
+      
+      if (aActivityPriority !== bActivityPriority) {
+        // FIXED: For activity, we want lower priority numbers (more active) to come first
+        // So we always do aActivityPriority - bActivityPriority regardless of sortDirection
+        return aActivityPriority - bActivityPriority;
       }
       
       // 2. Secondary sort by completeness (within same activity level)
@@ -318,17 +319,13 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
       }
       
       // 3. Tertiary sort by most recent activity time
-      if (aActive && bActive) {
-        return sortDirection === 'asc' ? 
-          aActive.getTime() - bActive.getTime() : 
-          bActive.getTime() - aActive.getTime();
+      if (a.lastActiveAt && b.lastActiveAt) {
+        const aTime = new Date(a.lastActiveAt).getTime();
+        const bTime = new Date(b.lastActiveAt).getTime();
+        return bTime - aTime; // More recent first (always)
       }
       
-      // 4. If only one has activity, prioritize it
-      if (aActive && !bActive) return sortDirection === 'asc' ? 1 : -1;
-      if (!aActive && bActive) return sortDirection === 'asc' ? -1 : 1;
-      
-      // 5. Fallback to name
+      // 4. Fallback to name
       return a.fullName.localeCompare(b.fullName);
     }
     
@@ -342,24 +339,11 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
       }
       
       // Secondary sort by activity
-      const aActive = a.lastActiveAt ? new Date(a.lastActiveAt) : null;
-      const bActive = b.lastActiveAt ? new Date(b.lastActiveAt) : null;
-      const now = new Date();
-      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const aActivityPriority = getActivityPriority(a.lastActiveAt);
+      const bActivityPriority = getActivityPriority(b.lastActiveAt);
       
-      const getActivityPriority = (lastActive: Date | null) => {
-        if (!lastActive) return 4;
-        if (lastActive >= oneHourAgo) return 1;
-        if (lastActive >= oneDayAgo) return 2;
-        return 3;
-      };
-      
-      const aPriority = getActivityPriority(aActive);
-      const bPriority = getActivityPriority(bActive);
-      
-      if (aPriority !== bPriority) {
-        return aPriority - bPriority;
+      if (aActivityPriority !== bActivityPriority) {
+        return aActivityPriority - bActivityPriority; // More active first
       }
       
       return a.fullName.localeCompare(b.fullName);
