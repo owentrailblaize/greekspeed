@@ -15,6 +15,7 @@ interface FilterState {
   state: string;
   activelyHiring: boolean;
   activityStatus: string; // New activity filter
+  showActiveOnly: boolean; // 🔥 NEW: Active alumni filter
 }
 
 interface PaginationState {
@@ -50,6 +51,7 @@ export function AlumniPipeline() {
     state: "",
     activelyHiring: false,
     activityStatus: "", // New activity filter
+    showActiveOnly: false, // 🔥 NEW: Active alumni filter
   });
   const [selectedAlumniForModal, setSelectedAlumniForModal] = useState<Alumni | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -80,6 +82,9 @@ export function AlumniPipeline() {
       if (filterParams.graduationYear) params.append('graduationYear', filterParams.graduationYear);
       if (filterParams.state) params.append('state', filterParams.state);
       if (filterParams.activelyHiring) params.append('activelyHiring', 'true');
+      if (filterParams.activityStatus) params.append('activityStatus', filterParams.activityStatus);
+      // 🔥 NEW: Add showActiveOnly parameter
+      if (filterParams.showActiveOnly) params.append('showActiveOnly', 'true');
       
       // Add pagination parameters with optimized limit
       params.append('limit', '100'); // Fixed to 100 for consistent performance
@@ -99,6 +104,19 @@ export function AlumniPipeline() {
       
       const data = await response.json();
       const alumniData = data.alumni || [];
+      
+      // 🔥 ADD DEBUG LOGGING
+      console.log('🔍 Alumni Pipeline Debug - Activity Status Filter:', {
+        activityStatus: filterParams.activityStatus,
+        showActiveOnly: filterParams.showActiveOnly,
+        totalAlumni: alumniData.length,
+        sampleActivityData: alumniData.slice(0, 3).map(a => ({
+          name: a.fullName,
+          lastActiveAt: a.lastActiveAt,
+          hasProfile: a.hasProfile
+        }))
+      });
+      
       setAlumni(alumniData);
       
       // Update pagination state
@@ -152,6 +170,7 @@ export function AlumniPipeline() {
       state: "",
       activelyHiring: false,
       activityStatus: "", // New activity filter
+      showActiveOnly: false, // 🔥 NEW: Active alumni filter
     });
     // Reset to first page when clearing filters
     setPagination(prev => ({ ...prev, page: 1 }));

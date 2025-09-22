@@ -41,7 +41,7 @@ interface AlumniTableViewProps {
   onSelectionChange: (selectedIds: string[]) => void;
 }
 
-type SortField = 'name' | 'company' | 'industry' | 'graduationYear' | 'location' | 'jobTitle' | 'chapter' | 'lastContact' | 'isActivelyHiring';
+type SortField = 'name' | 'company' | 'industry' | 'graduationYear' | 'location' | 'jobTitle' | 'chapter' | 'lastContact' | 'isActivelyHiring' | 'activity';
 type SortDirection = 'asc' | 'desc';
 
 const getChapterName = (chapterId: string): string => {
@@ -67,8 +67,8 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
     getConnectionId
   } = useConnections();
   
-  const [sortField, setSortField] = useState<SortField>('name');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [sortField, setSortField] = useState<SortField>('activity'); 
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); 
   const [accessedEmails, setAccessedEmails] = useState<Set<string>>(new Set());
   const [accessedPhones, setAccessedPhones] = useState<Set<string>>(new Set());
   const [selectedAlumniForPopup, setSelectedAlumniForPopup] = useState<Alumni | null>(null);
@@ -282,9 +282,61 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
   };
 
   const sortedAlumni = [...alumni].sort((a, b) => {
+    // 🔥 TEMPORARY DEBUG - Remove after testing
+    if (sortField === 'activity') {
+      console.log('🔍 Activity Sorting Debug:', {
+        sortField,
+        sortDirection,
+        aName: a.fullName,
+        aLastActive: a.lastActiveAt,
+        bName: b.fullName,
+        bLastActive: b.lastActiveAt
+      });
+    }
+    
     let aValue: string | number, bValue: string | number;
     
     switch (sortField) {
+      case 'activity':
+        // 🔥 Activity-based sorting logic (same as cards view)
+        const aActive = a.lastActiveAt ? new Date(a.lastActiveAt) : null;
+        const bActive = b.lastActiveAt ? new Date(b.lastActiveAt) : null;
+        const now = new Date();
+        
+        // Define activity thresholds
+        const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        
+        // Helper function to get activity priority (lower number = higher priority)
+        const getActivityPriority = (lastActive: Date | null) => {
+          if (!lastActive) return 4; // No activity - lowest priority
+          if (lastActive >= oneHourAgo) return 1; // Active within 1 hour - highest priority
+          if (lastActive >= oneDayAgo) return 2; // Active within 24 hours - medium priority
+          return 3; // Active but older than 24 hours - low priority
+        };
+        
+        const aPriority = getActivityPriority(aActive);
+        const bPriority = getActivityPriority(bActive);
+        
+        // First sort by activity priority
+        if (aPriority !== bPriority) {
+          return sortDirection === 'asc' ? aPriority - bPriority : bPriority - aPriority;
+        }
+        
+        // If same priority, sort by most recent activity
+        if (aActive && bActive) {
+          return sortDirection === 'asc' ? 
+            aActive.getTime() - bActive.getTime() : 
+            bActive.getTime() - aActive.getTime();
+        }
+        
+        // If only one has activity, prioritize it
+        if (aActive && !bActive) return sortDirection === 'asc' ? 1 : -1;
+        if (!aActive && bActive) return sortDirection === 'asc' ? -1 : 1;
+        
+        // If neither has activity, sort by name
+        return a.fullName.localeCompare(b.fullName);
+        
       case 'name':
         aValue = a.fullName;
         bValue = b.fullName;
@@ -325,7 +377,8 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
         aValue = a.fullName;
         bValue = b.fullName;
     }
-
+  
+    // For non-activity sorting, use the original logic
     if (sortDirection === 'asc') {
       return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
     } else {
@@ -501,6 +554,15 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   <div className="flex items-center space-x-2">
                     <span>LAST CONTACT</span>
                     <SortIcon field="lastContact" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="bg-gray-50 text-gray-900 font-medium cursor-pointer hover:bg-gray-100 transition-colors min-w-[120px]"
+                  onClick={() => handleSort('activity')}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span>ACTIVITY</span>
+                    <SortIcon field="activity" />
                   </div>
                 </TableHead>
                 <TableHead className="bg-gray-50 text-gray-900 font-medium min-w-[120px]">
@@ -704,6 +766,14 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                       <Calendar className="h-4 w-4 text-gray-400" />
                       <span className="text-gray-900 text-sm">{formatDate(alumni.lastContact)}</span>
                     </div>
+                  </TableCell>
+
+                  {/* Activity Column */}
+                  <TableCell className="bg-white">
+                    <ActivityIndicator 
+                      lastActiveAt={alumni.lastActiveAt} 
+                      size="sm"
+                    />
                   </TableCell>
                   
                   {/* Connection Column */}

@@ -30,6 +30,14 @@ export async function POST(request: NextRequest) {
       })
       .eq('id', userId)
     
+    // 🔍 TEMPORARY DEBUG - Add this after line 31
+    console.log('🔍 Activity API Debug:', {
+      userId,
+      activityType,
+      updateResult: { error },
+      timestamp: now
+    });
+    
     if (error) {
       console.error('❌ Failed to track activity:', error)
       return NextResponse.json({ 

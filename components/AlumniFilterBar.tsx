@@ -1,4 +1,4 @@
-import { Search, X, Building2, Users } from "lucide-react";
+import { Search, X, Building2, Users, Activity } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ interface FilterState {
   state: string;
   activelyHiring: boolean;
   activityStatus: string; // New activity filter
+  showActiveOnly: boolean; // 🔥 NEW: Active alumni filter
 }
 
 interface AlumniFilterBarProps {
@@ -69,6 +70,16 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
             >
               <Building2 className="h-4 w-4 mr-2" />
               Actively Hiring
+            </Button>
+            {/* 🔥 NEW: Active Alumni Button */}
+            <Button
+              variant={filters.showActiveOnly ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleFilterChange('showActiveOnly', !filters.showActiveOnly)}
+              className="justify-start"
+            >
+              <Activity className="h-4 w-4 mr-2" />
+              Active Alumni
             </Button>
           </div>
         </div>
@@ -198,6 +209,16 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                   />
                 </Badge>
               )}
+              {/* 🔥 NEW: Active Alumni Badge */}
+              {filters.showActiveOnly && (
+                <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
+                  Active Alumni
+                  <X 
+                    className="h-3 w-3 ml-1 cursor-pointer hover:text-green-900" 
+                    onClick={() => handleFilterChange('showActiveOnly', false)}
+                  />
+                </Badge>
+              )}
               {filters.activityStatus && (
                 <Badge 
                   variant="outline" 
@@ -244,6 +265,17 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
             >
               <Building2 className="h-4 w-4" />
               <span>Actively Hiring</span>
+            </Button>
+
+            {/* 🔥 NEW: Active Alumni Button */}
+            <Button
+              variant={filters.showActiveOnly ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleFilterChange('showActiveOnly', !filters.showActiveOnly)}
+              className="flex items-center space-x-2"
+            >
+              <Activity className="h-4 w-4" />
+              <span>Active Alumni</span>
             </Button>
 
             {/* State Filter */}
@@ -376,6 +408,16 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                 <X 
                   className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
                   onClick={() => handleFilterChange('activelyHiring', false)}
+                />
+              </Badge>
+            )}
+            {/* 🔥 NEW: Active Alumni Badge */}
+            {filters.showActiveOnly && (
+              <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
+                Active Alumni
+                <X 
+                  className="h-3 w-3 ml-1 cursor-pointer hover:text-green-900" 
+                  onClick={() => handleFilterChange('showActiveOnly', false)}
                 />
               </Badge>
             )}

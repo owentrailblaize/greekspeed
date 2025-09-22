@@ -133,7 +133,6 @@ export async function trackActivity(userId: string, activityType: ActivityTypes,
     }
 
     const result = await response.json()
-    console.log('✅ Activity tracked:', { userId, activityType, timestamp: now })
     return true
   } catch (error) {
     console.error('❌ Activity tracking error:', error)

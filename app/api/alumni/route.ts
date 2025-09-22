@@ -50,13 +50,14 @@ export async function GET(request: NextRequest) {
     const activelyHiring = searchParams.get('activelyHiring') || ''
     const state = searchParams.get('state') || ''
     const activityStatus = searchParams.get('activityStatus') || ''
-    
+    const showActiveOnly = searchParams.get('showActiveOnly') || '' // 🔥 NEW
+
     // Chapter filtering parameter
     const userChapter = searchParams.get('userChapter') || ''
 
     console.log('🔍 API Debug - Query params:', {
       page, limit, search, industry, chapter, location, graduationYear, 
-      activelyHiring, state, activityStatus, userChapter
+      activelyHiring, state, activityStatus, showActiveOnly, userChapter // 🔥 UPDATED
     });
 
     // 🔥 KEY CHANGE: Use main branch query structure (alumni → profiles) with activity fields
@@ -280,6 +281,21 @@ export async function GET(request: NextRequest) {
           return a.fullName.localeCompare(b.fullName)
         })
 
+        // 🔥 NEW: Apply showActiveOnly filter
+        if (showActiveOnly) {
+          const now = new Date()
+          const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+          
+          filteredAlumni = filteredAlumni.filter(alumni => {
+            if (!alumni.lastActiveAt) {
+              return false // Exclude alumni with no activity data
+            }
+
+            const lastActiveDate = new Date(alumni.lastActiveAt)
+            return lastActiveDate >= oneDayAgo // Only show alumni active within last 24 hours
+          })
+        }
+
         const totalPages = Math.ceil(totalCount / limit);
 
         return NextResponse.json({
@@ -480,6 +496,21 @@ export async function GET(request: NextRequest) {
           return a.fullName.localeCompare(b.fullName)
         })
 
+        // 🔥 NEW: Apply showActiveOnly filter
+        if (showActiveOnly) {
+          const now = new Date()
+          const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+          
+          filteredAlumni = filteredAlumni.filter(alumni => {
+            if (!alumni.lastActiveAt) {
+              return false // Exclude alumni with no activity data
+            }
+
+            const lastActiveDate = new Date(alumni.lastActiveAt)
+            return lastActiveDate >= oneDayAgo // Only show alumni active within last 24 hours
+          })
+        }
+
         const totalPages = Math.ceil(totalCount / limit);
 
         return NextResponse.json({
@@ -565,6 +596,16 @@ export async function GET(request: NextRequest) {
       lastLoginAt: alumni.profile?.last_login_at
     })) || []
 
+    // 🔍 TEMPORARY DEBUG - Add this after line 418
+    console.log('🔍 API Debug - Alumni data sample:', {
+      totalAlumni: transformedAlumni.length,
+      sampleAlumni: transformedAlumni.slice(0, 3).map(a => ({
+        name: a.fullName,
+        lastActiveAt: a.lastActiveAt,
+        hasProfile: a.hasProfile
+      }))
+    });
+
     //  ADD: Activity filtering and sorting logic
     let filteredAlumni = transformedAlumni
 
@@ -632,6 +673,21 @@ export async function GET(request: NextRequest) {
       // If neither has activity, sort by name
       return a.fullName.localeCompare(b.fullName)
     })
+
+    // 🔥 NEW: Apply showActiveOnly filter
+    if (showActiveOnly) {
+      const now = new Date()
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+      
+      filteredAlumni = filteredAlumni.filter(alumni => {
+        if (!alumni.lastActiveAt) {
+          return false // Exclude alumni with no activity data
+        }
+
+        const lastActiveDate = new Date(alumni.lastActiveAt)
+        return lastActiveDate >= oneDayAgo // Only show alumni active within last 24 hours
+      })
+    }
 
     const totalPages = Math.ceil((count || 0) / limit);
 
