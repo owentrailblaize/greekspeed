@@ -282,18 +282,6 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
   };
 
   const sortedAlumni = [...alumni].sort((a, b) => {
-    // 🔥 TEMPORARY DEBUG - Remove after testing
-    if (sortField === 'activity') {
-      console.log('🔍 Activity Sorting Debug:', {
-        sortField,
-        sortDirection,
-        aName: a.fullName,
-        aLastActive: a.lastActiveAt,
-        bName: b.fullName,
-        bLastActive: b.lastActiveAt
-      });
-    }
-    
     let aValue: string | number, bValue: string | number;
     
     switch (sortField) {

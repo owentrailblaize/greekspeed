@@ -55,11 +55,6 @@ export async function GET(request: NextRequest) {
     // Chapter filtering parameter
     const userChapter = searchParams.get('userChapter') || ''
 
-    console.log('🔍 API Debug - Query params:', {
-      page, limit, search, industry, chapter, location, graduationYear, 
-      activelyHiring, state, activityStatus, showActiveOnly, userChapter // 🔥 UPDATED
-    });
-
     // 🔥 KEY CHANGE: Use main branch query structure (alumni → profiles) with activity fields
     let query = supabase
       .from('alumni')
@@ -595,16 +590,6 @@ export async function GET(request: NextRequest) {
       lastActiveAt: alumni.profile?.last_active_at,
       lastLoginAt: alumni.profile?.last_login_at
     })) || []
-
-    // 🔍 TEMPORARY DEBUG - Add this after line 418
-    console.log('🔍 API Debug - Alumni data sample:', {
-      totalAlumni: transformedAlumni.length,
-      sampleAlumni: transformedAlumni.slice(0, 3).map(a => ({
-        name: a.fullName,
-        lastActiveAt: a.lastActiveAt,
-        hasProfile: a.hasProfile
-      }))
-    });
 
     //  ADD: Activity filtering and sorting logic
     let filteredAlumni = transformedAlumni

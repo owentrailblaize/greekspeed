@@ -105,18 +105,6 @@ export function AlumniPipeline() {
       const data = await response.json();
       const alumniData = data.alumni || [];
       
-      // 🔥 ADD DEBUG LOGGING
-      console.log('🔍 Alumni Pipeline Debug - Activity Status Filter:', {
-        activityStatus: filterParams.activityStatus,
-        showActiveOnly: filterParams.showActiveOnly,
-        totalAlumni: alumniData.length,
-        sampleActivityData: alumniData.slice(0, 3).map((a: Alumni) => ({
-          name: a.fullName,
-          lastActiveAt: a.lastActiveAt,
-          hasProfile: a.hasProfile
-        }))
-      });
-      
       setAlumni(alumniData);
       
       // Update pagination state
@@ -127,7 +115,6 @@ export function AlumniPipeline() {
       // Set alumni data without sorting by completeness
       setSortedAlumni(alumniData);
       
-      console.log(`📊 Alumni Pipeline: Fetched page ${pageToFetch} with ${alumniData.length} alumni (Total: ${data.pagination?.total})`);
     } catch (err) {
       console.error('❌ Error fetching alumni:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
