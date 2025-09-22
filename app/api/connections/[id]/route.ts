@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { EmailService } from '@/lib/services/emailService';
 
 export async function PATCH(
   request: NextRequest,
@@ -22,6 +23,33 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
+    // Get the connection with profile information before updating
+    const { data: existingConnection, error: fetchError } = await supabase
+      .from('connections')
+      .select(`
+        *,
+        requester:profiles!requester_id(
+          id,
+          first_name,
+          email,
+          chapter
+        ),
+        recipient:profiles!recipient_id(
+          id,
+          first_name,
+          email,
+          chapter
+        )
+      `)
+      .eq('id', id)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching connection:', fetchError);
+      return NextResponse.json({ error: 'Failed to fetch connection' }, { status: 500 });
+    }
+
+    // Update the connection status
     const { data: connection, error } = await supabase
       .from('connections')
       .update({ 
@@ -35,6 +63,29 @@ export async function PATCH(
     if (error) {
       console.error('Connection update error:', error);
       return NextResponse.json({ error: 'Failed to update connection' }, { status: 500 });
+    }
+
+    // Send email notification for accepted connections
+    if (status === 'accepted' && existingConnection) {
+      try {
+        // Send notification to the requester (the person who originally sent the request)
+        const requesterProfile = existingConnection.requester;
+        const recipientProfile = existingConnection.recipient;
+
+        if (requesterProfile?.email && requesterProfile?.first_name && recipientProfile?.first_name) {
+          await EmailService.sendConnectionAcceptedNotification({
+            to: requesterProfile.email,
+            firstName: requesterProfile.first_name,
+            chapterName: requesterProfile.chapter || 'Your Chapter',
+            actorFirstName: recipientProfile.first_name,
+            connectionId: id
+          });
+          console.log(`Connection accepted email sent to ${requesterProfile.email}`);
+        }
+      } catch (emailError) {
+        console.error('Failed to send connection accepted email:', emailError);
+        // Don't fail the connection update if email fails
+      }
     }
 
     return NextResponse.json({ connection });

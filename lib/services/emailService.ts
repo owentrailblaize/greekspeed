@@ -55,6 +55,25 @@ export interface EventNotificationEmail {
   eventId: string;
 }
 
+// NEW: Connection request notification interface
+export interface ConnectionRequestEmail {
+  to: string;
+  firstName: string;
+  chapterName: string;
+  actorFirstName: string;
+  message?: string;
+  connectionId: string;
+}
+
+// NEW: Connection accepted notification interface
+export interface ConnectionAcceptedEmail {
+  to: string;
+  firstName: string;
+  chapterName: string;
+  actorFirstName: string;
+  connectionId: string;
+}
+
 export class EmailService {
   private static fromEmail = process.env.SENDGRID_FROM_EMAIL || 'devin@trailblaize.net';
   private static fromName = process.env.SENDGRID_FROM_NAME || 'GreekSpeed';
@@ -384,6 +403,106 @@ export class EmailService {
       return true;
     } catch (error) {
       console.error('❌ Failed to send custom email:', error);
+      return false;
+    }
+  }
+
+  /**
+   * NEW: Send a connection accepted email using dynamic template
+   */
+  static async sendConnectionAcceptedNotification({
+    to,
+    firstName,
+    chapterName,
+    actorFirstName,
+    connectionId
+  }: ConnectionAcceptedEmail): Promise<boolean> {
+    try {
+      const msg = {
+        to,
+        from: {
+          email: this.fromEmail,
+          name: this.fromName,
+        },
+        subject: `${actorFirstName} accepted your connection request on Trailblaize`,
+        templateId: process.env.SENDGRID_CONNECTION_ACCEPTED_TEMPLATE_ID!,
+        dynamicTemplateData: {
+          recipient: {
+            first_name: firstName,
+            email: to
+          },
+          actor: {
+            first_name: actorFirstName
+          },
+          chapter: {
+            name: chapterName
+          },
+          cta: {
+            label: 'View Connection',
+            url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/notifications`
+          },
+          unsubscribe: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/unsubscribe?email=${encodeURIComponent(to)}`,
+          unsubscribe_preferences: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/preferences?email=${encodeURIComponent(to)}`
+        },
+      };
+
+      await sgMail.send(msg);
+      console.log(`Connection accepted email sent successfully to ${to}`);
+      return true;
+    } catch (error) {
+      console.error('Error sending connection accepted email:', error);
+      return false;
+    }
+  }
+
+  /**
+   * NEW: Send a connection request email using dynamic template
+   */
+  static async sendConnectionRequestNotification({
+    to,
+    firstName,
+    chapterName,
+    actorFirstName,
+    message,
+    connectionId
+  }: ConnectionRequestEmail): Promise<boolean> {
+    try {
+      const msg = {
+        to,
+        from: {
+          email: this.fromEmail,
+          name: this.fromName,
+        },
+        subject: `${actorFirstName} wants to connect with you on Trailblaize`,
+        templateId: process.env.SENDGRID_CONNECTION_REQUEST_TEMPLATE_ID!,
+        dynamicTemplateData: {
+          payload: {
+            message: message || null
+          },
+          recipient: {
+            first_name: firstName,
+            email: to
+          },
+          actor: {
+            first_name: actorFirstName
+          },
+          chapter: {
+            name: chapterName
+          },
+          cta: {
+            label: 'View Request',
+            url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/notifications`
+          },
+          unsubscribe: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/unsubscribe?email=${encodeURIComponent(to)}`,
+          unsubscribe_preferences: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/preferences?email=${encodeURIComponent(to)}`
+        },
+      };
+
+      await sgMail.send(msg);
+      console.log(`Connection request email sent successfully to ${to}`);
+      return true;
+    } catch (error) {
+      console.error('Error sending connection request email:', error);
       return false;
     }
   }

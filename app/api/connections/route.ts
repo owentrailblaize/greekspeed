@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { EmailService } from '@/lib/services/emailService';
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,7 +30,8 @@ export async function GET(request: NextRequest) {
           first_name,
           last_name,
           chapter,
-          avatar_url
+          avatar_url,
+          email
         ),
         recipient:profiles!recipient_id(
           id,
@@ -37,7 +39,8 @@ export async function GET(request: NextRequest) {
           first_name,
           last_name,
           chapter,
-          avatar_url
+          avatar_url,
+          email
         )
       `)
       .or(`requester_id.eq.${userId},recipient_id.eq.${userId}`);
@@ -85,6 +88,28 @@ export async function POST(request: NextRequest) {
       }, { status: 409 });
     }
 
+    // Get recipient profile information for email notification
+    const { data: recipientProfile, error: recipientError } = await supabase
+      .from('profiles')
+      .select('first_name, email, chapter')
+      .eq('id', recipientId)
+      .single();
+
+    if (recipientError) {
+      console.error('Error fetching recipient profile:', recipientError);
+    }
+
+    // Get requester profile information for email notification
+    const { data: requesterProfile, error: requesterError } = await supabase
+      .from('profiles')
+      .select('first_name')
+      .eq('id', requesterId)
+      .single();
+
+    if (requesterError) {
+      console.error('Error fetching requester profile:', requesterError);
+    }
+
     // Create new connection request
     const { data: connection, error } = await supabase
       .from('connections')
@@ -100,6 +125,30 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Connection creation error:', error);
       return NextResponse.json({ error: 'Failed to create connection' }, { status: 500 });
+    }
+
+    // Send email notification if we have the required profile information
+    if (recipientProfile?.email && recipientProfile?.first_name && requesterProfile?.first_name) {
+      try {
+        await EmailService.sendConnectionRequestNotification({
+          to: recipientProfile.email,
+          firstName: recipientProfile.first_name,
+          chapterName: recipientProfile.chapter || 'Your Chapter',
+          actorFirstName: requesterProfile.first_name,
+          message: message,
+          connectionId: connection.id
+        });
+        console.log(`Connection request email sent to ${recipientProfile.email}`);
+      } catch (emailError) {
+        console.error('Failed to send connection request email:', emailError);
+        // Don't fail the connection creation if email fails
+      }
+    } else {
+      console.warn('Missing profile information for email notification:', {
+        recipientEmail: !!recipientProfile?.email,
+        recipientFirstName: !!recipientProfile?.first_name,
+        requesterFirstName: !!requesterProfile?.first_name
+      });
     }
 
     return NextResponse.json({ connection });
