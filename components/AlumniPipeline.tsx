@@ -6,6 +6,8 @@ import { AlumniSubHeader } from "@/components/AlumniSubHeader";
 import { Alumni } from "@/lib/mockAlumni";
 import { AlumniProfileModal } from "./AlumniProfileModal";
 import { useProfile } from "@/lib/hooks/useProfile";
+// Add these imports
+import { calculateAlumniCompleteness } from '@/lib/utils/profileCompleteness';
 
 interface FilterState {
   searchTerm: string;
@@ -55,6 +57,51 @@ export function AlumniPipeline() {
   });
   const [selectedAlumniForModal, setSelectedAlumniForModal] = useState<Alumni | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Activity priority helper function
+  const getActivityPriority = (lastActiveAt?: string): number => {
+    if (!lastActiveAt) return 4; // No activity - lowest priority
+    
+    const lastActive = new Date(lastActiveAt);
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    
+    if (lastActive >= oneHourAgo) return 1; // Active within 1 hour - highest priority
+    if (lastActive >= oneDayAgo) return 2; // Active within 24 hours - medium priority
+    return 3; // Active but older than 24 hours - low priority
+  };
+
+  // Hybrid sorting function: Activity + Completeness
+  const sortAlumniWithHybridLogic = (alumniData: Alumni[]) => {
+    return [...alumniData].sort((a, b) => {
+      // 1. Primary sort by activity priority
+      const aActivityPriority = getActivityPriority(a.lastActiveAt);
+      const bActivityPriority = getActivityPriority(b.lastActiveAt);
+      
+      if (aActivityPriority !== bActivityPriority) {
+        return aActivityPriority - bActivityPriority; // Lower number = higher priority
+      }
+      
+      // 2. Secondary sort by completeness (within same activity level)
+      const aCompleteness = calculateAlumniCompleteness(a).totalScore;
+      const bCompleteness = calculateAlumniCompleteness(b).totalScore;
+      
+      if (aCompleteness !== bCompleteness) {
+        return bCompleteness - aCompleteness; // Higher completeness first
+      }
+      
+      // 3. Tertiary sort by most recent activity time
+      if (a.lastActiveAt && b.lastActiveAt) {
+        const aTime = new Date(a.lastActiveAt).getTime();
+        const bTime = new Date(b.lastActiveAt).getTime();
+        return bTime - aTime; // More recent first
+      }
+      
+      // 4. Fallback to name
+      return a.fullName.localeCompare(b.fullName);
+    });
+  };
 
   const handleAlumniClick = (alumni: Alumni) => {
     setSelectedAlumniForModal(alumni);
@@ -112,8 +159,9 @@ export function AlumniPipeline() {
         setPagination(data.pagination);
       }
       
-      // Set alumni data without sorting by completeness
-      setSortedAlumni(alumniData);
+      // Apply hybrid sorting: Activity + Completeness
+      const sortedAlumniData = sortAlumniWithHybridLogic(alumniData);
+      setSortedAlumni(sortedAlumniData);
       
     } catch (err) {
       console.error('❌ Error fetching alumni:', err);
