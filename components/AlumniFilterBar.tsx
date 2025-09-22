@@ -11,11 +11,9 @@ interface FilterState {
   searchTerm: string;
   graduationYear: string;
   industry: string;
-  chapter: string;
   state: string;
   activelyHiring: boolean;
-  activityStatus: string; // New activity filter
-  showActiveOnly: boolean; // 🔥 NEW: Active alumni filter
+  showActiveOnly: boolean; // Keep this one
 }
 
 interface AlumniFilterBarProps {
@@ -113,31 +111,21 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
           </Select>
         </div>
 
-        {/* Chapter Filter */}
+        {/* State Filter */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Chapter</label>
+          <label className="text-sm font-medium text-gray-700">State</label>
           <Select 
-            value={filters.chapter} 
-            onValueChange={(value) => handleFilterChange('chapter', value)}
+            value={filters.state} 
+            onValueChange={(value) => handleFilterChange('state', value)}
+            placeholder="All States"
+            className="w-full"
           >
-            <SelectItem value="">All Chapters</SelectItem>
-            {chapters.map((chapter) => (
-              <SelectItem key={chapter} value={chapter}>{chapter}</SelectItem>
+            <SelectItem value="">All States</SelectItem>
+            {US_STATES.map((state) => (
+              <SelectItem key={state.code} value={state.code}>
+                {state.name}
+              </SelectItem>
             ))}
-          </Select>
-        </div>
-
-        {/* Activity Status Filter */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Activity Status</label>
-          <Select 
-            value={filters.activityStatus} 
-            onValueChange={(value) => handleFilterChange('activityStatus', value)}
-          >
-            <SelectItem value="">All Activity</SelectItem>
-            <SelectItem value="hot">Active Now (Last Hour)</SelectItem>
-            <SelectItem value="warm">Recently Active (Last 24h)</SelectItem>
-            <SelectItem value="cold">Inactive (Over 24h)</SelectItem>
           </Select>
         </div>
 
@@ -191,15 +179,6 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                   />
                 </Badge>
               )}
-              {filters.chapter && (
-                <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
-                  Chapter: {filters.chapter}
-                  <X 
-                    className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
-                    onClick={() => handleFilterChange('chapter', '')}
-                  />
-                </Badge>
-              )}
               {filters.activelyHiring && (
                 <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
                   Actively Hiring
@@ -217,17 +196,6 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                     className="h-3 w-3 ml-1 cursor-pointer hover:text-green-900" 
                     onClick={() => handleFilterChange('showActiveOnly', false)}
                   />
-                </Badge>
-              )}
-              {filters.activityStatus && (
-                <Badge 
-                  variant="outline" 
-                  className="bg-blue-50 border-blue-200 text-blue-700 text-xs cursor-pointer hover:bg-blue-100"
-                  onClick={() => handleFilterChange('activityStatus', '')}
-                >
-                  Activity: {filters.activityStatus === 'hot' ? 'Active Now' : 
-                           filters.activityStatus === 'warm' ? 'Recently Active' : 'Inactive'}
-                  <X className="ml-1 h-3 w-3" />
                 </Badge>
               )}
             </div>
@@ -326,21 +294,6 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
               </Select>
             </div>
 
-            {/* Activity Status Filter */}
-            <div className="relative">
-              <Select 
-                value={filters.activityStatus} 
-                onValueChange={(value) => handleFilterChange('activityStatus', value)}
-                placeholder="Activity"
-                className="w-32"
-              >
-                <SelectItem value="">All Activity</SelectItem>
-                <SelectItem value="hot">Active Now</SelectItem>
-                <SelectItem value="warm">Recently Active</SelectItem>
-                <SelectItem value="cold">Inactive</SelectItem>
-              </Select>
-            </div>
-
             {/* Clear Filters Button */}
             {hasActiveFilters && (
               <Button
@@ -393,15 +346,6 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                 />
               </Badge>
             )}
-            {filters.chapter && (
-              <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
-                Chapter: {filters.chapter}
-                <X 
-                  className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
-                  onClick={() => handleFilterChange('chapter', '')}
-                />
-              </Badge>
-            )}
             {filters.activelyHiring && (
               <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
                 Actively Hiring
@@ -419,17 +363,6 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                   className="h-3 w-3 ml-1 cursor-pointer hover:text-green-900" 
                   onClick={() => handleFilterChange('showActiveOnly', false)}
                 />
-              </Badge>
-            )}
-            {filters.activityStatus && (
-              <Badge 
-                variant="outline" 
-                className="bg-blue-50 border-blue-200 text-blue-700 text-xs cursor-pointer hover:bg-blue-100"
-                onClick={() => handleFilterChange('activityStatus', '')}
-              >
-                Activity: {filters.activityStatus === 'hot' ? 'Active Now' : 
-                         filters.activityStatus === 'warm' ? 'Recently Active' : 'Inactive'}
-                <X className="ml-1 h-3 w-3" />
               </Badge>
             )}
           </motion.div>

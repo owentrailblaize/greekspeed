@@ -26,10 +26,8 @@ interface FilterState {
   searchTerm: string;
   graduationYear: string;
   industry: string;
-  chapter: string;
   state: string;
   activelyHiring: boolean;
-  activityStatus: string; // New activity filter
   showActiveOnly: boolean; 
 }
 

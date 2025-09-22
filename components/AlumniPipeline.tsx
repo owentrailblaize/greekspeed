@@ -13,10 +13,8 @@ interface FilterState {
   searchTerm: string;
   graduationYear: string;
   industry: string;
-  chapter: string;
   state: string;
   activelyHiring: boolean;
-  activityStatus: string; // New activity filter
   showActiveOnly: boolean; // 🔥 NEW: Active alumni filter
 }
 
@@ -49,10 +47,8 @@ export function AlumniPipeline() {
     searchTerm: "",
     graduationYear: "",
     industry: "",
-    chapter: "",
     state: "",
     activelyHiring: false,
-    activityStatus: "", // New activity filter
     showActiveOnly: false, // 🔥 NEW: Active alumni filter
   });
   const [selectedAlumniForModal, setSelectedAlumniForModal] = useState<Alumni | null>(null);
@@ -125,11 +121,9 @@ export function AlumniPipeline() {
       // Add all filter parameters including state
       if (filterParams.searchTerm) params.append('search', filterParams.searchTerm);
       if (filterParams.industry) params.append('industry', filterParams.industry);
-      if (filterParams.chapter) params.append('chapter', filterParams.chapter);
       if (filterParams.graduationYear) params.append('graduationYear', filterParams.graduationYear);
       if (filterParams.state) params.append('state', filterParams.state);
       if (filterParams.activelyHiring) params.append('activelyHiring', 'true');
-      if (filterParams.activityStatus) params.append('activityStatus', filterParams.activityStatus);
       // 🔥 NEW: Add showActiveOnly parameter
       if (filterParams.showActiveOnly) params.append('showActiveOnly', 'true');
       
@@ -201,10 +195,8 @@ export function AlumniPipeline() {
       searchTerm: "",
       graduationYear: "",
       industry: "",
-      chapter: "",
       state: "",
       activelyHiring: false,
-      activityStatus: "", // New activity filter
       showActiveOnly: false, // 🔥 NEW: Active alumni filter
     });
     // Reset to first page when clearing filters
