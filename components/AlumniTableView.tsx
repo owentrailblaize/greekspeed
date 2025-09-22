@@ -640,29 +640,31 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                         )}
                       </div>
                       
-                      {/* Name and Badge Container - Flexible width */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          {/* Name and Activity Indicator */}
-                          <div className="flex items-center space-x-2">
-                            <span 
-                              className="font-medium text-gray-900 underline cursor-pointer hover:text-navy-600 transition-colors break-words"
-                              onClick={() => handleAlumniNameClick(alumni)}
-                            >
-                              {alumni.fullName}
-                            </span>
-                            <ActivityIndicator 
-                              lastActiveAt={alumni.lastActiveAt} 
-                              size="sm"
-                            />
-                          </div>
-                          
-                          {/* Badge - Right-aligned */}
-                          <div className="ml-2 flex-shrink-0">
-                            {alumni.verified && (
-                              <Badge className="bg-navy-600 text-white text-xs px-1">✓</Badge>
-                            )}
-                          </div>
+                      {/* Name and Activity Container - Fixed width for consistent alignment */}
+                      <div className="flex-1 min-w-0 flex items-center">
+                        {/* Name Container - Reduced padding */}
+                        <div className="flex-1 min-w-0">
+                          <span 
+                            className="font-medium text-gray-900 underline cursor-pointer hover:text-navy-600 transition-colors break-words whitespace-nowrap"
+                            onClick={() => handleAlumniNameClick(alumni)}
+                          >
+                            {alumni.fullName}
+                          </span>
+                        </div>
+                        
+                        {/* Activity Indicator - Closer to name */}
+                        <div className="flex-shrink-0 w-4 flex justify-center">
+                          <ActivityIndicator 
+                            lastActiveAt={alumni.lastActiveAt} 
+                            size="sm"
+                          />
+                        </div>
+                        
+                        {/* Verification Badge - Fixed position */}
+                        <div className="flex-shrink-0">
+                          {alumni.verified && (
+                            <Badge className="bg-navy-600 text-white text-xs px-1">✓</Badge>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -697,7 +699,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   
                   {/* Industry Column */}
                   <TableCell className="bg-white">
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-xs whitespace-nowrap">
                       {alumni.industry || 'N/A'}
                     </Badge>
                   </TableCell>
