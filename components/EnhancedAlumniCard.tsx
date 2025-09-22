@@ -233,28 +233,31 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
             </div>
           </div>
 
-          {/* Job Title and Company - Only show if data exists and is not "Not specified" */}
-          {((alumni.jobTitle && alumni.jobTitle !== "Not specified") || 
-            (alumni.company && alumni.company !== "Not specified")) && (
-            <div className="text-center mb-1 sm:mb-3">
-              {isValidField(alumni.jobTitle) && (
-                <p className="text-xs sm:text-sm font-medium text-navy-600 mb-0.5 sm:mb-1 leading-tight truncate">{alumni.jobTitle}</p>
-              )}
-              {isValidField(alumni.company) && (
-                <div className="flex items-center justify-center space-x-2 text-gray-500 text-xs sm:text-sm">
-                  <Building2 className="h-3 w-3" />
-                  <ClickableField 
-                    value={alumni.company} 
-                    entityType="company" 
-                    className="text-gray-500 hover:text-blue-600"
-                  />
-                </div>
-              )}
-            </div>
-          )}
+          {/* Job Title and Company - Always reserve space for consistent layout */}
+          <div className="text-center mb-1 sm:mb-3 min-h-[2rem] sm:min-h-[3rem] flex flex-col justify-center">
+            {isValidField(alumni.jobTitle) && (
+              <p className="text-xs sm:text-sm font-medium text-navy-600 mb-0.5 sm:mb-1 leading-tight truncate">{alumni.jobTitle}</p>
+            )}
+            {isValidField(alumni.company) && (
+              <div className="flex items-center justify-center space-x-2 text-gray-500 text-xs sm:text-sm">
+                <Building2 className="h-3 w-3" />
+                <ClickableField 
+                  value={alumni.company} 
+                  entityType="company" 
+                  className="text-gray-500 hover:text-blue-600"
+                />
+              </div>
+            )}
+            {/* Show placeholder when no data to maintain consistent spacing */}
+            {!isValidField(alumni.jobTitle) && !isValidField(alumni.company) && (
+              <div className="text-xs sm:text-sm text-gray-400">
+                Professional info not available
+              </div>
+            )}
+          </div>
 
-          {/* Professional Tags - Only show tags that have valid data */}
-          <div className="flex flex-wrap justify-center gap-0.5 sm:gap-2 mb-1 sm:mb-3">
+          {/* Professional Tags - Always reserve space for consistent layout */}
+          <div className="flex flex-wrap justify-center gap-0.5 sm:gap-2 mb-1 sm:mb-3 min-h-[1.5rem] sm:min-h-[2rem] items-center">
             {/* Industry - Hidden on mobile */}
             {isValidField(alumni.industry) && (
               <Badge 
@@ -272,61 +275,50 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
                 {alumni.graduationYear}
               </Badge>
             )}
-            {/* Location - Hidden on mobile */}
-            {/* Location Badge removed */}
+            {/* Show placeholder when no tags to maintain consistent spacing */}
+            {!isValidField(alumni.industry) && !isValidField(alumni.graduationYear) && (
+              <div className="hidden sm:block text-xs text-gray-400">
+                No tags available
+              </div>
+            )}
           </div>
 
-          {/* Chapter - Display chapter name instead of ID */}
-          {isValidField(alumni.chapter) && (
-            <div className="text-center mb-1 sm:mb-4">
-              {/* Mobile version - shorter text, no parentheses */}
-              <div className="sm:hidden">
-                <div className="text-xs font-medium text-navy-600 px-1 py-0.5 rounded-full border border-navy-200 bg-navy-50 truncate max-w-full">
-                  {getChapterName(alumni.chapter, true)}
-                </div>
+          {/* Mutual Connections - Only show if there are actual connections */}
+          {Array.isArray(alumni.mutualConnections) && alumni.mutualConnections.length > 0 && (
+            <div className="flex items-center justify-center space-x-2 mb-1 sm:mb-4 min-h-[2rem] sm:min-h-[3rem]">
+              <div className="flex -space-x-1">
+                {alumni.mutualConnections.slice(0, 3).map((c, i) => (
+                  <div key={i} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative z-10" style={{ zIndex: 10 - i }}>
+                    {c.avatar ? (
+                      <ImageWithFallback 
+                        src={c.avatar} 
+                        alt={c.name || 'Unknown'} 
+                        width={24} 
+                        height={24} 
+                        className="w-full h-full object-cover" 
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
+                        <span className="text-white text-xs">
+                          {c.name
+                            ?.split(" ")
+                            ?.map((n) => n[0])
+                            ?.join("") || "?"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
-              {/* Desktop version - full text */}
-              <div className="hidden sm:block">
-                <div className="text-sm font-medium text-navy-600 px-3 py-1 rounded-full border border-navy-200 bg-navy-50">
-                  {getChapterName(alumni.chapter, false)}
-                </div>
-              </div>
+              {/* Connection count text */}
+              <span className="text-xs sm:text-sm text-gray-600 leading-tight">
+                {alumni.mutualConnections.length > 1 
+                  ? `+${alumni.mutualConnections.length - 1} other connections`
+                  : '1 connection'
+                }
+              </span>
             </div>
           )}
-
-          {/* Mutual Connections - Ensure perfect centering */}
-          <div className="flex flex-col items-center justify-center space-y-0.5 sm:space-y-2 mb-1 sm:mb-4">
-            <div className="flex -space-x-1">
-              {Array.isArray(alumni.mutualConnections) && alumni.mutualConnections.slice(0, 3).map((c, i) => (
-                <div key={i} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
-                  {c.avatar ? (
-                    <ImageWithFallback 
-                      src={c.avatar} 
-                      alt={c.name || 'Unknown'} 
-                      width={24} 
-                      height={24} 
-                      className="w-full h-full object-cover" 
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
-                      <span className="text-white text-xs">
-                        {c.name
-                          ?.split(" ")
-                          ?.map((n) => n[0])
-                          ?.join("") || "?"}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-            <span className="text-xs sm:text-sm text-gray-600 leading-tight text-center hidden sm:block">
-              {Array.isArray(alumni.mutualConnections) && alumni.mutualConnections.length > 0 
-                ? `${alumni.mutualConnections[0]?.name || 'Unknown'} and ${alumni.mutualConnectionsCount - 1} other connections`
-                : 'No mutual connections'
-              }
-            </span>
-          </div>
 
           {/* Action Button */}
           <div className="mt-auto pt-2">
