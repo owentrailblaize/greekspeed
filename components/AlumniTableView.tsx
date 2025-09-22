@@ -34,6 +34,7 @@ import { Alumni } from "@/lib/mockAlumni";
 import { useRouter } from 'next/navigation';
 import { ClickableField } from './ClickableField';
 import { ActivityIndicator } from './ActivityIndicator';
+import { calculateAlumniCompleteness, getCompletenessBadgeColor } from '@/lib/utils/profileCompleteness';
 
 interface AlumniTableViewProps {
   alumni: Alumni[];
@@ -41,7 +42,7 @@ interface AlumniTableViewProps {
   onSelectionChange: (selectedIds: string[]) => void;
 }
 
-type SortField = 'name' | 'company' | 'industry' | 'graduationYear' | 'location' | 'jobTitle' | 'chapter' | 'lastContact' | 'isActivelyHiring' | 'activity';
+type SortField = 'name' | 'company' | 'industry' | 'graduationYear' | 'location' | 'jobTitle' | 'chapter' | 'lastContact' | 'isActivelyHiring' | 'activity' | 'completeness';
 type SortDirection = 'asc' | 'desc';
 
 const getChapterName = (chapterId: string): string => {
@@ -282,49 +283,92 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
   };
 
   const sortedAlumni = [...alumni].sort((a, b) => {
+    // For activity sorting, use hybrid logic (activity + completeness)
+    if (sortField === 'activity') {
+      const aActive = a.lastActiveAt ? new Date(a.lastActiveAt) : null;
+      const bActive = b.lastActiveAt ? new Date(b.lastActiveAt) : null;
+      const now = new Date();
+      
+      // Define activity thresholds
+      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      
+      // Helper function to get activity priority (lower number = higher priority)
+      const getActivityPriority = (lastActive: Date | null) => {
+        if (!lastActive) return 4; // No activity - lowest priority
+        if (lastActive >= oneHourAgo) return 1; // Active within 1 hour - highest priority
+        if (lastActive >= oneDayAgo) return 2; // Active within 24 hours - medium priority
+        return 3; // Active but older than 24 hours - low priority
+      };
+      
+      const aPriority = getActivityPriority(aActive);
+      const bPriority = getActivityPriority(bActive);
+      
+      // 1. Primary sort by activity priority
+      if (aPriority !== bPriority) {
+        return sortDirection === 'asc' ? aPriority - bPriority : bPriority - aPriority;
+      }
+      
+      // 2. Secondary sort by completeness (within same activity level)
+      const aCompleteness = calculateAlumniCompleteness(a).totalScore;
+      const bCompleteness = calculateAlumniCompleteness(b).totalScore;
+      
+      if (aCompleteness !== bCompleteness) {
+        return bCompleteness - aCompleteness; // Higher completeness first
+      }
+      
+      // 3. Tertiary sort by most recent activity time
+      if (aActive && bActive) {
+        return sortDirection === 'asc' ? 
+          aActive.getTime() - bActive.getTime() : 
+          bActive.getTime() - aActive.getTime();
+      }
+      
+      // 4. If only one has activity, prioritize it
+      if (aActive && !bActive) return sortDirection === 'asc' ? 1 : -1;
+      if (!aActive && bActive) return sortDirection === 'asc' ? -1 : 1;
+      
+      // 5. Fallback to name
+      return a.fullName.localeCompare(b.fullName);
+    }
+    
+    // For completeness sorting, also use hybrid logic (completeness + activity)
+    if (sortField === 'completeness') {
+      const aCompleteness = calculateAlumniCompleteness(a).totalScore;
+      const bCompleteness = calculateAlumniCompleteness(b).totalScore;
+      
+      if (aCompleteness !== bCompleteness) {
+        return sortDirection === 'asc' ? aCompleteness - bCompleteness : bCompleteness - aCompleteness;
+      }
+      
+      // Secondary sort by activity
+      const aActive = a.lastActiveAt ? new Date(a.lastActiveAt) : null;
+      const bActive = b.lastActiveAt ? new Date(b.lastActiveAt) : null;
+      const now = new Date();
+      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      
+      const getActivityPriority = (lastActive: Date | null) => {
+        if (!lastActive) return 4;
+        if (lastActive >= oneHourAgo) return 1;
+        if (lastActive >= oneDayAgo) return 2;
+        return 3;
+      };
+      
+      const aPriority = getActivityPriority(aActive);
+      const bPriority = getActivityPriority(bActive);
+      
+      if (aPriority !== bPriority) {
+        return aPriority - bPriority;
+      }
+      
+      return a.fullName.localeCompare(b.fullName);
+    }
+    
+    // For all other fields, use existing logic
     let aValue: string | number, bValue: string | number;
     
     switch (sortField) {
-      case 'activity':
-        // 🔥 Activity-based sorting logic (same as cards view)
-        const aActive = a.lastActiveAt ? new Date(a.lastActiveAt) : null;
-        const bActive = b.lastActiveAt ? new Date(b.lastActiveAt) : null;
-        const now = new Date();
-        
-        // Define activity thresholds
-        const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        
-        // Helper function to get activity priority (lower number = higher priority)
-        const getActivityPriority = (lastActive: Date | null) => {
-          if (!lastActive) return 4; // No activity - lowest priority
-          if (lastActive >= oneHourAgo) return 1; // Active within 1 hour - highest priority
-          if (lastActive >= oneDayAgo) return 2; // Active within 24 hours - medium priority
-          return 3; // Active but older than 24 hours - low priority
-        };
-        
-        const aPriority = getActivityPriority(aActive);
-        const bPriority = getActivityPriority(bActive);
-        
-        // First sort by activity priority
-        if (aPriority !== bPriority) {
-          return sortDirection === 'asc' ? aPriority - bPriority : bPriority - aPriority;
-        }
-        
-        // If same priority, sort by most recent activity
-        if (aActive && bActive) {
-          return sortDirection === 'asc' ? 
-            aActive.getTime() - bActive.getTime() : 
-            bActive.getTime() - aActive.getTime();
-        }
-        
-        // If only one has activity, prioritize it
-        if (aActive && !bActive) return sortDirection === 'asc' ? 1 : -1;
-        if (!aActive && bActive) return sortDirection === 'asc' ? -1 : 1;
-        
-        // If neither has activity, sort by name
-        return a.fullName.localeCompare(b.fullName);
-        
       case 'name':
         aValue = a.fullName;
         bValue = b.fullName;
@@ -365,7 +409,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
         aValue = a.fullName;
         bValue = b.fullName;
     }
-  
+
     // For non-activity sorting, use the original logic
     if (sortDirection === 'asc') {
       return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
@@ -551,6 +595,15 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   <div className="flex items-center space-x-2">
                     <span>ACTIVITY</span>
                     <SortIcon field="activity" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="bg-gray-50 text-gray-900 font-medium cursor-pointer hover:bg-gray-100 transition-colors min-w-[120px]"
+                  onClick={() => handleSort('completeness')}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span>COMPLETENESS</span>
+                    <SortIcon field="completeness" />
                   </div>
                 </TableHead>
                 <TableHead className="bg-gray-50 text-gray-900 font-medium min-w-[120px]">
@@ -762,6 +815,18 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                       lastActiveAt={alumni.lastActiveAt} 
                       size="sm"
                     />
+                  </TableCell>
+                  
+                  {/* Completeness Column */}
+                  <TableCell className="bg-white">
+                    <div className="flex items-center space-x-2">
+                      <Badge 
+                        className={`text-xs px-2 py-1 ${getCompletenessBadgeColor(calculateAlumniCompleteness(alumni).percentage)}`}
+                        title={`Profile ${calculateAlumniCompleteness(alumni).percentage}% complete`}
+                      >
+                        {calculateAlumniCompleteness(alumni).percentage}%
+                      </Badge>
+                    </div>
                   </TableCell>
                   
                   {/* Connection Column */}
