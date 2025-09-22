@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
+// Add this helper function at the top of the file
+const getChapterId = async (supabase: any, chapterIdentifier: string): Promise<string | null> => {
+  // If it's already a UUID, return it
+  if (chapterIdentifier.length === 36 && chapterIdentifier.includes('-')) {
+    return chapterIdentifier;
+  }
+  
+  // If it's a name, look it up
+  const { data } = await supabase
+    .from('chapters')
+    .select('id')
+    .eq('name', chapterIdentifier)
+    .single();
+  
+  return data?.id || null;
+};
+
 export async function GET(request: NextRequest) {
   try {
     // Check environment variables
@@ -42,85 +59,472 @@ export async function GET(request: NextRequest) {
       activelyHiring, state, activityStatus, userChapter
     });
 
-    // Build the query - Query profiles table first, join alumni data
+    // 🔥 KEY CHANGE: Use main branch query structure (alumni → profiles) with activity fields
     let query = supabase
-      .from('profiles')
+      .from('alumni')
       .select(`
         *,
-        alumni!user_id(
-          first_name,
-          last_name,
-          full_name,
-          chapter,
-          industry,
-          graduation_year,
-          company,
-          job_title,
-          email,
-          phone,
-          location,
-          description,
-          mutual_connections,
+        profile:profiles!user_id(
           avatar_url,
-          verified,
-          is_actively_hiring,
-          last_contact,
-          tags
+          last_active_at,
+          last_login_at
         )
       `, { count: 'exact' })
 
-    // Apply role filter to only get alumni
-    query = query.eq('role', 'alumni')
-
-    // Apply chapter filter FIRST (most important)
-    if (userChapter) {
-      console.log('🔍 Applying chapter filter:', userChapter);
-      query = query.eq('chapter', userChapter);
-    }
-
-    // Apply other filters - need to check if alumni data exists for these filters
+    // Apply filters (same logic as main branch)
     if (search) {
       const searchTerm = search.toLowerCase().trim()
       const searchTerms = searchTerm.split(/\s+/)
       const searchConditions = searchTerms.map(term => 
-        `full_name.ilike.%${term}%,alumni.company.ilike.%${term}%,alumni.job_title.ilike.%${term}%,alumni.industry.ilike.%${term}%,chapter.ilike.%${term}%`
+        `full_name.ilike.%${term}%,company.ilike.%${term}%,job_title.ilike.%${term}%,industry.ilike.%${term}%,chapter.ilike.%${term}%`
       ).join(',')
       
       query = query.or(searchConditions)
     }
     
     if (industry) {
-      query = query.eq('alumni.industry', industry)
+      query = query.eq('industry', industry)
+    }
+    
+    // Handle chapter filtering (same logic as main branch)
+    if (userChapter) {
+      const chapterId = await getChapterId(supabase, userChapter);
+      if (chapterId) {
+        let chapterNameQuery = supabase
+          .from('alumni')
+          .select(`
+            *,
+            profile:profiles!user_id(
+              avatar_url,
+              last_active_at,
+              last_login_at
+            )
+          `, { count: 'exact' })
+          .eq('chapter', userChapter);
+        
+        let chapterIdQuery = supabase
+          .from('alumni')
+          .select(`
+            *,
+            profile:profiles!user_id(
+              avatar_url,
+              last_active_at,
+              last_login_at
+            )
+          `, { count: 'exact' })
+          .eq('chapter_id', chapterId);
+        
+        // Apply all other filters to both queries
+        if (search) {
+          const searchTerm = search.toLowerCase().trim()
+          const searchTerms = searchTerm.split(/\s+/)
+          const searchConditions = searchTerms.map(term => 
+            `full_name.ilike.%${term}%,company.ilike.%${term}%,job_title.ilike.%${term}%,industry.ilike.%${term}%,chapter.ilike.%${term}%`
+          ).join(',')
+          
+          chapterNameQuery = chapterNameQuery.or(searchConditions);
+          chapterIdQuery = chapterIdQuery.or(searchConditions);
+        }
+        
+        if (industry) {
+          chapterNameQuery = chapterNameQuery.eq('industry', industry);
+          chapterIdQuery = chapterIdQuery.eq('industry', industry);
+        }
+        
+        if (location) {
+          chapterNameQuery = chapterNameQuery.eq('location', location);
+          chapterIdQuery = chapterIdQuery.eq('location', location);
+        }
+        
+        if (state) {
+          chapterNameQuery = chapterNameQuery.ilike('location', `%, ${state}`);
+          chapterIdQuery = chapterIdQuery.ilike('location', `%, ${state}`);
+        }
+        
+        if (graduationYear && graduationYear !== 'All Years') {
+          if (graduationYear === 'older') {
+            chapterNameQuery = chapterNameQuery.lte('graduation_year', 2019);
+            chapterIdQuery = chapterIdQuery.lte('graduation_year', 2019);
+          } else {
+            chapterNameQuery = chapterNameQuery.eq('graduation_year', parseInt(graduationYear));
+            chapterIdQuery = chapterIdQuery.eq('graduation_year', parseInt(graduationYear));
+          }
+        }
+        
+        if (activelyHiring) {
+          chapterNameQuery = chapterNameQuery.eq('is_actively_hiring', true);
+          chapterIdQuery = chapterIdQuery.eq('is_actively_hiring', true);
+        }
+        
+        // Apply pagination to both queries
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        
+        chapterNameQuery = chapterNameQuery.range(from, to).order('created_at', { ascending: false });
+        chapterIdQuery = chapterIdQuery.range(from, to).order('created_at', { ascending: false });
+        
+        // Execute both queries and combine results
+        const [chapterNameResult, chapterIdResult] = await Promise.all([
+          chapterNameQuery,
+          chapterIdQuery
+        ]);
+        
+        // Combine and deduplicate results
+        const combinedResults = [
+          ...(chapterNameResult.data || []),
+          ...(chapterIdResult.data || [])
+        ];
+        
+        // Remove duplicates based on id
+        const uniqueResults = combinedResults.filter((alumni, index, self) => 
+          index === self.findIndex(a => a.id === alumni.id)
+        );
+        
+        // Calculate total count
+        const totalCount = Math.max(chapterNameResult.count || 0, chapterIdResult.count || 0);
+        
+        // 🔥 KEY CHANGE: Use main branch transformation with activity fields
+        const transformedAlumni = uniqueResults?.map(alumni => ({
+          id: alumni.user_id || alumni.id,
+          alumniId: alumni.id,
+          firstName: alumni.first_name,
+          lastName: alumni.last_name,
+          fullName: alumni.full_name,
+          chapter: alumni.chapter,
+          industry: alumni.industry,                    // ✅ Direct from alumni table
+          graduationYear: alumni.graduation_year,
+          company: alumni.company,                      // ✅ Direct from alumni table
+          jobTitle: alumni.job_title,                   // ✅ Direct from alumni table
+          email: alumni.email,
+          phone: alumni.phone,
+          location: alumni.location,                    // ✅ Direct from alumni table
+          description: alumni.description || `Experienced professional in ${alumni.industry}.`,
+          mutualConnections: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections : [],
+          mutualConnectionsCount: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections.length : 0,
+          avatar: alumni.avatar_url || alumni.profile?.avatar_url,
+          verified: alumni.verified,
+          isActivelyHiring: alumni.is_actively_hiring,  // ✅ Direct from alumni table
+          lastContact: alumni.last_contact,
+          tags: alumni.tags || [],
+          hasProfile: !!alumni.user_id,
+          // 🔥 NEW: Activity data from profiles table
+          lastActiveAt: alumni.profile?.last_active_at,
+          lastLoginAt: alumni.profile?.last_login_at
+        })) || [];
+
+        // 🔥 ADD: Activity filtering and sorting logic
+        let filteredAlumni = transformedAlumni
+
+        // Apply activity status filter
+        if (activityStatus) {
+          const now = new Date()
+          
+          filteredAlumni = transformedAlumni.filter(alumni => {
+            if (!alumni.lastActiveAt) {
+              return activityStatus === 'cold'
+            }
+
+            const lastActiveDate = new Date(alumni.lastActiveAt)
+            const diffMs = now.getTime() - lastActiveDate.getTime()
+            const diffHours = diffMs / (1000 * 60 * 60)
+
+            switch (activityStatus) {
+              case 'hot':
+                return diffHours < 1
+              case 'warm':
+                return diffHours >= 1 && diffHours < 24
+              case 'cold':
+                return diffHours >= 24
+              default:
+                return true
+            }
+          })
+        }
+
+        // 🔥 ADD: Activity sorting logic
+        filteredAlumni.sort((a, b) => {
+          const aActive = a.lastActiveAt ? new Date(a.lastActiveAt) : null
+          const bActive = b.lastActiveAt ? new Date(b.lastActiveAt) : null
+          const now = new Date()
+          
+          // Define activity thresholds
+          const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
+          const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+          
+          // Helper function to get activity priority (lower number = higher priority)
+          const getActivityPriority = (lastActive: Date | null) => {
+            if (!lastActive) return 4 // No activity - lowest priority
+            if (lastActive >= oneHourAgo) return 1 // Active within 1 hour - highest priority
+            if (lastActive >= oneDayAgo) return 2 // Active within 24 hours - medium priority
+            return 3 // Active but older than 24 hours - low priority
+          }
+          
+          const aPriority = getActivityPriority(aActive)
+          const bPriority = getActivityPriority(bActive)
+          
+          // First sort by activity priority
+          if (aPriority !== bPriority) {
+            return aPriority - bPriority
+          }
+          
+          // If same priority, sort by most recent activity
+          if (aActive && bActive) {
+            return bActive.getTime() - aActive.getTime()
+          }
+          
+          // If only one has activity, prioritize it
+          if (aActive && !bActive) return -1
+          if (!aActive && bActive) return 1
+          
+          // If neither has activity, sort by name
+          return a.fullName.localeCompare(b.fullName)
+        })
+
+        const totalPages = Math.ceil(totalCount / limit);
+
+        return NextResponse.json({
+          alumni: filteredAlumni,
+          pagination: {
+            page,
+            limit,
+            total: totalCount,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1
+          },
+          message: `Retrieved ${filteredAlumni.length} alumni records (page ${page} of ${totalPages})`
+        });
+      } else {
+        query = query.eq('chapter', userChapter);
+      }
+    } else if (chapter) {
+      const chapterId = await getChapterId(supabase, chapter);
+      if (chapterId) {
+        // Similar logic for selected chapter filter
+        let chapterNameQuery = supabase
+          .from('alumni')
+          .select(`
+            *,
+            profile:profiles!user_id(
+              avatar_url,
+              last_active_at,
+              last_login_at
+            )
+          `, { count: 'exact' })
+          .eq('chapter', chapter);
+        
+        let chapterIdQuery = supabase
+          .from('alumni')
+          .select(`
+            *,
+            profile:profiles!user_id(
+              avatar_url,
+              last_active_at,
+              last_login_at
+            )
+          `, { count: 'exact' })
+          .eq('chapter_id', chapterId);
+        
+        // Apply all other filters to both queries (same logic as above)
+        if (search) {
+          const searchTerm = search.toLowerCase().trim()
+          const searchTerms = searchTerm.split(/\s+/)
+          const searchConditions = searchTerms.map(term => 
+            `full_name.ilike.%${term}%,company.ilike.%${term}%,job_title.ilike.%${term}%,industry.ilike.%${term}%,chapter.ilike.%${term}%`
+          ).join(',')
+          
+          chapterNameQuery = chapterNameQuery.or(searchConditions);
+          chapterIdQuery = chapterIdQuery.or(searchConditions);
+        }
+        
+        if (industry) {
+          chapterNameQuery = chapterNameQuery.eq('industry', industry);
+          chapterIdQuery = chapterIdQuery.eq('industry', industry);
+        }
+        
+        if (location) {
+          chapterNameQuery = chapterNameQuery.eq('location', location);
+          chapterIdQuery = chapterIdQuery.eq('location', location);
+        }
+        
+        if (state) {
+          chapterNameQuery = chapterNameQuery.ilike('location', `%, ${state}`);
+          chapterIdQuery = chapterIdQuery.ilike('location', `%, ${state}`);
+        }
+        
+        if (graduationYear && graduationYear !== 'All Years') {
+          if (graduationYear === 'older') {
+            chapterNameQuery = chapterNameQuery.lte('graduation_year', 2019);
+            chapterIdQuery = chapterIdQuery.lte('graduation_year', 2019);
+          } else {
+            chapterNameQuery = chapterNameQuery.eq('graduation_year', parseInt(graduationYear));
+            chapterIdQuery = chapterIdQuery.eq('graduation_year', parseInt(graduationYear));
+          }
+        }
+        
+        if (activelyHiring) {
+          chapterNameQuery = chapterNameQuery.eq('is_actively_hiring', true);
+          chapterIdQuery = chapterIdQuery.eq('is_actively_hiring', true);
+        }
+        
+        // Apply pagination to both queries
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        
+        chapterNameQuery = chapterNameQuery.range(from, to).order('created_at', { ascending: false });
+        chapterIdQuery = chapterIdQuery.range(from, to).order('created_at', { ascending: false });
+        
+        const [chapterNameResult, chapterIdResult] = await Promise.all([
+          chapterNameQuery,
+          chapterIdQuery
+        ]);
+        
+        const combinedResults = [
+          ...(chapterNameResult.data || []),
+          ...(chapterIdResult.data || [])
+        ];
+        
+        const uniqueResults = combinedResults.filter((alumni, index, self) => 
+          index === self.findIndex(a => a.id === alumni.id)
+        );
+        
+        const totalCount = Math.max(chapterNameResult.count || 0, chapterIdResult.count || 0);
+        
+        // Transform data to match your interface
+        const transformedAlumni = uniqueResults?.map(alumni => ({
+          id: alumni.user_id || alumni.id,
+          alumniId: alumni.id,
+          firstName: alumni.first_name,
+          lastName: alumni.last_name,
+          fullName: alumni.full_name,
+          chapter: alumni.chapter,
+          industry: alumni.industry,
+          graduationYear: alumni.graduation_year,
+          company: alumni.company,
+          jobTitle: alumni.job_title,
+          email: alumni.email,
+          phone: alumni.phone,
+          location: alumni.location,
+          description: alumni.description || `Experienced professional in ${alumni.industry}.`,
+          mutualConnections: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections : [],
+          mutualConnectionsCount: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections.length : 0,
+          avatar: alumni.avatar_url || alumni.profile?.avatar_url,
+          verified: alumni.verified,
+          isActivelyHiring: alumni.is_actively_hiring,
+          lastContact: alumni.last_contact,
+          tags: alumni.tags || [],
+          hasProfile: !!alumni.user_id,
+          // Activity data from profiles table
+          lastActiveAt: alumni.profile?.last_active_at,
+          lastLoginAt: alumni.profile?.last_login_at
+        })) || [];
+
+        // Apply activity filtering and sorting logic
+        let filteredAlumni = transformedAlumni
+
+        if (activityStatus) {
+          const now = new Date()
+          
+          filteredAlumni = transformedAlumni.filter(alumni => {
+            if (!alumni.lastActiveAt) {
+              return activityStatus === 'cold'
+            }
+
+            const lastActiveDate = new Date(alumni.lastActiveAt)
+            const diffMs = now.getTime() - lastActiveDate.getTime()
+            const diffHours = diffMs / (1000 * 60 * 60)
+
+            switch (activityStatus) {
+              case 'hot':
+                return diffHours < 1
+              case 'warm':
+                return diffHours >= 1 && diffHours < 24
+              case 'cold':
+                return diffHours >= 24
+              default:
+                return true
+            }
+          })
+        }
+
+        // Activity sorting logic
+        filteredAlumni.sort((a, b) => {
+          const aActive = a.lastActiveAt ? new Date(a.lastActiveAt) : null
+          const bActive = b.lastActiveAt ? new Date(b.lastActiveAt) : null
+          const now = new Date()
+          
+          const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
+          const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+          
+          const getActivityPriority = (lastActive: Date | null) => {
+            if (!lastActive) return 4
+            if (lastActive >= oneHourAgo) return 1
+            if (lastActive >= oneDayAgo) return 2
+            return 3
+          }
+          
+          const aPriority = getActivityPriority(aActive)
+          const bPriority = getActivityPriority(bActive)
+          
+          if (aPriority !== bPriority) {
+            return aPriority - bPriority
+          }
+          
+          if (aActive && bActive) {
+            return bActive.getTime() - aActive.getTime()
+          }
+          
+          if (aActive && !bActive) return -1
+          if (!aActive && bActive) return 1
+          
+          return a.fullName.localeCompare(b.fullName)
+        })
+
+        const totalPages = Math.ceil(totalCount / limit);
+
+        return NextResponse.json({
+          alumni: filteredAlumni,
+          pagination: {
+            page,
+            limit,
+            total: totalCount,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1
+          },
+          message: `Retrieved ${filteredAlumni.length} alumni records (page ${page} of ${totalPages})`
+        });
+      } else {
+        query = query.eq('chapter', chapter);
+      }
     }
     
     if (location) {
-      query = query.eq('alumni.location', location)
+      query = query.eq('location', location)
     }
 
     if (state) {
-      query = query.ilike('alumni.location', `%, ${state}`)
+      query = query.ilike('location', `%, ${state}`)
     }
     
     if (graduationYear && graduationYear !== 'All Years') {
       if (graduationYear === 'older') {
-        query = query.lte('alumni.graduation_year', 2019)
+        query = query.lte('graduation_year', 2019)
       } else {
-        query = query.eq('alumni.graduation_year', parseInt(graduationYear))
+        query = query.eq('graduation_year', parseInt(graduationYear))
       }
     } 
     
     if (activelyHiring) {
-      query = query.eq('alumni.is_actively_hiring', true)
+      query = query.eq('is_actively_hiring', true)
     }
 
     // Apply pagination
     const from = (page - 1) * limit
     const to = from + limit - 1
     
-    // Sort by created_at first (we'll handle activity sorting in the frontend)
     query = query.range(from, to).order('created_at', { ascending: false })
 
-    console.log('🔍 Executing query...');
     const { data: alumni, error, count } = await query
 
     if (error) {
@@ -132,47 +536,36 @@ export async function GET(request: NextRequest) {
       }, { status: 500 })
     }
 
-    console.log('✅ Query successful:', {
-      profilesCount: alumni?.length || 0,
-      totalCount: count || 0,
-      page,
-      limit
-    });
+    // 🔥 KEY CHANGE: Use main branch transformation with activity fields
+    const transformedAlumni = alumni?.map(alumni => ({
+      id: alumni.user_id || alumni.id,
+      alumniId: alumni.id,
+      firstName: alumni.first_name,
+      lastName: alumni.last_name,
+      fullName: alumni.full_name,
+      chapter: alumni.chapter,
+      industry: alumni.industry,                    // ✅ Direct from alumni table
+      graduationYear: alumni.graduation_year,
+      company: alumni.company,                      // ✅ Direct from alumni table
+      jobTitle: alumni.job_title,                   // ✅ Direct from alumni table
+      email: alumni.email,
+      phone: alumni.phone,
+      location: alumni.location,                    // ✅ Direct from alumni table
+      description: alumni.description || `Experienced professional in ${alumni.industry}.`,
+      mutualConnections: alumni.mutual_connections || [],
+      mutualConnectionsCount: alumni.mutual_connections?.length || 0,
+      avatar: alumni.avatar_url || alumni.profile?.avatar_url,
+      verified: alumni.verified,
+      isActivelyHiring: alumni.is_actively_hiring,  // ✅ Direct from alumni table
+      lastContact: alumni.last_contact,
+      tags: alumni.tags || [],
+      hasProfile: !!alumni.user_id,
+      // 🔥 NEW: Activity data from profiles table
+      lastActiveAt: alumni.profile?.last_active_at,
+      lastLoginAt: alumni.profile?.last_login_at
+    })) || []
 
-    // Transform data to match your interface
-    const transformedAlumni = alumni?.map(profile => {
-      const alumniData = profile.alumni?.[0] // Get first alumni record if exists
-      
-      return {
-        id: profile.id,
-        alumniId: alumniData?.id,
-        firstName: alumniData?.first_name || profile.first_name,
-        lastName: alumniData?.last_name || profile.last_name,
-        fullName: alumniData?.full_name || profile.full_name,
-        chapter: alumniData?.chapter || profile.chapter,
-        industry: alumniData?.industry,
-        graduationYear: alumniData?.graduation_year,
-        company: alumniData?.company,
-        jobTitle: alumniData?.job_title,
-        email: alumniData?.email || profile.email,
-        phone: alumniData?.phone || profile.phone,
-        location: alumniData?.location || profile.location,
-        description: alumniData?.description || `Experienced professional in ${alumniData?.industry || 'their field'}.`,
-        mutualConnections: alumniData?.mutual_connections || [],
-        mutualConnectionsCount: alumniData?.mutual_connections?.length || 0,
-        avatar: alumniData?.avatar_url || profile.avatar_url,
-        verified: alumniData?.verified,
-        isActivelyHiring: alumniData?.is_actively_hiring,
-        lastContact: alumniData?.last_contact,
-        tags: alumniData?.tags || [],
-        hasProfile: true, // All profiles have profiles by definition
-        // Activity data - now from profiles table directly
-        lastActiveAt: profile.last_active_at,
-        lastLoginAt: profile.last_login_at
-      }
-    }) || []
-
-    // 🔥 ACTIVITY FILTERING AND SORTING LOGIC
+    //  ADD: Activity filtering and sorting logic
     let filteredAlumni = transformedAlumni
 
     // Apply activity status filter
@@ -199,31 +592,9 @@ export async function GET(request: NextRequest) {
             return true
         }
       })
-
-      console.log(`🔍 Activity filter "${activityStatus}" applied:`, {
-        originalCount: transformedAlumni.length,
-        filteredCount: filteredAlumni.length,
-        breakdown: {
-          hot: transformedAlumni.filter(a => {
-            if (!a.lastActiveAt) return false
-            const diffHours = (new Date().getTime() - new Date(a.lastActiveAt).getTime()) / (1000 * 60 * 60)
-            return diffHours < 1
-          }).length,
-          warm: transformedAlumni.filter(a => {
-            if (!a.lastActiveAt) return false
-            const diffHours = (new Date().getTime() - new Date(a.lastActiveAt).getTime()) / (1000 * 60 * 60)
-            return diffHours >= 1 && diffHours < 24
-          }).length,
-          cold: transformedAlumni.filter(a => {
-            if (!a.lastActiveAt) return true
-            const diffHours = (new Date().getTime() - new Date(a.lastActiveAt).getTime()) / (1000 * 60 * 60)
-            return diffHours >= 24
-          }).length
-        }
-      })
     }
 
-    // 🔥 ACTIVITY SORTING LOGIC - This is the key part!
+    // 🔥 ADD: Activity sorting logic
     filteredAlumni.sort((a, b) => {
       const aActive = a.lastActiveAt ? new Date(a.lastActiveAt) : null
       const bActive = b.lastActiveAt ? new Date(b.lastActiveAt) : null
@@ -263,33 +634,6 @@ export async function GET(request: NextRequest) {
     })
 
     const totalPages = Math.ceil((count || 0) / limit);
-
-    console.log('📊 Final result with activity filtering and sorting:', {
-      transformedCount: filteredAlumni.length,
-      totalPages,
-      hasNextPage: page < totalPages,
-      hasPrevPage: page > 1,
-      activityBreakdown: {
-        activeNow: filteredAlumni.filter(a => {
-          if (!a.lastActiveAt) return false
-          const lastActive = new Date(a.lastActiveAt)
-          const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
-          return lastActive >= oneHourAgo
-        }).length,
-        recentlyActive: filteredAlumni.filter(a => {
-          if (!a.lastActiveAt) return false
-          const lastActive = new Date(a.lastActiveAt)
-          const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
-          const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
-          return lastActive >= oneDayAgo && lastActive < oneHourAgo
-        }).length,
-        inactive: filteredAlumni.filter(a => !a.lastActiveAt || (() => {
-          const lastActive = new Date(a.lastActiveAt!)
-          const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
-          return lastActive < oneDayAgo
-        })()).length
-      }
-    });
 
     return NextResponse.json({
       alumni: filteredAlumni,
