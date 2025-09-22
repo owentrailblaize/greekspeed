@@ -183,7 +183,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
   };
 
   return (
-    <Card className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 overflow-hidden group h-[400px] flex flex-col cursor-pointer" onClick={handleCardClick}>
+    <Card className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 overflow-hidden group h-[280px] sm:h-[400px] flex flex-col cursor-pointer" onClick={handleCardClick}>
       <CardContent className="!p-0 flex flex-col h-full">
         {/* Header Banner */}
         <div className="h-16 bg-gradient-to-r from-navy-100 to-blue-100" />
@@ -211,9 +211,9 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
           </div>
 
           {/* BLACK BOX: Name and Activity Status - Fixed height */}
-          <div className="text-center mb-4 h-8 flex flex-col justify-center">
+          <div className="text-center mb-1 sm:mb-4 h-8 flex flex-col justify-center">
             <div className="flex items-center justify-center space-x-2">
-              <h3 className="font-semibold text-gray-900 text-lg leading-tight truncate sm:text-lg text-xs max-w-[120px]">
+              <h3 className="font-semibold text-gray-900 text-xs sm:text-lg leading-tight truncate">
                 {alumni.fullName}
               </h3>
               <ActivityIndicator 
@@ -221,23 +221,24 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
                 size="sm"
               />
             </div>
-            {/* Hiring badge if applicable - centered below name */}
+            {/* Remove hiring badge from here - move to professional info section */}
+          </div>
+
+          {/* BLUE BOX: Professional Information - Fixed height */}
+          <div className="text-center mb-1 sm:mb-4 h-12 flex flex-col justify-center">
+            {/* Hiring badge moved here to maintain consistent name positioning */}
             {alumni.isActivelyHiring && (
-              <div className="flex justify-center mt-1">
-                <Badge className="bg-gradient-to-r from-gray-600 to-gray-700 text-white text-xs px-2 py-1 rounded-full">
+              <div className="flex justify-center mb-1">
+                <Badge className="bg-gradient-to-r from-gray-600 to-gray-700 text-white text-xs px-1 sm:px-2 py-0.5 sm:py-1 rounded-full">
                   Hiring
                 </Badge>
               </div>
             )}
-          </div>
-
-          {/* BLUE BOX: Professional Information - Fixed height */}
-          <div className="text-center mb-4 h-12 flex flex-col justify-center">
             {isValidField(alumni.jobTitle) && (
-              <p className="text-sm font-medium text-navy-600 mb-1 leading-tight truncate">{alumni.jobTitle}</p>
+              <p className="hidden sm:block text-xs sm:text-sm font-medium text-navy-600 mb-0.5 sm:mb-1 leading-tight truncate">{alumni.jobTitle}</p>
             )}
             {isValidField(alumni.company) && (
-              <div className="flex items-center justify-center space-x-2 text-gray-500 text-sm">
+              <div className="flex items-center justify-center space-x-2 text-gray-500 text-xs sm:text-sm">
                 <Building2 className="h-3 w-3" />
                 <ClickableField 
                   value={alumni.company} 
@@ -247,15 +248,16 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
               </div>
             )}
             {/* Show placeholder when no data to maintain consistent spacing */}
-            {!isValidField(alumni.jobTitle) && !isValidField(alumni.company) && (
-              <div className="text-sm text-gray-400">
+            {!isValidField(alumni.jobTitle) && !isValidField(alumni.company) && !alumni.isActivelyHiring && (
+              <div className="text-xs sm:text-sm text-gray-400">
                 Professional info not available
               </div>
             )}
           </div>
 
           {/* PURPLE BOX: Tags (Industry and Graduation Year) - Fixed height */}
-          <div className="flex flex-wrap justify-center gap-2 mb-4 h-8 items-center">
+          <div className="hidden sm:flex flex-wrap justify-center gap-2 mb-4 h-8 items-center">
+            {/* Industry - Show on desktop only */}
             {isValidField(alumni.industry) && (
               <Badge 
                 variant="secondary" 
@@ -264,6 +266,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
                 {alumni.industry}
               </Badge>
             )}
+            {/* Graduation Year - Show on desktop only */}
             {isValidField(alumni.graduationYear) && (
               <Badge 
                 variant="secondary" 
@@ -272,7 +275,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
                 {alumni.graduationYear}
               </Badge>
             )}
-            {/* Show placeholder when no tags to maintain consistent spacing */}
+            {/* Show placeholder when no tags to maintain consistent spacing - desktop only */}
             {!isValidField(alumni.industry) && !isValidField(alumni.graduationYear) && (
               <div className="text-xs text-gray-400">
                 No tags available
@@ -281,12 +284,12 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
           </div>
 
           {/* PINK BOX: Mutual Connections - Fixed height */}
-          <div className="flex items-center justify-center space-x-2 mb-4 h-8">
+          <div className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 mb-1 sm:mb-4 h-8">
             {Array.isArray(alumni.mutualConnections) && alumni.mutualConnections.length > 0 ? (
               <>
                 <div className="flex -space-x-1">
                   {alumni.mutualConnections.slice(0, 3).map((c, i) => (
-                    <div key={i} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative z-10" style={{ zIndex: 10 - i }}>
+                    <div key={i} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative z-10" style={{ zIndex: 10 - i }}>
                       {c.avatar ? (
                         <ImageWithFallback 
                           src={c.avatar} 
@@ -308,7 +311,15 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
                     </div>
                   ))}
                 </div>
-                <span className="text-sm text-gray-600 leading-tight">
+                {/* Mobile: Show "+X other" below avatars */}
+                <span className="text-xs text-gray-600 leading-tight sm:hidden">
+                  {alumni.mutualConnections.length > 1 
+                    ? `+${alumni.mutualConnections.length - 1} other`
+                    : '1 connection'
+                  }
+                </span>
+                {/* Desktop: Show full text next to avatars */}
+                <span className="text-xs sm:text-sm text-gray-600 leading-tight hidden sm:block">
                   {alumni.mutualConnections.length > 1 
                     ? `+${alumni.mutualConnections.length - 1} other connections`
                     : '1 connection'
@@ -316,7 +327,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
                 </span>
               </>
             ) : (
-              <div className="text-sm text-gray-400">
+              <div className="text-xs sm:text-sm text-gray-400 text-center">
                 No mutual connections
               </div>
             )}
