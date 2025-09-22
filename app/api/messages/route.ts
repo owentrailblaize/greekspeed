@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { EmailService } from '@/lib/services/emailService';
 
 export async function GET(request: NextRequest) {
   try {
@@ -126,7 +127,9 @@ export async function POST(request: NextRequest) {
           full_name,
           first_name,
           last_name,
-          avatar_url
+          avatar_url,
+          email,
+          chapter
         )
       `)
       .single();
@@ -134,6 +137,33 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Message creation error:', error);
       return NextResponse.json({ error: 'Failed to create message' }, { status: 500 });
+    }
+
+    // Send email notification to the recipient
+    try {
+      // Get the recipient's profile information
+      const recipientId = connection.requester_id === senderId ? connection.recipient_id : connection.requester_id;
+      
+      const { data: recipientProfile, error: recipientError } = await supabase
+        .from('profiles')
+        .select('first_name, email, chapter')
+        .eq('id', recipientId)
+        .single();
+
+      if (!recipientError && recipientProfile?.email && recipientProfile?.first_name && message.sender?.first_name) {
+        await EmailService.sendMessageNotification({
+          to: recipientProfile.email,
+          firstName: recipientProfile.first_name,
+          chapterName: recipientProfile.chapter || 'Your Chapter',
+          actorFirstName: message.sender.first_name,
+          messagePreview: content.length > 100 ? content.substring(0, 100) + '...' : content,
+          connectionId: connectionId
+        });
+        console.log(`Message notification email sent to ${recipientProfile.email}`);
+      }
+    } catch (emailError) {
+      console.error('Failed to send message notification email:', emailError);
+      // Don't fail message creation if email fails
     }
 
     return NextResponse.json({ message });
