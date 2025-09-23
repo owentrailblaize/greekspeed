@@ -306,19 +306,6 @@ export function CompactCalendarCard() {
               </p>
             )}
           </div>
-          
-          {/* Arrow pointing to the hovered element */}
-          <div 
-            className={`absolute w-2 h-2 bg-white border-r border-b border-gray-200 transform rotate-45 ${
-              popupPosition.placement === 'bottom-right' 
-                ? 'top-full -translate-y-1 right-4' 
-                : popupPosition.placement === 'bottom-left'
-                ? 'top-full -translate-y-1 left-4'
-                : popupPosition.placement === 'top-right'
-                ? 'bottom-full translate-y-1 right-4'
-                : 'bottom-full translate-y-1 left-4'
-            }`}
-          />
         </div>
       )}
     </>
