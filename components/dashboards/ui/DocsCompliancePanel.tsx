@@ -80,6 +80,7 @@ export function DocsCompliancePanel() {
       }
 
       // User role-based access
+      console.log('User access details:', {
         userId: user.id,
         userRole: profile.role,
         chapterId: profile.chapter_id,
@@ -104,6 +105,7 @@ export function DocsCompliancePanel() {
         setDocuments([]);
       } else {
         // Documents loaded with role-based access
+        console.log('Documents loaded:', {
           totalDocuments: documents?.length || 0,
           userRole: profile.role,
           visibilityFilter: visibilityFilter

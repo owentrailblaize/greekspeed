@@ -10,6 +10,7 @@ export async function GET() {
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     
     // Environment check
+    console.log('Environment check:', {
       hasUrl: !!supabaseUrl,
       hasServiceKey: !!supabaseServiceKey,
       urlPreview: supabaseUrl?.substring(0, 30) + '...',
