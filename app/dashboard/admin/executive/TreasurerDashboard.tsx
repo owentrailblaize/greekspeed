@@ -583,7 +583,7 @@ export function TreasurerDashboard() {
 
       {/* Tab Navigation */}
       <div className="mb-4 sm:mb-6">
-      <div className="hidden md:flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+      <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
           {[
             { value: "overview", label: "Overview" },
             { value: "dues", label: "Dues" },
