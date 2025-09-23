@@ -24,7 +24,7 @@ export interface Task {
 export interface CreateTaskRequest {
   title: string;
   description?: string;
-  assignee_id: string;
+  assignee_id: string | string[];
   chapter_id: string;
   due_date?: string;
   priority: TaskPriority;

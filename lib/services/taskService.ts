@@ -2,18 +2,71 @@ import { supabase } from '@/lib/supabase/client';
 import { Task, CreateTaskRequest, UpdateTaskRequest, TaskFilters } from '@/types/operations';
 
 // Task Management
-export async function createTask(taskData: CreateTaskRequest, assignedBy: string): Promise<Task> {
+export async function createTask(taskData: CreateTaskRequest, assignedBy: string): Promise<Task | Task[]> {
+  console.log('=== taskService: createTask called ===');
+  console.log('taskData:', taskData);
+  console.log('assignedBy:', assignedBy);
+  console.log('Array.isArray(taskData.assignee_id):', Array.isArray(taskData.assignee_id));
+  
+  // Handle multiple assignees by creating separate tasks
+  if (Array.isArray(taskData.assignee_id)) {
+    console.log('🔄 Creating multiple tasks for assignees:', taskData.assignee_id);
+    
+    const tasks = await Promise.all(
+      taskData.assignee_id.map((assigneeId, index) => {
+        console.log(`Creating task ${index + 1}/${taskData.assignee_id.length} for assignee:`, assigneeId);
+        return supabase
+          .from('tasks')
+          .insert({
+            ...taskData,
+            assignee_id: assigneeId,
+            assigned_by: assignedBy,
+            status: 'pending'
+          })
+          .select()
+          .single();
+      })
+    );
+    
+    console.log('📝 All task creation promises completed');
+    const results = await Promise.all(tasks);
+    console.log('📊 Task creation results:', results);
+    
+    const errors = results.filter(result => result.error);
+    console.log('❌ Errors found:', errors);
+    
+    if (errors.length > 0) {
+      console.error('❌ Failed to create some tasks:', errors.map(e => e.error?.message));
+      throw new Error(`Failed to create some tasks: ${errors.map(e => e.error?.message).join(', ')}`);
+    }
+    
+    const createdTasks = results.map(result => result.data);
+    console.log('✅ Successfully created tasks:', createdTasks);
+    return createdTasks;
+  }
+  
+  // Single assignee (original behavior)
+  console.log('🔄 Creating single task for assignee:', taskData.assignee_id);
+  
   const { data, error } = await supabase
     .from('tasks')
     .insert({
       ...taskData,
+      assignee_id: taskData.assignee_id as string,
       assigned_by: assignedBy,
       status: 'pending'
     })
     .select()
     .single();
 
-  if (error) throw error;
+  console.log('📊 Single task creation result:', { data, error });
+
+  if (error) {
+    console.error('❌ Failed to create single task:', error);
+    throw error;
+  }
+  
+  console.log('✅ Successfully created single task:', data);
   return data;
 }
 
@@ -93,10 +146,10 @@ export async function getChapterMembers(chapterId: string): Promise<Array<{ id: 
 }
 
 // Get chapter members for task assignment (excludes alumni)
-export async function getChapterMembersForTasks(chapterId: string): Promise<Array<{ id: string; full_name: string }>> {
+export async function getChapterMembersForTasks(chapterId: string): Promise<Array<{ id: string; full_name: string; role: string; chapter_role: string | null }>> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name')
+    .select('id, full_name, role, chapter_role')
     .eq('chapter_id', chapterId)
     .in('role', ['admin', 'active_member']) // Exclude alumni for task assignment
     .order('full_name');

@@ -34,7 +34,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [chapterMembers, setChapterMembers] = useState<Array<{ id: string; full_name: string }>>([]);
+  const [chapterMembers, setChapterMembers] = useState<Array<{ id: string; full_name: string; role: string; chapter_role: string | null }>>([]);
   const [newTask, setNewTask] = useState<CreateTaskRequest>({
     title: '',
     description: '',
@@ -109,8 +109,14 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
   }, [chapterId]);
 
   const loadAllData = async () => {
+    console.log('=== TasksPanel: loadAllData called ===');
+    console.log('chapterId:', chapterId);
+    console.log('profile.id:', profile?.id);
+    
     try {
       setLoading(true);
+      
+      console.log('🔄 Loading personal tasks, all chapter tasks, and members in parallel...');
       
       // Load personal tasks, all chapter tasks, and members in parallel
       const [personalTasksData, allTasksData, membersData] = await Promise.all([
@@ -132,11 +138,17 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
         getChapterMembersForTasks(chapterId!) // Use the new function that excludes alumni
       ]);
       
+      console.log('📊 Personal tasks loaded:', personalTasksData.data);
+      console.log('📊 All chapter tasks loaded:', allTasksData.data);
+      console.log('📊 Members loaded:', membersData);
+      
       setTasks(personalTasksData.data || []); // Personal tasks
       setAllChapterTasks(allTasksData.data || []); // All chapter tasks
       setChapterMembers(membersData);
+      
+      console.log('✅ Data loaded successfully');
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('❌ Error loading data:', error);
       setTasks([]);
       setAllChapterTasks([]);
       setChapterMembers([]);
@@ -146,43 +158,97 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
   };
 
   const handleCreateTask = async (taskData: CreateTaskRequest) => {
-    if (!chapterId || !profile?.id) return;
+    console.log('=== TasksPanel: handleCreateTask called ===');
+    console.log('taskData received:', taskData);
+    console.log('chapterId:', chapterId);
+    console.log('profile.id:', profile?.id);
+    
+    if (!chapterId || !profile?.id) {
+      console.log('❌ Missing chapterId or profile.id');
+      return;
+    }
     
     try {
       setCreating(true);
       
-      console.log('Creating task with data:', {
+      const taskPayload = {
         ...taskData,
         chapter_id: chapterId,
         assigned_by: profile.id
-      });
+      };
       
-      // Use Supabase directly instead of API route
-      const { data: task, error } = await supabase
-        .from('tasks')
-        .insert({
-          ...taskData,
-          chapter_id: chapterId,
-          assigned_by: profile.id,
-          status: 'pending'
-        })
-        .select()
-        .single();
+      console.log('📝 Creating task with payload:', taskPayload);
+      console.log('Array.isArray(taskData.assignee_id):', Array.isArray(taskData.assignee_id));
+      
+      // Handle multiple assignees by creating separate tasks
+      if (Array.isArray(taskData.assignee_id)) {
+        console.log('🔄 Creating multiple tasks for assignees:', taskData.assignee_id);
+        
+        const tasks = await Promise.all(
+          taskData.assignee_id.map((assigneeId, index) => {
+            console.log(`Creating task ${index + 1}/${taskData.assignee_id.length} for assignee:`, assigneeId);
+            return supabase
+              .from('tasks')
+              .insert({
+                ...taskData,
+                assignee_id: assigneeId,
+                chapter_id: chapterId,
+                assigned_by: profile.id,
+                status: 'pending'
+              })
+              .select()
+              .single();
+          })
+        );
+        
+        console.log('📝 All task creation promises completed');
+        const results = await Promise.all(tasks);
+        console.log('📊 Task creation results:', results);
+        
+        const errors = results.filter(result => result.error);
+        console.log('❌ Errors found:', errors);
+        
+        if (errors.length > 0) {
+          console.error('Supabase errors:', errors);
+          throw new Error(`Failed to create some tasks: ${errors.map(e => e.error?.message).join(', ')}`);
+        }
+        
+        const createdTasks = results.map(r => r.data);
+        console.log('✅ Tasks created successfully:', createdTasks);
+      } else {
+        // Single assignee (original behavior)
+        console.log('🔄 Creating single task for assignee:', taskData.assignee_id);
+        
+        const { data: task, error } = await supabase
+          .from('tasks')
+          .insert({
+            ...taskData,
+            assignee_id: taskData.assignee_id as string,
+            chapter_id: chapterId,
+            assigned_by: profile.id,
+            status: 'pending'
+          })
+          .select()
+          .single();
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw new Error(`Failed to create task: ${error.message}`);
+        console.log('📊 Single task creation result:', { task, error });
+
+        if (error) {
+          console.error('Supabase error:', error);
+          throw new Error(`Failed to create task: ${error.message}`);
+        }
+
+        console.log('✅ Task created successfully:', task);
       }
 
-      console.log('Task created successfully:', task);
-
+      console.log('✅ All tasks created, closing modal and refreshing data');
       // Close modal
       setIsModalOpen(false);
       
       // Refresh tasks
       await loadAllData();
     } catch (error) {
-      console.error('Error creating task:', error);
+      console.error('❌ Error creating task:', error);
     } finally {
       setCreating(false);
     }
