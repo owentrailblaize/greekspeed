@@ -9,19 +9,19 @@ export function MyChapterPage() {
   const [activeSection, setActiveSection] = useState("all");
 
   const handleNavigate = (section: string) => {
-    console.log(`Navigating to: ${section}`);
+    // Navigating to section
     setActiveSection(section);
     
     // TODO: Implement navigation logic
     switch (section) {
       case 'add-member':
-        console.log('Opening add member modal/form');
+        // Opening add member modal/form
         break;
       case 'create-event':
-        console.log('Opening create event modal/form');
+        // Opening create event modal/form
         break;
       default:
-        console.log(`Navigating to ${section} section`);
+        // Navigating to section
     }
   };
 

@@ -144,15 +144,15 @@ export function ActivelyHiringPage() {
     if (!profile || loading) return false;
     
     const userRole = profile.role as string; // Type assertion to string instead of any
-    console.log('User role:', userRole);
+    // User role
     
     // Check for 'active_member' role (exact match from database)
     if (userRole === 'active_member') {
-      console.log('User is active_member - hiding button');
+      // User is active_member - hiding button
       return false;
     }
     
-    console.log('User can post job - showing button');
+    // User can post job - showing button
     return true;
   };
 

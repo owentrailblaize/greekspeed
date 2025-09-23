@@ -29,12 +29,7 @@ export class BannerService {
       const fileName = `${userId}-banner-${Date.now()}.${fileExt}`;
       const filePath = `${userId}/${fileName}`;
       
-      console.log('Uploading banner:', {
-        userId,
-        fileName,
-        filePath,
-        bucket: 'user-banners'
-      });
+      // Uploading banner
 
       // Upload file to Supabase Storage
       const { data, error } = await this.supabaseClient.storage

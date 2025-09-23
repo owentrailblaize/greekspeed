@@ -51,7 +51,7 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
-    console.log('📄 Selected file:', selectedFile);
+    // Selected file
     if (selectedFile && selectedFile.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
       setFile(selectedFile);
       setResults(null);
@@ -96,8 +96,7 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
             
             // Debug logging for first few rows
             if (index < 3) {
-              console.log(`📊 Row ${index} original:`, row);
-              console.log(`📊 Row ${index} transformed:`, transformed);
+              // Row original and transformed
             }
             
             return transformed;
@@ -131,13 +130,13 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
   const handleUpload = async () => {
     if (!file) return;
 
-    console.log('🚀 Starting upload process...');
+    // Starting upload process...
     setIsUploading(true);
     setProgress(0);
     setResults(null);
 
     try {
-      console.log('📄 Parsing Excel file...');
+      // Parsing Excel file...
       const alumniData = await parseExcelFile(file);
       
       if (alumniData.length === 0) {
@@ -146,8 +145,8 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
         return;
       }
 
-      console.log(`📊 Parsed ${alumniData.length} alumni records`);
-      console.log('📄 Sending request to API...');
+      // Parsed alumni records
+      // Sending request to API...
 
       const response = await fetch('/api/alumni/bulk-upload', {
         method: 'POST',
@@ -160,20 +159,20 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
         }),
       });
 
-      console.log('📥 Received response:', response.status);
+      // Received response
 
       if (!response.ok) {
         throw new Error(`Upload failed: ${response.statusText}`);
       }
 
       const result = await response.json();
-      console.log('📋 API result:', result);
+      // API result
       setResults(result.results);
       setProgress(100);
 
       // Auto-download Excel file with email/password pairs if passwords were generated OR default password used
       if (result.results.createdUsers.length > 0) {
-        console.log('📥 Auto-downloading Excel file with credentials...');
+        // Auto-downloading Excel file with credentials...
         downloadCredentialsExcel(result.results.createdUsers);
       }
 
@@ -191,7 +190,7 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
     const usersWithPasswords = createdUsers.filter(user => user.password);
     
     if (usersWithPasswords.length === 0) {
-      console.log('No users with passwords to download');
+      // No users with passwords to download
       return;
     }
 
@@ -217,7 +216,7 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
     
-    console.log(`📥 Downloaded credentials for ${usersWithPasswords.length} users`);
+    // Downloaded credentials for users
   };
 
   const downloadResults = () => {
@@ -327,7 +326,7 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
           {/* Upload Button */}
           <Button
             onClick={() => {
-              console.log('🚀 Button clicked!');
+              // Button clicked!
               handleUpload();
             }}
             disabled={!file || isUploading}

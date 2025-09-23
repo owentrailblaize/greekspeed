@@ -65,7 +65,7 @@ export class ProfileService {
         }
       });
 
-      console.log('Updating profile with data:', updateData);
+      // Updating profile with data
 
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -88,7 +88,7 @@ export class ProfileService {
         delete profile.chapters; // Remove the nested chapters object
       }
 
-      console.log('Profile updated successfully:', profile);
+      // Profile updated successfully
       return profile;
     } catch (error) {
       console.error('Error in updateProfile:', error);

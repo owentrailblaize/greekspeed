@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
       
       // Send email notifications directly
       try {
-        console.log('📧 Starting email notification process...');
+        // Starting email notification process
         
         // Get chapter name first
         const { data: chapter, error: chapterError } = await supabase
@@ -206,9 +206,9 @@ export async function POST(request: NextRequest) {
         if (membersError) {
           console.error('❌ Failed to fetch chapter members:', membersError);
         } else if (!members || members.length === 0) {
-          console.log('⚠️ No chapter members found for email notifications');
+          // No chapter members found for email notifications
         } else {
-          console.log('📊 Chapter members found:', members.length);
+          // Chapter members found
           
           // Map to recipients - no email_preferences filtering since column doesn't exist
           const recipients = members.map(member => ({
@@ -217,8 +217,7 @@ export async function POST(request: NextRequest) {
             chapterName: chapterName
           }));
 
-          console.log(' Recipients prepared:', recipients.length);
-          console.log(' Recipient emails:', recipients.map(r => r.email));
+          // Recipients prepared
 
           if (recipients.length > 0) {
             const { EmailService } = await import('@/lib/services/emailService');
@@ -234,7 +233,7 @@ export async function POST(request: NextRequest) {
               }
             );
 
-            console.log('✅ Email sending result:', result);
+            // Email sending result received
           }
         }
       } catch (emailError) {

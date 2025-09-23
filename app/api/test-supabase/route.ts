@@ -3,13 +3,13 @@ import { createClient } from '@supabase/supabase-js'
 
 export async function GET() {
   try {
-    console.log('Testing Supabase connection...')
+    // Testing Supabase connection...
     
     // Check environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     
-    console.log('Environment check:', {
+    // Environment check
       hasUrl: !!supabaseUrl,
       hasServiceKey: !!supabaseServiceKey,
       urlPreview: supabaseUrl?.substring(0, 30) + '...',

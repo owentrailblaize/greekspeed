@@ -70,5 +70,5 @@ async function createChapterWithLLM(name: string, supabase: any) {
 
 async function enrichChapterWithLLM(chapter: any, supabase: any) {
   // Placeholder - implement when LLM functionality is ready
-  console.log('LLM enrichment not yet implemented for chapter:', chapter.name);
+  // LLM enrichment not yet implemented for chapter
 }

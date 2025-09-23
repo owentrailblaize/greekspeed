@@ -26,14 +26,14 @@ export function EventsPanel() {
         setLoading(true);
         setError(null);
         
-        console.log('EventsPanel - Fetching events for chapter:', chapterId);
+        // EventsPanel - Fetching events for chapter
         const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=upcoming`);
         if (!response.ok) {
           throw new Error('Failed to fetch events');
         }
         
         const data = await response.json();
-        console.log('EventsPanel - Fetched events:', data);
+        // EventsPanel - Fetched events
         setEvents(data);
       } catch (err) {
         console.error('EventsPanel - Error fetching events:', err);
@@ -57,12 +57,12 @@ export function EventsPanel() {
   };
 
   const handleEditEvent = (eventId: string) => {
-    console.log('Edit event:', eventId);
+    // Edit event
     // TODO: Open event edit modal/form
   };
 
   const handleViewRSVPs = (eventId: string) => {
-    console.log('View RSVPs for event:', eventId);
+    // View RSVPs for event
     // TODO: Open RSVP list modal
   };
 

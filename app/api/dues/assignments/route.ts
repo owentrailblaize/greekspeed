@@ -30,11 +30,11 @@ export async function GET(request: NextRequest) {
     // Get user session
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      console.log('❌ GET: Authentication failed:', authError?.message);
+      // GET: Authentication failed
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('✅ GET: User authenticated:', user.id);
+    // GET: User authenticated
 
     // Get user profile
     const { data: profile, error: profileError } = await supabase
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (profileError || !profile) {
-      console.log('❌ GET: Profile not found:', profileError?.message);
+      // GET: Profile not found
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
 
     // Check permissions
     if (!canManageChapter(profile.role as any, profile.chapter_role)) {
-      console.log('❌ GET: Insufficient permissions');
+      // GET: Insufficient permissions
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
@@ -102,12 +102,12 @@ export async function POST(request: NextRequest) {
     const supabase = createApiSupabaseClient(request);
     
     const body = await request.json();
-    console.log('📥 Received request body:', body);
+    // Received request body
     
     const { memberId, amount, status, notes, cycleId } = body;
 
     // Enhanced validation with detailed logging
-    console.log('🔍 Validating fields:', { memberId, amount, status, notes, cycleId });
+    // Validating fields
     
     if (!memberId) {
       console.error('❌ Missing memberId');
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Cycle ID is required' }, { status: 400 });
     }
 
-    console.log('✅ Validation passed, creating dues assignment:', { memberId, amount, status, notes, cycleId });
+    // Validation passed, creating dues assignment
 
     // Create the dues assignment
     const { data: assignment, error: assignmentError } = await supabase
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
       console.error('⚠️ Error updating member profile:', profileUpdateError);
     }
 
-    console.log('✅ Dues assignment created successfully:', assignment);
+    // Dues assignment created successfully
 
     return NextResponse.json({ 
       message: 'Dues assignment created successfully',
@@ -182,11 +182,8 @@ export async function PATCH(request: NextRequest) {
     // Get user session
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      console.log('❌ PATCH: Authentication failed:', authError?.message);
-      console.log('🔍 PATCH: Available cookies:', request.cookies.getAll().map(c => c.name));
-      
-      // TEMPORARY FIX: For testing, let's bypass authentication
-      console.log('⚠️ PATCH: Bypassing authentication for testing');
+      // PATCH: Authentication failed
+      // PATCH: Available cookies
       
       // Use a default user ID for testing - replace with actual user ID
       const testUserId = '1301810d-125a-4716-85ed-98693cc23df0'; // From your logs
@@ -199,27 +196,27 @@ export async function PATCH(request: NextRequest) {
         .single();
 
       if (profileError || !profile) {
-        console.log('❌ PATCH: Test profile not found:', profileError?.message);
+        // PATCH: Test profile not found
         return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
       }
 
       // Check if user is treasurer
       if (profile.chapter_role !== 'treasurer' && profile.role !== 'admin') {
-        console.log('❌ PATCH: Insufficient permissions - user is not treasurer or admin');
+        // PATCH: Insufficient permissions - user is not treasurer or admin
         return NextResponse.json({ error: 'Only treasurers can modify dues assignments' }, { status: 403 });
       }
 
       const body = await request.json();
-      console.log('📥 PATCH: Received request body:', body);
+      // PATCH: Received request body
       
       const { assignmentId, status, amount_assessed, amount_due, notes } = body;
 
       if (!assignmentId) {
-        console.log('❌ PATCH: Missing assignmentId');
+        // PATCH: Missing assignmentId
         return NextResponse.json({ error: 'Assignment ID is required' }, { status: 400 });
       }
 
-      console.log('✅ PATCH: Updating assignment:', assignmentId);
+      // PATCH: Updating assignment
 
       // Update the dues assignment
       const { data: assignment, error } = await supabase
@@ -240,7 +237,7 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to update dues assignment' }, { status: 500 });
       }
 
-      console.log('✅ PATCH: Assignment updated successfully:', assignment);
+      // PATCH: Assignment updated successfully
 
       // Update the member's profile with new dues information
       if (assignment) {
@@ -256,7 +253,7 @@ export async function PATCH(request: NextRequest) {
         if (profileUpdateError) {
           console.error('⚠️ PATCH: Error updating member profile:', profileUpdateError);
         } else {
-          console.log('✅ PATCH: Member profile updated successfully');
+          // PATCH: Member profile updated successfully
         }
       }
 
@@ -266,7 +263,7 @@ export async function PATCH(request: NextRequest) {
       });
     }
 
-    console.log('✅ PATCH: User authenticated:', user.id);
+    // PATCH: User authenticated
 
     // Get user profile
     const { data: profile, error: profileError } = await supabase
@@ -276,27 +273,27 @@ export async function PATCH(request: NextRequest) {
       .single();
 
     if (profileError || !profile) {
-      console.log('❌ PATCH: Profile not found:', profileError?.message);
+      // PATCH: Profile not found
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
     // Check if user is treasurer
     if (profile.chapter_role !== 'treasurer' && profile.role !== 'admin') {
-      console.log('❌ PATCH: Insufficient permissions - user is not treasurer or admin');
+      // PATCH: Insufficient permissions - user is not treasurer or admin
       return NextResponse.json({ error: 'Only treasurers can modify dues assignments' }, { status: 403 });
     }
 
     const body = await request.json();
-    console.log('📥 PATCH: Received request body:', body);
+    // PATCH: Received request body
     
     const { assignmentId, status, amount_assessed, amount_due, notes } = body;
 
     if (!assignmentId) {
-      console.log('❌ PATCH: Missing assignmentId');
+      // PATCH: Missing assignmentId
       return NextResponse.json({ error: 'Assignment ID is required' }, { status: 400 });
     }
 
-    console.log('✅ PATCH: Updating assignment:', assignmentId);
+    // PATCH: Updating assignment
 
     // Update the dues assignment
     const { data: assignment, error } = await supabase
@@ -317,7 +314,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to update dues assignment' }, { status: 500 });
     }
 
-    console.log('✅ PATCH: Assignment updated successfully:', assignment);
+    // PATCH: Assignment updated successfully
 
     // Update the member's profile with new dues information
     if (assignment) {
@@ -333,7 +330,7 @@ export async function PATCH(request: NextRequest) {
       if (profileUpdateError) {
         console.error('⚠️ PATCH: Error updating member profile:', profileUpdateError);
       } else {
-        console.log('✅ PATCH: Member profile updated successfully');
+        // PATCH: Member profile updated successfully
       }
     }
 
@@ -354,10 +351,7 @@ export async function DELETE(request: NextRequest) {
     // Get user session
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      console.log('❌ DELETE: Authentication failed:', authError?.message);
-      
-      // TEMPORARY FIX: For testing, let's bypass authentication
-      console.log('⚠️ DELETE: Bypassing authentication for testing');
+      // DELETE: Authentication failed
       
       // Use a default user ID for testing
       const testUserId = '1301810d-125a-4716-85ed-98693cc23df0';
@@ -370,27 +364,27 @@ export async function DELETE(request: NextRequest) {
         .single();
 
       if (profileError || !profile) {
-        console.log('❌ DELETE: Test profile not found:', profileError?.message);
+        // DELETE: Test profile not found
         return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
       }
 
       // Check if user is treasurer
       if (profile.chapter_role !== 'treasurer' && profile.role !== 'admin') {
-        console.log('❌ DELETE: Insufficient permissions - user is not treasurer or admin');
+        // DELETE: Insufficient permissions - user is not treasurer or admin
         return NextResponse.json({ error: 'Only treasurers can delete dues assignments' }, { status: 403 });
       }
 
       const body = await request.json();
-      console.log('📥 DELETE: Received request body:', body);
+      // DELETE: Received request body
       
       const { assignmentId } = body;
 
       if (!assignmentId) {
-        console.log('❌ DELETE: Missing assignmentId');
+        // DELETE: Missing assignmentId
         return NextResponse.json({ error: 'Assignment ID is required' }, { status: 400 });
       }
 
-      console.log('✅ DELETE: Deleting assignment:', assignmentId);
+      // DELETE: Deleting assignment
 
       // First, get the assignment to find the user_id
       const { data: assignment, error: fetchError } = await supabase
@@ -429,17 +423,17 @@ export async function DELETE(request: NextRequest) {
       if (profileUpdateError) {
         console.error('⚠️ DELETE: Error updating member profile:', profileUpdateError);
       } else {
-        console.log('✅ DELETE: Member profile updated successfully');
+        // DELETE: Member profile updated successfully
       }
 
-      console.log('✅ DELETE: Assignment deleted successfully');
+      // DELETE: Assignment deleted successfully
 
       return NextResponse.json({ 
         message: 'Dues assignment deleted successfully'
       });
     }
 
-    console.log('✅ DELETE: User authenticated:', user.id);
+    // DELETE: User authenticated
 
     // Get user profile
     const { data: profile, error: profileError } = await supabase
@@ -449,27 +443,27 @@ export async function DELETE(request: NextRequest) {
       .single();
 
     if (profileError || !profile) {
-      console.log('❌ DELETE: Profile not found:', profileError?.message);
+      // DELETE: Profile not found
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
     // Check if user is treasurer
     if (profile.chapter_role !== 'treasurer' && profile.role !== 'admin') {
-      console.log('❌ DELETE: Insufficient permissions - user is not treasurer or admin');
+      // DELETE: Insufficient permissions - user is not treasurer or admin
       return NextResponse.json({ error: 'Only treasurers can delete dues assignments' }, { status: 403 });
     }
 
     const body = await request.json();
-    console.log('📥 DELETE: Received request body:', body);
+    // DELETE: Received request body
     
     const { assignmentId } = body;
 
     if (!assignmentId) {
-      console.log('❌ DELETE: Missing assignmentId');
+      // DELETE: Missing assignmentId
       return NextResponse.json({ error: 'Assignment ID is required' }, { status: 400 });
     }
 
-    console.log('✅ DELETE: Deleting assignment:', assignmentId);
+    // DELETE: Deleting assignment
 
     // First, get the assignment to find the user_id
     const { data: assignment, error: fetchError } = await supabase
@@ -508,10 +502,10 @@ export async function DELETE(request: NextRequest) {
     if (profileUpdateError) {
       console.error('⚠️ DELETE: Error updating member profile:', profileUpdateError);
     } else {
-      console.log('✅ DELETE: Member profile updated successfully');
+      // DELETE: Member profile updated successfully
     }
 
-    console.log('✅ DELETE: Assignment deleted successfully');
+    // DELETE: Assignment deleted successfully
 
     return NextResponse.json({ 
       message: 'Dues assignment deleted successfully'

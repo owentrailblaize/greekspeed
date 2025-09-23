@@ -90,7 +90,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
           console.error('Client-side sign-in failed:', signInError);
           // Don't fail the entire process, but log the error
         } else {
-          console.log('Client-side session established successfully');
+          // Client-side session established successfully
         }
       } catch (signInError) {
         console.error('Client-side sign-in error:', signInError);

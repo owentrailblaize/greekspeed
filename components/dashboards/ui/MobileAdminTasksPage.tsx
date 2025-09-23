@@ -51,7 +51,7 @@ export function MobileAdminTasksPage() {
             filter: `chapter_id=eq.${chapterId}`
           },
           (payload) => {
-            console.log('Real-time update received:', payload);
+            // Real-time update received
             
             if (payload.eventType === 'INSERT') {
               const newTask = payload.new as Task;
@@ -76,13 +76,12 @@ export function MobileAdminTasksPage() {
   }, [chapterId]);
 
   const loadAllData = async () => {
-    console.log('=== MobileAdminTasksPage: loadAllData called ===');
-    console.log('chapterId:', chapterId);
+    // MobileAdminTasksPage: loadAllData called
     
     try {
       setLoading(true);
       
-      console.log('🔄 Loading tasks and members in parallel...');
+      // Loading tasks and members in parallel...
       
       // Load all chapter tasks and members in parallel
       const [allTasksData, membersData] = await Promise.all([
@@ -94,13 +93,12 @@ export function MobileAdminTasksPage() {
         getChapterMembersForTasks(chapterId!) // Use the new function that excludes alumni
       ]);
       
-      console.log('📊 Tasks loaded from Supabase:', allTasksData.data);
-      console.log('📊 Members loaded:', membersData);
+      // Tasks loaded from Supabase
       
       setTasks(allTasksData.data || []);
       setChapterMembers(membersData);
       
-      console.log('✅ Data loaded successfully');
+      // Data loaded successfully
     } catch (error) {
       console.error('❌ Error loading data:', error);
       setTasks([]);
@@ -111,13 +109,10 @@ export function MobileAdminTasksPage() {
   };
 
   const handleCreateTask = async (taskData: CreateTaskRequest) => {
-    console.log('=== MobileAdminTasksPage: handleCreateTask called ===');
-    console.log('taskData received:', taskData);
-    console.log('chapterId:', chapterId);
-    console.log('profile.id:', profile?.id);
+    // MobileAdminTasksPage: handleCreateTask called
     
     if (!chapterId || !profile?.id) {
-      console.log('❌ Missing chapterId or profile.id');
+      // Missing chapterId or profile.id
       return;
     }
     
@@ -130,16 +125,15 @@ export function MobileAdminTasksPage() {
         assigned_by: profile.id
       };
       
-      console.log('📝 Creating task with payload:', taskPayload);
-      console.log('Array.isArray(taskData.assignee_id):', Array.isArray(taskData.assignee_id));
+      // Creating task with payload
       
       // Handle multiple assignees by creating separate tasks
       if (Array.isArray(taskData.assignee_id)) {
-        console.log('🔄 Creating multiple tasks for assignees:', taskData.assignee_id);
+        // Creating multiple tasks for assignees
         
         const tasks = await Promise.all(
           taskData.assignee_id.map((assigneeId, index) => {
-            console.log(`Creating task ${index + 1}/${taskData.assignee_id.length} for assignee:`, assigneeId);
+            // Creating task for assignee
             return supabase
               .from('tasks')
               .insert({
@@ -154,12 +148,10 @@ export function MobileAdminTasksPage() {
           })
         );
         
-        console.log('📝 All task creation promises completed');
-        const results = await Promise.all(tasks);
-        console.log('📊 Task creation results:', results);
+        // All task creation promises completed
         
         const errors = results.filter(result => result.error);
-        console.log('❌ Errors found:', errors);
+        // Errors found
         
         if (errors.length > 0) {
           console.error('Supabase errors:', errors);
@@ -167,10 +159,10 @@ export function MobileAdminTasksPage() {
         }
         
         const createdTasks = results.map(r => r.data);
-        console.log('✅ Tasks created successfully:', createdTasks);
+        // Tasks created successfully
       } else {
         // Single assignee (original behavior)
-        console.log('🔄 Creating single task for assignee:', taskData.assignee_id);
+        // Creating single task for assignee
         
         const { data: task, error } = await supabase
           .from('tasks')
@@ -184,17 +176,17 @@ export function MobileAdminTasksPage() {
           .select()
           .single();
 
-        console.log('📊 Single task creation result:', { task, error });
+        // Single task creation result
 
         if (error) {
           console.error('Supabase error:', error);
           throw new Error(`Failed to create task: ${error.message}`);
         }
 
-        console.log('✅ Task created successfully:', task);
+        // Task created successfully
       }
 
-      console.log('✅ All tasks created, closing modal and refreshing data');
+      // All tasks created, closing modal and refreshing data
       // Close modal
       setIsModalOpen(false);
       
@@ -236,7 +228,7 @@ export function MobileAdminTasksPage() {
 
   const handleDeleteTask = async (taskId: string) => {
     try {
-      console.log('Deleting task:', taskId);
+      // Deleting task
       
       const { error } = await supabase
         .from('tasks')
@@ -245,7 +237,7 @@ export function MobileAdminTasksPage() {
 
       if (error) throw error;
 
-      console.log('Task deleted successfully from Supabase');
+      // Task deleted successfully from Supabase
       
       // Immediately update local state for instant UI feedback
       setTasks(prev => prev.filter(task => task.id !== taskId));

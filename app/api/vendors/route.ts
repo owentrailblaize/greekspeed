@@ -37,18 +37,18 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const vendorData = await request.json();
-    console.log('Received vendor data:', vendorData);
+    // Received vendor data
     
     // Validate required fields
     const requiredFields = ['name', 'type', 'chapter_id'];
     for (const field of requiredFields) {
       if (!vendorData[field]) {
-        console.log(`Missing required field: ${field}`);
+        // Missing required field
         return NextResponse.json({ error: `${field} is required` }, { status: 400 });
       }
     }
 
-    console.log('Creating vendor with data:', vendorData);
+    // Creating vendor with data
 
     // Create the vendor - use the actual user ID from the request
     const insertData = {
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       updated_by: vendorData.updated_by
     };
 
-    console.log('Insert data:', insertData);
+    // Insert data
 
     const { data: newVendor, error } = await supabase
       .from('vendor_contacts')
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Failed to create vendor: ${error.message}` }, { status: 500 });
     }
 
-    console.log('Vendor created successfully:', newVendor);
+    // Vendor created successfully
 
     return NextResponse.json({ 
       success: true, 

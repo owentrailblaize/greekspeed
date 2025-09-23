@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function GET() {
   try {
-    console.log('🔍 Test Alumni Profiles API: Called');
+    // Test Alumni Profiles API: Called
 
     // Check environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -73,7 +73,7 @@ export async function GET() {
       .select('*', { count: 'exact', head: true })
       .not('user_id', 'is', null);
 
-    console.log('✅ Test Alumni Profiles API: Successfully fetched data');
+    // Test Alumni Profiles API: Successfully fetched data
 
     return NextResponse.json({
       success: true,

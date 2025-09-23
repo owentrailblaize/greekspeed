@@ -42,19 +42,14 @@ export class DocumentUploadService {
    */
   async uploadDocument(uploadData: DocumentUploadData): Promise<UploadedDocument> {
     try {
-      console.log('🚀 Starting document upload...');
-      console.log(' File details:', {
-        name: uploadData.file.name,
-        size: uploadData.file.size,
-        type: uploadData.file.type
-      });
+      // Starting document upload...
       
       // 1. Get current user and chapter info
       const { data: { user }, error: userError } = await this.supabaseClient.auth.getUser();
       if (userError || !user) {
         throw new Error('User not authenticated');
       }
-      console.log('✅ User authenticated:', user.id);
+      // User authenticated
 
       const { data: profile, error: profileError } = await this.supabaseClient
         .from('profiles')
@@ -65,14 +60,14 @@ export class DocumentUploadService {
       if (profileError || !profile?.chapter_id) {
         throw new Error('User profile or chapter not found');
       }
-      console.log('✅ Profile found, chapter_id:', profile.chapter_id);
+      // Profile found, chapter_id
 
       // 2. Validate file
       const validationError = this.validateFile(uploadData.file);
       if (validationError) {
         throw new Error(validationError);
       }
-      console.log('✅ File validation passed');
+      // File validation passed
 
       // 3. Generate storage path
       const storagePath = await this.generateStoragePath(
@@ -80,10 +75,10 @@ export class DocumentUploadService {
         uploadData.documentType,
         uploadData.file
       );
-      console.log('📁 Generated storage path:', storagePath);
+      // Generated storage path
 
       // 4. Upload file to Supabase Storage
-      console.log('📤 Attempting to upload file to storage...');
+      // Attempting to upload file to storage...
       const { data: uploadResult, error: uploadError } = await this.supabaseClient.storage
         .from('chapter-documents')
         .upload(storagePath, uploadData.file, {
@@ -95,16 +90,16 @@ export class DocumentUploadService {
         console.error('❌ Storage upload error:', uploadError);
         throw new Error(`Upload failed: ${uploadError.message}`);
       }
-      console.log('✅ File uploaded to storage successfully:', uploadResult);
+      // File uploaded to storage successfully
 
       // 5. Get public URL (for viewing)
       const { data: urlData } = this.supabaseClient.storage
         .from('chapter-documents')
         .getPublicUrl(storagePath);
-      console.log('🔗 Generated public URL:', urlData.publicUrl);
+      // Generated public URL
 
       // 6. Create database record
-      console.log('💾 Creating database record...');
+      // Creating database record...
       const { data: document, error: dbError } = await this.supabaseClient
         .from('documents')
         .insert({
@@ -136,7 +131,7 @@ export class DocumentUploadService {
           .remove([storagePath]);
         throw new Error(`Database error: ${dbError.message}`);
       }
-      console.log('✅ Database record created successfully:', document);
+      // Database record created successfully
 
       return document as UploadedDocument;
 
@@ -168,7 +163,7 @@ export class DocumentUploadService {
     } else {
       // Use the EXACT name from database (no sanitization)
       chapterFolder = chapter.name;
-      console.log('📁 Using exact chapter name:', chapterFolder);
+      // Using exact chapter name
     }
     
     const typeFolderMap: Record<string, string> = {

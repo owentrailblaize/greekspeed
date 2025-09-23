@@ -66,12 +66,12 @@ export function MessageInput({
 
   const handleFileUpload = () => {
     // TODO: Implement file upload functionality
-    console.log('File upload not implemented yet');
+    // File upload not implemented yet
   };
 
   const handleEmojiPicker = () => {
     // TODO: Implement emoji picker functionality
-    console.log('Emoji picker not implemented yet');
+    // Emoji picker not implemented yet
   };
 
   useEffect(() => {

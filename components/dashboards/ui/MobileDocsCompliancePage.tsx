@@ -81,12 +81,7 @@ export function MobileDocsCompliancePage() {
         visibilityFilter = ['chapter_all'];
       }
 
-      console.log('🔐 User role-based access:', {
-        userId: user.id,
-        userRole: profile.role,
-        chapterId: profile.chapter_id,
-        visibilityFilter: visibilityFilter
-      });
+      // User role-based access
 
       // Fetch documents with role-based visibility filtering
       const { data: documents, error } = await supabase
@@ -104,11 +99,7 @@ export function MobileDocsCompliancePage() {
         console.error('Error loading documents:', error);
         setDocuments([]);
       } else {
-        console.log('📄 Documents loaded with role-based access:', {
-          totalDocuments: documents?.length || 0,
-          userRole: profile.role,
-          visibilityFilter: visibilityFilter
-        });
+        // Documents loaded with role-based access
 
         // Transform the data to match ChapterDocument interface
         const transformedDocuments: ChapterDocument[] = (documents || []).map(doc => ({

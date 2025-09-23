@@ -49,12 +49,12 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
   }, [chapterContext]);
 
   // Add this debug log at the top of the component
-  console.log('CreateUserForm render - success state:', success);
+  // CreateUserForm render - success state
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    console.log('Starting user creation...'); // Debug log
+    // Starting user creation...
 
     try {
       // Validate required fields
@@ -77,7 +77,7 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
         })
       });
 
-      console.log('API Response status:', response.status); // Debug log
+      // API Response status
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -85,15 +85,13 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
       }
 
       const data = await response.json();
-      console.log('API Response data:', data); // Debug log
+      // API Response data
       
       setCreatedUser(data.user);
       setTempPassword(data.tempPassword);
       setSuccess(true);
       
-      console.log('Success state set to true'); // Debug log
-      console.log('Created user:', data.user); // Debug log
-      console.log('Temp password:', data.tempPassword); // Debug log
+      // Success state set to true
       
       // DON'T call onSuccess() here - let the success modal handle it
       // onSuccess(); // Remove this line
@@ -111,7 +109,7 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
   };
 
   if (success) {
-    console.log('Rendering success modal'); // Debug log
+    // Rendering success modal
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <Card className="w-full max-w-2xl">

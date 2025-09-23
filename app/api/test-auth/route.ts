@@ -10,7 +10,7 @@ interface UserData {
 
 export async function GET() {
   try {
-    console.log('🔍 Test Auth API: Called')
+    // Test Auth API: Called
     
     // Check environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -38,7 +38,7 @@ export async function GET() {
       }, { status: 500 })
     }
     
-    console.log('✅ Test Auth API: Successfully fetched users:', users?.length || 0)
+    // Test Auth API: Successfully fetched users
     
     return NextResponse.json({
       success: true,

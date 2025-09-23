@@ -70,7 +70,7 @@ export function UsersTab() {
       setTotalUsers(data.total || 0);
       setTotalPages(data.totalPages || 1);
       
-      console.log(`📊 Fetched page ${currentPage}: ${data.users?.length || 0} users (Total: ${data.total})`);
+      // Fetched page users
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -114,7 +114,7 @@ export function UsersTab() {
       }
 
       const result = await response.json();
-      console.log('User deleted successfully:', result);
+      // User deleted successfully
       
       // Remove the user from the local state
       setUsers(prevUsers => prevUsers.filter(user => user.id !== userToDelete.id));

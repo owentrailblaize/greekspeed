@@ -89,7 +89,7 @@ export function AlumniOverview() {
     setConnectionLoading(member.id);
     try {
       await sendConnectionRequest(member.id);
-      console.log('Connection request sent to:', member.full_name);
+      // Connection request sent to
       // You could show a success toast here
     } catch (error) {
       console.error('Failed to send connection request:', error);

@@ -91,10 +91,10 @@ export async function POST(request: NextRequest) {
     // Get user session
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    console.log('Auth check result:', { user: user?.id, error: authError });
+    // Auth check result
     
     if (authError || !user) {
-      console.log('Authentication failed:', authError);
+      // Authentication failed
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -105,20 +105,16 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    console.log('Profile data:', profile);
+    // Profile data
 
     if (profileError || !profile) {
-      console.log('Profile not found:', profileError);
+      // Profile not found
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
     // Check permissions
     const hasPermission = canManageMembers(profile.role as any, profile.chapter_role);
-    console.log('Permission check:', { 
-      role: profile.role, 
-      chapter_role: profile.chapter_role, 
-      hasPermission 
-    });
+    // Permission check
 
     if (!hasPermission) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });

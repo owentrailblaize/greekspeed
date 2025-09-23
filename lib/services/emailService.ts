@@ -133,7 +133,7 @@ export class EmailService {
       };
 
       await sgMail.send(msg);
-      console.log('✅ Chapter announcement email sent successfully to:', to);
+      // Chapter announcement email sent successfully
       return true;
     } catch (error) {
       console.error('❌ Failed to send chapter announcement email:', error);
@@ -255,7 +255,7 @@ export class EmailService {
       };
 
       await sgMail.send(msg);
-      console.log('✅ Event notification email sent successfully to:', to);
+      // Event notification email sent successfully
       return true;
     } catch (error) {
       console.error('❌ Failed to send event notification email:', error);
@@ -327,7 +327,7 @@ export class EmailService {
       };
 
       await sgMail.send(msg);
-      console.log('✅ Password reset email sent successfully to:', to);
+      // Password reset email sent successfully
       return true;
     } catch (error) {
       console.error('❌ Failed to send password reset email:', error);
@@ -352,7 +352,7 @@ export class EmailService {
       };
 
       await sgMail.send(msg);
-      console.log('✅ Welcome email sent successfully to:', to);
+      // Welcome email sent successfully
       return true;
     } catch (error) {
       console.error('❌ Failed to send welcome email:', error);
@@ -384,7 +384,7 @@ export class EmailService {
       };
 
       await sgMail.send(msg);
-      console.log('✅ Notification email sent successfully to:', to);
+      // Notification email sent successfully
       return true;
     } catch (error) {
       console.error('❌ Failed to send notification email:', error);
@@ -409,7 +409,7 @@ export class EmailService {
       };
 
       await sgMail.send(msg);
-      console.log('✅ Custom email sent successfully to:', to);
+      // Custom email sent successfully
       return true;
     } catch (error) {
       console.error('❌ Failed to send custom email:', error);
@@ -457,7 +457,7 @@ export class EmailService {
       };
 
       await sgMail.send(msg);
-      console.log(`Connection accepted email sent successfully to ${to}`);
+      // Connection accepted email sent successfully
       return true;
     } catch (error) {
       console.error('Error sending connection accepted email:', error);
@@ -509,7 +509,7 @@ export class EmailService {
       };
 
       await sgMail.send(msg);
-      console.log(`Connection request email sent successfully to ${to}`);
+      // Connection request email sent successfully
       return true;
     } catch (error) {
       console.error('Error sending connection request email:', error);
@@ -561,7 +561,7 @@ export class EmailService {
       };
 
       await sgMail.send(msg);
-      console.log(`Message notification email sent successfully to ${to}`);
+      // Message notification email sent successfully
       return true;
     } catch (error) {
       console.error('Error sending message notification email:', error);
@@ -900,7 +900,7 @@ export class EmailService {
       };
 
       await sgMail.send(msg);
-      console.log(`✅ Event reminder email sent successfully to: ${to}`);
+      // Event reminder email sent successfully
       return true;
     } catch (error) {
       console.error(`❌ Failed to send event reminder email to: ${to}`, error);

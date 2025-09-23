@@ -10,9 +10,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    console.log('Creating subscription for:', { userId, email });
-    console.log('Environment:', process.env.NODE_ENV);
-    console.log('Using live keys in:', process.env.NODE_ENV === 'development' ? 'DEVELOPMENT' : 'PRODUCTION');
+    // Creating subscription
 
     // Import Stripe only when needed (runtime)
     const { stripe } = await import('@/lib/stripe-server');
@@ -51,7 +49,7 @@ export async function POST(req: Request) {
     }
 
     if (!customerId) {
-      console.log('Creating new Stripe customer for:', email);
+      // Creating new Stripe customer
       try {
         // Create Stripe customer
         const customer = await stripe.customers.create({
@@ -62,7 +60,7 @@ export async function POST(req: Request) {
         });
 
         customerId = customer.id;
-        console.log('Created customer:', customerId);
+        // Created customer
 
         // Update profile with Stripe customer ID
         try {
@@ -84,7 +82,7 @@ export async function POST(req: Request) {
       }
     }
 
-    console.log('Creating checkout session with customer:', customerId);
+    // Creating checkout session with customer
 
     // Create checkout session with hosted checkout
     const session = await stripe.checkout.sessions.create({
@@ -112,8 +110,7 @@ export async function POST(req: Request) {
       submit_type: 'auto',
     });
 
-    console.log('Created session:', session.id);
-    console.log('Session URL:', session.url);
+    // Created session
     
     return NextResponse.json({ 
       sessionId: session.id,

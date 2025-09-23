@@ -81,14 +81,14 @@ export function CompactCalendarCard() {
         setLoading(true);
         setError(null);
         
-        console.log('CompactCalendarCard - Fetching events for chapter:', chapterId);
+        // CompactCalendarCard - Fetching events for chapter
         const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=all`);
         if (!response.ok) {
           throw new Error('Failed to fetch events');
         }
         
         const data = await response.json();
-        console.log('CompactCalendarCard - Fetched events:', data);
+        // CompactCalendarCard - Fetched events
         setEvents(data);
       } catch (err) {
         console.error('CompactCalendarCard - Error fetching events:', err);
