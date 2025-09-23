@@ -162,7 +162,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
       />
       
       {/* Modal */}
-      <div className="relative transform rounded-lg bg-white text-left shadow-xl transition-all w-full max-w-[95vw] sm:max-w-lg h-[85vh] sm:h-auto flex flex-col">
+      <div className="relative transform rounded-lg bg-white text-left shadow-xl transition-all w-full max-w-[95vw] sm:max-w-lg h-[70vh] sm:h-auto flex flex-col">
 
         {/* Header - Fixed */}
         <div className="rounded-t-lg bg-white px-4 pt-4 pb-3 sm:px-6 sm:pt-4 sm:pb-3 flex-shrink-0 border-b border-gray-200">
