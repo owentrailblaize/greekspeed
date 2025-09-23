@@ -518,16 +518,23 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
                                   {formatDate(task.due_date)}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                  {task.status === 'completed' && (
+                                <div className="relative group">
                                     <Button
                                       size="sm"
                                       onClick={() => handleDeleteTask(task.id)}
+                                      disabled={task.status !== 'completed'}
                                       className="flex items-center space-x-1"
                                     >
                                       <Trash2 className="h-4 w-4" />
                                       <span>Delete</span>
                                     </Button>
-                                  )}
+                                    {task.status !== 'completed' && (
+                                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                        Delete when completed
+                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                                      </div>
+                                    )}
+                                  </div>
                                 </td>
                               </tr>
                             ))}
@@ -585,53 +592,6 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
                   </div>
                 </div>
                 
-                <div className="flex space-x-2">
-                  <Select 
-                    value={task.status} 
-                    onValueChange={(value) => handleStatusChange(task.id, value)}
-                  >
-                    <SelectTrigger className="h-7 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="overdue">Overdue</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  <Select
-                    value={task.priority}
-                    onValueChange={(value) => handlePriorityChange(task.id, value)}
-                  >
-                    <SelectTrigger className="h-7 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="urgent">Urgent</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  <Select
-                    value={task.assignee_id}
-                    onValueChange={(value) => handleReassign(task.id, value)}
-                  >
-                    <SelectTrigger className="h-7 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {chapterMembers.map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {member.full_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
             ))
           )}
