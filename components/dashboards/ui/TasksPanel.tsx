@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ClipboardList, User, Calendar, AlertTriangle, Plus, Loader2, X, Eye, Trash2, CheckCircle, Clock } from 'lucide-react';
 import { Task, TaskStatus, TaskPriority, CreateTaskRequest } from '@/types/operations';
-import { getTasksByChapter, updateTask, getChapterMembers, subscribeToTasks } from '@/lib/services/taskService';
+import { getTasksByChapter, updateTask, getChapterMembersForTasks, subscribeToTasks } from '@/lib/services/taskService';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { TaskModal } from '@/components/ui/TaskModal';
 import { supabase } from '@/lib/supabase/client';
@@ -129,7 +129,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
           .eq('chapter_id', chapterId!)
           .order('due_date', { ascending: true }),
         
-        getChapterMembers(chapterId!)
+        getChapterMembersForTasks(chapterId!) // Use the new function that excludes alumni
       ]);
       
       setTasks(personalTasksData.data || []); // Personal tasks

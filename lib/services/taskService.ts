@@ -92,6 +92,19 @@ export async function getChapterMembers(chapterId: string): Promise<Array<{ id: 
   return data || [];
 }
 
+// Get chapter members for task assignment (excludes alumni)
+export async function getChapterMembersForTasks(chapterId: string): Promise<Array<{ id: string; full_name: string }>> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name')
+    .eq('chapter_id', chapterId)
+    .in('role', ['admin', 'active_member']) // Exclude alumni for task assignment
+    .order('full_name');
+
+  if (error) throw error;
+  return data || [];
+}
+
 // Subscribe to real-time task updates
 export function subscribeToTasks(chapterId: string, callback: (payload: any) => void) {
   return supabase

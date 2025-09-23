@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { Task, TaskStatus, TaskPriority, CreateTaskRequest } from '@/types/operations';
-import { getTasksByChapter, updateTask, getChapterMembers } from '@/lib/services/taskService';
+import { getTasksByChapter, updateTask, getChapterMembersForTasks } from '@/lib/services/taskService';
 import { TaskModal } from '@/components/ui/TaskModal';
 import { supabase } from '@/lib/supabase/client';
 
@@ -86,7 +86,7 @@ export function MobileAdminTasksPage() {
           .select('*')
           .eq('chapter_id', chapterId!)
           .order('due_date', { ascending: true }),
-        getChapterMembers(chapterId!)
+        getChapterMembersForTasks(chapterId!) // Use the new function that excludes alumni
       ]);
       
       setTasks(allTasksData.data || []);
