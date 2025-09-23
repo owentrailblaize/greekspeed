@@ -17,6 +17,7 @@ import { useVendors } from "@/lib/hooks/useVendors";
 import { VendorForm } from "@/components/ui/VendorForm";
 import { VendorContact, CreateVendorRequest, UpdateVendorRequest } from "@/types/vendors";
 import { SocialFeed } from "@/components/dashboards/ui/SocialFeed";
+import { CompactCalendarCard } from "@/components/dashboards/ui/CompactCalendarCard";
 
 const eventBudget = {
   totalAllocated: 12000,
@@ -340,7 +341,7 @@ export function SocialChairDashboard() {
     });
   };
 
-  // Get upcoming events for stats
+  // Keep the upcomingEvents filter as is (without slice)
   const upcomingEvents = events.filter(event => 
     event.status === 'published' && new Date(event.start_time) >= new Date()
   );
@@ -350,14 +351,16 @@ export function SocialChairDashboard() {
     sum + (event.attendee_count || 0), 0
   );
 
-  // Transform events for display (to match existing mock data structure)
-  const displayEvents = upcomingEvents.map(event => ({
-    name: event.title,
-    date: formatEventDate(event.start_time),
-    budget: event.budget_amount || 0,
-    status: event.status,
-    attendees: event.attendee_count || 0
-  }));
+  // Transform events for display (to match existing mock data structure) - WITH SORTING
+  const displayEvents = upcomingEvents
+    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+    .map(event => ({
+      name: event.title,
+      date: formatEventDate(event.start_time),
+      budget: event.budget_amount || 0,
+      status: event.status,
+      attendees: event.attendee_count || 0
+    }));
 
   // Budget calculation using real events data - CORRECTED VERSION
   const budgetData = useMemo(() => {
@@ -805,7 +808,7 @@ export function SocialChairDashboard() {
                 </div>
               ) : (
                 <div className="space-y-3 md:space-y-4">
-                  {displayEvents.map((event, index) => (
+                  {displayEvents.slice(0, 2).map((event, index) => (
                     <div key={index} className="p-3 md:p-4 border border-gray-200 rounded-lg">
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-medium">{event.name}</h4>
@@ -930,37 +933,12 @@ export function SocialChairDashboard() {
 
       {selectedTab === "calendar" && (
         <div className="space-y-6">
-          {/* Calendar Controls */}
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold whitespace-nowrap">Event Calendar</h3>
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setShowEventForm(true)}
-                className="text-xs md:text-sm h-8 md:h-10 px-2 md:px-4"
-              >
-                <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-                <span className="hidden sm:inline">Add Event</span>
-                <span className="sm:hidden">Event</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="opacity-60 cursor-not-allowed text-xs md:text-sm h-8 md:h-10 px-2 md:px-4" 
-                disabled
-              >
-                <span className="hidden sm:inline">Export Calendar</span>
-                <span className="sm:hidden">Export</span>
-                <Lock className="h-2.5 w-2.5 md:h-3 md:w-3 ml-1 md:ml-2 text-gray-400" />
-              </Button>
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Calendar */}
             <div className="lg:col-span-3">
-              {renderCalendar()}
+              <div className="w-full h-full">
+                <CompactCalendarCard />
+              </div>
             </div>
 
             {/* Event List */}
