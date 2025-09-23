@@ -583,11 +583,11 @@ export function TreasurerDashboard() {
 
       {/* Tab Navigation */}
       <div className="mb-4 sm:mb-6">
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+      <div className="hidden md:flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
           {[
             { value: "overview", label: "Overview" },
-            { value: "dues", label: "Member Dues" },
-            { value: "members", label: "All Members" }
+            { value: "dues", label: "Dues" },
+            { value: "members", label: "Members" }
           ].map((tab) => (
             <button
               key={tab.value}
