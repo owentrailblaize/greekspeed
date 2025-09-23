@@ -120,18 +120,26 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
       
       // Load personal tasks, all chapter tasks, and members in parallel
       const [personalTasksData, allTasksData, membersData] = await Promise.all([
-        // Personal tasks only (for the main panel)
+        // Personal tasks only (for the main panel) - with user names
         supabase
           .from('tasks')
-          .select('*')
+          .select(`
+            *,
+            assignee:profiles!tasks_assignee_id_fkey(full_name),
+            assigned_by:profiles!tasks_assigned_by_fkey(full_name)
+          `)
           .eq('chapter_id', chapterId!)
           .eq('assignee_id', profile!.id)
           .order('due_date', { ascending: true }),
         
-        // All chapter tasks (for the modal)
+        // All chapter tasks (for the modal) - with user names
         supabase
           .from('tasks')
-          .select('*')
+          .select(`
+            *,
+            assignee:profiles!tasks_assignee_id_fkey(full_name),
+            assigned_by:profiles!tasks_assigned_by_fkey(full_name)
+          `)
           .eq('chapter_id', chapterId!)
           .order('due_date', { ascending: true }),
         
@@ -142,8 +150,21 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
       console.log('📊 All chapter tasks loaded:', allTasksData.data);
       console.log('📊 Members loaded:', membersData);
       
-      setTasks(personalTasksData.data || []); // Personal tasks
-      setAllChapterTasks(allTasksData.data || []); // All chapter tasks
+      // Transform the data to include assignee_name
+      const personalTasks = (personalTasksData.data || []).map(task => ({
+        ...task,
+        assignee_name: task.assignee?.full_name || 'Unassigned',
+        assigned_by_name: task.assigned_by?.full_name || 'Unknown'
+      }));
+      
+      const allTasks = (allTasksData.data || []).map(task => ({
+        ...task,
+        assignee_name: task.assignee?.full_name || 'Unassigned',
+        assigned_by_name: task.assigned_by?.full_name || 'Unknown'
+      }));
+      
+      setTasks(personalTasks); // Personal tasks
+      setAllChapterTasks(allTasks); // All chapter tasks
       setChapterMembers(membersData);
       
       console.log('✅ Data loaded successfully');
