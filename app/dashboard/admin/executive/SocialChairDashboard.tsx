@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo } from "react";
+import { useExplicitPersistentState } from '@/lib/hooks/useAutoPersistentState';
 import { motion } from "framer-motion";
 import { Calendar, Users, DollarSign, BookOpen, Clock, Plus, Edit, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Trash2, X, Lock, Bell } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -60,7 +61,7 @@ const budgetBreakdown = [
 ];
 
 export function SocialChairDashboard() {
-  const [selectedTab, setSelectedTab] = useState("overview");
+  const [selectedTab, setSelectedTab] = useExplicitPersistentState('social-chair-selected-tab', 'overview');
   const [newLoreEntry, setNewLoreEntry] = useState({ title: "", content: "" });
   const [calendarDate, setCalendarDate] = useState(new Date());
   

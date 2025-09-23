@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePersistentFormState } from '@/lib/hooks/useAutoPersistentState';
 import { X, User, Mail, Building, Shield, FileText, Phone, MapPin, GraduationCap, Home, Calculator, Image, Upload, Linkedin, Briefcase, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +26,7 @@ interface EditProfileModalProps {
 }
 
 export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant = 'desktop' }: EditProfileModalProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData, clearFormData] = usePersistentFormState('edit-profile-form', {
     first_name: '',
     last_name: '',
     email: '',
@@ -448,6 +449,9 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
         };
         await updateAlumniData();
       }
+      
+      // Clear form data after successful save
+      clearFormData();
       onClose();
     } catch (error) {
       console.error('Error updating profile:', error);

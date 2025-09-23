@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 
 import { useRoleAccess } from '@/lib/hooks/useRoleAccess';
-import { useState } from "react";
+import { useExplicitPersistentState } from '@/lib/hooks/useAutoPersistentState';
 import { motion, AnimatePresence } from "framer-motion";
 import { Crown, UserCheck, Calculator, PartyPopper } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -73,7 +73,7 @@ const roleConfig = {
 };
 
 function ExecAdminPage() {
-  const [selectedRole, setSelectedRole] = useState("president");
+  const [selectedRole, setSelectedRole] = useExplicitPersistentState('admin-selected-role', 'president');
   
   const currentRoleConfig = roleConfig[selectedRole as keyof typeof roleConfig];
   const CurrentComponent = currentRoleConfig?.component;

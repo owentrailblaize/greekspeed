@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useExplicitPersistentState } from '@/lib/hooks/useAutoPersistentState';
 import { AlumniPipelineLayout } from "@/components/AlumniPipelineLayout";
 import { AlumniSubHeader } from "@/components/AlumniSubHeader";
 import { Alumni } from "@/lib/mockAlumni";
@@ -33,7 +34,7 @@ export function AlumniPipeline() {
   const [sortedAlumni, setSortedAlumni] = useState<Alumni[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
+  const [viewMode, setViewMode] = useExplicitPersistentState<'table' | 'card'>('alumni-view-mode', 'card');
   const [selectedAlumni, setSelectedAlumni] = useState<string[]>([]);
   const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
@@ -43,13 +44,13 @@ export function AlumniPipeline() {
     hasNextPage: false,
     hasPrevPage: false
   });
-  const [filters, setFilters] = useState<FilterState>({
+  const [filters, setFilters] = useExplicitPersistentState<FilterState>('alumni-filters', {
     searchTerm: "",
     graduationYear: "",
     industry: "",
     state: "",
     activelyHiring: false,
-    showActiveOnly: false, // 🔥 NEW: Active alumni filter
+    showActiveOnly: false,
   });
   const [selectedAlumniForModal, setSelectedAlumniForModal] = useState<Alumni | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);

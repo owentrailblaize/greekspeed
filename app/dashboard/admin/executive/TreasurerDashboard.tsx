@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from "react";
+import { useExplicitPersistentState } from '@/lib/hooks/useAutoPersistentState';
 import { motion } from "framer-motion";
 import { DollarSign, TrendingUp, Users, AlertTriangle, CheckCircle, Download, Mail, Plus, Calendar, Edit, Eye, UserPlus, X, Lock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -122,7 +123,7 @@ const exportDuesToCSV = (assignments: DuesAssignment[], filename: string = "dues
 
 export function TreasurerDashboard() {
   const { profile } = useProfile();
-  const [selectedTab, setSelectedTab] = useState("overview");
+  const [selectedTab, setSelectedTab] = useExplicitPersistentState('treasurer-selected-tab', 'overview');
   const [cycles, setCycles] = useState<DuesCycle[]>([]);
   const [assignments, setAssignments] = useState<DuesAssignment[]>([]);
   const [chapterMembers, setChapterMembers] = useState<ChapterMember[]>([]);
