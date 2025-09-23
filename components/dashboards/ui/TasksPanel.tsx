@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ClipboardList, User, Calendar, AlertTriangle, Plus, Loader2, X, Eye, Trash2, CheckCircle, Clock } from 'lucide-react';
 import { Task, TaskStatus, TaskPriority, CreateTaskRequest } from '@/types/operations';
-import { getTasksByChapter, updateTask, getChapterMembers, subscribeToTasks } from '@/lib/services/taskService';
+import { getTasksByChapter, updateTask, getChapterMembersForTasks, subscribeToTasks } from '@/lib/services/taskService';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { TaskModal } from '@/components/ui/TaskModal';
 import { supabase } from '@/lib/supabase/client';
@@ -34,7 +34,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [chapterMembers, setChapterMembers] = useState<Array<{ id: string; full_name: string }>>([]);
+  const [chapterMembers, setChapterMembers] = useState<Array<{ id: string; full_name: string; role: string; chapter_role: string | null }>>([]);
   const [newTask, setNewTask] = useState<CreateTaskRequest>({
     title: '',
     description: '',
@@ -109,34 +109,67 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
   }, [chapterId]);
 
   const loadAllData = async () => {
+    console.log('=== TasksPanel: loadAllData called ===');
+    console.log('chapterId:', chapterId);
+    console.log('profile.id:', profile?.id);
+    
     try {
       setLoading(true);
       
+      console.log('🔄 Loading personal tasks, all chapter tasks, and members in parallel...');
+      
       // Load personal tasks, all chapter tasks, and members in parallel
       const [personalTasksData, allTasksData, membersData] = await Promise.all([
-        // Personal tasks only (for the main panel)
+        // Personal tasks only (for the main panel) - with user names
         supabase
           .from('tasks')
-          .select('*')
+          .select(`
+            *,
+            assignee:profiles!tasks_assignee_id_fkey(full_name),
+            assigned_by:profiles!tasks_assigned_by_fkey(full_name)
+          `)
           .eq('chapter_id', chapterId!)
           .eq('assignee_id', profile!.id)
           .order('due_date', { ascending: true }),
         
-        // All chapter tasks (for the modal)
+        // All chapter tasks (for the modal) - with user names
         supabase
           .from('tasks')
-          .select('*')
+          .select(`
+            *,
+            assignee:profiles!tasks_assignee_id_fkey(full_name),
+            assigned_by:profiles!tasks_assigned_by_fkey(full_name)
+          `)
           .eq('chapter_id', chapterId!)
           .order('due_date', { ascending: true }),
         
-        getChapterMembers(chapterId!)
+        getChapterMembersForTasks(chapterId!) // Use the new function that excludes alumni
       ]);
       
-      setTasks(personalTasksData.data || []); // Personal tasks
-      setAllChapterTasks(allTasksData.data || []); // All chapter tasks
+      console.log('📊 Personal tasks loaded:', personalTasksData.data);
+      console.log('📊 All chapter tasks loaded:', allTasksData.data);
+      console.log('📊 Members loaded:', membersData);
+      
+      // Transform the data to include assignee_name
+      const personalTasks = (personalTasksData.data || []).map(task => ({
+        ...task,
+        assignee_name: task.assignee?.full_name || 'Unassigned',
+        assigned_by_name: task.assigned_by?.full_name || 'Unknown'
+      }));
+      
+      const allTasks = (allTasksData.data || []).map(task => ({
+        ...task,
+        assignee_name: task.assignee?.full_name || 'Unassigned',
+        assigned_by_name: task.assigned_by?.full_name || 'Unknown'
+      }));
+      
+      setTasks(personalTasks); // Personal tasks
+      setAllChapterTasks(allTasks); // All chapter tasks
       setChapterMembers(membersData);
+      
+      console.log('✅ Data loaded successfully');
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('❌ Error loading data:', error);
       setTasks([]);
       setAllChapterTasks([]);
       setChapterMembers([]);
@@ -146,43 +179,97 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
   };
 
   const handleCreateTask = async (taskData: CreateTaskRequest) => {
-    if (!chapterId || !profile?.id) return;
+    console.log('=== TasksPanel: handleCreateTask called ===');
+    console.log('taskData received:', taskData);
+    console.log('chapterId:', chapterId);
+    console.log('profile.id:', profile?.id);
+    
+    if (!chapterId || !profile?.id) {
+      console.log('❌ Missing chapterId or profile.id');
+      return;
+    }
     
     try {
       setCreating(true);
       
-      console.log('Creating task with data:', {
+      const taskPayload = {
         ...taskData,
         chapter_id: chapterId,
         assigned_by: profile.id
-      });
+      };
       
-      // Use Supabase directly instead of API route
-      const { data: task, error } = await supabase
-        .from('tasks')
-        .insert({
-          ...taskData,
-          chapter_id: chapterId,
-          assigned_by: profile.id,
-          status: 'pending'
-        })
-        .select()
-        .single();
+      console.log('📝 Creating task with payload:', taskPayload);
+      console.log('Array.isArray(taskData.assignee_id):', Array.isArray(taskData.assignee_id));
+      
+      // Handle multiple assignees by creating separate tasks
+      if (Array.isArray(taskData.assignee_id)) {
+        console.log('🔄 Creating multiple tasks for assignees:', taskData.assignee_id);
+        
+        const tasks = await Promise.all(
+          taskData.assignee_id.map((assigneeId, index) => {
+            console.log(`Creating task ${index + 1}/${taskData.assignee_id.length} for assignee:`, assigneeId);
+            return supabase
+              .from('tasks')
+              .insert({
+                ...taskData,
+                assignee_id: assigneeId,
+                chapter_id: chapterId,
+                assigned_by: profile.id,
+                status: 'pending'
+              })
+              .select()
+              .single();
+          })
+        );
+        
+        console.log('📝 All task creation promises completed');
+        const results = await Promise.all(tasks);
+        console.log('📊 Task creation results:', results);
+        
+        const errors = results.filter(result => result.error);
+        console.log('❌ Errors found:', errors);
+        
+        if (errors.length > 0) {
+          console.error('Supabase errors:', errors);
+          throw new Error(`Failed to create some tasks: ${errors.map(e => e.error?.message).join(', ')}`);
+        }
+        
+        const createdTasks = results.map(r => r.data);
+        console.log('✅ Tasks created successfully:', createdTasks);
+      } else {
+        // Single assignee (original behavior)
+        console.log('🔄 Creating single task for assignee:', taskData.assignee_id);
+        
+        const { data: task, error } = await supabase
+          .from('tasks')
+          .insert({
+            ...taskData,
+            assignee_id: taskData.assignee_id as string,
+            chapter_id: chapterId,
+            assigned_by: profile.id,
+            status: 'pending'
+          })
+          .select()
+          .single();
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw new Error(`Failed to create task: ${error.message}`);
+        console.log('📊 Single task creation result:', { task, error });
+
+        if (error) {
+          console.error('Supabase error:', error);
+          throw new Error(`Failed to create task: ${error.message}`);
+        }
+
+        console.log('✅ Task created successfully:', task);
       }
 
-      console.log('Task created successfully:', task);
-
+      console.log('✅ All tasks created, closing modal and refreshing data');
       // Close modal
       setIsModalOpen(false);
       
       // Refresh tasks
       await loadAllData();
     } catch (error) {
-      console.error('Error creating task:', error);
+      console.error('❌ Error creating task:', error);
     } finally {
       setCreating(false);
     }
@@ -431,16 +518,23 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
                                   {formatDate(task.due_date)}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                  {task.status === 'completed' && (
+                                <div className="relative group">
                                     <Button
                                       size="sm"
                                       onClick={() => handleDeleteTask(task.id)}
+                                      disabled={task.status !== 'completed'}
                                       className="flex items-center space-x-1"
                                     >
                                       <Trash2 className="h-4 w-4" />
                                       <span>Delete</span>
                                     </Button>
-                                  )}
+                                    {task.status !== 'completed' && (
+                                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                        Delete when completed
+                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                                      </div>
+                                    )}
+                                  </div>
                                 </td>
                               </tr>
                             ))}
@@ -498,53 +592,6 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
                   </div>
                 </div>
                 
-                <div className="flex space-x-2">
-                  <Select 
-                    value={task.status} 
-                    onValueChange={(value) => handleStatusChange(task.id, value)}
-                  >
-                    <SelectTrigger className="h-7 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="overdue">Overdue</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  <Select
-                    value={task.priority}
-                    onValueChange={(value) => handlePriorityChange(task.id, value)}
-                  >
-                    <SelectTrigger className="h-7 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="urgent">Urgent</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  <Select
-                    value={task.assignee_id}
-                    onValueChange={(value) => handleReassign(task.id, value)}
-                  >
-                    <SelectTrigger className="h-7 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {chapterMembers.map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {member.full_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
             ))
           )}

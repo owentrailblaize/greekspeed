@@ -3,7 +3,12 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function middleware(req: NextRequest) {
-  console.log('🔍 Middleware: Processing request for:', req.nextUrl.pathname);
+  // Skip logging for activity API calls to reduce spam
+  const isActivityAPI = req.nextUrl.pathname === '/api/activity';
+  
+  // if (!isActivityAPI) {
+  //   console.log('🔍 Middleware: Processing request for:', req.nextUrl.pathname);
+  // }
   
   let response = NextResponse.next({
     request: {
@@ -34,15 +39,18 @@ export async function middleware(req: NextRequest) {
     error
   } = await supabase.auth.getSession();
 
-  console.log('🔍 Middleware: Session check:', { 
-    hasSession: !!session, 
-    error: error?.message,
-    pathname: req.nextUrl.pathname,
-    userId: session?.user?.id
-  });
+  // Skip detailed session logging for activity API calls
+  // if (!isActivityAPI) {
+  //   console.log('🔍 Middleware: Session check:', { 
+  //     hasSession: !!session, 
+  //     error: error?.message,
+  //     pathname: req.nextUrl.pathname,
+  //     userId: session?.user?.id
+  //   });
+  //   console.log('✅ Middleware: Request allowed to proceed');
+  // }
 
   // Don't block dashboard access for now - just log the session state
-  console.log('✅ Middleware: Request allowed to proceed');
   return response;
 }
 

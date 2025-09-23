@@ -263,7 +263,7 @@ export function ProfileCompletionGate({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: isClosing ? 0 : 1, scale: isClosing ? 0.95 : 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-white rounded-lg max-w-lg w-full my-8 shadow-2xl"
+          className="bg-white rounded-lg max-w-lg w-full my-8 shadow-2xl h-auto"
         >
           <div className="flex flex-col">
             <div className="pb-4 flex-shrink-0 px-6 pt-6 relative">
@@ -319,7 +319,7 @@ export function ProfileCompletionGate({
                       </div>
                     </div>
 
-                    {/* Missing Fields List - Column Layout */}
+                  {/* Missing Fields List - Column Layout */}
                   {completion.missingFields.length > 0 && (
                     <div className="mb-4">
                       <h4 className="font-medium text-sm text-gray-900 mb-3">
@@ -348,7 +348,7 @@ export function ProfileCompletionGate({
                   )}
 
                   {/* Benefits Section - Simplified */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 hidden sm:block">
                     <h4 className="font-medium text-sm text-blue-900 mb-2">
                       {currentProfile?.role === 'alumni' ? 'Why Complete Your Professional Profile?' : 'Why Complete Your Profile?'}
                     </h4>
