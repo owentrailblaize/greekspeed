@@ -27,22 +27,10 @@ export const RoleSelect = React.forwardRef<HTMLDivElement, RoleSelectProps>(
     const [selectedValue, setSelectedValue] = React.useState(value || "");
     const [selectedLabel, setSelectedLabel] = React.useState<string>("");
     const [dropdownPosition, setDropdownPosition] = React.useState({ top: 0, left: 0, width: 0 });
-    const [isMobile, setIsMobile] = React.useState(false);
     const selectRef = React.useRef<HTMLDivElement>(null);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
     
     const selectedOption = options.find(option => option.value === value);
-    
-    // Check if mobile on mount and resize
-    React.useEffect(() => {
-      const checkMobile = () => {
-        setIsMobile(window.innerWidth < 768); // md breakpoint
-      };
-      
-      checkMobile();
-      window.addEventListener('resize', checkMobile);
-      return () => window.removeEventListener('resize', checkMobile);
-    }, []);
     
     React.useEffect(() => {
       setSelectedValue(value || "");
@@ -52,6 +40,18 @@ export const RoleSelect = React.forwardRef<HTMLDivElement, RoleSelectProps>(
         setSelectedLabel("");
       }
     }, [value, selectedOption]);
+
+    // Update dropdown position when scrolling or resizing
+    const updateDropdownPosition = React.useCallback(() => {
+      if (isOpen && selectRef.current) {
+        const rect = selectRef.current.getBoundingClientRect();
+        setDropdownPosition({
+          top: rect.bottom + window.scrollY,
+          left: rect.left + window.scrollX,
+          width: rect.width
+        });
+      }
+    }, [isOpen]);
 
     React.useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
@@ -67,6 +67,23 @@ export const RoleSelect = React.forwardRef<HTMLDivElement, RoleSelectProps>(
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    // Add scroll and resize listeners to update dropdown position
+    React.useEffect(() => {
+      if (isOpen) {
+        // Update position immediately
+        updateDropdownPosition();
+        
+        // Add listeners for scroll and resize
+        window.addEventListener('scroll', updateDropdownPosition, true);
+        window.addEventListener('resize', updateDropdownPosition);
+        
+        return () => {
+          window.removeEventListener('scroll', updateDropdownPosition, true);
+          window.removeEventListener('resize', updateDropdownPosition);
+        };
+      }
+    }, [isOpen, updateDropdownPosition]);
 
     const handleSelect = (option: RoleOption) => {
       if (option.disabled) return;
@@ -116,9 +133,9 @@ export const RoleSelect = React.forwardRef<HTMLDivElement, RoleSelectProps>(
         {isOpen && typeof window !== 'undefined' && createPortal(
           <div 
             ref={dropdownRef}
-            className="fixed z-[99999] max-h-60 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg"
+            className="absolute z-[99999] max-h-60 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg"
             style={{
-              top: dropdownPosition.top + (isMobile ? 0 : 8), // Add spacing only on desktop
+              top: dropdownPosition.top + 8,
               left: dropdownPosition.left,
               width: dropdownPosition.width,
               minWidth: '200px'
