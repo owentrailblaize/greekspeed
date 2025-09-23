@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, Users } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
@@ -14,9 +14,63 @@ export function CompactCalendarCard() {
   const [error, setError] = useState<string | null>(null);
   const [hoveredEvent, setHoveredEvent] = useState<Event | null>(null);
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0, placement: 'bottom-right' });
   
+  const popupRef = useRef<HTMLDivElement>(null);
+  const calendarRef = useRef<HTMLDivElement>(null);
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
+
+  // Calculate optimal popup position to prevent overflow
+  const calculatePopupPosition = useCallback((mouseX: number, mouseY: number) => {
+    if (!popupRef.current) {
+      // Fallback position if popup isn't rendered yet
+      return { 
+        x: Math.min(mouseX + 10, window.innerWidth - 340), 
+        y: Math.max(mouseY - 10, 10), 
+        placement: 'bottom-right' 
+      };
+    }
+
+    const popup = popupRef.current;
+    const popupRect = popup.getBoundingClientRect();
+    const popupWidth = popupRect.width;
+    const popupHeight = popupRect.height;
+    
+    const padding = 16; // Safe padding from viewport edges
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    let x = mouseX + 10;
+    let y = mouseY - 10;
+    let placement = 'bottom-right';
+    
+    // Check horizontal overflow - flip to left side if needed
+    if (x + popupWidth > viewportWidth - padding) {
+      x = mouseX - popupWidth - 10;
+      placement = 'bottom-left';
+    }
+    
+    // Check vertical overflow - flip to top if needed
+    if (y - popupHeight < padding) {
+      y = mouseY + 10;
+      placement = placement === 'bottom-right' ? 'top-right' : 'top-left';
+    }
+    
+    // Final boundary checks to ensure popup stays within viewport
+    x = Math.max(padding, Math.min(x, viewportWidth - popupWidth - padding));
+    y = Math.max(padding, Math.min(y, viewportHeight - popupHeight - padding));
+    
+    return { x, y, placement };
+  }, []);
+
+  // Recalculate position when popup is rendered
+  useEffect(() => {
+    if (hoveredEvent && popupRef.current) {
+      const newPosition = calculatePopupPosition(hoverPosition.x, hoverPosition.y);
+      setPopupPosition(newPosition);
+    }
+  }, [hoveredEvent, hoverPosition, calculatePopupPosition]);
 
   // Fetch events for the calendar - ONLY for this chapter
   useEffect(() => {
@@ -122,7 +176,7 @@ export function CompactCalendarCard() {
     }
 
     return (
-      <div className="bg-white rounded-lg border border-gray-200 w-full relative">
+      <div ref={calendarRef} className="bg-white rounded-lg border border-gray-200 w-full relative">
         {/* Calendar Title - Now inside the calendar */}
         <div className="flex items-center justify-center p-2 border-b border-gray-200">
           <div className="flex items-center space-x-2">
@@ -165,45 +219,6 @@ export function CompactCalendarCard() {
         <div className="grid grid-cols-7">
           {days}
         </div>
-
-        {/* Event Hover Popup */}
-        {hoveredEvent && (
-          <div 
-            className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 max-w-xs pointer-events-none"
-            style={{
-              left: `${hoverPosition.x + 10}px`,
-              top: `${hoverPosition.y - 10}px`,
-              transform: 'translateY(-100%)'
-            }}
-          >
-            <div className="space-y-2">
-              <h4 className="font-semibold text-sm text-gray-900">{hoveredEvent.title}</h4>
-              
-              <div className="space-y-1 text-xs text-gray-600">
-                <div className="flex items-center space-x-2">
-                  <Clock className="h-3 w-3" />
-                  <span>{parseRawTime(hoveredEvent.start_time)}</span>
-                </div>
-                {hoveredEvent.location && (
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="h-3 w-3" />
-                    <span>{hoveredEvent.location}</span>
-                  </div>
-                )}
-                <div className="flex items-center space-x-2">
-                  <Users className="h-3 w-3" />
-                  <span>{hoveredEvent.attendee_count || 0} attending</span>
-                </div>
-              </div>
-              
-              {hoveredEvent.description && (
-                <p className="text-xs text-gray-500 mt-2 line-clamp-2">
-                  {hoveredEvent.description}
-                </p>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     );
   };
@@ -248,5 +263,51 @@ export function CompactCalendarCard() {
     );
   }
 
-  return renderCompactCalendar();
+  return (
+    <>
+      {renderCompactCalendar()}
+      
+      {/* Event Hover Popup - Rendered outside calendar container for better positioning */}
+      {hoveredEvent && (
+        <div 
+          ref={popupRef}
+          className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 max-w-xs pointer-events-none transition-all duration-150 ease-out"
+          style={{
+            left: `${popupPosition.x}px`,
+            top: `${popupPosition.y}px`,
+            transform: popupPosition.placement.includes('bottom') 
+              ? 'translateY(-100%)' 
+              : 'translateY(0)'
+          }}
+        >
+          <div className="space-y-2">
+            <h4 className="font-semibold text-sm text-gray-900">{hoveredEvent.title}</h4>
+            
+            <div className="space-y-1 text-xs text-gray-600">
+              <div className="flex items-center space-x-2">
+                <Clock className="h-3 w-3" />
+                <span>{parseRawTime(hoveredEvent.start_time)}</span>
+              </div>
+              {hoveredEvent.location && (
+                <div className="flex items-center space-x-2">
+                  <MapPin className="h-3 w-3" />
+                  <span>{hoveredEvent.location}</span>
+                </div>
+              )}
+              <div className="flex items-center space-x-2">
+                <Users className="h-3 w-3" />
+                <span>{hoveredEvent.attendee_count || 0} attending</span>
+              </div>
+            </div>
+            
+            {hoveredEvent.description && (
+              <p className="text-xs text-gray-500 mt-2 line-clamp-2">
+                {hoveredEvent.description}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
