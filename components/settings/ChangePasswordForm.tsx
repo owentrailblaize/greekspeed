@@ -12,13 +12,15 @@ interface ChangePasswordFormProps {
   onBack?: () => void;
   onSuccess?: () => void;
   className?: string;
+  resetToken?: string; // Add this for password reset flow
 }
 
 export function ChangePasswordForm({ 
   showBackButton = false, 
   onBack, 
   onSuccess,
-  className = ""
+  className = "",
+  resetToken
 }: ChangePasswordFormProps) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -50,16 +52,18 @@ export function ChangePasswordForm({
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/change-password', {
+      const endpoint = resetToken ? '/api/auth/reset-password' : '/api/auth/change-password';
+      const body = resetToken 
+        ? { newPassword, resetToken }
+        : { currentPassword, newPassword };
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.access_token}`
         },
-        body: JSON.stringify({
-          currentPassword,
-          newPassword
-        })
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
@@ -108,29 +112,29 @@ export function ChangePasswordForm({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="current-password">Current Password <span className="text-red-400">*</span></Label>
-            <div className="relative">
-              <Input
-                id="current-password"
-                type={showCurrentPassword ? 'text' : 'password'}
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-                disabled={loading}
-                className="pr-12"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3"
-                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-              >
-                {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </Button>
+          {!resetToken && (
+            <div className="space-y-2">
+              <Label htmlFor="currentPassword">Current Password</Label>
+              <div className="relative">
+                <Input
+                  id="currentPassword"
+                  type={showCurrentPassword ? 'text' : 'password'}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           <div>
             <Label htmlFor="new-password">New Password <span className="text-red-400">*</span></Label>

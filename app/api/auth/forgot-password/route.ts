@@ -29,24 +29,28 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Generate reset link using Supabase's built-in password reset
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
+    // Generate a reset token using Supabase's admin API (doesn't send email)
+    const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
+      type: 'recovery',
+      email: email,
+      options: {
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/reset-password`,
+      }
     });
 
-    if (error) {
-      console.error('Password reset error:', error);
+    if (resetError) {
+      console.error('Password reset error:', resetError);
       return NextResponse.json({ 
         error: 'Failed to initiate password reset' 
       }, { status: 500 });
     }
 
-    // Send custom email with reset instructions
-    await EmailService.sendPasswordResetInstructions({
+    // Send ONLY your custom email with reset instructions
+    const emailSent = await EmailService.sendPasswordResetInstructions({
       to: email,
       firstName: profile.first_name || 'User',
       chapterName: profile.chapter || 'Unknown Chapter',
-      resetLink: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password?token=${data}`,
+      resetLink: resetData.properties?.action_link || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/reset-password`,
       timestamp: new Date().toLocaleString('en-US', {
         year: 'numeric',
         month: 'long',
@@ -56,6 +60,13 @@ export async function POST(request: NextRequest) {
         timeZoneName: 'short'
       })
     });
+
+    if (!emailSent) {
+      console.error('Failed to send custom email');
+      return NextResponse.json({ 
+        error: 'Failed to send reset email' 
+      }, { status: 500 });
+    }
 
     return NextResponse.json({ 
       success: true, 

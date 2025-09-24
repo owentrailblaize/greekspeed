@@ -80,8 +80,7 @@ export default function SignInPage() {
   };
 
   const handleForgotPassword = () => {
-    // Mock forgot password functionality
-    alert('Forgot password functionality would be implemented here. For now, please contact support.');
+    router.push('/auth/forgot-password');
   };
 
   const handleBackToLanding = () => {

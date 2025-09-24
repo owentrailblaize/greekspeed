@@ -1,68 +1,96 @@
 'use client';
 
-import { ChangePasswordForm } from '@/components/settings/ChangePasswordForm';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { ChangePasswordForm } from '@/components/settings/ChangePasswordForm';
+import { supabase } from '@/lib/supabase/client'; // Use the supabase instance, not createClient
 
 export default function ResetPasswordPage() {
-  const router = useRouter();
-  const [isValidToken, setIsValidToken] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const [isValidating, setIsValidating] = useState(true);
+  const [isValid, setIsValid] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    // Check if there's a valid reset token in the URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    
-    if (token) {
-      // TODO: Validate the reset token with your backend
-      setIsValidToken(true);
-    }
-    
-    setLoading(false);
-  }, []);
+    const validateToken = async () => {
+      // Check for Supabase access token in URL hash
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+      
+      if (accessToken && refreshToken) {
+        try {
+          // Set the session with the tokens
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
 
-  const handleSuccess = () => {
-    // Redirect to login page after successful password reset
-    router.push('/auth/sign-in');
-  };
+          if (error) {
+            console.error('Token validation error:', error);
+            setError('Invalid or expired reset link');
+            setIsValid(false);
+          } else {
+            setIsValid(true);
+          }
+        } catch (error) {
+          console.error('Token validation error:', error);
+          setError('Invalid or expired reset link');
+          setIsValid(false);
+        }
+      } else {
+        // Check for traditional token parameter
+        const token = searchParams.get('token');
+        if (token) {
+          setIsValid(true);
+        } else {
+          setError('Invalid or expired reset link');
+          setIsValid(false);
+        }
+      }
+      
+      setIsValidating(false);
+    };
 
-  const handleBack = () => {
-    router.push('/auth/sign-in');
-  };
+    validateToken();
+  }, [searchParams]);
 
-  if (loading) {
+  if (isValidating) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center p-6">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Validating reset link...</p>
+        </div>
       </div>
     );
   }
 
-  if (!isValidToken) {
+  if (!isValid || error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 flex items-center justify-center">
-        <div className="max-w-md mx-auto text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Invalid Reset Link</h1>
-          <p className="text-gray-600 mb-6">This password reset link is invalid or has expired.</p>
-          <button
-            onClick={() => router.push('/auth/sign-in')}
-            className="text-blue-600 hover:text-blue-700 font-medium"
-          >
-            Back to Sign In
-          </button>
+      <div className="min-h-screen bg-white flex items-center justify-center p-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Invalid Reset Link</h1>
+          <p className="text-gray-600">{error || 'This password reset link is invalid or has expired.'}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 flex items-center justify-center">
-      <div className="max-w-md mx-auto px-6">
-        <ChangePasswordForm
-          showBackButton={true}
-          onBack={handleBack}
-          onSuccess={handleSuccess}
+    <div className="min-h-screen bg-white flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Set New Password</h1>
+          <p className="text-gray-600">Enter your new password below</p>
+        </div>
+        
+        <ChangePasswordForm 
+          showBackButton={false}
+          onSuccess={() => {
+            // Redirect to sign in after successful password reset
+            window.location.href = '/sign-in';
+          }}
         />
       </div>
     </div>
