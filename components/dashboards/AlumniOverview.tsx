@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, UserPlus } from 'lucide-react';
+import { Users, UserPlus, X, CheckCircle } from 'lucide-react';
 import { PersonalAlumniProfile } from './ui/PersonalAlumniProfile';
 import { SocialFeed } from './ui/SocialFeed';
 import { AlumniMobileBottomNavigation } from './ui/AlumniMobileBottomNavigation';
@@ -35,53 +35,65 @@ interface Profile {
 export function AlumniOverview() {
   const { profile } = useProfile();
   const { members: chapterMembers, loading: membersLoading } = useChapterMembers(profile?.chapter_id || undefined);
-  const { connections, sendConnectionRequest } = useConnections();
+  const { connections, sendConnectionRequest, loading: connectionsLoading } = useConnections();
   const router = useRouter();
   const [connectModalOpen, setConnectModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [connectionLoading, setConnectionLoading] = useState<string | null>(null);
   const [activeMobileTab, setActiveMobileTab] = useState('home');
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [connectedUserName, setConnectedUserName] = useState<string>('');
+  const [localConnectionsSnapshot, setLocalConnectionsSnapshot] = useState<any[]>([]);
+  const [snapshotTaken, setSnapshotTaken] = useState(false);
 
-  // Get networking spotlight members from same chapter
-  const getNetworkingSpotlight = () => {
-    if (!chapterMembers || !profile) return [];
+  // Take snapshot of connections when they're loaded and we haven't taken one yet
+  useEffect(() => {
+    if (profile?.id && connections.length >= 0 && !connectionsLoading && !snapshotTaken) {
+      setLocalConnectionsSnapshot([...connections]);
+      setSnapshotTaken(true);
+    }
+  }, [profile?.id, connections, connectionsLoading, snapshotTaken]);
+
+  // Memoize the networking spotlight to prevent constant refreshing
+  const networkingSpotlight = useMemo(() => {
+    if (!chapterMembers || !profile || !snapshotTaken) return [];
     
-    // Get IDs of users the current user is already connected with
+    // Get IDs of users the current user has ANY connection with (pending, accepted, etc.)
+    // Use the local snapshot, not the live connections
     const connectedUserIds = new Set(
-      connections
-        .filter(conn => 
-          conn.status === 'accepted' && 
-          (conn.requester_id === profile.id || conn.recipient_id === profile.id)
-        )
-        .map(conn => 
-          conn.requester_id === profile.id ? conn.recipient_id : conn.requester_id
-        )
+      localConnectionsSnapshot.map(conn => 
+        conn.requester_id === profile.id ? conn.recipient_id : conn.requester_id
+      )
     );
     
-    // Filter out current user and already connected users
+    // Filter out current user and users with any existing connection
     const availableMembers = chapterMembers.filter(member => 
       member.id !== profile.id && 
       !connectedUserIds.has(member.id)
     );
     
-    // Prioritize alumni and active members, then randomly shuffle and return up to 5
+    // Prioritize alumni and active members, then sort by name for consistent ordering
     const alumniMembers = availableMembers.filter(member => member.role === 'alumni');
     const activeMembers = availableMembers.filter(member => member.role === 'active_member');
     const otherMembers = availableMembers.filter(member => 
       member.role !== 'alumni' && member.role !== 'active_member'
     );
     
-    // Combine with priority order: alumni first, then active members, then others
+    // Sort each group by name for consistent ordering (not random)
+    const sortByName = (a: any, b: any) => {
+      const nameA = a.full_name || `${a.first_name || ''} ${a.last_name || ''}`.trim() || '';
+      const nameB = b.full_name || `${b.first_name || ''} ${b.last_name || ''}`.trim() || '';
+      return nameA.localeCompare(nameB);
+    };
+    
     const prioritizedMembers = [
-      ...alumniMembers.sort(() => Math.random() - 0.5),
-      ...activeMembers.sort(() => Math.random() - 0.5),
-      ...otherMembers.sort(() => Math.random() - 0.5)
+      ...alumniMembers.sort(sortByName),
+      ...activeMembers.sort(sortByName),
+      ...otherMembers.sort(sortByName)
     ];
     
     return prioritizedMembers.slice(0, 5);
-  };
-
-  const networkingSpotlight = getNetworkingSpotlight();
+  }, [chapterMembers, profile, snapshotTaken, localConnectionsSnapshot]);
 
   const handleConnect = async (member: ChapterMemberData) => {
     if (!profile) return;
@@ -89,11 +101,24 @@ export function AlumniOverview() {
     setConnectionLoading(member.id);
     try {
       await sendConnectionRequest(member.id);
-      // Connection request sent to
-      // You could show a success toast here
+      
+      // Update our local snapshot to include the new connection
+      const newConnection = {
+        id: `temp-${Date.now()}`, // Temporary ID
+        requester_id: profile.id,
+        recipient_id: member.id,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      setLocalConnectionsSnapshot(prev => [...prev, newConnection]);
+      
+      // Show success modal
+      setConnectedUserName(member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member');
+      setSuccessModalOpen(true);
     } catch (error) {
       console.error('Failed to send connection request:', error);
-      // You could show an error toast here
     } finally {
       setConnectionLoading(null);
     }
@@ -185,7 +210,7 @@ export function AlumniOverview() {
                               
                               <p className="text-xs text-gray-600 mb-1 truncate">
                                 {member.chapter_role && member.chapter_role !== 'member' ? 
-                                  member.chapter_role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 
+                                  member.chapter_role.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 
                                   member.role === 'alumni' ? 'Alumni' : 'Member'
                                 }
                               </p>
@@ -202,7 +227,7 @@ export function AlumniOverview() {
                                   variant="outline"
                                   onClick={() => handleConnect(member)}
                                   disabled={connectionLoading === member.id}
-                                  className="text-navy-600 border-navy-600 hover:bg-navy-50 text-xs h-7 px-2"
+                                  className="text-navy-600 border-navy-600 hover:bg-navy-50 text-xs h-7 px-2 !rounded-full"
                                 >
                                   {connectionLoading === member.id ? (
                                     <div className="w-3 h-3 border border-navy-600 border-t-transparent rounded-full animate-spin" />
@@ -297,6 +322,39 @@ export function AlumniOverview() {
             <div className="flex space-x-2">
               <Button onClick={() => setConnectModalOpen(false)}>Close</Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {successModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-sm w-full mx-4 p-6 text-center">
+            <div className="flex justify-end mb-2">
+              <button
+                onClick={() => setSuccessModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Connection Request Sent!
+              </h3>
+              <p className="text-gray-600">
+                Your connection request has been sent to <span className="font-medium">{connectedUserName}</span>
+              </p>
+            </div>
+            
+            <Button 
+              onClick={() => setSuccessModalOpen(false)}
+              className="w-full bg-navy-600 hover:bg-navy-700"
+            >
+              Got it!
+            </Button>
           </div>
         </div>
       )}
