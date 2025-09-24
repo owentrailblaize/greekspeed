@@ -1,0 +1,392 @@
+'use client';
+
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Settings, Shield, Bell, ArrowLeft, ToggleLeft, ToggleRight, Mail, User, Phone, Calendar, Lock, User as UserIcon, HelpCircle } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useProfile } from '@/lib/hooks/useProfile';
+import { ChangePasswordForm } from '@/components/settings/ChangePasswordForm';
+
+export default function SettingsPage() {
+  const [activeSection, setActiveSection] = useState('security');
+  const [activeSubSection, setActiveSubSection] = useState<string | null>(null);
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [pushNotifications, setPushNotifications] = useState(false);
+  const [chapterAnnouncements, setChapterAnnouncements] = useState(true);
+  const [connectionRequests, setConnectionRequests] = useState(true);
+  const [messageNotifications, setMessageNotifications] = useState(true);
+  
+  const router = useRouter();
+  const { profile, loading: profileLoading } = useProfile();
+
+  const sidebarItems = [
+    {
+      id: 'security',
+      label: 'Security',
+      icon: Shield,
+      description: 'Password and security settings',
+      locked: false
+    },
+    {
+      id: 'notifications',
+      label: 'Notifications',
+      icon: Bell,
+      description: 'Notification preferences',
+      locked: true
+    },
+    {
+      id: 'account',
+      label: 'Account',
+      icon: User,
+      description: 'Account management & data',
+      locked: true
+    },
+    {
+      id: 'support',
+      label: 'Support',
+      icon: HelpCircle,
+      description: 'Help & support center',
+      locked: true
+    }
+  ];
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch {
+      return 'Unknown';
+    }
+  };
+
+  const handleBackToSecurity = () => {
+    setActiveSubSection(null);
+  };
+
+  const handlePasswordChangeSuccess = () => {
+    setActiveSubSection(null);
+  };
+
+  const renderSecurityContent = () => {
+    // Show change password form if that's the active sub-section
+    if (activeSubSection === 'change-password') {
+      return (
+        <ChangePasswordForm
+          showBackButton={true}
+          onBack={handleBackToSecurity}
+          onSuccess={handlePasswordChangeSuccess}
+        />
+      );
+    }
+
+    // Default security content
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Security Settings</h2>
+          <p className="text-gray-600">Manage your account security and privacy settings</p>
+        </div>
+
+        {/* Account Information - No card wrapper */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">Account Information</h3>
+          
+          <div className="space-y-4">
+            {/* Email */}
+            <div className="flex items-center space-x-4 p-4 border rounded-lg bg-gray-50">
+              <Mail className="w-5 h-5 text-gray-500" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Email Address</p>
+                <p className="text-sm text-gray-600">{profile?.email || 'Not provided'}</p>
+              </div>
+            </div>
+
+            {/* Full Name */}
+            <div className="flex items-center space-x-4 p-4 border rounded-lg bg-gray-50">
+              <User className="w-5 h-5 text-gray-500" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Full Name</p>
+                <p className="text-sm text-gray-600">{profile?.full_name || 'Not provided'}</p>
+              </div>
+            </div>
+
+            {/* Phone */}
+            <div className="flex items-center space-x-4 p-4 border rounded-lg bg-gray-50">
+              <Phone className="w-5 h-5 text-gray-500" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Phone Number</p>
+                <p className="text-sm text-gray-600">{profile?.phone || 'Not provided'}</p>
+              </div>
+            </div>
+
+            {/* Created At */}
+            <div className="flex items-center space-x-4 p-4 border rounded-lg bg-gray-50">
+              <Calendar className="w-5 h-5 text-gray-500" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Member Since</p>
+                <p className="text-sm text-gray-600">
+                  {profile?.created_at ? formatDate(profile.created_at) : 'Unknown'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Security Actions */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">Security Actions</h3>
+          
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex-1">
+              <h4 className="font-medium text-gray-900">Password</h4>
+              <p className="text-sm text-gray-600 mt-1">Set a unique password for better protection</p>
+            </div>
+            <Button 
+              variant="outline"
+              onClick={() => setActiveSubSection('change-password')}
+            >
+              Change Password
+            </Button>
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg opacity-50">
+            <div className="flex-1">
+              <h4 className="font-medium text-gray-900">Two-Factor Authentication</h4>
+              <p className="text-sm text-gray-600 mt-1">Add an extra layer of security to your account</p>
+            </div>
+            <div className="flex items-center space-x-3">
+              <span className="text-sm text-gray-500">Disabled</span>
+              <Button variant="outline" size="sm" disabled className="opacity-50 cursor-not-allowed">
+                Enable 2FA
+              </Button>
+              <Lock className="w-3 h-3 text-gray-400" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderNotificationsContent = () => (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Notification Preferences</h2>
+        <p className="text-gray-600">Control how and when you receive notifications</p>
+      </div>
+
+      {/* Email Notifications */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900">Email Notifications</h3>
+        
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex-1">
+              <h4 className="font-medium text-gray-900">Connection Requests</h4>
+              <p className="text-sm text-gray-600">Get notified when someone wants to connect with you</p>
+            </div>
+            <div className="flex items-center space-x-3">
+              <span className="text-sm text-gray-500">
+                {connectionRequests ? 'Enabled' : 'Disabled'}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setConnectionRequests(!connectionRequests)}
+                className="p-0 h-auto"
+              >
+                {connectionRequests ? (
+                  <ToggleRight className="w-8 h-8 text-green-600" />
+                ) : (
+                  <ToggleLeft className="w-8 h-8 text-gray-400" />
+                )}
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex-1">
+              <h4 className="font-medium text-gray-900">Chapter Announcements</h4>
+              <p className="text-sm text-gray-600">Receive updates from your chapter leadership</p>
+            </div>
+            <div className="flex items-center space-x-3">
+              <span className="text-sm text-gray-500">
+                {chapterAnnouncements ? 'Enabled' : 'Disabled'}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setChapterAnnouncements(!chapterAnnouncements)}
+                className="p-0 h-auto"
+              >
+                {chapterAnnouncements ? (
+                  <ToggleRight className="w-8 h-8 text-green-600" />
+                ) : (
+                  <ToggleLeft className="w-8 h-8 text-gray-400" />
+                )}
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex-1">
+              <h4 className="font-medium text-gray-900">Message Notifications</h4>
+              <p className="text-sm text-gray-600">Get notified when you receive new messages</p>
+            </div>
+            <div className="flex items-center space-x-3">
+              <span className="text-sm text-gray-500">
+                {messageNotifications ? 'Enabled' : 'Disabled'}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMessageNotifications(!messageNotifications)}
+                className="p-0 h-auto"
+              >
+                {messageNotifications ? (
+                  <ToggleRight className="w-8 h-8 text-green-600" />
+                ) : (
+                  <ToggleLeft className="w-8 h-8 text-gray-400" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Push Notifications */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900">Push Notifications</h3>
+        
+        <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="flex-1">
+            <h4 className="font-medium text-gray-900">Browser Notifications</h4>
+            <p className="text-sm text-gray-600">Receive notifications in your browser</p>
+          </div>
+          <div className="flex items-center space-x-3">
+            <span className="text-sm text-gray-500">
+              {pushNotifications ? 'Enabled' : 'Disabled'}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setPushNotifications(!pushNotifications)}
+              className="p-0 h-auto"
+            >
+              {pushNotifications ? (
+                <ToggleRight className="w-8 h-8 text-green-600" />
+              ) : (
+                <ToggleLeft className="w-8 h-8 text-gray-400" />
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+        <div className="max-w-full mx-auto px-14 py-6">
+          <div className="flex gap-6">
+            <div className="w-72 flex-shrink-0">
+              <Card className="bg-white shadow-sm">
+                <CardContent className="p-6">
+                  <div className="animate-pulse space-y-4">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="flex-1">
+              <div className="bg-white rounded-lg shadow-sm p-8">
+                <div className="animate-pulse space-y-6">
+                  <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div className="space-y-4">
+                    <div className="h-20 bg-gray-200 rounded"></div>
+                    <div className="h-20 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+      <div className="max-w-full mx-auto px-14 py-6">
+        <div className="flex gap-6">
+          {/* Sidebar */}
+          <div className="w-72 flex-shrink-0">
+            <Card className="bg-white shadow-sm">
+              <CardHeader className="pb-4">
+                <Button
+                  variant="ghost"
+                  onClick={() => router.back()}
+                  className="w-full justify-start mb-4 text-gray-600 hover:text-gray-900 rounded-full"
+                  style={{ borderRadius: '100px' }}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
+                <CardTitle className="text-lg text-gray-900">Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <nav className="space-y-2">
+                  {sidebarItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => !item.locked && setActiveSection(item.id)}
+                        className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${
+                          activeSection === item.id
+                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                            : item.locked
+                            ? 'text-gray-400 cursor-not-allowed opacity-50'
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                        disabled={item.locked}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Icon className="w-5 h-5" />
+                          <div>
+                            <div className="font-medium">{item.label}</div>
+                            <div className="text-xs text-gray-500">{item.description}</div>
+                          </div>
+                        </div>
+                        {item.locked && (
+                          <Lock className="w-4 h-4 text-gray-400" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </nav>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1">
+            <div className="bg-white rounded-lg shadow-sm p-8">
+              {activeSection === 'security' && renderSecurityContent()}
+              {activeSection === 'notifications' && renderNotificationsContent()}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

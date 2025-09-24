@@ -84,6 +84,23 @@ export interface MessageNotificationEmail {
   connectionId: string;
 }
 
+// Add these interfaces after line 85 (after MessageNotificationEmail interface)
+export interface PasswordChangeConfirmationEmail {
+  to: string;
+  firstName: string;
+  chapterName: string;
+  timestamp: string;
+  deviceInfo?: string;
+}
+
+export interface PasswordResetInstructionsEmail {
+  to: string;
+  firstName: string;
+  chapterName: string;
+  resetLink: string;
+  timestamp: string;
+}
+
 export class EmailService {
   private static fromEmail = process.env.SENDGRID_FROM_EMAIL || 'devin@trailblaize.net';
   private static fromName = process.env.SENDGRID_FROM_NAME || 'GreekSpeed';
@@ -929,6 +946,87 @@ export class EmailService {
       return 'tomorrow';
     } else {
       return `in ${diffDays} days`;
+    }
+  }
+
+  /**
+   * Send password change confirmation email using dynamic template
+   */
+  static async sendPasswordChangeConfirmation({
+    to,
+    firstName,
+    chapterName,
+    timestamp,
+    deviceInfo
+  }: PasswordChangeConfirmationEmail): Promise<boolean> {
+    try {
+      const msg = {
+        to,
+        from: {
+          email: this.fromEmail,
+          name: this.fromName,
+        },
+        subject: '✅ Password Successfully Changed - GreekSpeed',
+        templateId: process.env.SENDGRID_PASSWORD_CHANGE_TEMPLATE_ID!,
+        dynamicTemplateData: {
+          recipient: {
+            first_name: firstName,
+            email: to
+          },
+          chapter: {
+            name: chapterName
+          },
+          timestamp: timestamp,
+          device_info: deviceInfo || 'Unknown Device',
+          dashboard_link: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard`
+        }
+      };
+
+      await sgMail.send(msg);
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to send password change confirmation email:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Send password reset instructions email using dynamic template
+   */
+  static async sendPasswordResetInstructions({
+    to,
+    firstName,
+    chapterName,
+    resetLink,
+    timestamp
+  }: PasswordResetInstructionsEmail): Promise<boolean> {
+    try {
+      const msg = {
+        to,
+        from: {
+          email: this.fromEmail,
+          name: this.fromName,
+        },
+        subject: 'Reset Your GreekSpeed Password',
+        templateId: process.env.SENDGRID_PASSWORD_RESET_TEMPLATE_ID!,
+        dynamicTemplateData: {
+          recipient: {
+            first_name: firstName,
+            email: to
+          },
+          chapter: {
+            name: chapterName
+          },
+          reset_link: resetLink,
+          timestamp: timestamp
+        }
+      };
+
+      await sgMail.send(msg);
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to send password reset instructions email:', error);
+      return false;
     }
   }
 }
