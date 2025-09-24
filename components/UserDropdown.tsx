@@ -50,8 +50,8 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
   const menuItems = [
     { label: 'View Profile', href: '/dashboard/profile', icon: User, locked: false },
     { label: 'Notifications', href: '/dashboard/notifications', icon: Bell, key: 'notifications', locked: false },
+    { label: 'Settings', href: '/dashboard/settings', icon: Settings, locked: false },
     { label: 'Chapter & Role', href: '#', icon: Users, locked: true },
-    { label: 'Documents & Uploads', href: '#', icon: FileText, locked: true },
     { label: 'Help & Support', href: '#', icon: HelpCircle, locked: true },
     {
       label: 'Subscription Management',
@@ -333,7 +333,7 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
 
             {/* Menu Items */}
             <div className="space-y-1">
-              {menuItems.map((item) => {
+              {visibleMenuItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <button

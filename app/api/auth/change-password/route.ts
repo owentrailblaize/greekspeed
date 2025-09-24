@@ -39,12 +39,14 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Update password
-    const { error: updateError } = await supabase.auth.updateUser({
-      password: newPassword
-    });
+    // Update password using the service role key with user ID
+    const { error: updateError } = await supabase.auth.admin.updateUserById(
+      user.id,
+      { password: newPassword }
+    );
 
     if (updateError) {
+      console.error('Password update error:', updateError);
       return NextResponse.json({ 
         error: 'Failed to update password' 
       }, { status: 500 });

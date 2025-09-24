@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Settings, Shield, Bell, ArrowLeft, ToggleLeft, ToggleRight, Mail, User, Phone, Calendar } from 'lucide-react';
+import { Settings, Shield, Bell, ArrowLeft, ToggleLeft, ToggleRight, Mail, User, Phone, Calendar, Lock, User as UserIcon, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useProfile } from '@/lib/hooks/useProfile';
@@ -26,13 +26,29 @@ export default function SettingsPage() {
       id: 'security',
       label: 'Security',
       icon: Shield,
-      description: 'Manage your account security'
+      description: 'Password and security settings',
+      locked: false
     },
     {
       id: 'notifications',
       label: 'Notifications',
       icon: Bell,
-      description: 'Control your notification preferences'
+      description: 'Notification preferences',
+      locked: true
+    },
+    {
+      id: 'account',
+      label: 'Account',
+      icon: User,
+      description: 'Account management & data',
+      locked: true
+    },
+    {
+      id: 'support',
+      label: 'Support',
+      icon: HelpCircle,
+      description: 'Help & support center',
+      locked: true
     }
   ];
 
@@ -139,14 +155,17 @@ export default function SettingsPage() {
             </Button>
           </div>
 
-          <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="flex items-center justify-between p-4 border rounded-lg opacity-50">
             <div className="flex-1">
               <h4 className="font-medium text-gray-900">Two-Factor Authentication</h4>
               <p className="text-sm text-gray-600 mt-1">Add an extra layer of security to your account</p>
             </div>
             <div className="flex items-center space-x-3">
               <span className="text-sm text-gray-500">Disabled</span>
-              <Button variant="outline" size="sm">Enable 2FA</Button>
+              <Button variant="outline" size="sm" disabled className="opacity-50 cursor-not-allowed">
+                Enable 2FA
+              </Button>
+              <Lock className="w-3 h-3 text-gray-400" />
             </div>
           </div>
         </div>
@@ -328,26 +347,29 @@ export default function SettingsPage() {
                 <nav className="space-y-2">
                   {sidebarItems.map((item) => {
                     const Icon = item.icon;
-                    const isActive = activeSection === item.id;
-                    
                     return (
                       <button
                         key={item.id}
-                        onClick={() => {
-                          setActiveSection(item.id);
-                          setActiveSubSection(null); // Reset sub-section when changing main section
-                        }}
-                        className={`w-full flex items-center space-x-3 px-3 py-3 rounded-lg text-left transition-colors ${
-                          isActive
+                        onClick={() => !item.locked && setActiveSection(item.id)}
+                        className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${
+                          activeSection === item.id
                             ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                            : item.locked
+                            ? 'text-gray-400 cursor-not-allowed opacity-50'
+                            : 'text-gray-700 hover:bg-gray-50'
                         }`}
+                        disabled={item.locked}
                       >
-                        <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
-                        <div className="flex-1">
-                          <div className="font-medium">{item.label}</div>
-                          <div className="text-xs text-gray-500 mt-0.5">{item.description}</div>
+                        <div className="flex items-center space-x-3">
+                          <Icon className="w-5 h-5" />
+                          <div>
+                            <div className="font-medium">{item.label}</div>
+                            <div className="text-xs text-gray-500">{item.description}</div>
+                          </div>
                         </div>
+                        {item.locked && (
+                          <Lock className="w-4 h-4 text-gray-400" />
+                        )}
                       </button>
                     );
                   })}
