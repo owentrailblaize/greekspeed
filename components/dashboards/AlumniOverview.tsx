@@ -35,7 +35,7 @@ interface Profile {
 export function AlumniOverview() {
   const { profile } = useProfile();
   const { members: chapterMembers, loading: membersLoading } = useChapterMembers(profile?.chapter_id || undefined);
-  const { connections, sendConnectionRequest } = useConnections();
+  const { connections, sendConnectionRequest, loading: connectionsLoading } = useConnections();
   const router = useRouter();
   const [connectModalOpen, setConnectModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
@@ -48,11 +48,11 @@ export function AlumniOverview() {
 
   // Take snapshot of connections when they're loaded and we haven't taken one yet
   useEffect(() => {
-    if (profile?.id && connections.length >= 0 && !snapshotTaken) {
+    if (profile?.id && connections.length >= 0 && !connectionsLoading && !snapshotTaken) {
       setLocalConnectionsSnapshot([...connections]);
       setSnapshotTaken(true);
     }
-  }, [profile?.id, connections, snapshotTaken]);
+  }, [profile?.id, connections, connectionsLoading, snapshotTaken]);
 
   // Memoize the networking spotlight to prevent constant refreshing
   const networkingSpotlight = useMemo(() => {
@@ -227,7 +227,7 @@ export function AlumniOverview() {
                                   variant="outline"
                                   onClick={() => handleConnect(member)}
                                   disabled={connectionLoading === member.id}
-                                  className="text-navy-600 border-navy-600 hover:bg-navy-50 text-xs h-7 px-2"
+                                  className="text-navy-600 border-navy-600 hover:bg-navy-50 text-xs h-7 px-2 !rounded-full"
                                 >
                                   {connectionLoading === member.id ? (
                                     <div className="w-3 h-3 border border-navy-600 border-t-transparent rounded-full animate-spin" />

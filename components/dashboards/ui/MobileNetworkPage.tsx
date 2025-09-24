@@ -191,7 +191,7 @@ export function MobileNetworkPage() {
                     variant="outline"
                     onClick={() => handleConnect(member)}
                     disabled={connectionLoading === member.id}
-                    className="w-full h-8 text-sm text-navy-600 border-navy-600 hover:bg-navy-50"
+                    className="w-full h-8 text-sm text-navy-600 border-navy-600 hover:bg-navy-50 !rounded-full"
                   >
                     {connectionLoading === member.id ? (
                       <div className="w-4 h-4 border border-navy-600 border-t-transparent rounded-full animate-spin" />
