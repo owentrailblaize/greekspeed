@@ -27,7 +27,7 @@ export async function createTask(taskData: CreateTaskRequest, assignedBy: string
     
     // All task creation promises completed
     
-    const errors = results.filter(result => result.error);
+    const errors = tasks.filter(result => result.error);
     // Errors found
     
     if (errors.length > 0) {
@@ -35,7 +35,7 @@ export async function createTask(taskData: CreateTaskRequest, assignedBy: string
       throw new Error(`Failed to create some tasks: ${errors.map(e => e.error?.message).join(', ')}`);
     }
     
-    const createdTasks = results.map(result => result.data);
+    const createdTasks = tasks.map(result => result.data);
     // Successfully created tasks
     return createdTasks;
   }
