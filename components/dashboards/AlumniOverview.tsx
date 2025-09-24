@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,20 +43,27 @@ export function AlumniOverview() {
   const [activeMobileTab, setActiveMobileTab] = useState('home');
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [connectedUserName, setConnectedUserName] = useState<string>('');
+  const [localConnectionsSnapshot, setLocalConnectionsSnapshot] = useState<any[]>([]);
+  const [snapshotTaken, setSnapshotTaken] = useState(false);
+
+  // Take snapshot of connections when they're loaded and we haven't taken one yet
+  useEffect(() => {
+    if (profile?.id && connections.length >= 0 && !snapshotTaken) {
+      setLocalConnectionsSnapshot([...connections]);
+      setSnapshotTaken(true);
+    }
+  }, [profile?.id, connections, snapshotTaken]);
 
   // Memoize the networking spotlight to prevent constant refreshing
   const networkingSpotlight = useMemo(() => {
-    if (!chapterMembers || !profile) return [];
+    if (!chapterMembers || !profile || !snapshotTaken) return [];
     
     // Get IDs of users the current user has ANY connection with (pending, accepted, etc.)
+    // Use the local snapshot, not the live connections
     const connectedUserIds = new Set(
-      connections
-        .filter(conn => 
-          conn.requester_id === profile.id || conn.recipient_id === profile.id
-        )
-        .map(conn => 
-          conn.requester_id === profile.id ? conn.recipient_id : conn.requester_id
-        )
+      localConnectionsSnapshot.map(conn => 
+        conn.requester_id === profile.id ? conn.recipient_id : conn.requester_id
+      )
     );
     
     // Filter out current user and users with any existing connection
@@ -65,43 +72,28 @@ export function AlumniOverview() {
       !connectedUserIds.has(member.id)
     );
     
-    // Prioritize alumni and active members, then randomly shuffle and return up to 5
+    // Prioritize alumni and active members, then sort by name for consistent ordering
     const alumniMembers = availableMembers.filter(member => member.role === 'alumni');
     const activeMembers = availableMembers.filter(member => member.role === 'active_member');
     const otherMembers = availableMembers.filter(member => 
       member.role !== 'alumni' && member.role !== 'active_member'
     );
     
-    // Combine with priority order: alumni first, then active members, then others
-    // Use a seeded shuffle based on user ID for consistent randomness per user
-    const shuffleArray = (arr: any[], seed: string) => {
-      const shuffled = [...arr];
-      let currentIndex = shuffled.length;
-      
-      // Simple seeded random function
-      let seedNum = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const seededRandom = () => {
-        seedNum = (seedNum * 9301 + 49297) % 233280;
-        return seedNum / 233280;
-      };
-      
-      while (currentIndex !== 0) {
-        const randomIndex = Math.floor(seededRandom() * currentIndex);
-        currentIndex--;
-        [shuffled[currentIndex], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[currentIndex]];
-      }
-      
-      return shuffled;
+    // Sort each group by name for consistent ordering (not random)
+    const sortByName = (a: any, b: any) => {
+      const nameA = a.full_name || `${a.first_name || ''} ${a.last_name || ''}`.trim() || '';
+      const nameB = b.full_name || `${b.first_name || ''} ${b.last_name || ''}`.trim() || '';
+      return nameA.localeCompare(nameB);
     };
     
     const prioritizedMembers = [
-      ...shuffleArray(alumniMembers, profile.id),
-      ...shuffleArray(activeMembers, profile.id),
-      ...shuffleArray(otherMembers, profile.id)
+      ...alumniMembers.sort(sortByName),
+      ...activeMembers.sort(sortByName),
+      ...otherMembers.sort(sortByName)
     ];
     
     return prioritizedMembers.slice(0, 5);
-  }, [chapterMembers, profile, connections]); // Only recalculate when these dependencies change
+  }, [chapterMembers, profile, snapshotTaken, localConnectionsSnapshot]);
 
   const handleConnect = async (member: ChapterMemberData) => {
     if (!profile) return;
@@ -109,12 +101,24 @@ export function AlumniOverview() {
     setConnectionLoading(member.id);
     try {
       await sendConnectionRequest(member.id);
+      
+      // Update our local snapshot to include the new connection
+      const newConnection = {
+        id: `temp-${Date.now()}`, // Temporary ID
+        requester_id: profile.id,
+        recipient_id: member.id,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      setLocalConnectionsSnapshot(prev => [...prev, newConnection]);
+      
       // Show success modal
       setConnectedUserName(member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member');
       setSuccessModalOpen(true);
     } catch (error) {
       console.error('Failed to send connection request:', error);
-      // You could show an error toast here
     } finally {
       setConnectionLoading(null);
     }

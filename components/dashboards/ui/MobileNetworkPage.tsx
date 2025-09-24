@@ -53,42 +53,28 @@ export function MobileNetworkPage() {
       !connectedUserIds.has(member.id)
     );
     
-    // Prioritize alumni and active members, then use seeded shuffle for consistency
+    // Prioritize alumni and active members, then sort by name for consistent ordering
     const alumniMembers = availableMembers.filter(member => member.role === 'alumni');
     const activeMembers = availableMembers.filter(member => member.role === 'active_member');
     const otherMembers = availableMembers.filter(member => 
       member.role !== 'alumni' && member.role !== 'active_member'
     );
     
-    // Use seeded shuffle based on user ID for consistent randomness per user
-    const shuffleArray = (arr: any[], seed: string) => {
-      const shuffled = [...arr];
-      let currentIndex = shuffled.length;
-      
-      // Simple seeded random function
-      let seedNum = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const seededRandom = () => {
-        seedNum = (seedNum * 9301 + 49297) % 233280;
-        return seedNum / 233280;
-      };
-      
-      while (currentIndex !== 0) {
-        const randomIndex = Math.floor(seededRandom() * currentIndex);
-        currentIndex--;
-        [shuffled[currentIndex], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[currentIndex]];
-      }
-      
-      return shuffled;
+    // Sort each group by name for consistent ordering (not random)
+    const sortByName = (a: any, b: any) => {
+      const nameA = a.full_name || `${a.first_name || ''} ${a.last_name || ''}`.trim() || '';
+      const nameB = b.full_name || `${b.first_name || ''} ${b.last_name || ''}`.trim() || '';
+      return nameA.localeCompare(nameB);
     };
     
     // Combine with priority order: alumni first, then active members, then others
     const prioritizedMembers = [
-      ...shuffleArray(alumniMembers, profile.id),
-      ...shuffleArray(activeMembers, profile.id),
-      ...shuffleArray(otherMembers, profile.id)
+      ...alumniMembers.sort(sortByName),
+      ...activeMembers.sort(sortByName),
+      ...otherMembers.sort(sortByName)
     ];
     
-    return prioritizedMembers;
+    return prioritizedMembers.slice(0, 5); // Limit to 5 results
   }, [chapterMembers, profile, snapshotTaken, localConnectionsSnapshot]);
 
   const handleConnect = async (member: ChapterMemberData) => {
