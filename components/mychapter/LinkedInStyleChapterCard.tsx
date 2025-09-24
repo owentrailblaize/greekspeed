@@ -227,12 +227,11 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
 
           {/* Position and Description */}
           <div className="text-center mb-1 sm:mb-4">
+            {/* Position - Show on both mobile and desktop */}
             {position && position !== 'Member' && (
-              <p className="hidden sm:block text-xs sm:text-sm font-medium text-navy-600 mb-0.5 sm:mb-2 leading-tight truncate">{position}</p>
+              <p className="text-xs sm:text-sm font-medium text-navy-600 mb-0.5 sm:mb-2 leading-tight truncate">{position}</p>
             )}
-            {/* Bio - Show on mobile, hide on desktop */}
-            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed sm:hidden">{memberDescription}</p>
-            {/* Position - Show on desktop */}
+            {/* Bio - Show on desktop only */}
             <p className="hidden sm:block text-xs sm:text-sm text-gray-600 leading-relaxed">{memberDescription}</p>
           </div>
 

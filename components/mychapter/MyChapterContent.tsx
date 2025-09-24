@@ -25,6 +25,24 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
   // Role checking
   const { hasChapterRoleAccess } = useChapterRoleAccess(CHAPTER_ADMIN_ROLES);
 
+  // Helper function to get role display name
+  function getRoleDisplayName(role: string): string {
+    const roleNames: Record<string, string> = {
+      'president': 'President',
+      'vice_president': 'Vice President',
+      'treasurer': 'Treasurer',
+      'secretary': 'Secretary',
+      'rush_chair': 'Rush Chair',
+      'social_chair': 'Social Chair',
+      'philanthropy_chair': 'Philanthropy Chair',
+      'risk_management_chair': 'Risk Management Chair',
+      'alumni_relations_chair': 'Alumni Relations Chair',
+      'member': 'Member',
+      'pledge': 'Pledge'
+    };
+    return roleNames[role] || 'Member';
+  }
+
   // Update the transformation logic to handle null values better
   const transformedMembers: ChapterMember[] = members.map(member => {
     // Only use bio for description, nothing else
@@ -60,27 +78,35 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
   const officers = filteredMembers.filter(member => 
     member.position && ['President', 'Vice President', 'Treasurer', 'Secretary', 'Rush Chair', 'Social Chair'].includes(member.position)
   );
+
+  // Sort officers by leadership hierarchy
+  const sortedOfficers = officers.sort((a, b) => {
+    // Define the priority order for leadership positions
+    const positionPriority: Record<string, number> = {
+      'President': 1,
+      'Vice President': 2,
+      'Treasurer': 3,
+      'Social Chair': 4,
+      'Secretary': 5,
+      'Rush Chair': 6,
+      // Any other positions will be sorted alphabetically after the priority positions
+    };
+
+    const aPriority = positionPriority[a.position || ''] || 999;
+    const bPriority = positionPriority[b.position || ''] || 999;
+
+    // If priorities are different, sort by priority
+    if (aPriority !== bPriority) {
+      return aPriority - bPriority;
+    }
+
+    // If same priority or both are non-priority positions, sort alphabetically by name
+    return a.name.localeCompare(b.name);
+  });
+
   const generalMembers = filteredMembers.filter(member => 
     !member.position || member.position === 'Member' || member.position === 'Pledge'
   );
-
-  // Helper function to get role display name
-  function getRoleDisplayName(role: string): string {
-    const roleNames: Record<string, string> = {
-      'president': 'President',
-      'vice_president': 'Vice President',
-      'treasurer': 'Treasurer',
-      'secretary': 'Secretary',
-      'rush_chair': 'Rush Chair',
-      'social_chair': 'Social Chair',
-      'philanthropy_chair': 'Philanthropy Chair',
-      'risk_management_chair': 'Risk Management Chair',
-      'alumni_relations_chair': 'Alumni Relations Chair',
-      'member': 'Member',
-      'pledge': 'Pledge'
-    };
-    return roleNames[role] || 'Member';
-  }
 
   // Filter members based on active section
   const getFilteredMembers = () => {
@@ -90,7 +116,7 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
       case "members":
         return generalMembers; // Show only general members
       case "officers":
-        return officers; // Show only officers
+        return sortedOfficers; // Show only sorted officers
       default:
         return filteredMembers; // Default to all members
     }
@@ -135,14 +161,14 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
         {/* Content - Original Layout */}
         <div className="max-w-7xl mx-auto px-2 sm:px-6 py-6">
           {/* Officers Section */}
-          {officers.length > 0 && (
+          {sortedOfficers.length > 0 && (
             <div className="mb-8">
               <div className="flex items-center space-x-2 mb-4">
                 <h2 className="text-lg font-medium text-gray-900">Officers & Leadership</h2>
-                <span className="text-sm text-gray-500">({officers.length})</span>
+                <span className="text-sm text-gray-500">({sortedOfficers.length})</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 items-start">
-                {officers.map((member) => (
+                {sortedOfficers.map((member) => (
                   <LinkedInStyleChapterCard 
                     key={member.id} 
                     member={member}
