@@ -31,6 +31,10 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
     (!member.chapter_role || !['president', 'vice_president', 'treasurer', 'secretary', 'rush_chair', 'social_chair', 'philanthropy_chair', 'risk_management_chair', 'alumni_relations_chair'].includes(member.chapter_role))
   );
 
+  // Add these missing variables
+  const executiveIds = executiveMembers.map(member => member.id);
+  const activeIds = activeMembers.map(member => member.id);
+
   const handleAssigneeToggle = (memberId: string) => {
     // TaskModal: handleAssigneeToggle called
     
@@ -53,6 +57,8 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
 
   const handleSelectAllExecutive = () => {
     // TaskModal: handleSelectAllExecutive called
+
+    const allExecutiveSelected = executiveIds.every(id => selectedAssignees.includes(id));
     
     if (allExecutiveSelected) {
       // Deselecting all executive members
