@@ -150,7 +150,7 @@ export function MobileAdminTasksPage() {
         
         // All task creation promises completed
         
-        const errors = results.filter(result => result.error);
+        const errors = tasks.filter(result => result.error);
         // Errors found
         
         if (errors.length > 0) {
@@ -158,7 +158,7 @@ export function MobileAdminTasksPage() {
           throw new Error(`Failed to create some tasks: ${errors.map(e => e.error?.message).join(', ')}`);
         }
         
-        const createdTasks = results.map(r => r.data);
+        const createdTasks = tasks.map(r => r.data);
         // Tasks created successfully
       } else {
         // Single assignee (original behavior)
