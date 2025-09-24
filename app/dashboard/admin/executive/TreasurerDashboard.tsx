@@ -200,7 +200,7 @@ export function TreasurerDashboard() {
 
   const loadChapterMembers = async () => {
     try {
-      console.log('🔍 Loading chapter members for chapter_id:', profile?.chapter_id);
+      // Loading chapter members
       
       const { data: membersData, error } = await supabase
         .from('profiles')
@@ -224,8 +224,7 @@ export function TreasurerDashboard() {
         return;
       }
 
-      console.log('✅ Loaded chapter members:', membersData?.length || 0, 'members');
-      console.log('📋 Sample member data:', membersData?.[0]);
+      // Loaded chapter members
       
       setChapterMembers(membersData || []);
     } catch (error) {
@@ -278,8 +277,7 @@ export function TreasurerDashboard() {
 
   const handleBulkAssignDues = async () => {
     try {
-      console.log(' Starting bulk dues assignment for', bulkAssignment.selectedMembers.length, 'members');
-      console.log('📋 Selected cycle ID:', bulkAssignment.cycleId);
+      // Starting bulk dues assignment
       
       // Check if we have a valid cycle selected
       if (!bulkAssignment.cycleId) {
@@ -310,7 +308,7 @@ export function TreasurerDashboard() {
         setBulkAssignment({ selectedMembers: [], cycleId: '', amount: 0, status: 'required', notes: '' });
         loadDuesData();
         loadChapterMembers();
-        console.log('✅ Bulk dues assignment completed successfully');
+        // Bulk dues assignment completed successfully
       } else {
         console.error('❌ Some bulk assignments failed');
       }
@@ -361,7 +359,7 @@ export function TreasurerDashboard() {
       if (response.ok) {
         loadDuesData();
         loadChapterMembers();
-        console.log('✅ Dues assignment deleted successfully');
+        // Dues assignment deleted successfully
       } else {
         console.error('❌ Error deleting dues assignment');
         alert('Failed to delete dues assignment. Please try again.');

@@ -86,7 +86,7 @@ export function MyTasksCard() {
         task.id === taskId ? { ...task, status: newStatus } : task
       ));
 
-      console.log(`Task marked as ${newStatus}`);
+      // Task marked as newStatus
     } catch (error) {
       console.error('Error updating task:', error);
       // Could add toast notification here

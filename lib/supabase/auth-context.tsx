@@ -135,7 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // If no alumni record exists, create one
         if (!existingAlumni) {
-          console.log('🔍 AuthContext: Creating missing alumni record for existing user:', userId);
+          // AuthContext: Creating missing alumni record for existing user
           
           const { error: alumniError } = await supabase
             .from('alumni')
@@ -164,7 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (alumniError) {
             console.error('❌ AuthContext: Missing alumni record creation failed:', alumniError);
           } else {
-            console.log('✅ AuthContext: Missing alumni record created successfully');
+            // AuthContext: Missing alumni record created successfully
           }
         }
       }
@@ -223,7 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // If signup successful and user exists, create profile
       if (data.user) {
-        console.log('🔍 AuthContext: Creating profile for user:', data.user.id);
+        // AuthContext: Creating profile for user
         
         try {
           const fullName = profileData 
@@ -249,15 +249,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (profileError) {
             console.error('❌ AuthContext: Profile creation failed:', profileError);
           } else {
-            console.log('✅ AuthContext: Profile created successfully with data:', {
-              fullName,
-              chapter: profileData?.chapter,
-              role: profileData?.role
-            });
+            // AuthContext: Profile created successfully
 
             // NEW CODE: If role is "Alumni", also create an alumni record
             if (profileData?.role?.toLowerCase() === 'alumni') {
-              console.log('🔍 AuthContext: Creating alumni record for user:', data.user.id);
+              // AuthContext: Creating alumni record for user
               
               try {
                 const { error: alumniError } = await supabase
@@ -292,7 +288,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   // Don't throw here - profile was created successfully
                   // We can handle alumni creation later if needed
                 } else {
-                  console.log('✅ AuthContext: Alumni record created/updated successfully');
+                  // AuthContext: Alumni record created/updated successfully
                 }
               } catch (alumniError) {
                 console.error('❌ AuthContext: Alumni record creation exception:', alumniError);
@@ -305,7 +301,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Auto sign-in after successful sign-up
-        console.log('🔍 AuthContext: Attempting auto sign-in...');
+        // AuthContext: Attempting auto sign-in...
         
         try {
           const { error: signInError } = await supabase.auth.signInWithPassword({ 
@@ -316,14 +312,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (signInError) {
             console.error('❌ AuthContext: Auto sign-in failed:', signInError);
           } else {
-            console.log('✅ AuthContext: Auto sign-in successful');
+            // AuthContext: Auto sign-in successful
           }
         } catch (signInError) {
           console.error('❌ AuthContext: Auto sign-in exception:', signInError);
         }
       }
       
-      console.log('✅ AuthContext: Sign up process completed');
+      // AuthContext: Sign up process completed
     } catch (error) {
       console.error('❌ AuthContext: Sign up exception:', error);
       throw error;
@@ -340,7 +336,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
       
-      console.log('✅ AuthContext: Sign out successful');
+      // AuthContext: Sign out successful
     } catch (error) {
       console.error('❌ AuthContext: Sign out exception:', error);
       throw error;

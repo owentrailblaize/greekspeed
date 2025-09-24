@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 
 export async function GET() {
   try {
-    console.log('🔍 Test Profiles API: Called')
+    // Test Profiles API: Called
     
     // Check environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -34,7 +34,7 @@ export async function GET() {
       }, { status: 500 })
     }
     
-    console.log('✅ Test Profiles API: Successfully fetched profiles:', profiles?.length || 0)
+    // Test Profiles API: Successfully fetched profiles
     
     // Get table structure by looking at the first profile
     const tableStructure = profiles && profiles.length > 0 ? Object.keys(profiles[0]) : []

@@ -141,7 +141,7 @@ export function AlumniDashboard() {
 
   const handleTabClick = (tabId: string, disabled: boolean = false) => {
     if (disabled) {
-      console.log("Actively Hiring - Feature coming soon!");
+      // Actively Hiring - Feature coming soon!
       return;
     }
     setActive(tabId);

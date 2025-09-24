@@ -85,7 +85,7 @@ export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebar
   const handleCreateEvent = async (eventData: any) => {
     try {
       // TODO: Implement actual event creation API call
-      console.log('Creating event:', eventData);
+      // Creating event
       setShowCreateEventForm(false);
       // Optionally refresh events or navigate to events section
     } catch (error) {

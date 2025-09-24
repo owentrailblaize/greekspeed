@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       
       chapterName = chapterData.name;
       chapterId = chapterData.id;
-      console.log('✅ Resolved chapter:', { id: chapterId, name: chapterName });
+      // Resolved chapter
     }
 
     // Generate a secure temporary password
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
         .single();
       
       if (existingProfile) {
-        console.log('⚠️ Profile already exists, updating instead');
+        // Profile already exists, updating instead
         // Update existing profile - REMOVE developer_permissions here too
         const { data: updatedProfile, error: updateError } = await supabase
           .from('profiles')
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
           }, { status: 500 });
         }
         
-        console.log('✅ Existing profile updated:', updatedProfile.id);
+        // Existing profile updated
       } else {
         // Profile doesn't exist, rollback auth user
         console.error('❌ Profile creation failed and no existing profile found');
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
         }, { status: 500 });
       }
     } else {
-      console.log('✅ New profile created:', newProfile.id);
+      // New profile created
     }
 
     return NextResponse.json({ 

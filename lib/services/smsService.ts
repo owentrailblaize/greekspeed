@@ -33,8 +33,7 @@ export class SMSService {
 
       // In sandbox mode, we'll simulate sending but not actually send
       if (this.isSandboxMode) {
-        console.log('🧪 SANDBOX MODE: Would send SMS to', message.to);
-        console.log('📱 Message:', message.body);
+        // SANDBOX MODE: Would send SMS
         
         // Simulate a delay
         await new Promise(resolve => setTimeout(resolve, 1000));

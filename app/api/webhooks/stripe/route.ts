@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   const supabase = createServerSupabaseClient();
 
   try {
-    console.log('Webhook received:', event.type);
+    // Webhook received
     
     switch (event.type) {
       case 'checkout.session.completed':
@@ -65,12 +65,11 @@ export async function POST(req: Request) {
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
   const supabase = createServerSupabaseClient();
   
-  console.log('Processing checkout session completed:', session.id);
-  console.log('Session metadata:', session.metadata);
+  // Processing checkout session completed
   
   // Handle chapter subscription payments
   if (session.metadata?.type === 'chapter_subscription') {
-    console.log('Processing chapter subscription payment for chapter:', session.metadata.chapter_id);
+    // Processing chapter subscription payment
     
     // Insert into chapter_subscriptions table
     const { error: subscriptionError } = await supabase.from('chapter_subscriptions').insert({
@@ -84,13 +83,13 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     if (subscriptionError) {
       console.error('Error inserting chapter subscription:', subscriptionError);
     } else {
-      console.log('Successfully created chapter subscription');
+      // Successfully created chapter subscription
     }
   }
   
   // Handle individual subscription payments (keep existing logic)
   if (session.metadata?.type === 'subscription') {
-    console.log('Processing subscription payment for user:', session.metadata.user_id);
+    // Processing subscription payment for user
     
     // Insert into app_subscriptions table
     const { error: subscriptionError } = await supabase.from('app_subscriptions').insert({
@@ -115,13 +114,13 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     if (profileError) {
       console.error('Error updating profile:', profileError);
     } else {
-      console.log('Successfully updated user profile subscription status');
+      // Successfully updated user profile subscription status
     }
   }
   
   // Handle dues payments (keep existing logic)
   if (session.metadata?.type === 'dues') {
-    console.log('💳 Processing dues payment for assignment:', session.metadata.dues_assignment_id);
+    // Processing dues payment
     
     try {
       // Insert into payments ledger
@@ -137,9 +136,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       });
 
       if (ledgerError) {
-        console.error('❌ Error inserting into payments ledger:', ledgerError);
+        console.error('Error inserting into payments ledger:', ledgerError);
       } else {
-        console.log('✅ Successfully inserted into payments ledger');
+        // Successfully inserted into payments ledger
       }
 
       // Update dues assignment status
@@ -153,9 +152,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         .eq('id', session.metadata.dues_assignment_id);
 
       if (assignmentError) {
-        console.error('❌ Error updating dues assignment:', assignmentError);
+        console.error('Error updating dues assignment:', assignmentError);
       } else {
-        console.log('✅ Successfully updated dues assignment to paid');
+        // Successfully updated dues assignment to paid
       }
 
       // Update user profile dues status
@@ -169,12 +168,12 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         .eq('id', session.metadata.user_id);
 
       if (profileError) {
-        console.error('❌ Error updating user profile:', profileError);
+        console.error('Error updating user profile:', profileError);
       } else {
-        console.log('✅ Successfully updated user profile dues status');
+        // Successfully updated user profile dues status
       }
     } catch (error) {
-      console.error('❌ Error in dues payment processing:', error);
+      console.error('Error in dues payment processing:', error);
     }
   }
 }
@@ -197,8 +196,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
   const supabase = createServerSupabaseClient();
   
-  console.log('Processing invoice paid:', invoice.id);
-  console.log('Invoice metadata:', invoice.metadata);
+  // Processing invoice paid
   
   // Handle subscription payments for payment plans
   if (invoice.metadata?.type === 'dues_payment_plan') {
@@ -213,7 +211,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
     if (error) {
       console.error('Error updating dues assignment for payment plan:', error);
     } else {
-      console.log('Successfully updated dues assignment for payment plan');
+      // Successfully updated dues assignment for payment plan
     }
   }
   
@@ -260,7 +258,7 @@ async function handleChapterSubscriptionUpdated(subscription: Stripe.Subscriptio
 async function handleChargeRefunded(charge: Stripe.Charge) {
   const supabase = createServerSupabaseClient();
   
-  console.log('Processing charge refunded:', charge.id);
+  // Processing charge refunded
   
   // Update payments ledger
   const { error } = await supabase
@@ -274,7 +272,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
   if (error) {
     console.error('Error updating payments ledger for refund:', error);
   } else {
-    console.log('Successfully updated payments ledger for refund');
+    // Successfully updated payments ledger for refund
   }
   
   // If this was a dues payment, update the assignment
@@ -291,7 +289,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     if (assignmentError) {
       console.error('Error updating dues assignment for refund:', assignmentError);
     } else {
-      console.log('Successfully updated dues assignment for refund');
+      // Successfully updated dues assignment for refund
     }
   }
 }

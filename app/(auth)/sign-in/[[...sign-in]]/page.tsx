@@ -20,14 +20,10 @@ export default function SignInPage() {
 
   // Redirect if already authenticated
   useEffect(() => {
-    console.log('🔍 SignInPage: Auth state check:', { 
-      authLoading, 
-      hasUser: !!user,
-      userId: user?.id 
-    });
+    // SignInPage: Auth state check
 
     if (!authLoading && user) {
-      console.log('✅ SignInPage: User already authenticated, redirecting to dashboard');
+      // SignInPage: User already authenticated, redirecting to dashboard
       router.push('/dashboard');
     }
   }, [user, authLoading, router]);
@@ -37,11 +33,11 @@ export default function SignInPage() {
     setLoading(true);
     setError('');
     
-    console.log('🔍 SignInPage: Attempting sign in for:', email);
+    // SignInPage: Attempting sign in
 
     try {
       await signIn(email, password);
-      console.log('✅ SignInPage: Sign in successful, redirecting to dashboard');
+      // SignInPage: Sign in successful, redirecting to dashboard
       
       // Add a small delay to ensure auth state is updated
       setTimeout(() => {

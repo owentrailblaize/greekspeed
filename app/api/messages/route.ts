@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
           messagePreview: content.length > 100 ? content.substring(0, 100) + '...' : content,
           connectionId: connectionId
         });
-        console.log(`Message notification email sent to ${recipientProfile.email}`);
+        // Email notification sent successfully
       }
     } catch (emailError) {
       console.error('Failed to send message notification email:', emailError);

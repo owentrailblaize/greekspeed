@@ -36,7 +36,7 @@ export default function ProfileCompletePage() {
   // Pre-populate form with OAuth data
   useEffect(() => {
     if (user?.user_metadata) {
-      console.log('🔍 OAuth user metadata:', user.user_metadata); // Debug log
+      // OAuth user metadata
       
       setFormData(prev => ({
         ...prev,

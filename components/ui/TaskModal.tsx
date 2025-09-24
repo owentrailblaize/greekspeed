@@ -31,37 +31,37 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
     (!member.chapter_role || !['president', 'vice_president', 'treasurer', 'secretary', 'rush_chair', 'social_chair', 'philanthropy_chair', 'risk_management_chair', 'alumni_relations_chair'].includes(member.chapter_role))
   );
 
+  // Add these missing variables
+  const executiveIds = executiveMembers.map(member => member.id);
+  const activeIds = activeMembers.map(member => member.id);
+
   const handleAssigneeToggle = (memberId: string) => {
-    console.log('=== TaskModal: handleAssigneeToggle called ===');
-    console.log('memberId:', memberId);
-    console.log('current selectedAssignees:', selectedAssignees);
+    // TaskModal: handleAssigneeToggle called
     
     setSelectedAssignees(prev => {
       const newSelection = prev.includes(memberId) 
         ? prev.filter(id => id !== memberId)
         : [...prev, memberId];
       
-      console.log('newSelection:', newSelection);
+      // newSelection
       
       setNewTask(prevTask => ({
         ...prevTask,
         assignee_id: newSelection
       }));
       
-      console.log('✅ TaskModal: Updated assignee_id to:', newSelection);
+      // TaskModal: Updated assignee_id
       return newSelection;
     });
   };
 
   const handleSelectAllExecutive = () => {
-    console.log('=== TaskModal: handleSelectAllExecutive called ===');
-    const executiveIds = executiveMembers.map(member => member.id);
-    console.log('executiveIds:', executiveIds);
+    // TaskModal: handleSelectAllExecutive called
+
     const allExecutiveSelected = executiveIds.every(id => selectedAssignees.includes(id));
-    console.log('allExecutiveSelected:', allExecutiveSelected);
     
     if (allExecutiveSelected) {
-      console.log('Deselecting all executive members');
+      // Deselecting all executive members
       setSelectedAssignees(prev => prev.filter(id => !executiveIds.includes(id)));
       setNewTask(prevTask => ({
         ...prevTask,
@@ -70,7 +70,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
           : []
       }));
     } else {
-      console.log('Selecting all executive members');
+      // Selecting all executive members
       setSelectedAssignees(prev => [...new Set([...prev, ...executiveIds])]);
       setNewTask(prevTask => ({
         ...prevTask,
@@ -80,14 +80,12 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
   };
 
   const handleSelectAllActive = () => {
-    console.log('=== TaskModal: handleSelectAllActive called ===');
-    const activeIds = activeMembers.map(member => member.id);
-    console.log('activeIds:', activeIds);
+    // TaskModal: handleSelectAllActive called
     const allActiveSelected = activeIds.every(id => selectedAssignees.includes(id));
-    console.log('allActiveSelected:', allActiveSelected);
+    // allActiveSelected
     
     if (allActiveSelected) {
-      console.log('Deselecting all active members');
+      // Deselecting all active members
       setSelectedAssignees(prev => prev.filter(id => !activeIds.includes(id)));
       setNewTask(prevTask => ({
         ...prevTask,
@@ -96,7 +94,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
           : []
       }));
     } else {
-      console.log('Selecting all active members');
+      // Selecting all active members
       setSelectedAssignees(prev => [...new Set([...prev, ...activeIds])]);
       setNewTask(prevTask => ({
         ...prevTask,
@@ -115,29 +113,19 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
   });
 
   const handleSubmit = async () => {
-    console.log('=== TaskModal: handleSubmit called ===');
-    console.log('newTask:', newTask);
-    console.log('selectedAssignees:', selectedAssignees);
-    console.log('Array.isArray(newTask.assignee_id):', Array.isArray(newTask.assignee_id));
-    console.log('newTask.assignee_id length:', Array.isArray(newTask.assignee_id) ? newTask.assignee_id.length : 'not array');
+    // TaskModal: handleSubmit called
+    // newTask.assignee_id length
     
     if (!newTask.title || (Array.isArray(newTask.assignee_id) && newTask.assignee_id.length === 0)) {
-      console.log('❌ TaskModal: Validation failed - missing title or assignees');
+      // TaskModal: Validation failed - missing title or assignees
       return;
     }
     
-    console.log('✅ TaskModal: Validation passed, calling onSubmit with:', {
-      title: newTask.title,
-      description: newTask.description,
-      assignee_id: newTask.assignee_id,
-      due_date: newTask.due_date,
-      priority: newTask.priority,
-      chapter_id: newTask.chapter_id
-    });
+    // TaskModal: Validation passed, calling onSubmit
     
     await onSubmit(newTask);
     
-    console.log('✅ TaskModal: onSubmit completed, resetting form');
+    // TaskModal: onSubmit completed, resetting form
     
     // Reset form
     setNewTask({

@@ -13,8 +13,7 @@ export async function POST(
     const { email, password, full_name, first_name, last_name } = body;
     const { token } = await params; // FIX: Await params
 
-    console.log(' Invitation Accept: Starting process for token:', token);
-    console.log(' Invitation Accept: Email:', email);
+    // Invitation Accept: Starting process for token
 
     if (!token) {
       return NextResponse.json({ error: 'Token is required' }, { status: 400 });
@@ -27,15 +26,14 @@ export async function POST(
     // Validate the invitation token
     const validation = await validateInvitationToken(token);
     if (!validation.valid) {
-      console.log('❌ Invitation Accept: Invalid token:', validation.error);
+      // Invitation Accept: Invalid token
       return NextResponse.json({ 
         error: validation.error 
       }, { status: 400 });
     }
 
     const invitation = validation.invitation!;
-    console.log('✅ Invitation Accept: Token validated for chapter:', invitation.chapter_id);
-    console.log('🔍 Invitation Accept: Chapter ID from invitation:', invitation.chapter_id);
+    // Invitation Accept: Token validated for chapter
 
     // Validate email domain if restricted
     if (!validateEmailDomain(email, invitation.email_domain_allowlist)) {
@@ -47,13 +45,13 @@ export async function POST(
     // Check if this email has already used this invitation
     const hasUsed = await hasEmailUsedInvitation(invitation.id, email);
     if (hasUsed) {
-      console.log('❌ Invitation Accept: Email already used:', email);
+      // Invitation Accept: Email already used
       return NextResponse.json({ 
         error: 'This email has already been used with this invitation' 
       }, { status: 400 });
     }
 
-    console.log('🔍 Invitation Accept: Creating auth user...');
+    // Invitation Accept: Creating auth user...
 
     // Create the user account
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -75,7 +73,7 @@ export async function POST(
       }, { status: 500 });
     }
 
-    console.log('✅ Invitation Accept: Auth user created:', authData.user.id);
+    // Invitation Accept: Auth user created
 
     // Wait a moment to ensure auth user is fully created
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -92,10 +90,7 @@ export async function POST(
     }
 
     if (autoProfile) {
-      console.log('✅ Invitation Accept: Profile auto-created by trigger, updating...');
-      console.log(' Invitation Accept: Current profile chapter_id:', autoProfile.chapter_id);
-      console.log('🔍 Invitation Accept: Setting chapter_id to:', invitation.chapter_id);
-      console.log('🔍 Invitation Accept: Setting chapter to:', validation.chapter_name);
+      // Invitation Accept: Profile auto-created by trigger, updating...
       
       // Update the profile with invitation data
       const { data: updatedProfile, error: updateError } = await supabase
@@ -126,7 +121,7 @@ export async function POST(
         }, { status: 500 });
       }
 
-      console.log('✅ Invitation Accept: Profile updated successfully');
+      // Invitation Accept: Profile updated successfully
       
       // Wait a moment and verify the update worked
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -141,13 +136,10 @@ export async function POST(
       if (verifyError) {
         console.error('❌ Invitation Accept: Error verifying profile update:', verifyError);
       } else {
-        console.log('✅ Invitation Accept: Profile verification - chapter_id:', verifiedProfile?.chapter_id);
-        console.log('✅ Invitation Accept: Profile verification - chapter:', verifiedProfile?.chapter);
-        console.log('✅ Invitation Accept: Profile verification - role:', verifiedProfile?.role);
-        console.log('✅ Invitation Accept: Profile verification - member_status:', verifiedProfile?.member_status);
+        // Invitation Accept: Profile verification completed
       }
     } else {
-      console.log('🔍 Invitation Accept: No auto-profile found, creating manually...');
+      // Invitation Accept: No auto-profile found, creating manually...
       
       // Create the profile manually
       const { error: profileError } = await supabase
@@ -181,7 +173,7 @@ export async function POST(
         }, { status: 500 });
       }
 
-      console.log('✅ Invitation Accept: Profile created successfully');
+      // Invitation Accept: Profile created successfully
     }
 
     // Record invitation usage
@@ -190,13 +182,13 @@ export async function POST(
       console.error('❌ Invitation Accept: Failed to record invitation usage:', usageResult.error);
       // Don't fail the signup, just log the error
     } else {
-      console.log('✅ Invitation Accept: Invitation usage recorded');
+      // Invitation Accept: Invitation usage recorded
     }
 
-    console.log('✅ Invitation Accept: Process completed successfully');
+    // Invitation Accept: Process completed successfully
 
     // CRITICAL FIX: Sign in the user after account creation
-    console.log('🔍 Invitation Accept: Signing in user...');
+    // Invitation Accept: Signing in user...
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: email.toLowerCase(),
       password
@@ -206,7 +198,7 @@ export async function POST(
       console.error('❌ Invitation Accept: Auto sign-in failed:', signInError);
       // Don't fail the entire process, just log the error
     } else {
-      console.log('✅ Invitation Accept: User signed in successfully');
+      // Invitation Accept: User signed in successfully
     }
 
     return NextResponse.json({

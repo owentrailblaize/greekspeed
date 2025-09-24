@@ -80,7 +80,7 @@ export async function PATCH(
             actorFirstName: recipientProfile.first_name,
             connectionId: id
           });
-          console.log(`Connection accepted email sent to ${requesterProfile.email}`);
+          // Connection accepted email sent
         }
       } catch (emailError) {
         console.error('Failed to send connection accepted email:', emailError);

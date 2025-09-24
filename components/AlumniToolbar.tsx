@@ -35,7 +35,7 @@ export function AlumniToolbar({
   onExport 
 }: AlumniToolbarProps) {
   const handleNonFunctionalFeature = (featureName: string) => {
-    console.log(`${featureName} - Feature coming soon!`);
+    // Feature coming soon!
     // Could add a toast notification here
   };
 

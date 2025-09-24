@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     const supabase = createServerSupabaseClient();
     
     const body = await request.json();
-    console.log('📥 Creating dues cycle with data:', body);
+    // Creating dues cycle with data
     
     const {
       name,
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     // For now, use a default chapter_id since we're not authenticating
     const defaultChapterId = '404e65ab-1123-44a0-81c7-e8e75118e741'; // Your chapter ID
 
-    console.log('✅ Creating cycle for chapter:', defaultChapterId);
+    // Creating cycle for chapter
 
     // Create the dues cycle with start_date
     const { data: cycle, error: cycleError } = await supabase
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-    console.log('✅ Dues cycle created successfully:', cycle);
+    // Dues cycle created successfully
 
     return NextResponse.json({ 
       message: 'Dues cycle created successfully',

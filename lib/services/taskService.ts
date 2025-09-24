@@ -3,18 +3,15 @@ import { Task, CreateTaskRequest, UpdateTaskRequest, TaskFilters } from '@/types
 
 // Task Management
 export async function createTask(taskData: CreateTaskRequest, assignedBy: string): Promise<Task | Task[]> {
-  console.log('=== taskService: createTask called ===');
-  console.log('taskData:', taskData);
-  console.log('assignedBy:', assignedBy);
-  console.log('Array.isArray(taskData.assignee_id):', Array.isArray(taskData.assignee_id));
+  // taskService: createTask called
   
   // Handle multiple assignees by creating separate tasks
   if (Array.isArray(taskData.assignee_id)) {
-    console.log('🔄 Creating multiple tasks for assignees:', taskData.assignee_id);
+    // Creating multiple tasks for assignees
     
     const tasks = await Promise.all(
       taskData.assignee_id.map((assigneeId, index) => {
-        console.log(`Creating task ${index + 1}/${taskData.assignee_id.length} for assignee:`, assigneeId);
+        // Creating task for assignee
         return supabase
           .from('tasks')
           .insert({
@@ -28,25 +25,23 @@ export async function createTask(taskData: CreateTaskRequest, assignedBy: string
       })
     );
     
-    console.log('📝 All task creation promises completed');
-    const results = await Promise.all(tasks);
-    console.log('📊 Task creation results:', results);
+    // All task creation promises completed
     
-    const errors = results.filter(result => result.error);
-    console.log('❌ Errors found:', errors);
+    const errors = tasks.filter(result => result.error);
+    // Errors found
     
     if (errors.length > 0) {
       console.error('❌ Failed to create some tasks:', errors.map(e => e.error?.message));
       throw new Error(`Failed to create some tasks: ${errors.map(e => e.error?.message).join(', ')}`);
     }
     
-    const createdTasks = results.map(result => result.data);
-    console.log('✅ Successfully created tasks:', createdTasks);
+    const createdTasks = tasks.map(result => result.data);
+    // Successfully created tasks
     return createdTasks;
   }
   
   // Single assignee (original behavior)
-  console.log('🔄 Creating single task for assignee:', taskData.assignee_id);
+  // Creating single task for assignee
   
   const { data, error } = await supabase
     .from('tasks')
@@ -59,14 +54,14 @@ export async function createTask(taskData: CreateTaskRequest, assignedBy: string
     .select()
     .single();
 
-  console.log('📊 Single task creation result:', { data, error });
+  // Single task creation result
 
   if (error) {
     console.error('❌ Failed to create single task:', error);
     throw error;
   }
   
-  console.log('✅ Successfully created single task:', data);
+  // Successfully created single task
   return data;
 }
 

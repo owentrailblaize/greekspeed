@@ -15,7 +15,7 @@ export function useActivityTracking() {
     })
   }, [user])
 
-  // Track activity on user interaction
+  // Track activity on user interaction (kept for manual use if needed)
   const trackInteraction = useCallback(async (action: string, metadata?: any) => {
     if (!user) return
     
@@ -62,30 +62,9 @@ export function useActivityTracking() {
       stopTracking()
     }, 30 * 60 * 1000) // 30 minutes
 
-    // Track activity on user interaction
-    const handleUserActivity = () => {
-      clearTimeout(inactivityTimer)
-      stopTracking()
-      startTracking()
-      
-      // Reset inactivity timer
-      setTimeout(() => {
-        stopTracking()
-      }, 30 * 60 * 1000)
-    }
-
-    // Add event listeners for user activity
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart']
-    events.forEach(event => {
-      document.addEventListener(event, handleUserActivity, true)
-    })
-
     return () => {
       stopTracking()
       clearTimeout(inactivityTimer)
-      events.forEach(event => {
-        document.removeEventListener(event, handleUserActivity, true)
-      })
     }
   }, [user])
 

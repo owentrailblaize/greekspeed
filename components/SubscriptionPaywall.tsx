@@ -47,7 +47,7 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
 
       // ALUMNI: Always free - no paywall
       if (profile.role === 'alumni') {
-        console.log('User is alumni - granting free access');
+        // User is alumni - granting free access
         setIsPaywallVisible(false);
         return;
       }
@@ -55,7 +55,7 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
       // ADMIN & ACTIVE_MEMBER: Check chapter subscription
       if (profile.role === 'admin' || profile.role === 'active_member') {
         if (!profile.chapter_id) {
-          console.log('User has no chapter assigned - showing paywall');
+          // User has no chapter assigned - showing paywall
           setIsPaywallVisible(true);
           return;
         }
@@ -82,10 +82,10 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
         }
 
         if (!chapterSubscription) {
-          console.log('Chapter has no active subscription - showing paywall');
+          // Chapter has no active subscription - showing paywall
           setIsPaywallVisible(true);
         } else {
-          console.log('Chapter has active subscription - granting access');
+          // Chapter has active subscription - granting access
           setIsPaywallVisible(false);
         }
       }
@@ -111,11 +111,8 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
     setSessionUrl(null);
 
     try {
-      console.log('Starting chapter subscription process...');
-      console.log('User ID:', user.id);
-      console.log('User Email:', user.email);
-      console.log('Chapter ID:', userChapter.id);
-      console.log('Chapter:', userChapter);
+      // Starting chapter subscription process...
+      // Chapter
       
       const response = await fetch('/api/chapter/create-subscription', {
         method: 'POST',

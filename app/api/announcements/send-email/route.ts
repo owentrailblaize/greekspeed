@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('✅ All required environment variables are set');
+    // All required environment variables are set
     
     const supabase = createServerSupabaseClient();
     const { 
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('📊 Chapter members found:', members?.length || 0);
+    // Chapter members found
 
     // Filter members who have opted into announcements
     const recipients = members
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
         chapterName: chapter.name
       }));
 
-    console.log('📧 Recipients after filtering:', recipients.length);
+    // Recipients after filtering
 
     if (recipients.length === 0) {
       return NextResponse.json(
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🚀 About to send emails to:', recipients.length, 'recipients');
+    // About to send emails
 
     // Send announcements
     const result = await EmailService.sendAnnouncementToChapter(
@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    console.log('✅ Email sending result:', result);
+    // Email sending result received
 
     // Update announcement to mark emails as sent
     await supabase

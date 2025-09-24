@@ -74,7 +74,7 @@ export function ChaptersTab() {
         setChapters(data.chapters || []);
         setTotalChapters(data.total || 0);
         setTotalPages(data.totalPages || 1);
-        console.log(`📊 Fetched page ${currentPage}: ${data.chapters?.length || 0} chapters (Total: ${data.total})`);
+        // Fetched page chapters
       } else {
         console.error('Failed to fetch chapters');
       }
@@ -117,7 +117,7 @@ export function ChaptersTab() {
       }
 
       const result = await response.json();
-      console.log('Chapter deleted successfully:', result);
+      // Chapter deleted successfully
       
       // Remove the chapter from the local state
       setChapters(prevChapters => prevChapters.filter(chapter => chapter.id !== chapterToDelete.id));
