@@ -87,6 +87,7 @@ export default function ResetPasswordPage() {
         
         <ChangePasswordForm 
           showBackButton={false}
+          resetToken="reset"  // Add this line to hide current password field
           onSuccess={() => {
             // Redirect to sign in after successful password reset
             window.location.href = '/sign-in';

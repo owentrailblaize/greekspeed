@@ -13,16 +13,30 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServerSupabaseClient();
     
-    // Update password using the current session (set by the reset page)
-    const { data, error } = await supabase.auth.updateUser({
-      password: newPassword
-    });
+    // Get user from auth header
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json({ error: 'No authorization header' }, { status: 401 });
+    }
 
-    if (error) {
-      console.error('Password reset error:', error);
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    // Update password using the service role key with user ID
+    const { error: updateError } = await supabase.auth.admin.updateUserById(
+      user.id,
+      { password: newPassword }
+    );
+
+    if (updateError) {
+      console.error('Password update error:', updateError);
       return NextResponse.json({ 
-        error: 'Failed to update password. Please try again.' 
-      }, { status: 400 });
+        error: 'Failed to update password' 
+      }, { status: 500 });
     }
 
     return NextResponse.json({ 

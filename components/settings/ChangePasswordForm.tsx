@@ -12,7 +12,7 @@ interface ChangePasswordFormProps {
   onBack?: () => void;
   onSuccess?: () => void;
   className?: string;
-  resetToken?: string; // Add this for password reset flow
+  resetToken?: string;
 }
 
 export function ChangePasswordForm({ 
@@ -31,7 +31,6 @@ export function ChangePasswordForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
   const { session } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,13 +38,21 @@ export function ChangePasswordForm({
     setError('');
     setSuccess('');
 
+    // Validate password match
     if (newPassword !== confirmPassword) {
       setError('New passwords do not match');
       return;
     }
 
+    // Validate password length
     if (newPassword.length < 8) {
       setError('Password must be at least 8 characters long');
+      return;
+    }
+
+    // Only validate current password if NOT in reset mode
+    if (!resetToken && !currentPassword) {
+      setError('Current password is required');
       return;
     }
 
@@ -54,14 +61,15 @@ export function ChangePasswordForm({
     try {
       const endpoint = resetToken ? '/api/auth/reset-password' : '/api/auth/change-password';
       const body = resetToken 
-        ? { newPassword, resetToken }
+        ? { newPassword }
         : { currentPassword, newPassword };
 
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`
+          // Include Authorization header for both flows
+          'Authorization': `Bearer ${session?.access_token || ''}`
         },
         body: JSON.stringify(body),
       });
@@ -77,7 +85,6 @@ export function ChangePasswordForm({
       setNewPassword('');
       setConfirmPassword('');
 
-      // Call onSuccess callback if provided
       if (onSuccess) {
         setTimeout(() => {
           onSuccess();
@@ -85,127 +92,127 @@ export function ChangePasswordForm({
       }
 
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'An error occurred');
+      console.error('Password change error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to change password');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      <div className="max-w-md mx-left">
-        {showBackButton && onBack && (
-          <Button
-            variant="ghost"
-            onClick={onBack}
-            className="text-gray-600 hover:text-gray-900 rounded-full mb-4"
-            style={{ borderRadius: '100px' }}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
+    <div className={`w-full max-w-md mx-auto ${className}`}>
+      {showBackButton && (
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onBack}
+          className="text-gray-600 hover:text-gray-900 rounded-full mb-4"
+          style={{ borderRadius: '100px' }}
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
+      )}
+
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Change Password</h2>
+        <p className="text-gray-600">Create a new password that is at least 8 characters long.</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {!resetToken && (
+          <div className="space-y-2">
+            <Label htmlFor="currentPassword">Current Password</Label>
+            <div className="relative">
+              <Input
+                id="currentPassword"
+                type={showCurrentPassword ? 'text' : 'password'}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required={!resetToken}
+                disabled={loading}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
         )}
 
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Change Password</h2>
-          <p className="text-gray-600">Create a new password that is at least 8 characters long.</p>
+        <div>
+          <Label htmlFor="new-password">New Password <span className="text-red-400">*</span></Label>
+          <div className="relative">
+            <Input
+              id="new-password"
+              type={showNewPassword ? 'text' : 'password'}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+              disabled={loading}
+              className="pr-12"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3"
+              onClick={() => setShowNewPassword(!showNewPassword)}
+            >
+              {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </Button>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {!resetToken && (
-            <div className="space-y-2">
-              <Label htmlFor="currentPassword">Current Password</Label>
-              <div className="relative">
-                <Input
-                  id="currentPassword"
-                  type={showCurrentPassword ? 'text' : 'password'}
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div>
-            <Label htmlFor="new-password">New Password <span className="text-red-400">*</span></Label>
-            <div className="relative">
-              <Input
-                id="new-password"
-                type={showNewPassword ? 'text' : 'password'}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                disabled={loading}
-                className="pr-12"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3"
-                onClick={() => setShowNewPassword(!showNewPassword)}
-              >
-                {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </Button>
-            </div>
+        <div>
+          <Label htmlFor="confirm-password">Confirm New Password <span className="text-red-400">*</span></Label>
+          <div className="relative">
+            <Input
+              id="confirm-password"
+              type={showConfirmPassword ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              disabled={loading}
+              className="pr-12"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </Button>
           </div>
+        </div>
 
-          <div>
-            <Label htmlFor="confirm-password">Confirm New Password <span className="text-red-400">*</span></Label>
-            <div className="relative">
-              <Input
-                id="confirm-password"
-                type={showConfirmPassword ? 'text' : 'password'}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                disabled={loading}
-                className="pr-12"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </Button>
-            </div>
+        {success && (
+          <div className="text-green-600 text-sm bg-green-50 border border-green-200 rounded-lg p-3">
+            {success}
           </div>
+        )}
 
-          {error && (
-            <div className="text-red-500 text-sm bg-red-50 border border-red-200 rounded-lg p-3">
-              {error}
-            </div>
-          )}
+        {error && (
+          <div className="text-red-500 text-sm bg-red-50 border border-red-200 rounded-lg p-3">
+            {error}
+          </div>
+        )}
 
-          {success && (
-            <div className="text-green-500 text-sm bg-green-50 border border-green-200 rounded-lg p-3">
-              {success}
-            </div>
-          )}
-
-          <Button 
-            type="submit" 
-            className="w-full max-w-xs mx-auto block rounded-full" 
-            style={{ borderRadius: '100px' }}
-            disabled={loading || !currentPassword || !newPassword || !confirmPassword}
-          >
-            {loading ? 'Changing Password...' : 'Save password'}
-          </Button>
+            <Button 
+                type="submit" 
+                className="w-full max-w-xs mx-auto block rounded-full" 
+                style={{ borderRadius: '100px' }}
+                disabled={loading || (!resetToken && !currentPassword) || !newPassword || !confirmPassword}
+            >
+                {loading ? 'Changing Password...' : 'Save password'}
+            </Button>
         </form>
-      </div>
     </div>
   );
 }
