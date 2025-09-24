@@ -22,6 +22,7 @@ import { BannerService } from '@/lib/services/bannerService';
 import { useUserPosts } from '@/lib/hooks/useUserPosts';
 import { formatDistanceToNow } from 'date-fns';
 import { DeletePostModal } from '@/components/social/DeletePostModal';
+import { EmailService } from '@/lib/services/emailService';
 
 export default function ProfilePage() {
   const { profile, loading, refreshProfile } = useProfile();
@@ -546,36 +547,32 @@ export default function ProfilePage() {
             <div className="space-y-6">
               {/* Profile Tools */}
               <Card className="bg-white">
-                <CardHeader className="pb-1">
+                <CardHeader className="pb-0">
                   <CardTitle className="text-lg text-navy-600">Profile Tools</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => setIsEditModalOpen(true)}
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                      Edit Profile
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start opacity-50 cursor-not-allowed" 
-                    disabled
-                  >
-                    <Settings className="w-4 h-4 mr-2" />
-                    Settings
-                    <Lock className="w-3 h-3 ml-auto text-gray-400" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start opacity-50 cursor-not-allowed" 
-                    disabled
-                  >
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Activity
-                    <Lock className="w-3 h-3 ml-auto text-gray-400" />
-                  </Button>
+                <CardContent className="pt-4">
+                  <div className="flex flex-col gap-2">
+                    <Link href="/dashboard/notifications">
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start opacity-50 cursor-not-allowed" 
+                        disabled
+                      >
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Notifications
+                        <Lock className="w-3 h-3 ml-auto text-gray-400" />
+                      </Button>
+                    </Link>
+                    <Link href="/dashboard/settings">
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                      >
+                        <Settings className="w-4 h-4 mr-2" />
+                        Settings
+                      </Button>
+                    </Link>
+                  </div>
                 </CardContent>
               </Card>
 
