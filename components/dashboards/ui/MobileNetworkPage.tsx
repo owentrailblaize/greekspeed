@@ -64,7 +64,7 @@ export function MobileNetworkPage() {
     setConnectionLoading(member.id);
     try {
       await sendConnectionRequest(member.id);
-      console.log('Connection request sent to:', member.full_name);
+      // Connection request sent to
       await refreshConnections(); // Refresh connections to update the list
     } catch (error) {
       console.error('Failed to send connection request:', error);

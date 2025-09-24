@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
           message: message,
           connectionId: connection.id
         });
-        console.log(`Connection request email sent to ${recipientProfile.email}`);
+        // Connection request email sent successfully
       } catch (emailError) {
         console.error('Failed to send connection request email:', emailError);
         // Don't fail the connection creation if email fails

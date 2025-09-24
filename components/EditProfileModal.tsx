@@ -81,7 +81,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
       }
 
       setAlumniData(data);
-      console.log('📊 Loaded alumni data:', data);
+      // Loaded alumni data
     } catch (error) {
       console.error('Error loading alumni data:', error);
     } finally {
@@ -381,7 +381,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
         }
       });
 
-      console.log('🚀 Updating profile with:', profileUpdates);
+      // Updating profile
       await onUpdate(profileUpdates);
 
       // Track profile update activity
@@ -397,7 +397,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
 
       // If user is alumni, also update alumni table
       if (profile?.role === 'alumni') {
-        console.log('🎓 Updating alumni data...');
+        // Updating alumni data...
         // Update alumni-specific data
         const updateAlumniData = async () => {
           if (!profile?.id || profile.role !== 'alumni') return;
@@ -423,7 +423,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                 : null
             };
 
-            console.log(' Alumni updates:', alumniUpdates);
+            // Alumni updates
 
             const { data, error } = await supabase
               .from('alumni')
@@ -440,7 +440,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
               throw error;
             }
 
-            console.log('✅ Alumni data updated successfully:', data);
+            // Alumni data updated successfully
           } catch (error) {
             console.error('❌ Error updating alumni data:', error);
             throw error;

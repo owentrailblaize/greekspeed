@@ -71,7 +71,7 @@ export function AlumniTab() {
         setAlumni(data.alumni || []);
         setTotalAlumni(data.pagination?.total || 0);
         setTotalPages(data.pagination?.totalPages || 1);
-        console.log(`📊 Fetched page ${currentPage}: ${data.alumni?.length || 0} alumni (Total: ${data.pagination?.total})`);
+        // Fetched page alumni
       } else {
         console.error('Failed to fetch alumni');
       }

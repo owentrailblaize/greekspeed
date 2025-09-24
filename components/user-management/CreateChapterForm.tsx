@@ -104,7 +104,7 @@ export function CreateChapterForm({ onClose, onSuccess }: CreateChapterFormProps
       }
 
       const result = await response.json();
-      console.log('Chapter created successfully:', result);
+      // Chapter created successfully
       
       onSuccess();
       onClose();

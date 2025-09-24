@@ -8,50 +8,39 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LogOut, User, Mail, Shield } from 'lucide-react';
 
 export function DashboardClient() {
-  console.log('🔍 DashboardClient: Component initializing');
+  // DashboardClient: Component initializing
   
   const { user, session, loading, signOut } = useAuth();
   const router = useRouter();
 
-  console.log('🔍 DashboardClient: Auth context values:', { 
-    loading, 
-    hasUser: !!user, 
-    hasSession: !!session,
-    userId: user?.id,
-    userEmail: user?.email
-  });
+  // DashboardClient: Auth context values
 
   useEffect(() => {
-    console.log('🔍 DashboardClient: useEffect triggered with:', { 
-      loading, 
-      hasUser: !!user, 
-      hasSession: !!session,
-      userId: user?.id 
-    });
+    // DashboardClient: useEffect triggered
 
     if (!loading && !user) {
-      console.log('❌ DashboardClient: No user, redirecting to sign-in');
+      // DashboardClient: No user, redirecting to sign-in
       router.push('/sign-in');
     } else if (!loading && user) {
-      console.log('✅ DashboardClient: User authenticated, should render dashboard');
+      // DashboardClient: User authenticated, should render dashboard
     }
   }, [user, session, loading, router]);
 
   const handleSignOut = async () => {
-    console.log('🔍 DashboardClient: Signing out...');
+    // DashboardClient: Signing out...
     try {
       await signOut();
-      console.log('✅ DashboardClient: Sign out successful, redirecting to landing page');
+      // DashboardClient: Sign out successful, redirecting to landing page
       router.push('/');
     } catch (error) {
-      console.error('❌ DashboardClient: Sign out failed:', error);
+      console.error('DashboardClient: Sign out failed:', error);
     }
   };
 
-  console.log('🔍 DashboardClient: About to render, current state:', { loading, hasUser: !!user });
+  // DashboardClient: About to render, current state
 
   if (loading) {
-    console.log('🔍 DashboardClient: Rendering loading state');
+    // DashboardClient: Rendering loading state
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -63,7 +52,7 @@ export function DashboardClient() {
   }
 
   if (!user) {
-    console.log('🔍 DashboardClient: Rendering redirect state (no user)');
+    // DashboardClient: Rendering redirect state (no user)
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -73,7 +62,7 @@ export function DashboardClient() {
     );
   }
 
-  console.log('🔍 DashboardClient: Rendering main dashboard content');
+  // DashboardClient: Rendering main dashboard content
   return (
     <div className="max-w-7xl mx-auto p-10">
       {/* Header */}

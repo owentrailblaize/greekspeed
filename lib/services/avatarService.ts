@@ -23,12 +23,7 @@ export class AvatarService {
       const fileName = `${userId}-${Date.now()}.${fileExt}`;
       const filePath = fileName;
       
-      console.log('Uploading file:', {
-        userId,
-        fileName,
-        filePath,
-        bucket: 'user-avatar'
-      });
+      // Uploading file
 
       // Upload file to Supabase Storage
       const { data, error } = await this.supabaseClient.storage

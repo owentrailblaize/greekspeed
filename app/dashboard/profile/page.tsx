@@ -104,10 +104,7 @@ export default function ProfilePage() {
   // Debug: Log the profile data to see what's available
   useEffect(() => {
     if (profile) {
-      console.log('Full profile object:', profile);
-      console.log('Available keys:', Object.keys(profile));
-      console.log('Chapter value:', profile.chapter);
-      console.log('Role value:', profile.role);
+      // Full profile object loaded
     }
   }, [profile]);
 
@@ -630,7 +627,7 @@ export default function ProfilePage() {
                             className="text-navy-600 border-navy-300 hover:bg-navy-50 text-xs px-4 py-1 w-full"
                             onClick={() => {
                               // TODO: Implement connection request
-                              console.log('Send connection request to:', member.id);
+                              // Send connection request
                             }}
                           >
                             <UserPlus className="w-3 h-3 mr-2" />

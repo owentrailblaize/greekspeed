@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function GET() {
   try {
-    console.log('🔍 Test Connections API: Called');
+    // Test Connections API: Called
 
     // Check environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -34,7 +34,7 @@ export async function GET() {
       }, { status: 500 });
     }
 
-    console.log('✅ Test Connections API: Successfully fetched connections:', connections?.length || 0);
+    // Test Connections API: Successfully fetched connections
 
     // Get table structure by looking at the first connection
     const tableStructure = connections && connections.length > 0 ? Object.keys(connections[0]) : [];

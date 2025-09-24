@@ -202,7 +202,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
     toast.info('Document editing is currently locked. This feature will be available soon!');
     
     // TODO: Implement edit functionality
-    // console.log('Edit document:', doc);
+    // Edit document
   };
 
   const handleDeleteDocument = async (documentId: string) => {
@@ -217,32 +217,28 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
         return;
       }
 
-      console.log('🗑️ Deleting document:', {
-        id: docToDelete.id,
-        title: docToDelete.title,
-        storage_path: docToDelete.storage_path
-      });
+      // Deleting document
 
       // Debug storage access
-      console.log('🔍 Testing storage access...');
+      // Testing storage access...
       
       // Test 1: List root directory
       const { data: rootList, error: rootError } = await supabase.storage
         .from('chapter-documents')
         .list('', { limit: 100 });
-      console.log('📁 Root listing:', { data: rootList, error: rootError });
+      // Root listing
       
       // Test 2: List specific chapter directory
       const { data: chapterList, error: chapterError } = await supabase.storage
         .from('chapter-documents')
         .list('Sigma Chi Eta (Ole Miss)', { limit: 100 });
-      console.log('📁 Chapter listing:', { data: chapterList, error: chapterError });
+      // Chapter listing
       
       // Test 3: Check if file exists
       const { data: fileExists, error: fileError } = await supabase.storage
         .from('chapter-documents')
         .list('Sigma Chi Eta (Ole Miss)/governance', { limit: 100 });
-      console.log('📁 Governance listing:', { data: fileExists, error: fileError });
+      // Governance listing
 
       // FIRST: List what's actually in the bucket to debug
       const { data: bucketContents, error: listError } = await supabase.storage
@@ -252,7 +248,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
       if (listError) {
         console.error('❌ Error listing bucket:', listError);
       } else {
-        console.log('📁 Actual bucket contents:', bucketContents);
+        // Actual bucket contents
       }
 
       // SECOND: Try to delete with the exact path
@@ -263,20 +259,20 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
           docToDelete.storage_path.split('/').slice(1).join('/') // Remove first segment
         ];
 
-        console.log('🔄 Trying different path formats:', pathsToTry);
+        // Trying different path formats
 
         for (const path of pathsToTry) {
-          console.log(`🔄 Attempting to delete with path: "${path}"`);
+          // Attempting to delete with path
           
           const { error: storageError } = await supabase.storage
             .from('chapter-documents')
             .remove([path]);
 
           if (!storageError) {
-            console.log(`✅ Successfully deleted with path: "${path}"`);
+            // Successfully deleted with path
             break;
           } else {
-            console.log(`❌ Failed with path "${path}":`, storageError);
+            // Failed with path
           }
         }
       }
@@ -293,7 +289,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
         return;
       }
 
-      console.log('✅ Database record deleted successfully');
+      // Database record deleted successfully
 
       // Remove from local state
       setDocuments(prev => prev.filter(doc => doc.id !== documentId));

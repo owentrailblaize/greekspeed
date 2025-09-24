@@ -7,7 +7,7 @@ export async function middleware(req: NextRequest) {
   const isActivityAPI = req.nextUrl.pathname === '/api/activity';
   
   // if (!isActivityAPI) {
-  //   console.log('🔍 Middleware: Processing request for:', req.nextUrl.pathname);
+  // Middleware: Processing request
   // }
   
   let response = NextResponse.next({
@@ -41,13 +41,8 @@ export async function middleware(req: NextRequest) {
 
   // Skip detailed session logging for activity API calls
   // if (!isActivityAPI) {
-  //   console.log('🔍 Middleware: Session check:', { 
-  //     hasSession: !!session, 
-  //     error: error?.message,
-  //     pathname: req.nextUrl.pathname,
-  //     userId: session?.user?.id
-  //   });
-  //   console.log('✅ Middleware: Request allowed to proceed');
+  // Middleware: Session check
+  // Middleware: Request allowed to proceed
   // }
 
   // Don't block dashboard access for now - just log the session state

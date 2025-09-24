@@ -28,14 +28,14 @@ export function UpcomingEventsCard() {
         setLoading(true);
         setError(null);
         
-        console.log('UpcomingEventsCard - Fetching events for chapter:', chapterId);
+        // UpcomingEventsCard - Fetching events for chapter
         const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=upcoming`);
         if (!response.ok) {
           throw new Error('Failed to fetch events');
         }
         
         const data = await response.json();
-        console.log('UpcomingEventsCard - Fetched events:', data);
+        // UpcomingEventsCard - Fetched events
         setEvents(data);
 
         // Fetch user's RSVP statuses for all events
@@ -72,7 +72,7 @@ export function UpcomingEventsCard() {
       });
 
       setRsvpStatuses(userRsvps);
-      console.log('UpcomingEventsCard - Fetched user RSVPs:', userRsvps);
+      // UpcomingEventsCard - Fetched user RSVPs
     } catch (error) {
       console.error('Error fetching user RSVPs:', error);
     }
@@ -125,10 +125,8 @@ export function UpcomingEventsCard() {
   };
 
   const handleViewAllEvents = () => {
-    console.log('🎯 View All Events button clicked!');
-    console.log('📊 Current showAllEventsModal state:', showAllEventsModal);
-    setShowAllEventsModal(true);
-    console.log('✅ After setting showAllEventsModal to true');
+    // View All Events button clicked!
+    // Current showAllEventsModal state
   };
 
   if (loading) {

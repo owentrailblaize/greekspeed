@@ -24,12 +24,12 @@ interface AlumniUploadData {
 }
 
 export async function POST(request: NextRequest) {
-  console.log('🚀 API ROUTE CALLED!'); // Add this line
+  // API ROUTE CALLED!
   try {
     const { alumniData, options = {} } = await request.json();
     
     // Debug: Log the first few records to see what data we're receiving
-    console.log('📋 Received alumni data sample:', alumniData.slice(0, 2));
+    // Received alumni data sample
     
     const { 
       generatePasswords = true, 
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    console.log(`🚀 Starting bulk upload of ${alumniData.length} alumni records`);
+    // Starting bulk upload
 
     const results = {
       total: alumniData.length,
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     // Process in batches to avoid overwhelming the system
     for (let i = 0; i < alumniData.length; i += batchSize) {
       const batch = alumniData.slice(i, i + batchSize);
-      console.log(`📦 Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(alumniData.length/batchSize)}`);
+      // Processing batch
 
       for (const alumni of batch) {
         try {
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`✅ Bulk upload completed: ${results.successful} successful, ${results.failed} failed`);
+    // Bulk upload completed
 
     return NextResponse.json({
       success: true,
@@ -120,7 +120,7 @@ async function processAlumniRecordSimple(
 ) {
   try {
     const email = alumniData.email.toLowerCase();
-    console.log(`🔍 Processing email: ${email}`);
+    // Processing email
 
     // Step 1: Check if profile already exists
     const { data: existingProfile } = await supabase
@@ -129,10 +129,10 @@ async function processAlumniRecordSimple(
       .eq('email', email)
       .maybeSingle(); // Use maybeSingle instead of single to avoid errors
 
-    console.log(`🔍 Profile check result:`, { existingProfile });
+    // Profile check result
 
     if (existingProfile) {
-      console.log(`⚠️ Profile already exists: ${email}`);
+      // Profile already exists
       return { 
         success: true, 
         user: { id: existingProfile.id, email: existingProfile.email }, 
@@ -148,7 +148,7 @@ async function processAlumniRecordSimple(
 
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        console.log(`🔄 Auth creation attempt ${attempt} for: ${email}`);
+        // Auth creation attempt
         const { data: newUser, error } = await supabase.auth.admin.createUser({
           email,
           password,
@@ -162,16 +162,16 @@ async function processAlumniRecordSimple(
           }
         });
 
-        console.log(`🔍 Auth creation result:`, { newUser, error });
+        // Auth creation result
 
         if (error) {
           if (error.message.includes('already registered') || error.message.includes('duplicate')) {
             // User already exists in auth, try to get their info
-            console.log(`🔍 Checking for existing auth user: ${email}`);
+            // Checking for existing auth user
             const { data: existingUsers } = await supabase.auth.admin.listUsers();
             authUser = existingUsers.users.find(u => u.email === email);
             if (authUser) {
-              console.log(`⚠️ Auth user already exists: ${email} with ID: ${authUser.id}`);
+              // Auth user already exists
               
               // Check if this auth user already has a profile
               const { data: existingProfileForAuth } = await supabase
@@ -181,7 +181,7 @@ async function processAlumniRecordSimple(
                 .maybeSingle();
               
               if (existingProfileForAuth) {
-                console.log(`⚠️ Auth user already has profile: ${email}`);
+                // Auth user already has profile
                 return { 
                   success: true, 
                   user: { id: authUser.id, email: authUser.email }, 
@@ -193,13 +193,13 @@ async function processAlumniRecordSimple(
           }
           authError = error;
           if (attempt < 3) {
-            console.log(`⚠️ Auth creation attempt ${attempt} failed, retrying...`);
+            // Auth creation attempt failed, retrying...
             await new Promise(resolve => setTimeout(resolve, 1000));
             continue;
           }
         } else {
           authUser = newUser.user;
-          console.log(`✅ Auth user created: ${email} with ID: ${authUser.id}`);
+          // Auth user created
           break;
         }
       } catch (error) {
@@ -216,7 +216,7 @@ async function processAlumniRecordSimple(
     }
 
     // Step 3: Create or update profile
-    console.log(`📝 Creating/updating profile for: ${email} with ID: ${authUser.id}`);
+    // Creating/updating profile
     let profileCreated = false;
     
     // First, check if profile already exists
@@ -227,13 +227,13 @@ async function processAlumniRecordSimple(
       .maybeSingle();
 
     if (existingProfileById) {
-      console.log(`⚠️ Profile already exists for auth user ID: ${authUser.id}`);
+      // Profile already exists for auth user ID
       profileCreated = true;
     } else {
       // Try to create new profile
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
-          console.log(`🔄 Profile creation attempt ${attempt} for: ${email}`);
+          // Profile creation attempt
           const chapterId = await getChapterIdFromName(supabase, alumniData.chapter);
 
           const { error: profileError } = await supabase
@@ -259,20 +259,20 @@ async function processAlumniRecordSimple(
               updated_at: new Date().toISOString()
             });
 
-          console.log(`🔍 Profile creation result:`, { profileError });
+          // Profile creation result
 
           if (profileError) {
             console.error(`❌ Profile creation error:`, profileError);
             
             // If it's a duplicate key error, the profile already exists
             if (profileError.code === '23505' && profileError.message.includes('profiles_pkey')) {
-              console.log(`✅ Profile already exists (duplicate key), proceeding with update`);
+              // Profile already exists (duplicate key), proceeding with update
               profileCreated = true;
               break;
             }
             
             if (attempt < 3) {
-              console.log(`⚠️ Profile creation attempt ${attempt} failed, retrying...`);
+              // Profile creation attempt failed, retrying...
               await new Promise(resolve => setTimeout(resolve, 1000));
               continue;
             }
@@ -280,7 +280,7 @@ async function processAlumniRecordSimple(
           }
           
           profileCreated = true;
-          console.log(`✅ Profile created successfully: ${email}`);
+          // Profile created successfully
           break;
         } catch (error) {
           console.error(`❌ Profile creation exception:`, error);
@@ -299,7 +299,7 @@ async function processAlumniRecordSimple(
 
     // Step 4: Update profile with complete data from Excel file
     try {
-      console.log(`📝 Updating profile with complete data for: ${email}`);
+      // Updating profile with complete data
       const chapterId = await getChapterIdFromName(supabase, alumniData.chapter);
       
       const { error: updateError } = await supabase
@@ -326,7 +326,7 @@ async function processAlumniRecordSimple(
       if (updateError) {
         console.error(`❌ Profile update failed for ${email}:`, updateError);
       } else {
-        console.log(`✅ Profile updated with complete data for: ${email}`);
+        // Profile updated with complete data
       }
     } catch (updateError) {
       console.error(`❌ Profile update exception for ${email}:`, updateError);
@@ -334,7 +334,7 @@ async function processAlumniRecordSimple(
 
     // Step 5: Create alumni record
     try {
-      console.log(`📝 Creating alumni record for: ${email}`);
+      // Creating alumni record
       const chapterId = await getChapterIdFromName(supabase, alumniData.chapter);
 
       const { error: alumniError } = await supabase
@@ -370,13 +370,13 @@ async function processAlumniRecordSimple(
       if (alumniError) {
         console.error(`❌ Alumni record creation failed for ${email}:`, alumniError);
       } else {
-        console.log(`✅ Alumni record created successfully for: ${email}`);
+        // Alumni record created successfully
       }
     } catch (alumniError) {
       console.error(`❌ Alumni record creation exception for ${email}:`, alumniError);
     }
 
-    console.log(`✅ Successfully created complete profile and alumni record for: ${email}`);
+    // Successfully created complete profile and alumni record
     return { 
       success: true, 
       user: authUser, 

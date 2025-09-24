@@ -10,7 +10,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    console.log('Creating chapter subscription for:', { chapterId, adminUserId, adminEmail });
+    // Creating chapter subscription
 
     // Import Stripe only when needed (runtime)
     const { stripe } = await import('@/lib/stripe-server');
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     }
 
     if (!customerId) {
-      console.log('Creating new Stripe customer for:', adminEmail);
+      // Creating new Stripe customer
       try {
         const customer = await stripe.customers.create({
           email: adminEmail,
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
         });
 
         customerId = customer.id;
-        console.log('Created customer:', customerId);
+        // Created customer
 
         // Update profile with Stripe customer ID
         try {
@@ -119,7 +119,7 @@ export async function POST(req: Request) {
       },
     });
 
-    console.log('Created checkout session:', session.id);
+    // Created checkout session
 
     return NextResponse.json({
       sessionId: session.id,

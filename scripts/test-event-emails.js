@@ -12,11 +12,11 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 async function testEventEmailNotifications() {
-  console.log('🧪 Testing Event Email Notifications...\n');
+  // Testing Event Email Notifications...
 
   try {
     // Test 1: Create a test event
-    console.log('1️⃣ Creating test event...');
+    // Creating test event...
     const testEvent = {
       title: 'Test Event - Email Notification',
       description: 'This is a test event to verify email notifications are working correctly.',
@@ -41,11 +41,11 @@ async function testEventEmailNotifications() {
     }
 
     const createResult = await createResponse.json();
-    console.log('✅ Event created successfully:', createResult.event.id);
-    console.log('📧 Email notifications should have been sent automatically\n');
+    // Event created successfully
+    // Email notifications should have been sent automatically
 
     // Test 2: Test manual email sending
-    console.log('2️⃣ Testing manual email sending...');
+    // Testing manual email sending...
     const emailResponse = await fetch(`${API_BASE_URL}/api/events/send-email`, {
       method: 'POST',
       headers: {
@@ -63,13 +63,13 @@ async function testEventEmailNotifications() {
     }
 
     const emailResult = await emailResponse.json();
-    console.log('✅ Manual email sending successful:');
-    console.log(`   📊 Total recipients: ${emailResult.emailResult.totalRecipients}`);
-    console.log(`   ✅ Successful: ${emailResult.emailResult.successful}`);
-    console.log(`   ❌ Failed: ${emailResult.emailResult.failed}\n`);
+    // Manual email sending successful
+    // Total recipients
+    // Successful
+    // Failed
 
     // Test 3: Verify environment variables
-    console.log('3️⃣ Checking environment configuration...');
+    // Checking environment configuration...
     const requiredEnvVars = [
       'SENDGRID_API_KEY',
       'SENDGRID_EVENT_TEMPLATE_ID',
@@ -80,26 +80,26 @@ async function testEventEmailNotifications() {
     const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
     
     if (missingVars.length > 0) {
-      console.log('⚠️  Missing environment variables:', missingVars.join(', '));
-      console.log('   Make sure these are set in your .env.local file\n');
+      // Missing environment variables
+      // Make sure these are set in your .env.local file
     } else {
-      console.log('✅ All required environment variables are set\n');
+      // All required environment variables are set
     }
 
-    console.log('🎉 Event email notification testing completed successfully!');
-    console.log('\n📋 Next steps:');
-    console.log('   1. Check your SendGrid dashboard for email activity');
-    console.log('   2. Verify emails were received by chapter members');
-    console.log('   3. Check the event metadata in your database');
-    console.log('   4. Test creating events through the Social Chair Dashboard UI');
+    // Event email notification testing completed successfully!
+    // Next steps
+    // Check your SendGrid dashboard for email activity
+    // Verify emails were received by chapter members
+    // Check the event metadata in your database
+    // Test creating events through the Social Chair Dashboard UI
 
   } catch (error) {
     console.error('❌ Test failed:', error.message);
-    console.log('\n🔧 Troubleshooting tips:');
-    console.log('   1. Make sure your development server is running');
-    console.log('   2. Verify your SendGrid API key and template ID');
-    console.log('   3. Check that you have active members in your test chapter');
-    console.log('   4. Review the server console logs for detailed error messages');
+    // Troubleshooting tips
+    // Make sure your development server is running
+    // Verify your SendGrid API key and template ID
+    // Check that you have active members in your test chapter
+    // Review the server console logs for detailed error messages
   }
 }
 

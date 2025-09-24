@@ -47,7 +47,7 @@ export function ProfileCompletionGate({
   // Smart refresh logic - only refresh when modal opens or after profile updates
   useEffect(() => {
     if (isOpen) {
-      console.log('🔄 ProfileCompletionGate: Modal opened, loading fresh data...');
+      // ProfileCompletionGate: Modal opened, loading fresh data...
       loadCompletionData();
     } else {
       // Clear any pending refreshes when modal closes
@@ -61,11 +61,11 @@ export function ProfileCompletionGate({
   // Auto-close when completion is achieved
   useEffect(() => {
     if (completion?.isComplete) {
-      console.log('✅ ProfileCompletionGate: Profile is now complete! Auto-closing in 2 seconds...');
+      // ProfileCompletionGate: Profile is now complete! Auto-closing in 2 seconds...
       
       // Show completion message briefly, then auto-close
       setTimeout(() => {
-        console.log('✅ ProfileCompletionGate: Auto-closing modal...');
+        // ProfileCompletionGate: Auto-closing modal...
         onClose();
       }, 2000);
     }
@@ -79,7 +79,7 @@ export function ProfileCompletionGate({
       const now = Date.now();
       // Only refresh if it's been more than 5 seconds since last update
       if (now - lastUpdateRef.current > 5000) {
-        console.log('🔄 ProfileCompletionGate: Window focused, refreshing data...');
+        // ProfileCompletionGate: Window focused, refreshing data...
         loadCompletionData();
       }
     };
@@ -93,10 +93,10 @@ export function ProfileCompletionGate({
 
     setLoading(true);
     try {
-      console.log('🔄 ProfileCompletionGate: Loading completion data for profile:', currentProfile.id);
+      // ProfileCompletionGate: Loading completion data for profile
       
       // Always refresh the profile context first to get latest data
-      console.log('🔄 ProfileCompletionGate: Refreshing profile context...');
+      // ProfileCompletionGate: Refreshing profile context...
       await refreshProfile();
       
       // Load alumni data if user is alumni
@@ -113,21 +113,21 @@ export function ProfileCompletionGate({
         } else {
           currentAlumniData = alumni;
           setAlumniData(alumni);
-          console.log('📊 ProfileCompletionGate: Loaded alumni data:', alumni);
+          // ProfileCompletionGate: Loaded alumni data
         }
       }
 
       // Calculate completion with the latest profile data
       const completionData = await calculateProfileCompletion(currentProfile, currentAlumniData);
       setCompletion(completionData);
-      console.log('📊 ProfileCompletionGate: Calculated completion:', completionData);
+      // ProfileCompletionGate: Calculated completion
       
       // Update last refresh time
       lastUpdateRef.current = Date.now();
       
       // Log if profile is now complete
       if (completionData.isComplete) {
-        console.log('✅ ProfileCompletionGate: Profile is complete!', completionData);
+        // ProfileCompletionGate: Profile is complete!
       }
     } catch (error) {
       console.error('❌ ProfileCompletionGate: Error loading completion data:', error);
@@ -220,7 +220,7 @@ export function ProfileCompletionGate({
 
   const handleProfileUpdate = async (updatedProfile: any) => {
     try {
-      console.log(' ProfileCompletionGate: Starting profile update...');
+      // ProfileCompletionGate: Starting profile update...
       
       // Update the profile first
       await updateProfile(updatedProfile);
@@ -232,10 +232,10 @@ export function ProfileCompletionGate({
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Force immediate refresh of completion data
-      console.log('🔄 ProfileCompletionGate: Force refreshing completion data after update...');
+      // ProfileCompletionGate: Force refreshing completion data after update...
       await loadCompletionData();
       
-      console.log('✅ ProfileCompletionGate: Profile update completed successfully');
+      // ProfileCompletionGate: Profile update completed successfully
     } catch (error) {
       console.error('❌ ProfileCompletionGate: Error updating profile:', error);
     }
@@ -243,7 +243,7 @@ export function ProfileCompletionGate({
 
   // Add a manual refresh function that can be called when needed
   const handleManualRefresh = async () => {
-    console.log('🔄 ProfileCompletionGate: Manual refresh triggered...');
+    // ProfileCompletionGate: Manual refresh triggered...
     await loadCompletionData();
   };
 

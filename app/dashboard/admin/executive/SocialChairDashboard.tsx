@@ -109,10 +109,7 @@ export function SocialChairDashboard() {
 
   // Debug logging
   useEffect(() => {
-    console.log('SocialChairDashboard - Chapter ID:', chapterId);
-    console.log('SocialChairDashboard - Events:', events);
-    console.log('SocialChairDashboard - Events Loading:', eventsLoading);
-    console.log('SocialChairDashboard - Events Error:', eventsError);
+    // SocialChairDashboard - Debug info
   }, [chapterId, events, eventsLoading, eventsError]);
 
   const getDaysInMonth = (date: Date): number => {
@@ -198,7 +195,7 @@ export function SocialChairDashboard() {
     if (confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
       const success = await deleteEvent(eventId);
       if (success) {
-        console.log('Event deleted successfully');
+        // Event deleted successfully
       }
     }
   };
@@ -229,7 +226,7 @@ export function SocialChairDashboard() {
         updated_by: profile?.id || ''  // Add this
       };
       
-      console.log('Sending vendor with user data:', vendorWithUser);
+      // Sending vendor with user data
       
       const newVendor = await createVendor(vendorWithUser);
       
@@ -271,7 +268,7 @@ export function SocialChairDashboard() {
     if (confirm('Are you sure you want to delete this vendor? This action cannot be undone.')) {
       const success = await deleteVendor(vendorId);
       if (success) {
-        console.log('Vendor deleted successfully');
+        // Vendor deleted successfully
       }
     }
   };
@@ -307,7 +304,7 @@ export function SocialChairDashboard() {
 
       if (response.ok) {
         const result = await response.json();
-        console.log('✅ Reminder emails sent:', result);
+        // Reminder emails sent
         setReminderSuccess(eventId);
         // Clear success state after 2 seconds
         setTimeout(() => setReminderSuccess(null), 2000);

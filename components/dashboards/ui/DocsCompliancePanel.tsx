@@ -79,7 +79,8 @@ export function DocsCompliancePanel() {
         visibilityFilter = ['chapter_all'];
       }
 
-      console.log('🔐 User role-based access:', {
+      // User role-based access
+      console.log('User access details:', {
         userId: user.id,
         userRole: profile.role,
         chapterId: profile.chapter_id,
@@ -103,7 +104,8 @@ export function DocsCompliancePanel() {
         console.error('Error loading documents:', error);
         setDocuments([]);
       } else {
-        console.log('📄 Documents loaded with role-based access:', {
+        // Documents loaded with role-based access
+        console.log('Documents loaded:', {
           totalDocuments: documents?.length || 0,
           userRole: profile.role,
           visibilityFilter: visibilityFilter

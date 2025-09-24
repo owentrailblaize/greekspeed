@@ -8,7 +8,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(request: NextRequest) {
-  console.log('📧 === EVENT REMINDER API CALLED ===');
+  // Event reminder API called
   
   try {
     const { eventId, chapterId } = await request.json();
@@ -20,7 +20,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch the event details
-    console.log('📧 Fetching event details...');
     const { data: event, error: eventError } = await supabase
       .from('events')
       .select('*')
@@ -29,20 +28,14 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (eventError || !event) {
-      console.error('❌ Error fetching event:', eventError);
+      console.error('Error fetching event:', eventError);
       return NextResponse.json({ 
         error: 'Event not found' 
       }, { status: 404 });
     }
 
-    console.log('✅ Event found:', {
-      id: event.id,
-      title: event.title,
-      start_time: event.start_time
-    });
 
     // Get all chapter members
-    console.log('�� Fetching chapter members...');
     const { data: allMembers, error: membersError } = await supabase
       .from('profiles')
       .select('id, email, first_name, chapter_id, role')
@@ -51,23 +44,21 @@ export async function POST(request: NextRequest) {
       .not('email', 'is', null);
 
     if (membersError || !allMembers) {
-      console.error('❌ Error fetching chapter members:', membersError);
+      console.error('Error fetching chapter members:', membersError);
       return NextResponse.json({ 
         error: 'Failed to fetch chapter members' 
       }, { status: 500 });
     }
 
-    console.log('📧 All members found:', allMembers.length);
 
     // Get users who have RSVP'd
-    console.log('📧 Fetching existing RSVPs...');
     const { data: rsvps, error: rsvpError } = await supabase
       .from('event_rsvps')
       .select('user_id')
       .eq('event_id', eventId);
 
     if (rsvpError) {
-      console.error('❌ Error fetching RSVPs:', rsvpError);
+      console.error('Error fetching RSVPs:', rsvpError);
       return NextResponse.json({ 
         error: 'Failed to fetch RSVPs' 
       }, { status: 500 });
@@ -79,11 +70,6 @@ export async function POST(request: NextRequest) {
       !rsvpUserIds.has(member.id)
     );
 
-    console.log(`📧 Found ${membersWithoutRsvp.length} members who haven't RSVP'd`);
-    console.log('📧 Members without RSVP:', membersWithoutRsvp.map(m => ({ 
-      name: m.first_name, 
-      email: m.email 
-    })));
 
     if (membersWithoutRsvp.length === 0) {
       return NextResponse.json({
@@ -94,7 +80,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Get chapter name
-    console.log('📧 Fetching chapter name...');
     const { data: chapter } = await supabase
       .from('chapters')
       .select('name')
@@ -130,16 +115,8 @@ export async function POST(request: NextRequest) {
       startAtRelative = `in ${diffDays} days`;
     }
 
-    console.log('📧 Calculated relative time:', startAtRelative);
 
-    // Check environment variables
-    console.log('📧 Environment check:');
-    console.log('   SENDGRID_API_KEY:', process.env.SENDGRID_API_KEY ? '✅ Set' : '❌ Missing');
-    console.log('   SENDGRID_EVENT_REMINDER_TEMPLATE_ID:', process.env.SENDGRID_EVENT_REMINDER_TEMPLATE_ID ? '✅ Set' : '❌ Missing');
-    console.log('   SENDGRID_FROM_EMAIL:', process.env.SENDGRID_FROM_EMAIL || '❌ Missing');
 
-    // Send reminder emails
-    console.log('📧 Calling EmailService.sendEventReminderToChapter...');
     const emailResult = await EmailService.sendEventReminderToChapter(recipients, {
       eventTitle: event.title,
       eventDescription: event.description,
@@ -150,7 +127,6 @@ export async function POST(request: NextRequest) {
       startAtRelative
     });
 
-    console.log('📧 Email service result:', emailResult);
 
     return NextResponse.json({
       success: true,
@@ -163,8 +139,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ Error in send event reminder API:', error);
-    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('Error in send event reminder API:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json({ 
       error: 'Internal server error' 
     }, { status: 500 });

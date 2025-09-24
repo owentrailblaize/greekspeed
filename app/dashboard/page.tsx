@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { WelcomeModal } from '@/components/WelcomeModal';
 
 export default function DashboardPage() {
-  console.log('🔍 DashboardPage: Component rendering');
+  // DashboardPage: Component rendering
   
   const { user, isDeveloper } = useAuth();
   const router = useRouter();

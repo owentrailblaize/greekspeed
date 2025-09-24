@@ -54,7 +54,7 @@ export function AdminTasksManager() {
 
       // Remove from local state
       setAllTasks(prev => prev.filter(task => task.id !== taskId));
-      console.log('Task deleted successfully');
+      // Task deleted successfully
     } catch (error) {
       console.error('Error deleting task:', error);
     }

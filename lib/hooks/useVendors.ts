@@ -35,8 +35,7 @@ export function useVendors({ chapterId }: UseVendorsOptions) {
     try {
       setError(null);
       
-      console.log('Sending vendor data:', vendorData);
-      console.log('Chapter ID:', chapterId);
+      // Sending vendor data
       
       const response = await fetch('/api/vendors', {
         method: 'POST',
@@ -49,7 +48,7 @@ export function useVendors({ chapterId }: UseVendorsOptions) {
         }),
       });
 
-      console.log('Response status:', response.status);
+      // Response status
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -58,7 +57,7 @@ export function useVendors({ chapterId }: UseVendorsOptions) {
       }
 
       const result = await response.json();
-      console.log('API success response:', result);
+      // API success response
       await fetchVendors(); // Refresh the vendors list
       return result.vendor;
     } catch (err) {

@@ -106,7 +106,7 @@ export default function DuesClient() {
     const canceled = urlParams.get('canceled');
     
     if (success === 'true') {
-      console.log('✅ Payment successful! Refreshing data...');
+      // Payment successful! Refreshing data...
       setShowSuccessMessage(true);
       loadDuesAssignments();
       loadPaymentHistory(); // Refresh payment history
@@ -116,7 +116,7 @@ export default function DuesClient() {
       // Hide success message after 5 seconds
       setTimeout(() => setShowSuccessMessage(false), 5000);
     } else if (canceled === 'true') {
-      console.log('❌ Payment canceled');
+      // Payment canceled
       window.history.replaceState({}, '', '/dashboard/dues');
     }
   }, []);
@@ -124,7 +124,7 @@ export default function DuesClient() {
   const loadDuesAssignments = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Loading dues assignments for user:', profile?.id);
+      // Loading dues assignments for user
       
       const { data, error } = await supabase
         .from('dues_assignments')
@@ -142,7 +142,7 @@ export default function DuesClient() {
 
       if (error) throw error;
       
-      console.log('📊 Loaded assignments:', data);
+      // Loaded assignments
       setAssignments(data || []);
     } catch (error) {
       console.error('Error loading dues assignments:', error);

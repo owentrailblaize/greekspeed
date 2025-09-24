@@ -7,8 +7,8 @@ import { AddMemberForm } from '@/components/chapter/AddMemberForm';
 export default function MyChapterPage() {
   const [showAddMemberForm, setShowAddMemberForm] = useState(false);
 
-  console.log('showAddMemberForm:', showAddMemberForm);
-  console.log('Page rendering normally');
+  // showAddMemberForm
+  // Page rendering normally
 
   return (
     <div>

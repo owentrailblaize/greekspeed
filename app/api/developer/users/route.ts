@@ -110,10 +110,7 @@ export async function DELETE(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    console.log(`🗑️ Attempting to delete user: ${userId}`);
-
-    // First, try to delete the user from Supabase Auth
-    console.log(' Deleting auth user...');
+    // Attempting to delete user
     const { error: authError } = await supabase.auth.admin.deleteUser(userId);
 
     if (authError) {
@@ -121,17 +118,17 @@ export async function DELETE(request: NextRequest) {
       
       // Check if it's a permission issue or user not found
       if (authError.message.includes('not found') || authError.message.includes('does not exist')) {
-        console.log('ℹ️ Auth user not found, proceeding with profile deletion only');
+        // Auth user not found, proceeding with profile deletion only
       } else {
         // For other auth errors, we'll still try to delete the profile
-        console.log('⚠️ Auth deletion failed, but proceeding with profile cleanup');
+        // Auth deletion failed, but proceeding with profile cleanup
       }
     } else {
-      console.log('✅ Auth user deleted successfully');
+      // Auth user deleted successfully
     }
 
     // Then, delete the profile from the profiles table
-    console.log('🗃️ Deleting profile...');
+    // Deleting profile...
     const { error: profileError } = await supabase
       .from('profiles')
       .delete()
@@ -142,11 +139,11 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to delete user profile' }, { status: 500 });
     }
 
-    console.log('✅ Profile deleted successfully');
+    // Profile deleted successfully
 
     // Also clean up any related data (connections, etc.)
     try {
-      console.log('🧹 Cleaning up related data...');
+      // Cleaning up related data...
       
       // Delete connections where this user is involved
       const { error: connectionsError } = await supabase
@@ -155,16 +152,16 @@ export async function DELETE(request: NextRequest) {
         .or(`requester_id.eq.${userId},recipient_id.eq.${userId}`);
 
       if (connectionsError) {
-        console.log('⚠️ Connections cleanup failed:', connectionsError.message);
+        // Connections cleanup failed
       } else {
-        console.log('✅ Connections cleaned up');
+        // Connections cleaned up
       }
 
       // Delete any other related data as needed
       // Add more cleanup operations here if you have other tables with user references
 
     } catch (cleanupError) {
-      console.log('⚠️ Additional cleanup failed:', cleanupError);
+      // Additional cleanup failed
       // Don't fail the entire operation for cleanup issues
     }
 
