@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, UserPlus } from 'lucide-react';
+import { Users, UserPlus, X, CheckCircle } from 'lucide-react';
 import { PersonalAlumniProfile } from './ui/PersonalAlumniProfile';
 import { SocialFeed } from './ui/SocialFeed';
 import { AlumniMobileBottomNavigation } from './ui/AlumniMobileBottomNavigation';
@@ -41,24 +41,25 @@ export function AlumniOverview() {
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [connectionLoading, setConnectionLoading] = useState<string | null>(null);
   const [activeMobileTab, setActiveMobileTab] = useState('home');
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [connectedUserName, setConnectedUserName] = useState<string>('');
 
-  // Get networking spotlight members from same chapter
-  const getNetworkingSpotlight = () => {
+  // Memoize the networking spotlight to prevent constant refreshing
+  const networkingSpotlight = useMemo(() => {
     if (!chapterMembers || !profile) return [];
     
-    // Get IDs of users the current user is already connected with
+    // Get IDs of users the current user has ANY connection with (pending, accepted, etc.)
     const connectedUserIds = new Set(
       connections
         .filter(conn => 
-          conn.status === 'accepted' && 
-          (conn.requester_id === profile.id || conn.recipient_id === profile.id)
+          conn.requester_id === profile.id || conn.recipient_id === profile.id
         )
         .map(conn => 
           conn.requester_id === profile.id ? conn.recipient_id : conn.requester_id
         )
     );
     
-    // Filter out current user and already connected users
+    // Filter out current user and users with any existing connection
     const availableMembers = chapterMembers.filter(member => 
       member.id !== profile.id && 
       !connectedUserIds.has(member.id)
@@ -72,16 +73,35 @@ export function AlumniOverview() {
     );
     
     // Combine with priority order: alumni first, then active members, then others
+    // Use a seeded shuffle based on user ID for consistent randomness per user
+    const shuffleArray = (arr: any[], seed: string) => {
+      const shuffled = [...arr];
+      let currentIndex = shuffled.length;
+      
+      // Simple seeded random function
+      let seedNum = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const seededRandom = () => {
+        seedNum = (seedNum * 9301 + 49297) % 233280;
+        return seedNum / 233280;
+      };
+      
+      while (currentIndex !== 0) {
+        const randomIndex = Math.floor(seededRandom() * currentIndex);
+        currentIndex--;
+        [shuffled[currentIndex], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[currentIndex]];
+      }
+      
+      return shuffled;
+    };
+    
     const prioritizedMembers = [
-      ...alumniMembers.sort(() => Math.random() - 0.5),
-      ...activeMembers.sort(() => Math.random() - 0.5),
-      ...otherMembers.sort(() => Math.random() - 0.5)
+      ...shuffleArray(alumniMembers, profile.id),
+      ...shuffleArray(activeMembers, profile.id),
+      ...shuffleArray(otherMembers, profile.id)
     ];
     
     return prioritizedMembers.slice(0, 5);
-  };
-
-  const networkingSpotlight = getNetworkingSpotlight();
+  }, [chapterMembers, profile, connections]); // Only recalculate when these dependencies change
 
   const handleConnect = async (member: ChapterMemberData) => {
     if (!profile) return;
@@ -89,8 +109,9 @@ export function AlumniOverview() {
     setConnectionLoading(member.id);
     try {
       await sendConnectionRequest(member.id);
-      // Connection request sent to
-      // You could show a success toast here
+      // Show success modal
+      setConnectedUserName(member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member');
+      setSuccessModalOpen(true);
     } catch (error) {
       console.error('Failed to send connection request:', error);
       // You could show an error toast here
@@ -185,7 +206,7 @@ export function AlumniOverview() {
                               
                               <p className="text-xs text-gray-600 mb-1 truncate">
                                 {member.chapter_role && member.chapter_role !== 'member' ? 
-                                  member.chapter_role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 
+                                  member.chapter_role.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 
                                   member.role === 'alumni' ? 'Alumni' : 'Member'
                                 }
                               </p>
@@ -297,6 +318,39 @@ export function AlumniOverview() {
             <div className="flex space-x-2">
               <Button onClick={() => setConnectModalOpen(false)}>Close</Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {successModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-sm w-full mx-4 p-6 text-center">
+            <div className="flex justify-end mb-2">
+              <button
+                onClick={() => setSuccessModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Connection Request Sent!
+              </h3>
+              <p className="text-gray-600">
+                Your connection request has been sent to <span className="font-medium">{connectedUserName}</span>
+              </p>
+            </div>
+            
+            <Button 
+              onClick={() => setSuccessModalOpen(false)}
+              className="w-full bg-navy-600 hover:bg-navy-700"
+            >
+              Got it!
+            </Button>
           </div>
         </div>
       )}
