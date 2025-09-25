@@ -3,6 +3,10 @@
 import SubscriptionPaywall from '@/components/SubscriptionPaywall';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { useActivityTracking } from '@/lib/hooks/useActivityTracking';
+import { ModalProvider, useModal } from '@/lib/contexts/ModalContext';
+import { useProfile } from '@/lib/hooks/useProfile';
+import { EditProfileModal } from '@/components/EditProfileModal';
+import { ProfileService } from '@/lib/services/profileService';
 
 export default function DashboardLayout({
   children,
@@ -20,9 +24,47 @@ export default function DashboardLayout({
       {/* Wrap the main content with SubscriptionPaywall */}
       <SubscriptionPaywall>
         <main className="flex-1">
-          {children}
+          <ModalProvider>
+            {children}
+            
+            {/* Global Edit Profile Modal - Rendered at layout level */}
+            <EditProfileModalWrapper />
+          </ModalProvider>
         </main>
       </SubscriptionPaywall>
     </div>
+  );
+}
+
+// Global Modal Wrapper Component
+function EditProfileModalWrapper() {
+  const { isEditProfileModalOpen, closeEditProfileModal } = useModal();
+  const { profile, refreshProfile } = useProfile();
+
+  const handleProfileUpdate = async (updatedProfile: any) => {
+    try {
+      // Update profile data without page reload
+      const result = await ProfileService.updateProfile(updatedProfile);
+      
+      if (result) {
+        // Refresh profile data
+        await refreshProfile();
+        // Close the modal
+        closeEditProfileModal();
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };
+
+  if (!profile) return null;
+
+  return (
+    <EditProfileModal
+      isOpen={isEditProfileModalOpen}
+      onClose={closeEditProfileModal}
+      profile={profile}
+      onUpdate={handleProfileUpdate}
+    />
   );
 } 

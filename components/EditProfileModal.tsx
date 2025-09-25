@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, User, Mail, Building, Shield, FileText, Phone, MapPin, GraduationCap, Home, Calculator, Image, Upload, Linkedin, Briefcase, HelpCircle } from 'lucide-react';
+import { X, User, Mail, Building, Shield, FileText, Phone, MapPin, GraduationCap, Home, Calculator, Image, Upload, Linkedin, Briefcase, HelpCircle, Edit, AlertTriangle, Save, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +15,9 @@ import { BannerService } from '@/lib/services/bannerService';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/lib/supabase/client';
 import { trackActivity, ActivityTypes } from '@/lib/utils/activityUtils';
+import { useFormPersistence } from '@/lib/hooks/useFormPersistence';
+import { useModal } from '@/lib/contexts/ModalContext';
+import Link from 'next/link';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -25,7 +28,15 @@ interface EditProfileModalProps {
 }
 
 export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant = 'desktop' }: EditProfileModalProps) {
-  const [formData, setFormData] = useState({
+  // Use enhanced form persistence hook
+  const {
+    formData,
+    updateFormData,
+    resetForm,
+    hasUnsavedChanges,
+    isInitialized,
+    initializeWithProfileData
+  } = useFormPersistence({
     first_name: '',
     last_name: '',
     email: '',
@@ -46,6 +57,11 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
     is_actively_hiring: false,
     description: '',
     tags: ''
+  }, {
+    key: `edit-profile-${profile?.id || 'default'}`,
+    storage: 'sessionStorage',
+    debounceMs: 1000,
+    autoSave: true
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -62,6 +78,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
   const [loadingAlumni, setLoadingAlumni] = useState(false);
 
   const { updateProfile, refreshProfile } = useProfile();
+  const { openEditProfileModal, closeEditProfileModal } = useModal();
 
   // Add loadAlumniData function
   const loadAlumniData = async () => {
@@ -92,7 +109,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
   // Update the useEffect to load alumni data
   useEffect(() => {
     if (profile) {
-      setFormData({
+      const profileFormData = {
         first_name: profile.first_name || profile.full_name?.split(' ')[0] || '',
         last_name: profile.last_name || profile.full_name?.split(' ')[1] || '',
         email: profile.email || '',
@@ -113,7 +130,9 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
         is_actively_hiring: false,
         description: '',
         tags: ''
-      });
+      };
+      
+      initializeWithProfileData(profileFormData);
       
       if (profile.avatar_url) {
         setAvatarPreview(profile.avatar_url);
@@ -127,12 +146,12 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
         loadAlumniData();
       }
     }
-  }, [profile]);
+  }, [profile, initializeWithProfileData]);
 
   // Add another useEffect to update formData when alumniData loads
   useEffect(() => {
     if (alumniData) {
-      setFormData(prev => ({
+      updateFormData(prev => ({
         ...prev,
         industry: alumniData.industry || '',
         company: alumniData.company || '',
@@ -147,7 +166,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
         // Remove location from alumni data mapping - only use profile location
       }));
     }
-  }, [alumniData]);
+  }, [alumniData, updateFormData]);
 
   // Email validation regex
   const validateEmail = (email: string): boolean => {
@@ -185,10 +204,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
 
   // Enhanced input change handler with validation
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    updateFormData({ [field]: value });
 
     // Clear error when user starts typing
     if (errors[field]) {
@@ -219,7 +235,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
   // Phone number specific handler
   const handlePhoneChange = (value: string) => {
     const formatted = formatPhoneNumber(value);
-    setFormData(prev => ({ ...prev, phone: formatted }));
+    updateFormData({ phone: formatted });
     
     if (errors.phone) {
       setErrors(prev => ({ ...prev, phone: '' }));
@@ -456,6 +472,17 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
     }
   };
 
+  // Enhanced close handler with unsaved changes warning
+  const handleClose = () => {
+    if (hasUnsavedChanges) {
+      const confirmClose = window.confirm(
+        'You have unsaved changes. Are you sure you want to close? Your changes will be saved automatically.'
+      );
+      if (!confirmClose) return;
+    }
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -463,11 +490,13 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
       <div className={`bg-white rounded-xl shadow-2xl w-full max-w-2xl flex flex-col ${
         variant === 'mobile' ? 'max-h-[85vh] my-8' : 'max-h-[90vh]'
       }`}>
-        {/* Persistent Header */}
+        {/* Enhanced Header with Unsaved Changes Indicator */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
-          <h2 className="text-2xl font-bold text-navy-900">Edit Profile</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-navy-900">Edit Profile</h2>
+          </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5 text-gray-500" />
@@ -703,7 +732,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                           id="is_actively_hiring"
                           checked={formData.is_actively_hiring}
                           onCheckedChange={(checked) => 
-                            setFormData(prev => ({ ...prev, is_actively_hiring: checked as boolean }))
+                            updateFormData({ is_actively_hiring: checked as boolean })
                           }
                         />
                         <Label htmlFor="is_actively_hiring" className="text-sm">
@@ -944,16 +973,42 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
           </form>
         </div>
 
-        {/* Persistent Footer */}
-        <div className="flex justify-end space-x-3 p-6 border-t border-gray-200 flex-shrink-0">
-          <Button
-            type="submit"
-            disabled={loading}
-            className="bg-navy-600 hover:bg-navy-700"
-            onClick={handleSubmit}
-          >
-            {loading ? 'Saving...' : 'Save Changes'}
-          </Button>
+        {/* Enhanced Footer with Save Options */}
+        <div className="flex justify-between items-center p-6 border-t border-gray-200 flex-shrink-0">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            {hasUnsavedChanges && (
+              <>
+                <Save className="w-4 h-4" />
+                <span className="text-xs">Autosaves</span>
+              </>
+            )}
+          </div>
+          <div className="flex space-x-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                if (hasUnsavedChanges) {
+                  const confirmReset = window.confirm('Are you sure you want to discard all unsaved changes?');
+                  if (confirmReset) {
+                    resetForm();
+                  }
+                } else {
+                  handleClose();
+                }
+              }}
+            >
+              {hasUnsavedChanges ? 'Discard Changes' : 'Cancel'}
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="bg-navy-600 hover:bg-navy-700"
+              onClick={handleSubmit}
+            >
+              {loading ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
