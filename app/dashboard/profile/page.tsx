@@ -23,6 +23,9 @@ import { useUserPosts } from '@/lib/hooks/useUserPosts';
 import { formatDistanceToNow } from 'date-fns';
 import { DeletePostModal } from '@/components/social/DeletePostModal';
 import { EmailService } from '@/lib/services/emailService';
+import { useModal } from '@/lib/contexts/ModalContext';
+import { useFormPersistence } from '@/lib/hooks/useFormPersistence';
+import { Save, AlertTriangle } from 'lucide-react';
 
 export default function ProfilePage() {
   const { profile, loading, refreshProfile } = useProfile();
@@ -30,7 +33,7 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState('connections');
   const [connectionLoading, setConnectionLoading] = useState<string | null>(null);
   const router = useRouter();
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const { openEditProfileModal } = useModal();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -283,8 +286,16 @@ export default function ProfilePage() {
             />
           </div>
 
-          {/* Action Buttons - Only Messages Button */}
+          {/* Action Buttons - Add Edit Profile Button */}
           <div className="absolute right-4 sm:right-8 bottom-4 flex items-center space-x-3">
+            <Button 
+              size="sm" 
+              className="w-10 h-10 rounded-full bg-navy-600 hover:bg-navy-700"
+              onClick={openEditProfileModal}
+              title="Edit Profile"
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
             <Link href="/dashboard/messages">
               <Button size="sm" className="w-10 h-10 rounded-full bg-navy-600 hover:bg-navy-700">
                 <MessageCircle className="w-4 h-4" />
@@ -648,8 +659,8 @@ export default function ProfilePage() {
 
         {/* Edit Profile Modal */}
         <EditProfileModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
+          isOpen={true} // Always open globally
+          onClose={() => {}} // No local close, handled by global
           profile={profile}
           onUpdate={handleProfileUpdate}
         />
