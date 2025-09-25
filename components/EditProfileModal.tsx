@@ -148,9 +148,9 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
     }
   }, [profile, initializeWithProfileData]);
 
-  // Only update formData with alumni data ONCE when it first loads, not on every change
+  // Add another useEffect to update formData when alumniData loads
   useEffect(() => {
-    if (alumniData && !isInitialized) {
+    if (alumniData) {
       updateFormData(prev => ({
         ...prev,
         industry: alumniData.industry || '',
@@ -163,9 +163,10 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
           : alumniData.tags || '',
         grad_year: alumniData.graduation_year || prev.grad_year,
         phone: alumniData.phone || prev.phone,
+        // Remove location from alumni data mapping - only use profile location
       }));
     }
-  }, [alumniData, isInitialized]); // Remove updateFormData from dependencies
+  }, [alumniData, updateFormData]);
 
   // Email validation regex
   const validateEmail = (email: string): boolean => {
