@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { EmailService } from '@/lib/services/emailService';
+import { getEmailBaseUrl } from '@/lib/utils/urlUtils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,12 +30,15 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Use the email base URL for consistent redirects
+    const baseUrl = getEmailBaseUrl();
+
     // Generate a reset token using Supabase's admin API (doesn't send email)
     const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/reset-password`,
+        redirectTo: `${baseUrl}/auth/reset-password`,
       }
     });
 
@@ -50,7 +54,7 @@ export async function POST(request: NextRequest) {
       to: email,
       firstName: profile.first_name || 'User',
       chapterName: profile.chapter || 'Unknown Chapter',
-      resetLink: resetData.properties?.action_link || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/reset-password`,
+      resetLink: resetData.properties?.action_link || `${baseUrl}/auth/reset-password`,
       timestamp: new Date().toLocaleString('en-US', {
         year: 'numeric',
         month: 'long',

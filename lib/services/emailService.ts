@@ -1,4 +1,5 @@
 import sgMail from '@sendgrid/mail';
+import { getEmailBaseUrl } from '@/lib/utils/urlUtils';
 
 // Initialize SendGrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
@@ -466,10 +467,10 @@ export class EmailService {
           },
           cta: {
             label: 'View Connection',
-            url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/notifications`
+            url: `${getEmailBaseUrl()}/dashboard/notifications`
           },
-          unsubscribe: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/unsubscribe?email=${encodeURIComponent(to)}`,
-          unsubscribe_preferences: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/preferences?email=${encodeURIComponent(to)}`
+          unsubscribe: `${getEmailBaseUrl()}/unsubscribe?email=${encodeURIComponent(to)}`,
+          unsubscribe_preferences: `${getEmailBaseUrl()}/preferences?email=${encodeURIComponent(to)}`
         },
       };
 
@@ -518,10 +519,10 @@ export class EmailService {
           },
           cta: {
             label: 'View Request',
-            url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/notifications`
+            url: `${getEmailBaseUrl()}/dashboard/notifications`
           },
-          unsubscribe: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/unsubscribe?email=${encodeURIComponent(to)}`,
-          unsubscribe_preferences: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/preferences?email=${encodeURIComponent(to)}`
+          unsubscribe: `${getEmailBaseUrl()}/unsubscribe?email=${encodeURIComponent(to)}`,
+          unsubscribe_preferences: `${getEmailBaseUrl()}/preferences?email=${encodeURIComponent(to)}`
         },
       };
 
@@ -570,10 +571,10 @@ export class EmailService {
           },
           cta: {
             label: 'Open Chat',
-            url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/messages`
+            url: `${getEmailBaseUrl()}/dashboard/messages`
           },
-          unsubscribe: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/unsubscribe?email=${encodeURIComponent(to)}`,
-          unsubscribe_preferences: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/preferences?email=${encodeURIComponent(to)}`
+          unsubscribe: `${getEmailBaseUrl()}/unsubscribe?email=${encodeURIComponent(to)}`,
+          unsubscribe_preferences: `${getEmailBaseUrl()}/preferences?email=${encodeURIComponent(to)}`
         },
       };
 
@@ -695,7 +696,7 @@ export class EmailService {
               Discover career opportunities and professional connections.
             </div>
             
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" class="button">Get Started</a>
+            <a href="${getEmailBaseUrl()}/dashboard" class="button">Get Started</a>
             
             <p>If you have any questions, feel free to reach out to our support team.</p>
           </div>
@@ -731,7 +732,7 @@ export class EmailService {
       💼 Professional Network
       Discover career opportunities and professional connections.
       
-      Get started: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard
+      Get started: ${getEmailBaseUrl()}/dashboard
       
       If you have any questions, feel free to reach out to our support team.
       
@@ -978,7 +979,7 @@ export class EmailService {
           },
           timestamp: timestamp,
           device_info: deviceInfo || 'Unknown Device',
-          dashboard_link: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard`
+          dashboard_link: `${getEmailBaseUrl()}/dashboard`
         }
       };
 
