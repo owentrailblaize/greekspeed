@@ -8,6 +8,43 @@ html {
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
 } 
 
+/* iOS Safari Auto-Zoom Prevention */
+/* Force 16px font-size on all form controls to prevent iOS Safari auto-zoom */
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+/* Ensure all input types are covered */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+select, 
+textarea {
+  font-size: 16px !important;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  /* Ensure form controls maintain 16px on mobile */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+  
+  /* Override any Tailwind text-sm classes on form controls */
+  .text-sm {
+    font-size: 16px !important;
+  }
+}
+
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
