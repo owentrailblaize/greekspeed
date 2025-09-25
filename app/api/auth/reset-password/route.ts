@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
+import { EmailService } from '@/lib/services/emailService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,6 +38,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         error: 'Failed to update password' 
       }, { status: 500 });
+    }
+
+    // Get user profile for email notification
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('first_name, chapter')
+      .eq('id', user.id)
+      .single();
+
+    // Send password change confirmation email
+    if (profile) {
+      await EmailService.sendPasswordChangeConfirmation({
+        to: user.email!,
+        firstName: profile.first_name || 'User',
+        chapterName: profile.chapter || 'Unknown Chapter',
+        timestamp: new Date().toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          timeZoneName: 'short'
+        }),
+        deviceInfo: request.headers.get('user-agent') || 'Unknown Device'
+      });
     }
 
     return NextResponse.json({ 
