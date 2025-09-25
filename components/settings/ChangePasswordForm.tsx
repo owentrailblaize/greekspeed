@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, Check, X, Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/supabase/auth-context';
 
 interface ChangePasswordFormProps {
@@ -31,7 +31,94 @@ export function ChangePasswordForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  
+  // State for password validation
+  const [currentPasswordValid, setCurrentPasswordValid] = useState<boolean | null>(null);
+  const [validatingCurrentPassword, setValidatingCurrentPassword] = useState(false);
+  const [currentPasswordError, setCurrentPasswordError] = useState('');
+  
+  // State for password matching validation
+  const [passwordsMatch, setPasswordsMatch] = useState<boolean | null>(null);
+  const [passwordMatchError, setPasswordMatchError] = useState('');
+  
   const { session } = useAuth();
+
+  // Debounced password validation
+  useEffect(() => {
+    if (!resetToken && currentPassword.length > 0) {
+      const timeoutId = setTimeout(() => {
+        validateCurrentPassword();
+      }, 500); // 500ms delay
+
+      return () => clearTimeout(timeoutId);
+    } else if (!resetToken && currentPassword.length === 0) {
+      // Reset validation state when password is cleared
+      setCurrentPasswordValid(null);
+      setCurrentPasswordError('');
+    }
+  }, [currentPassword, resetToken]);
+
+  // Real-time password matching validation
+  useEffect(() => {
+    if (newPassword.length > 0 && confirmPassword.length > 0) {
+      if (newPassword === confirmPassword) {
+        setPasswordsMatch(true);
+        setPasswordMatchError('');
+      } else {
+        setPasswordsMatch(false);
+        setPasswordMatchError('Passwords do not match');
+      }
+    } else if (newPassword.length === 0 && confirmPassword.length === 0) {
+      // Reset validation state when both fields are cleared
+      setPasswordsMatch(null);
+      setPasswordMatchError('');
+    } else if (confirmPassword.length > 0 && newPassword.length === 0) {
+      // If confirm password has content but new password is empty
+      setPasswordsMatch(false);
+      setPasswordMatchError('Please enter a new password first');
+    } else if (newPassword.length > 0 && confirmPassword.length === 0) {
+      // If new password has content but confirm password is empty
+      setPasswordsMatch(null);
+      setPasswordMatchError('');
+    }
+  }, [newPassword, confirmPassword]);
+
+  const validateCurrentPassword = async () => {
+    if (!session?.user?.email || !currentPassword) {
+      setCurrentPasswordValid(null);
+      return;
+    }
+
+    setValidatingCurrentPassword(true);
+    setCurrentPasswordError('');
+
+    try {
+      const response = await fetch('/api/auth/validate-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ password: currentPassword }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.valid) {
+        setCurrentPasswordValid(true);
+        setCurrentPasswordError('');
+      } else {
+        setCurrentPasswordValid(false);
+        setCurrentPasswordError(data.error || 'Invalid password');
+      }
+    } catch (error) {
+      console.error('Password validation error:', error);
+      setCurrentPasswordValid(false);
+      setCurrentPasswordError('Failed to validate password');
+    } finally {
+      setValidatingCurrentPassword(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +140,18 @@ export function ChangePasswordForm({
     // Only validate current password if NOT in reset mode
     if (!resetToken && !currentPassword) {
       setError('Current password is required');
+      return;
+    }
+
+    // Check if current password is valid (only in change password mode)
+    if (!resetToken && currentPasswordValid !== true) {
+      setError('Please enter a valid current password');
+      return;
+    }
+
+    // Check if passwords match
+    if (passwordsMatch !== true) {
+      setError('Please ensure passwords match');
       return;
     }
 
@@ -84,6 +183,8 @@ export function ChangePasswordForm({
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      setCurrentPasswordValid(null); // Reset validation state
+      setPasswordsMatch(null); // Reset password match state
 
       if (onSuccess) {
         setTimeout(() => {
@@ -131,8 +232,27 @@ export function ChangePasswordForm({
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required={!resetToken}
                 disabled={loading}
-                className="pr-10"
+                className={`pr-20 ${
+                  currentPasswordValid === true 
+                    ? 'border-green-500 focus:border-green-500' 
+                    : currentPasswordValid === false 
+                    ? 'border-red-500 focus:border-red-500' 
+                    : ''
+                }`}
               />
+              
+              {/* Validation indicator - positioned to the left of eye icon */}
+              <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
+                {validatingCurrentPassword ? (
+                  <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+                ) : currentPasswordValid === true ? (
+                  <Check className="w-4 h-4 text-green-500" />
+                ) : currentPasswordValid === false ? (
+                  <X className="w-4 h-4 text-red-500" />
+                ) : null}
+              </div>
+
+              {/* Password visibility toggle - original button style */}
               <button
                 type="button"
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
@@ -141,6 +261,11 @@ export function ChangePasswordForm({
                 {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+            
+            {/* Current password error message */}
+            {currentPasswordError && (
+              <p className="text-red-500 text-sm">{currentPasswordError}</p>
+            )}
           </div>
         )}
 
@@ -154,18 +279,30 @@ export function ChangePasswordForm({
               onChange={(e) => setNewPassword(e.target.value)}
               required
               disabled={loading}
-              className="pr-12"
+              className={`pr-12 ${
+                newPassword.length >= 8 
+                  ? 'border-green-500 focus:border-green-500' 
+                  : newPassword.length > 0 && newPassword.length < 8
+                  ? 'border-red-500 focus:border-red-500' 
+                  : ''
+              }`}
             />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="absolute right-0 top-0 h-full px-3"
-              onClick={() => setShowNewPassword(!showNewPassword)}
+            <button
+                type="button"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
-              {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </Button>
+                {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
+          {/* Password length indicator */}
+          {newPassword.length > 0 && (
+            <p className={`text-sm ${
+              newPassword.length >= 8 ? 'text-green-600' : 'text-red-500'
+            }`}>
+              {newPassword.length >= 8 ? '✓ Password length is valid' : `${newPassword.length}/8 characters minimum`}
+            </p>
+          )}
         </div>
 
         <div>
@@ -178,18 +315,38 @@ export function ChangePasswordForm({
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               disabled={loading}
-              className="pr-12"
+              className={`pr-20 ${
+                passwordsMatch === true 
+                  ? 'border-green-500 focus:border-green-500' 
+                  : passwordsMatch === false 
+                  ? 'border-red-500 focus:border-red-500' 
+                  : ''
+              }`}
             />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="absolute right-0 top-0 h-full px-3"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            
+            {/* Password match indicator - positioned to the left of eye icon */}
+            <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
+              {passwordsMatch === true ? (
+                <Check className="w-4 h-4 text-green-500" />
+              ) : passwordsMatch === false ? (
+                <X className="w-4 h-4 text-red-500" />
+              ) : null}
+            </div>
+
+            {/* Password visibility toggle - original button style */}
+            <button
+                type="button"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
-              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </Button>
+                {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
+          
+          {/* Password match error message */}
+          {passwordMatchError && (
+            <p className="text-red-500 text-sm">{passwordMatchError}</p>
+          )}
         </div>
 
         {success && (
@@ -204,15 +361,23 @@ export function ChangePasswordForm({
           </div>
         )}
 
-            <Button 
-                type="submit" 
-                className="w-full max-w-xs mx-auto block rounded-full" 
-                style={{ borderRadius: '100px' }}
-                disabled={loading || (!resetToken && !currentPassword) || !newPassword || !confirmPassword}
-            >
-                {loading ? 'Changing Password...' : 'Save password'}
-            </Button>
-        </form>
+        <Button 
+          type="submit" 
+          className="w-full max-w-xs mx-auto block rounded-full" 
+          style={{ borderRadius: '100px' }}
+          disabled={
+            loading || 
+            (!resetToken && !currentPassword) || 
+            (!resetToken && currentPasswordValid !== true) ||
+            !newPassword || 
+            !confirmPassword ||
+            passwordsMatch !== true ||
+            newPassword.length < 8
+          }
+        >
+          {loading ? 'Changing Password...' : 'Save password'}
+        </Button>
+      </form>
     </div>
   );
 }
