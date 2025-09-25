@@ -57,7 +57,7 @@ export function QuickActions() {
   return (
     <>
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-0">
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
