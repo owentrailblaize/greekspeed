@@ -24,7 +24,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { DeletePostModal } from '@/components/social/DeletePostModal';
 import { EmailService } from '@/lib/services/emailService';
 import { useModal } from '@/lib/contexts/ModalContext';
-import { useFormPersistence } from '@/lib/hooks/useFormPersistence';
 import { Save, AlertTriangle } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -657,13 +656,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Edit Profile Modal */}
-        <EditProfileModal
-          isOpen={true} // Always open globally
-          onClose={() => {}} // No local close, handled by global
-          profile={profile}
-          onUpdate={handleProfileUpdate}
-        />
         {/* Delete Confirmation Modal */}
         <DeletePostModal
           isOpen={deleteModalOpen}
