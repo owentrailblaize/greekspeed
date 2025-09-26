@@ -154,22 +154,28 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
   // Add another useEffect to update formData when alumniData loads
   useEffect(() => {
     if (alumniData && !alumniDataMerged) {
-      updateFormData(prev => ({
-        ...prev,
-        industry: alumniData.industry || '',
-        company: alumniData.company || '',
-        job_title: alumniData.job_title || '',
-        is_actively_hiring: alumniData.is_actively_hiring || false,
-        description: alumniData.description || '',
-        tags: Array.isArray(alumniData.tags) 
-          ? alumniData.tags.join(', ') 
-          : alumniData.tags || '',
-        grad_year: alumniData.graduation_year || prev.grad_year,
-        phone: alumniData.phone || prev.phone,
-      }));
+      // Check if we have persisted data first
+      const hasPersistedData = hasUnsavedChanges;
+      
+      // Only merge alumni data if no persisted data exists
+      if (!hasPersistedData) {
+        updateFormData(prev => ({
+          ...prev,
+          industry: alumniData.industry || '',
+          company: alumniData.company || '',
+          job_title: alumniData.job_title || '',
+          is_actively_hiring: alumniData.is_actively_hiring || false,
+          description: alumniData.description || '',
+          tags: Array.isArray(alumniData.tags) 
+            ? alumniData.tags.join(', ') 
+            : alumniData.tags || '',
+          grad_year: alumniData.graduation_year || prev.grad_year,
+          phone: alumniData.phone || prev.phone,
+        }));
+      }
       setAlumniDataMerged(true);
     }
-  }, [alumniData, updateFormData, alumniDataMerged]);
+  }, [alumniData, updateFormData, alumniDataMerged, hasUnsavedChanges]);
 
   // Email validation regex
   const validateEmail = (email: string): boolean => {
