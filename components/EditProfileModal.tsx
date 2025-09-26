@@ -1015,7 +1015,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                 }
               }}
             >
-              {hasUnsavedChanges ? 'Discard Changes' : 'Cancel'}
+              Cancel
             </Button>
             <Button
               type="submit"
