@@ -77,6 +77,9 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
   const [alumniData, setAlumniData] = useState<any>(null);
   const [loadingAlumni, setLoadingAlumni] = useState(false);
 
+  // Add state to track if alumni data has been merged
+  const [alumniDataMerged, setAlumniDataMerged] = useState(false);
+
   const { updateProfile, refreshProfile } = useProfile();
   const { openEditProfileModal, closeEditProfileModal } = useModal();
 
@@ -150,7 +153,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
 
   // Add another useEffect to update formData when alumniData loads
   useEffect(() => {
-    if (alumniData) {
+    if (alumniData && !alumniDataMerged) {
       updateFormData(prev => ({
         ...prev,
         industry: alumniData.industry || '',
@@ -163,10 +166,10 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
           : alumniData.tags || '',
         grad_year: alumniData.graduation_year || prev.grad_year,
         phone: alumniData.phone || prev.phone,
-        // Remove location from alumni data mapping - only use profile location
       }));
+      setAlumniDataMerged(true);
     }
-  }, [alumniData, updateFormData]);
+  }, [alumniData, updateFormData, alumniDataMerged]);
 
   // Email validation regex
   const validateEmail = (email: string): boolean => {
