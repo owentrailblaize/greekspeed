@@ -83,6 +83,9 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
   const { updateProfile, refreshProfile } = useProfile();
   const { openEditProfileModal, closeEditProfileModal } = useModal();
 
+  // Add loading state to prevent modal flicker
+  const [isModalReady, setIsModalReady] = useState(false);
+
   // Add loadAlumniData function
   const loadAlumniData = async () => {
     if (!profile?.id || profile.role !== 'alumni') return;
@@ -146,7 +149,11 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
 
       // Load alumni data if user is alumni
       if (profile.role === 'alumni') {
-        loadAlumniData();
+        loadAlumniData().finally(() => {
+          setIsModalReady(true);
+        });
+      } else {
+        setIsModalReady(true);
       }
     }
   }, [profile, initializeWithProfileData]);
@@ -492,7 +499,8 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
     onClose();
   };
 
-  if (!isOpen) return null;
+  // Only render modal when ready
+  if (!isOpen || !isModalReady) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

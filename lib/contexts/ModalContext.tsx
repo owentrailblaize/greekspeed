@@ -13,6 +13,7 @@ const ModalContext = createContext<ModalContextType | undefined>(undefined);
 
 export function ModalProvider({ children }: { children: ReactNode }) {
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Load modal state from sessionStorage on mount
   useEffect(() => {
@@ -20,12 +21,15 @@ export function ModalProvider({ children }: { children: ReactNode }) {
     if (savedModalState === 'true') {
       setIsEditProfileModalOpen(true);
     }
+    setIsInitialized(true);
   }, []);
 
-  // Save modal state to sessionStorage when it changes
+  // Save modal state to sessionStorage when it changes (only after initialization)
   useEffect(() => {
-    sessionStorage.setItem('greekspeed-edit-profile-modal-open', isEditProfileModalOpen.toString());
-  }, [isEditProfileModalOpen]);
+    if (isInitialized) {
+      sessionStorage.setItem('greekspeed-edit-profile-modal-open', isEditProfileModalOpen.toString());
+    }
+  }, [isEditProfileModalOpen, isInitialized]);
 
   const openEditProfileModal = () => {
     setIsEditProfileModalOpen(true);
