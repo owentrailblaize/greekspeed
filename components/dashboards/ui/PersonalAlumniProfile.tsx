@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,7 +38,7 @@ interface AlumniData {
   location: string;
   description: string;
   avatar_url: string | null;
-  banner_url: string | null; // Add this line
+  banner_url: string | null;
   verified: boolean;
   is_actively_hiring: boolean;
   created_at: string;
@@ -56,17 +56,77 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  useEffect(() => {
-    if (profile && profile.role === 'alumni') {
-      loadAlumniData();
-    } else {
-      setLoading(false);
+  // Cache key for sessionStorage
+  const getCacheKey = useCallback(() => {
+    return profile?.id ? `alumni-profile-${profile.id}` : null;
+  }, [profile?.id]);
+
+  // Load from cache
+  const loadFromCache = useCallback((): AlumniData | null => {
+    const cacheKey = getCacheKey();
+    if (!cacheKey) return null;
+    
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        // Check if cache is not too old (5 minutes)
+        const maxAge = 5 * 60 * 1000;
+        if (Date.now() - parsed.timestamp < maxAge) {
+          return parsed.data;
+        }
+      }
+    } catch (error) {
+      console.error('Error loading alumni data from cache:', error);
     }
-  }, [profile]);
+    return null;
+  }, [getCacheKey]);
 
-  const loadAlumniData = async () => {
-    if (!profile?.id) return;
+  // Save to cache
+  const saveToCache = useCallback((data: AlumniData) => {
+    const cacheKey = getCacheKey();
+    if (!cacheKey) return;
+    
+    try {
+      sessionStorage.setItem(cacheKey, JSON.stringify({
+        data,
+        timestamp: Date.now()
+      }));
+    } catch (error) {
+      console.error('Error saving alumni data to cache:', error);
+    }
+  }, [getCacheKey]);
+
+  // Clear cache
+  const clearCache = useCallback(() => {
+    const cacheKey = getCacheKey();
+    if (!cacheKey) return;
+    
+    try {
+      sessionStorage.removeItem(cacheKey);
+    } catch (error) {
+      console.error('Error clearing alumni data cache:', error);
+    }
+  }, [getCacheKey]);
+
+  const loadAlumniData = useCallback(async (forceRefresh = false) => {
+    if (!profile?.id || profile.role !== 'alumni') {
+      setLoading(false);
+      return;
+    }
+
+    // Check cache first unless force refresh
+    if (!forceRefresh) {
+      const cachedData = loadFromCache();
+      if (cachedData) {
+        setAlumniData(cachedData);
+        setLoading(false);
+        setIsInitialized(true);
+        return;
+      }
+    }
 
     try {
       setLoading(true);
@@ -98,13 +158,22 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
       };
 
       setAlumniData(alumniWithProfile);
+      saveToCache(alumniWithProfile);
     } catch (err) {
       console.error('Error loading alumni data:', err);
       setError('Failed to load alumni profile');
     } finally {
       setLoading(false);
+      setIsInitialized(true);
     }
-  };
+  }, [profile?.id, profile?.role, loadFromCache, saveToCache]);
+
+  // Initialize data on mount
+  useEffect(() => {
+    if (profile && !isInitialized) {
+      loadAlumniData();
+    }
+  }, [profile, isInitialized, loadAlumniData]);
 
   const handleEditProfile = () => {
     setEditModalOpen(true);
@@ -115,8 +184,9 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
       // Update the profile using ProfileContext
       await updateProfile(updatedProfile);
       
-      // Refresh alumni data after profile update
-      await loadAlumniData();
+      // Clear cache and refresh alumni data after profile update
+      clearCache();
+      await loadAlumniData(true);
     } catch (error) {
       console.error('Error updating profile:', error);
     }
@@ -139,7 +209,8 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
     });
   };
 
-  if (profileLoading || loading) {
+  // Show loading until both profile and alumni data are ready
+  if (profileLoading || loading || !isInitialized) {
     return (
       <div className="sticky top-6">
         <Card className="bg-white">
@@ -164,7 +235,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={loadAlumniData}
+                onClick={() => loadAlumniData(true)}
                 className="mt-2"
               >
                 Try Again

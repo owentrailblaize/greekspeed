@@ -77,8 +77,14 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
   const [alumniData, setAlumniData] = useState<any>(null);
   const [loadingAlumni, setLoadingAlumni] = useState(false);
 
+  // Add state to track if alumni data has been merged
+  const [alumniDataMerged, setAlumniDataMerged] = useState(false);
+
   const { updateProfile, refreshProfile } = useProfile();
   const { openEditProfileModal, closeEditProfileModal } = useModal();
+
+  // Add loading state to prevent modal flicker
+  const [isModalReady, setIsModalReady] = useState(false);
 
   // Add loadAlumniData function
   const loadAlumniData = async () => {
@@ -143,30 +149,40 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
 
       // Load alumni data if user is alumni
       if (profile.role === 'alumni') {
-        loadAlumniData();
+        loadAlumniData().finally(() => {
+          setIsModalReady(true);
+        });
+      } else {
+        setIsModalReady(true);
       }
     }
   }, [profile, initializeWithProfileData]);
 
   // Add another useEffect to update formData when alumniData loads
   useEffect(() => {
-    if (alumniData) {
-      updateFormData(prev => ({
-        ...prev,
-        industry: alumniData.industry || '',
-        company: alumniData.company || '',
-        job_title: alumniData.job_title || '',
-        is_actively_hiring: alumniData.is_actively_hiring || false,
-        description: alumniData.description || '',
-        tags: Array.isArray(alumniData.tags) 
-          ? alumniData.tags.join(', ') 
-          : alumniData.tags || '',
-        grad_year: alumniData.graduation_year || prev.grad_year,
-        phone: alumniData.phone || prev.phone,
-        // Remove location from alumni data mapping - only use profile location
-      }));
+    if (alumniData && !alumniDataMerged) {
+      // Check if we have persisted data first
+      const hasPersistedData = hasUnsavedChanges;
+      
+      // Only merge alumni data if no persisted data exists
+      if (!hasPersistedData) {
+        updateFormData(prev => ({
+          ...prev,
+          industry: alumniData.industry || '',
+          company: alumniData.company || '',
+          job_title: alumniData.job_title || '',
+          is_actively_hiring: alumniData.is_actively_hiring || false,
+          description: alumniData.description || '',
+          tags: Array.isArray(alumniData.tags) 
+            ? alumniData.tags.join(', ') 
+            : alumniData.tags || '',
+          grad_year: alumniData.graduation_year || prev.grad_year,
+          phone: alumniData.phone || prev.phone,
+        }));
+      }
+      setAlumniDataMerged(true);
     }
-  }, [alumniData, updateFormData]);
+  }, [alumniData, updateFormData, alumniDataMerged, hasUnsavedChanges]);
 
   // Email validation regex
   const validateEmail = (email: string): boolean => {
@@ -483,7 +499,8 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
     onClose();
   };
 
-  if (!isOpen) return null;
+  // Only render modal when ready
+  if (!isOpen || !isModalReady) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

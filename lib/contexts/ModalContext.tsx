@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface ModalContextType {
   isEditProfileModalOpen: boolean;
@@ -13,6 +13,23 @@ const ModalContext = createContext<ModalContextType | undefined>(undefined);
 
 export function ModalProvider({ children }: { children: ReactNode }) {
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Load modal state from sessionStorage on mount
+  useEffect(() => {
+    const savedModalState = sessionStorage.getItem('greekspeed-edit-profile-modal-open');
+    if (savedModalState === 'true') {
+      setIsEditProfileModalOpen(true);
+    }
+    setIsInitialized(true);
+  }, []);
+
+  // Save modal state to sessionStorage when it changes (only after initialization)
+  useEffect(() => {
+    if (isInitialized) {
+      sessionStorage.setItem('greekspeed-edit-profile-modal-open', isEditProfileModalOpen.toString());
+    }
+  }, [isEditProfileModalOpen, isInitialized]);
 
   const openEditProfileModal = () => {
     setIsEditProfileModalOpen(true);
@@ -20,10 +37,19 @@ export function ModalProvider({ children }: { children: ReactNode }) {
 
   const closeEditProfileModal = () => {
     setIsEditProfileModalOpen(false);
+    // Clear the saved state when explicitly closed
+    sessionStorage.removeItem('greekspeed-edit-profile-modal-open');
   };
 
   const toggleEditProfileModal = () => {
-    setIsEditProfileModalOpen(prev => !prev);
+    setIsEditProfileModalOpen(prev => {
+      const newState = !prev;
+      if (!newState) {
+        // Clear the saved state when explicitly closed
+        sessionStorage.removeItem('greekspeed-edit-profile-modal-open');
+      }
+      return newState;
+    });
   };
 
   return (
