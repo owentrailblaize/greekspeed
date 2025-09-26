@@ -269,16 +269,18 @@ export function AlumniPipelineLayout({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Toolbar */}
-        <AlumniToolbar
-          selectedCount={selectedAlumni.length}
-          totalCount={totalAlumni}
-          onBulkAction={handleBulkAction}
-          onSaveSearch={handleSaveSearch}
-          onExport={handleExport}
-        />
+        <div className="relative z-20">
+          <AlumniToolbar
+            selectedCount={selectedAlumni.length}
+            totalCount={totalAlumni}
+            onBulkAction={handleBulkAction}
+            onSaveSearch={handleSaveSearch}
+            onExport={handleExport}
+          />
+        </div>
 
         {/* Content with scrollable container */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden relative z-10">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
