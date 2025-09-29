@@ -23,8 +23,11 @@ interface EditAlumniProfileModalProps {
   variant?: 'desktop' | 'mobile';
 }
 
+// Storage key for sessionStorage
+const STORAGE_KEY = 'editAlumniProfileFormData';
+
 export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, variant = 'desktop' }: EditAlumniProfileModalProps) {
-  // Simplified form state - only alumni fields, no persistence
+  // Form state with persistence
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -59,6 +62,33 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
 
   const { updateProfile, refreshProfile } = useProfile();
 
+  // SessionStorage persistence functions
+  const saveFormDataToStorage = useCallback((data: typeof formData) => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (error) {
+      console.error('Failed to save form data to sessionStorage:', error);
+    }
+  }, []);
+
+  const loadFormDataFromStorage = useCallback((): typeof formData | null => {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch (error) {
+      console.error('Failed to load form data from sessionStorage:', error);
+      return null;
+    }
+  }, []);
+
+  const clearFormDataFromStorage = useCallback(() => {
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.error('Failed to clear form data from sessionStorage:', error);
+    }
+  }, []);
+
   // Load alumni data directly from alumni table
   const loadAlumniData = useCallback(async () => {
     if (!profile?.id) return;
@@ -81,8 +111,9 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
       console.log('✅ Alumni data loaded:', data);
       setAlumniData(data);
       
-      // Set form data directly from alumni table
-      setFormData({
+      // Check for saved form data first, then use alumni data
+      const savedFormData = loadFormDataFromStorage();
+      const initialFormData = savedFormData || {
         first_name: data.first_name || '',
         last_name: data.last_name || '',
         email: data.email || '',
@@ -98,7 +129,14 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         tags: Array.isArray(data.tags) ? data.tags.join(', ') : (data.tags || ''),
         linkedin_url: data.linkedin_url || '',
         hometown: data.hometown || ''
-      });
+      };
+
+      setFormData(initialFormData);
+      
+      // If we loaded saved data, save it again to ensure it's persisted
+      if (savedFormData) {
+        saveFormDataToStorage(initialFormData);
+      }
       
     } catch (error) {
       console.error('Error loading alumni data:', error);
@@ -106,7 +144,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
       setLoadingAlumni(false);
       setIsModalReady(true);
     }
-  }, [profile?.id]);
+  }, [profile?.id, loadFormDataFromStorage, saveFormDataToStorage]);
 
   // Create alumni record if it doesn't exist
   const createAlumniRecord = useCallback(async () => {
@@ -176,9 +214,13 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
     }
   };
 
-  // Input change handler - simplified, no persistence
+  // Input change handler with persistence
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    const newFormData = { ...formData, [field]: value };
+    setFormData(newFormData);
+    
+    // Save to sessionStorage on every change
+    saveFormDataToStorage(newFormData);
 
     // Clear error when user starts typing
     if (errors[field]) {
@@ -195,10 +237,14 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
     }
   };
 
-  // Phone number specific handler
+  // Phone number specific handler with persistence
   const handlePhoneChange = (value: string) => {
     const formatted = formatPhoneNumber(value);
-    setFormData(prev => ({ ...prev, phone: formatted }));
+    const newFormData = { ...formData, phone: formatted };
+    setFormData(newFormData);
+    
+    // Save to sessionStorage
+    saveFormDataToStorage(newFormData);
     
     if (errors.phone) {
       setErrors(prev => ({ ...prev, phone: '' }));
@@ -300,7 +346,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
     }
   };
 
-  // Submit handler - only updates alumni table
+  // Submit handler with persistence cleanup
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -390,6 +436,9 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         console.error('Failed to track profile update activity:', activityError);
       }
       
+      // Clear saved form data on successful save
+      clearFormDataFromStorage();
+      
       // Close modal after successful save
       onClose();
     } catch (error) {
@@ -399,12 +448,14 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
     }
   };
 
-  // Simple close handler - no persistence cleanup needed
+  // Close handler with persistence cleanup
   const handleClose = () => {
+    clearFormDataFromStorage();
     onClose();
   };
 
   const handleCancel = () => {
+    clearFormDataFromStorage();
     onClose();
   };
 
@@ -419,8 +470,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         {/* Header - same as original */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold text-navy-900">Edit Alumni Profile</h2>
-            <Badge variant="secondary" className="text-xs">Alumni</Badge>
+            <h2 className="text-2xl font-bold text-navy-900">Edit Profile</h2>
           </div>
           <button
             onClick={handleClose}
@@ -802,9 +852,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
 
         {/* Footer - same as original */}
         <div className="flex justify-between items-center p-6 border-t border-gray-200 flex-shrink-0">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span className="text-xs">Alumni Profile</span>
-          </div>
+          
           <div className="flex space-x-3">
             <Button
               type="button"
