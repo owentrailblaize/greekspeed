@@ -6,6 +6,7 @@ import { useActivityTracking } from '@/lib/hooks/useActivityTracking';
 import { ModalProvider, useModal } from '@/lib/contexts/ModalContext';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { EditProfileModal } from '@/components/EditProfileModal';
+import { EditAlumniProfileModal } from '@/components/EditAlumniProfileModal';
 import { ProfileService } from '@/lib/services/profileService';
 
 export default function DashboardLayout({
@@ -59,6 +60,19 @@ function EditProfileModalWrapper() {
 
   if (!profile) return null;
 
+  // Use alumni-specific modal for alumni users
+  if (profile.role === 'alumni') {
+    return (
+      <EditAlumniProfileModal
+        isOpen={isEditProfileModalOpen}
+        onClose={closeEditProfileModal}
+        profile={profile}
+        onUpdate={handleProfileUpdate}
+      />
+    );
+  }
+
+  // Use regular modal for non-alumni users
   return (
     <EditProfileModal
       isOpen={isEditProfileModalOpen}

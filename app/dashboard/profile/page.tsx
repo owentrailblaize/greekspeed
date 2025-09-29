@@ -14,7 +14,6 @@ import { ProfileService } from '@/lib/services/profileService';
 import Link from 'next/link';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { useRouter } from 'next/navigation';
-import { EditProfileModal } from '@/components/EditProfileModal';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { AvatarService } from '@/lib/services/avatarService';
