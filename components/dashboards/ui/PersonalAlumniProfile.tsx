@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { EditProfileModal } from '@/components/EditProfileModal';
+import { EditAlumniProfileModal } from '@/components/EditAlumniProfileModal';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { supabase } from '@/lib/supabase/client';
 import { 
@@ -405,7 +405,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
 
         {/* Edit Profile Modal */}
         {editModalOpen && (
-          <EditProfileModal
+          <EditAlumniProfileModal
             isOpen={editModalOpen}
             onClose={() => setEditModalOpen(false)}
             profile={profile}
@@ -561,7 +561,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
 
       {/* Edit Profile Modal */}
       {editModalOpen && (
-        <EditProfileModal
+        <EditAlumniProfileModal
           isOpen={editModalOpen}
           onClose={() => setEditModalOpen(false)}
           profile={profile}
