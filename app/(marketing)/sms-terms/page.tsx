@@ -4,15 +4,15 @@ import { MarketingHeader } from '@/components/MarketingHeader';
 export default function SMSTermsPage() {
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <MarketingHeader />
+            {/* Header */}
+            <MarketingHeader />
       
       {/* Main Content Area */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Centered Header */}
         <div className="text-center py-8">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
-            SMS Terms &<br/>Conditions
+            Our User Agreements &<br/> Terms of Service
           </h1>
         </div>
 
@@ -20,6 +20,23 @@ export default function SMSTermsPage() {
         <p className="text-gray-600 mb-8">
           Last Updated: October 3rd, 2025
         </p>
+
+        {/* Google API Disclosure Box */}
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-12">
+          <h2 className="text-lg font-bold text-gray-800 mb-2">Google API Disclosure</h2>
+          <p className="text-gray-700">
+            Trailblaize's use of information received from Google APIs will adhere to{' '}
+            <a 
+              href="https://developers.google.com/terms/api-services-user-data-policy" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-blue-600 hover:underline font-semibold"
+            >
+              Google API Services User Data Policy
+            </a>
+            , including the Limited Use requirements.
+          </p>
+        </div>
 
         {/* SMS Terms Content - Plain Text */}
         <div className="space-y-2 text-gray-700 leading-relaxed">
