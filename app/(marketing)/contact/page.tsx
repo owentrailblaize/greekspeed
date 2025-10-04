@@ -46,6 +46,38 @@ const faqs = [
 ];
 
 export default function ContactPage() {
+  const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.ok) {
+        setSubmitStatus('success');
+        // Don't clear email immediately - let the user see the success message
+      } else {
+        setSubmitStatus('error');
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
 
   const toggleFAQ = (index: number) => {
@@ -73,14 +105,30 @@ export default function ContactPage() {
                 </p>
               </div>
 
-              {/* Right Side - Simple Contact Form */}
+               {/* Right Side - Simple Contact Form */}
               <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Get in touch with Trailblaize</h2>
                 <p className="text-gray-600 mb-6">
                   We'd love to show how Trailblaize can help your chapter thrive.
                 </p>
                 
-                <form className="space-y-4">
+                {submitStatus === 'success' && (
+                  <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-green-800 font-medium">
+                      ✓ Thanks! We've sent a confirmation email to {email}. Our support team will reach out within 24 hours.
+                    </p>
+                  </div>
+                )}
+
+                {submitStatus === 'error' && (
+                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-800 font-medium">
+                      ✗ Something went wrong. Please try again or email us directly at support@trailblaize.net
+                    </p>
+                  </div>
+                )}
+                
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                       Organization email
@@ -89,17 +137,21 @@ export default function ContactPage() {
                       type="email"
                       id="email"
                       name="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-navy-500 text-base"
+                      disabled={isSubmitting}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-navy-500 text-base disabled:bg-gray-100"
                       placeholder="your-chapter@university.edu"
                     />
                   </div>
                   
                   <Button 
                     type="submit" 
-                    className="w-full bg-navy-600 hover:bg-navy-700 text-white py-3 text-lg font-medium rounded-lg"
+                    disabled={isSubmitting}
+                    className="w-full bg-navy-600 hover:bg-navy-700 text-white py-3 text-lg font-medium rounded-lg disabled:opacity-50"
                   >
-                    Get In Touch
+                    {isSubmitting ? 'Sending...' : 'Get In Touch'}
                   </Button>
                 </form>
                 
