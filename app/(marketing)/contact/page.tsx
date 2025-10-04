@@ -1,34 +1,57 @@
-import { Metadata } from 'next';
+'use client';
+
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MarketingHeader } from '@/components/MarketingHeader';
-import { Mail, Clock, CheckCircle } from 'lucide-react';
-
-export const metadata: Metadata = {
-  title: 'Contact Us | Trailblaize',
-  description: 'Contact Trailblaize, Inc. for support, inquiries, and assistance.',
-};
+import { Mail, Clock, CheckCircle, Plus, Minus } from 'lucide-react';
+import { useState } from 'react';
 
 // Support feature cards data
 const supportFeatures = [
-    {
-      icon: Mail,
-      title: "Email Support",
-      description: "Get help via email with detailed responses to your questions"
-    },
-    {
-      icon: Clock,
-      title: "Quick Response",
-      description: "We aim to respond to all inquiries within 24 hours"
-    },
-    {
-      icon: CheckCircle,
-      title: "Expert Support",
-      description: "Our team understands Greek organizations and their unique needs"
-    }
+  {
+    icon: Mail,
+    title: "Email Support",
+    description: "Get help via email with detailed responses to your questions"
+  },
+  {
+    icon: Clock,
+    title: "Quick Response",
+    description: "We aim to respond to all inquiries within 24 hours"
+  },
+  {
+    icon: CheckCircle,
+    title: "Expert Support",
+    description: "Our team understands Greek organizations and their unique needs"
+  }
+];
+
+// FAQ data
+const faqs = [
+  {
+    question: "How do I get started with Trailblaize?",
+    answer: "Getting started is easy! Simply sign up for an account, complete your chapter profile, and our team will guide you through the setup process. We offer personalized onboarding to ensure your chapter gets the most out of our platform."
+  },
+  {
+    question: "What types of support do you offer?",
+    answer: "We provide comprehensive support through email, phone, and SMS. Our support team specializes in Greek organizations and can help with technical issues, feature questions, billing, and best practices for chapter management."
+  },
+  {
+    question: "How secure is our chapter data?",
+    answer: "Data security is our top priority. We use enterprise-grade encryption, secure servers, and comply with industry standards. Your chapter's information is protected with the same level of security used by major financial institutions."
+  },
+  {
+    question: "Can I customize Trailblaize for our chapter's needs?",
+    answer: "Absolutely! Trailblaize offers extensive customization options including custom fields, branding, workflow automation, and integration with your existing systems. Our team works with you to tailor the platform to your chapter's unique requirements."
+  }
 ];
 
 export default function ContactPage() {
+  const [openFAQ, setOpenFAQ] = useState<number | null>(null);
+
+  const toggleFAQ = (index: number) => {
+    setOpenFAQ(openFAQ === index ? null : index);
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Use the shared header component */}
@@ -76,7 +99,7 @@ export default function ContactPage() {
                     type="submit" 
                     className="w-full bg-navy-600 hover:bg-navy-700 text-white py-3 text-lg font-medium rounded-lg"
                   >
-                    Get a demo
+                    Get In Touch
                   </Button>
                 </form>
                 
@@ -123,6 +146,51 @@ export default function ContactPage() {
               <p className="text-gray-500 text-sm">
                 Thousands of chapters at universities nationwide trust Trailblaize for their management needs.
               </p>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section - Apollo Style */}
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+              {/* Left Side - FAQ Title */}
+              <div>
+                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+                  Frequently Asked Questions
+                </h2>
+              </div>
+
+              {/* Right Side - FAQ List */}
+              <div className="space-y-0">
+                {faqs.map((faq, index) => (
+                  <div key={index} className="border-b border-gray-200 last:border-b-0">
+                    <button
+                      onClick={() => toggleFAQ(index)}
+                      className="w-full text-left py-6 flex items-center justify-between hover:text-navy-600 transition-colors"
+                    >
+                      <span className="text-lg font-medium text-gray-900 pr-4">
+                        {faq.question}
+                      </span>
+                      <div className="flex-shrink-0">
+                        {openFAQ === index ? (
+                          <Minus className="h-5 w-5 text-gray-500" />
+                        ) : (
+                          <Plus className="h-5 w-5 text-gray-500" />
+                        )}
+                      </div>
+                    </button>
+                    
+                    {openFAQ === index && (
+                      <div className="pb-6">
+                        <p className="text-gray-600 leading-relaxed">
+                          {faq.answer}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
