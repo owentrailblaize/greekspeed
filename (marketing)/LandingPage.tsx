@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Users, DollarSign, Shield, Star, Check, Menu, X } from "lucide-react";
+import { ArrowRight, Users, DollarSign, Shield, Star, Check } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MarketingHeader } from "@/components/MarketingHeader";
+
 // Logo served from public directory
 
 const features = [
@@ -44,7 +46,7 @@ const pricingPlans = [
   {
     name: "Premium",
     price: "$5",
-    period: "per month",
+    period: "per member",
     description: "Full access for active members",
     features: [
       "Alumni Network Access",
@@ -71,135 +73,12 @@ const pricingPlans = [
 
 export function LandingPage() {
   const [activeSection, setActiveSection] = useState("home");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, signOut } = useAuth();
-
-  const scrollToSection = (sectionId: string) => {
-    setActiveSection(sectionId);
-    setMobileMenuOpen(false);
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
-  };
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-lg border-b border-gray-200/50 z-50">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <motion.div className="flex items-center space-x-3" whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-              <div className="w-10 h-10 relative">
-                <img src="/logo.jpeg" alt="Trailblaize logo" className="w-full h-full object-contain" />
-              </div>
-              <span className="font-semibold text-xl text-gray-900">Trailblaize</span>
-            </motion.div>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              {[
-                { id: "features", label: "Features" },
-                { id: "pricing", label: "Pricing" },
-                { id: "about", label: "About Us" },
-              ].map(({ id, label }) => (
-                <button
-                  key={id}
-                  onClick={() => scrollToSection(id)}
-                  className={`text-sm font-medium transition-colors duration-200 ${
-                    activeSection === id ? "text-navy-600" : "text-gray-700 hover:text-navy-600"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-              {/* Dashboard link for authenticated users */}
-              {user && (
-                <Link href="/dashboard" className="text-sm font-medium text-gray-700 hover:text-navy-600">
-                  Dashboard
-                </Link>
-              )}
-            </div>
-
-            {/* Auth Buttons */}
-            <div className="hidden md:flex items-center space-x-4">
-              {!user ? (
-                <>
-                  <Link href="/sign-in">
-                    <Button variant="ghost" className="text-gray-700 hover:text-navy-600">
-                      Log In
-                    </Button>
-                  </Link>
-                  <Link href="/sign-up">
-                    <Button className="bg-navy-600 hover:bg-navy-700 text-white">Sign Up</Button>
-                  </Link>
-                </>
-              ) : (
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-700">{user.email}</span>
-                  <Button variant="ghost" onClick={() => signOut()}>
-                    Sign Out
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-gray-700">
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-white border-t border-gray-200"
-            >
-              <div className="px-6 py-4 space-y-4">
-                {[
-                  { id: "features", label: "Features" },
-                  { id: "pricing", label: "Pricing" },
-                  { id: "about", label: "About Us" },
-                ].map(({ id, label }) => (
-                  <button key={id} onClick={() => scrollToSection(id)} className="block w-full text-left text-gray-700 hover:text-navy-600">
-                    {label}
-                  </button>
-                ))}
-                {user && (
-                  <Link href="/dashboard" className="block w-full text-left text-gray-700 hover:text-navy-600">
-                    Dashboard
-                  </Link>
-                )}
-                {!user ? (
-                  <div className="pt-4 border-t border-gray-200 space-y-2">
-                    <Link href="/sign-in">
-                      <Button variant="ghost" className="w-full justify-start text-gray-700">
-                        Log In
-                      </Button>
-                    </Link>
-                    <Link href="/sign-up">
-                      <Button className="w-full bg-navy-600 hover:bg-navy-700 text-white">Sign Up</Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="pt-4 border-t border-gray-200">
-                    <div className="text-sm text-gray-700 mb-2">{user.email}</div>
-                    <Button variant="ghost" className="w-full justify-start" onClick={() => signOut()}>
-                      Sign Out
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
+      {/* Use the shared header component */}
+      <MarketingHeader activeSection={activeSection} onSectionChange={setActiveSection} />
 
       {/* Hero Section */}
       <section id="home" className="relative pt-24 pb-16 overflow-hidden">
@@ -436,21 +315,6 @@ export function LandingPage() {
           </motion.div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="flex items-center space-x-3 mb-4 md:mb-0">
-              <div className="w-8 h-8 relative">
-                <img src="/logo.jpeg" alt="Trailblaize logo" className="w-full h-full object-contain" />
-              </div>
-              <span className="font-semibold text-lg">Trailblaize</span>
-            </div>
-            <div className="text-gray-400 text-sm">© Trailblaize, Inc. 2025</div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
