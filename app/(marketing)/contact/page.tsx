@@ -66,7 +66,7 @@ export default function ContactPage() {
 
       if (response.ok) {
         setSubmitStatus('success');
-        // Don't clear email immediately - let the user see the success message
+        setEmail(''); // Clear the input field after successful submission
       } else {
         setSubmitStatus('error');
       }
