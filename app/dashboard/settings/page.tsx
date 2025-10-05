@@ -17,7 +17,12 @@ export default function SettingsPage() {
   const [chapterAnnouncements, setChapterAnnouncements] = useState(true);
   const [connectionRequests, setConnectionRequests] = useState(true);
   const [messageNotifications, setMessageNotifications] = useState(true);
-  
+
+  // Add these SMS-related state variables
+  const [smsEnabled, setSmsEnabled] = useState(false);
+  const [smsPhone, setSmsPhone] = useState('');
+  const [smsConsent, setSmsConsent] = useState(false);
+
   // Mobile-specific state
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   
@@ -39,7 +44,7 @@ export default function SettingsPage() {
       icon: Bell,
       description: 'Notification preferences',
       mobileDescription: 'Notification preferences',
-      locked: true
+      locked: false
     },
     {
       id: 'account',
@@ -215,6 +220,82 @@ export default function SettingsPage() {
         <p className="text-gray-600">Control how and when you receive notifications</p>
       </div>
 
+      {/* SMS Notifications Section */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900">SMS Notifications</h3>
+        
+        <div className="p-4 border rounded-xl bg-white">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h4 className="font-medium text-gray-900">SMS Text Messages</h4>
+              <p className="text-sm text-gray-600">
+                Receive important chapter updates and announcements via SMS
+              </p>
+              <div className="mt-2 text-xs text-gray-500">
+                <p>• Message and data rates may apply</p>
+                <p>• Reply STOP to opt-out at any time</p>
+                <p>• Reply HELP for help</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3 ml-4">
+              <span className="text-sm text-gray-500">
+                {smsEnabled ? 'Enabled' : 'Disabled'}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSmsEnabled(!smsEnabled)}
+                className="p-0 h-auto"
+              >
+                {smsEnabled ? (
+                  <ToggleRight className="w-8 h-8 text-green-600" />
+                ) : (
+                  <ToggleLeft className="w-8 h-8 text-gray-400" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* SMS Phone Number Input */}
+        {smsEnabled && (
+          <div className="p-4 border rounded-xl bg-blue-50">
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Phone Number for SMS
+                </label>
+                <input
+                  type="tel"
+                  value={smsPhone || ''}
+                  onChange={(e) => setSmsPhone(e.target.value)}
+                  placeholder="(555) 123-4567"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter your mobile phone number to receive SMS notifications
+                </p>
+              </div>
+              <div className="flex items-start space-x-2">
+                <input
+                  type="checkbox"
+                  id="smsConsent"
+                  checked={smsConsent}
+                  onChange={(e) => setSmsConsent(e.target.checked)}
+                  className="mt-1"
+                />
+                <label htmlFor="smsConsent" className="text-sm text-gray-700">
+                  I consent to receive SMS messages from my chapter. I understand that message and data rates may apply, and I can reply STOP to opt-out at any time. By checking this box, I acknowledge that I have read and agree to the{' '}
+                  <Link href="/sms-terms" className="text-blue-600 hover:underline">
+                    SMS Terms of Service
+                  </Link>.
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Email Notifications */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900">Email Notifications</h3>
@@ -330,8 +411,44 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Save Button */}
+      <div className="flex justify-end pt-4">
+        <Button 
+          onClick={handleSaveSettings}
+          disabled={smsEnabled && (!smsPhone || !smsConsent)}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          Save Notification Preferences
+        </Button>
+      </div>
     </div>
   );
+
+  const handleSaveSettings = async () => {
+    try {
+      // Here you would save the notification settings to your database
+      // This would integrate with your NotificationSettings interface
+      console.log('Saving notification settings:', {
+        smsEnabled,
+        smsPhone,
+        smsConsent,
+        emailNotifications,
+        pushNotifications,
+        chapterAnnouncements,
+        connectionRequests,
+        messageNotifications
+      });
+      
+      // TODO: Implement API call to save settings
+      // await saveNotificationSettings({...});
+      
+      alert('Notification preferences saved successfully!');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Failed to save settings. Please try again.');
+    }
+  };
 
   // Loading state with responsive design
   if (profileLoading) {
