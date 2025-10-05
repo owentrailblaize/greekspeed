@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Settings, Shield, Bell, ArrowLeft, ToggleLeft, ToggleRight, Mail, User, Phone, Calendar, Lock, User as UserIcon, HelpCircle, Menu, X } from 'lucide-react';
@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { ChangePasswordForm } from '@/components/settings/ChangePasswordForm';
+import { supabase } from '@/lib/supabase/client';
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('security');
@@ -425,27 +426,82 @@ export default function SettingsPage() {
     </div>
   );
 
+  const loadNotificationSettings = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch('/api/notification-settings', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      if (response.ok) {
+        const { settings } = await response.json();
+        setSmsEnabled(settings.sms_enabled);
+        setSmsPhone(settings.sms_phone || '');
+        setEmailNotifications(settings.email_enabled);
+        setPushNotifications(settings.push_enabled);
+        setChapterAnnouncements(settings.announcement_notifications);
+        setConnectionRequests(settings.connection_notifications);
+        setMessageNotifications(settings.message_notifications);
+      }
+    } catch (error) {
+      console.error('Error loading notification settings:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (activeSection === 'notifications') {
+      loadNotificationSettings();
+    }
+  }, [activeSection]);
+
   const handleSaveSettings = async () => {
     try {
-      // Here you would save the notification settings to your database
-      // This would integrate with your NotificationSettings interface
-      console.log('Saving notification settings:', {
-        smsEnabled,
-        smsPhone,
-        smsConsent,
-        emailNotifications,
-        pushNotifications,
-        chapterAnnouncements,
-        connectionRequests,
-        messageNotifications
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Please sign in to save settings');
+        return;
+      }
+
+      // Validate SMS settings
+      if (smsEnabled && (!smsPhone || !smsPhone.trim())) {
+        alert('Please enter a phone number for SMS notifications');
+        return;
+      }
+
+      const settingsData = {
+        sms_enabled: smsEnabled,
+        sms_phone: smsPhone,
+        email_enabled: emailNotifications,
+        push_enabled: pushNotifications,
+        announcement_notifications: chapterAnnouncements,
+        connection_notifications: connectionRequests,
+        message_notifications: messageNotifications,
+        event_notifications: true, // Default for now
+        urgent_notifications: true  // Default for now
+      };
+
+      const response = await fetch('/api/notification-settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify(settingsData)
       });
-      
-      // TODO: Implement API call to save settings
-      // await saveNotificationSettings({...});
-      
-      alert('Notification preferences saved successfully!');
+
+      if (response.ok) {
+        const { message } = await response.json();
+        alert(message);
+      } else {
+        const { error } = await response.json();
+        alert(`Failed to save settings: ${error}`);
+      }
     } catch (error) {
-      console.error('Error saving settings:', error);
+      console.error('Error saving notification settings:', error);
       alert('Failed to save settings. Please try again.');
     }
   };
