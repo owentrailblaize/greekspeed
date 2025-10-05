@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
 
         const chapterName = chapter?.name || 'Your Chapter';
         
-        // Get chapter members for email - FIXED QUERY
+        // Get chapter members with their notification preferences
         const { data: members, error: membersError } = await supabase
           .from('profiles')
           .select(`
@@ -197,7 +197,11 @@ export async function POST(request: NextRequest) {
             first_name,
             last_name,
             chapter_id,
-            role
+            role,
+            notification_settings!left(
+              email_enabled,
+              announcement_notifications
+            )
           `)
           .eq('chapter_id', profile.chapter_id)
           .in('role', ['active_member', 'admin'])
@@ -208,17 +212,22 @@ export async function POST(request: NextRequest) {
         } else if (!members || members.length === 0) {
           // No chapter members found for email notifications
         } else {
-          // Chapter members found
+          // Filter members who want email notifications
+          const emailRecipients = members.filter(member => {
+            const settings = member.notification_settings?.[0];
+            return settings?.email_enabled && settings?.announcement_notifications;
+          });
           
-          // Map to recipients - no email_preferences filtering since column doesn't exist
-          const recipients = members.map(member => ({
+          console.log(`📧 Sending emails to ${emailRecipients.length} of ${members.length} members`);
+          
+          // Map to recipients for email sending
+          const recipients = emailRecipients.map(member => ({
             email: member.email,
-            firstName: member.first_name || 'Member',
+            firstName: member.first_name,
             chapterName: chapterName
           }));
-
-          // Recipients prepared
-
+          
+          // Send emails to filtered recipients
           if (recipients.length > 0) {
             const { EmailService } = await import('@/lib/services/emailService');
             

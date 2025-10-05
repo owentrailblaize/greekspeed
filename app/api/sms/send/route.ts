@@ -72,10 +72,18 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // Get all chapter members with phone numbers
+    // Get chapter members with SMS preferences
     const { data: members, error: membersError } = await supabase
       .from('profiles')
-      .select('phone, full_name')
+      .select(`
+        phone,
+        full_name,
+        notification_settings!left(
+          sms_enabled,
+          sms_phone,
+          announcement_notifications
+        )
+      `)
       .eq('chapter_id', chapterId)
       .not('phone', 'is', null)
       .neq('phone', '');
@@ -85,15 +93,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch members' }, { status: 500 });
     }
 
+    // Filter members who want SMS notifications
+    const smsRecipients = members.filter(member => {
+      const settings = member.notification_settings?.[0];
+      return settings?.sms_enabled && settings?.announcement_notifications;
+    });
 
-    if (!members || members.length === 0) {
+    if (smsRecipients.length === 0) {
       return NextResponse.json({ 
-        error: 'No members with phone numbers found in this chapter' 
+        error: 'No members have SMS notifications enabled' 
       }, { status: 400 });
     }
 
-    // Format phone numbers and filter valid ones
-    const validMembers = members
+    console.log(`📱 Sending SMS to ${smsRecipients.length} of ${members.length} members`);
+
+    // Format phone numbers for filtered recipients
+    const validMembers = smsRecipients
       .map(member => ({
         ...member,
         formattedPhone: SMSService.formatPhoneNumber(member.phone!),
