@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { getStripe } from '@/lib/stripe';
 import { supabase } from '@/lib/supabase/client';
+import { PAYWALL_CONFIG } from '@/lib/config/paywall';
 
 interface SubscriptionPaywallProps {
   children: React.ReactNode;
@@ -26,6 +27,12 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
 
   const checkSubscriptionStatus = async () => {
     if (!user) return;
+
+    // PAYWALL DISABLED: Always grant access when paywall is disabled
+    if (!PAYWALL_CONFIG.enabled) {
+      setIsPaywallVisible(false);
+      return;
+    }
 
     try {
       // Get user profile with role and chapter_id
@@ -187,6 +194,11 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
+  }
+
+  // PAYWALL DISABLED: Always render children when paywall is disabled
+  if (!PAYWALL_CONFIG.enabled) {
+    return <>{children}</>;
   }
 
   if (isPaywallVisible) {
