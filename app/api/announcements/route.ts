@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
 
         const chapterName = chapter?.name || 'Your Chapter';
         
-        // Get chapter members with their notification preferences
+        // Get chapter members
         const { data: members, error: membersError } = await supabase
           .from('profiles')
           .select(`
@@ -197,11 +197,7 @@ export async function POST(request: NextRequest) {
             first_name,
             last_name,
             chapter_id,
-            role,
-            notification_settings!left(
-              email_enabled,
-              announcement_notifications
-            )
+            role
           `)
           .eq('chapter_id', profile.chapter_id)
           .in('role', ['active_member', 'admin'])
@@ -212,13 +208,31 @@ export async function POST(request: NextRequest) {
         } else if (!members || members.length === 0) {
           // No chapter members found for email notifications
         } else {
+          // Get notification settings for all members
+          const memberIds = members.map(member => member.id);
+          const { data: notificationSettings, error: settingsError } = await supabase
+            .from('notification_settings')
+            .select('user_id, email_enabled, announcement_notifications')
+            .in('user_id', memberIds);
+
+          if (settingsError) {
+            console.error('❌ Failed to fetch notification settings:', settingsError);
+          }
+
           // Filter members who want email notifications
           const emailRecipients = members.filter(member => {
-            const settings = member.notification_settings?.[0];
-            return settings?.email_enabled && settings?.announcement_notifications;
+            const settings = notificationSettings?.find(s => s.user_id === member.id);
+            // Default to true if no settings found (for backward compatibility)
+            const emailEnabled = settings?.email_enabled ?? true;
+            const announcementEnabled = settings?.announcement_notifications ?? true;
+            return emailEnabled && announcementEnabled;
           });
           
           console.log(`📧 Sending emails to ${emailRecipients.length} of ${members.length} members`);
+          console.log(`📧 Email recipients:`, emailRecipients.map(r => ({ email: r.email, firstName: r.first_name })));
+          console.log(`📧 Filtered out users:`, members.filter(member => 
+            !emailRecipients.find(r => r.email === member.email)
+          ).map(m => ({ email: m.email, id: m.id, firstName: m.first_name })));
           
           // Map to recipients for email sending
           const recipients = emailRecipients.map(member => ({
