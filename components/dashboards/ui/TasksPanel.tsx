@@ -4,17 +4,13 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { ClipboardList, User, Calendar, AlertTriangle, Plus, Loader2, X, Eye, Trash2, CheckCircle, Clock } from 'lucide-react';
 import { Task, TaskStatus, TaskPriority, CreateTaskRequest } from '@/types/operations';
 import { getTasksByChapter, updateTask, getChapterMembersForTasks, subscribeToTasks } from '@/lib/services/taskService';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { TaskModal } from '@/components/ui/TaskModal';
 import { supabase } from '@/lib/supabase/client';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface TasksPanelProps {
   chapterId?: string;
@@ -313,6 +309,35 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
     }
   };
 
+  const handleTaskToggle = async (taskId: string, currentStatus: TaskStatus) => {
+    try {
+      const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
+      
+      // Update in Supabase
+      const { error: updateError } = await supabase
+        .from('tasks')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', taskId);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      setTasks(prev => prev.map(task => 
+        task.id === taskId ? { ...task, status: newStatus } : task
+      ));
+      setAllChapterTasks(prev => prev.map(task => 
+        task.id === taskId ? { ...task, status: newStatus } : task
+      ));
+
+    } catch (error) {
+      console.error('Error updating task:', error);
+      // Could add toast notification here
+    }
+  };
+
   const getStatusIcon = (status: TaskStatus) => {
     switch (status) {
       case 'completed': return <CheckCircle className="h-4 w-4 text-green-600" />;
@@ -547,38 +572,51 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
           ) : (
             tasks.map((task) => (
               <div key={task.id} className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-medium text-gray-900 text-sm">{task.title}</h4>
-                  <div className="flex space-x-2">
-                    <Badge className={getStatusColor(task.status)}>
-                      {task.status}
-                    </Badge>
-                    <Badge className={getPriorityColor(task.priority)}>
-                      {task.priority}
-                    </Badge>
-                  </div>
-                </div>
-                
-                {task.description && (
-                  <p className="text-sm text-gray-600 mb-2">{task.description}</p>
-                )}
-                
-                <div className="space-y-2 text-xs text-gray-600 mb-3">
-                  <div className="flex items-center space-x-2">
-                    <User className="h-3 w-3" />
-                    <span>{task.assignee_name}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-3 w-3" />
-                    <span className={task.is_overdue ? 'text-red-600 font-medium' : ''}>
-                      {formatDate(task.due_date)}
-                    </span>
-                    {task.is_overdue && (
-                      <AlertTriangle className="h-3 w-3 text-red-600" />
+                <div className="flex items-start space-x-3">
+                  {/* Checkbox aligned with title */}
+                  <Checkbox 
+                    checked={task.status === 'completed'}
+                    onCheckedChange={() => handleTaskToggle(task.id, task.status)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className={`font-medium text-sm ${task.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                        {task.title}
+                      </h4>
+                      <div className="flex space-x-2">
+                        <Badge className={getStatusColor(task.status)}>
+                          {task.status}
+                        </Badge>
+                        <Badge className={getPriorityColor(task.priority)}>
+                          {task.priority}
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    {task.description && (
+                      <p className={`text-sm mb-2 ${task.status === 'completed' ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {task.description}
+                      </p>
                     )}
+                    
+                    <div className="space-y-2 text-xs text-gray-600 mb-3">
+                      <div className="flex items-center space-x-2">
+                        <User className="h-3 w-3" />
+                        <span>{task.assignee_name}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="h-3 w-3" />
+                        <span className={task.is_overdue ? 'text-red-600 font-medium' : ''}>
+                          {formatDate(task.due_date)}
+                        </span>
+                        {task.is_overdue && (
+                          <AlertTriangle className="h-3 w-3 text-red-600" />
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-                
               </div>
             ))
           )}
