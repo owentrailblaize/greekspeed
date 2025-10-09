@@ -245,18 +245,36 @@ export async function POST(request: NextRequest) {
           if (recipients.length > 0) {
             const { EmailService } = await import('@/lib/services/emailService');
             
-            const result = await EmailService.sendAnnouncementToChapter(
-              recipients,
-              {
-                title: announcement.title,
-                summary: '',
-                content: announcement.content,
-                announcementId: announcement.id,
-                announcementType: announcement.announcement_type
+            // 🔥 NEW: Double-check with SendGrid suppression list
+            const finalRecipients = [];
+            
+            for (const recipient of recipients) {
+              const isSuppressed = await EmailService.isSuppressed(recipient.email);
+              if (!isSuppressed) {
+                finalRecipients.push(recipient);
+              } else {
+                console.log(`🚫 Skipping ${recipient.email} - in SendGrid suppression list`);
               }
-            );
-
-            // Email sending result received
+            }
+            
+            console.log(`📧 Final email recipients after suppression check: ${finalRecipients.length} of ${recipients.length}`);
+            
+            if (finalRecipients.length > 0) {
+              const result = await EmailService.sendAnnouncementToChapter(
+                finalRecipients, // Use finalRecipients instead of recipients
+                {
+                  title: announcement.title,
+                  summary: '',
+                  content: announcement.content,
+                  announcementId: announcement.id,
+                  announcementType: announcement.announcement_type
+                }
+              );
+              
+              console.log(`📧 Email sending result: ${result.successful} successful, ${result.failed} failed`);
+            } else {
+              console.log(`📧 No emails to send - all recipients are suppressed`);
+            }
           }
         }
       } catch (emailError) {

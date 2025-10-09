@@ -1,8 +1,10 @@
 import sgMail from '@sendgrid/mail';
 import { getEmailBaseUrl } from '@/lib/utils/urlUtils';
+import sgClient from '@sendgrid/client';
 
 // Initialize SendGrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+sgClient.setApiKey(process.env.SENDGRID_API_KEY!);
 
 export interface EmailTemplate {
   to: string;
@@ -1028,6 +1030,106 @@ export class EmailService {
     } catch (error) {
       console.error('❌ Failed to send password reset instructions email:', error);
       return false;
+    }
+  }
+
+  /**
+   * Add email to SendGrid global suppression list
+   */
+  static async addToSuppressionList(email: string): Promise<boolean> {
+    try {
+      await sgClient.request({
+        method: 'POST',
+        url: '/v3/suppression/global',
+        body: {
+          emails: [email]
+        }
+      });
+      console.log(`✅ Added ${email} to SendGrid global suppression list`);
+      return true;
+    } catch (error) {
+      console.error(`❌ Failed to add ${email} to suppression list:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Remove email from SendGrid global suppression list
+   */
+  static async removeFromSuppressionList(email: string): Promise<boolean> {
+    try {
+      await sgClient.request({
+        method: 'DELETE',
+        url: `/v3/suppression/global/${email}`
+      });
+      console.log(`✅ Removed ${email} from SendGrid global suppression list`);
+      return true;
+    } catch (error) {
+      console.error(`❌ Failed to remove ${email} from suppression list:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Check if email is in global suppression list
+   */
+  static async isSuppressed(email: string): Promise<boolean> {
+    try {
+      const [response] = await sgClient.request({
+        method: 'GET',
+        url: `/v3/suppression/global/${email}`
+      });
+      return response.statusCode === 200;
+    } catch (error: any) {
+      if (error.response?.statusCode === 404) {
+        return false; // Not suppressed
+      }
+      console.error(`❌ Error checking suppression status for ${email}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Sync all users' notification preferences with SendGrid
+   */
+  static async syncAllUserPreferences(): Promise<void> {
+    try {
+      const { createServerSupabaseClient } = await import('@/lib/supabase/client');
+      const supabase = createServerSupabaseClient();
+      
+      // Get all users with their notification settings
+      const { data: users, error } = await supabase
+        .from('profiles')
+        .select(`
+          email,
+          notification_settings!left(
+            email_enabled,
+            announcement_notifications
+          )
+        `)
+        .not('email', 'is', null);
+
+      if (error) {
+        console.error('❌ Failed to fetch users:', error);
+        return;
+      }
+
+      console.log(`🔄 Syncing ${users?.length || 0} users with SendGrid...`);
+
+      for (const user of users || []) {
+        const settings = user.notification_settings?.[0];
+        const shouldReceiveEmails = settings?.email_enabled && settings?.announcement_notifications;
+        
+        if (shouldReceiveEmails) {
+          await this.removeFromSuppressionList(user.email);
+        } else {
+          await this.addToSuppressionList(user.email);
+        }
+      }
+
+      console.log('✅ Sync completed');
+    } catch (error) {
+      console.error('❌ Error syncing user preferences:', error);
     }
   }
 }

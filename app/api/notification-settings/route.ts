@@ -73,10 +73,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
     }
 
-    // Get user's profile to get chapter_id
+    // Get user's profile to get chapter_id and email
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('chapter_id')
+      .select('chapter_id, email')  // Add email here
       .eq('id', user.id)
       .single();
 
@@ -143,6 +143,27 @@ export async function POST(request: NextRequest) {
     if (upsertError) {
       console.error('Error saving notification settings:', upsertError);
       return NextResponse.json({ error: 'Failed to save settings' }, { status: 500 });
+    }
+
+    // 🔥 NEW: Sync with SendGrid suppression lists
+    try {
+      const { EmailService } = await import('@/lib/services/emailService');
+      
+      // Determine if user should receive announcement emails
+      const shouldReceiveAnnouncements = settings.email_enabled && settings.announcement_notifications;
+      
+      if (shouldReceiveAnnouncements) {
+        // Remove from suppression list if they want to receive emails
+        await EmailService.removeFromSuppressionList(profile.email);
+        console.log(`✅ Removed ${profile.email} from SendGrid suppression list`);
+      } else {
+        // Add to suppression list if they don't want emails
+        await EmailService.addToSuppressionList(profile.email);
+        console.log(`🚫 Added ${profile.email} to SendGrid suppression list`);
+      }
+    } catch (suppressionError) {
+      console.error('❌ Error syncing with SendGrid suppression list:', suppressionError);
+      // Don't fail the request if suppression sync fails
     }
 
     return NextResponse.json({ 
