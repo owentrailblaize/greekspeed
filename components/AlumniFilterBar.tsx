@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectItem } from "@/components/ui/select";
-import { graduationYears, industries, chapters, locations } from "@/lib/mockAlumni";
+import { graduationYears, industries, chapters, locations, getEarlierCutoffYear } from "@/lib/mockAlumni";
 import { US_STATES, getStateNameByCode } from "@/lib/usStates";
 import { motion } from "framer-motion";
 
@@ -93,7 +93,7 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
             {graduationYears.map((year) => (
               <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
             ))}
-            <SelectItem value="older">2019 & Earlier</SelectItem>
+            <SelectItem value="older">{getEarlierCutoffYear()} & Earlier</SelectItem>
           </Select>
         </div>
 
@@ -275,7 +275,7 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
                 {graduationYears.map((year) => (
                   <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
                 ))}
-                <SelectItem value="older">2019 & Earlier</SelectItem>
+                <SelectItem value="older">{getEarlierCutoffYear()} & Earlier</SelectItem>
               </Select>
             </div>
 

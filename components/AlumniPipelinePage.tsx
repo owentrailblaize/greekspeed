@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { LinkedInStyleAlumniCard } from "./LinkedInStyleAlumniCard";
 import { motion } from "framer-motion";
+import { getEarlierCutoffYear } from "@/lib/mockAlumni";
 
 // Mock data for alumni
 const mockAlumniData = [
@@ -241,7 +242,7 @@ export function AlumniPipelinePage() {
                   <SelectItem value="2021">2021</SelectItem>
                   <SelectItem value="2020">2020</SelectItem>
                   <SelectItem value="older">
-                    2019 & Earlier
+                    {getEarlierCutoffYear()} & Earlier
                   </SelectItem>
                 </SelectContent>
               </Select>
