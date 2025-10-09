@@ -243,12 +243,19 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
                 <ClickableField 
                   value={alumni.company} 
                   entityType="company" 
-                  className="text-gray-500 hover:text-blue-600"
+                  className="text-gray-500 hover:text-blue-600 text-center "
                 />
               </div>
             )}
+            {/* Add location information */}
+            {isValidField(alumni.location) && (
+              <div className="flex items-center justify-center space-x-2 text-gray-500 text-xs sm:text-sm mt-0.5">
+                <MapPin className="h-3 w-3" />
+                <span className="text-gray-500 truncate">{alumni.location}</span>
+              </div>
+            )}
             {/* Show placeholder when no data to maintain consistent spacing */}
-            {!isValidField(alumni.jobTitle) && !isValidField(alumni.company) && !alumni.isActivelyHiring && (
+            {!isValidField(alumni.jobTitle) && !isValidField(alumni.company) && !alumni.isActivelyHiring && !isValidField(alumni.location) && (
               <div className="text-xs sm:text-sm text-gray-400">
                 Professional info not available
               </div>
@@ -327,7 +334,8 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
                 </span>
               </>
             ) : (
-              <div className="text-xs sm:text-sm text-gray-400 text-center">
+              /* Mobile: Show nothing, Desktop: Show "No mutual connections" */
+              <div className="text-xs sm:text-sm text-gray-400 text-center hidden sm:block">
                 No mutual connections
               </div>
             )}
