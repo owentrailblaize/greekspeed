@@ -152,8 +152,20 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
         assigned_by_name: task.assigned_by?.full_name || 'Unknown'
       }));
       
+      // Sort tasks: completed first, then by due date
+      const sortedAllTasks = allTasks.sort((a, b) => {
+        // First sort by status: completed tasks first
+        if (a.status === 'completed' && b.status !== 'completed') return -1;
+        if (a.status !== 'completed' && b.status === 'completed') return 1;
+        
+        // If both have same status, sort by due date
+        const dateA = a.due_date ? new Date(a.due_date) : new Date('9999-12-31');
+        const dateB = b.due_date ? new Date(b.due_date) : new Date('9999-12-31');
+        return dateA.getTime() - dateB.getTime();
+      });
+      
       setTasks(personalTasks); // Personal tasks
-      setAllChapterTasks(allTasks); // All chapter tasks
+      setAllChapterTasks(sortedAllTasks); // All chapter tasks (sorted)
       setChapterMembers(membersData);
       
       // Data loaded successfully
