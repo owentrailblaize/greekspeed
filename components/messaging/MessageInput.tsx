@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Send, Paperclip, Smile } from 'lucide-react';
+import { Send, Paperclip } from 'lucide-react';
+import { EmojiPicker } from './EmojiPicker';
 
 interface MessageInputProps {
   onSendMessage: (content: string) => Promise<void>;
@@ -64,14 +65,29 @@ export function MessageInput({
     }
   };
 
-  const handleFileUpload = () => {
-    // TODO: Implement file upload functionality
-    // File upload not implemented yet
+  // 🔴 NEW: Handle emoji selection
+  const handleEmojiSelect = (emoji: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const newMessage = message.slice(0, start) + emoji + message.slice(end);
+    
+    setMessage(newMessage);
+    
+    // Focus back to textarea and set cursor position
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPosition = start + emoji.length;
+      textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+    }, 0);
   };
 
-  const handleEmojiPicker = () => {
-    // TODO: Implement emoji picker functionality
-    // Emoji picker not implemented yet
+  // 🔴 DISABLED: File upload functionality
+  const handleFileUpload = () => {
+    // File upload is disabled for now
+    console.log('File upload is currently disabled');
   };
 
   useEffect(() => {
@@ -85,27 +101,23 @@ export function MessageInput({
   return (
     <div className="border-t border-gray-200 bg-white p-4">
       <div className="flex items-end space-x-3">
-        {/* File attachment button */}
+        {/* File attachment button - DISABLED */}
         <Button
           variant="ghost"
           size="sm"
           onClick={handleFileUpload}
-          disabled={disabled}
-          className="text-gray-400 hover:text-navy-600 hover:bg-navy-50 p-2 h-10 w-10"
+          disabled={true} // 🔴 DISABLED
+          className="text-gray-300 cursor-not-allowed p-2 h-10 w-10"
+          title="File upload is currently disabled"
         >
           <Paperclip className="h-5 w-5" />
         </Button>
 
-        {/* Emoji picker button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleEmojiPicker}
+        {/* 🔴 NEW: Emoji picker */}
+        <EmojiPicker
+          onEmojiSelect={handleEmojiSelect}
           disabled={disabled}
-          className="text-gray-400 hover:text-navy-600 hover:bg-navy-50 p-2 h-10 w-10"
-        >
-          <Smile className="h-5 w-5" />
-        </Button>
+        />
 
         {/* Message input */}
         <div className="flex-1 relative">
