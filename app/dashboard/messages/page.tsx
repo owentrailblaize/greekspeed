@@ -81,7 +81,8 @@ function MessagesPageContent() {
   }, []);
 
   return (
-    <div className="h-full flex flex-col min-h-0">
+    // 🔴 FIXED: Use viewport height instead of h-full
+    <div className="h-screen flex flex-col">
       {/* Mobile Header */}
       <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
         <h1 className="text-lg font-semibold text-gray-900">Messages</h1>
@@ -95,9 +96,9 @@ function MessagesPageContent() {
         </Button>
       </div>
 
-      {/* Main Layout */}
-      <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* Sidebar */}
+      {/* Main Layout - FIXED: Use flex-1 to fill remaining space */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar - FIXED: Constrained height */}
         <div className={`
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           md:translate-x-0
@@ -108,6 +109,7 @@ function MessagesPageContent() {
           w-80 md:w-80
           bg-gray-50 border-r border-gray-200
           flex-shrink-0
+          h-full
         `}>
           <MessagesSidebar
             connections={connections}
@@ -115,12 +117,12 @@ function MessagesPageContent() {
             selectedConnectionId={selectedConnectionId}
             onConnectionSelect={handleConnectionSelect}
             onMobileMenuToggle={toggleSidebar}
-            isMobile={isMobile} // ✅ Use state instead of window.innerWidth
+            isMobile={isMobile}
           />
         </div>
 
-        {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col min-h-0">
+        {/* Main Chat Area - FIXED: Proper height constraint */}
+        <div className="flex-1 flex flex-col h-full">
           <MessagesMainChat
             selectedConnectionId={selectedConnectionId}
             connections={connections}

@@ -21,7 +21,8 @@ export function MessagesMainChat({
   // If no connection is selected, show welcome state
   if (!selectedConnectionId) {
     return (
-      <div className="flex-1 bg-white flex flex-col items-center justify-center p-8 h-full min-h-0">
+      // 🔴 FIXED: Use h-full instead of h-full min-h-0
+      <div className="flex-1 bg-white flex flex-col items-center justify-center p-8 h-full">
         <div className="text-center max-w-md">
           {/* Welcome Icon */}
           <div className="w-20 h-20 bg-navy-50 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -64,7 +65,8 @@ export function MessagesMainChat({
 
   // If a connection is selected, show the chat
   return (
-    <div className="flex-1 bg-white flex flex-col h-full min-h-0">
+    // 🔴 FIXED: Use h-full instead of h-full min-h-0
+    <div className="flex-1 bg-white flex flex-col h-full">
       <ConnectionChat 
         connectionId={selectedConnectionId} 
         onBack={onBack}
