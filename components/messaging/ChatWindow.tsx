@@ -54,7 +54,7 @@ export function ChatWindow({
   };
 
   return (
-    // 🔴 FIXED: Use h-full and flex flex-col for full height
+    // 🔴 FIXED: Use h-full instead of h-full
     <div className="h-full flex flex-col bg-white">
       {/* Chat header - fixed height */}
       <div className="flex-shrink-0 bg-white border-b border-gray-200 px-4 py-3">
@@ -98,7 +98,7 @@ export function ChatWindow({
       </div>
 
       {/* Messages area - flex-1 to fill remaining space */}
-      <div className="flex-1 overflow-hidden min-h-0">
+      <div className="flex-1 overflow-hidden">
         <MessageList
           messages={messages}
           loading={loading}

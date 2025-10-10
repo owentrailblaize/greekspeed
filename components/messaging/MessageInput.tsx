@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Send, Paperclip, Smile } from 'lucide-react';
+import { Send, Paperclip } from 'lucide-react';
+import { EmojiPicker } from './EmojiPicker';
 
 interface MessageInputProps {
   onSendMessage: (content: string) => Promise<void>;
@@ -64,14 +65,28 @@ export function MessageInput({
     }
   };
 
-  const handleFileUpload = () => {
-    // TODO: Implement file upload functionality
-    // File upload not implemented yet
+  // Handle emoji selection
+  const handleEmojiSelect = (emoji: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const newMessage = message.slice(0, start) + emoji + message.slice(end);
+    
+    setMessage(newMessage);
+    
+    // Focus back to textarea and set cursor position
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPosition = start + emoji.length;
+      textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+    }, 0);
   };
 
-  const handleEmojiPicker = () => {
-    // TODO: Implement emoji picker functionality
-    // Emoji picker not implemented yet
+  // File upload functionality
+  const handleFileUpload = () => {
+    console.log('File upload is currently disabled');
   };
 
   useEffect(() => {
@@ -85,29 +100,25 @@ export function MessageInput({
   return (
     <div className="border-t border-gray-200 bg-white p-4">
       <div className="flex items-end space-x-3">
-        {/* File attachment button */}
+        {/* File attachment button - HIDDEN ON MOBILE */}
         <Button
           variant="ghost"
           size="sm"
           onClick={handleFileUpload}
-          disabled={disabled}
-          className="text-gray-400 hover:text-navy-600 hover:bg-navy-50 p-2 h-10 w-10"
+          disabled={true}
+          className="hidden md:flex text-gray-300 cursor-not-allowed p-2 h-10 w-10"
+          title="File upload is currently disabled"
         >
           <Paperclip className="h-5 w-5" />
         </Button>
 
-        {/* Emoji picker button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleEmojiPicker}
+        {/* Emoji picker */}
+        <EmojiPicker
+          onEmojiSelect={handleEmojiSelect}
           disabled={disabled}
-          className="text-gray-400 hover:text-navy-600 hover:bg-navy-50 p-2 h-10 w-10"
-        >
-          <Smile className="h-5 w-5" />
-        </Button>
+        />
 
-        {/* Message input */}
+        {/* Message input - MOBILE OPTIMIZED */}
         <div className="flex-1 relative">
           <textarea
             ref={textareaRef}
@@ -116,8 +127,12 @@ export function MessageInput({
             onKeyPress={handleKeyPress}
             placeholder={placeholder}
             disabled={disabled}
-            className="w-full resize-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
-            style={{ minHeight: '44px', maxHeight: '120px' }}
+            className="w-full resize-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 placeholder:text-gray-400 placeholder:truncate"
+            style={{ 
+              minHeight: '44px', 
+              maxHeight: '120px',
+              fontSize: '16px' // Prevent zoom on iOS
+            }}
             rows={1}
           />
         </div>
@@ -139,12 +154,12 @@ export function MessageInput({
         </Button>
       </div>
 
-      {/* Character count */}
-      <div className="flex justify-between items-center mt-2 text-xs text-gray-400">
+      {/* Character count - HIDDEN ON MOBILE */}
+      <div className="hidden md:flex justify-end items-center mt-2 text-xs text-gray-400">
         <span>
           {message.length}/1000 characters
         </span>
-        <span>
+        <span className="ml-4">
           Press Enter to send, Shift+Enter for new line
         </span>
       </div>
