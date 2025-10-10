@@ -81,8 +81,8 @@ function MessagesPageContent() {
   }, []);
 
   return (
-    // 🔴 FIXED: Use viewport height instead of h-full
-    <div className="h-screen flex flex-col">
+    // 🔴 FIXED: Use calc to account for header height
+    <div className="h-[calc(100vh-4rem)] flex flex-col">
       {/* Mobile Header */}
       <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
         <h1 className="text-lg font-semibold text-gray-900">Messages</h1>
