@@ -4,17 +4,13 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { ClipboardList, User, Calendar, AlertTriangle, Plus, Loader2, X, Eye, Trash2, CheckCircle, Clock } from 'lucide-react';
 import { Task, TaskStatus, TaskPriority, CreateTaskRequest } from '@/types/operations';
 import { getTasksByChapter, updateTask, getChapterMembersForTasks, subscribeToTasks } from '@/lib/services/taskService';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { TaskModal } from '@/components/ui/TaskModal';
 import { supabase } from '@/lib/supabase/client';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface TasksPanelProps {
   chapterId?: string;
@@ -156,8 +152,20 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
         assigned_by_name: task.assigned_by?.full_name || 'Unknown'
       }));
       
+      // Sort tasks: completed first, then by due date
+      const sortedAllTasks = allTasks.sort((a, b) => {
+        // First sort by status: completed tasks first
+        if (a.status === 'completed' && b.status !== 'completed') return -1;
+        if (a.status !== 'completed' && b.status === 'completed') return 1;
+        
+        // If both have same status, sort by due date
+        const dateA = a.due_date ? new Date(a.due_date) : new Date('9999-12-31');
+        const dateB = b.due_date ? new Date(b.due_date) : new Date('9999-12-31');
+        return dateA.getTime() - dateB.getTime();
+      });
+      
       setTasks(personalTasks); // Personal tasks
-      setAllChapterTasks(allTasks); // All chapter tasks
+      setAllChapterTasks(sortedAllTasks); // All chapter tasks (sorted)
       setChapterMembers(membersData);
       
       // Data loaded successfully
@@ -310,6 +318,35 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
     } catch (error) {
       console.error('Error deleting task:', error);
       alert('Failed to delete task. Please try again.');
+    }
+  };
+
+  const handleTaskToggle = async (taskId: string, currentStatus: TaskStatus) => {
+    try {
+      const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
+      
+      // Update in Supabase
+      const { error: updateError } = await supabase
+        .from('tasks')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', taskId);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      setTasks(prev => prev.map(task => 
+        task.id === taskId ? { ...task, status: newStatus } : task
+      ));
+      setAllChapterTasks(prev => prev.map(task => 
+        task.id === taskId ? { ...task, status: newStatus } : task
+      ));
+
+    } catch (error) {
+      console.error('Error updating task:', error);
+      // Could add toast notification here
     }
   };
 
@@ -547,38 +584,51 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
           ) : (
             tasks.map((task) => (
               <div key={task.id} className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-medium text-gray-900 text-sm">{task.title}</h4>
-                  <div className="flex space-x-2">
-                    <Badge className={getStatusColor(task.status)}>
-                      {task.status}
-                    </Badge>
-                    <Badge className={getPriorityColor(task.priority)}>
-                      {task.priority}
-                    </Badge>
-                  </div>
-                </div>
-                
-                {task.description && (
-                  <p className="text-sm text-gray-600 mb-2">{task.description}</p>
-                )}
-                
-                <div className="space-y-2 text-xs text-gray-600 mb-3">
-                  <div className="flex items-center space-x-2">
-                    <User className="h-3 w-3" />
-                    <span>{task.assignee_name}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-3 w-3" />
-                    <span className={task.is_overdue ? 'text-red-600 font-medium' : ''}>
-                      {formatDate(task.due_date)}
-                    </span>
-                    {task.is_overdue && (
-                      <AlertTriangle className="h-3 w-3 text-red-600" />
+                <div className="flex items-start space-x-3">
+                  {/* Checkbox aligned with title */}
+                  <Checkbox 
+                    checked={task.status === 'completed'}
+                    onCheckedChange={() => handleTaskToggle(task.id, task.status)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className={`font-medium text-sm ${task.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                        {task.title}
+                      </h4>
+                      <div className="flex space-x-2">
+                        <Badge className={getStatusColor(task.status)}>
+                          {task.status}
+                        </Badge>
+                        <Badge className={getPriorityColor(task.priority)}>
+                          {task.priority}
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    {task.description && (
+                      <p className={`text-sm mb-2 ${task.status === 'completed' ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {task.description}
+                      </p>
                     )}
+                    
+                    <div className="space-y-2 text-xs text-gray-600 mb-3">
+                      <div className="flex items-center space-x-2">
+                        <User className="h-3 w-3" />
+                        <span>{task.assignee_name}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="h-3 w-3" />
+                        <span className={task.is_overdue ? 'text-red-600 font-medium' : ''}>
+                          {formatDate(task.due_date)}
+                        </span>
+                        {task.is_overdue && (
+                          <AlertTriangle className="h-3 w-3 text-red-600" />
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-                
               </div>
             ))
           )}
