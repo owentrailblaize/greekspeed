@@ -65,7 +65,7 @@ export function MessageInput({
     }
   };
 
-  // 🔴 NEW: Handle emoji selection
+  // Handle emoji selection
   const handleEmojiSelect = (emoji: string) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -84,9 +84,8 @@ export function MessageInput({
     }, 0);
   };
 
-  // 🔴 DISABLED: File upload functionality
+  // File upload functionality
   const handleFileUpload = () => {
-    // File upload is disabled for now
     console.log('File upload is currently disabled');
   };
 
@@ -101,25 +100,25 @@ export function MessageInput({
   return (
     <div className="border-t border-gray-200 bg-white p-4">
       <div className="flex items-end space-x-3">
-        {/* File attachment button - DISABLED */}
+        {/* File attachment button - HIDDEN ON MOBILE */}
         <Button
           variant="ghost"
           size="sm"
           onClick={handleFileUpload}
-          disabled={true} // 🔴 DISABLED
-          className="text-gray-300 cursor-not-allowed p-2 h-10 w-10"
+          disabled={true}
+          className="hidden md:flex text-gray-300 cursor-not-allowed p-2 h-10 w-10"
           title="File upload is currently disabled"
         >
           <Paperclip className="h-5 w-5" />
         </Button>
 
-        {/* 🔴 NEW: Emoji picker */}
+        {/* Emoji picker */}
         <EmojiPicker
           onEmojiSelect={handleEmojiSelect}
           disabled={disabled}
         />
 
-        {/* Message input */}
+        {/* Message input - MOBILE OPTIMIZED */}
         <div className="flex-1 relative">
           <textarea
             ref={textareaRef}
@@ -128,8 +127,12 @@ export function MessageInput({
             onKeyPress={handleKeyPress}
             placeholder={placeholder}
             disabled={disabled}
-            className="w-full resize-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
-            style={{ minHeight: '44px', maxHeight: '120px' }}
+            className="w-full resize-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 placeholder:text-gray-400 placeholder:truncate"
+            style={{ 
+              minHeight: '44px', 
+              maxHeight: '120px',
+              fontSize: '16px' // Prevent zoom on iOS
+            }}
             rows={1}
           />
         </div>
@@ -151,12 +154,12 @@ export function MessageInput({
         </Button>
       </div>
 
-      {/* Character count */}
-      <div className="flex justify-between items-center mt-2 text-xs text-gray-400">
+      {/* Character count - HIDDEN ON MOBILE */}
+      <div className="hidden md:flex justify-end items-center mt-2 text-xs text-gray-400">
         <span>
           {message.length}/1000 characters
         </span>
-        <span>
+        <span className="ml-4">
           Press Enter to send, Shift+Enter for new line
         </span>
       </div>
