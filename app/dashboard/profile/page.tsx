@@ -333,15 +333,49 @@ export default function ProfilePage() {
             <Card className="bg-white">
               <CardHeader>
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
+                  {/* Mobile: Horizontal scrollable tabs */}
+                  <div className="sm:hidden">
+                    <div className="flex overflow-x-auto scrollbar-hide pb-2 mb-4">
+                      <div className="flex space-x-1 min-w-max">
+                        <button
+                          onClick={() => setActiveTab('connections')}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                            activeTab === 'connections'
+                              ? 'bg-navy-600 text-white'
+                              : ' text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          Connections
+                        </button>
+                        <button
+                          onClick={() => setActiveTab('connected')}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                            activeTab === 'connected'
+                              ? 'bg-navy-600 text-white'
+                              : ' text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          Connected
+                        </button>
+                        <button
+                          onClick={() => setActiveTab('posts')}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                            activeTab === 'posts'
+                              ? 'bg-navy-600 text-white'
+                              : ' text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          Posts
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Desktop: Standard grid tabs */}
+                  <TabsList className="hidden sm:grid w-full grid-cols-3">
                     <TabsTrigger value="connections" className="text-sm">Connections</TabsTrigger>
                     <TabsTrigger value="connected" className="text-sm">Connected</TabsTrigger>
-                    <TabsTrigger 
-                      value="posts" 
-                      className="text-sm"
-                    >
-                      Posts
-                    </TabsTrigger>
+                    <TabsTrigger value="posts" className="text-sm">Posts</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="connections" className="mt-4">
@@ -357,31 +391,35 @@ export default function ProfilePage() {
                           if (!partner) return null;
                           
                           return (
-                            <div key={connection.id} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:border-navy-300 transition-colors">
-                              <UserAvatar
-                                user={{
-                                  user_metadata: {
-                                    avatar_url: partner?.avatar_url, // Use partner's avatar_url
-                                    full_name: partner?.full_name
-                                  }
-                                }}
-                                completionPercent={0}
-                                hasUnread={false}
-                                size="md"
-                              />
-                              <div className="flex-1">
-                                <p className="font-medium text-gray-900">{partner?.full_name || 'Unknown User'}</p>
-                                <p className="text-sm text-gray-500">{partner?.email || 'No email provided'}</p>
+                            <div key={connection.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-navy-300 transition-colors">
+                              <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                <UserAvatar
+                                  user={{
+                                    user_metadata: {
+                                      avatar_url: partner?.avatar_url, // Use partner's avatar_url
+                                      full_name: partner?.full_name
+                                    }
+                                  }}
+                                  completionPercent={0}
+                                  hasUnread={false}
+                                  size="md"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-gray-900 truncate">{partner?.full_name || 'Unknown User'}</p>
+                                  <p className="text-sm text-gray-500 truncate">{partner?.email || 'No email provided'}</p>
+                                </div>
                               </div>
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="text-navy-600 border-navy-300 hover:bg-navy-50"
-                                onClick={() => handleMessageClick(connection.id)}
-                              >
-                                <MessageCircle className="w-4 h-4 mr-2" />
-                                Message
-                              </Button>
+                              <div className="flex-shrink-0 ml-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="text-navy-600 border-navy-300 hover:bg-navy-50 px-2 sm:px-3"
+                                  onClick={() => handleMessageClick(connection.id)}
+                                >
+                                  <MessageCircle className="w-4 h-4 sm:mr-2" />
+                                  <span className="hidden sm:inline">Message</span>
+                                </Button>
+                              </div>
                             </div>
                           );
                         })}
@@ -408,30 +446,34 @@ export default function ProfilePage() {
                           if (!partner) return null;
                           
                           return (
-                            <div key={connection.id} className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 bg-[#FBFCFD]">
-                              <UserAvatar
-                                user={{
-                                  user_metadata: {
-                                    avatar_url: partner?.avatar_url, // Use partner's avatar_url
-                                    full_name: partner?.full_name
-                                  }
-                                }}
-                                completionPercent={0}
-                                hasUnread={false}
-                                size="md"
-                              />
-                              <div className="flex-1">
-                                <p className="font-medium text-gray-900">{partner?.full_name || 'Unknown User'}</p>
-                                <p className="text-sm text-gray-500">{partner?.email || 'No email provided'}</p>
-                                <div className="flex items-center mt-1">
-                                  <Clock className="w-3 h-3 text-red-400 mr-1" />
-                                  <span className="text-xs text-red-400">Request sent</span>
+                            <div key={connection.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-[#FBFCFD]">
+                              <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                <UserAvatar
+                                  user={{
+                                    user_metadata: {
+                                      avatar_url: partner?.avatar_url, // Use partner's avatar_url
+                                      full_name: partner?.full_name
+                                    }
+                                  }}
+                                  completionPercent={0}
+                                  hasUnread={false}
+                                  size="md"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-gray-900 truncate">{partner?.full_name || 'Unknown User'}</p>
+                                  <p className="text-sm text-gray-500 truncate">{partner?.email || 'No email provided'}</p>
+                                  <div className="flex items-center mt-1">
+                                    <Clock className="w-3 h-3 text-red-400 mr-1" />
+                                    <span className="text-xs text-red-400">Request sent</span>
+                                  </div>
                                 </div>
                               </div>
-                              <Button size="sm" variant="outline" className="text-gray-500 border-gray-200 hover:bg-gray-100">
-                                <UserPlus className="w-4 h-4 mr-2" />
-                                Pending
-                              </Button>
+                              <div className="flex-shrink-0 ml-2">
+                                <Button size="sm" variant="outline" className="text-gray-500 border-gray-200 hover:bg-gray-100 px-2 sm:px-3">
+                                  <UserPlus className="w-4 h-4 sm:mr-2" />
+                                  <span className="hidden sm:inline">Pending</span>
+                                </Button>
+                              </div>
                             </div>
                           );
                         })}
