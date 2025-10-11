@@ -7,6 +7,7 @@ import { useConnections } from "@/lib/contexts/ConnectionsContext";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutualConnections } from "@/lib/hooks/useMutualConnections";
 
 interface LinkedInStyleChapterCardProps {
   member: ChapterMember;
@@ -38,12 +39,8 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
   // Generate description if not provided
   const memberDescription = description || '';
   
-  // Generate mutual connections data if not provided
-  const connections = [
-    { name: "Chapter Member", avatar: undefined },
-    { name: "Alumni", avatar: undefined }
-  ];
-  const connectionsCount = 5;
+  // Fetch real mutual connections
+  const { mutualConnections, count: connectionsCount, loading: mutualLoading } = useMutualConnections(member.id);
 
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel', e: React.MouseEvent) => {
     e.stopPropagation();
@@ -237,34 +234,40 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
 
           {/* Mutual Connections */}
           <div className="flex flex-col items-center justify-center space-y-1 sm:space-y-2 mb-2 sm:mb-6">
-            <div className="flex -space-x-1 justify-center">
-              {connections.slice(0, 3).map((c, i) => (
-                <div key={i} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
-                  {c.avatar ? (
-                    <img 
-                      src={c.avatar} 
-                      alt={c.name || 'Unknown'} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
-                      <span className="text-white text-xs">
-                        {c.name
-                          ?.split(" ")
-                          ?.map((n) => n[0])
-                          ?.join("") || "?"}
-                      </span>
+            {mutualLoading ? (
+              <div className="text-xs text-gray-400">Loading...</div>
+            ) : (
+              <>
+                <div className="flex -space-x-1 justify-center">
+                  {mutualConnections.slice(0, 3).map((c) => (
+                    <div key={c.id} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
+                      {c.avatar ? (
+                        <img 
+                          src={c.avatar} 
+                          alt={c.name || 'Unknown'} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
+                          <span className="text-white text-xs">
+                            {c.name
+                              ?.split(" ")
+                              ?.map((n) => n[0])
+                              ?.join("") || "?"}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  ))}
                 </div>
-              ))}
-            </div>
-            <span className="text-xs sm:text-sm text-gray-600 leading-tight text-center">
-              {connections.length > 0 
-                ? `${connectionsCount} connections`
-                : 'No connections'
-              }
-            </span>
+                <span className="text-xs sm:text-sm text-gray-600 leading-tight text-center">
+                  {connectionsCount > 0 
+                    ? `${connectionsCount} mutual connection${connectionsCount !== 1 ? 's' : ''}`
+                    : 'No mutual connections'
+                  }
+                </span>
+              </>
+            )}
           </div>
 
           {/* Action Button */}

@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ClickableField } from './ClickableField';
 import { ActivityIndicator } from './ActivityIndicator';
+import { useMutualConnections } from "@/lib/hooks/useMutualConnections";
 
 // Add this function at the top of the file, outside the component
 const getChapterName = (chapterId: string, isMobile: boolean = false): string => {
@@ -47,6 +48,9 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
     getConnectionId
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
+  
+  // Fetch real mutual connections
+  const { mutualConnections, count: mutualConnectionsCount, loading: mutualLoading } = useMutualConnections(alumni.id);
 
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel', e: React.MouseEvent) => {
     // Stop event propagation to prevent card click from triggering
@@ -295,11 +299,13 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
 
           {/* PINK BOX: Mutual Connections - Fixed height */}
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 mb-1 sm:mb-4 h-8">
-            {Array.isArray(alumni.mutualConnections) && alumni.mutualConnections.length > 0 ? (
+            {mutualLoading ? (
+              <div className="text-xs text-gray-400">Loading...</div>
+            ) : mutualConnections.length > 0 ? (
               <>
                 <div className="flex -space-x-1">
-                  {alumni.mutualConnections.slice(0, 3).map((c, i) => (
-                    <div key={i} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative z-10" style={{ zIndex: 10 - i }}>
+                  {mutualConnections.slice(0, 3).map((c, i) => (
+                    <div key={c.id} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative z-10" style={{ zIndex: 10 - i }}>
                       {c.avatar ? (
                         <ImageWithFallback 
                           src={c.avatar} 
@@ -323,15 +329,15 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
                 </div>
                 {/* Mobile: Show "+X other" below avatars */}
                 <span className="text-xs text-gray-600 leading-tight sm:hidden">
-                  {alumni.mutualConnections.length > 1 
-                    ? `+${alumni.mutualConnections.length - 1} other`
+                  {mutualConnectionsCount > 1 
+                    ? `+${mutualConnectionsCount - 1} other`
                     : '1 connection'
                   }
                 </span>
                 {/* Desktop: Show full text next to avatars */}
                 <span className="text-xs sm:text-sm text-gray-600 leading-tight hidden sm:block">
-                  {alumni.mutualConnections.length > 1 
-                    ? `+${alumni.mutualConnections.length - 1} other connections`
+                  {mutualConnectionsCount > 1 
+                    ? `+${mutualConnectionsCount - 1} other connections`
                     : '1 connection'
                   }
                 </span>

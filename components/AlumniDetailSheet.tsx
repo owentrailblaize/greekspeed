@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Alumni } from "@/lib/mockAlumni";
 import ImageWithFallback from "./figma/ImageWithFallback";
+import { useMutualConnections } from "@/lib/hooks/useMutualConnections";
 
 interface AlumniDetailSheetProps {
   alumni: Alumni | null;
@@ -26,6 +27,9 @@ interface AlumniDetailSheetProps {
 }
 
 export function AlumniDetailSheet({ alumni, isOpen, onClose }: AlumniDetailSheetProps) {
+  // Fetch real mutual connections
+  const { mutualConnections, count: mutualConnectionsCount, loading: mutualLoading } = useMutualConnections(alumni?.id);
+  
   if (!alumni) return null;
 
   return (
@@ -121,18 +125,23 @@ export function AlumniDetailSheet({ alumni, isOpen, onClose }: AlumniDetailSheet
           </div>
 
           {/* Mutual Connections */}
-          {alumni.mutualConnections && alumni.mutualConnections.length > 0 && (
+          {mutualLoading ? (
+            <div className="space-y-3">
+              <h3 className="font-medium text-gray-900">Mutual Connections</h3>
+              <div className="text-sm text-gray-400">Loading...</div>
+            </div>
+          ) : mutualConnections.length > 0 && (
             <div className="space-y-3">
               <h3 className="font-medium text-gray-900">Mutual Connections</h3>
               <div className="flex flex-wrap gap-2">
-                {alumni.mutualConnections.slice(0, 5).map((connection, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
+                {mutualConnections.slice(0, 5).map((connection) => (
+                  <Badge key={connection.id} variant="outline" className="text-xs">
                     {connection.name}
                   </Badge>
                 ))}
-                {alumni.mutualConnections.length > 5 && (
+                {mutualConnectionsCount > 5 && (
                   <Badge variant="outline" className="text-xs">
-                    +{alumni.mutualConnections.length - 5} more
+                    +{mutualConnectionsCount - 5} more
                   </Badge>
                 )}
               </div>
