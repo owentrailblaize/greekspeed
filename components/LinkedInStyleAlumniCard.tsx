@@ -13,6 +13,7 @@ import {
   Check,
   X
 } from "lucide-react";
+import { useMutualConnections } from "@/lib/hooks/useMutualConnections";
 
 interface MutualConnection {
   name: string;
@@ -33,8 +34,8 @@ interface LinkedInStyleAlumniCardProps {
 export function LinkedInStyleAlumniCard({
   name,
   description,
-  mutualConnections,
-  mutualConnectionsCount,
+  mutualConnections: _mutualConnections, // Keep for backward compatibility but don't use
+  mutualConnectionsCount: _mutualConnectionsCount, // Keep for backward compatibility but don't use
   avatar,
   verified = false,
   alumniId,
@@ -49,6 +50,9 @@ export function LinkedInStyleAlumniCard({
     getConnectionId
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
+  
+  // Fetch real mutual connections
+  const { mutualConnections, count: mutualConnectionsCount, loading: mutualLoading } = useMutualConnections(alumniId);
 
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel') => {
     if (!user || !alumniId) return;
@@ -233,30 +237,36 @@ export function LinkedInStyleAlumniCard({
           <p className="text-sm text-gray-600 text-center mb-4 leading-relaxed">{description}</p>
 
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="flex -space-x-1">
-              {Array.isArray(mutualConnections) && mutualConnections.slice(0, 3).map((c, i) => (
-                <div key={i} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
-                  {c.avatar ? (
-                    <ImageWithFallback src={c.avatar} alt={c.name || 'Unknown'} width={64} height={64} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
-                      <span className="text-white text-xs">
-                        {c.name
-                          ?.split(" ")
-                          ?.map((n) => n[0])
-                          ?.join("") || "?"}
-                      </span>
+            {mutualLoading ? (
+              <div className="text-sm text-gray-400">Loading...</div>
+            ) : (
+              <>
+                <div className="flex -space-x-1">
+                  {mutualConnections.slice(0, 3).map((c) => (
+                    <div key={c.id} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
+                      {c.avatar ? (
+                        <ImageWithFallback src={c.avatar} alt={c.name || 'Unknown'} width={64} height={64} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
+                          <span className="text-white text-xs">
+                            {c.name
+                              ?.split(" ")
+                              ?.map((n) => n[0])
+                              ?.join("") || "?"}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  ))}
                 </div>
-              ))}
-            </div>
-            <span className="text-sm text-gray-600">
-              {Array.isArray(mutualConnections) && mutualConnections.length > 0 
-                ? `${mutualConnections[0]?.name || 'Unknown'} and ${mutualConnectionsCount - 1} other mutual connections`
-                : 'No mutual connections'
-              }
-            </span>
+                <span className="text-sm text-gray-600">
+                  {mutualConnections.length > 0 
+                    ? `${mutualConnections[0]?.name || 'Unknown'} and ${mutualConnectionsCount - 1} other mutual connections`
+                    : 'No mutual connections'
+                  }
+                </span>
+              </>
+            )}
           </div>
 
           {renderConnectionButton()}

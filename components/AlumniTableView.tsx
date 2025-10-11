@@ -561,6 +561,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                 <TableHead className="bg-gray-50 text-gray-900 font-medium min-w-[120px]">
                   <div className="flex items-center space-x-2">
                     <span>MUTUAL CONNECTIONS</span>
+                    <span className="text-xs text-gray-500 ml-1">(view profile)</span>
                   </div>
                 </TableHead>
                 <TableHead 
@@ -777,12 +778,12 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                     </div>
                   </TableCell>
                   
-                  {/* Mutual Connections Column */}
+                  {/* Mutual Connections Column - Calculated on-demand when viewing profile */}
                   <TableCell className="bg-white">
                     <div className="flex items-center space-x-2">
                       <Users className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-900 text-sm">
-                        {alumni.mutualConnectionsCount || alumni.mutualConnections?.length || 0}
+                      <span className="text-gray-500 text-sm italic">
+                        View profile
                       </span>
                     </div>
                   </TableCell>
