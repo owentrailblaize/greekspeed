@@ -12,6 +12,8 @@ interface ProfileData {
   lastName: string;
   chapter: string;
   role: 'Admin / Executive' | 'Active Member' | 'Alumni';
+  phone?: string;
+  smsConsent?: boolean;
 }
 
 interface AuthContextType {
@@ -240,6 +242,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               last_name: profileData?.lastName || null,
               chapter: profileData?.chapter || null,
               role: profileData?.role || null,
+              phone: profileData?.phone || null,  // Add this line
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             }, {

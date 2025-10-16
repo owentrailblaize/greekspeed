@@ -13,6 +13,7 @@ import { Star, Mail, Info, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useChapters } from '@/lib/hooks/useChapters';
 import { Chapter } from '@/types/chapter';
+import { Checkbox } from '@/components/ui/checkbox';
 
 // User roles for the dropdown - Only Alumni allowed for public signup
 const userRoles = [
@@ -26,6 +27,11 @@ export default function SignUpPage() {
   const [lastName, setLastName] = useState('');
   const [chapter, setChapter] = useState('');
   const [role, setRole] = useState<'Alumni' | ''>('');
+  // Phone number opt-in / opt-out
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [smsConsent, setSmsConsent] = useState(false);
+
+  const [isTermsAccepted, setIsTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -62,7 +68,9 @@ export default function SignUpPage() {
         firstName,
         lastName,
         chapter,
-        role
+        role,
+        phone: phoneNumber, // Add phone number to the signUp payload
+        smsConsent: smsConsent // Add SMS consent to the signUp payload
       });
       setSuccess('Account created successfully! Redirecting...');
       
@@ -108,6 +116,34 @@ export default function SignUpPage() {
   const handleEmailSignUp = () => {
     setShowEmailForm(true);
   };
+
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-numeric characters
+    const phoneNumber = value.replace(/\D/g, '');
+    
+    // Limit to 10 digits (US phone numbers)
+    const limitedPhone = phoneNumber.slice(0, 10);
+    
+    // Format based on length
+    if (limitedPhone.length === 0) return '';
+    if (limitedPhone.length < 4) return `(${limitedPhone}`;
+    if (limitedPhone.length < 7) {
+      return `(${limitedPhone.slice(0, 3)}) ${limitedPhone.slice(3)}`;
+    }
+    return `(${limitedPhone.slice(0, 3)}) ${limitedPhone.slice(3, 6)}-${limitedPhone.slice(6)}`;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setPhoneNumber(formatted);
+  };
+
+  const isValidPhoneNumber = (phone: string) => {
+    const digits = phone.replace(/\D/g, '')
+    return digits.length === 10;
+  }
+
+  const isPhoneValid = phoneNumber === '' || isValidPhoneNumber(phoneNumber);
 
   if (authLoading || oauthLoading) {
     return (
@@ -303,6 +339,68 @@ export default function SignUpPage() {
                           disabled={loading}
                           className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
                         />
+                      </div>
+
+                      {/* Phone Number Field - Compact */}
+                      <div className="space-y-1">
+                        <Label htmlFor="phone" className="text-xs font-medium text-gray-700">
+                          Phone Number <span className="text-gray-500 font-normal">(Optional)</span>
+                        </Label>
+                        <Input
+                          id="phone"
+                          type="tel"
+                          placeholder="(555) 123-4567"
+                          value={phoneNumber}
+                          onChange={handlePhoneChange}
+                          disabled={loading}
+                          className={`h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm ${
+                            phoneNumber && !isValidPhoneNumber(phoneNumber) 
+                              ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                              : ''
+                          }`}
+                          maxLength={14}
+                          pattern="\(\d{3}\) \d{3}-\d{4}"
+                          inputMode="numeric"
+                        />
+                        <p className="text-xs text-gray-500">
+                          Used for SMS notifications about chapter updates and events
+                        </p>
+                        {phoneNumber && !isValidPhoneNumber(phoneNumber) && (
+                          <p className="text-xs text-red-500">
+                            Please enter a complete 10-digit phone number
+                          </p>
+                        )}
+                      </div>
+
+                      {/* SMS Consent Checkbox - Compact */}
+                      <div className="space-y-1">
+                        <div className="flex items-start space-x-2">
+                          <Checkbox
+                            id="sms-consent"
+                            checked={smsConsent}
+                            onCheckedChange={(checked) => setSmsConsent(checked === true)}
+                            className="mt-0.5"
+                          />
+                          <div className="grid gap-1.5 leading-none">
+                            <Label
+                              htmlFor="sms-consent"
+                              className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              I agree to receive SMS messages from Trailblaize
+                            </Label>
+                            <div className="text-xs text-gray-500 space-y-1">
+                              <p>
+                                Get chapter updates, event reminders, and announcements via SMS.
+                              </p>
+                              <p>
+                                You can opt out at any time by replying "STOP" to any message.{' '}
+                                <Link href="/sms-terms" className="text-navy-600 hover:text-navy-700 underline">
+                                  View SMS Terms
+                                </Link>
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Chapter Selection - Compact */}
