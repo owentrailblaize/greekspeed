@@ -62,8 +62,8 @@ export default function TermsOfServicePage() {
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
             <p className="font-bold text-yellow-800 mb-2">Important: Communication Terms</p>
             <ul className="list-disc list-inside ml-4 text-yellow-800 space-y-1">
-              <li>By creating an account, you agree to receive communications from Trailblaize via email and SMS.</li>
-              <li>Message frequency varies based on chapter activity. Standard message and data rates may apply.</li>
+              <li>By creating an account, you agree to receive communications from Trailblaize via email.</li>
+              <li><strong>SMS communications are optional</strong> and require separate consent.</li>
               <li>You may unsubscribe from emails by using the unsubscribe link and from SMS by replying STOP.</li>
             </ul>
           </div>

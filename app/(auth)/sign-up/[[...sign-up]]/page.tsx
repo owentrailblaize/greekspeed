@@ -372,7 +372,7 @@ export default function SignUpPage() {
                         )}
                       </div>
 
-                      {/* SMS Consent Checkbox - Compact */}
+                      {/* SMS Consent Checkbox - Updated for compliance */}
                       <div className="space-y-1">
                         <div className="flex items-start space-x-2">
                           <Checkbox
@@ -380,25 +380,21 @@ export default function SignUpPage() {
                             checked={smsConsent}
                             onCheckedChange={(checked) => setSmsConsent(checked === true)}
                             className="mt-0.5"
+                            disabled={loading}
                           />
-                          <div className="grid gap-1.5 leading-none">
+                          <div className="grid gap-1 leading-none">
                             <Label
                               htmlFor="sms-consent"
                               className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                             >
-                              I agree to receive SMS messages from Trailblaize
+                              I agree to receive SMS notifications from Trailblaize, Inc.{' '}
+                              <Link href="/sms-terms" className="text-navy-600 hover:text-navy-700 underline">
+                                (View Terms)
+                              </Link>
                             </Label>
-                            <div className="text-xs text-gray-500 space-y-1">
-                              <p>
-                                Get chapter updates, event reminders, and announcements via SMS.
-                              </p>
-                              <p>
-                                You can opt out at any time by replying "STOP" to any message.{' '}
-                                <Link href="/sms-terms" className="text-navy-600 hover:text-navy-700 underline">
-                                  View SMS Terms
-                                </Link>
-                              </p>
-                            </div>
+                            <p className="text-xs text-red-400 font-sm">
+                              Optional. You can create an account without SMS notifications.
+                            </p>
                           </div>
                         </div>
                       </div>

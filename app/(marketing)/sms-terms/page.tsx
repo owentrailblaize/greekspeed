@@ -41,9 +41,10 @@ export default function SMSTermsPage() {
         {/* SMS Terms Content - Plain Text */}
         <div className="space-y-2 text-gray-700 leading-relaxed">
           <p>
-            By providing your phone number to Trailblaize, Inc. ("Trailblaize," "we," "our," "us"), you agree to receive SMS messages from us. These SMS Terms and Conditions ("SMS Terms") govern your participation in our messaging program.
+            These SMS Terms and Conditions ("SMS Terms") govern your participation in our optional SMS messaging program. 
+            <strong>SMS messaging is completely optional</strong> and separate from your account creation. 
+            You can use Trailblaize services without opting in to SMS communications.
           </p>
-
           <h2 className="text-2xl font-bold text-gray-900 pt-4 pb-2">1. Message Program Description</h2>
           <p>
             Trailblaize sends SMS messages to help Greek organizations manage chapter operations, including but not limited to:
