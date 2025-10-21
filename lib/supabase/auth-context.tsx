@@ -242,7 +242,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               last_name: profileData?.lastName || null,
               chapter: profileData?.chapter || null,
               role: profileData?.role || null,
-              phone: profileData?.phone || null,  // Add this line
+              phone: profileData?.phone || null,  
+              sms_consent: profileData?.smsConsent || false,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             }, {

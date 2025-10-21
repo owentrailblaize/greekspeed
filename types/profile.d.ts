@@ -50,6 +50,7 @@ export interface Profile {
   hometown?: string;
   bio: string | null;
   phone: string | null;
+  sms_consent: boolean;
   location: string | null;
   avatar_url: string | null;
   banner_url?: string | null;
