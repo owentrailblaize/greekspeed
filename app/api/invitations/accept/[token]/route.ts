@@ -100,7 +100,9 @@ export async function POST(
           chapter: validation.chapter_name,
           role: 'active_member',
           member_status: 'active',
-          welcome_seen: false // New users should see welcome modal
+          welcome_seen: false,
+          phone: body.phone || null,
+          sms_consent: body.sms_consent || false
         })
         .eq('id', authData.user.id)
         .select()
@@ -150,6 +152,8 @@ export async function POST(
           full_name,
           first_name: first_name || full_name.split(' ')[0],
           last_name: last_name || full_name.split(' ').slice(1).join(' '),
+          phone: body.phone || null,
+          sms_consent: body.sms_consent || false,
           chapter_id: invitation.chapter_id,
           chapter: validation.chapter_name, // FIX: Set the chapter name
           role: 'active_member',

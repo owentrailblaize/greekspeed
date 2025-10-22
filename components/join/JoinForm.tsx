@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Eye, EyeOff, AlertCircle, CheckCircle, Users, Shield, Loader2 } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, AlertCircle, CheckCircle, Users, Shield, Loader2, Link } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Invitation, JoinFormData } from '@/types/invitations';
 import { toast } from 'react-toastify';
 import { supabase } from '@/lib/supabase/client';
+import { Checkbox } from '../ui/checkbox';
 
 interface JoinFormProps {
   invitation: Invitation;
@@ -22,7 +23,9 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
     password: '',
     full_name: '',
     first_name: '',
-    last_name: ''
+    last_name: '',
+    phone: '',
+    sms_consent: false
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -112,7 +115,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
     }
   };
 
-  const handleInputChange = (field: keyof JoinFormData, value: string) => {
+  const handleInputChange = (field: keyof JoinFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear error when user starts typing
@@ -121,7 +124,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
     }
 
     // Auto-populate first and last name from full name
-    if (field === 'full_name') {
+    if (field === 'full_name' && typeof value === 'string') {
       const nameParts = value.trim().split(' ');
       setFormData(prev => ({
         ...prev,
@@ -129,6 +132,23 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
         last_name: nameParts.slice(1).join(' ') || ''
       }));
     }
+  };
+
+  const formatPhoneNumber = (value: string) => {
+    const phoneNumber = value.replace(/\D/g, '');
+    const limitedPhone = phoneNumber.slice(0, 10);
+    
+    if (limitedPhone.length === 0) return '';
+    if (limitedPhone.length < 4) return `(${limitedPhone}`;
+    if (limitedPhone.length < 7) {
+      return `(${limitedPhone.slice(0, 3)}) ${limitedPhone.slice(3)}`;
+    }
+    return `(${limitedPhone.slice(0, 3)}) ${limitedPhone.slice(3, 6)}-${limitedPhone.slice(6)}`;
+  };
+  
+  const isValidPhoneNumber = (phone: string) => {
+    const digits = phone.replace(/\D/g, '');
+    return digits.length === 10;
   };
 
   return (
@@ -192,6 +212,57 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                 )}
               </div>
 
+              {/* Phone Number */}
+              <div className="space-y-1 md:space-y-2">
+                <Label htmlFor="phone" className="text-sm">Phone Number (Optional)</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={formData.phone || ''}
+                  onChange={(e) => {
+                    const formatted = formatPhoneNumber(e.target.value);
+                    handleInputChange('phone', formatted);
+                  }}
+                  placeholder="(555) 123-4567"
+                  className="h-8 md:h-9"
+                />
+                <p className="text-xs text-gray-500">
+                  Used for SMS notifications about chapter updates and events
+                </p>
+                {formData.phone && !isValidPhoneNumber(formData.phone) && (
+                  <p className="text-xs text-red-500">
+                    Please enter a complete 10-digit phone number
+                  </p>
+                )}
+              </div>
+
+              {/* SMS Consent Checkbox */}
+              <div className="space-y-1">
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="sms-consent"
+                    checked={formData.sms_consent || false}
+                    onCheckedChange={(checked) => handleInputChange('sms_consent', checked === true)}
+                    className="mt-0.5"
+                    disabled={loading}
+                  />
+                  <div className="grid gap-1 leading-none">
+                    <Label
+                      htmlFor="sms-consent"
+                      className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      I agree to receive SMS notifications from Trailblaize, Inc.{' '}
+                      <Link href="/sms-terms" className="text-navy-600 hover:text-navy-700 underline">
+                        (View Terms)
+                      </Link>
+                    </Label>
+                    <p className="text-xs text-red-400 font-sm">
+                      Optional. You can create an account without SMS notifications.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Password */}
               <div className="space-y-1 md:space-y-2">
                 <Label htmlFor="password" className="text-sm">Password *</Label>
@@ -242,7 +313,6 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
               <div className="bg-gray-50 rounded-lg p-2 md:p-3">
                 <p className="text-xs text-gray-600">
                   By creating an account, you agree to join {invitation.chapter_name} and abide by the chapter's rules and policies.
-                  Your account will be created with the role of "Active Member" and appropriate status based on the invitation settings.
                 </p>
               </div>
 
