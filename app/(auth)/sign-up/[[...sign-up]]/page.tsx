@@ -387,13 +387,10 @@ export default function SignUpPage() {
                               htmlFor="sms-consent"
                               className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                             >
-                              I agree to receive SMS notifications from Trailblaize, Inc.{' '}
-                              <Link href="/sms-terms" className="text-navy-600 hover:text-navy-700 underline">
-                                (View Terms)
-                              </Link>
+                              By providing your phone number and clicking 'Submit,' you agree to receive SMS notifications about chapter updates and events from Trailblaize, Inc.
                             </Label>
-                            <p className="text-xs text-red-400 font-sm">
-                              Optional. You can create an account without SMS notifications.
+                            <p className="text-xs text-gray-500">
+                              Message frequency may vary. Standard Message and Data Rates may apply. Reply STOP to opt out. Reply HELP for help. Consent is not a condition of purchase. Your mobile information will not be sold or shared with third parties for promotional or marketing purposes.
                             </p>
                           </div>
                         </div>

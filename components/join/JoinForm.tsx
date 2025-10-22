@@ -251,8 +251,11 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                       htmlFor="sms-consent"
                       className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
-                      I agree to receive SMS notifications from Trailblaize, Inc. (Optional){' '}
+                      By providing your phone number and clicking 'Submit,' you agree to receive SMS notifications about chapter updates and events from Trailblaize, Inc. Message frequency may vary. Standard Message and Data Rates may apply. Reply STOP to opt out. Reply HELP for help. Consent is not a condition of purchase. Your mobile information will not be sold or shared with third parties for promotional or marketing purposes.
                     </Label>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Message frequency may vary. Standard Message and Data Rates may apply. Reply STOP to opt out. Reply HELP for help. Consent is not a condition of purchase. Your mobile information will not be sold or shared with third parties for promotional or marketing purposes.
+                    </p>
                   </div>
                 </div>
               </div>
