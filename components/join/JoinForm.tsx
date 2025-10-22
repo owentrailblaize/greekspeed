@@ -251,14 +251,8 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                       htmlFor="sms-consent"
                       className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
-                      I agree to receive SMS notifications from Trailblaize, Inc.{' '}
-                      <Link href="/sms-terms" className="text-navy-600 hover:text-navy-700 underline">
-                        (View Terms)
-                      </Link>
+                      I agree to receive SMS notifications from Trailblaize, Inc. (Optional){' '}
                     </Label>
-                    <p className="text-xs text-red-400 font-sm">
-                      Optional. You can create an account without SMS notifications.
-                    </p>
                   </div>
                 </div>
               </div>
