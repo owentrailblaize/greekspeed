@@ -245,7 +245,13 @@ export async function getInvitationStats(chapterId: string): Promise<{
 /**
  * Generate invitation URL
  */
-export function generateInvitationUrl(token: string, baseUrl?: string): string {
+export function generateInvitationUrl(token: string, invitationType?: string, baseUrl?: string): string {
   const base = baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+  // Route to alumni join page for alumni invitations
+  if (invitationType === 'alumni') {
+    return `${base}/alumni-join/${token}`;
+  }
+  
   return `${base}/join/${token}`;
 }

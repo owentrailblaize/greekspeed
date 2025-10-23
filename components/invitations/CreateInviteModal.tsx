@@ -23,7 +23,8 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
     approval_mode: invitation?.approval_mode || 'auto',
     expires_at: invitation?.expires_at ? new Date(invitation.expires_at).toISOString().slice(0, 16) : '',
     max_uses: invitation?.max_uses?.toString() || '',
-    is_active: invitation?.is_active ?? true
+    is_active: invitation?.is_active ?? true,
+    invitation_type: invitation?.invitation_type || 'active_member'
   });
   const [loading, setLoading] = useState(false);
 
@@ -37,7 +38,8 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
         approval_mode: formData.approval_mode,
         expires_at: formData.expires_at || null,
         max_uses: formData.max_uses ? parseInt(formData.max_uses) : null,
-        is_active: formData.is_active
+        is_active: formData.is_active,
+        invitation_type: formData.invitation_type
       };
 
       await onSubmit(submitData);
@@ -51,7 +53,7 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
 
   const copyInvitationLink = () => {
     if (invitation) {
-      const url = generateInvitationUrl(invitation.token);
+      const url = generateInvitationUrl(invitation.token, invitation.invitation_type);
       navigator.clipboard.writeText(url);
       toast.success('Invitation link copied to clipboard!');
     }
@@ -79,6 +81,50 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] space-y-6">
+          {/* Invitation Type */}
+          <div className="space-y-2">
+            <Label className="flex items-center space-x-2">
+              <Users className="h-4 w-4 text-blue-600" />
+              <span>Invitation Type</span>
+            </Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  id="active_member"
+                  name="invitation_type"
+                  value="active_member"
+                  checked={formData.invitation_type === 'active_member'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, invitation_type: e.target.value as 'active_member' | 'alumni' }))}
+                  className="text-blue-600"
+                />
+                <Label htmlFor="active_member" className="text-sm">
+                  Active Member
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  id="alumni"
+                  name="invitation_type"
+                  value="alumni"
+                  checked={formData.invitation_type === 'alumni'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, invitation_type: e.target.value as 'active_member' | 'alumni' }))}
+                  className="text-purple-600"
+                />
+                <Label htmlFor="alumni" className="text-sm">
+                  Alumni
+                </Label>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600">
+              {formData.invitation_type === 'active_member' 
+                ? 'Active member invitations are for current students and recent graduates who want to join as active chapter members.'
+                : 'Alumni invitations are for graduates who want to join as alumni members with professional networking features.'
+              }
+            </p>
+          </div>
+
           {/* Approval Mode */}
           <div className="space-y-2">
             <Label className="flex items-center space-x-2">
@@ -86,7 +132,7 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
               <span>Auto-Approval Enabled</span>
             </Label>
             <p className="text-sm text-gray-600">
-              All new members will be automatically approved and gain immediate access to the chapter dashboard.
+              All new {formData.invitation_type === 'active_member' ? 'members' : 'alumni'} will be automatically approved and gain immediate access to the chapter dashboard.
             </p>
           </div>
 
