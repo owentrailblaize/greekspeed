@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectItem } from '@/components/ui/select';
 import { Invitation, AlumniJoinFormData } from '@/types/invitations';
 import { toast } from 'react-toastify';
 import { supabase } from '@/lib/supabase/client';
@@ -328,17 +328,13 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
                     <Select
                       value={formData.industry}
                       onValueChange={(value) => handleInputChange('industry', value)}
+                      placeholder="Select your industry"
                     >
-                      <SelectTrigger className={`h-8 md:h-9 ${errors.industry ? 'border-red-500' : ''}`}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {industries.map((industry) => (
-                          <SelectItem key={industry} value={industry}>
-                            {industry}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
+                      {industries.map((industry) => (
+                        <SelectItem key={industry} value={industry}>
+                          {industry}
+                        </SelectItem>
+                      ))}
                     </Select>
                     {errors.industry && (
                       <p className="text-xs text-red-600 flex items-center space-x-1">
@@ -394,17 +390,13 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
                     <Select
                       value={formData.graduation_year.toString()}
                       onValueChange={(value) => handleInputChange('graduation_year', parseInt(value))}
+                      placeholder="Select graduation year"
                     >
-                      <SelectTrigger className={`h-8 md:h-9 ${errors.graduation_year ? 'border-red-500' : ''}`}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {graduationYears.map((year) => (
-                          <SelectItem key={year} value={year.toString()}>
-                            {year}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
+                      {graduationYears.map((year) => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      ))}
                     </Select>
                     {errors.graduation_year && (
                       <p className="text-xs text-red-600 flex items-center space-x-1">
