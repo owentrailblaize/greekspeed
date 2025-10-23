@@ -49,6 +49,32 @@ A comprehensive platform for Greek life chapter management, alumni networking, a
 5. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
+---
+## Commit Workflow
+**For Development Work:**
+Start working on a new feature
+```bash
+git checkout develop
+
+# Make your changes
+# ... code changes ...
+
+# Commit and push to test
+git add .
+git commit -m "Add new feature: description"
+git push origin develop
+
+# Test on greekspeed.vercel.app
+# Once satisfied, merge to production
+```
+
+**For Production Deployment:**
+```bash
+# Merge develop to main
+git checkout main
+git merge develop
+git push origin main
+```
 ----
 ## Project Structure
 ```bash
