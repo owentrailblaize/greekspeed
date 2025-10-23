@@ -81,3 +81,19 @@ export interface InvitationStats {
   recent_invitations: InvitationWithUsage[];
 }
 
+export interface AlumniJoinFormData {
+  email: string;
+  password: string;
+  full_name: string;
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  sms_consent?: boolean;
+  // Alumni-specific fields
+  industry: string;
+  company: string;
+  job_title: string;
+  graduation_year: number;
+  location: string;
+  linkedin_url?: string;
+}
