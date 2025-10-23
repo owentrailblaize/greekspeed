@@ -96,7 +96,7 @@ export async function POST(
     // Create the profile with alumni role
     const { error: profileError } = await supabase
       .from('profiles')
-      .insert({
+      .upsert({
         id: authData.user.id,
         email: email.toLowerCase(),
         full_name,
@@ -108,13 +108,26 @@ export async function POST(
         chapter: validation.chapter_name,
         role: 'alumni', // KEY DIFFERENCE: alumni role
         member_status: 'active',
+        access_level: 'standard',
+        is_developer: false,
+        bio: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      });
+      },
+      {
+        onConflict: 'id',
+        ignoreDuplicates: false
+      }
+    );
 
     if (profileError) {
       console.error('❌ Alumni Invitation Accept: Profile creation error:', profileError);
-      
+      console.error('❌ Alumni Invitation Accept: Profile error details:', {
+        code: profileError.code,
+        message: profileError.message,
+        details: profileError.details,
+        hint: profileError.hint
+      });
       // Clean up the auth user if profile creation fails
       try {
         await supabase.auth.admin.deleteUser(authData.user.id);
