@@ -5,6 +5,7 @@ import { Plus, Copy, Eye, Edit, Trash2, Users, Calendar, Shield, Link, AlertCirc
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreateInviteModal } from './CreateInviteModal';
 import { InviteSettings } from './InviteSettings';
 import { InvitationWithUsage } from '@/types/invitations';
@@ -23,6 +24,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
   const [editingInvitation, setEditingInvitation] = useState<InvitationWithUsage | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showUsageModal, setShowUsageModal] = useState<InvitationWithUsage | null>(null);
+  const [selectedInvitationType, setSelectedInvitationType] = useState<'all' | 'active_member' | 'alumni'>('all');
 
   const fetchInvitations = async () => {
     try {
@@ -199,6 +201,18 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
     return <Badge variant="default">Active</Badge>;
   };
 
+  const getInvitationTypeBadge = (invitation: InvitationWithUsage) => {
+    if (invitation.invitation_type === 'alumni') {
+      return <Badge variant="outline" className="text-purple-600 border-purple-600">Alumni</Badge>;
+    }
+    return <Badge variant="outline" className="text-blue-600 border-blue-600">Active Member</Badge>;
+  };
+
+  const filteredInvitations = invitations.filter(invitation => {
+    if (selectedInvitationType === 'all') return true;
+    return invitation.invitation_type === selectedInvitationType;
+  });
+
   if (loading) {
     return (
       <Card className={className}>
@@ -226,6 +240,16 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
               <span>Invitation Management</span>
             </CardTitle>
             <div className="flex space-x-2">
+            <Select value={selectedInvitationType} onValueChange={(value) => setSelectedInvitationType(value as 'all' | 'active_member' | 'alumni')}>                
+              <SelectTrigger className="w-40 h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="active_member">Active Members</SelectItem>
+                  <SelectItem value="alumni">Alumni</SelectItem>
+                </SelectContent>
+              </Select>
               <Button
                 variant="outline"
                 size="sm"
@@ -254,6 +278,18 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
                 Invitation Management
               </CardTitle>
             </div>
+            <div className="mb-3">
+            <Select value={selectedInvitationType} onValueChange={(value) => setSelectedInvitationType(value as 'all' | 'active_member' | 'alumni')}>
+                <SelectTrigger className="w-full h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="active_member">Active Members</SelectItem>
+                  <SelectItem value="alumni">Alumni</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex space-x-2">
               <Button
                 variant="outline"
@@ -277,12 +313,17 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
           </div>
         </CardHeader>
         <CardContent className="pt-2">
-          {invitations.length === 0 ? (
+          {filteredInvitations.length === 0 ? (
             <div className="text-center py-8">
               <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No invitations yet</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {invitations.length === 0 ? 'No invitations yet' : `No ${selectedInvitationType === 'all' ? '' : selectedInvitationType.replace('_', ' ')} invitations`}
+              </h3>
               <p className="text-gray-500 mb-4">
-                Create your first invitation to start inviting new members to your chapter.
+                {invitations.length === 0 
+                  ? 'Create your first invitation to start inviting new members to your chapter.'
+                  : `No ${selectedInvitationType === 'all' ? '' : selectedInvitationType.replace('_', ' ')} invitations found. Try selecting a different type or create a new invitation.`
+                }
               </p>
               <Button
                 onClick={() => setShowCreateModal(true)}
@@ -294,7 +335,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
             </div>
           ) : (
             <div className="space-y-3">
-              {invitations.map((invitation) => (
+              {filteredInvitations.map((invitation) => (
                 <motion.div
                   key={invitation.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -309,6 +350,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
                           <h4 className="font-medium text-gray-900">
                             Invitation #{invitation.token.slice(0, 8)}...
                           </h4>
+                          {getInvitationTypeBadge(invitation)}
                           {getStatusBadge(invitation)}
                         </div>
                         
@@ -392,7 +434,10 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
                       <h4 className="font-medium text-gray-900 text-sm">
                         Invitation #{invitation.token.slice(0, 8)}...
                       </h4>
-                      {getStatusBadge(invitation)}
+                      <div className="flex items-center space-x-1">
+                        {getInvitationTypeBadge(invitation)}
+                        {getStatusBadge(invitation)}
+                      </div>
                     </div>
                     
                     {/* Stats row - aligned with invitation ID */}

@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
     // Transform the data
     const transformedInvitation = {
       ...invitation,
-      invitation_url: generateInvitationUrl(invitation.token),
+      invitation_url: generateInvitationUrl(invitation.token, invitation.invitation_type),
       chapter_name: invitation.chapters?.name,
       created_by_name: invitation.creator?.full_name || `${invitation.creator?.first_name} ${invitation.creator?.last_name}`.trim(),
       usage: []
