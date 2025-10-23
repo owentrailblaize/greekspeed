@@ -171,6 +171,7 @@ export async function POST(request: NextRequest) {
         single_use: single_use || false,
         expires_at: expires_at || null,
         max_uses: max_uses || null,
+        invitation_type: body.invitation_type || 'active_member',
         is_active: true
       })
       .select(`

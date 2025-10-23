@@ -1,5 +1,6 @@
 export type ApprovalMode = 'auto' | 'pending';
 export type InvitationStatus = 'active' | 'expired' | 'deactivated';
+export type InvitationType = 'active_member' | 'alumni';
 
 export interface Invitation {
   id: string;
@@ -7,15 +8,16 @@ export interface Invitation {
   chapter_id: string;
   created_by: string;
   email_domain_allowlist: string[] | null;
-  approval_mode: 'auto'; // Change from ApprovalMode to just 'auto'
+  approval_mode: 'auto'; 
   single_use: boolean;
   expires_at: string | null;
   usage_count: number;
   max_uses: number | null;
   is_active: boolean;
+  invitation_type: InvitationType;
   created_at: string;
   updated_at: string;
-  chapter_name?: string; // Add this optional property
+  chapter_name?: string; 
 }
 
 export interface InvitationUsage {
@@ -34,6 +36,7 @@ export interface CreateInvitationData {
   single_use?: boolean;
   expires_at?: string | null;
   max_uses?: number | null;
+  invitation_type?: InvitationType;
 }
 
 export interface UpdateInvitationData {
@@ -43,6 +46,7 @@ export interface UpdateInvitationData {
   expires_at?: string | null;
   max_uses?: number | null;
   is_active?: boolean;
+  invitation_type?: InvitationType;
 }
 
 export interface InvitationWithUsage extends Invitation {
