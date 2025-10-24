@@ -93,7 +93,7 @@ export function LandingPage() {
             >
               <Badge className="mb-6 bg-navy-100 text-navy-700 border-navy-200">✨ The Future of Chapter Management</Badge>
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
-                Where Alumni
+                Where Alumni 
                 <br />
                 <span className="bg-gradient-to-r from-navy-600 to-blue-600 bg-clip-text text-transparent">Networks Thrive</span>
               </h1>

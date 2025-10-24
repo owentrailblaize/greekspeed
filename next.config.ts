@@ -20,6 +20,9 @@ const nextConfig = {
       },
     ],
   },
+  env: {
+    CUSTOM_ENV: process.env.CUSTOM_ENV,
+  }
 };
 
 export default nextConfig;

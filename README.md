@@ -49,6 +49,95 @@ A comprehensive platform for Greek life chapter management, alumni networking, a
 5. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
+---
+## Commit Workflow
+#### Option 1: Feature Branch Workflow (Recommended)
+**For New Features:**
+Start working on a new feature
+```bash
+# 1. Start from develop branch
+git checkout develop
+git pull origin develop
+
+# 2. Create a new feature branch
+git checkout -b feature/your-feature-name
+
+# 3. Work on your feature
+# ... make changes ...
+
+# 4. Commit your changes
+git add .
+git commit -m "feat: add new alumni card component"
+
+# 5. Push feature branch to GitHub
+git push origin feature/your-feature-name
+
+# 6. Create Pull Request from feature branch → develop branch
+# (Do this in GitHub UI)
+
+# 7. After PR is approved and merged, delete the feature branch
+git checkout develop
+git pull origin develop
+git branch -d feature/your-feature-name
+git push origin --delete feature/your-feature-name
+```
+
+**For Bug Fixes:**
+```bash
+# 1. Start from develop branch
+git checkout develop
+git pull origin develop
+
+# 2. Create a bugfix branch
+git checkout -b bugfix/fix-login-issue
+
+# 3. Fix the bug and commit
+git add .
+git commit -m "fix: resolve login authentication issue"
+
+# 4. Push and create PR to develop
+git push origin bugfix/fix-login-issue
+```
+#### Option 2: Direct Development Workflow (Simpler)
+If you prefer to work directly on the develop branch:
+```bash
+# 1. Switch to develop branch
+git checkout develop
+git pull origin develop
+
+# 2. Make your changes
+# ... work on features ...
+
+# 3. Commit and push directly to develop
+git add .
+git commit -m "feat: add new feature"
+git push origin develop
+
+# This will automatically deploy to greekspeed.vercel.app
+```
+**Production Deployment Workflow:**
+When Ready for Production:
+```bash
+# 1. Make sure develop branch is up to date
+git checkout develop
+git pull origin develop
+
+# 2. Switch to main branch
+git checkout main
+git pull origin main
+
+# 3. Merge develop into main
+git merge develop
+
+# 4. Push to main (this deploys to trailblaize.net)
+git push origin main
+
+# 5. Tag the release (optional but recommended)
+git tag -a v1.0.0 -m "Release version 1.0.0"
+git push origin v1.0.0
+```
+
+
 ----
 ## Project Structure
 ```bash
