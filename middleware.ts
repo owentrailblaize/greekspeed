@@ -3,13 +3,6 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function middleware(req: NextRequest) {
-  // Skip logging for activity API calls to reduce spam
-  const isActivityAPI = req.nextUrl.pathname === '/api/activity';
-  
-  // if (!isActivityAPI) {
-  // Middleware: Processing request
-  // }
-  
   let response = NextResponse.next({
     request: {
       headers: req.headers,
@@ -34,21 +27,80 @@ export async function middleware(req: NextRequest) {
     }
   );
 
-  const {
-    data: { session },
-    error
-  } = await supabase.auth.getSession();
+  // Public API routes that don't require authentication
+  const publicApiRoutes = [
+    '/api/contact',
+    '/api/webhooks/stripe',
+    '/api/auth/forgot-password',
+    '/api/auth/reset-password',
+    '/api/chapters',
+    '/api/connections',
+    '/api/activity',
+    '/api/events',  // Uses service role key
+  ];
 
-  // Skip detailed session logging for activity API calls
-  // if (!isActivityAPI) {
-  // Middleware: Session check
-  // Middleware: Request allowed to proceed
-  // }
+  // Define public API routes with tokens (invitation/join flows)
+  const publicTokenRoutes = [
+    '/api/join/',
+    '/api/invitations/accept/',
+    '/api/invitations/validate/',
+    '/api/alumni-join/',
+    '/api/alumni-invitations/accept/',
+  ];
 
-  // Don't block dashboard access for now - just log the session state
+  const isPublicApiRoute = publicApiRoutes.includes(req.nextUrl.pathname);
+  const isPublicTokenRoute = publicTokenRoutes.some(route => 
+    req.nextUrl.pathname.startsWith(route)
+  );
+
+  // Handle API routes only
+  if (req.nextUrl.pathname.startsWith('/api/')) {
+    // Skip authentication for public routes
+    if (isPublicApiRoute || isPublicTokenRoute) {
+      return response;
+    }
+
+    // For protected API routes, check for Bearer token OR cookie auth
+    const authHeader = req.headers.get('authorization');
+    const hasBearerToken = authHeader && authHeader.startsWith('Bearer ');
+    
+    // Check for Supabase auth cookies
+    const authTokenCookie = req.cookies.getAll().find(cookie => 
+      cookie.name.includes('sb-') && cookie.name.includes('-auth-token')
+    );
+    
+    // If no Bearer token AND no auth cookies, block the request
+    if (!hasBearerToken && !authTokenCookie) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // If Bearer token is present, let the API route handle it
+    // If only cookies are present, verify they're valid
+    if (!hasBearerToken && authTokenCookie) {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error || !user) {
+          return NextResponse.json(
+            { error: 'Unauthorized - Invalid session' },
+            { status: 401 }
+          );
+        }
+      } catch (error) {
+        return NextResponse.json(
+          { error: 'Unauthorized - Authentication required' },
+          { status: 401 }
+        );
+      }
+    }
+  }
+
   return response;
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/sign-in', '/sign-up', '/api/:path*'],
+  matcher: ['/api/:path*'], // Only protect API routes
 };
