@@ -21,6 +21,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils";
 import { trackActivity, ActivityTypes } from "@/lib/utils/activityUtils";
+import { createPortal } from 'react-dom'; // Add this import
 
 interface AlumniProfileModalProps {
   alumni: Alumni | null;
@@ -49,6 +50,7 @@ const getChapterName = (chapterId: string, isMobile: boolean = false): string =>
 
 export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileModalProps) {
   const { user } = useAuth();
+  const [mounted, setMounted] = useState(false);
   
   // Track profile view when modal opens
   useEffect(() => {
@@ -72,7 +74,12 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
 
-  if (!alumni) return null;
+  // Ensure component is mounted (for SSR)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!alumni || !isOpen || !mounted) return null;
 
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel') => {
     if (!user || user.id === alumni.id) return;
@@ -238,8 +245,9 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
     }
   };
 
-  return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center ${isOpen ? 'block' : 'hidden'}`}>
+  // Use createPortal to render modal at document body level
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -388,7 +396,7 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
 
           {/* Action Buttons - Updated with messaging functionality */}
           <div className="flex space-x-2 pt-3 border-t border-gray-200">
-            <Button className="flex-1" variant="outline" size="sm" disabled>
+            <Button className="flex-1" variant="ghost" size="sm" disabled>
               <Mail className="h-3 w-3 mr-2" />
               <span className="hidden sm:inline">Send Email</span>
               <span className="sm:hidden">Email</span>
@@ -403,7 +411,7 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
                   ? "border-navy-600 text-navy-600 hover:bg-navy-50" 
                   : "text-gray-400 border-gray-200"
               )}
-              variant="outline" 
+              variant={canSendMessage() ? "outline" : "ghost"}
               size="sm" 
               onClick={handleMessageClick}
               disabled={!canSendMessage()}
@@ -414,13 +422,14 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
               {!canSendMessage() && <Lock className="h-3 w-3 ml-2 text-gray-400" />}
             </Button>
             
-            <Button variant="outline" size="sm" className="w-10 h-10 p-0" disabled>
+            <Button variant="ghost" size="sm" className="w-10 h-10 p-0" disabled>
               <Share2 className="h-3 w-3" />
               <Lock className="h-3 w-3 text-gray-400" />
             </Button>
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 } 
