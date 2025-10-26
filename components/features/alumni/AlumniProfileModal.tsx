@@ -14,7 +14,7 @@ import {
   Lock
 } from "lucide-react";
 import { Alumni } from "@/lib/alumniConstants";
-import ImageWithFallback from "./figma/ImageWithFallback";
+import ImageWithFallback from "@/components/figma/ImageWithFallback";
 import { useConnections } from "@/lib/contexts/ConnectionsContext";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { useState, useEffect } from "react";

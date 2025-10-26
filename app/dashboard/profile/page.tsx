@@ -9,7 +9,7 @@ import { User, Mail, MapPin, Building, Shield, FileText, Phone, MessageCircle, U
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
-import { UserAvatar } from '@/components/UserAvatar';
+import { UserAvatar } from '@/components/features/profile/UserAvatar';
 import { ProfileService } from '@/lib/services/profileService';
 import Link from 'next/link';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
@@ -20,7 +20,7 @@ import { AvatarService } from '@/lib/services/avatarService';
 import { BannerService } from '@/lib/services/bannerService';
 import { useUserPosts } from '@/lib/hooks/useUserPosts';
 import { formatDistanceToNow } from 'date-fns';
-import { DeletePostModal } from '@/components/social/DeletePostModal';
+import { DeletePostModal } from '@/components/features/social/DeletePostModal';
 import { EmailService } from '@/lib/services/emailService';
 import { useModal } from '@/lib/contexts/ModalContext';
 import { Save, AlertTriangle } from 'lucide-react';

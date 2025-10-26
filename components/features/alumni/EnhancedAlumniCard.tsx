@@ -3,13 +3,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alumni } from "@/lib/alumniConstants";
 import { MessageCircle, UserPlus, Shield, Building2, MapPin, GraduationCap, Clock } from "lucide-react";
-import ImageWithFallback from "./figma/ImageWithFallback";
+import ImageWithFallback from "@/components/figma/ImageWithFallback";
 import { useConnections } from "@/lib/contexts/ConnectionsContext";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ClickableField } from './ClickableField';
-import { ActivityIndicator } from './ActivityIndicator';
+import { ClickableField } from '@/components/shared/ClickableField';
+import { ActivityIndicator } from '@/components/shared/ActivityIndicator';
 import { useMutualConnections } from "@/lib/hooks/useMutualConnections";
 
 // Add this function at the top of the file, outside the component

@@ -5,7 +5,7 @@ import { User, AlertCircle, Briefcase, Building2, MapPin, Phone, X } from 'lucid
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { EditAlumniProfileModal } from '@/components/EditAlumniProfileModal';
+import { EditAlumniProfileModal } from '@/components/features/alumni/EditAlumniProfileModal';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { supabase } from '@/lib/supabase/client';
 

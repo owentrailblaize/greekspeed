@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { EditAlumniProfileModal } from '@/components/EditAlumniProfileModal';
+import { EditAlumniProfileModal } from '@/components/features/alumni/EditAlumniProfileModal';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { supabase } from '@/lib/supabase/client';
 import { 
@@ -20,7 +20,7 @@ import {
   Loader2,
   Linkedin
 } from 'lucide-react';
-import ImageWithFallback from "../../figma/ImageWithFallback";
+import ImageWithFallback from "@/components/figma/ImageWithFallback";
 
 interface AlumniData {
   id: string;

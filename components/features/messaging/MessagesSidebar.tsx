@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Connection } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
-import { UserAvatar } from '@/components/UserAvatar';
+import { UserAvatar } from '@/components/features/profile/UserAvatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, MessageSquare, Menu } from 'lucide-react';

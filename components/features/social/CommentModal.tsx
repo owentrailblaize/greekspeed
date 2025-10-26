@@ -10,7 +10,7 @@ import { Post, PostComment, CreateCommentRequest } from '@/types/posts';
 import { useComments } from '@/lib/hooks/useComments';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { formatDistanceToNow } from 'date-fns';
-import ImageWithFallback from "../figma/ImageWithFallback";
+import ImageWithFallback from "@/components/figma/ImageWithFallback";
 
 interface CommentModalProps {
   isOpen: boolean;

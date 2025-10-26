@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserDropdown } from './UserDropdown';
+import { UserDropdown } from '@/components/features/profile/UserDropdown';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useConnections } from "@/lib/contexts/ConnectionsContext";
 import { useAuth } from "@/lib/supabase/auth-context";
-import ImageWithFallback from "./figma/ImageWithFallback";
+import ImageWithFallback from "@/components/figma/ImageWithFallback";
 import { 
   ChevronDown, 
   ChevronUp, 
@@ -29,11 +29,11 @@ import {
   UserX,
   AlertCircle
 } from "lucide-react";
-import { AlumniProfileModal } from "@/components/AlumniProfileModal";
+import { AlumniProfileModal } from "./AlumniProfileModal";
 import { Alumni } from "@/lib/alumniConstants";
 import { useRouter } from 'next/navigation';
-import { ClickableField } from './ClickableField';
-import { ActivityIndicator } from './ActivityIndicator';
+import { ClickableField } from "@/components/shared/ClickableField";
+import { ActivityIndicator } from "@/components/shared/ActivityIndicator";
 import { calculateAlumniCompleteness, getCompletenessBadgeColor } from '@/lib/utils/profileCompleteness';
 
 interface AlumniTableViewProps {

@@ -1,8 +1,8 @@
 "use client";
 
 import { Users } from "lucide-react";
-import { ViewToggle } from "./ViewToggle";
-import { Badge } from "./ui/badge";
+import { ViewToggle } from "@/components/shared/ViewToggle";
+import { Badge } from "@/components/ui/badge";
 
 interface AlumniSubHeaderProps {
   viewMode: 'table' | 'card';

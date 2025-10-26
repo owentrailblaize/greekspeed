@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
-import { ChangePasswordForm } from '@/components/settings/ChangePasswordForm';
+import { ChangePasswordForm } from '@/components/features/settings/ChangePasswordForm';
 import { supabase } from '@/lib/supabase/client'; // Use the supabase instance, not createClient
 
 function ResetPasswordContent() {

@@ -5,9 +5,9 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { ProfileService } from '@/lib/services/profileService';
 import { Profile } from '@/types/profile';
-import { DashboardOverview } from '@/components/DashboardOverview';
+import { DashboardOverview } from '@/components/features/dashboard/DashboardOverview';
 import { useRouter } from 'next/navigation';
-import { WelcomeModal } from '@/components/WelcomeModal';
+import { WelcomeModal } from '@/components/shared/WelcomeModal';
 
 export default function DashboardPage() {
   // DashboardPage: Component rendering

@@ -10,7 +10,7 @@ import { Select, SelectItem } from '@/components/ui/select';
 import { Invitation, AlumniJoinFormData } from '@/types/invitations';
 import { toast } from 'react-toastify';
 import { supabase } from '@/lib/supabase/client';
-import { Checkbox } from '../ui/checkbox';
+import { Checkbox } from '@/components/ui/checkbox';
 import { industries } from '@/lib/alumniConstants';
 
 interface AlumniJoinFormProps {

@@ -6,7 +6,7 @@ import { useConnections, Connection } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { ChatWindow } from './ChatWindow';
 import { Button } from '@/components/ui/button';
-import { UserAvatar } from '@/components/UserAvatar';
+import { UserAvatar } from '@/components/features/profile/UserAvatar';
 import { ArrowLeft, Phone, Video, MoreHorizontal } from 'lucide-react';
 
 interface ConnectionChatProps {

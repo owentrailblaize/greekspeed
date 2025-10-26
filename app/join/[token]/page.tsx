@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { AlertCircle, Users, Shield, Calendar, CheckCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { JoinForm } from '@/components/join/JoinForm';
+import { JoinForm } from '@/components/features/join/JoinForm';
 import { Invitation } from '@/types/invitations';
 
 export default function JoinPage() {

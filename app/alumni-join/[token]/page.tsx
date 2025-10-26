@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { AlertCircle, Users, Shield, Calendar, CheckCircle, Loader2, GraduationCap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlumniJoinForm } from '@/components/join/AlumniJoinForm';
+import { AlumniJoinForm } from '@/components/features/join/AlumniJoinForm';
 import { Invitation } from '@/types/invitations';
 
 export default function AlumniJoinPage() {

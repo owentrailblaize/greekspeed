@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { usePosts } from '@/lib/hooks/usePosts';
 import { useProfile } from '@/lib/hooks/useProfile';
-import { CreatePostModal } from '@/components/social/CreatePostModal';
-import { PostCard } from '@/components/social/PostCard';
+import { CreatePostModal } from '@/components/features/social/CreatePostModal';
+import { PostCard } from '@/components/features/social/PostCard';
 import { Post, CreatePostRequest } from '@/types/posts';
-import ImageWithFallback from "../../figma/ImageWithFallback";
+import ImageWithFallback from "@/components/figma/ImageWithFallback";
 
 interface SocialFeedProps {
   chapterId: string;

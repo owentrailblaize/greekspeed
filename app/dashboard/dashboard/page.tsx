@@ -1,7 +1,7 @@
 'use client';
 export const dynamic = "force-dynamic";
 
-import { DashboardClient } from '@/components/DashboardClient';
+import { DashboardClient } from '@/components/features/dashboard/DashboardClient';
 
 export default function DashboardPage() {
   // DashboardPage: Component rendering

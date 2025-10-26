@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Invitation, JoinFormData } from '@/types/invitations';
 import { toast } from 'react-toastify';
 import { supabase } from '@/lib/supabase/client';
-import { Checkbox } from '../ui/checkbox';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface JoinFormProps {
   invitation: Invitation;

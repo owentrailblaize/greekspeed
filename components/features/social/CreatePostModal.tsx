@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { X, Image, Smile, Clock, Lock } from 'lucide-react';
 import { CreatePostRequest } from '@/types/posts';
-import ImageWithFallback from "../figma/ImageWithFallback";
+import ImageWithFallback from "@/components/figma/ImageWithFallback";
 
 interface CreatePostModalProps {
   isOpen: boolean;

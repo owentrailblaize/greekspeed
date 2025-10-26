@@ -17,7 +17,7 @@ import {
   Share2
 } from "lucide-react";
 import { Alumni } from "@/lib/alumniConstants";
-import ImageWithFallback from "./figma/ImageWithFallback";
+import ImageWithFallback from "@/components/figma/ImageWithFallback";
 import { useMutualConnections } from "@/lib/hooks/useMutualConnections";
 
 interface AlumniDetailSheetProps {

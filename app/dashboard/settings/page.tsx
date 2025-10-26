@@ -7,7 +7,7 @@ import { Settings, Shield, Bell, ArrowLeft, ToggleLeft, ToggleRight, Mail, User,
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useProfile } from '@/lib/hooks/useProfile';
-import { ChangePasswordForm } from '@/components/settings/ChangePasswordForm';
+import { ChangePasswordForm } from '@/components/features/settings/ChangePasswordForm';
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('security');

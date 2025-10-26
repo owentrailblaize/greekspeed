@@ -1,8 +1,8 @@
 'use client';
 export const dynamic = "force-dynamic";
 
-import { AlumniPipeline } from '@/components/AlumniPipeline';
-import { ProfileCompletionGate } from '@/components/ProfileCompletionGate';
+import { AlumniPipeline } from '@/components/features/alumni/AlumniPipeline';
+import { ProfileCompletionGate } from '@/components/features/profile/ProfileCompletionGate';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { supabase } from '@/lib/supabase/client';
 import { useState, useEffect } from 'react';

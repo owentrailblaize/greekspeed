@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Message } from '@/lib/hooks/useMessages';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { Button } from '@/components/ui/button';
-import { UserAvatar } from '@/components/UserAvatar';
+import { UserAvatar } from '@/components/features/profile/UserAvatar';
 import { MoreHorizontal, Edit, Trash2, Check, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 

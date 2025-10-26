@@ -10,7 +10,7 @@ import { SocialFeed } from './ui/SocialFeed';
 import { AlumniMobileBottomNavigation } from './ui/AlumniMobileBottomNavigation';
 import { MobileNetworkPage } from './ui/MobileNetworkPage';
 import { MobileProfilePage } from './ui/MobileProfilePage';
-import { AlumniPipeline } from '@/components/AlumniPipeline';
+import { AlumniPipeline } from '@/components/features/alumni/AlumniPipeline';
 import { MyChapterPage } from '@/components/mychapter/MyChapterPage';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
