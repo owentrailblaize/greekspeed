@@ -32,6 +32,7 @@
     "react-toastify": "^11.0.5",
     "stripe": "^18.5.0",
     "tailwind-merge": "^3.3.1",
+    "telnyx": "^3.9.0",
     "twilio": "^5.9.0",
     "us-state-codes": "^1.1.2",
     "xlsx": "^0.18.5"
