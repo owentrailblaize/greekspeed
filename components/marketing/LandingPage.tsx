@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/supabase/auth-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MarketingHeader } from "@/components/MarketingHeader";
+import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 
 // Logo served from public directory
 
