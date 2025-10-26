@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { AlumniPipelineLayout } from "@/components/AlumniPipelineLayout";
 import { AlumniSubHeader } from "@/components/AlumniSubHeader";
-import { Alumni } from "@/lib/mockAlumni";
+import { Alumni } from "@/lib/alumniConstants";
 import { AlumniProfileModal } from "./AlumniProfileModal";
 import { useProfile } from "@/lib/hooks/useProfile";
 // Add these imports

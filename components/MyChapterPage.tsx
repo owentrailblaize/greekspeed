@@ -1,1 +1,0 @@
-export { MyChapterPage } from './mychapter/MyChapterPage';

@@ -13,7 +13,7 @@ import {
   Users,
   Lock
 } from "lucide-react";
-import { Alumni } from "@/lib/mockAlumni";
+import { Alumni } from "@/lib/alumniConstants";
 import ImageWithFallback from "./figma/ImageWithFallback";
 import { useConnections } from "@/lib/contexts/ConnectionsContext";
 import { useAuth } from "@/lib/supabase/auth-context";

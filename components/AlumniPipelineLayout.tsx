@@ -9,7 +9,7 @@ import { AlumniTableView } from "@/components/AlumniTableView";
 import { EnhancedAlumniCard } from "@/components/EnhancedAlumniCard";
 import { AlumniToolbar } from "@/components/AlumniToolbar";
 import { AlumniDetailSheet } from "@/components/AlumniDetailSheet";
-import { Alumni } from "@/lib/mockAlumni";
+import { Alumni } from "@/lib/alumniConstants";
 import { exportAlumniToCSV, exportSelectedAlumniToCSV } from "@/lib/csvExport";
 import { AlumniProfileModal } from "./AlumniProfileModal";
 import { AlumniPagination } from "./AlumniPagination";
@@ -18,7 +18,7 @@ import { ViewToggle } from "./ViewToggle";
 import { Badge } from "./ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectItem } from "@/components/ui/select";
-import { graduationYears, industries, chapters, locations } from "@/lib/mockAlumni";
+import { graduationYears, industries, chapters, locations } from "@/lib/alumniConstants";
 import { US_STATES, getStateNameByCode } from "@/lib/usStates";
 import { useProfile } from "@/lib/hooks/useProfile";
 

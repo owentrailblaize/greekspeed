@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Alumni } from "@/lib/mockAlumni";
+import { Alumni } from "@/lib/alumniConstants";
 import { MessageCircle, UserPlus, Shield, Building2, MapPin, GraduationCap, Clock } from "lucide-react";
 import ImageWithFallback from "./figma/ImageWithFallback";
 import { useConnections } from "@/lib/contexts/ConnectionsContext";

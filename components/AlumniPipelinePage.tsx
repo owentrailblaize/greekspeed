@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { LinkedInStyleAlumniCard } from "./LinkedInStyleAlumniCard";
 import { motion } from "framer-motion";
-import { getEarlierCutoffYear } from "@/lib/mockAlumni";
+import { getEarlierCutoffYear } from "@/lib/alumniConstants";
 
 // Mock data for alumni
 const mockAlumniData = [

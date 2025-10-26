@@ -11,7 +11,7 @@ import { Invitation, AlumniJoinFormData } from '@/types/invitations';
 import { toast } from 'react-toastify';
 import { supabase } from '@/lib/supabase/client';
 import { Checkbox } from '../ui/checkbox';
-import { industries } from '@/lib/mockAlumni';
+import { industries } from '@/lib/alumniConstants';
 
 interface AlumniJoinFormProps {
   invitation: Invitation;

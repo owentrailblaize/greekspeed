@@ -30,7 +30,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { AlumniProfileModal } from "@/components/AlumniProfileModal";
-import { Alumni } from "@/lib/mockAlumni";
+import { Alumni } from "@/lib/alumniConstants";
 import { useRouter } from 'next/navigation';
 import { ClickableField } from './ClickableField';
 import { ActivityIndicator } from './ActivityIndicator';

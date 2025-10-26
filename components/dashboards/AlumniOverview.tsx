@@ -11,7 +11,7 @@ import { AlumniMobileBottomNavigation } from './ui/AlumniMobileBottomNavigation'
 import { MobileNetworkPage } from './ui/MobileNetworkPage';
 import { MobileProfilePage } from './ui/MobileProfilePage';
 import { AlumniPipeline } from '@/components/AlumniPipeline';
-import { MyChapterPage } from '@/components/MyChapterPage';
+import { MyChapterPage } from '@/components/mychapter/MyChapterPage';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';

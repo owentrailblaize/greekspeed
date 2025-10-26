@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlumniPipeline } from "@/components/AlumniPipeline";
 import { ActivelyHiringPage } from "@/components/ActivelyHiringPage";
-import { MyChapterPage } from "@/components/MyChapterPage";
+import { MyChapterPage } from "@/components/mychapter/MyChapterPage";
 import { ProfileCompletionGate } from "@/components/ProfileCompletionGate";
 import { Lock, ChevronDown, ChevronUp } from "lucide-react";
 import { useProfile } from "@/lib/hooks/useProfile";

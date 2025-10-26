@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectItem } from "@/components/ui/select";
-import { graduationYears, industries, chapters, locations, getEarlierCutoffYear } from "@/lib/mockAlumni";
+import { graduationYears, industries, chapters, locations, getEarlierCutoffYear } from "@/lib/alumniConstants";
 import { US_STATES, getStateNameByCode } from "@/lib/usStates";
 import { motion } from "framer-motion";
 

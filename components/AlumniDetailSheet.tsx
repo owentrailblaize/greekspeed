@@ -16,7 +16,7 @@ import {
   Star,
   Share2
 } from "lucide-react";
-import { Alumni } from "@/lib/mockAlumni";
+import { Alumni } from "@/lib/alumniConstants";
 import ImageWithFallback from "./figma/ImageWithFallback";
 import { useMutualConnections } from "@/lib/hooks/useMutualConnections";
 
