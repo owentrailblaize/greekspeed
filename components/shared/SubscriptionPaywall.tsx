@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
-import { getStripe } from '@/lib/stripe';
+import { getStripe } from '@/lib/services/stripe/stripe';
 import { supabase } from '@/lib/supabase/client';
 import { PAYWALL_CONFIG } from '@/lib/config/paywall';
 

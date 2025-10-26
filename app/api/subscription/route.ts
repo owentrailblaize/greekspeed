@@ -34,7 +34,7 @@ export async function GET(req: Request) {
     // Test Stripe import
     let stripe;
     try {
-      const stripeModule = await import('@/lib/stripe-server');
+      const stripeModule = await import('@/lib/services/stripe/stripe-server');
       stripe = stripeModule.stripe;
     } catch (stripeError) {
       console.error('Error importing Stripe:', stripeError);
@@ -51,7 +51,7 @@ export async function GET(req: Request) {
       expand: ['data.default_payment_method', 'data.latest_invoice']
     });
 
-    const activeSubscription = subscriptions.data.find(sub => 
+    const activeSubscription = subscriptions.data.find((sub: any) => 
       sub.status === 'active' || sub.status === 'trialing'
     );
 
@@ -116,7 +116,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Action and subscription ID required' }, { status: 400 });
     }
 
-    const { stripe } = await import('@/lib/stripe-server');
+    const { stripe } = await import('@/lib/services/stripe/stripe-server');
 
     let updatedSubscription;
 

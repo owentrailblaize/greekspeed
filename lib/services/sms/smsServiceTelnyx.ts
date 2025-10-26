@@ -1,6 +1,20 @@
 // @ts-ignore
 const Telnyx = require('telnyx');
-const telnyx = Telnyx(process.env.TELNYX_API_KEY!);
+
+// Lazy initialization to prevent build errors
+let telnyx: any = null;
+
+function getTelnyxClient() {
+  if (!telnyx) {
+    const apiKey = process.env.TELNYX_API_KEY;
+    if (!apiKey) {
+      console.warn('TELNYX_API_KEY not found. SMS will work in sandbox mode only.');
+      return null;
+    }
+    telnyx = Telnyx(apiKey);
+  }
+  return telnyx;
+}
 
 export interface SMSMessage {
   to: string;
@@ -40,8 +54,18 @@ export class SMSService {
         };
       }
 
+      // Lazy initialization check
+      const client = getTelnyxClient();
+      if (!client) {
+        console.warn('Telnyx client not initialized. Running in sandbox mode.');
+        return {
+          success: false,
+          error: 'Telnyx API key not configured',
+        };
+      }
+
       // Real SMS sending via Telnyx API v2
-      const result = await telnyx.messages.create({
+      const result = await client.messages.create({
         from: this.fromNumber,
         to: message.to,
         text: message.body,
