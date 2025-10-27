@@ -56,7 +56,8 @@ const features = [
 const pricingPlans = [
   {
     name: "Premium",
-    price: "$5",
+    monthlyPrice: "$5",
+    yearlyPrice: "$50", // assuming yearly pricing
     period: "per member",
     description: "Full access for active members",
     features: [
@@ -69,7 +70,8 @@ const pricingPlans = [
   },
   {
     name: "Executive",
-    price: "Contact for pricing",
+    monthlyPrice: "Contact for pricing",
+    yearlyPrice: "Contact for pricing",
     period: "",
     description: "Complete administrative suite",
     features: [
@@ -84,6 +86,7 @@ const pricingPlans = [
 
 export function LandingPage() {
   const [activeSection, setActiveSection] = useState("home");
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
   const { user } = useAuth();
 
   return (
@@ -329,59 +332,149 @@ export function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
+      <section id="pricing" className="py-10 bg-gradient-to-tl from-slate-200 to-white">
+        {/* Decorative gradient overlays */}
+        <div className="absolute left-0 top-0 w-1/4 h-full bg-gradient-to-r from-blue-500/10 to-transparent pointer-events-none"></div>
+        <div className="absolute right-0 top-0 w-1/4 h-full bg-gradient-to-l from-navy-500/10 to-transparent pointer-events-none"></div>
+        
+        <div className="max-w-7xl mx-auto px-6 relative">
+          {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-12 max-w-xl mx-auto"
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Simple, Transparent Pricing</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">Choose the plan that fits your chapter's needs. All plans include our core features.</p>
+            <h2 className="text-4xl md:text-5xl font-mdeium text-black mb-6">
+              Choose the Plan That's Right for You
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Streamline your chapter operations with powerful management tools and features. Upgrade to Executive for complete administrative control.
+            </p>
           </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {pricingPlans.map((plan, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -8 }}
-                className={`relative ${plan.popular ? "scale-105" : ""}`}
+
+          {/* Billing Toggle */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="flex justify-center mb-12"
+          >
+            <div className="inline-flex bg-gray-800 rounded-full p-1 border border-gray-700">
+              <button
+                onClick={() => setBillingPeriod("monthly")}
+                className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
+                  billingPeriod === "monthly"
+                    ? "bg-navy-600 text-white"
+                    : "text-gray-400 hover:text-gray-200"
+                }`}
               >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-navy-600 text-white px-4 py-1">Most Popular</Badge>
-                  </div>
-                )}
-                <Card className={`h-full ${plan.popular ? "border-navy-300 shadow-2xl" : "border-gray-200 shadow-lg"} hover:shadow-xl transition-all duration-300`}>
-                  <CardContent className="p-8">
-                    <div className="text-center mb-8">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                      <p className="text-gray-600 mb-4">{plan.description}</p>
-                      <div className="mb-4">
-                        <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
-                        {plan.period && <span className="text-gray-600">/{plan.period}</span>}
-                      </div>
-                    </div>
-                    <div className="space-y-4 mb-8">
-                      {plan.features.map((feature, idx) => (
-                        <div key={idx} className="flex items-center space-x-3">
-                          <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                          <span className="text-gray-700">{feature}</span>
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingPeriod("yearly")}
+                className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
+                  billingPeriod === "yearly"
+                    ? "bg-navy-600 text-white"
+                    : "text-gray-400 hover:text-gray-200"
+                }`}
+              >
+                Yearly
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Pricing Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            {pricingPlans.map((plan, index) => {
+              const price = billingPeriod === "monthly" ? plan.monthlyPrice : plan.yearlyPrice;
+              const showDiscount = billingPeriod === "yearly" && plan.name === "Premium";
+              
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  className={`relative ${plan.popular ? "md:scale-105 z-10" : ""}`}
+                >
+                  <Card className={`h-full bg-white border-2 ${
+                    plan.popular 
+                      ? "border-blue-500 shadow-xl hover:shadow-2xl" 
+                      : "border-gray-200 hover:border-gray-300 shadow-lg hover:shadow-xl"
+                  } transition-all duration-300 relative`}>
+                    <CardContent className="p-8 h-full flex flex-col">
+                      {/* Popular Badge */}
+                      {plan.popular && (
+                        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                          <Badge className="bg-blue-600 text-white px-4 py-1">
+                            Most Popular
+                          </Badge>
                         </div>
-                      ))}
-                    </div>
-                    <Button className={`w-full ${plan.popular ? "bg-navy-600 hover:bg-navy-700 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-900"}`}>
-                      {plan.name === "Executive" ? "Contact Sales" : "Get Started"}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                      )}
+
+                      {/* Title */}
+                      <div className="mb-3">
+                        <h3 className={`text-xl font-bold mb-2 ${
+                          plan.popular ? "text-blue-600" : "text-gray-900"
+                        }`}>
+                          {plan.name}
+                        </h3>
+                        <p className="text-gray-600">{plan.description}</p>
+                      </div>
+
+                      {/* Price */}
+                      <div className="mb-8">
+                        <div className="flex items-baseline gap-3">
+                          <span className="text-4xl font-bold text-gray-900">{price}</span>
+                          <div className="flex flex-col">
+                            {plan.period && (
+                              <span className="text-gray-600">/{plan.period}</span>
+                            )}
+                            {billingPeriod === "yearly" && plan.period && (
+                              <span className="text-sm text-gray-500">billed yearly</span>
+                            )}
+                          </div>
+                          {showDiscount && (
+                            <Badge className="bg-blue-600 text-white ml-2">
+                              -17%
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Features */}
+                      <div className="space-y-4 mb-8 flex-grow">
+                        <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                          What's included
+                        </p>
+                        {plan.features.map((feature, idx) => (
+                          <div key={idx} className="flex items-center space-x-3">
+                            <Check className={`h-5 w-5 flex-shrink-0 ${
+                              plan.popular ? "text-blue-600" : "text-green-600"
+                            }`} />
+                            <span className="text-gray-700">{feature}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* CTA Button - pushed to bottom with mt-auto */}
+                      <Button className={`w-full ${
+                        plan.popular
+                          ? "bg-blue-600 hover:bg-blue-700 text-white"
+                          : "bg-gray-900 hover:bg-gray-800 text-white"
+                      }`}>
+                        {plan.name === "Executive" ? "Contact Sales" : "Subscribe"}
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
