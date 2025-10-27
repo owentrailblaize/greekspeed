@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
+import { HeroIcon } from "./icons/HeroIcon";
 
 // Logo served from public directory
 
@@ -83,63 +84,114 @@ export function LandingPage() {
 
       {/* Hero Section */}
       <section id="home" className="relative pt-24 pb-16 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-navy-50 via-white to-blue-50/30"></div>
-        <div className="relative max-w-7xl mx-auto px-6">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white to-navy-50/30"></div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
+          className="relative w-full h-full"
+        >
+          {/* Top Left Icon */}
+          <div className="absolute left-64 top-1/4 hidden lg:block opacity-20">
+            <HeroIcon className="w-48 h-48 rotate-6" />
+          </div>
+          
+          {/* Bottom Right Icon */}
+          <div className="absolute right-44 top-56 hidden lg:block opacity-20">
+            <HeroIcon className="w-48 h-48 -rotate-6" />
+          </div>
+        </motion.div>
+        
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="text-center">
+            {/* Badge/Tagline */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className=""
+            >
+              <Badge className="mb-4 bg-blue-50 text-navy-700 border-blue-200 hover:bg-blue-100 transition-colors">
+                <Star className="w-3 h-3 mr-2" />
+                The Future of Chapter Management
+              </Badge>
+            </motion.div>
+
+            {/* Main Headline */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="mb-8"
+              transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
+              className="mb-6"
             >
-              <Badge className="mb-6 bg-navy-100 text-navy-700 border-navy-200">✨ The Future of Chapter Management</Badge>
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
-                Where Alumni 
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-4">
+                <span className="text-gray-900">Where Alumni</span>
                 <br />
-                <span className="bg-gradient-to-r from-navy-600 to-blue-600 bg-clip-text text-transparent">Networks Thrive</span>
+                <span className="bg-gradient-to-r from-navy-600 via-blue-600 to-blue-500 bg-clip-text text-transparent">
+                  Networks Thrive
+                </span>
               </h1>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                Streamline your chapter operations, connect with alumni, and manage finances with our comprehensive platform designed for modern fraternity and sorority management.
-              </p>
             </motion.div>
 
+            {/* Description */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-              className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-16"
+              className="mb-10"
+            >
+              <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+                Streamline your chapter operations, connect with alumni, and manage finances with our comprehensive platform designed for modern fraternity and sorority management.
+              </p>
+            </motion.div>
+
+            {/* CTA Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
             >
               <Link href="/sign-up">
-                <Button size="lg" className="bg-navy-600 hover:bg-navy-700 text-white px-8 py-4 text-lg group">
+                <Button size="lg" className="bg-navy-600 hover:bg-navy-700 text-white px-6 py-4 text-lg rounded-lg shadow-lg hover:shadow-xl transition-all group">
                   Get Started
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              {/*}
-              <Button size="lg" variant="outline" className="border-navy-300 text-navy-600 hover:bg-navy-50 px-8 py-4 text-lg">
-                Watch Demo
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-navy-400 px-6 py-4 text-lg rounded-lg"
+              >
+                Learn More
               </Button>
-              */}
             </motion.div>
 
-            {/* Stats */}
+            {/* Statistics */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-              className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto"
+              className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto pt-12 border-t border-gray-200"
             >
               <div className="text-center">
-                <div className="text-3xl font-bold text-navy-600 mb-2">3+</div>
-                <div className="text-gray-600">Active Chapters</div>
+                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-br from-navy-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                  3+
+                </div>
+                <div className="text-sm md:text-base text-gray-600 font-medium">Active Chapters</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-navy-600 mb-2">5000+</div>
-                <div className="text-gray-600">Connected Alumni</div>
+                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-br from-navy-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                  5,000+
+                </div>
+                <div className="text-sm md:text-base text-gray-600 font-medium">Connected Alumni</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-navy-600 mb-2">1000+</div>
-                <div className="text-gray-600">Connected Members</div>
+                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-br from-navy-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                  1,000+
+                </div>
+                <div className="text-sm md:text-base text-gray-600 font-medium">Connected Members</div>
               </div>
             </motion.div>
           </div>
