@@ -95,8 +95,11 @@ export function LandingPage() {
       <MarketingHeader activeSection={activeSection} onSectionChange={setActiveSection} />
 
       {/* Hero Section */}
-      <section id="home" className="relative pt-24 pb-16 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white to-navy-50/30"></div>
+      <section id="home" className="relative py-16 md:py-24 overflow-hidden min-h-[500px] md:min-h-[600px]">
+        {/* Background - make sure it covers full height */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white to-navy-50/30">
+          <div className="absolute inset-0 bg-white/50 md:bg-white/30"></div>
+        </div>
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -117,7 +120,6 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className=""
             >
               <Badge className="mb-4 bg-blue-50 text-navy-700 border-blue-200 hover:bg-blue-100 transition-colors">
                 <Star className="w-3 h-3 mr-2" />
@@ -132,7 +134,7 @@ export function LandingPage() {
               transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
               className="mb-6"
             >
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-4">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-4">
                 <span className="text-gray-900">Where Alumni</span>
                 <br />
                 <span className="bg-gradient-to-r from-navy-600 via-blue-600 to-blue-500 bg-clip-text text-transparent">
@@ -148,7 +150,7 @@ export function LandingPage() {
               transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
               className="mb-10"
             >
-              <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed px-4">
                 Streamline your chapter operations, connect with alumni, and manage finances with our comprehensive platform designed for modern fraternity and sorority management.
               </p>
             </motion.div>
@@ -158,7 +160,7 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
+              className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6 md:mb-12 px-4"
             >
               <Link href="/sign-up">
                 <Button size="lg" className="bg-navy-600 hover:bg-navy-700 text-white px-6 py-4 text-lg rounded-lg shadow-lg hover:shadow-xl transition-all group">
@@ -170,35 +172,36 @@ export function LandingPage() {
                 size="lg" 
                 variant="outline" 
                 className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-navy-400 px-6 py-4 text-lg rounded-lg"
+                onClick={() => window.open('mailto:support@trailblaize.com?subject=Learn More About Trailblaize')}
               >
                 Learn More
               </Button>
             </motion.div>
 
-            {/* Statistics */}
+            {/* Statistics - Always show in one row */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-              className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto pt-12 border-t border-gray-200"
+              className="grid grid-cols-3 gap-4 md:gap-8 max-w-3xl mx-auto pt-6 md:pt-12 border-t border-gray-200"
             >
               <div className="text-center">
-                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-br from-navy-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                <div className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-br from-navy-600 to-blue-600 bg-clip-text text-transparent mb-2">
                   3+
                 </div>
-                <div className="text-sm md:text-base text-gray-600 font-medium">Active Chapters</div>
+                <div className="text-xs sm:text-sm md:text-base text-gray-600 font-medium">Active Chapters</div>
               </div>
               <div className="text-center">
-                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-br from-navy-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                <div className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-br from-navy-600 to-blue-600 bg-clip-text text-transparent mb-2">
                   5,000+
                 </div>
-                <div className="text-sm md:text-base text-gray-600 font-medium">Connected Alumni</div>
+                <div className="text-xs sm:text-sm md:text-base text-gray-600 font-medium">Connected Alumni</div>
               </div>
               <div className="text-center">
-                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-br from-navy-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                <div className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-br from-navy-600 to-blue-600 bg-clip-text text-transparent mb-2">
                   1,000+
                 </div>
-                <div className="text-sm md:text-base text-gray-600 font-medium">Connected Members</div>
+                <div className="text-xs sm:text-sm md:text-base text-gray-600 font-medium">Connected Members</div>
               </div>
             </motion.div>
           </div>
@@ -206,7 +209,7 @@ export function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-10 bg-gradient-to-tr from-slate-100 to-white">
+      <section id="features" className="py-8 md:py-12 bg-gradient-to-tr from-slate-100 to-white">
         <div className="max-w-7xl mx-auto px-6">
           {/* Header Section with Title and Graphic */}
           <motion.div
@@ -214,7 +217,7 @@ export function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="mb-8"
+            className="mb-6 md:mb-8"
           >
             <div className="flex flex-col lg:flex-row items-start justify-between gap-6 lg:items-center">
               <div className="flex-1">
