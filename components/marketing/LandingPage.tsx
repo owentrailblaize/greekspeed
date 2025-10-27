@@ -18,7 +18,7 @@ const features = [
   {
     icon: Users,
     title: "Alumni Network",
-    description: "Connect with thousands of alumni across industries with our LinkedIn-style platform",
+    description: "Connect with thousands of alumni across industries with our LinkedIn-style platform. Build meaningful relationships that last.",
     highlights: ["Alumni Pipeline", "Actively Hiring", "Chapter Directory"],
     color: "from-blue-500 to-blue-600",
     bgColor: "bg-blue-50",
@@ -27,7 +27,7 @@ const features = [
   {
     icon: DollarSign,
     title: "Dues Management",
-    description: "Streamlined payment processing and financial tracking for chapter operations",
+    description: "Streamlined payment processing and financial tracking for chapter operations. Automated reminders and comprehensive reporting keep everything on track.",
     highlights: ["Payment Portal", "Financial Reports", "Automated Reminders"],
     color: "from-green-500 to-green-600",
     bgColor: "bg-green-50",
@@ -36,11 +36,20 @@ const features = [
   {
     icon: Shield,
     title: "Executive Admin",
-    description: "Comprehensive administrative tools for chapter leadership and management",
+    description: "Comprehensive administrative tools for chapter leadership and management. Role-based access ensures secure and efficient operations.",
     highlights: ["Role-based Access", "Task Management", "Chapter Analytics"],
     color: "from-purple-500 to-purple-600",
     bgColor: "bg-purple-50",
     delay: 0.3,
+  },
+  {
+    icon: Check,
+    title: "Event Coordination",
+    description: "Organize and manage chapter events with ease. Track RSVPs, manage vendors, and keep everyone informed about what's happening.",
+    highlights: ["Event Planning", "Vendor Management", "RSVP Tracking"],
+    color: "from-navy-500 to-navy-600",
+    bgColor: "bg-navy-50",
+    delay: 0.4,
   },
 ];
 
@@ -199,20 +208,43 @@ export function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 bg-gray-50">
+      <section id="features" className="py-10 bg-gradient-to-tr from-slate-100 to-white">
         <div className="max-w-7xl mx-auto px-6">
+          {/* Header Section with Title and Graphic */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="mb-8"
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Our Features</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">Discover how Trailblaize can help your chapter thrive with our powerful features.</p>
+            <div className="flex flex-col lg:flex-row items-start justify-between gap-6 lg:items-center">
+              <div className="flex-1">
+                <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 leading-tight">
+                  Built for
+                  <br />
+                  <span className="bg-gradient-to-r from-navy-600 via-blue-600 to-blue-500 bg-clip-text text-transparent">
+                    Greek Life.
+                  </span>
+                </h2>
+                <p className="text-lg text-gray-600 max-w-2xl leading-relaxed">
+                  Unlock the full potential of your chapter with our comprehensive platform. Manage operations, connect alumni, and strengthen your community—all in one place.
+                </p>
+              </div>
+              {/* Graphic on the right */}
+              <div className="hidden lg:block lg:flex-shrink-0">
+                <div className="w-64 h-64 relative">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <HeroIcon className="w-full h-full opacity-10" />
+                  </div>
+                </div>
+              </div>
+            </div>
           </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {features.map((feature, index) => {
+
+          {/* Top Row - Left Narrower, Right Wider */}
+          <div className="grid grid-cols-1 md:grid-cols-[0.45fr_0.55fr] gap-8 mb-8">
+            {features.slice(0, 2).map((feature, index) => {
               const IconComponent = feature.icon;
               return (
                 <motion.div
@@ -221,24 +253,72 @@ export function LandingPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: feature.delay }}
                   viewport={{ once: true }}
-                  whileHover={{ y: -8 }}
+                  whileHover={{ y: -8, scale: 1.02 }}
                   className="group"
                 >
-                  <Card className="h-full bg-white/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
-                    <CardContent className="p-8">
-                      <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${feature.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                        <IconComponent className="h-8 w-8 text-white" />
+                  <Card className="bg-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 relative overflow-hidden">
+                    {/* Subtle gradient background overlay */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${index % 2 === 0 ? 'from-blue-50/50' : 'from-navy-50/30'} to-transparent pointer-events-none`} />
+                    
+                    <CardContent className="p-6 relative">
+                      {/* Circular button in top-right corner */}
+                      <div className="absolute top-8 right-8">
+                        <button className="w-12 h-12 rounded-full bg-gradient-to-r from-navy-600 to-blue-600 hover:from-navy-500 hover:to-blue-500 flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg z-10">
+                          <ArrowRight className="h-5 w-5 text-white rotate-45" />
+                        </button>
                       </div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">{feature.title}</h3>
-                      <p className="text-gray-600 mb-6 leading-relaxed">{feature.description}</p>
-                      <div className="space-y-3">
-                        {feature.highlights.map((highlight, idx) => (
-                          <div key={idx} className="flex items-center space-x-3">
-                            <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${feature.color}`}></div>
-                            <span className="text-sm text-gray-700">{highlight}</span>
-                          </div>
-                        ))}
+
+                      {/* Description text at the TOP */}
+                      <p className="text-gray-600 leading-relaxed text-base mb-6 pr-20">
+                        {feature.description}
+                      </p>
+
+                      {/* Large Title at the BOTTOM */}
+                      <h3 className="text-4xl md:text-5xl font-light text-gray-900">
+                        {feature.title}
+                      </h3>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Bottom Row - Left Wider, Right Narrower */}
+          <div className="grid grid-cols-1 md:grid-cols-[0.55fr_0.45fr] gap-8">
+            {features.slice(2, 4).map((feature, index) => {
+              const IconComponent = feature.icon;
+              return (
+                <motion.div
+                  key={index + 2}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: feature.delay }}
+                  viewport={{ once: true }}
+                  whileHover={{ y: -8, scale: 1.02 }}
+                  className="group"
+                >
+                  <Card className="bg-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 relative overflow-hidden">
+                    {/* Subtle gradient background overlay */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${index % 2 === 0 ? 'from-blue-50/50' : 'from-navy-50/30'} to-transparent pointer-events-none`} />
+                    
+                    <CardContent className="p-6 relative">
+                      {/* Circular button in top-right corner */}
+                      <div className="absolute top-8 right-8">
+                        <button className="w-12 h-12 rounded-full bg-gradient-to-r from-navy-600 to-blue-600 hover:from-navy-500 hover:to-blue-500 flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg z-10">
+                          <ArrowRight className="h-5 w-5 text-white rotate-45" />
+                        </button>
                       </div>
+
+                      {/* Description text at the TOP */}
+                      <p className="text-gray-600 leading-relaxed text-base mb-6 pr-20">
+                        {feature.description}
+                      </p>
+
+                      {/* Large Title at the BOTTOM */}
+                      <h3 className="text-4xl md:text-5xl font-light text-gray-900">
+                        {feature.title}
+                      </h3>
                     </CardContent>
                   </Card>
                 </motion.div>
