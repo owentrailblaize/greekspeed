@@ -99,7 +99,7 @@ export function LandingPage() {
       <MarketingHeader activeSection={activeSection} onSectionChange={setActiveSection} />
 
       {/* Hero Section */}
-      <section id="home" className="relative pt-24 pb-8 md:pb-16 overflow-hidden">
+      <section id="home" className="relative pt-28 md:pt-24 pb-8 md:pb-16 overflow-hidden">
         {/* Background - make sure it covers full height */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white to-navy-50/30">
           <div className="absolute inset-0 bg-white/50 md:bg-white/30"></div>
@@ -124,6 +124,7 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
+              className="mt-4 md:mt-0"
             >
               <Badge className="mb-4 bg-blue-50 text-navy-700 border-blue-200 hover:bg-blue-100 transition-colors">
                 <Star className="w-3 h-3 mr-2" />
@@ -187,25 +188,25 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-              className="grid grid-cols-3 gap-4 md:gap-8 max-w-3xl mx-auto pt-6 md:pt-12 border-t border-gray-200"
+              className="grid grid-cols-3 gap-2 md:gap-8 max-w-3xl mx-auto pt-6 md:pt-12 border-t border-gray-200 px-1 md:px-0"
             >
               <div className="text-center">
-                <div className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-br from-navy-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-br from-navy-600 to-blue-600 bg-clip-text text-transparent mb-2">
                   3+
                 </div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600 font-medium">Active Chapters</div>
+                <div className="text-xs md:text-sm lg:text-base text-gray-600 font-medium">Active Chapters</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-br from-navy-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-br from-navy-600 to-blue-600 bg-clip-text text-transparent mb-2">
                   5,000+
                 </div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600 font-medium">Connected Alumni</div>
+                <div className="text-xs md:text-sm lg:text-base text-gray-600 font-medium">Connected Alumni</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-br from-navy-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-br from-navy-600 to-blue-600 bg-clip-text text-transparent mb-2">
                   1,000+
                 </div>
-                <div className="text-xs sm:text-sm md:text-base text-gray-600 font-medium">Connected Members</div>
+                <div className="text-xs md:text-sm lg:text-base text-gray-600 font-medium">Connected Members</div>
               </div>
             </motion.div>
           </div>
