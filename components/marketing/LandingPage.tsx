@@ -19,6 +19,7 @@ const features = [
     icon: Users,
     title: "Alumni Network",
     description: "Connect with thousands of alumni across industries with our LinkedIn-style platform. Build meaningful relationships that last.",
+    mobileDescription: "Connect with thousands of alumni across industries.",
     highlights: ["Alumni Pipeline", "Actively Hiring", "Chapter Directory"],
     color: "from-blue-500 to-blue-600",
     bgColor: "bg-blue-50",
@@ -28,6 +29,7 @@ const features = [
     icon: DollarSign,
     title: "Dues Management",
     description: "Streamlined payment processing and financial tracking for chapter operations. Automated reminders and comprehensive reporting keep everything on track.",
+    mobileDescription: "Streamlined payment processing and financial tracking.",
     highlights: ["Payment Portal", "Financial Reports", "Automated Reminders"],
     color: "from-green-500 to-green-600",
     bgColor: "bg-green-50",
@@ -37,6 +39,7 @@ const features = [
     icon: Shield,
     title: "Executive Admin",
     description: "Comprehensive administrative tools for chapter leadership and management. Role-based access ensures secure and efficient operations.",
+    mobileDescription: "Comprehensive administrative tools for chapter leadership.",
     highlights: ["Role-based Access", "Task Management", "Chapter Analytics"],
     color: "from-purple-500 to-purple-600",
     bgColor: "bg-purple-50",
@@ -46,6 +49,7 @@ const features = [
     icon: Check,
     title: "Event Coordination",
     description: "Organize and manage chapter events with ease. Track RSVPs, manage vendors, and keep everyone informed about what's happening.",
+    mobileDescription: "Organize and manage chapter events with ease.",
     highlights: ["Event Planning", "Vendor Management", "RSVP Tracking"],
     color: "from-navy-500 to-navy-600",
     bgColor: "bg-navy-50",
@@ -95,7 +99,7 @@ export function LandingPage() {
       <MarketingHeader activeSection={activeSection} onSectionChange={setActiveSection} />
 
       {/* Hero Section */}
-      <section id="home" className="relative py-16 md:py-24 overflow-hidden min-h-[500px] md:min-h-[600px]">
+      <section id="home" className="relative pt-24 pb-8 md:pb-16 overflow-hidden">
         {/* Background - make sure it covers full height */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white to-navy-50/30">
           <div className="absolute inset-0 bg-white/50 md:bg-white/30"></div>
@@ -209,7 +213,7 @@ export function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-8 md:py-12 bg-gradient-to-tr from-slate-100 to-white">
+      <section id="features" className="pt-4 md:pt-12 pb-8 md:pb-12 bg-gradient-to-tr from-slate-100 to-white">
         <div className="max-w-7xl mx-auto px-6">
           {/* Header Section with Title and Graphic */}
           <motion.div
@@ -221,7 +225,7 @@ export function LandingPage() {
           >
             <div className="flex flex-col lg:flex-row items-start justify-between gap-6 lg:items-center">
               <div className="flex-1">
-                <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 leading-tight">
+                <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 leading-tight">
                   Built for
                   <br />
                   <span className="bg-gradient-to-r from-navy-600 via-blue-600 to-blue-500 bg-clip-text text-transparent">
@@ -270,9 +274,16 @@ export function LandingPage() {
                       </div>
 
                       {/* Description text at the TOP */}
-                      <p className="text-gray-600 leading-relaxed text-base mb-6 pr-20">
-                        {feature.description}
-                      </p>
+                      <div>
+                        {/* Mobile version - shorter text */}
+                        <p className="text-gray-600 leading-relaxed text-xs md:text-base mb-4 md:mb-6 pr-16 md:pr-20 md:hidden">
+                          {feature.mobileDescription}
+                        </p>
+                        {/* Desktop version - full text */}
+                        <p className="text-gray-600 leading-relaxed text-base mb-6 pr-20 hidden md:block">
+                          {feature.description}
+                        </p>
+                      </div>
 
                       {/* Large Title at the BOTTOM */}
                       <h3 className="text-4xl md:text-5xl font-light text-gray-900">
@@ -312,9 +323,16 @@ export function LandingPage() {
                       </div>
 
                       {/* Description text at the TOP */}
-                      <p className="text-gray-600 leading-relaxed text-base mb-6 pr-20">
-                        {feature.description}
-                      </p>
+                      <div>
+                        {/* Mobile version - shorter text */}
+                        <p className="text-gray-600 leading-relaxed text-xs md:text-base mb-4 md:mb-6 pr-16 md:pr-20 md:hidden">
+                          {feature.mobileDescription}
+                        </p>
+                        {/* Desktop version - full text */}
+                        <p className="text-gray-600 leading-relaxed text-base mb-6 pr-20 hidden md:block">
+                          {feature.description}
+                        </p>
+                      </div>
 
                       {/* Large Title at the BOTTOM */}
                       <h3 className="text-4xl md:text-5xl font-light text-gray-900">
