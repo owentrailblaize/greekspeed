@@ -108,11 +108,6 @@ export function LandingPage() {
           <div className="absolute left-64 top-1/4 hidden lg:block opacity-20">
             <HeroIcon className="w-48 h-48 rotate-6" />
           </div>
-          
-          {/* Bottom Right Icon */}
-          <div className="absolute right-44 top-56 hidden lg:block opacity-20">
-            <HeroIcon className="w-48 h-48 -rotate-6" />
-          </div>
         </motion.div>
         
         <div className="relative max-w-6xl mx-auto px-6">
@@ -480,42 +475,121 @@ export function LandingPage() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-20 bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900 text-white">
-        <div className="max-w-7xl mx-auto px-6">
+      <section id="about" className="relative py-14 overflow-hidden">
+        {/* Background similar to hero */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white to-navy-50/30"></div>
+        
+        {/* Decorative background elements */}
+        <div className="absolute top-20 left-10 w-32 h-32 bg-blue-200/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 right-10 w-40 h-40 bg-navy-200/20 rounded-full blur-3xl"></div>
+        
+        <div className="max-w-7xl mx-auto px-6 relative">
+          {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-14"
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">About Trailblaize</h2>
-            <p className="text-xl text-navy-200 max-w-3xl mx-auto leading-relaxed">Built by Greek life alumni who understand the unique challenges of chapter management. We're passionate about helping organizations thrive through better technology.</p>
+            <div className="inline-block mb-4">
+              <span className="text-sm font-medium text-gray-500 tracking-wide">ESTABLISHED 2025</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium text-gray-900 mb-6">
+              About Trailblaize
+            </h2>
+            <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+              Built by Greek life alumni who understand the unique challenges of chapter management. We're passionate about helping organizations thrive through better technology.
+            </p>
           </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }}>
-              <h3 className="text-3xl font-bold mb-6">Our Mission</h3>
-              <p className="text-navy-200 text-lg leading-relaxed mb-6">To modernize Greek life operations by providing intuitive, powerful tools that strengthen alumni connections, streamline financial management, and empower chapter leadership.</p>
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <div className="text-3xl font-bold text-white mb-2">2025</div>
-                  <div className="text-navy-300">Founded</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-bold text-white mb-2">24/7</div>
-                  <div className="text-navy-300">Support</div>
+
+          {/* Statistics Row */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-14"
+          >
+            <div className="text-center md:text-left">
+              <div className="text-5xl md:text-6xl font-light text-gray-900 mb-2">2025</div>
+              <div className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Year Founded</div>
+              <div className="text-sm text-gray-600">Fresh and innovative</div>
+            </div>
+            <div className="text-center md:text-left">
+              <div className="text-5xl md:text-6xl font-light text-gray-900 mb-2">3+</div>
+              <div className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Active Chapters</div>
+              <div className="text-sm text-gray-600">Growing rapidly</div>
+            </div>
+            <div className="text-center md:text-left">
+              <div className="text-5xl md:text-6xl font-light text-gray-900 mb-2">5,000+</div>
+              <div className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Alumni Network</div>
+              <div className="text-sm text-gray-600">Strong connections</div>
+            </div>
+            <div className="text-center md:text-left">
+              <div className="text-5xl md:text-6xl font-light text-gray-900 mb-2">24/7</div>
+              <div className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Support</div>
+              <div className="text-sm text-gray-600">Always available</div>
+            </div>
+          </motion.div>
+
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+            {/* Left Column - Mission */}
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }} 
+              whileInView={{ opacity: 1, x: 0 }} 
+              transition={{ duration: 0.8 }} 
+              viewport={{ once: true }}
+            >
+              <div className="mb-6">
+                <h3 className="text-3xl font-bold text-gray-900 mb-4">Our Mission</h3>
+                <p className="text-lg text-gray-600 leading-relaxed">
+                  To modernize Greek life operations by providing intuitive, powerful tools that strengthen alumni connections, streamline financial management, and empower chapter leadership.
+                </p>
+              </div>
+              
+              <div className="mt-8 flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <span>Available Now</span>
                 </div>
               </div>
             </motion.div>
-            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="relative">
-              <div className="bg-gradient-to-br from-navy-700 to-navy-600 rounded-2xl p-8 shadow-2xl">
-                <div className="text-center">
-                  <div className="w-20 h-20 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                    <Star className="h-10 w-10 text-yellow-400" />
+
+            {/* Right Column - Testimonial Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: 30 }} 
+              whileInView={{ opacity: 1, x: 0 }} 
+              transition={{ duration: 0.8 }} 
+              viewport={{ once: true }}
+            >
+              <div className="relative overflow-hidden rounded-2xl p-8 border border-blue-200/40
+                bg-blue-50/50 backdrop-blur-xl
+                shadow-[0_8px_32px_rgba(59,130,246,0.15),inset_0_1px_0_rgba(255,255,255,0.6),inset_0_-1px_0_rgba(147,197,253,0.2)]
+                hover:shadow-[0_12px_40px_rgba(59,130,246,0.2),inset_0_1px_0_rgba(255,255,255,0.7)]
+                transition-all duration-300">
+                
+                {/* Optional: Add a blue gradient overlay for more tint */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 via-white/0 to-navy-400/10 pointer-events-none"></div>
+                
+                <div className="relative z-10">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-16 h-16 bg-blue-100/50 backdrop-blur-sm rounded-xl flex items-center justify-center border border-blue-200/30">
+                      <Star className="h-8 w-8 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="text-gray-900 font-semibold text-lg">Nick Siebert</div>
+                      <div className="text-blue-700 text-sm">Sigma Chi Eta</div>
+                    </div>
                   </div>
-                  <blockquote className="text-lg text-navy-100 mb-4">"Trailblaize has completely transformed how we manage our chapter. The alumni connections alone have been game-changing."</blockquote>
-                  <div className="text-white font-semibold">Nick Siebert</div>
-                  <div className="text-navy-300">Sigma Chi Eta</div>
+                  <blockquote className="text-lg text-gray-800 leading-relaxed mb-6">
+                    "Trailblaize has completely transformed how we manage our chapter. The alumni connections alone have been game-changing."
+                  </blockquote>
+                  <div className="flex items-center gap-2 text-sm text-blue-700">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span>Verified Chapter Leader</span>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -524,7 +598,7 @@ export function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-white">
+      <section className="py-10 bg-white">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }}>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Ready to Transform Your Chapter?</h2>
