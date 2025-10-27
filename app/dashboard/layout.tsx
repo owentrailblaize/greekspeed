@@ -1,12 +1,12 @@
 'use client';
 
-import SubscriptionPaywall from '@/components/SubscriptionPaywall';
-import { DashboardHeader } from '@/components/DashboardHeader';
+import SubscriptionPaywall from '@/components/shared/SubscriptionPaywall';
+import { DashboardHeader } from '@/components/features/dashboard/DashboardHeader';
 import { useActivityTracking } from '@/lib/hooks/useActivityTracking';
 import { ModalProvider, useModal } from '@/lib/contexts/ModalContext';
 import { useProfile } from '@/lib/hooks/useProfile';
-import { EditProfileModal } from '@/components/EditProfileModal';
-import { EditAlumniProfileModal } from '@/components/EditAlumniProfileModal';
+import { EditProfileModal } from '@/components/features/profile/EditProfileModal';
+import { EditAlumniProfileModal } from '@/components/features/alumni/EditAlumniProfileModal';
 import { ProfileService } from '@/lib/services/profileService';
 
 export default function DashboardLayout({

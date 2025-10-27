@@ -1,4 +1,4 @@
-import { Alumni } from '@/lib/mockAlumni';
+import { Alumni } from '@/lib/alumniConstants';
 import { Profile } from '@/types/profile';
 
 export interface ProfileCompletenessScore {

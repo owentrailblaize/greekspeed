@@ -16,8 +16,8 @@ import { Event as EventType, CreateEventRequest, UpdateEventRequest } from "@/ty
 import { useVendors } from "@/lib/hooks/useVendors";
 import { VendorForm } from "@/components/ui/VendorForm";
 import { VendorContact, CreateVendorRequest, UpdateVendorRequest } from "@/types/vendors";
-import { SocialFeed } from "@/components/dashboards/ui/SocialFeed";
-import { CompactCalendarCard } from "@/components/dashboards/ui/CompactCalendarCard";
+import { SocialFeed } from "@/components/features/dashboard/dashboards/ui/SocialFeed";
+import { CompactCalendarCard } from "@/components/features/dashboard/dashboards/ui/CompactCalendarCard";
 
 const eventBudget = {
   totalAllocated: 12000,

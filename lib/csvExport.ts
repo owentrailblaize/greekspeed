@@ -1,4 +1,4 @@
-import { Alumni } from "./mockAlumni";
+import { Alumni } from "./alumniConstants";
 
 export function exportAlumniToCSV(alumni: Alumni[], filename: string = "alumni-export.csv") {
   // Define the CSV headers

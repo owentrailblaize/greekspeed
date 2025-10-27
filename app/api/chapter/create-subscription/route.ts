@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     // Creating chapter subscription
 
     // Import Stripe only when needed (runtime)
-    const { stripe } = await import('@/lib/stripe-server');
+    const { stripe } = await import('@/lib/services/stripe/stripe-server');
     const supabase = createServerSupabaseClient();
 
     // Validate environment variables

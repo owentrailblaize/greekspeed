@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
   try {
     // Import Stripe only when needed (runtime)
-    const { stripe } = await import('@/lib/stripe-server');
+    const { stripe } = await import('@/lib/services/stripe/stripe-server');
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err) {
     console.error('Webhook signature verification failed:', err);

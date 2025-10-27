@@ -1,5 +1,5 @@
 'use client';
-import { MarketingHeader } from '@/components/MarketingHeader';
+import { MarketingHeader } from '@/components/marketing/MarketingHeader';
 
 export default function TermsOfServicePage() {
   return (

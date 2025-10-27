@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MarketingHeader } from '@/components/MarketingHeader';
+import { MarketingHeader } from '@/components/marketing/MarketingHeader';
 import { Mail, Clock, CheckCircle, Plus, Minus } from 'lucide-react';
 import { useState } from 'react';
 
