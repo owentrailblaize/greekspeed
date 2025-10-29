@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Settings, Shield, Bell, ArrowLeft, ToggleLeft, ToggleRight, Mail, User, Phone, Calendar, Lock, User as UserIcon, HelpCircle, Menu, X } from 'lucide-react';
@@ -21,8 +21,64 @@ export default function SettingsPage() {
   // Mobile-specific state
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   
+  // SMS notification state - SIMPLIFIED to just one toggle
+  const [smsEnabled, setSmsEnabled] = useState(false);
+  const [loadingSettings, setLoadingSettings] = useState(true);
+
   const router = useRouter();
   const { profile, loading: profileLoading } = useProfile();
+
+  // Fetch notification settings on mount
+  useEffect(() => {
+    if (profile?.id) {
+      fetchNotificationSettings(profile.id);
+    }
+  }, [profile?.id]);
+
+  const fetchNotificationSettings = async (userId: string) => {
+    try {
+      setLoadingSettings(true);
+      const response = await fetch(`/api/notifications/settings?userId=${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSmsEnabled(data.sms_enabled || false);
+      }
+    } catch (error) {
+      console.error('Error fetching notification settings:', error);
+    } finally {
+      setLoadingSettings(false);
+    }
+  };
+
+  const handleSMSEnabledToggle = async (value: boolean) => {
+    if (!profile?.id) return;
+    
+    // Optimistically update UI
+    setSmsEnabled(value);
+    
+    try {
+      const response = await fetch('/api/notifications/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: profile.id,
+          sms_enabled: value
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update setting');
+      }
+
+      const result = await response.json();
+      console.log('✅ SMS preference updated:', result);
+    } catch (error) {
+      console.error('Error updating notification setting:', error);
+      // Revert on error
+      setSmsEnabled(!value);
+      // You could add a toast notification here
+    }
+  };
 
   const sidebarItems = [
     {
@@ -39,7 +95,7 @@ export default function SettingsPage() {
       icon: Bell,
       description: 'Notification preferences',
       mobileDescription: 'Notification preferences',
-      locked: true
+      locked: false
     },
     {
       id: 'account',
@@ -295,6 +351,42 @@ export default function SettingsPage() {
                   )}
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SMS Notifications */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Phone className="w-5 h-5" />
+          SMS Notifications
+        </h3>
+        
+        {/* Single SMS Toggle */}
+        <div className="p-4 border rounded-xl bg-white">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h4 className="font-medium text-gray-900">Enable SMS Notifications</h4>
+              <p className="text-sm text-gray-600">Receive SMS notifications for events, messages, and connections</p>
+            </div>
+            <div className="flex items-center space-x-3 ml-4">
+              <span className="text-sm text-gray-500">
+                {smsEnabled ? 'Enabled' : 'Disabled'}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleSMSEnabledToggle(!smsEnabled)}
+                className="p-0 h-auto"
+                disabled={loadingSettings}
+              >
+                {smsEnabled ? (
+                  <ToggleRight className="w-8 h-8 text-green-600" />
+                ) : (
+                  <ToggleLeft className="w-8 h-8 text-gray-400" />
+                )}
+              </Button>
             </div>
           </div>
         </div>
