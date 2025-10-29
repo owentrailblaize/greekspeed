@@ -32,13 +32,19 @@ export async function PATCH(
           id,
           first_name,
           email,
-          chapter
+          chapter,
+          phone,
+          chapter_id,
+          sms_consent
         ),
         recipient:profiles!recipient_id(
           id,
           first_name,
           email,
-          chapter
+          chapter,
+          phone,
+          chapter_id,
+          sms_consent
         )
       `)
       .eq('id', id)
@@ -65,26 +71,96 @@ export async function PATCH(
       return NextResponse.json({ error: 'Failed to update connection' }, { status: 500 });
     }
 
-    // Send email notification for accepted connections
+    // Send email and SMS notifications for accepted connections
     if (status === 'accepted' && existingConnection) {
       try {
         // Send notification to the requester (the person who originally sent the request)
         const requesterProfile = existingConnection.requester;
         const recipientProfile = existingConnection.recipient;
 
+        // Send email notification
         if (requesterProfile?.email && requesterProfile?.first_name && recipientProfile?.first_name) {
-          await EmailService.sendConnectionAcceptedNotification({
+          EmailService.sendConnectionAcceptedNotification({
             to: requesterProfile.email,
             firstName: requesterProfile.first_name,
             chapterName: requesterProfile.chapter || 'Your Chapter',
             actorFirstName: recipientProfile.first_name,
             connectionId: id
+          }).catch(emailError => {
+            console.error('Failed to send connection accepted email:', emailError);
           });
-          // Connection accepted email sent
         }
-      } catch (emailError) {
-        console.error('Failed to send connection accepted email:', emailError);
-        // Don't fail the connection update if email fails
+
+        // Send SMS notification (parallel to email, don't block if SMS fails)
+        console.log('📱 Starting SMS notification process for connection accepted:', {
+          connectionId: id,
+          requesterId: requesterProfile?.id,
+          recipientId: recipientProfile?.id
+        });
+
+        if (!requesterProfile?.phone || !requesterProfile.sms_consent) {
+          console.log('ℹ️ Requester not eligible for SMS notification:', {
+            requesterId: requesterProfile?.id,
+            hasPhone: !!requesterProfile?.phone,
+            hasConsent: requesterProfile?.sms_consent
+          });
+        } else {
+          // Format and validate phone number
+          const { SMSService } = await import('@/lib/services/sms/smsServiceTelnyx');
+          const formattedPhone = SMSService.formatPhoneNumber(requesterProfile.phone);
+          
+          if (!SMSService.isValidPhoneNumber(requesterProfile.phone)) {
+            console.log('⚠️ Invalid phone number format:', {
+              requesterId: requesterProfile.id,
+              phone: requesterProfile.phone,
+              formatted: formattedPhone
+            });
+          } else {
+            const accepterName = recipientProfile?.first_name || 'Someone';
+
+            console.log('🚀 Preparing to send connection accepted SMS:', {
+              requesterId: requesterProfile.id,
+              requesterName: requesterProfile.first_name,
+              phone: formattedPhone,
+              accepterName
+            });
+
+            // Import SMSNotificationService
+            const { SMSNotificationService } = await import('@/lib/services/sms/smsNotificationService');
+
+            // Send SMS notification (don't await - fire and forget)
+            SMSNotificationService.sendConnectionAcceptedNotification(
+              formattedPhone,
+              requesterProfile.first_name || 'Member',
+              accepterName,
+              requesterProfile.id,
+              requesterProfile.chapter_id || ''
+            )
+              .then(success => {
+                console.log('✅ Connection accepted SMS notification result:', {
+                  connectionId: id,
+                  requesterId: requesterProfile.id,
+                  success,
+                  phoneNumber: formattedPhone
+                });
+              })
+              .catch(error => {
+                console.error('❌ Connection accepted SMS notification failed:', {
+                  connectionId: id,
+                  requesterId: requesterProfile.id,
+                  error: error.message,
+                  stack: error.stack
+                });
+              });
+          }
+        }
+      } catch (notificationError) {
+        console.error('❌ Error in connection accepted notification process:', {
+          connectionId: id,
+          error: notificationError instanceof Error ? notificationError.message : 'Unknown error',
+          stack: notificationError instanceof Error ? notificationError.stack : undefined
+        });
+        // Don't fail the connection update if notifications fail
       }
     }
 

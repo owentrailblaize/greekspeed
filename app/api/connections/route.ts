@@ -88,10 +88,10 @@ export async function POST(request: NextRequest) {
       }, { status: 409 });
     }
 
-    // Get recipient profile information for email notification
+    // Get recipient profile information for email and SMS notifications (optimized single query)
     const { data: recipientProfile, error: recipientError } = await supabase
       .from('profiles')
-      .select('first_name, email, chapter')
+      .select('id, first_name, email, chapter, phone, chapter_id, sms_consent')
       .eq('id', recipientId)
       .single();
 
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     // Get requester profile information for email notification
     const { data: requesterProfile, error: requesterError } = await supabase
       .from('profiles')
-      .select('first_name')
+      .select('first_name, chapter_id')
       .eq('id', requesterId)
       .single();
 
@@ -127,28 +127,88 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create connection' }, { status: 500 });
     }
 
-    // Send email notification if we have the required profile information
-    if (recipientProfile?.email && recipientProfile?.first_name && requesterProfile?.first_name) {
-      try {
-        await EmailService.sendConnectionRequestNotification({
+    // Send email and SMS notifications (parallel, don't block if notifications fail)
+    try {
+      // Send email notification if we have the required profile information
+      if (recipientProfile?.email && recipientProfile?.first_name && requesterProfile?.first_name) {
+        EmailService.sendConnectionRequestNotification({
           to: recipientProfile.email,
           firstName: recipientProfile.first_name,
           chapterName: recipientProfile.chapter || 'Your Chapter',
           actorFirstName: requesterProfile.first_name,
           message: message,
           connectionId: connection.id
+        }).catch(emailError => {
+          console.error('Failed to send connection request email:', emailError);
         });
-        // Connection request email sent successfully
-      } catch (emailError) {
-        console.error('Failed to send connection request email:', emailError);
-        // Don't fail the connection creation if email fails
       }
-    } else {
-      console.warn('Missing profile information for email notification:', {
-        recipientEmail: !!recipientProfile?.email,
-        recipientFirstName: !!recipientProfile?.first_name,
-        requesterFirstName: !!requesterProfile?.first_name
+
+      // Send SMS notification (parallel to email, don't block if SMS fails)
+      console.log('📱 Starting SMS notification process for connection request:', {
+        connectionId: connection.id,
+        requesterId: requesterId,
+        recipientId: recipientId
       });
+
+      if (!recipientProfile?.phone || !recipientProfile.sms_consent) {
+        console.log('ℹ️ Recipient not eligible for SMS notification:', {
+          recipientId,
+          hasPhone: !!recipientProfile?.phone,
+          hasConsent: recipientProfile?.sms_consent
+        });
+      } else {
+        // Format and validate phone number
+        const { SMSService } = await import('@/lib/services/sms/smsServiceTelnyx');
+        const formattedPhone = SMSService.formatPhoneNumber(recipientProfile.phone);
+        
+        if (!SMSService.isValidPhoneNumber(recipientProfile.phone)) {
+          console.log('⚠️ Invalid phone number format:', {
+            recipientId,
+            phone: recipientProfile.phone,
+            formatted: formattedPhone
+          });
+        } else {
+          const requesterName = requesterProfile?.first_name || 'Someone';
+
+          console.log('🚀 Preparing to send connection request SMS:', {
+            recipientId,
+            recipientName: recipientProfile.first_name,
+            phone: formattedPhone,
+            requesterName
+          });
+
+          // Import SMSNotificationService
+          const { SMSNotificationService } = await import('@/lib/services/sms/smsNotificationService');
+
+          // Send SMS notification (don't await - fire and forget)
+          SMSNotificationService.sendConnectionRequestNotification(
+            formattedPhone,
+            recipientProfile.first_name || 'Member',
+            requesterName,
+            recipientProfile.id,
+            recipientProfile.chapter_id || ''
+          )
+            .then(success => {
+              console.log('✅ Connection request SMS notification result:', {
+                connectionId: connection.id,
+                recipientId,
+                success,
+                phoneNumber: formattedPhone
+              });
+            })
+            .catch(error => {
+              console.error('❌ Connection request SMS notification failed:', {
+                connectionId: connection.id,
+                recipientId,
+                error: error.message,
+                stack: error.stack
+              });
+            });
+        }
+      }
+    } catch (notificationError) {
+      console.error('❌ Error in notification process:', notificationError);
+      // Don't fail the connection creation if notifications fail
     }
 
     return NextResponse.json({ connection });

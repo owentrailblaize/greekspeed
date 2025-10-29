@@ -163,13 +163,38 @@ export class SMSNotificationService {
     userId: string,
     chapterId: string
   ): Promise<boolean> {
+    console.log('📤 Sending connection request SMS notification:', {
+      userId,
+      userName,
+      phoneNumber,
+      requesterName,
+      chapterId
+    });
+
+    // Format the phone number before sending
+    const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
+
     const message = `${requesterName} wants to connect with you on Trailblaize. View: trailblaize.net/dashboard/notifications`;
-    const result = await SMSService.sendSMS({ to: phoneNumber, body: message });
+    
+    console.log('📝 SMS message prepared:', {
+      to: formattedPhone,
+      messageLength: message.length,
+      messagePreview: message.substring(0, 50) + '...'
+    });
+
+    const result = await SMSService.sendSMS({ to: formattedPhone, body: message });
+    
+    console.log('📬 SMS send result:', {
+      success: result.success,
+      messageId: result.messageId,
+      error: result.error,
+      phoneNumber: formattedPhone
+    });
     
     await this.logSMS({
       userId,
       chapterId,
-      phoneNumber,
+      phoneNumber: formattedPhone,
       messageType: 'connection_request',
       messageContent: message
     }, result.success, result.messageId, result.error);
@@ -185,13 +210,38 @@ export class SMSNotificationService {
     userId: string,
     chapterId: string
   ): Promise<boolean> {
+    console.log('📤 Sending connection accepted SMS notification:', {
+      userId,
+      userName,
+      phoneNumber,
+      accepterName,
+      chapterId
+    });
+
+    // Format the phone number before sending
+    const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
+
     const message = `${accepterName} accepted your connection request on Trailblaize!`;
-    const result = await SMSService.sendSMS({ to: phoneNumber, body: message });
+    
+    console.log('📝 SMS message prepared:', {
+      to: formattedPhone,
+      messageLength: message.length,
+      messagePreview: message.substring(0, 50) + '...'
+    });
+
+    const result = await SMSService.sendSMS({ to: formattedPhone, body: message });
+    
+    console.log('📬 SMS send result:', {
+      success: result.success,
+      messageId: result.messageId,
+      error: result.error,
+      phoneNumber: formattedPhone
+    });
     
     await this.logSMS({
       userId,
       chapterId,
-      phoneNumber,
+      phoneNumber: formattedPhone,
       messageType: 'connection_accepted',
       messageContent: message
     }, result.success, result.messageId, result.error);
