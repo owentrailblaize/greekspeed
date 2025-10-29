@@ -32,8 +32,9 @@ export async function GET(request: NextRequest) {
       .eq('user_id', userId)
       .single();
 
-    // If no settings exist, sync from profile.sms_consent
-    if (!settings && !settingsError) {
+    // Handle case where settings don't exist (not found error)
+    if (settingsError && settingsError.code === 'PGRST116') {
+      // Settings record doesn't exist - create it from profile.sms_consent
       const { data: newSettings, error: createError } = await supabase
         .from('notification_settings')
         .insert({
@@ -47,16 +48,69 @@ export async function GET(request: NextRequest) {
 
       if (createError) {
         console.error('Error creating notification settings:', createError);
-        return NextResponse.json({ error: 'Failed to create settings' }, { status: 500 });
+        // Fall through to use profile.sms_consent as fallback
+        settings = null;
+      } else {
+        settings = newSettings;
       }
-
-      settings = newSettings;
-    } else if (settingsError && settingsError.code !== 'PGRST116') {
+    } else if (settingsError) {
+      // Other error (not "not found") - return error
+      console.error('Error fetching notification settings:', settingsError);
       return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
     }
 
-    // Prioritize notification_settings, but fallback to profiles.sms_consent
-    const smsEnabled = settings?.sms_enabled ?? profile.sms_consent ?? false;
+    // Prioritize profiles.sms_consent as source of truth
+    // Only use notification_settings if profile doesn't have sms_consent set
+    let smsEnabled: boolean;
+    
+    if (profile.sms_consent !== null && profile.sms_consent !== undefined) {
+      // Profile has explicit consent value - use that as source of truth
+      smsEnabled = profile.sms_consent;
+      
+      // If notification_settings exists but is out of sync, update it
+      if (settings && settings.sms_enabled !== profile.sms_consent) {
+        // Auto-sync: update notification_settings to match profile
+        supabase
+          .from('notification_settings')
+          .update({ 
+            sms_enabled: profile.sms_consent,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', userId)
+          .then(({ error }) => {
+            if (error) {
+              console.error('Failed to sync notification_settings:', error);
+            } else {
+              console.log('✅ Auto-synced notification_settings to match profile.sms_consent');
+            }
+          });
+      } else if (!settings && profile.sms_consent) {
+        // Settings don't exist but profile has consent - create them
+        supabase
+          .from('notification_settings')
+          .insert({
+            user_id: userId,
+            chapter_id: profile.chapter_id,
+            sms_enabled: profile.sms_consent,
+            sms_phone: profile.phone || null
+          })
+          .then(({ error }) => {
+            if (error) {
+              console.error('Failed to create notification_settings:', error);
+            }
+          });
+      }
+    } else {
+      // Profile doesn't have sms_consent - fallback to notification_settings
+      smsEnabled = settings?.sms_enabled ?? false;
+    }
+
+    console.log('📋 SMS settings fetched:', {
+      userId,
+      profile_sms_consent: profile.sms_consent,
+      settings_sms_enabled: settings?.sms_enabled,
+      final_sms_enabled: smsEnabled
+    });
 
     return NextResponse.json({ 
       sms_enabled: smsEnabled,

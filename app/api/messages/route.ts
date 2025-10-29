@@ -185,13 +185,18 @@ export async function POST(request: NextRequest) {
             recipientId: recipientId
           });
 
-          if (!recipientProfile.phone || !recipientProfile.sms_consent) {
+          // CRITICAL: Must have sms_consent = true to send SMS
+          if (!recipientProfile.phone || recipientProfile.sms_consent !== true) {
             console.log('ℹ️ Recipient not eligible for SMS notification:', {
               recipientId,
-              hasPhone: !!recipientProfile.phone,
-              hasConsent: recipientProfile.sms_consent
+              hasPhone: !!recipientProfile?.phone,
+              smsConsent: recipientProfile?.sms_consent,
+              reason: recipientProfile?.sms_consent === false 
+                ? 'SMS consent is disabled' 
+                : 'Missing phone or consent'
             });
           } else {
+            // SMS consent verified - proceed with sending
             // Format and validate phone number
             const { SMSService } = await import('@/lib/services/sms/smsServiceTelnyx');
             const formattedPhone = SMSService.formatPhoneNumber(recipientProfile.phone);

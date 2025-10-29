@@ -257,7 +257,8 @@ export async function POST(request: NextRequest) {
           .eq('chapter_id', profile.chapter_id)
           .in('role', ['active_member', 'admin'])
           .not('phone', 'is', null)
-          .neq('phone', '');
+          .neq('phone', '')
+          .eq('sms_consent', true);  // ← Add this line
 
         if (!smsMembersError && smsMembers && smsMembers.length > 0) {
           // Format and validate phone numbers

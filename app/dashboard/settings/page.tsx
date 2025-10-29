@@ -41,7 +41,16 @@ export default function SettingsPage() {
       const response = await fetch(`/api/notifications/settings?userId=${userId}`);
       if (response.ok) {
         const data = await response.json();
-        setSmsEnabled(data.sms_enabled || false);
+        // Explicitly check for boolean true (not just truthy)
+        const smsEnabled = data.sms_enabled === true;
+        console.log('📋 Settings loaded:', { 
+          sms_enabled: data.sms_enabled, 
+          parsed: smsEnabled,
+          type: typeof data.sms_enabled 
+        });
+        setSmsEnabled(smsEnabled);
+      } else {
+        console.error('Failed to fetch settings:', response.status);
       }
     } catch (error) {
       console.error('Error fetching notification settings:', error);
