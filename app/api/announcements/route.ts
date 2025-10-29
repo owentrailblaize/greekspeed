@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
+import { SMSService } from '@/lib/services/sms/smsServiceTelnyx';
 
 export async function GET(request: NextRequest) {
   try {
@@ -239,6 +240,64 @@ export async function POST(request: NextRequest) {
       } catch (emailError) {
         console.error('❌ Error sending announcement emails:', emailError);
         // Don't fail the announcement creation if email fails
+      }
+
+      // Send SMS notifications (parallel to email, don't block if SMS fails)
+      try {
+        // Get chapter members with phone numbers and SMS consent
+        const { data: smsMembers, error: smsMembersError } = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            phone,
+            first_name,
+            chapter_id,
+            role
+          `)
+          .eq('chapter_id', profile.chapter_id)
+          .in('role', ['active_member', 'admin'])
+          .not('phone', 'is', null)
+          .neq('phone', '');
+
+        if (!smsMembersError && smsMembers && smsMembers.length > 0) {
+          // Format and validate phone numbers
+          const validSMSMembers = smsMembers
+            .map(member => ({
+              ...member,
+              formattedPhone: SMSService.formatPhoneNumber(member.phone!),
+            }))
+            .filter(member => SMSService.isValidPhoneNumber(member.phone!));
+
+          if (validSMSMembers.length > 0) {
+            // Create SMS message (truncate if needed - SMS has 160 char limit per message)
+            const smsMessage = `${announcement.title}: ${announcement.content.substring(0, 120)}...${announcement.id ? `\n\nView: ${process.env.NEXT_PUBLIC_APP_URL || ''}/dashboard` : ''}`.substring(0, 160);
+
+            // Get phone numbers
+            const phoneNumbers = validSMSMembers.map(member => member.formattedPhone);
+
+            // Determine if we should use test mode (same logic as email)
+            const isSandbox = SMSService.isInSandboxMode();
+            const recipientsToUse = isSandbox ? phoneNumbers.slice(0, 3) : phoneNumbers;
+
+            // Send SMS in background (don't await - fire and forget)
+            SMSService.sendBulkSMS(recipientsToUse, smsMessage)
+              .then(result => {
+                console.log('✅ Announcement SMS sent:', {
+                  total: recipientsToUse.length,
+                  success: result.success,
+                  failed: result.failed,
+                  announcementId: announcement.id
+                });
+              })
+              .catch(error => {
+                console.error('❌ Announcement SMS failed:', error);
+                // Don't throw - SMS failure shouldn't block announcement creation
+              });
+          }
+        }
+      } catch (smsError) {
+        console.error('❌ Error sending announcement SMS:', smsError);
+        // Don't fail the announcement creation if SMS fails
       }
     }
 
