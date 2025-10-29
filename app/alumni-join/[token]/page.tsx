@@ -58,10 +58,7 @@ export default function AlumniJoinPage() {
       setShowApprovalPending(true);
     } else {
       // Show success message and ensure session is ready before redirect
-      setTimeout(() => {
-        // Force a page reload to ensure session is properly established
-        window.location.href = '/dashboard';
-      }, 1000); // Reduced delay
+      window.location.href = '/dashboard';
     }
   };
 

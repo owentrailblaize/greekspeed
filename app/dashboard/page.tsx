@@ -3,53 +3,43 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
-import { ProfileService } from '@/lib/services/profileService';
 import { Profile } from '@/types/profile';
 import { DashboardOverview } from '@/components/features/dashboard/DashboardOverview';
 import { useRouter } from 'next/navigation';
 import { WelcomeModal } from '@/components/shared/WelcomeModal';
 
 export default function DashboardPage() {
-  // DashboardPage: Component rendering
-  
-  const { user, isDeveloper } = useAuth();
+  const { user, isDeveloper, loading: authLoading, profile } = useAuth();
   const router = useRouter();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   useEffect(() => {
-    const loadProfile = async () => {
-      if (user) {
-        try {
-          const profileData = await ProfileService.getCurrentProfile();
-          setProfile(profileData);
-          
-          // Check if this is a new user who hasn't seen the welcome modal
-          if (profileData && !profileData.welcome_seen && !isDeveloper) {
-            setShowWelcomeModal(true);
-          }
-          
-          // Check if profile is incomplete and redirect if needed
-          // Skip this check for developers
-          if (!isDeveloper && (!profileData?.chapter || !profileData?.role)) {
-            router.push('/profile/complete');
-            return;
-          }
-        } catch (error) {
-          console.error('Error loading profile:', error);
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        setLoading(false);
+    // Wait for auth to finish loading
+    if (authLoading) return;
+
+    // No user means not authenticated
+    if (!user) {
+      router.push('/sign-in');
+      return;
+    }
+
+    // If we have profile data, check if it's complete
+    if (profile) {
+      // Check if this is a new user who hasn't seen the welcome modal
+      if (!profile.welcome_seen && !isDeveloper) {
+        setShowWelcomeModal(true);
       }
-    };
+      
+      // Check if profile is incomplete (only for non-developers)
+      if (!isDeveloper && (!profile.chapter || !profile.role)) {
+        router.push('/profile/complete');
+        return;
+      }
+    }
+  }, [user, profile, authLoading, isDeveloper, router]);
 
-    loadProfile();
-  }, [user, router, isDeveloper]);
-
-  if (loading) {
+  // Show loading while auth is loading
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -60,8 +50,12 @@ export default function DashboardPage() {
     );
   }
 
+  // No user = will redirect (handled in useEffect)
+  if (!user) {
+    return null;
+  }
+
   // Don't render dashboard if profile is incomplete (will redirect)
-  // Skip this check for developers
   if (!isDeveloper && (!profile?.chapter || !profile?.role)) {
     return null;
   }
@@ -71,7 +65,6 @@ export default function DashboardPage() {
       <div style={{ display: 'none' }}>Dashboard Page Wrapper</div>
       <DashboardOverview userRole={profile?.role || null} />
       
-      {/* Welcome Modal for New Users */}
       {showWelcomeModal && profile && (
         <WelcomeModal
           profile={profile}
