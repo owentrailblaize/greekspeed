@@ -18,7 +18,7 @@ export class SMSNotificationService {
   // Log SMS attempt to database
   private static async logSMS(data: SMSNotificationData, success: boolean, messageId?: string, error?: string) {
     try {
-      await supabase.from('sms_notification_logs').insert({
+      await supabase.from('sms_logs').insert({
         user_id: data.userId,
         chapter_id: data.chapterId,
         message_type: data.messageType,
@@ -50,7 +50,7 @@ export class SMSNotificationService {
     await this.logSMS({
       userId,
       chapterId,
-      phoneNumber,
+      phoneNumber: formattedPhone,
       messageType: 'announcement',
       messageContent: message
     }, result.success, result.messageId, result.error);
@@ -67,13 +67,39 @@ export class SMSNotificationService {
     userId: string,
     chapterId: string
   ): Promise<boolean> {
+    console.log('📤 Sending event SMS notification:', {
+      userId,
+      userName,
+      phoneNumber,
+      eventTitle,
+      eventDate,
+      chapterId
+    });
+
+    // Format the phone number before sending
+    const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
+
     const message = `New event: ${eventTitle} on ${eventDate}. RSVP: trailblaize.net/dashboard`;
-    const result = await SMSService.sendSMS({ to: phoneNumber, body: message });
+    
+    console.log('📝 SMS message prepared:', {
+      to: formattedPhone,
+      messageLength: message.length,
+      messagePreview: message.substring(0, 50) + '...'
+    });
+
+    const result = await SMSService.sendSMS({ to: formattedPhone, body: message });
+    
+    console.log('📬 SMS send result:', {
+      success: result.success,
+      messageId: result.messageId,
+      error: result.error,
+      phoneNumber: formattedPhone
+    });
     
     await this.logSMS({
       userId,
       chapterId,
-      phoneNumber,
+      phoneNumber: formattedPhone,
       messageType: 'event',
       messageContent: message
     }, result.success, result.messageId, result.error);
