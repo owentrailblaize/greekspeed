@@ -139,31 +139,123 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create message' }, { status: 500 });
     }
 
-    // Send email notification to the recipient
+    // Calculate recipient ID once (used for both email and SMS)
+    const recipientId = connection.requester_id === senderId ? connection.recipient_id : connection.requester_id;
+
+    // Send email and SMS notifications (parallel, don't block if notifications fail)
     try {
-      // Get the recipient's profile information
-      const recipientId = connection.requester_id === senderId ? connection.recipient_id : connection.requester_id;
-      
+      // Fetch recipient profile with all fields needed for both email and SMS
       const { data: recipientProfile, error: recipientError } = await supabase
         .from('profiles')
-        .select('first_name, email, chapter')
+        .select(`
+          id,
+          first_name,
+          email,
+          phone,
+          chapter,
+          chapter_id,
+          sms_consent
+        `)
         .eq('id', recipientId)
         .single();
 
-      if (!recipientError && recipientProfile?.email && recipientProfile?.first_name && message.sender?.first_name) {
-        await EmailService.sendMessageNotification({
-          to: recipientProfile.email,
-          firstName: recipientProfile.first_name,
-          chapterName: recipientProfile.chapter || 'Your Chapter',
-          actorFirstName: message.sender.first_name,
-          messagePreview: content.length > 100 ? content.substring(0, 100) + '...' : content,
-          connectionId: connectionId
-        });
-        // Email notification sent successfully
+      if (recipientError || !recipientProfile) {
+        console.error('❌ Error fetching recipient profile:', recipientError);
+      } else {
+        // Send email notification
+        if (recipientProfile.email && recipientProfile.first_name && message.sender?.first_name) {
+          EmailService.sendMessageNotification({
+            to: recipientProfile.email,
+            firstName: recipientProfile.first_name,
+            chapterName: recipientProfile.chapter || 'Your Chapter',
+            actorFirstName: message.sender.first_name,
+            messagePreview: content.length > 100 ? content.substring(0, 100) + '...' : content,
+            connectionId: connectionId
+          }).catch(emailError => {
+            console.error('Failed to send message notification email:', emailError);
+          });
+        }
+
+        // Send SMS notification (parallel to email, don't block if SMS fails)
+        try {
+          console.log('📱 Starting SMS notification process for message:', {
+            messageId: message.id,
+            connectionId: connectionId,
+            senderId: senderId,
+            recipientId: recipientId
+          });
+
+          if (!recipientProfile.phone || !recipientProfile.sms_consent) {
+            console.log('ℹ️ Recipient not eligible for SMS notification:', {
+              recipientId,
+              hasPhone: !!recipientProfile.phone,
+              hasConsent: recipientProfile.sms_consent
+            });
+          } else {
+            // Format and validate phone number
+            const { SMSService } = await import('@/lib/services/sms/smsServiceTelnyx');
+            const formattedPhone = SMSService.formatPhoneNumber(recipientProfile.phone);
+            
+            if (!SMSService.isValidPhoneNumber(recipientProfile.phone)) {
+              console.log('⚠️ Invalid phone number format:', {
+                recipientId,
+                phone: recipientProfile.phone,
+                formatted: formattedPhone
+              });
+            } else {
+              // Prepare message preview
+              const messagePreview = content.length > 50 ? content.substring(0, 50) + '...' : content;
+              const senderName = message.sender?.first_name || message.sender?.full_name || 'Someone';
+
+              console.log('🚀 Preparing to send message SMS:', {
+                recipientId,
+                recipientName: recipientProfile.first_name,
+                phone: formattedPhone,
+                senderName,
+                messagePreview: messagePreview.substring(0, 30) + '...'
+              });
+
+              // Import SMSNotificationService
+              const { SMSNotificationService } = await import('@/lib/services/sms/smsNotificationService');
+
+              // Send SMS notification (don't await - fire and forget)
+              SMSNotificationService.sendMessageNotification(
+                formattedPhone,
+                recipientProfile.first_name || 'Member',
+                senderName,
+                messagePreview,
+                recipientProfile.id,
+                recipientProfile.chapter_id || ''
+              )
+                .then(success => {
+                  console.log('✅ Message SMS notification result:', {
+                    messageId: message.id,
+                    recipientId,
+                    success,
+                    phoneNumber: formattedPhone
+                  });
+                })
+                .catch(error => {
+                  console.error('❌ Message SMS notification failed:', {
+                    messageId: message.id,
+                    recipientId,
+                    error: error.message,
+                    stack: error.stack
+                  });
+                });
+            }
+          }
+        } catch (smsError) {
+          console.error('❌ Error in SMS notification process for message:', {
+            messageId: message.id,
+            error: smsError instanceof Error ? smsError.message : 'Unknown error',
+            stack: smsError instanceof Error ? smsError.stack : undefined
+          });
+        }
       }
-    } catch (emailError) {
-      console.error('Failed to send message notification email:', emailError);
-      // Don't fail message creation if email fails
+    } catch (notificationError) {
+      console.error('❌ Error in notification process:', notificationError);
+      // Don't fail message creation if notifications fail
     }
 
     return NextResponse.json({ message });
