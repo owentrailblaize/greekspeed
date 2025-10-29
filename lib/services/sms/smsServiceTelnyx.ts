@@ -30,18 +30,21 @@ export interface SMSResult {
 
 export class SMSService {
   private static fromNumber = process.env.TELNYX_PHONE_NUMBER;
-  private static isSandboxMode = process.env.TELNYX_SANDBOX_MODE === 'true';
+  private static isSandboxMode = false;
 
   static async sendSMS(message: SMSMessage): Promise<SMSResult> {
     try {
-      if (!this.fromNumber) {
-        throw new Error('Telnyx phone number not configured');
-      }
+      // Debug: Log environment variables
+      console.log('🔍 Environment Debug:', {
+        TELNYX_SANDBOX_MODE: process.env.TELNYX_SANDBOX_MODE,
+        isSandboxMode: this.isSandboxMode,
+        TELNYX_PHONE_NUMBER: process.env.TELNYX_PHONE_NUMBER ? 'SET' : 'NOT SET'
+      });
 
-      // Sandbox mode simulation
+      // Sandbox mode simulation - doesn't need real phone number
       if (this.isSandboxMode) {
         console.log('🔧 SANDBOX MODE: Simulating SMS send', {
-          from: this.fromNumber,
+          from: this.fromNumber || 'SANDBOX',
           to: message.to,
           body: message.body.substring(0, 50) + '...'
         });
@@ -52,6 +55,11 @@ export class SMSService {
           success: true,
           messageId: `sandbox_${Date.now()}`,
         };
+      }
+
+      // Real SMS requires phone number
+      if (!this.fromNumber) {
+        throw new Error('Telnyx phone number not configured');
       }
 
       // Lazy initialization check
@@ -73,7 +81,7 @@ export class SMSService {
 
       return {
         success: true,
-        messageId: result.data.id,
+        messageId: result.data?.id || result.id,
       };
     } catch (error) {
       console.error('SMS sending error:', error);
