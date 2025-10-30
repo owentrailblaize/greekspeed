@@ -31,13 +31,12 @@ export default function AdminMembersPage() {
       <div className="max-w-7xl mx-auto px-6 py-6">
         <Card>
           <CardHeader>
-            <div className="flex flex-row items-center justify-between p-2">
+            <div className="flex flex-row items-center justify-between">
               <Button variant="outline" size="sm" onClick={() => router.back()}>
                 <ArrowLeft className="h-4 w-4" />
                 Back
               </Button>
             </div>
-            <CardTitle className="ml-1">Manage Chapter Members</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <UsersTab

@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100');
     const offset = (page - 1) * limit;
     const chapterId = searchParams.get('chapterId');
+    const q = (searchParams.get('q') || '').trim();
 
     let query = supabase
       .from('profiles')
@@ -23,6 +24,13 @@ export async function GET(request: NextRequest) {
 
     if (chapterId) {
       query = query.eq('chapter_id', chapterId);
+    }
+
+    if (q) {
+      const like = `%${q}%`;
+      query = query.or(
+        `email.ilike.${like},full_name.ilike.${like},role.ilike.${like},chapter.ilike.${like}`
+      )
     }
 
     const { data: users, error, count } = await query.range(offset, offset + limit - 1);

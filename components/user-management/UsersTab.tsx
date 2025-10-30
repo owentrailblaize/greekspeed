@@ -64,16 +64,30 @@ export function UsersTab({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
-  const [pageSize] = useState(100); // Show 100 users per page
+  const [searchDebounced, setSearchDebounced] = useState('');
+  const [pageSize] = useState(25); // Show 100 users per page
 
   useEffect(() => {
     fetchUsers();
-  }, [currentPage]);
+  }, [currentPage, searchDebounced]);
+
+  useEffect(() => {
+    const t = setTimeout(() => setSearchDebounced(searchTerm.trim()), 300);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    // when search term changes, go back to first page
+    setCurrentPage(1);
+  },[searchDebounced]);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/developer/users?page=${currentPage}&limit=${pageSize}${chapterId ? `&chapterId=${encodeURIComponent(chapterId)}` : ''}`);
+      const q = searchDebounced ? `&q=${encodeURIComponent(searchDebounced)}` : '';
+      const response = await fetch(
+        `/api/developer/users?page=${currentPage}&limit=${pageSize}${chapterId ? `&chapterId=${encodeURIComponent(chapterId)}` : ''}${q}`
+      );
       if (!response.ok) throw new Error('Failed to fetch users');
       
       const data = await response.json();
@@ -154,12 +168,7 @@ export function UsersTab({
     }
   };
 
-  const filteredUsers = users.filter(user =>
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.full_name && user.full_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (user.role && user.role.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (user.chapter && user.chapter.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredUsers = users;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
