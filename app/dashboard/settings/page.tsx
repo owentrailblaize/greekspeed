@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Settings, Shield, Bell, ArrowLeft, ToggleLeft, ToggleRight, Mail, User, Phone, Calendar, Lock, User as UserIcon, HelpCircle, Menu, X } from 'lucide-react';
@@ -13,16 +13,128 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('security');
   const [activeSubSection, setActiveSubSection] = useState<string | null>(null);
   const [emailNotifications, setEmailNotifications] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(false);
   const [chapterAnnouncements, setChapterAnnouncements] = useState(true);
   const [connectionRequests, setConnectionRequests] = useState(true);
   const [messageNotifications, setMessageNotifications] = useState(true);
+  const [emailEnabled, setEmailEnabled] = useState(true);
+  const [emailPrefsLoading, setEmailPrefsLoading] = useState(false);
+  const [emailPrefs, setEmailPrefs] = useState({
+    announcement_notifications: true,
+    event_notifications: true,
+    event_reminder_notifications: true,
+    message_notifications: true,
+    connection_notifications: true,
+  });
+
+  // Helper to PATCH only changed fields
+  const updateEmailSettings = async (payload:Partial<typeof emailPrefs> & { email_enabled?: boolean }) => {
+    if (!profile?.id) return;
+    setEmailPrefsLoading(true);
+    try {
+      const res = await fetch('/api/notifications/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: profile.id, ...payload }),
+      });
+      if (!res.ok) throw new Error('Failed to update email settings');
+    } finally {
+      setEmailPrefsLoading(false);
+    }
+  };
   
   // Mobile-specific state
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   
+  // SMS notification state - SIMPLIFIED to just one toggle
+  const [smsEnabled, setSmsEnabled] = useState(false);
+  const [loadingSettings, setLoadingSettings] = useState(true);
+
   const router = useRouter();
   const { profile, loading: profileLoading } = useProfile();
+
+  // Fetch notification settings on mount
+  useEffect(() => {
+    if (profile?.id) {
+      fetchNotificationSettings(profile.id);
+    }
+  }, [profile?.id]);
+
+  const fetchNotificationSettings = async (userId: string) => {
+    try {
+      setLoadingSettings(true);
+      const response = await fetch(`/api/notifications/settings?userId=${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        // Explicitly check for boolean true (not just truthy)
+        const smsEnabled = data.sms_enabled === true;
+        console.log('📋 Settings loaded:', { 
+          sms_enabled: data.sms_enabled, 
+          parsed: smsEnabled,
+          type: typeof data.sms_enabled 
+        });
+        setSmsEnabled(smsEnabled);
+
+        setEmailEnabled(data.email_enabled === true);
+        setEmailPrefs({
+          announcement_notifications: data.announcement_notifications === true,
+          event_notifications: data.event_notifications === true,
+          event_reminder_notifications: data.event_reminder_notifications === true,
+          message_notifications: data.message_notifications === true,
+          connection_notifications: data.connection_notifications === true,
+        })
+      } else {
+        console.error('Failed to fetch settings:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching notification settings:', error);
+    } finally {
+      setLoadingSettings(false);
+    }
+  };
+
+  const handleSMSEnabledToggle = async (value: boolean) => {
+    if (!profile?.id) return;
+    
+    // Optimistically update UI
+    setSmsEnabled(value);
+    
+    try {
+      const response = await fetch('/api/notifications/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: profile.id,
+          sms_enabled: value
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update setting');
+      }
+
+      const result = await response.json();
+      console.log('✅ SMS preference updated:', result);
+    } catch (error) {
+      console.error('Error updating notification setting:', error);
+      // Revert on error
+      setSmsEnabled(!value);
+      // You could add a toast notification here
+    }
+  };
+
+  // Master Email Toggle
+  const handleEmailEnabledToggle = async (value: boolean) => {
+    setEmailEnabled(value);
+    await updateEmailSettings({ email_enabled: value });
+  };  
+
+  // Individual Email Preferences
+  const togglePref = async (key: keyof typeof emailPrefs) => {
+    if (!emailEnabled) return;
+    const next = { ...emailPrefs, [key]: !emailPrefs[key]};
+    setEmailPrefs(next);
+    await updateEmailSettings({ [key]: next[key] });
+  };
 
   const sidebarItems = [
     {
@@ -39,7 +151,7 @@ export default function SettingsPage() {
       icon: Bell,
       description: 'Notification preferences',
       mobileDescription: 'Notification preferences',
-      locked: true
+      locked: false
     },
     {
       id: 'account',
@@ -218,109 +330,200 @@ export default function SettingsPage() {
       {/* Email Notifications */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900">Email Notifications</h3>
-        
-        <div className="space-y-3">
-          <div className="p-4 border rounded-xl bg-white">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <h4 className="font-medium text-gray-900">Connection Requests</h4>
-                <p className="text-sm text-gray-600">Get notified when someone wants to connect with you</p>
-              </div>
-              <div className="flex items-center space-x-3 ml-4">
-                <span className="text-sm text-gray-500">
-                  {connectionRequests ? 'Enabled' : 'Disabled'}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setConnectionRequests(!connectionRequests)}
-                  className="p-0 h-auto"
-                >
-                  {connectionRequests ? (
-                    <ToggleRight className="w-8 h-8 text-green-600" />
-                  ) : (
-                    <ToggleLeft className="w-8 h-8 text-gray-400" />
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
 
-          <div className="p-4 border rounded-xl bg-white">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <h4 className="font-medium text-gray-900">Chapter Announcements</h4>
-                <p className="text-sm text-gray-600">Receive updates from your chapter leadership</p>
-              </div>
-              <div className="flex items-center space-x-3 ml-4">
-                <span className="text-sm text-gray-500">
-                  {chapterAnnouncements ? 'Enabled' : 'Disabled'}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setChapterAnnouncements(!chapterAnnouncements)}
-                  className="p-0 h-auto"
-                >
-                  {chapterAnnouncements ? (
-                    <ToggleRight className="w-8 h-8 text-green-600" />
-                  ) : (
-                    <ToggleLeft className="w-8 h-8 text-gray-400" />
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-4 border rounded-xl bg-white">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <h4 className="font-medium text-gray-900">Message Notifications</h4>
-                <p className="text-sm text-gray-600">Get notified when you receive new messages</p>
-              </div>
-              <div className="flex items-center space-x-3 ml-4">
-                <span className="text-sm text-gray-500">
-                  {messageNotifications ? 'Enabled' : 'Disabled'}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setMessageNotifications(!messageNotifications)}
-                  className="p-0 h-auto"
-                >
-                  {messageNotifications ? (
-                    <ToggleRight className="w-8 h-8 text-green-600" />
-                  ) : (
-                    <ToggleLeft className="w-8 h-8 text-gray-400" />
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Push Notifications */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Push Notifications</h3>
-        
+        {/* Master Toggle */}
         <div className="p-4 border rounded-xl bg-white">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <h4 className="font-medium text-gray-900">Browser Notifications</h4>
-              <p className="text-sm text-gray-600">Receive notifications in your browser</p>
+              <h4 className="font-medium text-gray-900">Enable Email Notifications</h4>
+              <p className="text-sm text-gray-600">Turn all email notifications on or off</p>
+            </div>
+            <div className="flex items-center space-x-3 ml-4">
+              <span className="text-sm text-gray-500">{emailEnabled ? 'Enabled' : 'Disabled'}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleEmailEnabledToggle(!emailEnabled)}
+                className="p-0 h-auto"
+                disabled={emailPrefsLoading}
+              >
+                {emailEnabled ? (
+                  <ToggleRight className="w-8 h-8 text-green-600" />
+                ) : (
+                  <ToggleLeft className="w-8 h-8 text-gray-400" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Sub-toggles, disabled if master off */}
+        {emailEnabled && (
+          <div className="space-y-3">
+            <div className="p-4 border rounded-xl bg-white">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">Announcements</h4>
+                  <p className="text-sm text-gray-600">Receive chapter announcements</p>
+                </div>
+                <div className="flex items-center space-x-3 ml-4">
+                  <span className="text-sm text-gray-500">
+                    {emailPrefs.announcement_notifications ? 'Enabled' : 'Disabled'}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => togglePref('announcement_notifications')}
+                    className="p-0 h-auto"
+                    disabled={emailPrefsLoading}
+                  >
+                    {emailPrefs.announcement_notifications ? (
+                      <ToggleRight className="w-8 h-8 text-green-600" />
+                    ) : (
+                      <ToggleLeft className="w-8 h-8 text-gray-400" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border rounded-xl bg-white">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">Events</h4>
+                  <p className="text-sm text-gray-600">Get notified about new events</p>
+                </div>
+                <div className="flex items-center space-x-3 ml-4">
+                  <span className="text-sm text-gray-500">
+                    {emailPrefs.event_notifications ? 'Enabled' : 'Disabled'}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => togglePref('event_notifications')}
+                    className="p-0 h-auto"
+                    disabled={emailPrefsLoading}
+                  >
+                    {emailPrefs.event_notifications ? (
+                      <ToggleRight className="w-8 h-8 text-green-600" />
+                    ) : (
+                      <ToggleLeft className="w-8 h-8 text-gray-400" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border rounded-xl bg-white">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">Event Reminders</h4>
+                  <p className="text-sm text-gray-600">Receive reminders for upcoming events</p>
+                </div>
+                <div className="flex items-center space-x-3 ml-4">
+                  <span className="text-sm text-gray-500">
+                    {emailPrefs.event_reminder_notifications ? 'Enabled' : 'Disabled'}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => togglePref('event_reminder_notifications')}
+                    className="p-0 h-auto"
+                    disabled={emailPrefsLoading}
+                  >
+                    {emailPrefs.event_reminder_notifications ? (
+                      <ToggleRight className="w-8 h-8 text-green-600" />
+                    ) : (
+                      <ToggleLeft className="w-8 h-8 text-gray-400" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border rounded-xl bg-white">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">Messages</h4>
+                  <p className="text-sm text-gray-600">Get notified when you receive new messages</p>
+                </div>
+                <div className="flex items-center space-x-3 ml-4">
+                  <span className="text-sm text-gray-500">
+                    {emailPrefs.message_notifications ? 'Enabled' : 'Disabled'}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => togglePref('message_notifications')}
+                    className="p-0 h-auto"
+                    disabled={emailPrefsLoading}
+                  >
+                    {emailPrefs.message_notifications ? (
+                      <ToggleRight className="w-8 h-8 text-green-600" />
+                    ) : (
+                      <ToggleLeft className="w-8 h-8 text-gray-400" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border rounded-xl bg-white">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">Connections</h4>
+                  <p className="text-sm text-gray-600">Notify me about requests and accepted connections</p>
+                </div>
+                <div className="flex items-center space-x-3 ml-4">
+                  <span className="text-sm text-gray-500">
+                    {emailPrefs.connection_notifications ? 'Enabled' : 'Disabled'}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => togglePref('connection_notifications')}
+                    className="p-0 h-auto"
+                    disabled={emailPrefsLoading}
+                  >
+                    {emailPrefs.connection_notifications ? (
+                      <ToggleRight className="w-8 h-8 text-green-600" />
+                    ) : (
+                      <ToggleLeft className="w-8 h-8 text-gray-400" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* SMS Notifications */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Phone className="w-5 h-5" />
+          SMS Notifications
+        </h3>
+        
+        {/* Single SMS Toggle */}
+        <div className="p-4 border rounded-xl bg-white">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h4 className="font-medium text-gray-900">Enable SMS Notifications</h4>
+              <p className="text-sm text-gray-600">Receive SMS notifications for events, messages, and connections</p>
             </div>
             <div className="flex items-center space-x-3 ml-4">
               <span className="text-sm text-gray-500">
-                {pushNotifications ? 'Enabled' : 'Disabled'}
+                {smsEnabled ? 'Enabled' : 'Disabled'}
               </span>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setPushNotifications(!pushNotifications)}
+                onClick={() => handleSMSEnabledToggle(!smsEnabled)}
                 className="p-0 h-auto"
+                disabled={loadingSettings}
               >
-                {pushNotifications ? (
+                {smsEnabled ? (
                   <ToggleRight className="w-8 h-8 text-green-600" />
                 ) : (
                   <ToggleLeft className="w-8 h-8 text-gray-400" />
