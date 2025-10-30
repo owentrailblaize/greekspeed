@@ -11,7 +11,7 @@ export const execColumns: UsersTableColumn[] = [
 ];
 
 export function buildDeveloperColumns(options: {
-  getRoleBadgeVariant: (role: string | null) => string;
+  getRoleBadgeVariant: (role: string | null) => 'default' | 'outline' | 'secondary' | 'destructive';
   formatDate: (dateString: string) => string;
   showDeveloperColumn: boolean;
 }): UsersTableColumn[] {
