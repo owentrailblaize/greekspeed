@@ -30,7 +30,14 @@ export default function AdminMembersPage() {
             <CardTitle>Manage Chapter Members</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <UsersTab chapterId={chapterId} />
+            <UsersTab
+              chapterId={chapterId}
+              chapterContext={{
+                chapterId: chapterId,
+                chapterName: profile.chapter || 'Current Chapter',
+                isChapterAdmin: true
+              }}
+            />
           </CardContent>
         </Card>
       </div>

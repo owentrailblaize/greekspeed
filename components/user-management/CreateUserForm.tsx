@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -110,9 +111,14 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
 
   if (success) {
     // Rendering success modal
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <Card className="w-full max-w-2xl">
+    return typeof window !== 'undefined' && createPortal(
+      <div className="fixed inset-0 z-50">
+        {/* Full screen overlay */}
+        <div className="absolute inset-0 bg-black bg-opacity-50" />
+        
+        {/* Modal content centered */}
+        <div className="relative flex items-center justify-center min-h-screen p-4">
+          <Card className="w-full max-w-2xl">
           <CardHeader>
             <CardTitle className="text-green-600">User Created Successfully!</CardTitle>
           </CardHeader>
@@ -165,13 +171,20 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
             </div>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </div>,
+      document.body
     );
   }
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-md mx-4">
+  return typeof window !== 'undefined' && createPortal(
+    <div className="fixed inset-0 z-50">
+      {/* Full screen overlay */}
+      <div className="absolute inset-0 bg-black bg-opacity-50" />
+      
+      {/* Modal content centered */}
+      <div className="relative flex items-center justify-center min-h-screen p-4">
+        <Card className="w-full max-w-md mx-4">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle>Create New User</CardTitle>
@@ -364,6 +377,8 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+        </div>
+      </div>,
+      document.body
+    );
 }
