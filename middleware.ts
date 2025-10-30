@@ -3,6 +3,12 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function middleware(req: NextRequest) {
+  // Skip middleware for webhook endpoints (they don't need auth)
+  if (req.nextUrl.pathname.startsWith('/api/webhooks/') || 
+      req.nextUrl.pathname.startsWith('/api/telnyx/webhooks')) {
+    return NextResponse.next();
+  }
+
   // Skip logging for activity API calls to reduce spam
   const isActivityAPI = req.nextUrl.pathname === '/api/activity';
   
@@ -50,5 +56,10 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/sign-in', '/sign-up', '/api/:path*'],
+  matcher: [
+    '/dashboard/:path*',
+    '/sign-in',
+    '/sign-up',
+    '/api/:path*'
+  ],
 };

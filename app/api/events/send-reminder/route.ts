@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { EmailService } from '@/lib/services/emailService';
+import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -86,12 +87,26 @@ export async function POST(request: NextRequest) {
       .eq('id', chapterId)
       .single();
 
+    // Filter by email preferences (email_enabled AND event_reminder_notifications)
+    const allowedMembers = await Promise.all(
+      membersWithoutRsvp.map(async (member) => {
+        try {
+          const allowed = await canSendEmailNotification(member.id as string, 'event_reminder');
+          return allowed ? member : null;
+        } catch {
+          return null;
+        }
+      })
+    );
+
     // Prepare recipients
-    const recipients = membersWithoutRsvp.map(member => ({
-      email: member.email,
-      firstName: member.first_name || 'Member',
-      chapterName: chapter?.name || 'Your Chapter'
-    }));
+    const recipients = allowedMembers
+      .filter((m): m is NonNullable<typeof m> => Boolean(m))
+      .map(member => ({
+        email: member.email,
+        firstName: member.first_name || 'Member',
+        chapterName: chapter?.name || 'Your Chapter'
+      }));
 
     // Calculate relative time
     const startDate = new Date(event.start_time);

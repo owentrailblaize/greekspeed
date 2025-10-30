@@ -118,23 +118,6 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
 
       const data = await response.json();
       
-      // CRITICAL FIX: Ensure client-side session is established
-      try {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: formData.email.toLowerCase(),
-          password: formData.password
-        });
-
-        if (signInError) {
-          console.error('Client-side sign-in failed:', signInError);
-          // Don't fail the entire process, but log the error
-        } else {
-          // Client-side session established successfully
-        }
-      } catch (signInError) {
-        console.error('Client-side sign-in error:', signInError);
-      }
-
       toast.success('Alumni account created successfully!');
       onSuccess(data.user);
     } catch (error) {
