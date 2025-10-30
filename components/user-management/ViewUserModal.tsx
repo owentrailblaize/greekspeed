@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, User, Mail, Phone, MapPin, GraduationCap, Building2, Shield, Calendar, BookOpen } from 'lucide-react';
+import { getRoleDisplayName } from '@/lib/permissions';
 
 interface User {
   id: string;
@@ -150,7 +151,7 @@ export function ViewUserModal({ isOpen, onClose, user }: ViewUserModalProps) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Chapter Role:</span>
-                  <span className="font-medium capitalize">{user.chapter_role || 'Not set'}</span>
+                  <span className="font-medium">{user.chapter_role ? getRoleDisplayName(user.chapter_role as any) : 'Not set'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Developer Access:</span>

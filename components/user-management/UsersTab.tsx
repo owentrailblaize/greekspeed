@@ -5,10 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Users, Plus, Search, Edit, Trash2, Eye, Lock } from 'lucide-react';
+import { Users, Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
 import { CreateUserForm } from './CreateUserForm';
 import { DeleteUserModal } from './DeleteUserModal';
 import { ViewUserModal } from './ViewUserModal';
+import { getRoleDisplayName } from '@/lib/permissions';
+import { EditUserModal } from './EditUserModal';
 
 interface User {
   id: string;
@@ -38,7 +40,7 @@ interface User {
   access_level: string | null;
 }
 
-export function UsersTab() {
+export function UsersTab({ chapterId }: { chapterId?: string } = {}) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -48,6 +50,8 @@ export function UsersTab() {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [userToView, setUserToView] = useState<User | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [userToEdit, setUserToEdit] = useState<User | null>(null);
   
   // Add pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -62,7 +66,7 @@ export function UsersTab() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/developer/users?page=${currentPage}&limit=${pageSize}`);
+      const response = await fetch(`/api/developer/users?page=${currentPage}&limit=${pageSize}${chapterId ? `&chapterId=${encodeURIComponent(chapterId)}` : ''}`);
       if (!response.ok) throw new Error('Failed to fetch users');
       
       const data = await response.json();
@@ -96,6 +100,16 @@ export function UsersTab() {
   const closeViewModal = () => {
     setViewModalOpen(false);
     setUserToView(null);
+  };
+
+  const openEditModal = (user: User) => {
+    setUserToEdit(user);
+    setEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setEditModalOpen(false);
+    setUserToEdit(null);
   };
 
   const handleDeleteUser = async () => {
@@ -201,7 +215,10 @@ export function UsersTab() {
                       <th className="text-left p-3 font-medium text-sm bg-gray-50">Chapter</th>
                       <th className="text-left p-3 font-medium text-sm bg-gray-50">Contact</th>
                       <th className="text-left p-3 font-medium text-sm bg-gray-50">Academic</th>
-                      <th className="text-left p-3 font-medium text-sm bg-gray-50">Developer</th>
+                      
+                      {!chapterId && (
+                        <th className="text-left p-3 font-medium text-sm bg-gray-50">Developer</th>
+                      )}
                       <th className="text-left p-3 font-medium text-sm bg-gray-50">Created</th>
                       <th className="text-left p-3 font-medium text-sm bg-gray-50">Actions</th>
                     </tr>
@@ -224,7 +241,7 @@ export function UsersTab() {
                               {user.member_status || 'N/A'}
                             </Badge>
                             {user.chapter_role && (
-                              <p className="text-xs text-gray-600">{user.chapter_role}</p>
+                              <p className="text-xs text-gray-600">{getRoleDisplayName(user.chapter_role as any)}</p>
                             )}
                           </div>
                         </td>
@@ -245,21 +262,23 @@ export function UsersTab() {
                             {!user.major && !user.grad_year && <p className="text-xs text-gray-500">No academic info</p>}
                           </div>
                         </td>
-                        <td className="p-3">
-                          {user.is_developer ? (
-                            <div className="space-y-1">
-                              <Badge variant="secondary">Developer</Badge>
-                              <p className="text-xs text-gray-600">
-                                {user.developer_permissions?.length || 0} permissions
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {user.access_level || 'N/A'} access
-                              </p>
-                            </div>
-                          ) : (
-                            <p className="text-xs text-gray-500">Standard user</p>
-                          )}
-                        </td>
+                        {!chapterId ? (
+                          <td className="p-3">
+                            {user.is_developer ? (
+                              <div className="space-y-1">
+                                <Badge variant="secondary">Developer</Badge>
+                                <p className="text-xs text-gray-600">
+                                  {user.developer_permissions?.length || 0} permissions
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {user.access_level || 'N/A'} access
+                                </p>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-gray-500">Standard user</p>
+                            )}
+                          </td>
+                        ) : null}
                         <td className="p-3">
                           <p className="text-sm">{formatDate(user.created_at)}</p>
                           <p className="text-xs text-gray-500">Updated: {formatDate(user.updated_at)}</p>
@@ -275,20 +294,14 @@ export function UsersTab() {
                               <Eye className="h-4 w-4" />
                             </Button>
                             
-                            {/* Edit Button with Lock Indicator */}
-                            <div className="relative">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                disabled
-                                className="h-8 w-8 p-0 bg-gray-50 cursor-not-allowed opacity-60"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <div className="absolute -top-1 -right-1">
-                                <Lock className="h-3 w-3 text-gray-500" />
-                              </div>
-                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() => openEditModal(user)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
                             
                             <Button 
                               variant="outline" 
@@ -364,6 +377,14 @@ export function UsersTab() {
         isOpen={viewModalOpen}
         onClose={closeViewModal}
         user={userToView}
+      />
+
+      {/* Edit User Modal */}
+      <EditUserModal
+        isOpen={editModalOpen}
+        onClose={closeEditModal}
+        user={userToEdit}
+        onSaved={fetchUsers}
       />
     </div>
   );

@@ -29,7 +29,7 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
     lastName: '',
     chapter: chapterContext?.chapterId || '',
     role: 'active_member' as 'admin' | 'active_member',
-    chapter_role: 'member' as 'member' | 'president' | 'vice_president' | 'social_chair' | 'treasurer',
+    chapter_role: 'member' as string,
     is_developer: false
     // Remove developer_permissions from state since it's auto-assigned
   });
@@ -267,16 +267,43 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
             </div>
             <div>
               <Label htmlFor="chapter_role">Chapter Role *</Label>
-              <Select 
-                value={formData.chapter_role} 
-                onValueChange={(value: string) => setFormData({ ...formData, chapter_role: value as any })}
+              <Select
+                value={['president','vice_president','secretary','treasurer','rush_chair','social_chair','philanthropy_chair','risk_management_chair','alumni_relations_chair','member','pledge'].includes(formData.chapter_role)
+                  ? formData.chapter_role
+                  : '__custom__'}
+                onValueChange={(v: string) => {
+                  if (v === '__custom__') {
+                    setFormData({ ...formData, chapter_role: '' });
+                  } else {
+                    setFormData({ ...formData, chapter_role: v });
+                  }
+                }}
               >
                 <SelectItem value="member">General Member</SelectItem>
                 <SelectItem value="president">President</SelectItem>
                 <SelectItem value="vice_president">Vice President</SelectItem>
-                <SelectItem value="social_chair">Social Chair</SelectItem>
+                <SelectItem value="secretary">Secretary</SelectItem>
                 <SelectItem value="treasurer">Treasurer</SelectItem>
+                <SelectItem value="rush_chair">Rush Chair</SelectItem>
+                <SelectItem value="social_chair">Social Chair</SelectItem>
+                <SelectItem value="philanthropy_chair">Philanthropy Chair</SelectItem>
+                <SelectItem value="risk_management_chair">Risk Management Chair</SelectItem>
+                <SelectItem value="alumni_relations_chair">Alumni Relations Chair</SelectItem>
+                <SelectItem value="pledge">Pledge</SelectItem>
+                <SelectItem value="__custom__">Custom…</SelectItem>
               </Select>
+              {(['president','vice_president','secretary','treasurer','rush_chair','social_chair','philanthropy_chair','risk_management_chair','alumni_relations_chair','member','pledge'].includes(formData.chapter_role) === false) && (
+                <div className="mt-2">
+                  <Label htmlFor="chapter_role_custom">Custom Title</Label>
+                  <Input
+                    id="chapter_role_custom"
+                    placeholder='e.g. "Historian"'
+                    value={formData.chapter_role}
+                    onChange={(e) => setFormData({ ...formData, chapter_role: e.target.value })}
+                    required
+                  />
+                </div>
+              )}
             </div>
           </div>
 
