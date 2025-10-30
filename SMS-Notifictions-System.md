@@ -185,3 +185,40 @@ Handle replies to SMS messages
 - SMS failures don't block core functionality
 - Comprehensive logging and error handling
 - Messages appear in Telnyx dashboard
+
+---
+#### Implementation plan: email notification preferences
+Use the existing notification_settings table columns, similar to SMS.
+
+**Phase 1: Update API to read/write email preferences**
+1. 1.1 Update GET endpoint (app/api/notifications/settings/route.ts)
+Return all email preference fields from notification_settings
+Default to true if not set (opt-in by default)
+
+2. 1.2 Update PATCH endpoint (app/api/notifications/settings/route.ts)
+
+- Accept granular email preference updates
+- Handle both individual toggles and the master email_enabled toggle
+
+**Phase 2: Add email preference checks in sending logic**
+Add checks before sending:
+1. `Announcements (app/api/announcements/route.ts)`: Check `announcement_notifications` AND `email_enabled`
+2. `Events (app/api/events/send-email/route.ts)`: Check `event_notifications` AND `email_enabled`
+3. `Event Reminders (app/api/events/send-reminder/route.ts)`: Check `event_reminder_notifications` AND `email_enabled`
+4. `Messages (app/api/messages/route.ts)`: Check `message_notifications` AND `email_enabled
+5. `Connection Requests (app/api/connections/route.ts)`: Check `connection_notifications` AND `email_enabled`
+6. `Connection Accepted (app/api/connections/[id]/route.ts)`: Check `connection_accepted_notifications` AND `email_enabled`
+
+**Phase 3: Update UI to show email toggles**
+3.1 Update Settings Page (`app/dashboard/settings/page.tsx`)
+
+Add email preference toggles:
+Master toggle: "Enable Email Notifications"
+Sub-toggles (when master is enabled):
+- Announcements
+- Events
+- Event Reminders
+- Messages
+- Connection Requests
+- Connection Accepted
+Note: Password reset/change and support emails should remain always-on for security.

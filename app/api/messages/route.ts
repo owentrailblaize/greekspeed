@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { EmailService } from '@/lib/services/emailService';
+import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
 
 export async function GET(request: NextRequest) {
   try {
@@ -162,18 +163,25 @@ export async function POST(request: NextRequest) {
       if (recipientError || !recipientProfile) {
         console.error('❌ Error fetching recipient profile:', recipientError);
       } else {
-        // Send email notification
+        // Send email notification (respect user preferences)
         if (recipientProfile.email && recipientProfile.first_name && message.sender?.first_name) {
-          EmailService.sendMessageNotification({
-            to: recipientProfile.email,
-            firstName: recipientProfile.first_name,
-            chapterName: recipientProfile.chapter || 'Your Chapter',
-            actorFirstName: message.sender.first_name,
-            messagePreview: content.length > 100 ? content.substring(0, 100) + '...' : content,
-            connectionId: connectionId
-          }).catch(emailError => {
-            console.error('Failed to send message notification email:', emailError);
+          const allowed = await canSendEmailNotification(recipientProfile.id as string, 'message');
+          console.log('Email preference check (message):', {
+            recipientId,
+            allowed,
           });
+          if (allowed) {
+            EmailService.sendMessageNotification({
+              to: recipientProfile.email,
+              firstName: recipientProfile.first_name,
+              chapterName: recipientProfile.chapter || 'Your Chapter',
+              actorFirstName: message.sender.first_name,
+              messagePreview: content.length > 100 ? content.substring(0, 100) + '...' : content,
+              connectionId: connectionId
+            }).catch(emailError => {
+              console.error('Failed to send message notification email:', emailError);
+            });
+          }
         }
 
         // Send SMS notification (parallel to email, don't block if SMS fails)

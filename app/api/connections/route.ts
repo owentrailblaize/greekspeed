@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { EmailService } from '@/lib/services/emailService';
+import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
 
 export async function GET(request: NextRequest) {
   try {
@@ -129,18 +130,25 @@ export async function POST(request: NextRequest) {
 
     // Send email and SMS notifications (parallel, don't block if notifications fail)
     try {
-      // Send email notification if we have the required profile information
+      // Send email notification if allowed by preferences
       if (recipientProfile?.email && recipientProfile?.first_name && requesterProfile?.first_name) {
-        EmailService.sendConnectionRequestNotification({
-          to: recipientProfile.email,
-          firstName: recipientProfile.first_name,
-          chapterName: recipientProfile.chapter || 'Your Chapter',
-          actorFirstName: requesterProfile.first_name,
-          message: message,
-          connectionId: connection.id
-        }).catch(emailError => {
-          console.error('Failed to send connection request email:', emailError);
+        const allowed = await canSendEmailNotification(recipientProfile.id as string, 'connection');
+        console.log('Email preference check (connection request):', {
+          recipientId: recipientProfile.id,
+          allowed,
         });
+        if (allowed) {
+          EmailService.sendConnectionRequestNotification({
+            to: recipientProfile.email,
+            firstName: recipientProfile.first_name,
+            chapterName: recipientProfile.chapter || 'Your Chapter',
+            actorFirstName: requesterProfile.first_name,
+            message: message,
+            connectionId: connection.id
+          }).catch(emailError => {
+            console.error('Failed to send connection request email:', emailError);
+          });
+        }
       }
 
       // Send SMS notification (parallel to email, don't block if SMS fails)

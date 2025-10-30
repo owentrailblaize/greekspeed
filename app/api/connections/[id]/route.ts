@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { EmailService } from '@/lib/services/emailService';
+import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
 
 export async function PATCH(
   request: NextRequest,
@@ -78,17 +79,24 @@ export async function PATCH(
         const requesterProfile = existingConnection.requester;
         const recipientProfile = existingConnection.recipient;
 
-        // Send email notification
+        // Send email notification if allowed by preferences
         if (requesterProfile?.email && requesterProfile?.first_name && recipientProfile?.first_name) {
-          EmailService.sendConnectionAcceptedNotification({
-            to: requesterProfile.email,
-            firstName: requesterProfile.first_name,
-            chapterName: requesterProfile.chapter || 'Your Chapter',
-            actorFirstName: recipientProfile.first_name,
-            connectionId: id
-          }).catch(emailError => {
-            console.error('Failed to send connection accepted email:', emailError);
+          const allowed = await canSendEmailNotification(requesterProfile.id as string, 'connection_accepted');
+          console.log('Email preference check (connection accepted):', {
+            requesterId: requesterProfile.id,
+            allowed,
           });
+          if (allowed) {
+            EmailService.sendConnectionAcceptedNotification({
+              to: requesterProfile.email,
+              firstName: requesterProfile.first_name,
+              chapterName: requesterProfile.chapter || 'Your Chapter',
+              actorFirstName: recipientProfile.first_name,
+              connectionId: id
+            }).catch(emailError => {
+              console.error('Failed to send connection accepted email:', emailError);
+            });
+          }
         }
 
         // Send SMS notification (parallel to email, don't block if SMS fails)

@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { EmailService } from '@/lib/services/emailService';
 import { SMSService } from '@/lib/services/sms/smsServiceTelnyx';
 import { SMSNotificationService } from '@/lib/services/sms/smsNotificationService';
+import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
     // Fetch chapter members (active members and admins only)
     const { data: members, error: membersError } = await supabase
       .from('profiles')
-      .select('email, first_name, chapter_id, role')
+      .select('id, email, first_name, chapter_id, role')
       .eq('chapter_id', chapterId)
       .in('role', ['active_member', 'admin'])
       .not('email', 'is', null);
@@ -80,12 +81,25 @@ export async function POST(request: NextRequest) {
     }
 
 
-    // Prepare recipients
-    const recipients = members.map(member => ({
-      email: member.email,
-      firstName: member.first_name || 'Member',
-      chapterName: chapter.name
-    }));
+    // Prepare recipients with email preference checks (email_enabled AND event_notifications)
+    const allowedMembers = await Promise.all(
+      (members || []).map(async (member) => {
+        try {
+          const allowed = await canSendEmailNotification(member.id as string, 'event');
+          return allowed ? member : null;
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    const recipients = allowedMembers
+      .filter((m): m is NonNullable<typeof m> => Boolean(m))
+      .map(member => ({
+        email: member.email,
+        firstName: member.first_name || 'Member',
+        chapterName: chapter.name
+      }));
 
 
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { SMSService } from '@/lib/services/sms/smsServiceTelnyx';
+import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
 
 export async function GET(request: NextRequest) {
   try {
@@ -211,14 +212,26 @@ export async function POST(request: NextRequest) {
         } else {
           // Chapter members found
           
-          // Map to recipients - no email_preferences filtering since column doesn't exist
-          const recipients = members.map(member => ({
-            email: member.email,
-            firstName: member.first_name || 'Member',
-            chapterName: chapterName
-          }));
+          // Filter by email preferences (email_enabled AND announcement_notifications)
+          const allowedMembers = await Promise.all(
+            members.map(async (member) => {
+              try {
+                const allowed = await canSendEmailNotification(member.id, 'announcement');
+                return allowed ? member : null;
+              } catch {
+                // On error, default to not sending to be safe
+                return null;
+              }
+            })
+          );
 
-          // Recipients prepared
+          const recipients = allowedMembers
+            .filter((m): m is NonNullable<typeof m> => Boolean(m))
+            .map(member => ({
+              email: member.email,
+              firstName: member.first_name || 'Member',
+              chapterName: chapterName
+            }));
 
           if (recipients.length > 0) {
             const { EmailService } = await import('@/lib/services/emailService');
