@@ -13,7 +13,6 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('security');
   const [activeSubSection, setActiveSubSection] = useState<string | null>(null);
   const [emailNotifications, setEmailNotifications] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(false);
   const [chapterAnnouncements, setChapterAnnouncements] = useState(true);
   const [connectionRequests, setConnectionRequests] = useState(true);
   const [messageNotifications, setMessageNotifications] = useState(true);
@@ -525,37 +524,6 @@ export default function SettingsPage() {
                 disabled={loadingSettings}
               >
                 {smsEnabled ? (
-                  <ToggleRight className="w-8 h-8 text-green-600" />
-                ) : (
-                  <ToggleLeft className="w-8 h-8 text-gray-400" />
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Push Notifications */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Push Notifications</h3>
-        
-        <div className="p-4 border rounded-xl bg-white">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <h4 className="font-medium text-gray-900">Browser Notifications</h4>
-              <p className="text-sm text-gray-600">Receive notifications in your browser</p>
-            </div>
-            <div className="flex items-center space-x-3 ml-4">
-              <span className="text-sm text-gray-500">
-                {pushNotifications ? 'Enabled' : 'Disabled'}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setPushNotifications(!pushNotifications)}
-                className="p-0 h-auto"
-              >
-                {pushNotifications ? (
                   <ToggleRight className="w-8 h-8 text-green-600" />
                 ) : (
                   <ToggleLeft className="w-8 h-8 text-gray-400" />
