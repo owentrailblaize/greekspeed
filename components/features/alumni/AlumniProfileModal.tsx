@@ -335,11 +335,15 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
                 <div className="flex flex-row items-center justify-between">
                   <div className="flex flex-col">
                     <span className="text-gray-500">Email</span>
-                    <span className="text-gray-900 truncate">{alumni.email}</span>
+                    <span className="text-gray-900 truncate">
+                      {alumni.email || ((alumni.isEmailPublic === false || alumni.is_email_public === false) ? 'Hidden by user' : 'Not available')}
+                    </span>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-gray-500">Phone</span>
-                    <span className="text-gray-900">{alumni.phone}</span>
+                    <span className="text-gray-900">
+                      {alumni.phone || ((alumni.isPhonePublic === false || alumni.is_phone_public === false) ? 'Hidden by user' : 'Not available')}
+                    </span>
                   </div>
                 </div>
                 {/* Location in column */}

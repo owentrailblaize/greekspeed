@@ -155,7 +155,9 @@ export function AlumniTab() {
                         <td className="p-3">
                           <div>
                             <p className="font-medium">{alumni.full_name}</p>
-                            <p className="text-sm text-gray-600">{alumni.email}</p>
+                            <p className="text-sm text-gray-600">
+                              {alumni.email || 'Not available'}
+                            </p>
                             <p className="text-xs text-gray-500">ID: {alumni.user_id}</p>
                           </div>
                         </td>
@@ -194,17 +196,16 @@ export function AlumniTab() {
                         </td>
                         <td className="p-3">
                           <div className="space-y-1">
-                            {alumni.phone && (
+                            {alumni.phone ? (
                               <p className="text-sm">{alumni.phone}</p>
+                            ) : (
+                              <p className="text-xs text-gray-500">Not available</p>
                             )}
                             {alumni.location && (
                               <div className="flex items-center space-x-2">
                                 <MapPin className="h-4 w-4 text-gray-400" />
                                 <span className="text-sm">{alumni.location}</span>
                               </div>
-                            )}
-                            {!alumni.phone && !alumni.location && (
-                              <p className="text-xs text-gray-500">No contact info</p>
                             )}
                           </div>
                         </td>
