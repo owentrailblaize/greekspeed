@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -34,6 +35,14 @@ export function EditUserModal({ isOpen, onClose, user, onSaved }: EditUserModalP
     }
   }, [user]);
 
+  // Prevent background scroll when open
+  useEffect(() => {
+    if (!isOpen) return;
+    const {overflow} = document.body.style;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = overflow; };
+  }, [isOpen]);
+
   if (!isOpen || !user) return null;
 
   const predefined = ['president','vice_president','secretary','treasurer','rush_chair','social_chair','philanthropy_chair','risk_management_chair','alumni_relations_chair','member','pledge'];
@@ -59,63 +68,80 @@ export function EditUserModal({ isOpen, onClose, user, onSaved }: EditUserModalP
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="pb-2 flex items-center justify-between">
-          <CardTitle>Edit User</CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label>System Role</Label>
-            <Select value={role} onValueChange={(v: any) => setRole(v)}>
-              <SelectItem value="active_member">Active Member</SelectItem>
-              <SelectItem value="alumni">Alumni</SelectItem>
-              <SelectItem value="admin">Admin / Executive</SelectItem>
-            </Select>
-          </div>
-
-          <div>
-            <Label>Chapter Role</Label>
-            <Select
-              value={predefined.includes(chapterRole) ? chapterRole : '__custom__'}
-              onValueChange={(v: string) => {
-                if (v === '__custom__') setChapterRole('');
-                else setChapterRole(v);
-              }}
-            >
-              <SelectItem value="member">General Member</SelectItem>
-              <SelectItem value="president">President</SelectItem>
-              <SelectItem value="vice_president">Vice President</SelectItem>
-              <SelectItem value="treasurer">Treasurer</SelectItem>
-              <SelectItem value="social_chair">Social Chair</SelectItem>
-              <SelectItem value="__custom__">Custom…</SelectItem>
-            </Select>
-            {(!predefined.includes(chapterRole)) && (
-              <div className="mt-2">
-                <Label htmlFor="chapter_role_custom">Custom Title</Label>
-                <Input
-                  id="chapter_role_custom"
-                  placeholder='e.g. "Historian"'
-                  value={chapterRole}
-                  onChange={(e) => setChapterRole(e.target.value)}
-                  required
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="flex gap-2 pt-2">
-            <Button variant="outline" className="flex-1" onClick={onClose} disabled={saving}>Cancel</Button>
-            <Button className="flex-1" onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : 'Save'}</Button>
-          </div>
-        </CardContent>
-      </Card>
+  const modal = (
+    <div className="fixed inset-0 z-50">
+      {/* Backdrop rendered via portal, uses blur + subtle tint */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+  
+      {/* Centered card */}
+      <div className="absolute inset-0 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-xl">
+          {/* Title and X on the same row */}
+          <CardHeader className="p-6 pb-2 flex flex-row items-center justify-between">
+            <CardTitle>Edit User</CardTitle>
+            <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close">
+              <X className="h-4 w-4" />
+            </Button>
+          </CardHeader>
+  
+          <CardContent className="space-y-4">
+            <div>
+              <Label>System Role</Label>
+              <Select value={role} onValueChange={(v: any) => setRole(v)}>
+                <SelectItem value="active_member">Active Member</SelectItem>
+                <SelectItem value="alumni">Alumni</SelectItem>
+                <SelectItem value="admin">Admin / Executive</SelectItem>
+              </Select>
+            </div>
+  
+            <div>
+              <Label>Chapter Role</Label>
+              <Select
+                value={predefined.includes(chapterRole) ? chapterRole : '__custom__'}
+                onValueChange={(v: string) => {
+                  if (v === '__custom__') setChapterRole('');
+                  else setChapterRole(v);
+                }}
+              >
+                <SelectItem value="member">General Member</SelectItem>
+                <SelectItem value="president">President</SelectItem>
+                <SelectItem value="vice_president">Vice President</SelectItem>
+                <SelectItem value="secretary">Secretary</SelectItem>
+                <SelectItem value="treasurer">Treasurer</SelectItem>
+                <SelectItem value="rush_chair">Rush Chair</SelectItem>
+                <SelectItem value="social_chair">Social Chair</SelectItem>
+                <SelectItem value="philanthropy_chair">Philanthropy Chair</SelectItem>
+                <SelectItem value="risk_management_chair">Risk Management Chair</SelectItem>
+                <SelectItem value="alumni_relations_chair">Alumni Relations Chair</SelectItem>
+                <SelectItem value="pledge">Pledge</SelectItem>
+                <SelectItem value="__custom__">Custom…</SelectItem>
+              </Select>
+  
+              {!predefined.includes(chapterRole) && (
+                <div className="mt-2">
+                  <Label htmlFor="chapter_role_custom">Custom Title</Label>
+                  <Input
+                    id="chapter_role_custom"
+                    placeholder='e.g. "Historian"'
+                    value={chapterRole}
+                    onChange={(e) => setChapterRole(e.target.value)}
+                    required
+                  />
+                </div>
+              )}
+            </div>
+  
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" className="flex-1" onClick={onClose} disabled={saving}>Cancel</Button>
+              <Button className="flex-1" onClick={handleSave} disabled={saving}>
+                {saving ? 'Saving…' : 'Save'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
+  
+  return createPortal(modal, document.body);
 }
-
-

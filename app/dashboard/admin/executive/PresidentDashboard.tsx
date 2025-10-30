@@ -634,7 +634,7 @@ export function PresidentDashboard() {
 
           {/* Quick Actions */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-0">
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -661,16 +661,6 @@ export function PresidentDashboard() {
               >
                 <UserPlus className="h-4 w-4 mr-2" />
                 Manage Invitations
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start opacity-60 cursor-not-allowed" 
-                disabled
-                title="Feature coming soon!"
-              >
-                <TrendingUp className="h-4 w-4 mr-2" />
-                View Reports
-                <Lock className="h-3 w-3 ml-2 text-gray-400" />
               </Button>
               
               {/* Manage Members - navigate to admin members page */}
