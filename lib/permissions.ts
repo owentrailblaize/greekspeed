@@ -42,7 +42,7 @@ export function canViewChapterData(userRole: SystemRole, userChapterRole: Chapte
 }
 
 export function getRoleDisplayName(role: ChapterRole): string {
-  const roleNames: Record<ChapterRole, string> = {
+  const roleNames: Record<string, string> = {
     president: 'President',
     vice_president: 'Vice President',
     treasurer: 'Treasurer',
@@ -53,7 +53,10 @@ export function getRoleDisplayName(role: ChapterRole): string {
     risk_management_chair: 'Risk Management Chair',
     alumni_relations_chair: 'Alumni Relations Chair',
     member: 'Member',
-    pledge: 'Pledge'
+    pledge: 'Pledge',
   };
-  return roleNames[role];
-} 
+  if (role in roleNames) return roleNames[role as string];
+  return role
+    ? (role as string).replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    : 'Member';
+}

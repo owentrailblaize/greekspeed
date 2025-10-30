@@ -14,17 +14,39 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '100');
     const offset = (page - 1) * limit;
+    const chapterId = searchParams.get('chapterId');
+    const q = (searchParams.get('q') || '').trim();
+    const role = searchParams.get('role');
 
-    // Fetch users with pagination
-    const { data: users, error, count } = await supabase
+    let query = supabase
       .from('profiles')
       .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+      .order('created_at', { ascending: false});
+
+    if (chapterId) {
+      query = query.eq('chapter_id', chapterId);
+    }
+
+    if (q) {
+      const like = `%${q}%`;
+      query = query.or(
+        `email.ilike.${like},full_name.ilike.${like},role.ilike.${like},chapter.ilike.${like}`
+      )
+    }
+
+    if (role) {
+      query = query.eq('role',role);
+    }
+
+    const { data: users, error, count } = await query.range(offset, offset + limit - 1);
 
     if (error) {
       console.error('Error fetching users:', error);
       return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
+    }
+
+    if (role) {
+      query = query.eq('role', role);
     }
 
     return NextResponse.json({ 
@@ -175,6 +197,50 @@ export async function DELETE(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ Unexpected error during user deletion:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    if (!userId) return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+
+    const body = await request.json();
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const allowed = ['role', 'chapter_role', 'member_status', 'chapter_id'];
+    const update: Record<string, any> = {};
+    for (const key of allowed) if (key in body) update[key] = body[key];
+
+    if (update.role && !['admin', 'active_member', 'alumni'].includes(update.role)) {
+      return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
+    }
+
+    if (typeof update.chapter_role === 'string') {
+      update.chapter_role = update.chapter_role
+        .replace(/[^\p{L}\p{N}\s\-_]/gu, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 50);
+    }
+
+    update.updated_at = new Date().toISOString();
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(update)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
+    return NextResponse.json({ user: data });
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

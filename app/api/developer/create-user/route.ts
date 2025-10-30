@@ -4,15 +4,14 @@ import { createClient } from '@supabase/supabase-js';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { 
+    let { 
       email, 
       firstName, 
       lastName, 
       chapter, 
-      role = 'active_member', // Only allow 'admin' or 'active_member'
+      role = 'active_member', 
       chapter_role = 'member',
       is_developer = false, 
-      developer_permissions = [],
       member_status = 'active'
     } = body;
 
@@ -23,11 +22,23 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Add role validation
-    if (!['admin', 'active_member'].includes(role)) {
+    // Add role validation (restrict to admin, active_member, alumni)
+    if (!['admin', 'active_member', 'alumni'].includes(role)) {
       return NextResponse.json({ 
-        error: 'Invalid role. Only admin and active_member are allowed.' 
+        error: 'Invalid role. Only admin, active_member, or alumni are allowed.' 
       }, { status: 400 });
+    }
+
+    // Sanitize free-text chapter_role
+    const sanitizeTitle = (s: string) =>
+      s
+        .replace(/[^\p{L}\p{N}\s\-_]/gu, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 50);
+
+    if (typeof chapter_role === 'string') {
+      chapter_role = sanitizeTitle(chapter_role || 'member') || 'member';
     }
 
     // Create server-side Supabase client with service role key
