@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
     const chapterId = searchParams.get('chapterId');
     const q = (searchParams.get('q') || '').trim();
+    const role = searchParams.get('role');
 
     let query = supabase
       .from('profiles')
@@ -33,11 +34,19 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    if (role) {
+      query = query.eq('role',role);
+    }
+
     const { data: users, error, count } = await query.range(offset, offset + limit - 1);
 
     if (error) {
       console.error('Error fetching users:', error);
       return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
+    }
+
+    if (role) {
+      query = query.eq('role', role);
     }
 
     return NextResponse.json({ 

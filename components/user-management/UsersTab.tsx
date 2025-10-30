@@ -12,6 +12,7 @@ import { DeleteUserModal } from './DeleteUserModal';
 import { ViewUserModal } from './ViewUserModal';
 import { getRoleDisplayName } from '@/lib/permissions';
 import { EditUserModal } from './EditUserModal';
+import { Select, SelectItem } from '@/components/ui/select';
 
 interface User {
   id: string;
@@ -67,9 +68,13 @@ export function UsersTab({
   const [searchDebounced, setSearchDebounced] = useState('');
   const [pageSize] = useState(25); // Show 100 users per page
 
+  const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'active_member' | 'alumni'>('all');
+
+  useEffect(() => { setCurrentPage(1); }, [roleFilter]);
+  
   useEffect(() => {
     fetchUsers();
-  }, [currentPage, searchDebounced]);
+  }, [currentPage, searchDebounced, roleFilter]);
 
   useEffect(() => {
     const t = setTimeout(() => setSearchDebounced(searchTerm.trim()), 300);
@@ -85,17 +90,17 @@ export function UsersTab({
     try {
       setLoading(true);
       const q = searchDebounced ? `&q=${encodeURIComponent(searchDebounced)}` : '';
-      const response = await fetch(
-        `/api/developer/users?page=${currentPage}&limit=${pageSize}${chapterId ? `&chapterId=${encodeURIComponent(chapterId)}` : ''}${q}`
-      );
-      if (!response.ok) throw new Error('Failed to fetch users');
-      
+      const role = roleFilter !== 'all' ? `&role=${encodeURIComponent(roleFilter)}` : '';
+      const url = `/api/developer/users?page=${currentPage}&limit=${pageSize}${chapterId ? `&chapterId=${encodeURIComponent(chapterId)}` : ''}${q}${role}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        const err = await response.text();
+        throw new Error(`Failed to fetch users (${response.status}): ${err}`);
+      }
       const data = await response.json();
       setUsers(data.users || []);
       setTotalUsers(data.total || 0);
       setTotalPages(data.totalPages || 1);
-      
-      // Fetched page users
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -206,14 +211,25 @@ export function UsersTab({
       </div>
 
       {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-        <Input
-          placeholder="Search users by email, name, role, or chapter..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
-        />
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Search users by email, name, role, or chapter..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        <div className="w-full sm:w-56">
+          <Select value={roleFilter} onValueChange={(v: any) => setRoleFilter(v)}>
+            <SelectItem value="all">All Roles</SelectItem>
+            <SelectItem value="active_member">Active Members</SelectItem>
+            <SelectItem value="alumni">Alumni</SelectItem>
+            <SelectItem value="admin">Admin / Executive</SelectItem>
+          </Select>
+        </div>
       </div>
 
       {/* Users Table */}

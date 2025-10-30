@@ -33,7 +33,12 @@ export function UsersTable({
       </CardHeader>
       <CardContent className="space-y-4 pt-0">
         {loading ? (
-          <div className="text-center py-8">Loading users...</div>
+          <div className="flex items-center justify-center py-16">
+            <div
+              className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-blue-600"
+              aria-label="Loading"
+            />
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <div className="max-h-[70vh] overflow-y-auto border border-gray-200 rounded-lg">
