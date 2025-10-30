@@ -43,7 +43,9 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
     is_actively_hiring: false,
     tags: '',
     linkedin_url: '',
-    hometown: ''
+    hometown: '',
+    is_email_public: true,
+    is_phone_public: true
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -128,7 +130,9 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         is_actively_hiring: data.is_actively_hiring || false,
         tags: Array.isArray(data.tags) ? data.tags.join(', ') : (data.tags || ''),
         linkedin_url: data.linkedin_url || '',
-        hometown: data.hometown || ''
+        hometown: data.hometown || '',
+        is_email_public: data.is_email_public !== false, // Default to true if not set
+        is_phone_public: data.is_phone_public !== false  // Default to true if not set
       };
 
       setFormData(initialFormData);
@@ -390,6 +394,8 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         description: formData.description?.trim() || null,
         linkedin_url: formData.linkedin_url?.trim() || null,
         is_actively_hiring: formData.is_actively_hiring || false,
+        is_email_public: formData.is_email_public !== false,
+        is_phone_public: formData.is_phone_public !== false,
         tags: formData.tags && formData.tags.trim() 
           ? formData.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0)
           : null
@@ -768,6 +774,49 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
                       className="mt-1"
                       placeholder="Jackson, Mississippi"
                     />
+                  </div>
+                </div>
+                
+                {/* Privacy Settings */}
+                <div className="border-t border-gray-200 pt-4 mt-4">
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">Privacy Settings</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex items-center justify-between border rounded-md p-3">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">Show Email</p>
+                        <p className="text-xs text-gray-500 mt-1">Other users can see your email if enabled</p>
+                      </div>
+                      <div className="ml-2">
+                        <Checkbox
+                          id="is_email_public"
+                          checked={formData.is_email_public}
+                          onCheckedChange={(checked) => {
+                            const newFormData = { ...formData, is_email_public: checked as boolean };
+                            setFormData(newFormData);
+                            saveFormDataToStorage(newFormData);
+                          }}
+                          className="h-5 w-5" // Make it slightly larger
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between border rounded-md p-3">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">Show Phone</p>
+                        <p className="text-xs text-gray-500 mt-1">Other users can see your phone if enabled</p>
+                      </div>
+                      <div className="ml-2">
+                        <Checkbox
+                          id="is_phone_public"
+                          checked={formData.is_phone_public}
+                          onCheckedChange={(checked) => {
+                            const newFormData = { ...formData, is_phone_public: checked as boolean };
+                            setFormData(newFormData);
+                            saveFormDataToStorage(newFormData);
+                          }}
+                          className="h-5 w-5" // Make it slightly larger
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>

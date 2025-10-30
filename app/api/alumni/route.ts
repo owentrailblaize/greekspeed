@@ -38,6 +38,61 @@ export async function GET(request: NextRequest) {
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     
+    // Get viewer identity for privacy checks
+    let viewerId: string | null = null;
+    let viewerRole: string | null = null;
+    
+    try {
+      // Try to get viewer from auth header first
+      const authHeader = request.headers.get('authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (!authError && user) {
+          viewerId = user.id;
+        }
+      }
+      
+      // If no viewer from header, try cookies (for SSR requests)
+      if (!viewerId) {
+        const { cookies } = await import('next/headers');
+        const cookieStore = await cookies();
+        const { createServerClient } = await import('@supabase/ssr');
+        
+        const anonClient = createServerClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          {
+            cookies: {
+              get(name: string) {
+                return cookieStore.get(name)?.value;
+              },
+              set() {},
+              remove() {},
+            },
+          }
+        );
+        
+        const { data: { user } } = await anonClient.auth.getUser();
+        if (user) {
+          viewerId = user.id;
+        }
+      }
+      
+      // Get viewer role if we have a viewer
+      if (viewerId) {
+        const { data: viewerProfile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', viewerId)
+          .single();
+        viewerRole = viewerProfile?.role || null;
+      }
+    } catch (viewerError) {
+      // If we can't get viewer, continue without privacy checks (all data will be shown)
+      console.log('Could not determine viewer identity, continuing without privacy checks');
+    }
+    
     // Get query parameters
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -63,7 +118,8 @@ export async function GET(request: NextRequest) {
         profile:profiles!user_id(
           avatar_url,
           last_active_at,
-          last_login_at
+          last_login_at,
+          role
         )
       `, { count: 'exact' })
 
@@ -179,34 +235,44 @@ export async function GET(request: NextRequest) {
         // Calculate total count
         const totalCount = Math.max(chapterNameResult.count || 0, chapterIdResult.count || 0);
         
-        // 🔥 KEY CHANGE: Use main branch transformation with activity fields
-        const transformedAlumni = uniqueResults?.map(alumni => ({
-          id: alumni.user_id || alumni.id,
-          alumniId: alumni.id,
-          firstName: alumni.first_name,
-          lastName: alumni.last_name,
-          fullName: alumni.full_name,
-          chapter: alumni.chapter,
-          industry: alumni.industry,                    // ✅ Direct from alumni table
-          graduationYear: alumni.graduation_year,
-          company: alumni.company,                      // ✅ Direct from alumni table
-          jobTitle: alumni.job_title,                   // ✅ Direct from alumni table
-          email: alumni.email,
-          phone: alumni.phone,
-          location: alumni.location,                    // ✅ Direct from alumni table
-          description: alumni.description || `Experienced professional in ${alumni.industry}.`,
-          mutualConnections: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections : [],
-          mutualConnectionsCount: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections.length : 0,
-          avatar: alumni.avatar_url || alumni.profile?.avatar_url,
-          verified: alumni.verified,
-          isActivelyHiring: alumni.is_actively_hiring,  // ✅ Direct from alumni table
-          lastContact: alumni.last_contact,
-          tags: alumni.tags || [],
-          hasProfile: !!alumni.user_id,
-          // 🔥 NEW: Activity data from profiles table
-          lastActiveAt: alumni.profile?.last_active_at,
-          lastLoginAt: alumni.profile?.last_login_at
-        })) || [];
+        // 🔥 KEY CHANGE: Use main branch transformation with activity fields and privacy
+        const transformedAlumni = uniqueResults?.map(alumni => {
+          const alumniUserId = alumni.user_id || alumni.id;
+          const isOwner = viewerId && (viewerId === alumniUserId);
+          const isAdmin = viewerRole === 'admin';
+          const canSeeEmail = isOwner || isAdmin || (alumni.is_email_public !== false);
+          const canSeePhone = isOwner || isAdmin || (alumni.is_phone_public !== false);
+          
+          return {
+            id: alumniUserId,
+            alumniId: alumni.id,
+            firstName: alumni.first_name,
+            lastName: alumni.last_name,
+            fullName: alumni.full_name,
+            chapter: alumni.chapter,
+            industry: alumni.industry,                    // ✅ Direct from alumni table
+            graduationYear: alumni.graduation_year,
+            company: alumni.company,                      // ✅ Direct from alumni table
+            jobTitle: alumni.job_title,                   // ✅ Direct from alumni table
+            email: canSeeEmail ? alumni.email : null,
+            phone: canSeePhone ? alumni.phone : null,
+            isEmailPublic: alumni.is_email_public !== false,
+            isPhonePublic: alumni.is_phone_public !== false,
+            location: alumni.location,                    // ✅ Direct from alumni table
+            description: alumni.description || `Experienced professional in ${alumni.industry}.`,
+            mutualConnections: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections : [],
+            mutualConnectionsCount: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections.length : 0,
+            avatar: alumni.avatar_url || alumni.profile?.avatar_url,
+            verified: alumni.verified,
+            isActivelyHiring: alumni.is_actively_hiring,  // ✅ Direct from alumni table
+            lastContact: alumni.last_contact,
+            tags: alumni.tags || [],
+            hasProfile: !!alumni.user_id,
+            // 🔥 NEW: Activity data from profiles table
+            lastActiveAt: alumni.profile?.last_active_at,
+            lastLoginAt: alumni.profile?.last_login_at
+          };
+        }) || [];
 
         // 🔥 ADD: Activity filtering and sorting logic
         let filteredAlumni = transformedAlumni
@@ -401,34 +467,44 @@ export async function GET(request: NextRequest) {
         
         const totalCount = Math.max(chapterNameResult.count || 0, chapterIdResult.count || 0);
         
-        // Transform data to match your interface
-        const transformedAlumni = uniqueResults?.map(alumni => ({
-          id: alumni.user_id || alumni.id,
-          alumniId: alumni.id,
-          firstName: alumni.first_name,
-          lastName: alumni.last_name,
-          fullName: alumni.full_name,
-          chapter: alumni.chapter,
-          industry: alumni.industry,
-          graduationYear: alumni.graduation_year,
-          company: alumni.company,
-          jobTitle: alumni.job_title,
-          email: alumni.email,
-          phone: alumni.phone,
-          location: alumni.location,
-          description: alumni.description || `Experienced professional in ${alumni.industry}.`,
-          mutualConnections: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections : [],
-          mutualConnectionsCount: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections.length : 0,
-          avatar: alumni.avatar_url || alumni.profile?.avatar_url,
-          verified: alumni.verified,
-          isActivelyHiring: alumni.is_actively_hiring,
-          lastContact: alumni.last_contact,
-          tags: alumni.tags || [],
-          hasProfile: !!alumni.user_id,
-          // Activity data from profiles table
-          lastActiveAt: alumni.profile?.last_active_at,
-          lastLoginAt: alumni.profile?.last_login_at
-        })) || [];
+        // Transform data to match your interface with privacy checks
+        const transformedAlumni = uniqueResults?.map(alumni => {
+          const alumniUserId = alumni.user_id || alumni.id;
+          const isOwner = viewerId && (viewerId === alumniUserId);
+          const isAdmin = viewerRole === 'admin';
+          const canSeeEmail = isOwner || isAdmin || (alumni.is_email_public !== false);
+          const canSeePhone = isOwner || isAdmin || (alumni.is_phone_public !== false);
+          
+          return {
+            id: alumniUserId,
+            alumniId: alumni.id,
+            firstName: alumni.first_name,
+            lastName: alumni.last_name,
+            fullName: alumni.full_name,
+            chapter: alumni.chapter,
+            industry: alumni.industry,
+            graduationYear: alumni.graduation_year,
+            company: alumni.company,
+            jobTitle: alumni.job_title,
+            email: canSeeEmail ? alumni.email : null,
+            phone: canSeePhone ? alumni.phone : null,
+            isEmailPublic: alumni.is_email_public !== false,
+            isPhonePublic: alumni.is_phone_public !== false,
+            location: alumni.location,
+            description: alumni.description || `Experienced professional in ${alumni.industry}.`,
+            mutualConnections: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections : [],
+            mutualConnectionsCount: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections.length : 0,
+            avatar: alumni.avatar_url || alumni.profile?.avatar_url,
+            verified: alumni.verified,
+            isActivelyHiring: alumni.is_actively_hiring,
+            lastContact: alumni.last_contact,
+            tags: alumni.tags || [],
+            hasProfile: !!alumni.user_id,
+            // Activity data from profiles table
+            lastActiveAt: alumni.profile?.last_active_at,
+            lastLoginAt: alumni.profile?.last_login_at
+          };
+        }) || [];
 
         // Apply activity filtering and sorting logic
         let filteredAlumni = transformedAlumni
@@ -562,34 +638,44 @@ export async function GET(request: NextRequest) {
       }, { status: 500 })
     }
 
-    // 🔥 KEY CHANGE: Use main branch transformation with activity fields
-    const transformedAlumni = alumni?.map(alumni => ({
-      id: alumni.user_id || alumni.id,
-      alumniId: alumni.id,
-      firstName: alumni.first_name,
-      lastName: alumni.last_name,
-      fullName: alumni.full_name,
-      chapter: alumni.chapter,
-      industry: alumni.industry,                    // ✅ Direct from alumni table
-      graduationYear: alumni.graduation_year,
-      company: alumni.company,                      // ✅ Direct from alumni table
-      jobTitle: alumni.job_title,                   // ✅ Direct from alumni table
-      email: alumni.email,
-      phone: alumni.phone,
-      location: alumni.location,                    // ✅ Direct from alumni table
-      description: alumni.description || `Experienced professional in ${alumni.industry}.`,
-      mutualConnections: alumni.mutual_connections || [],
-      mutualConnectionsCount: alumni.mutual_connections?.length || 0,
-      avatar: alumni.avatar_url || alumni.profile?.avatar_url,
-      verified: alumni.verified,
-      isActivelyHiring: alumni.is_actively_hiring,  // ✅ Direct from alumni table
-      lastContact: alumni.last_contact,
-      tags: alumni.tags || [],
-      hasProfile: !!alumni.user_id,
-      // 🔥 NEW: Activity data from profiles table
-      lastActiveAt: alumni.profile?.last_active_at,
-      lastLoginAt: alumni.profile?.last_login_at
-    })) || []
+    // 🔥 KEY CHANGE: Use main branch transformation with activity fields and privacy
+    const transformedAlumni = alumni?.map(alumni => {
+      const alumniUserId = alumni.user_id || alumni.id;
+      const isOwner = viewerId && (viewerId === alumniUserId);
+      const isAdmin = viewerRole === 'admin';
+      const canSeeEmail = isOwner || isAdmin || (alumni.is_email_public !== false);
+      const canSeePhone = isOwner || isAdmin || (alumni.is_phone_public !== false);
+      
+      return {
+        id: alumniUserId,
+        alumniId: alumni.id,
+        firstName: alumni.first_name,
+        lastName: alumni.last_name,
+        fullName: alumni.full_name,
+        chapter: alumni.chapter,
+        industry: alumni.industry,                    // ✅ Direct from alumni table
+        graduationYear: alumni.graduation_year,
+        company: alumni.company,                      // ✅ Direct from alumni table
+        jobTitle: alumni.job_title,                   // ✅ Direct from alumni table
+        email: canSeeEmail ? alumni.email : null,
+        phone: canSeePhone ? alumni.phone : null,
+        isEmailPublic: alumni.is_email_public !== false,
+        isPhonePublic: alumni.is_phone_public !== false,
+        location: alumni.location,                    // ✅ Direct from alumni table
+        description: alumni.description || `Experienced professional in ${alumni.industry}.`,
+        mutualConnections: alumni.mutual_connections || [],
+        mutualConnectionsCount: alumni.mutual_connections?.length || 0,
+        avatar: alumni.avatar_url || alumni.profile?.avatar_url,
+        verified: alumni.verified,
+        isActivelyHiring: alumni.is_actively_hiring,  // ✅ Direct from alumni table
+        lastContact: alumni.last_contact,
+        tags: alumni.tags || [],
+        hasProfile: !!alumni.user_id,
+        // 🔥 NEW: Activity data from profiles table
+        lastActiveAt: alumni.profile?.last_active_at,
+        lastLoginAt: alumni.profile?.last_login_at
+      };
+    }) || []
 
     //  ADD: Activity filtering and sorting logic
     let filteredAlumni = transformedAlumni

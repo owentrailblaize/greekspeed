@@ -9,8 +9,12 @@ export interface Alumni {
   graduationYear: number;
   company: string;
   jobTitle: string;
-  email: string;
-  phone: string;
+  email: string | null;
+  phone: string | null;
+  is_email_public?: boolean;
+  is_phone_public?: boolean;
+  isEmailPublic?: boolean;  // camelCase version for API response
+  isPhonePublic?: boolean;  // camelCase version for API response
   location: string;
   description: string;
   mutualConnections: MutualConnection[];
