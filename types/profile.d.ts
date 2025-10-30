@@ -11,7 +11,8 @@ export type ChapterRole =
   | 'risk_management_chair'
   | 'alumni_relations_chair'
   | 'member'
-  | 'pledge';
+  | 'pledge'
+  | (string & {});
 
 export type MemberStatus = 
   | 'active'
