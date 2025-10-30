@@ -304,7 +304,7 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
                   <Label htmlFor="chapter_role_custom">Custom Title</Label>
                   <Input
                     id="chapter_role_custom"
-                    placeholder='e.g. "Historian"'
+                    placeholder='e.g. "Board Chair"'
                     value={formData.chapter_role}
                     onChange={(e) => setFormData({ ...formData, chapter_role: e.target.value })}
                     required

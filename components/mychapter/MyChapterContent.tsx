@@ -6,7 +6,7 @@ import { ChapterMember } from "@/types/chapter";
 import { useChapterRoleAccess } from '@/lib/hooks/useChapterRoleAccess';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { useProfile } from '@/lib/hooks/useProfile';
-import { CHAPTER_ADMIN_ROLES } from '@/lib/permissions';
+import { CHAPTER_ADMIN_ROLES, getRoleDisplayName } from '@/lib/permissions';
 
 interface MyChapterContentProps {
   onNavigate: (section: string) => void;
@@ -25,24 +25,6 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
   // Role checking
   const { hasChapterRoleAccess } = useChapterRoleAccess(CHAPTER_ADMIN_ROLES);
 
-  // Helper function to get role display name
-  function getRoleDisplayName(role: string): string {
-    const roleNames: Record<string, string> = {
-      'president': 'President',
-      'vice_president': 'Vice President',
-      'treasurer': 'Treasurer',
-      'secretary': 'Secretary',
-      'rush_chair': 'Rush Chair',
-      'social_chair': 'Social Chair',
-      'philanthropy_chair': 'Philanthropy Chair',
-      'risk_management_chair': 'Risk Management Chair',
-      'alumni_relations_chair': 'Alumni Relations Chair',
-      'member': 'Member',
-      'pledge': 'Pledge'
-    };
-    return roleNames[role] || 'Member';
-  }
-
   // Update the transformation logic to handle null values better
   const transformedMembers: ChapterMember[] = members.map(member => {
     // Only use bio for description, nothing else
@@ -55,7 +37,9 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
       name: member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Unknown Member',
       year: member.grad_year ? member.grad_year.toString() : undefined,
       major: member.major && member.major !== 'null' ? member.major : undefined,
-      position: member.chapter_role && member.chapter_role !== 'member' ? getRoleDisplayName(member.chapter_role) : undefined,
+      position: member.chapter_role && member.chapter_role !== 'member' 
+        ? getRoleDisplayName(member.chapter_role as any) 
+        : undefined,
       avatar: member.avatar_url || undefined,
       verified: member.role === 'admin',
       mutualConnections: [],
@@ -75,8 +59,10 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
   });
 
   // Separate officers from general members
-  const officers = filteredMembers.filter(member => 
-    member.position && ['President', 'Vice President', 'Treasurer', 'Secretary', 'Rush Chair', 'Social Chair'].includes(member.position)
+  const leadershipTitles = ['President', 'Vice President', 'Treasurer', 'Secretary', 'Rush Chair', 'Social Chair'];
+  const officers = filteredMembers.filter(member =>
+    member.verified /* role === 'admin' */ ||
+    (member.position && leadershipTitles.includes(member.position))
   );
 
   // Sort officers by leadership hierarchy
@@ -105,7 +91,7 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
   });
 
   const generalMembers = filteredMembers.filter(member => 
-    !member.position || member.position === 'Member' || member.position === 'Pledge'
+    !(member.verified || (member.position && leadershipTitles.includes(member.position)))
   );
 
   // Filter members based on active section
