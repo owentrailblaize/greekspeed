@@ -292,17 +292,11 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
                   }
                 }}
               >
-                <SelectItem value="member">General Member</SelectItem>
+                <SelectItem value="member">Member</SelectItem>
                 <SelectItem value="president">President</SelectItem>
                 <SelectItem value="vice_president">Vice President</SelectItem>
-                <SelectItem value="secretary">Secretary</SelectItem>
                 <SelectItem value="treasurer">Treasurer</SelectItem>
-                <SelectItem value="rush_chair">Rush Chair</SelectItem>
                 <SelectItem value="social_chair">Social Chair</SelectItem>
-                <SelectItem value="philanthropy_chair">Philanthropy Chair</SelectItem>
-                <SelectItem value="risk_management_chair">Risk Management Chair</SelectItem>
-                <SelectItem value="alumni_relations_chair">Alumni Relations Chair</SelectItem>
-                <SelectItem value="pledge">Pledge</SelectItem>
                 <SelectItem value="__custom__">Custom…</SelectItem>
               </Select>
               {(['president','vice_president','secretary','treasurer','rush_chair','social_chair','philanthropy_chair','risk_management_chair','alumni_relations_chair','member','pledge'].includes(formData.chapter_role) === false) && (

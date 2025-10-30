@@ -90,14 +90,8 @@ export function EditUserModal({ isOpen, onClose, user, onSaved }: EditUserModalP
               <SelectItem value="member">General Member</SelectItem>
               <SelectItem value="president">President</SelectItem>
               <SelectItem value="vice_president">Vice President</SelectItem>
-              <SelectItem value="secretary">Secretary</SelectItem>
               <SelectItem value="treasurer">Treasurer</SelectItem>
-              <SelectItem value="rush_chair">Rush Chair</SelectItem>
               <SelectItem value="social_chair">Social Chair</SelectItem>
-              <SelectItem value="philanthropy_chair">Philanthropy Chair</SelectItem>
-              <SelectItem value="risk_management_chair">Risk Management Chair</SelectItem>
-              <SelectItem value="alumni_relations_chair">Alumni Relations Chair</SelectItem>
-              <SelectItem value="pledge">Pledge</SelectItem>
               <SelectItem value="__custom__">Custom…</SelectItem>
             </Select>
             {(!predefined.includes(chapterRole)) && (
