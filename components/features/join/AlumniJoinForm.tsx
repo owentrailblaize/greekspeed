@@ -118,6 +118,15 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
       }
 
       const data = await response.json();
+
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+      });
+      
+      if (signInError) {
+        throw new Error(signInError.message || 'Failed to sign in after creating account');
+      }
       
       toast.success('Alumni account created successfully!');
       onSuccess(data.user);
