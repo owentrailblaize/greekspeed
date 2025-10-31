@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Star, User, Building2, GraduationCap, MapPin, Briefcase, Info, Users } from 'lucide-react';
+import { Select, SelectItem } from '@/components/ui/select';
+import {  Info, Users } from 'lucide-react';
 import { useChapters } from '@/lib/hooks/useChapters';
 
 // User roles for the dropdown - Only Alumni allowed for public signup
