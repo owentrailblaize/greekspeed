@@ -164,6 +164,18 @@ export async function POST(
     }
 
     // Create or update alumni record
+    const { data: existingAlumni, error: fetchAlumniError } = await supabase
+      .from('alumni')
+      .select(
+        'description, avatar_url, verified, is_actively_hiring, last_contact, tags, mutual_connections, created_at'
+      )
+      .eq('user_id', authData.user.id)
+      .maybeSingle();
+
+    if (fetchAlumniError) {
+      console.error('❌ Alumni Invitation Accept: Failed to fetch existing alumni record:', fetchAlumniError);
+    }
+
     const alumniPayload = {
       user_id: authData.user.id,
       first_name: normalizedFirstName,
@@ -179,6 +191,14 @@ export async function POST(
       phone: normalizedPhone,
       location: normalizedLocation,
       linkedin_url: normalizedLinkedIn,
+      description: existingAlumni?.description ?? `Alumni from ${validation.chapter_name}`,
+      avatar_url: existingAlumni?.avatar_url ?? null,
+      verified: existingAlumni?.verified ?? false,
+      is_actively_hiring: existingAlumni?.is_actively_hiring ?? false,
+      last_contact: existingAlumni?.last_contact ?? null,
+      tags: existingAlumni?.tags ?? null,
+      mutual_connections: existingAlumni?.mutual_connections ?? [],
+      created_at: existingAlumni?.created_at ?? nowIso,
       updated_at: nowIso
     };
 
