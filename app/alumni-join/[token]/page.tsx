@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { AlertCircle, Users, Shield, Calendar, CheckCircle, Loader2, GraduationCap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { logger } from '@/lib/utils/logger';
 import { AlumniJoinForm } from '@/components/features/join/AlumniJoinForm';
 import { Invitation } from '@/types/invitations';
 
@@ -38,9 +39,16 @@ export default function AlumniJoinPage() {
         }
 
         setInvitation(data.invitation);
-      } catch (error) {
-        console.error('Error validating alumni invitation:', error);
-        setError(error instanceof Error ? error.message : 'Failed to validate alumni invitation');
+      } catch (validationError) {
+        logger.error('Failed to validate alumni invitation', {
+          validationError,
+          token,
+        });
+        setError(
+          validationError instanceof Error
+            ? validationError.message
+            : 'Failed to validate alumni invitation'
+        );
       } finally {
         setLoading(false);
       }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { logger } from '@/lib/utils/logger'
 
 // Add this helper function at the top of the file
 const getChapterId = async (supabase: any, chapterIdentifier: string): Promise<string | null> => {
@@ -25,7 +26,10 @@ export async function GET(request: NextRequest) {
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     
     if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('Missing environment variables')
+      logger.error('Missing environment variables for alumni API route', {
+        hasUrl: !!supabaseUrl,
+        hasServiceKey: !!supabaseServiceKey,
+      })
       return NextResponse.json({ 
         error: 'Missing environment variables',
         details: {
@@ -90,7 +94,9 @@ export async function GET(request: NextRequest) {
       }
     } catch (viewerError) {
       // If we can't get viewer, continue without privacy checks (all data will be shown)
-      console.log('Could not determine viewer identity, continuing without privacy checks');
+      logger.warn('Could not determine viewer identity; continuing without privacy checks', {
+        viewerError,
+      })
     }
     
     // Get query parameters
@@ -630,7 +636,15 @@ export async function GET(request: NextRequest) {
     const { data: alumni, error, count } = await query
 
     if (error) {
-      console.error('❌ Supabase error:', error)
+      logger.error('Supabase query failed while fetching alumni records', {
+        error,
+        page,
+        limit,
+        search,
+        industry,
+        chapter,
+        location,
+      })
       return NextResponse.json({ 
         error: 'Database query failed',
         details: error.message,
@@ -776,7 +790,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('API Route error:', error)
+    logger.error('Alumni API route error', { error })
     return NextResponse.json({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
