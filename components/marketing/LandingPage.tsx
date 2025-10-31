@@ -61,7 +61,7 @@ const pricingPlans = [
   {
     name: "Premium",
     monthlyPrice: "$5",
-    yearlyPrice: "$50", // assuming yearly pricing
+    yearlyPrice: "$36", // assuming yearly pricing
     period: "per member",
     description: "Full access for active members",
     features: [
