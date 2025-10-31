@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { SMSService } from '@/lib/services/sms/smsServiceTelnyx';
 import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
+import { logger } from '@/lib/utils/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
       .range(offset, offset + limit - 1);
 
     if (error) {
-      console.error('Announcements fetch error:', error);
+      logger.error('Failed to fetch announcements', { error, chapterId });
       return NextResponse.json({ error: 'Failed to fetch announcements' }, { status: 500 });
     }
 
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('Announcements GET route error', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -169,7 +170,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Announcement creation error:', createError);
+      logger.error('Failed to create announcement', { createError, userId: user.id });
       return NextResponse.json({ error: 'Failed to create announcement' }, { status: 500 });
     }
 
@@ -206,7 +207,10 @@ export async function POST(request: NextRequest) {
           .not('email', 'is', null);
 
         if (membersError) {
-          console.error('❌ Failed to fetch chapter members:', membersError);
+          logger.error('Failed to fetch chapter members for announcement email notifications', {
+            membersError,
+            chapterId: profile.chapter_id,
+          });
         } else if (!members || members.length === 0) {
           // No chapter members found for email notifications
         } else {
@@ -247,11 +251,18 @@ export async function POST(request: NextRequest) {
               }
             );
 
-            // Email sending result received
+            logger.info('Announcement email notification attempt finished', {
+              announcementId: announcement.id,
+              recipientCount: recipients.length,
+              result,
+            });
           }
         }
       } catch (emailError) {
-        console.error('❌ Error sending announcement emails:', emailError);
+        logger.error('Error sending announcement emails', {
+          emailError,
+          announcementId: announcement.id,
+        });
         // Don't fail the announcement creation if email fails
       }
 
@@ -296,28 +307,34 @@ export async function POST(request: NextRequest) {
             // Send SMS in background (don't await - fire and forget)
             SMSService.sendBulkSMS(recipientsToUse, smsMessage)
               .then(result => {
-                console.log('✅ Announcement SMS sent:', {
-                  total: recipientsToUse.length,
+                logger.info('Announcement SMS send completed', {
+                  totalRecipients: recipientsToUse.length,
                   success: result.success,
                   failed: result.failed,
-                  announcementId: announcement.id
+                  announcementId: announcement.id,
                 });
               })
               .catch(error => {
-                console.error('❌ Announcement SMS failed:', error);
+                logger.error('Announcement SMS send failed', {
+                  error,
+                  announcementId: announcement.id,
+                });
                 // Don't throw - SMS failure shouldn't block announcement creation
               });
           }
         }
       } catch (smsError) {
-        console.error('❌ Error sending announcement SMS:', smsError);
+        logger.error('Error preparing announcement SMS notifications', {
+          smsError,
+          announcementId: announcement.id,
+        });
         // Don't fail the announcement creation if SMS fails
       }
     }
 
     return NextResponse.json({ announcement });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('Announcements POST route error', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -332,7 +349,10 @@ async function createRecipientRecords(announcementId: string, chapterId: string,
       .eq('role', 'active_member');
 
     if (error || !members) {
-      console.error('Failed to fetch chapter members:', error);
+      logger.error('Failed to fetch chapter members when creating announcement recipients', {
+        error,
+        chapterId,
+      });
       return;
     }
 
@@ -347,9 +367,15 @@ async function createRecipientRecords(announcementId: string, chapterId: string,
       .insert(recipientRecords);
 
     if (insertError) {
-      console.error('Failed to create recipient records:', insertError);
+      logger.error('Failed to create announcement recipient records', {
+        insertError,
+        announcementId,
+      });
     }
   } catch (error) {
-    console.error('Error creating recipient records:', error);
+    logger.error('Error creating announcement recipient records', {
+      error,
+      announcementId,
+    });
   }
 }

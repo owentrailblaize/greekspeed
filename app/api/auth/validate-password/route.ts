@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
+import { logger } from '@/lib/utils/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Password validation error:', error);
+    logger.error('Password validation route error', { error });
     return NextResponse.json({ 
       valid: false,
       error: 'Internal server error' 

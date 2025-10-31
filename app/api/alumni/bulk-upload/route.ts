@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ Bulk upload error:', error);
+    logger.error('Bulk alumni upload failed', { error });
     return NextResponse.json({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
@@ -262,7 +263,10 @@ async function processAlumniRecordSimple(
           // Profile creation result
 
           if (profileError) {
-            console.error(`❌ Profile creation error:`, profileError);
+            logger.error('Profile creation error during bulk alumni upload', {
+              profileError,
+              email,
+            });
             
             // If it's a duplicate key error, the profile already exists
             if (profileError.code === '23505' && profileError.message.includes('profiles_pkey')) {
@@ -283,7 +287,10 @@ async function processAlumniRecordSimple(
           // Profile created successfully
           break;
         } catch (error) {
-          console.error(`❌ Profile creation exception:`, error);
+          logger.error('Profile creation exception during bulk alumni upload', {
+            error,
+            email,
+          });
           if (attempt < 3) {
             await new Promise(resolve => setTimeout(resolve, 1000));
             continue;
@@ -324,12 +331,18 @@ async function processAlumniRecordSimple(
         .eq('id', authUser.id);
 
       if (updateError) {
-        console.error(`❌ Profile update failed for ${email}:`, updateError);
+        logger.error('Profile update failed during bulk alumni upload', {
+          updateError,
+          email,
+        });
       } else {
         // Profile updated with complete data
       }
     } catch (updateError) {
-      console.error(`❌ Profile update exception for ${email}:`, updateError);
+      logger.error('Profile update exception during bulk alumni upload', {
+        updateError,
+        email,
+      });
     }
 
     // Step 5: Create alumni record
@@ -368,12 +381,18 @@ async function processAlumniRecordSimple(
         });
 
       if (alumniError) {
-        console.error(`❌ Alumni record creation failed for ${email}:`, alumniError);
+        logger.error('Alumni record creation failed during bulk alumni upload', {
+          alumniError,
+          email,
+        });
       } else {
         // Alumni record created successfully
       }
     } catch (alumniError) {
-      console.error(`❌ Alumni record creation exception for ${email}:`, alumniError);
+      logger.error('Alumni record creation exception during bulk alumni upload', {
+        alumniError,
+        email,
+      });
     }
 
     // Successfully created complete profile and alumni record
@@ -385,7 +404,10 @@ async function processAlumniRecordSimple(
     };
 
   } catch (error) {
-    console.error(`❌ Failed to process alumni ${alumniData.email}:`, error);
+    logger.error('Failed to process individual alumni during bulk upload', {
+      error,
+      email: alumniData.email,
+    });
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 

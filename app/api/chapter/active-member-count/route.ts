@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -23,13 +24,13 @@ export async function GET(request: NextRequest) {
       .eq('member_status', 'active');
 
     if (error) {
-      console.error('Error counting active members:', error);
+      logger.error('Failed to count active members', { error, chapterId });
       return NextResponse.json({ error: 'Failed to count active members' }, { status: 500 });
     }
 
     return NextResponse.json({ count: count || 0 });
   } catch (error) {
-    console.error('Error in active member count API:', error);
+    logger.error('Active member count route error', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

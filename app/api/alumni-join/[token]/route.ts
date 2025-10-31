@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateInvitationToken } from '@/lib/utils/invitationUtils';
+import { logger } from '@/lib/utils/logger';
 
 export async function GET(
   request: NextRequest,
@@ -39,7 +40,7 @@ export async function GET(
       }
     });
   } catch (error) {
-    console.error('Error validating alumni invitation:', error);
+    logger.error('Failed to validate alumni invitation token', { error });
     return NextResponse.json({ 
       valid: false,
       error: 'Failed to validate invitation' 
