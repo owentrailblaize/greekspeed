@@ -182,7 +182,6 @@ export async function POST(
       last_name: normalizedLastName,
       full_name: normalizedFullName,
       chapter: validation.chapter_name,
-      chapter_id: invitation.chapter_id,
       industry: normalizedIndustry,
       graduation_year,
       company: normalizedCompany,
