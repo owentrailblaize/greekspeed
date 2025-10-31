@@ -103,6 +103,7 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
     setLoading(true);
 
     try {
+      console.log('Submitting alumni form payload', formData);
       const response = await fetch(`/api/alumni-invitations/accept/${invitation.token}`, {
         method: 'POST',
         headers: {
@@ -493,7 +494,7 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
                     <span>Creating Alumni Account...</span>
                   </div>
                 ) : (
-                  'Create Alumni Account & Join Chapter'
+                  'Create Account'
                 )}
               </Button>
 

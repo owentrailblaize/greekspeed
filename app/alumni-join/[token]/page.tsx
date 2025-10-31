@@ -248,7 +248,7 @@ export default function AlumniJoinPage() {
               className="w-full bg-purple-600 hover:bg-purple-700"
               size="lg"
             >
-              Create Alumni Account & Join Chapter
+              Create Account
             </Button>
 
             <div className="text-center">
