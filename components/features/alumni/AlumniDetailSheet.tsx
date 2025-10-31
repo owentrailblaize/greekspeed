@@ -80,23 +80,39 @@ export function AlumniDetailSheet({ alumni, isOpen, onClose }: AlumniDetailSheet
             <div className="space-y-2">
               <div className="flex items-center space-x-3">
                 <Mail className="h-4 w-4 text-gray-400" />
-                <span className="text-sm text-gray-600">{alumni.email}</span>
-                <Button size="sm" variant="outline">
-                  <Mail className="h-4 w-4 mr-1" />
-                  Send Email
-                </Button>
+                <span className="text-sm text-gray-600">
+                  {alumni.email || ((alumni.is_email_public === false) ? 'Hidden by user' : 'Not available')}
+                </span>
+                {alumni.email && (
+                  <Button size="sm" variant="outline">
+                    <Mail className="h-4 w-4 mr-1" />
+                    Send Email
+                  </Button>
+                )}
+              </div>
+              <div className="flex items-center space-x-3">
+                <Mail className="h-4 w-4 text-gray-400" />
+                <span className="text-sm text-gray-600">
+                  {alumni.email || ((alumni.isEmailPublic === false || alumni.is_email_public === false) ? 'Hidden by user' : 'Not available')}
+                </span>
+                {alumni.email && (
+                  <Button size="sm" variant="outline">
+                    <Mail className="h-4 w-4 mr-1" />
+                    Send Email
+                  </Button>
+                )}
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="h-4 w-4 text-gray-400" />
-                <span className="text-sm text-gray-600">{alumni.phone}</span>
-                <Button size="sm" variant="outline">
-                  <Phone className="h-4 w-4 mr-1" />
-                  Call
-                </Button>
-              </div>
-              <div className="flex items-center space-x-3">
-                <MapPin className="h-4 w-4 text-gray-400" />
-                <span className="text-sm text-gray-600">{alumni.location}</span>
+                <span className="text-sm text-gray-600">
+                  {alumni.phone || ((alumni.isPhonePublic === false || alumni.is_phone_public === false) ? 'Hidden by user' : 'Not available')}
+                </span>
+                {alumni.phone && (
+                  <Button size="sm" variant="outline">
+                    <Phone className="h-4 w-4 mr-1" />
+                    Call
+                  </Button>
+                )}
               </div>
             </div>
           </div>
