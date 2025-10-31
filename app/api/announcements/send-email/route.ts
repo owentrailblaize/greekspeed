@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EmailService } from '@/lib/services/emailService';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
+import { logger } from "@/lib/utils/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
       .map(([key]) => key);
 
     if (missingVars.length > 0) {
-      console.error('❌ Missing environment variables:', missingVars);
+      logger.error('❌ Missing environment variables:', { context: [missingVars] });
       return NextResponse.json(
         { error: `Missing environment variables: ${missingVars.join(', ')}` },
         { status: 500 }
@@ -205,7 +206,7 @@ export async function POST(request: NextRequest) {
     }, { status: 200 });
 
   } catch (error) {
-    console.error('Announcement email error:', error);
+    logger.error('Announcement email error:', { context: [error] });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

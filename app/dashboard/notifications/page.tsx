@@ -9,6 +9,7 @@ import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { ConnectionManagement } from '@/components/ui/ConnectionManagement';
 import { Check, X, UserPlus, Users, Clock, MessageCircle, UserX, Bell, FileText } from 'lucide-react';
+import { logger } from "@/lib/utils/logger";
 
 export default function NotificationsPage() {
   const { user } = useAuth();
@@ -60,7 +61,7 @@ export default function NotificationsPage() {
       await updateConnectionStatus(connectionId, status);
       await refreshConnections();
     } catch (error) {
-      console.error('Failed to update connection:', error);
+      logger.error('Failed to update connection:', { context: [error] });
     } finally {
       setProcessingId(null);
     }

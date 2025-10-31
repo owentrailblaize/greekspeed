@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { generateInvitationToken, generateInvitationUrl } from '@/lib/utils/invitationUtils';
 import { CreateInvitationData } from '@/types/invitations';
+import { logger } from "@/lib/utils/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Invitations fetch error:', error);
+      logger.error('Invitations fetch error:', { context: [error] });
       return NextResponse.json({ error: 'Failed to fetch invitations' }, { status: 500 });
     }
 
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ invitations: transformedInvitations });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -187,7 +188,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Invitation creation error:', createError);
+      logger.error('Invitation creation error:', { context: [createError] });
       return NextResponse.json({ error: 'Failed to create invitation' }, { status: 500 });
     }
 
@@ -202,7 +203,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ invitation: transformedInvitation });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { EmailService } from '@/lib/services/emailService';
 import { getEmailBaseUrl } from '@/lib/utils/urlUtils';
+import { logger } from '@/lib/utils/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (resetError) {
-      console.error('Password reset error:', resetError);
+      logger.error('Password reset link generation failed', { resetError, email });
       return NextResponse.json({ 
         error: 'Failed to initiate password reset' 
       }, { status: 500 });
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!emailSent) {
-      console.error('Failed to send custom email');
+      logger.error('Failed to send password reset email', { email });
       return NextResponse.json({ 
         error: 'Failed to send reset email' 
       }, { status: 500 });
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Forgot password error:', error);
+    logger.error('Forgot password route error', { error });
     return NextResponse.json({ 
       error: 'Internal server error' 
     }, { status: 500 });

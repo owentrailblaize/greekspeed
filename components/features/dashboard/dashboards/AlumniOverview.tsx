@@ -18,6 +18,7 @@ import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 import { ChapterMemberData } from '@/types/chapter';
+import { logger } from "@/lib/utils/logger";
 
 interface Profile {
   id: string;
@@ -118,7 +119,7 @@ export function AlumniOverview() {
       setConnectedUserName(member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member');
       setSuccessModalOpen(true);
     } catch (error) {
-      console.error('Failed to send connection request:', error);
+      logger.error('Failed to send connection request:', { context: [error] });
     } finally {
       setConnectionLoading(null);
     }

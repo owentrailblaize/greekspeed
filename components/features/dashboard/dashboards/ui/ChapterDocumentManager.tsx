@@ -30,7 +30,8 @@ import {
 } from 'lucide-react';
 import { documentUploadService, DocumentUploadData } from '@/lib/services/documentUploadService';
 import { toast } from 'react-toastify';
-import { supabase } from '@/lib/supabase/client'; // Fixed import path
+import { supabase } from '@/lib/supabase/client';
+import { logger } from "@/lib/utils/logger";
 
 // Mock data structure that matches your future database schema
 interface ChapterDocument {
@@ -116,7 +117,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading documents:', error);
+        logger.error('Error loading documents:', { context: [error] });
         setDocuments([]);
       } else {
         // Transform the data to match your ChapterDocument interface
@@ -141,7 +142,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
         setDocuments(transformedDocuments);
       }
     } catch (error) {
-      console.error('Error loading documents:', error);
+      logger.error('Error loading documents:', { context: [error] });
       setDocuments([]);
     } finally {
       setLoading(false);
@@ -246,7 +247,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
         .list('', { limit: 100 });
 
       if (listError) {
-        console.error('❌ Error listing bucket:', listError);
+        logger.error('❌ Error listing bucket:', { context: [listError] });
       } else {
         // Actual bucket contents
       }
@@ -284,7 +285,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
         .eq('id', documentId);
 
       if (dbError) {
-        console.error('❌ Database deletion error:', dbError);
+        logger.error('❌ Database deletion error:', { context: [dbError] });
         toast.error('Failed to delete document record');
         return;
       }
@@ -296,7 +297,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
       toast.success('Document deleted successfully!');
 
     } catch (error) {
-      console.error('❌ Error deleting document:', error);
+      logger.error('❌ Error deleting document:', { context: [error] });
       toast.error('Failed to delete document');
     }
   };
@@ -320,7 +321,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
         toast.error('Document not accessible for download');
       }
     } catch (error) {
-      console.error('Download error:', error);
+      logger.error('Download error:', { context: [error] });
       toast.error('Download failed. Please try again.');
     }
   };
@@ -477,7 +478,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
       toast.success('Document uploaded successfully!');
       
     } catch (error) {
-      console.error('Upload error:', error);
+      logger.error('Upload error:', { context: [error] });
       setUploadError(error instanceof Error ? error.message : 'Upload failed');
     } finally {
       setUploading(false);

@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import { getStripe } from '@/lib/services/stripe/stripe';
 import { supabase } from '@/lib/supabase/client';
 import { PAYWALL_CONFIG } from '@/lib/config/paywall';
+import { logger } from "@/lib/utils/logger";
 
 interface SubscriptionPaywallProps {
   children: React.ReactNode;
@@ -43,7 +44,7 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
         .single();
 
       if (profileError) {
-        console.error('Error fetching profile:', profileError);
+        logger.error('Error fetching profile:', { context: [profileError] });
         return;
       }
 
@@ -85,7 +86,7 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
           .single();
 
         if (subscriptionError && subscriptionError.code !== 'PGRST116') {
-          console.error('Error checking chapter subscription:', subscriptionError);
+          logger.error('Error checking chapter subscription:', { context: [subscriptionError] });
         }
 
         if (!chapterSubscription) {
@@ -97,18 +98,18 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
         }
       }
     } catch (error) {
-      console.error('Error checking subscription status:', error);
+      logger.error('Error checking subscription status:', { context: [error] });
     }
   };
 
   const handleSubscribe = async () => {
     if (!user?.id || !user?.email || !userChapter?.id) {
-      console.error('Missing required data:', {
-        userId: user?.id,
-        userEmail: user?.email,
-        chapterId: userChapter?.id,
-        userChapter: userChapter
-      });
+      logger.error('Missing required data:', {
+                userId: user?.id,
+                userEmail: user?.email,
+                chapterId: userChapter?.id,
+                userChapter: userChapter
+              });
       setError('User information or chapter not available');
       return;
     }
@@ -165,7 +166,7 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
           throw stripeError;
         }
       } catch (stripeError) {
-        console.error('Stripe redirect error:', stripeError);
+        logger.error('Stripe redirect error:', { context: [stripeError] });
         
         // Fallback to direct URL redirect
         if (url) {
@@ -175,7 +176,7 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
         }
       }
     } catch (error) {
-      console.error('Error creating chapter subscription:', error);
+      logger.error('Error creating chapter subscription:', { context: [error] });
       setError(error instanceof Error ? error.message : 'An unexpected error occurred');
     } finally {
       setIsLoading(false);

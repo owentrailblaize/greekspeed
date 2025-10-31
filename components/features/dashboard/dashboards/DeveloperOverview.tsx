@@ -14,6 +14,7 @@ import {
   UserCheck,
   Shield
 } from 'lucide-react';
+import { logger } from "@/lib/utils/logger";
 
 export function DeveloperOverview() {
   const { profile, isDeveloper } = useAuth();
@@ -58,7 +59,7 @@ export function DeveloperOverview() {
       });
 
     } catch (error) {
-      console.error('Error loading developer stats:', error);
+      logger.error('Error loading developer stats:', { context: [error] });
       setError(error instanceof Error ? error.message : 'Failed to load data');
     } finally {
       setLoading(false);

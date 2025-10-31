@@ -6,6 +6,7 @@ import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, Users, ChevronDown,
 import { useProfile } from '@/lib/hooks/useProfile';
 import { Event } from '@/types/events';
 import { parseRawTime } from '@/lib/utils/timezoneUtils';
+import { logger } from "@/lib/utils/logger";
 
 export function MobileCalendarPage() {
   const [calendarDate, setCalendarDate] = useState(new Date());
@@ -35,7 +36,7 @@ export function MobileCalendarPage() {
         const data = await response.json();
         setEvents(data);
       } catch (err) {
-        console.error('Error fetching events:', err);
+        logger.error('Error fetching events:', { context: [err] });
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
         setLoading(false);

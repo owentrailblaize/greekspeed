@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 export async function DELETE(
   request: NextRequest,
@@ -73,13 +74,13 @@ export async function DELETE(
       .eq('id', commentId);
 
     if (deleteError) {
-      console.error('Comment deletion error:', deleteError);
+      logger.error('Comment deletion error:', { context: [deleteError] });
       return NextResponse.json({ error: 'Failed to delete comment' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

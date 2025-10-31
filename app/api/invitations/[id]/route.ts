@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { generateInvitationUrl } from '@/lib/utils/invitationUtils';
+import { logger } from "@/lib/utils/logger";
 
 export async function PUT(
   request: NextRequest,
@@ -99,7 +100,7 @@ export async function PUT(
       .single();
 
     if (updateError) {
-      console.error('Invitation update error:', updateError);
+      logger.error('Invitation update error:', { context: [updateError] });
       return NextResponse.json({ error: 'Failed to update invitation' }, { status: 500 });
     }
 
@@ -117,7 +118,7 @@ export async function PUT(
 
     return NextResponse.json({ invitation: transformedInvitation });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -183,13 +184,13 @@ export async function DELETE(
       .eq('id', id);
 
     if (deleteError) {
-      console.error('Invitation deletion error:', deleteError);
+      logger.error('Invitation deletion error:', { context: [deleteError] });
       return NextResponse.json({ error: 'Failed to delete invitation' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

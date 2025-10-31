@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { EmailService } from '@/lib/services/emailService';
 import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
+import { logger } from "@/lib/utils/logger";
 
 export async function PATCH(
   request: NextRequest,
@@ -52,7 +53,7 @@ export async function PATCH(
       .single();
 
     if (fetchError) {
-      console.error('Error fetching connection:', fetchError);
+      logger.error('Error fetching connection:', { context: [fetchError] });
       return NextResponse.json({ error: 'Failed to fetch connection' }, { status: 500 });
     }
 
@@ -68,7 +69,7 @@ export async function PATCH(
       .single();
 
     if (error) {
-      console.error('Connection update error:', error);
+      logger.error('Connection update error:', { context: [error] });
       return NextResponse.json({ error: 'Failed to update connection' }, { status: 500 });
     }
 
@@ -82,10 +83,10 @@ export async function PATCH(
         // Send email notification if allowed by preferences
         if (requesterProfile?.email && requesterProfile?.first_name && recipientProfile?.first_name) {
           const allowed = await canSendEmailNotification(requesterProfile.id as string, 'connection_accepted');
-          console.log('Email preference check (connection accepted):', {
-            requesterId: requesterProfile.id,
-            allowed,
-          });
+          logger.info('Email preference check (connection accepted):', {
+                        requesterId: requesterProfile.id,
+                        allowed,
+                      });
           if (allowed) {
             EmailService.sendConnectionAcceptedNotification({
               to: requesterProfile.email,
@@ -94,44 +95,44 @@ export async function PATCH(
               actorFirstName: recipientProfile.first_name,
               connectionId: id
             }).catch(emailError => {
-              console.error('Failed to send connection accepted email:', emailError);
+              logger.error('Failed to send connection accepted email:', { context: [emailError] });
             });
           }
         }
 
         // Send SMS notification (parallel to email, don't block if SMS fails)
-        console.log('📱 Starting SMS notification process for connection accepted:', {
-          connectionId: id,
-          requesterId: requesterProfile?.id,
-          recipientId: recipientProfile?.id
-        });
+        logger.info('📱 Starting SMS notification process for connection accepted:', {
+                    connectionId: id,
+                    requesterId: requesterProfile?.id,
+                    recipientId: recipientProfile?.id
+                  });
 
         if (!requesterProfile?.phone || !requesterProfile.sms_consent) {
-          console.log('ℹ️ Requester not eligible for SMS notification:', {
-            requesterId: requesterProfile?.id,
-            hasPhone: !!requesterProfile?.phone,
-            hasConsent: requesterProfile?.sms_consent
-          });
+          logger.info('ℹ️ Requester not eligible for SMS notification:', {
+                        requesterId: requesterProfile?.id,
+                        hasPhone: !!requesterProfile?.phone,
+                        hasConsent: requesterProfile?.sms_consent
+                      });
         } else {
           // Format and validate phone number
           const { SMSService } = await import('@/lib/services/sms/smsServiceTelnyx');
           const formattedPhone = SMSService.formatPhoneNumber(requesterProfile.phone);
           
           if (!SMSService.isValidPhoneNumber(requesterProfile.phone)) {
-            console.log('⚠️ Invalid phone number format:', {
-              requesterId: requesterProfile.id,
-              phone: requesterProfile.phone,
-              formatted: formattedPhone
-            });
+            logger.info('⚠️ Invalid phone number format:', {
+                            requesterId: requesterProfile.id,
+                            phone: requesterProfile.phone,
+                            formatted: formattedPhone
+                          });
           } else {
             const accepterName = recipientProfile?.first_name || 'Someone';
 
-            console.log('🚀 Preparing to send connection accepted SMS:', {
-              requesterId: requesterProfile.id,
-              requesterName: requesterProfile.first_name,
-              phone: formattedPhone,
-              accepterName
-            });
+            logger.info('🚀 Preparing to send connection accepted SMS:', {
+                            requesterId: requesterProfile.id,
+                            requesterName: requesterProfile.first_name,
+                            phone: formattedPhone,
+                            accepterName
+                          });
 
             // Import SMSNotificationService
             const { SMSNotificationService } = await import('@/lib/services/sms/smsNotificationService');
@@ -145,36 +146,36 @@ export async function PATCH(
               requesterProfile.chapter_id || ''
             )
               .then(success => {
-                console.log('✅ Connection accepted SMS notification result:', {
-                  connectionId: id,
-                  requesterId: requesterProfile.id,
-                  success,
-                  phoneNumber: formattedPhone
-                });
+                logger.info('✅ Connection accepted SMS notification result:', {
+                                    connectionId: id,
+                                    requesterId: requesterProfile.id,
+                                    success,
+                                    phoneNumber: formattedPhone
+                                  });
               })
               .catch(error => {
-                console.error('❌ Connection accepted SMS notification failed:', {
-                  connectionId: id,
-                  requesterId: requesterProfile.id,
-                  error: error.message,
-                  stack: error.stack
-                });
+                logger.error('❌ Connection accepted SMS notification failed:', {
+                                    connectionId: id,
+                                    requesterId: requesterProfile.id,
+                                    error: error.message,
+                                    stack: error.stack
+                                  });
               });
           }
         }
       } catch (notificationError) {
-        console.error('❌ Error in connection accepted notification process:', {
-          connectionId: id,
-          error: notificationError instanceof Error ? notificationError.message : 'Unknown error',
-          stack: notificationError instanceof Error ? notificationError.stack : undefined
-        });
+        logger.error('❌ Error in connection accepted notification process:', {
+                    connectionId: id,
+                    error: notificationError instanceof Error ? notificationError.message : 'Unknown error',
+                    stack: notificationError instanceof Error ? notificationError.stack : undefined
+                  });
         // Don't fail the connection update if notifications fail
       }
     }
 
     return NextResponse.json({ connection });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -200,13 +201,13 @@ export async function DELETE(
       .eq('id', id);
 
     if (error) {
-      console.error('Connection deletion error:', error);
+      logger.error('Connection deletion error:', { context: [error] });
       return NextResponse.json({ error: 'Failed to delete connection' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

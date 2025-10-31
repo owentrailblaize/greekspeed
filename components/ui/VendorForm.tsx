@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X, Building2, Phone, Mail, Globe, MapPin, Star } from 'lucide-react';
 import { VendorContact, CreateVendorRequest, UpdateVendorRequest, VENDOR_TYPES } from '@/types/vendors';
+import { logger } from "@/lib/utils/logger";
 
 interface VendorFormProps {
   vendor?: VendorContact | null;
@@ -81,7 +82,7 @@ export function VendorForm({ vendor, onSubmit, onCancel, loading = false }: Vend
     try {
       await onSubmit(formData);
     } catch (error) {
-      console.error('Error submitting form:', error);
+      logger.error('Error submitting form:', { context: [error] });
     }
   };
 

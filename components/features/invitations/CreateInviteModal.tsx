@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { InvitationWithUsage, CreateInvitationData, UpdateInvitationData } from '@/types/invitations';
 import { generateInvitationUrl } from '@/lib/utils/invitationUtils';
 import { toast } from 'react-toastify';
+import { logger } from "@/lib/utils/logger";
 
 interface CreateInviteModalProps {
   invitation?: InvitationWithUsage;
@@ -44,7 +45,7 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
 
       await onSubmit(submitData);
     } catch (error) {
-      console.error('Error submitting form:', error);
+      logger.error('Error submitting form:', { context: [error] });
     } finally {
       setLoading(false);
     }

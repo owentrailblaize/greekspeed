@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 export async function POST(
   request: NextRequest,
@@ -79,7 +80,7 @@ export async function POST(
         .eq('user_id', user.id);
 
       if (unlikeError) {
-        console.error('Comment unlike error:', unlikeError);
+        logger.error('Comment unlike error:', { context: [unlikeError] });
         return NextResponse.json({ error: 'Failed to unlike comment' }, { status: 500 });
       }
 
@@ -94,14 +95,14 @@ export async function POST(
         });
 
       if (likeError) {
-        console.error('Comment like error:', likeError);
+        logger.error('Comment like error:', { context: [likeError] });
         return NextResponse.json({ error: 'Failed to like comment' }, { status: 500 });
       }
 
       return NextResponse.json({ liked: true });
     }
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

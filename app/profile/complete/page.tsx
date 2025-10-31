@@ -8,9 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Star, User, Building2, GraduationCap, MapPin, Briefcase, Info, Users } from 'lucide-react';
+import { Select, SelectItem } from '@/components/ui/select';
+import {  Info, Users } from 'lucide-react';
 import { useChapters } from '@/lib/hooks/useChapters';
+import { logger } from "@/lib/utils/logger";
 
 // User roles for the dropdown - Only Alumni allowed for public signup
 const userRoles = [
@@ -80,7 +81,7 @@ export default function ProfileCompletePage() {
       // Redirect to dashboard after successful profile completion
       router.push('/dashboard');
     } catch (error) {
-      console.error('Profile update error:', error);
+      logger.error('Profile update error:', { context: [error] });
       setError('Failed to update profile. Please try again.');
     } finally {
       setLoading(false);

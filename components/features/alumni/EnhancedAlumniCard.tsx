@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { ClickableField } from '@/components/shared/ClickableField';
 import { ActivityIndicator } from '@/components/shared/ActivityIndicator';
 import { useMutualConnections } from "@/lib/hooks/useMutualConnections";
+import { logger } from "@/lib/utils/logger";
 
 // Add this function at the top of the file, outside the component
 const getChapterName = (chapterId: string, isMobile: boolean = false): string => {
@@ -84,7 +85,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
           break;
       }
     } catch (error) {
-      console.error('Connection action failed:', error);
+      logger.error('Connection action failed:', { context: [error] });
     } finally {
       setConnectionLoading(false);
     }

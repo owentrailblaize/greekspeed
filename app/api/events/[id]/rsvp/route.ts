@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -57,7 +58,7 @@ export async function POST(
       .single();
 
     if (error) {
-      console.error('Error creating RSVP:', error);
+      logger.error('Error creating RSVP:', { context: [error] });
       return NextResponse.json({ error: 'Failed to create RSVP' }, { status: 500 });
     }
 
@@ -68,7 +69,7 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error('Error in RSVP API:', error);
+    logger.error('Error in RSVP API:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -95,7 +96,7 @@ export async function GET(
       .single();
 
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-      console.error('Error fetching RSVP:', error);
+      logger.error('Error fetching RSVP:', { context: [error] });
       return NextResponse.json({ error: 'Failed to fetch RSVP' }, { status: 500 });
     }
 
@@ -106,7 +107,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error in RSVP GET API:', error);
+    logger.error('Error in RSVP GET API:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

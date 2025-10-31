@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 import { Task, CreateTaskRequest, UpdateTaskRequest, TaskFilters } from '@/types/operations';
+import { logger } from "@/lib/utils/logger";
 
 // Task Management
 export async function createTask(taskData: CreateTaskRequest, assignedBy: string): Promise<Task | Task[]> {
@@ -31,7 +32,7 @@ export async function createTask(taskData: CreateTaskRequest, assignedBy: string
     // Errors found
     
     if (errors.length > 0) {
-      console.error('❌ Failed to create some tasks:', errors.map(e => e.error?.message));
+      logger.error('❌ Failed to create some tasks:', { context: [errors.map(e => e.error?.message)] });
       throw new Error(`Failed to create some tasks: ${errors.map(e => e.error?.message).join(', ')}`);
     }
     
@@ -57,7 +58,7 @@ export async function createTask(taskData: CreateTaskRequest, assignedBy: string
   // Single task creation result
 
   if (error) {
-    console.error('❌ Failed to create single task:', error);
+    logger.error('❌ Failed to create single task:', { context: [error] });
     throw error;
   }
   

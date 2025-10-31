@@ -5,6 +5,7 @@ import { X, Users, Calendar, MessageSquare, Shield, CheckCircle, Sparkles } from
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProfileService } from '@/lib/services/profileService';
+import { logger } from "@/lib/utils/logger";
 
 interface WelcomeModalProps {
   profile: any;
@@ -21,7 +22,7 @@ export function WelcomeModal({ profile, onClose }: WelcomeModalProps) {
     try {
       await ProfileService.updateProfile({ welcome_seen: true });
     } catch (error) {
-      console.error('Error updating welcome_seen:', error);
+      logger.error('Error updating welcome_seen:', { context: [error] });
     }
     
     onClose();

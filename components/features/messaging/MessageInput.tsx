@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Send, Paperclip } from 'lucide-react';
 import { EmojiPicker } from './EmojiPicker';
+import { logger } from "@/lib/utils/logger";
 
 interface MessageInputProps {
   onSendMessage: (content: string) => Promise<void>;
@@ -35,7 +36,7 @@ export function MessageInput({
         textareaRef.current.style.height = 'auto';
       }
     } catch (error) {
-      console.error('Failed to send message:', error);
+      logger.error('Failed to send message:', { context: [error] });
     } finally {
       setIsSending(false);
     }
@@ -86,7 +87,7 @@ export function MessageInput({
 
   // File upload functionality
   const handleFileUpload = () => {
-    console.log('File upload is currently disabled');
+    logger.info('File upload is currently disabled');
   };
 
   useEffect(() => {

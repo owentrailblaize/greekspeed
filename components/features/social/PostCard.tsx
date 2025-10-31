@@ -9,6 +9,7 @@ import { Post } from '@/types/posts';
 import { formatDistanceToNow } from 'date-fns';
 import { CommentModal } from './CommentModal';
 import { DeletePostModal } from './DeletePostModal';
+import { logger } from "@/lib/utils/logger";
 
 interface PostCardProps {
   post: Post;
@@ -51,7 +52,7 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
       await onDelete(post.id);
       setIsDeleteModalOpen(false);
     } catch (error) {
-      console.error('Failed to delete post:', error);
+      logger.error('Failed to delete post:', { context: [error] });
       // You could show a toast notification here
     } finally {
       setIsDeleting(false);

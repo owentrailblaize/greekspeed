@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { validateInvitationToken, validateEmailDomain, hasEmailUsedInvitation, recordInvitationUsage } from '@/lib/utils/invitationUtils';
+import { logger } from '@/lib/utils/logger';
 
 // New interface for alumni form data
 interface AlumniJoinFormData {
@@ -84,7 +85,7 @@ export async function POST(
     });
 
     if (authError || !authData.user) {
-      console.error('❌ Alumni Invitation Accept: Auth signup error:', authError);
+      logger.error('Alumni invitation accept signup error', { authError });
       return NextResponse.json({ 
         error: authError?.message || 'Failed to create account' 
       }, { status: 500 });
@@ -121,18 +122,20 @@ export async function POST(
     );
 
     if (profileError) {
-      console.error('❌ Alumni Invitation Accept: Profile creation error:', profileError);
-      console.error('❌ Alumni Invitation Accept: Profile error details:', {
-        code: profileError.code,
-        message: profileError.message,
-        details: profileError.details,
-        hint: profileError.hint
+      logger.error('Alumni invitation accept profile creation error', {
+        profileError,
+        profileErrorCode: profileError.code,
+        profileErrorDetails: profileError.details,
+        profileErrorHint: profileError.hint,
       });
       // Clean up the auth user if profile creation fails
       try {
         await supabase.auth.admin.deleteUser(authData.user.id);
       } catch (deleteError) {
-        console.error('❌ Alumni Invitation Accept: Failed to clean up auth user:', deleteError);
+        logger.error('Failed to clean up auth user after profile creation failure', {
+          deleteError,
+          authUserId: authData.user.id,
+        });
       }
       
       return NextResponse.json({ 
@@ -170,14 +173,18 @@ export async function POST(
       });
 
     if (alumniError) {
-      console.error('❌ Alumni Invitation Accept: Alumni record creation error:', alumniError);
+      logger.error('Alumni invitation accept alumni record creation error', { alumniError });
       // Don't fail the entire process, but log the error
     }
 
     // Record invitation usage
     const usageResult = await recordInvitationUsage(invitation.id, email, authData.user.id);
     if (!usageResult.success) {
-      console.error('❌ Alumni Invitation Accept: Failed to record invitation usage:', usageResult.error);
+      logger.error('Failed to record invitation usage during alumni invitation accept', {
+        usageError: usageResult.error,
+        invitationId: invitation.id,
+        email,
+      });
     }
 
     // Sign in the user after account creation
@@ -187,7 +194,7 @@ export async function POST(
     });
 
     if (signInError) {
-      console.error('❌ Alumni Invitation Accept: Auto sign-in failed:', signInError);
+      logger.error('Auto sign-in failed after alumni invitation accept', { signInError });
     }
 
     return NextResponse.json({
@@ -204,7 +211,7 @@ export async function POST(
       }
     });
   } catch (error) {
-    console.error('❌ Alumni Invitation Accept: API error:', error);
+    logger.error('Alumni invitation accept route error', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

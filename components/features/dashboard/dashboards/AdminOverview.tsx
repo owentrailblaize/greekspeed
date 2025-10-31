@@ -24,6 +24,7 @@ import { EventForm } from '@/components/ui/EventForm';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { createPortal } from 'react-dom';
+import { logger } from "@/lib/utils/logger";
 
 export function AdminOverview() {
   const { profile } = useProfile();
@@ -65,7 +66,7 @@ export function AdminOverview() {
       setShowEventModal(false);
     } catch (error) {
       toast.error('Failed to create event');
-      console.error('Error creating event:', error);
+      logger.error('Error creating event:', { context: [error] });
     }
   };
 

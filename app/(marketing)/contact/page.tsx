@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { MarketingHeader } from '@/components/marketing/MarketingHeader';
 import { Mail, Clock, CheckCircle, Plus, Minus } from 'lucide-react';
 import { useState } from 'react';
+import { logger } from '@/lib/utils/logger';
 
 // Support feature cards data
 const supportFeatures = [
@@ -71,7 +72,7 @@ export default function ContactPage() {
         setSubmitStatus('error');
       }
     } catch (error) {
-      console.error('Form submission error:', error);
+      logger.debug('Form submission error:', { error });
       setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);

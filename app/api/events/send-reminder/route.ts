@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { EmailService } from '@/lib/services/emailService';
 import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
+import { logger } from "@/lib/utils/logger";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (eventError || !event) {
-      console.error('Error fetching event:', eventError);
+      logger.error('Error fetching event:', { context: [eventError] });
       return NextResponse.json({ 
         error: 'Event not found' 
       }, { status: 404 });
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
       .not('email', 'is', null);
 
     if (membersError || !allMembers) {
-      console.error('Error fetching chapter members:', membersError);
+      logger.error('Error fetching chapter members:', { context: [membersError] });
       return NextResponse.json({ 
         error: 'Failed to fetch chapter members' 
       }, { status: 500 });
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
       .eq('event_id', eventId);
 
     if (rsvpError) {
-      console.error('Error fetching RSVPs:', rsvpError);
+      logger.error('Error fetching RSVPs:', { context: [rsvpError] });
       return NextResponse.json({ 
         error: 'Failed to fetch RSVPs' 
       }, { status: 500 });
@@ -154,8 +155,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error in send event reminder API:', error);
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    logger.error('Error in send event reminder API:', { context: [error] });
+    logger.error('Error stack:', { context: [error instanceof Error ? error.stack : 'No stack trace'] });
     return NextResponse.json({ 
       error: 'Internal server error' 
     }, { status: 500 });

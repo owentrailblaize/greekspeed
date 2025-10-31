@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 export async function POST(
   request: NextRequest,
@@ -36,13 +37,13 @@ export async function POST(
       .single();
 
     if (error) {
-      console.error('Announcement read receipt error:', error);
+      logger.error('Announcement read receipt error:', { context: [error] });
       return NextResponse.json({ error: 'Failed to mark announcement as read' }, { status: 500 });
     }
 
     return NextResponse.json({ recipient });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

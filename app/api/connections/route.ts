@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { EmailService } from '@/lib/services/emailService';
 import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
+import { logger } from "@/lib/utils/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,13 +48,13 @@ export async function GET(request: NextRequest) {
       .or(`requester_id.eq.${userId},recipient_id.eq.${userId}`);
 
     if (error) {
-      console.error('Connection fetch error:', error);
+      logger.error('Connection fetch error:', { context: [error] });
       return NextResponse.json({ error: 'Failed to fetch connections' }, { status: 500 });
     }
 
     return NextResponse.json({ connections: connections || [] });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (recipientError) {
-      console.error('Error fetching recipient profile:', recipientError);
+      logger.error('Error fetching recipient profile:', { context: [recipientError] });
     }
 
     // Get requester profile information for email notification
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (requesterError) {
-      console.error('Error fetching requester profile:', requesterError);
+      logger.error('Error fetching requester profile:', { context: [requesterError] });
     }
 
     // Create new connection request
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Connection creation error:', error);
+      logger.error('Connection creation error:', { context: [error] });
       return NextResponse.json({ error: 'Failed to create connection' }, { status: 500 });
     }
 
@@ -133,10 +134,10 @@ export async function POST(request: NextRequest) {
       // Send email notification if allowed by preferences
       if (recipientProfile?.email && recipientProfile?.first_name && requesterProfile?.first_name) {
         const allowed = await canSendEmailNotification(recipientProfile.id as string, 'connection');
-        console.log('Email preference check (connection request):', {
-          recipientId: recipientProfile.id,
-          allowed,
-        });
+        logger.info('Email preference check (connection request):', {
+                    recipientId: recipientProfile.id,
+                    allowed,
+                  });
         if (allowed) {
           EmailService.sendConnectionRequestNotification({
             to: recipientProfile.email,
@@ -146,44 +147,44 @@ export async function POST(request: NextRequest) {
             message: message,
             connectionId: connection.id
           }).catch(emailError => {
-            console.error('Failed to send connection request email:', emailError);
+            logger.error('Failed to send connection request email:', { context: [emailError] });
           });
         }
       }
 
       // Send SMS notification (parallel to email, don't block if SMS fails)
-      console.log('📱 Starting SMS notification process for connection request:', {
-        connectionId: connection.id,
-        requesterId: requesterId,
-        recipientId: recipientId
-      });
+      logger.info('📱 Starting SMS notification process for connection request:', {
+                connectionId: connection.id,
+                requesterId: requesterId,
+                recipientId: recipientId
+              });
 
       if (!recipientProfile?.phone || !recipientProfile.sms_consent) {
-        console.log('ℹ️ Recipient not eligible for SMS notification:', {
-          recipientId,
-          hasPhone: !!recipientProfile?.phone,
-          hasConsent: recipientProfile?.sms_consent
-        });
+        logger.info('ℹ️ Recipient not eligible for SMS notification:', {
+                    recipientId,
+                    hasPhone: !!recipientProfile?.phone,
+                    hasConsent: recipientProfile?.sms_consent
+                  });
       } else {
         // Format and validate phone number
         const { SMSService } = await import('@/lib/services/sms/smsServiceTelnyx');
         const formattedPhone = SMSService.formatPhoneNumber(recipientProfile.phone);
         
         if (!SMSService.isValidPhoneNumber(recipientProfile.phone)) {
-          console.log('⚠️ Invalid phone number format:', {
-            recipientId,
-            phone: recipientProfile.phone,
-            formatted: formattedPhone
-          });
+          logger.info('⚠️ Invalid phone number format:', {
+                        recipientId,
+                        phone: recipientProfile.phone,
+                        formatted: formattedPhone
+                      });
         } else {
           const requesterName = requesterProfile?.first_name || 'Someone';
 
-          console.log('🚀 Preparing to send connection request SMS:', {
-            recipientId,
-            recipientName: recipientProfile.first_name,
-            phone: formattedPhone,
-            requesterName
-          });
+          logger.info('🚀 Preparing to send connection request SMS:', {
+                        recipientId,
+                        recipientName: recipientProfile.first_name,
+                        phone: formattedPhone,
+                        requesterName
+                      });
 
           // Import SMSNotificationService
           const { SMSNotificationService } = await import('@/lib/services/sms/smsNotificationService');
@@ -197,31 +198,31 @@ export async function POST(request: NextRequest) {
             recipientProfile.chapter_id || ''
           )
             .then(success => {
-              console.log('✅ Connection request SMS notification result:', {
-                connectionId: connection.id,
-                recipientId,
-                success,
-                phoneNumber: formattedPhone
-              });
+              logger.info('✅ Connection request SMS notification result:', {
+                                connectionId: connection.id,
+                                recipientId,
+                                success,
+                                phoneNumber: formattedPhone
+                              });
             })
             .catch(error => {
-              console.error('❌ Connection request SMS notification failed:', {
-                connectionId: connection.id,
-                recipientId,
-                error: error.message,
-                stack: error.stack
-              });
+              logger.error('❌ Connection request SMS notification failed:', {
+                                connectionId: connection.id,
+                                recipientId,
+                                error: error.message,
+                                stack: error.stack
+                              });
             });
         }
       }
     } catch (notificationError) {
-      console.error('❌ Error in notification process:', notificationError);
+      logger.error('❌ Error in notification process:', { context: [notificationError] });
       // Don't fail the connection creation if notifications fail
     }
 
     return NextResponse.json({ connection });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

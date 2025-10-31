@@ -1,5 +1,6 @@
 // lib/utils/checkEmailPreferences.ts
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -36,7 +37,7 @@ export async function canSendEmailNotification(
 
   if (error && error.code !== 'PGRST116') {
     // If an unexpected error occurs, be conservative: allow send (fail-open) or log and block
-    console.error('Failed to load notification_settings:', error);
+    logger.error('Failed to load notification_settings:', { context: [error] });
   }
 
   // Defaults: opt-in (true) when missing

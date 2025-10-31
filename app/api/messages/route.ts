@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { EmailService } from '@/lib/services/emailService';
 import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
+import { logger } from "@/lib/utils/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
     const { data: messages, error } = await query;
 
     if (error) {
-      console.error('Message fetch error:', error);
+      logger.error('Message fetch error:', { context: [error] });
       return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
     }
 
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
       hasMore: messages && messages.length === limit
     });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -136,7 +137,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Message creation error:', error);
+      logger.error('Message creation error:', { context: [error] });
       return NextResponse.json({ error: 'Failed to create message' }, { status: 500 });
     }
 
@@ -161,15 +162,15 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (recipientError || !recipientProfile) {
-        console.error('❌ Error fetching recipient profile:', recipientError);
+        logger.error('❌ Error fetching recipient profile:', { context: [recipientError] });
       } else {
         // Send email notification (respect user preferences)
         if (recipientProfile.email && recipientProfile.first_name && message.sender?.first_name) {
           const allowed = await canSendEmailNotification(recipientProfile.id as string, 'message');
-          console.log('Email preference check (message):', {
-            recipientId,
-            allowed,
-          });
+          logger.info('Email preference check (message):', {
+                        recipientId,
+                        allowed,
+                      });
           if (allowed) {
             EmailService.sendMessageNotification({
               to: recipientProfile.email,
@@ -179,30 +180,30 @@ export async function POST(request: NextRequest) {
               messagePreview: content.length > 100 ? content.substring(0, 100) + '...' : content,
               connectionId: connectionId
             }).catch(emailError => {
-              console.error('Failed to send message notification email:', emailError);
+              logger.error('Failed to send message notification email:', { context: [emailError] });
             });
           }
         }
 
         // Send SMS notification (parallel to email, don't block if SMS fails)
         try {
-          console.log('📱 Starting SMS notification process for message:', {
-            messageId: message.id,
-            connectionId: connectionId,
-            senderId: senderId,
-            recipientId: recipientId
-          });
+          logger.info('📱 Starting SMS notification process for message:', {
+                        messageId: message.id,
+                        connectionId: connectionId,
+                        senderId: senderId,
+                        recipientId: recipientId
+                      });
 
           // CRITICAL: Must have sms_consent = true to send SMS
           if (!recipientProfile.phone || recipientProfile.sms_consent !== true) {
-            console.log('ℹ️ Recipient not eligible for SMS notification:', {
-              recipientId,
-              hasPhone: !!recipientProfile?.phone,
-              smsConsent: recipientProfile?.sms_consent,
-              reason: recipientProfile?.sms_consent === false 
-                ? 'SMS consent is disabled' 
-                : 'Missing phone or consent'
-            });
+            logger.info('ℹ️ Recipient not eligible for SMS notification:', {
+                            recipientId,
+                            hasPhone: !!recipientProfile?.phone,
+                            smsConsent: recipientProfile?.sms_consent,
+                            reason: recipientProfile?.sms_consent === false 
+                              ? 'SMS consent is disabled' 
+                              : 'Missing phone or consent'
+                          });
           } else {
             // SMS consent verified - proceed with sending
             // Format and validate phone number
@@ -210,23 +211,23 @@ export async function POST(request: NextRequest) {
             const formattedPhone = SMSService.formatPhoneNumber(recipientProfile.phone);
             
             if (!SMSService.isValidPhoneNumber(recipientProfile.phone)) {
-              console.log('⚠️ Invalid phone number format:', {
-                recipientId,
-                phone: recipientProfile.phone,
-                formatted: formattedPhone
-              });
+              logger.info('⚠️ Invalid phone number format:', {
+                                recipientId,
+                                phone: recipientProfile.phone,
+                                formatted: formattedPhone
+                              });
             } else {
               // Prepare message preview
               const messagePreview = content.length > 50 ? content.substring(0, 50) + '...' : content;
               const senderName = message.sender?.first_name || message.sender?.full_name || 'Someone';
 
-              console.log('🚀 Preparing to send message SMS:', {
-                recipientId,
-                recipientName: recipientProfile.first_name,
-                phone: formattedPhone,
-                senderName,
-                messagePreview: messagePreview.substring(0, 30) + '...'
-              });
+              logger.info('🚀 Preparing to send message SMS:', {
+                                recipientId,
+                                recipientName: recipientProfile.first_name,
+                                phone: formattedPhone,
+                                senderName,
+                                messagePreview: messagePreview.substring(0, 30) + '...'
+                              });
 
               // Import SMSNotificationService
               const { SMSNotificationService } = await import('@/lib/services/sms/smsNotificationService');
@@ -241,39 +242,39 @@ export async function POST(request: NextRequest) {
                 recipientProfile.chapter_id || ''
               )
                 .then(success => {
-                  console.log('✅ Message SMS notification result:', {
-                    messageId: message.id,
-                    recipientId,
-                    success,
-                    phoneNumber: formattedPhone
-                  });
+                  logger.info('✅ Message SMS notification result:', {
+                                        messageId: message.id,
+                                        recipientId,
+                                        success,
+                                        phoneNumber: formattedPhone
+                                      });
                 })
                 .catch(error => {
-                  console.error('❌ Message SMS notification failed:', {
-                    messageId: message.id,
-                    recipientId,
-                    error: error.message,
-                    stack: error.stack
-                  });
+                  logger.error('❌ Message SMS notification failed:', {
+                                        messageId: message.id,
+                                        recipientId,
+                                        error: error.message,
+                                        stack: error.stack
+                                      });
                 });
             }
           }
         } catch (smsError) {
-          console.error('❌ Error in SMS notification process for message:', {
-            messageId: message.id,
-            error: smsError instanceof Error ? smsError.message : 'Unknown error',
-            stack: smsError instanceof Error ? smsError.stack : undefined
-          });
+          logger.error('❌ Error in SMS notification process for message:', {
+                        messageId: message.id,
+                        error: smsError instanceof Error ? smsError.message : 'Unknown error',
+                        stack: smsError instanceof Error ? smsError.stack : undefined
+                      });
         }
       }
     } catch (notificationError) {
-      console.error('❌ Error in notification process:', notificationError);
+      logger.error('❌ Error in notification process:', { context: [notificationError] });
       // Don't fail message creation if notifications fail
     }
 
     return NextResponse.json({ message });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { Check, X, UserPlus, Users, Clock, UserX } from 'lucide-react';
+import { logger } from "@/lib/utils/logger";
 
 interface ConnectionManagementProps {
   variant?: 'desktop' | 'mobile';
@@ -51,7 +52,7 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
       await updateConnectionStatus(connectionId, status);
       await refreshConnections();
     } catch (error) {
-      console.error('Failed to update connection:', error);
+      logger.error('Failed to update connection:', { context: [error] });
     } finally {
       setProcessingId(null);
     }

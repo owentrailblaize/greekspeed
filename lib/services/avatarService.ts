@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
+import { logger } from "@/lib/utils/logger";
 
 export class AvatarService {
   private static supabaseClient = supabase;
@@ -11,7 +12,7 @@ export class AvatarService {
       // Validate file type more strictly
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
       if (!allowedTypes.includes(file.type)) {
-        console.error('Invalid file type. Only JPEG, PNG, and GIF are allowed.');
+        logger.error('Invalid file type. Only JPEG, PNG, and GIF are allowed.');
         return null;
       }
 
@@ -34,7 +35,7 @@ export class AvatarService {
         });
 
       if (error) {
-        console.error('Error uploading avatar:', error);
+        logger.error('Error uploading avatar:', { context: [error] });
         return null;
       }
 
@@ -45,7 +46,7 @@ export class AvatarService {
 
       return urlData.publicUrl;
     } catch (error) {
-      console.error('Error in uploadAvatar:', error);
+      logger.error('Error in uploadAvatar:', { context: [error] });
       return null;
     }
   }
@@ -66,7 +67,7 @@ export class AvatarService {
         .from('user-avatar')
         .remove([fileName]);
     } catch (error) {
-      console.error('Error deleting old avatar:', error);
+      logger.error('Error deleting old avatar:', { context: [error] });
     }
   }
 
@@ -81,13 +82,13 @@ export class AvatarService {
         .eq('id', userId);
 
       if (error) {
-        console.error('Error updating profile avatar:', error);
+        logger.error('Error updating profile avatar:', { context: [error] });
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error in updateProfileAvatar:', error);
+      logger.error('Error in updateProfileAvatar:', { context: [error] });
       return false;
     }
   }

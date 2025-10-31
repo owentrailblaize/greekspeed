@@ -10,6 +10,7 @@ import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { ConnectionManagement } from '@/components/ui/ConnectionManagement';
 import { ChapterMemberData } from '@/types/chapter';
+import { logger } from "@/lib/utils/logger";
 
 export function MobileNetworkPage() {
   const router = useRouter();
@@ -100,7 +101,7 @@ export function MobileNetworkPage() {
       setConnectedUserName(member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member');
       setSuccessModalOpen(true);
     } catch (error) {
-      console.error('Failed to send connection request:', error);
+      logger.error('Failed to send connection request:', { context: [error] });
     } finally {
       setConnectionLoading(null);
     }

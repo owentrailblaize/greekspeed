@@ -23,6 +23,7 @@ import {
 import { ViewChapterModal } from './ViewChapterModal';
 import { DeleteChapterModal } from './DeleteChapterModal';
 import { CreateChapterForm } from './CreateChapterForm';
+import { logger } from "@/lib/utils/logger";
 
 interface Chapter {
   id: string;
@@ -76,10 +77,10 @@ export function ChaptersTab() {
         setTotalPages(data.totalPages || 1);
         // Fetched page chapters
       } else {
-        console.error('Failed to fetch chapters');
+        logger.error('Failed to fetch chapters');
       }
     } catch (error) {
-      console.error('Error fetching chapters:', error);
+      logger.error('Error fetching chapters:', { context: [error] });
     } finally {
       setLoading(false);
     }
@@ -129,7 +130,7 @@ export function ChaptersTab() {
       alert(`Chapter "${chapterToDelete.name}" has been deleted successfully.`);
       
     } catch (error) {
-      console.error('Error deleting chapter:', error);
+      logger.error('Error deleting chapter:', { context: [error] });
       alert(`Failed to delete chapter: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setDeletingChapterId(null);

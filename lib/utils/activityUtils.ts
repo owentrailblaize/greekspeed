@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client'
+import { logger } from "@/lib/utils/logger";
 
 export enum ActivityTypes {
   LOGIN = 'login',
@@ -128,14 +129,14 @@ export async function trackActivity(userId: string, activityType: ActivityTypes,
 
     if (!response.ok) {
       const errorData = await response.json()
-      console.error('❌ Failed to track activity:', errorData)
+      logger.error('❌ Failed to track activity:', { context: [errorData] })
       return false
     }
 
     const result = await response.json()
     return true
   } catch (error) {
-    console.error('❌ Activity tracking error:', error)
+    logger.error('❌ Activity tracking error:', { context: [error] })
     return false
   }
 }
@@ -149,7 +150,7 @@ export async function updateLastLogin(userId: string) {
       loginMethod: 'direct_update' 
     })
   } catch (error) {
-    console.error('❌ Last login update error:', error)
+    logger.error('❌ Last login update error:', { context: [error] })
     return false
   }
 }
@@ -163,7 +164,7 @@ export async function updateLastActive(userId: string) {
       activitySource: 'direct_update' 
     })
   } catch (error) {
-    console.error('❌ Last active update error:', error)
+    logger.error('❌ Last active update error:', { context: [error] })
     return false
   }
 }

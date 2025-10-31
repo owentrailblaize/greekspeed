@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { EmailService } from '@/lib/services/emailService';
+import { logger } from '@/lib/utils/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
     );
 
     if (updateError) {
-      console.error('Password update error:', updateError);
+      logger.error('Password update failed', { updateError, userId: user.id });
       return NextResponse.json({ 
         error: 'Failed to update password' 
       }, { status: 500 });
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Reset password error:', error);
+    logger.error('Reset password route error', { error });
     return NextResponse.json({ 
       error: 'Internal server error' 
     }, { status: 500 });

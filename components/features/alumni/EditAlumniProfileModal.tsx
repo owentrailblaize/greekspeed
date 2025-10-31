@@ -14,6 +14,7 @@ import { BannerService } from '@/lib/services/bannerService';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/lib/supabase/client';
 import { trackActivity, ActivityTypes } from '@/lib/utils/activityUtils';
+import { logger } from "@/lib/utils/logger";
 
 interface EditAlumniProfileModalProps {
   isOpen: boolean;
@@ -69,7 +70,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (error) {
-      console.error('Failed to save form data to sessionStorage:', error);
+      logger.error('Failed to save form data to sessionStorage:', { context: [error] });
     }
   }, []);
 
@@ -78,7 +79,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
       const saved = sessionStorage.getItem(STORAGE_KEY);
       return saved ? JSON.parse(saved) : null;
     } catch (error) {
-      console.error('Failed to load form data from sessionStorage:', error);
+      logger.error('Failed to load form data from sessionStorage:', { context: [error] });
       return null;
     }
   }, []);
@@ -87,7 +88,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
     try {
       sessionStorage.removeItem(STORAGE_KEY);
     } catch (error) {
-      console.error('Failed to clear form data from sessionStorage:', error);
+      logger.error('Failed to clear form data from sessionStorage:', { context: [error] });
     }
   }, []);
 
@@ -104,13 +105,13 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         .single();
 
       if (error) {
-        console.error('Error loading alumni data:', error);
+        logger.error('Error loading alumni data:', { context: [error] });
         // If no alumni record exists, create one
         await createAlumniRecord();
         return;
       }
 
-      console.log('✅ Alumni data loaded:', data);
+      logger.info('✅ Alumni data loaded:', { context: [data] });
       setAlumniData(data);
       
       // Check for saved form data first, then use alumni data
@@ -143,7 +144,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
       }
       
     } catch (error) {
-      console.error('Error loading alumni data:', error);
+      logger.error('Error loading alumni data:', { context: [error] });
     } finally {
       setLoadingAlumni(false);
       setIsModalReady(true);
@@ -168,15 +169,15 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         });
 
       if (error) {
-        console.error('Error creating alumni record:', error);
+        logger.error('Error creating alumni record:', { context: [error] });
         return;
       }
 
-      console.log('✅ Alumni record created');
+      logger.info('✅ Alumni record created');
       // Reload data after creation
       await loadAlumniData();
     } catch (error) {
-      console.error('Error creating alumni record:', error);
+      logger.error('Error creating alumni record:', { context: [error] });
     }
   }, [profile, loadAlumniData]);
 
@@ -296,7 +297,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         await refreshProfile();
       }
     } catch (error) {
-      console.error('Error uploading avatar:', error);
+      logger.error('Error uploading avatar:', { context: [error] });
       alert('Failed to upload avatar. Please try again.');
     } finally {
       setAvatarUploading(false);
@@ -343,7 +344,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         await refreshProfile();
       }
     } catch (error) {
-      console.error('Error uploading banner:', error);
+      logger.error('Error uploading banner:', { context: [error] });
       alert('Failed to upload banner. Please try again.');
     } finally {
       setBannerUploading(false);
@@ -401,7 +402,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
           : null
       };
 
-      console.log('🔄 Updating alumni data:', alumniUpdates);
+      logger.info('🔄 Updating alumni data:', { context: [alumniUpdates] });
 
       const { data, error } = await supabase
         .from('alumni')
@@ -414,11 +415,11 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         .select();
 
       if (error) {
-        console.error('❌ Error updating alumni data:', error);
+        logger.error('❌ Error updating alumni data:', { context: [error] });
         throw error;
       }
 
-      console.log('✅ Alumni data updated successfully:', data);
+      logger.info('✅ Alumni data updated successfully:', { context: [data] });
 
       // Update basic profile fields for consistency
       const profileUpdates = {
@@ -439,7 +440,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
           timestamp: new Date().toISOString()
         });
       } catch (activityError) {
-        console.error('Failed to track profile update activity:', activityError);
+        logger.error('Failed to track profile update activity:', { context: [activityError] });
       }
       
       // Clear saved form data on successful save
@@ -448,7 +449,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
       // Close modal after successful save
       onClose();
     } catch (error) {
-      console.error('Error updating alumni profile:', error);
+      logger.error('Error updating alumni profile:', { context: [error] });
     } finally {
       setLoading(false);
     }

@@ -27,6 +27,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Progress } from "../../../components/ui/progress";
 import { useProfile } from "@/lib/contexts/ProfileContext";
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -145,7 +146,7 @@ export default function DuesClient() {
       // Loaded assignments
       setAssignments(data || []);
     } catch (error) {
-      console.error('Error loading dues assignments:', error);
+      logger.error('Error loading dues assignments:', { context: [error] });
     } finally {
       setLoading(false);
     }
@@ -186,7 +187,7 @@ export default function DuesClient() {
       if (error) throw error;
       setPaymentHistory(data || []);
     } catch (error) {
-      console.error('Error loading payment history:', error);
+      logger.error('Error loading payment history:', { context: [error] });
     }
   };
 
@@ -204,10 +205,10 @@ export default function DuesClient() {
         const { url } = await response.json();
         window.location.href = url;
       } else {
-        console.error('Payment failed');
+        logger.error('Payment failed');
       }
     } catch (error) {
-      console.error('Error processing payment:', error);
+      logger.error('Error processing payment:', { context: [error] });
     } finally {
       setProcessingPayment(false);
     }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { SMSService } from '@/lib/services/sms/smsServiceTelnyx';
+import { logger } from "@/lib/utils/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (profileError) {
-      console.error('Profile fetch error:', profileError);
+      logger.error('Profile fetch error:', { context: [profileError] });
       return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 });
     }
 
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
       .eq('sms_consent', true);  // ← ADD THIS LINE
 
     if (membersError) {
-      console.error('Error fetching members:', membersError);
+      logger.error('Error fetching members:', { context: [membersError] });
       return NextResponse.json({ error: 'Failed to fetch members' }, { status: 500 });
     }
 
@@ -133,7 +134,7 @@ export async function POST(request: NextRequest) {
         test_mode: testMode,
       });
     } catch (logError) {
-      console.error('Error logging SMS activity:', logError);
+      logger.error('Error logging SMS activity:', { context: [logError] });
       // Don't fail the request if logging fails
     }
 
@@ -152,8 +153,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('SMS API error:', error);
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    logger.error('SMS API error:', { context: [error] });
+    logger.error('Error stack:', { context: [error instanceof Error ? error.stack : 'No stack trace'] });
     return NextResponse.json(
       { 
         error: 'Internal server error',

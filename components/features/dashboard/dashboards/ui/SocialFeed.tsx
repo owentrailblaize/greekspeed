@@ -10,6 +10,7 @@ import { CreatePostModal } from '@/components/features/social/CreatePostModal';
 import { PostCard } from '@/components/features/social/PostCard';
 import { Post, CreatePostRequest } from '@/types/posts';
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
+import { logger } from "@/lib/utils/logger";
 
 interface SocialFeedProps {
   chapterId: string;
@@ -33,7 +34,7 @@ export function SocialFeed({ chapterId }: SocialFeedProps) {
     try {
       await deletePost(postId);
     } catch (error) {
-      console.error('Failed to delete post:', error);
+      logger.error('Failed to delete post:', { context: [error] });
       // You could show a toast notification here
     }
   };

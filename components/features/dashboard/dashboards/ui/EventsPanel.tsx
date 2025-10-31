@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Users, Edit, Eye, X } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { Event } from '@/types/events';
+import { logger } from "@/lib/utils/logger";
 
 export function EventsPanel() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -36,7 +37,7 @@ export function EventsPanel() {
         // EventsPanel - Fetched events
         setEvents(data);
       } catch (err) {
-        console.error('EventsPanel - Error fetching events:', err);
+        logger.error('EventsPanel - Error fetching events:', { context: [err] });
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
         setLoading(false);

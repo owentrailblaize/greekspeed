@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { createTask } from '@/lib/services/taskService';
 import { canManageMembers } from '@/lib/permissions';
+import { logger } from "@/lib/utils/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(tasks);
   } catch (error) {
-    console.error('Error fetching tasks:', error);
+    logger.error('Error fetching tasks:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(task, { status: 201 });
   } catch (error) {
-    console.error('Error creating task:', error);
+    logger.error('Error creating task:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

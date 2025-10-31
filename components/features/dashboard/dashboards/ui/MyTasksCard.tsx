@@ -8,6 +8,7 @@ import { ListTodo, Loader2 } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { supabase } from '@/lib/supabase/client'; // Add this import
 import { Task, TaskStatus } from '@/types/operations';
+import { logger } from "@/lib/utils/logger";
 
 export function MyTasksCard() {
   const { profile } = useProfile();
@@ -55,7 +56,7 @@ export function MyTasksCard() {
 
         setTasks(transformedTasks);
       } catch (error) {
-        console.error('Error loading my tasks:', error);
+        logger.error('Error loading my tasks:', { context: [error] });
         setError('Failed to load tasks');
         setTasks([]);
       } finally {
@@ -88,7 +89,7 @@ export function MyTasksCard() {
 
       // Task marked as newStatus
     } catch (error) {
-      console.error('Error updating task:', error);
+      logger.error('Error updating task:', { context: [error] });
       // Could add toast notification here
     }
   };

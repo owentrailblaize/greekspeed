@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 export async function DELETE(
   request: NextRequest,
@@ -52,13 +53,13 @@ export async function DELETE(
       .eq('id', postId);
 
     if (deleteError) {
-      console.error('Post deletion error:', deleteError);
+      logger.error('Post deletion error:', { context: [deleteError] });
       return NextResponse.json({ error: 'Failed to delete post' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, message: 'Post deleted successfully' });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

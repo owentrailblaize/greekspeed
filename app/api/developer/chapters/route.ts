@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
       .range(offset, offset + limit - 1);
 
     if (error) {
-      console.error('Error fetching chapters:', error);
+      logger.error('Error fetching chapters:', { context: [error] });
       return NextResponse.json({ error: 'Failed to fetch chapters' }, { status: 500 });
     }
 
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil((count || 0) / limit)
     });
   } catch (error) {
-    console.error('Error in chapters API:', error);
+    logger.error('Error in chapters API:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating chapter:', error);
+      logger.error('Error creating chapter:', { context: [error] });
       return NextResponse.json({ error: 'Failed to create chapter' }, { status: 500 });
     }
 
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error in create chapter API:', error);
+    logger.error('Error in create chapter API:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -103,7 +104,7 @@ export async function DELETE(request: NextRequest) {
       .eq('id', chapterId);
 
     if (deleteError) {
-      console.error('Error deleting chapter:', deleteError);
+      logger.error('Error deleting chapter:', { context: [deleteError] });
       return NextResponse.json({ error: 'Failed to delete chapter' }, { status: 500 });
     }
 
@@ -113,7 +114,7 @@ export async function DELETE(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error in delete chapter API:', error);
+    logger.error('Error in delete chapter API:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

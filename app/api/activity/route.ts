@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { logger } from '@/lib/utils/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
       .eq('id', userId)
     
     if (error) {
-      console.error('❌ Failed to track activity:', error)
+      logger.error('Failed to track activity', { error, userId, activityType })
       return NextResponse.json({ 
         error: 'Failed to track activity',
         details: error.message 
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('Activity API error:', error)
+    logger.error('Activity API error', { error })
     return NextResponse.json({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'

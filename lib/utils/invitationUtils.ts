@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { Invitation, InvitationUsage, InvitationValidationResult } from '@/types/invitations';
+import { logger } from "@/lib/utils/logger";
 
 /**
  * Generate a secure random token for invitations
@@ -93,7 +94,7 @@ export async function validateInvitationToken(token: string): Promise<Invitation
       chapter_name: invitation.chapters?.name
     };
   } catch (error) {
-    console.error('Error validating invitation token:', error);
+    logger.error('Error validating invitation token:', { context: [error] });
     return {
       valid: false,
       error: 'Failed to validate invitation'
@@ -121,7 +122,7 @@ export async function hasEmailUsedInvitation(invitationId: string, email: string
     
     return !!data;
   } catch (error) {
-    console.error('Error checking invitation usage:', error);
+    logger.error('Error checking invitation usage:', { context: [error] });
     return false; // Default to allowing usage if check fails
   }
 }
@@ -168,13 +169,13 @@ export async function recordInvitationUsage(
       .eq('id', invitationId);
     
     if (updateError) {
-      console.error('Error updating invitation usage count:', updateError);
+      logger.error('Error updating invitation usage count:', { context: [updateError] });
       // Don't fail the operation, just log the error
     }
     
     return { success: true };
   } catch (error) {
-    console.error('Error recording invitation usage:', error);
+    logger.error('Error recording invitation usage:', { context: [error] });
     return {
       success: false,
       error: 'Failed to record invitation usage'
@@ -232,7 +233,7 @@ export async function getInvitationStats(chapterId: string): Promise<{
       pending_approvals: pendingApprovals || 0
     };
   } catch (error) {
-    console.error('Error getting invitation stats:', error);
+    logger.error('Error getting invitation stats:', { context: [error] });
     return {
       total_invitations: 0,
       active_invitations: 0,

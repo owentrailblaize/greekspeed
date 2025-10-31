@@ -14,6 +14,7 @@ import {
   X
 } from "lucide-react";
 import { useMutualConnections } from "@/lib/hooks/useMutualConnections";
+import { logger } from "@/lib/utils/logger";
 
 interface MutualConnection {
   name: string;
@@ -83,7 +84,7 @@ export function LinkedInStyleAlumniCard({
           break;
       }
     } catch (error) {
-      console.error('Connection action failed:', error);
+      logger.error('Connection action failed:', { context: [error] });
     } finally {
       setConnectionLoading(false);
     }

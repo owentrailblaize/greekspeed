@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
+import { logger } from "@/lib/utils/logger";
 
 export interface DocumentUploadData {
   title: string;
@@ -87,7 +88,7 @@ export class DocumentUploadService {
         });
 
       if (uploadError) {
-        console.error('❌ Storage upload error:', uploadError);
+        logger.error('❌ Storage upload error:', { context: [uploadError] });
         throw new Error(`Upload failed: ${uploadError.message}`);
       }
       // File uploaded to storage successfully
@@ -124,7 +125,7 @@ export class DocumentUploadService {
         .single();
 
       if (dbError) {
-        console.error('❌ Database error:', dbError);
+        logger.error('❌ Database error:', { context: [dbError] });
         // Clean up uploaded file if database insert fails
         await this.supabaseClient.storage
           .from('chapter-documents')
@@ -136,7 +137,7 @@ export class DocumentUploadService {
       return document as UploadedDocument;
 
     } catch (error) {
-      console.error('❌ Document upload error:', error);
+      logger.error('❌ Document upload error:', { context: [error] });
       throw error;
     }
   }
@@ -158,7 +159,7 @@ export class DocumentUploadService {
     
     let chapterFolder: string;
     if (chapterError || !chapter?.name) {
-      console.warn('Could not get chapter name, falling back to UUID');
+      logger.warn('Could not get chapter name, falling back to UUID');
       chapterFolder = chapterId;
     } else {
       // Use the EXACT name from database (no sanitization)
@@ -250,7 +251,7 @@ export class DocumentUploadService {
       }
 
     } catch (error) {
-      console.error('Document deletion error:', error);
+      logger.error('Document deletion error:', { context: [error] });
       throw error;
     }
   }

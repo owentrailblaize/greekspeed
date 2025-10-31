@@ -1,6 +1,7 @@
 // app/api/notifications/settings/route.ts (proposed GET + PATCH updates)
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -69,7 +70,7 @@ export async function GET(request: NextRequest) {
       settings = createError ? null : newSettings;
       settingsError = createError || null;
     } else if (settingsError) {
-      console.error('Error fetching notification settings:', settingsError);
+      logger.error('Error fetching notification settings:', { context: [settingsError] });
       return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
     }
 
@@ -100,7 +101,7 @@ export async function GET(request: NextRequest) {
       connection_notifications,
     });
   } catch (error) {
-    console.error('Error fetching notification settings:', error);
+    logger.error('Error fetching notification settings:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -194,7 +195,7 @@ export async function PATCH(request: NextRequest) {
 
     const failed = results.find((r) => r?.error);
     if (failed?.error) {
-      console.error('Error updating settings:', failed.error);
+      logger.error('Error updating settings:', { context: [failed.error] });
       return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
     }
 
@@ -203,7 +204,7 @@ export async function PATCH(request: NextRequest) {
       message: 'Preferences updated',
     });
   } catch (error) {
-    console.error('Error updating notification settings:', error);
+    logger.error('Error updating notification settings:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

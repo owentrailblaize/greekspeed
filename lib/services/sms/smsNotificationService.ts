@@ -1,5 +1,6 @@
-import { SMSService } from './smsServiceTelnyx';
-import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
+import { SMSService } from "./smsServiceTelnyx";
+import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -14,238 +15,302 @@ interface SMSNotificationData {
 }
 
 export class SMSNotificationService {
-  
-  // Log SMS attempt to database
-  private static async logSMS(data: SMSNotificationData, success: boolean, messageId?: string, error?: string) {
+  private static async logSMS(
+    data: SMSNotificationData,
+    success: boolean,
+    messageId?: string,
+    error?: string,
+  ) {
     try {
-      await supabase.from('sms_logs').insert({
+      await supabase.from("sms_logs").insert({
         user_id: data.userId,
         chapter_id: data.chapterId,
         message_type: data.messageType,
         message_content: data.messageContent,
         phone_number: data.phoneNumber,
-        status: success ? 'sent' : 'failed',
+        status: success ? "sent" : "failed",
         telnyx_id: messageId,
-        error: error
+        error,
       });
     } catch (logError) {
-      console.error('Failed to log SMS:', logError);
+      logger.error("Failed to log SMS", { logError, data });
     }
   }
 
-  // For announcements
   static async sendAnnouncementNotification(
     phoneNumber: string,
     userName: string,
     announcementTitle: string,
     userId: string,
-    chapterId: string
+    chapterId: string,
   ): Promise<boolean> {
-    // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
-    
     const message = `New announcement: ${announcementTitle}. View at: trailblaize.net/dashboard`;
+
     const result = await SMSService.sendSMS({ to: formattedPhone, body: message });
-    
-    await this.logSMS({
-      userId,
-      chapterId,
-      phoneNumber: formattedPhone,
-      messageType: 'announcement',
-      messageContent: message
-    }, result.success, result.messageId, result.error);
-    
+
+    if (!result.success) {
+      logger.error("Announcement SMS send failed", {
+        error: result.error,
+        messageId: result.messageId,
+        phoneNumber: formattedPhone,
+        chapterId,
+        userId,
+      });
+    } else {
+      logger.info("Announcement SMS sent", {
+        messageId: result.messageId,
+        phoneNumber: formattedPhone,
+        chapterId,
+        userId,
+      });
+    }
+
+    await this.logSMS(
+      {
+        userId,
+        chapterId,
+        phoneNumber: formattedPhone,
+        messageType: "announcement",
+        messageContent: message,
+      },
+      result.success,
+      result.messageId,
+      result.error,
+    );
+
     return result.success;
   }
 
-  // For events
   static async sendEventNotification(
     phoneNumber: string,
     userName: string,
     eventTitle: string,
     eventDate: string,
     userId: string,
-    chapterId: string
+    chapterId: string,
   ): Promise<boolean> {
-    console.log('📤 Sending event SMS notification:', {
+    logger.info("Sending event SMS notification", {
       userId,
       userName,
       phoneNumber,
       eventTitle,
       eventDate,
-      chapterId
+      chapterId,
     });
 
-    // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
-
     const message = `New event: ${eventTitle} on ${eventDate}. RSVP: trailblaize.net/dashboard`;
-    
-    console.log('📝 SMS message prepared:', {
+
+    logger.debug("Prepared event SMS payload", {
       to: formattedPhone,
       messageLength: message.length,
-      messagePreview: message.substring(0, 50) + '...'
+      messagePreview: `${message.substring(0, 50)}...`,
     });
 
     const result = await SMSService.sendSMS({ to: formattedPhone, body: message });
-    
-    console.log('📬 SMS send result:', {
+
+    logger.info("Event SMS send result", {
       success: result.success,
       messageId: result.messageId,
       error: result.error,
-      phoneNumber: formattedPhone
-    });
-    
-    await this.logSMS({
-      userId,
-      chapterId,
       phoneNumber: formattedPhone,
-      messageType: 'event',
-      messageContent: message
-    }, result.success, result.messageId, result.error);
-    
+    });
+
+    if (!result.success) {
+      logger.error("Event SMS send failed", {
+        error: result.error,
+        messageId: result.messageId,
+        phoneNumber: formattedPhone,
+      });
+    }
+
+    await this.logSMS(
+      {
+        userId,
+        chapterId,
+        phoneNumber: formattedPhone,
+        messageType: "event",
+        messageContent: message,
+      },
+      result.success,
+      result.messageId,
+      result.error,
+    );
+
     return result.success;
   }
 
-  // For messages
   static async sendMessageNotification(
     phoneNumber: string,
     userName: string,
     senderName: string,
     preview: string,
     userId: string,
-    chapterId: string
+    chapterId: string,
   ): Promise<boolean> {
-    console.log('📤 Sending message SMS notification:', {
+    logger.info("Sending message SMS notification", {
       userId,
       userName,
       phoneNumber,
       senderName,
-      previewLength: preview.length
+      previewLength: preview.length,
+      chapterId,
     });
 
-    // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
-
     const message = `New message from ${senderName}: ${preview.substring(0, 50)}... View: trailblaize.net/dashboard/messages`;
-    
-    console.log('📝 SMS message prepared:', {
+
+    logger.debug("Prepared message SMS payload", {
       to: formattedPhone,
       messageLength: message.length,
-      messagePreview: message.substring(0, 50) + '...'
+      messagePreview: `${message.substring(0, 50)}...`,
     });
 
     const result = await SMSService.sendSMS({ to: formattedPhone, body: message });
-    
-    console.log('📬 SMS send result:', {
+
+    logger.info("Message SMS send result", {
       success: result.success,
       messageId: result.messageId,
       error: result.error,
-      phoneNumber: formattedPhone
-    });
-    
-    await this.logSMS({
-      userId,
-      chapterId,
       phoneNumber: formattedPhone,
-      messageType: 'message',
-      messageContent: message
-    }, result.success, result.messageId, result.error);
-    
+    });
+
+    if (!result.success) {
+      logger.error("Message SMS send failed", {
+        error: result.error,
+        messageId: result.messageId,
+        phoneNumber: formattedPhone,
+      });
+    }
+
+    await this.logSMS(
+      {
+        userId,
+        chapterId,
+        phoneNumber: formattedPhone,
+        messageType: "message",
+        messageContent: message,
+      },
+      result.success,
+      result.messageId,
+      result.error,
+    );
+
     return result.success;
   }
 
-  // For connection requests
   static async sendConnectionRequestNotification(
     phoneNumber: string,
     userName: string,
     requesterName: string,
     userId: string,
-    chapterId: string
+    chapterId: string,
   ): Promise<boolean> {
-    console.log('📤 Sending connection request SMS notification:', {
+    logger.info("Sending connection request SMS", {
       userId,
       userName,
       phoneNumber,
       requesterName,
-      chapterId
+      chapterId,
     });
 
-    // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
-
     const message = `${requesterName} wants to connect with you on Trailblaize. View: trailblaize.net/dashboard/notifications`;
-    
-    console.log('📝 SMS message prepared:', {
+
+    logger.debug("Prepared connection request SMS payload", {
       to: formattedPhone,
       messageLength: message.length,
-      messagePreview: message.substring(0, 50) + '...'
+      messagePreview: `${message.substring(0, 50)}...`,
     });
 
     const result = await SMSService.sendSMS({ to: formattedPhone, body: message });
-    
-    console.log('📬 SMS send result:', {
+
+    logger.info("Connection request SMS send result", {
       success: result.success,
       messageId: result.messageId,
       error: result.error,
-      phoneNumber: formattedPhone
-    });
-    
-    await this.logSMS({
-      userId,
-      chapterId,
       phoneNumber: formattedPhone,
-      messageType: 'connection_request',
-      messageContent: message
-    }, result.success, result.messageId, result.error);
-    
+    });
+
+    if (!result.success) {
+      logger.error("Connection request SMS send failed", {
+        error: result.error,
+        messageId: result.messageId,
+        phoneNumber: formattedPhone,
+      });
+    }
+
+    await this.logSMS(
+      {
+        userId,
+        chapterId,
+        phoneNumber: formattedPhone,
+        messageType: "connection_request",
+        messageContent: message,
+      },
+      result.success,
+      result.messageId,
+      result.error,
+    );
+
     return result.success;
   }
 
-  // For connection accepted
   static async sendConnectionAcceptedNotification(
     phoneNumber: string,
     userName: string,
     accepterName: string,
     userId: string,
-    chapterId: string
+    chapterId: string,
   ): Promise<boolean> {
-    console.log('📤 Sending connection accepted SMS notification:', {
+    logger.info("Sending connection accepted SMS", {
       userId,
       userName,
       phoneNumber,
       accepterName,
-      chapterId
+      chapterId,
     });
 
-    // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
-
     const message = `${accepterName} accepted your connection request on Trailblaize!`;
-    
-    console.log('📝 SMS message prepared:', {
+
+    logger.debug("Prepared connection accepted SMS payload", {
       to: formattedPhone,
       messageLength: message.length,
-      messagePreview: message.substring(0, 50) + '...'
+      messagePreview: `${message.substring(0, 50)}...`,
     });
 
     const result = await SMSService.sendSMS({ to: formattedPhone, body: message });
-    
-    console.log('📬 SMS send result:', {
+
+    logger.info("Connection accepted SMS send result", {
       success: result.success,
       messageId: result.messageId,
       error: result.error,
-      phoneNumber: formattedPhone
-    });
-    
-    await this.logSMS({
-      userId,
-      chapterId,
       phoneNumber: formattedPhone,
-      messageType: 'connection_accepted',
-      messageContent: message
-    }, result.success, result.messageId, result.error);
-    
+    });
+
+    if (!result.success) {
+      logger.error("Connection accepted SMS send failed", {
+        error: result.error,
+        messageId: result.messageId,
+        phoneNumber: formattedPhone,
+      });
+    }
+
+    await this.logSMS(
+      {
+        userId,
+        chapterId,
+        phoneNumber: formattedPhone,
+        messageType: "connection_accepted",
+        messageContent: message,
+      },
+      result.success,
+      result.messageId,
+      result.error,
+    );
+
     return result.success;
   }
 }

@@ -11,6 +11,7 @@ import { InviteSettings } from './InviteSettings';
 import { InvitationWithUsage } from '@/types/invitations';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'react-toastify';
+import { logger } from "@/lib/utils/logger";
 
 interface InviteManagementProps {
   chapterId: string;
@@ -50,7 +51,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
       const data = await response.json();
       setInvitations(data.invitations || []);
     } catch (error) {
-      console.error('Error fetching invitations:', error);
+      logger.error('Error fetching invitations:', { context: [error] });
       toast.error('Failed to load invitations');
     } finally {
       setLoading(false);
@@ -94,7 +95,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
       setShowCreateModal(false);
       toast.success('Invitation created successfully!');
     } catch (error) {
-      console.error('Error creating invitation:', error);
+      logger.error('Error creating invitation:', { context: [error] });
       toast.error(error instanceof Error ? error.message : 'Failed to create invitation');
     }
   };
@@ -131,7 +132,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
       setEditingInvitation(null);
       toast.success('Invitation updated successfully!');
     } catch (error) {
-      console.error('Error updating invitation:', error);
+      logger.error('Error updating invitation:', { context: [error] });
       toast.error(error instanceof Error ? error.message : 'Failed to update invitation');
     }
   };
@@ -165,7 +166,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
       setInvitations(prev => prev.filter(inv => inv.id !== invitationId));
       toast.success('Invitation deleted successfully!');
     } catch (error) {
-      console.error('Error deleting invitation:', error);
+      logger.error('Error deleting invitation:', { context: [error] });
       toast.error(error instanceof Error ? error.message : 'Failed to delete invitation');
     }
   };

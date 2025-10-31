@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { InvitationStats } from '@/types/invitations';
+import { logger } from "@/lib/utils/logger";
 
 interface InviteSettingsProps {
   chapterId: string;
@@ -29,7 +30,7 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
         const statsData = await response.json();
         setStats(statsData);
       } catch (error) {
-        console.error('Error fetching invitation stats:', error);
+        logger.error('Error fetching invitation stats:', { context: [error] });
       } finally {
         setLoading(false);
       }

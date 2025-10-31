@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Activity, AlertCircle, CheckCircle, Clock, Users, DollarSign, Calendar, FileText, Megaphone } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -187,7 +188,7 @@ export function MobileOperationsFeedPage() {
       
       setActivities(sortedActivities);
     } catch (error) {
-      console.error('Error fetching activities:', error);
+      logger.error('Error fetching activities:', { context: [error] });
       setActivities([]);
     } finally {
       setLoading(false);

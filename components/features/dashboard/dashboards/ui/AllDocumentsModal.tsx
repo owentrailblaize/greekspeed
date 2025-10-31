@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Eye, Download, Edit, Trash2, Lock, X, User, Calendar, Shield } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { logger } from "@/lib/utils/logger";
 
 // Use the same interface as ChapterDocumentManager
 interface ChapterDocument {
@@ -134,7 +135,7 @@ export function AllDocumentsModal({ isOpen, onClose, documents }: AllDocumentsMo
         toast.error('Document not accessible for download');
       }
     } catch (error) {
-      console.error('Download error:', error);
+      logger.error('Download error:', { context: [error] });
       toast.error('Download failed. Please try again.');
     }
   };

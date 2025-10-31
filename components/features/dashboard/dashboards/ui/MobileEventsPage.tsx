@@ -7,6 +7,7 @@ import { Calendar, MapPin, Clock, Users, HelpCircle, X, Filter } from 'lucide-re
 import { useProfile } from '@/lib/hooks/useProfile';
 import { Event } from '@/types/events';
 import { parseRawTime } from '@/lib/utils/timezoneUtils';
+import { logger } from "@/lib/utils/logger";
 
 type EventFilter = 'all' | 'attending' | 'maybe' | 'not_attending';
 
@@ -72,7 +73,7 @@ export function MobileEventsPage() {
 
       setRsvpStatuses(userRsvps);
     } catch (error) {
-      console.error('Error fetching user RSVPs:', error);
+      logger.error('Error fetching user RSVPs:', { context: [error] });
     }
   };
 
@@ -103,10 +104,10 @@ export function MobileEventsPage() {
         }
       } else {
         const errorData = await response.json();
-        console.error('RSVP error:', errorData.error);
+        logger.error('RSVP error:', { context: [errorData.error] });
       }
     } catch (error) {
-      console.error('Error submitting RSVP:', error);
+      logger.error('Error submitting RSVP:', { context: [error] });
     }
   };
 

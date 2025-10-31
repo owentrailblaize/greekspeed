@@ -12,6 +12,7 @@ import { toast } from 'react-toastify';
 import { supabase } from '@/lib/supabase/client';
 import { Checkbox } from '@/components/ui/checkbox';
 import { industries } from '@/lib/alumniConstants';
+import { logger } from "@/lib/utils/logger";
 
 interface AlumniJoinFormProps {
   invitation: Invitation;
@@ -121,7 +122,7 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
       toast.success('Alumni account created successfully!');
       onSuccess(data.user);
     } catch (error) {
-      console.error('Error creating alumni account:', error);
+      logger.error('Error creating alumni account:', { context: [error] });
       const errorMessage = error instanceof Error ? error.message : 'Failed to create alumni account';
       toast.error(errorMessage);
       

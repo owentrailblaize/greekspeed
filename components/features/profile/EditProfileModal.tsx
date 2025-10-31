@@ -18,6 +18,7 @@ import { trackActivity, ActivityTypes } from '@/lib/utils/activityUtils';
 import { useFormPersistence } from '@/lib/hooks/useFormPersistence';
 import { useModal } from '@/lib/contexts/ModalContext';
 import Link from 'next/link';
+import { logger } from "@/lib/utils/logger";
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -99,14 +100,14 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
         .single();
 
       if (error) {
-        console.error('Error loading alumni data:', error);
+        logger.error('Error loading alumni data:', { context: [error] });
         return;
       }
 
       setAlumniData(data);
       // Loaded alumni data
     } catch (error) {
-      console.error('Error loading alumni data:', error);
+      logger.error('Error loading alumni data:', { context: [error] });
     } finally {
       setLoadingAlumni(false);
     }
@@ -299,7 +300,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
         await refreshProfile();
       }
     } catch (error) {
-      console.error('Error uploading avatar:', error);
+      logger.error('Error uploading avatar:', { context: [error] });
       alert('Failed to upload avatar. Please try again.');
     } finally {
       setAvatarUploading(false);
@@ -347,7 +348,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
         await refreshProfile();
       }
     } catch (error) {
-      console.error('Error uploading banner:', error);
+      logger.error('Error uploading banner:', { context: [error] });
       alert('Failed to upload banner. Please try again.');
     } finally {
       setBannerUploading(false);
@@ -423,7 +424,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
           timestamp: new Date().toISOString()
         });
       } catch (activityError) {
-        console.error('Failed to track profile update activity:', activityError);
+        logger.error('Failed to track profile update activity:', { context: [activityError] });
         // Don't throw - profile update was successful
       }
 
@@ -468,13 +469,13 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
               .select();
 
             if (error) {
-              console.error('❌ Error updating alumni data:', error);
+              logger.error('❌ Error updating alumni data:', { context: [error] });
               throw error;
             }
 
             // Alumni data updated successfully
           } catch (error) {
-            console.error('❌ Error updating alumni data:', error);
+            logger.error('❌ Error updating alumni data:', { context: [error] });
             throw error;
           }
         };
@@ -482,7 +483,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
       }
       onClose();
     } catch (error) {
-      console.error('Error updating profile:', error);
+      logger.error('Error updating profile:', { context: [error] });
     } finally {
       setLoading(false);
     }

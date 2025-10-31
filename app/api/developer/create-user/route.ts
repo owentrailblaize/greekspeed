@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
         .single();
       
       if (chapterError || !chapterData) {
-        console.error('❌ Chapter not found:', chapter);
+        logger.error('❌ Chapter not found:', { context: [chapter] });
         return NextResponse.json({ 
           error: `Chapter not found: ${chapter}` 
         }, { status: 400 });
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (authError) {
-      console.error('❌ Auth user creation error:', authError);
+      logger.error('❌ Auth user creation error:', { context: [authError] });
       return NextResponse.json({ 
         error: `Failed to create auth user: ${authError.message}` 
       }, { status: 500 });
@@ -126,7 +127,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (profileError) {
-      console.error('❌ Profile creation error:', profileError);
+      logger.error('❌ Profile creation error:', { context: [profileError] });
       
       // Check if profile already exists
       const { data: existingProfile } = await supabase
@@ -160,7 +161,7 @@ export async function POST(request: NextRequest) {
           .single();
         
         if (updateError) {
-          console.error('❌ Profile update failed:', updateError);
+          logger.error('❌ Profile update failed:', { context: [updateError] });
           // Rollback: delete the auth user
           await supabase.auth.admin.deleteUser(newUserAuth.user.id);
           return NextResponse.json({ 
@@ -171,7 +172,7 @@ export async function POST(request: NextRequest) {
         // Existing profile updated
       } else {
         // Profile doesn't exist, rollback auth user
-        console.error('❌ Profile creation failed and no existing profile found');
+        logger.error('❌ Profile creation failed and no existing profile found');
         await supabase.auth.admin.deleteUser(newUserAuth.user.id);
         return NextResponse.json({ 
           error: `Failed to create user profile: ${profileError.message}` 
@@ -201,7 +202,7 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
 
   } catch (error) {
-    console.error('❌ Unexpected error:', error);
+    logger.error('❌ Unexpected error:', { context: [error] });
     return NextResponse.json({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'

@@ -8,6 +8,7 @@ import { useProfile } from '@/lib/hooks/useProfile';
 import { Event } from '@/types/events';
 import { AllEventsModal } from './AllEventsModal';
 import { parseRawTime } from '@/lib/utils/timezoneUtils';
+import { logger } from "@/lib/utils/logger";
 
 export function UpcomingEventsCard() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -74,7 +75,7 @@ export function UpcomingEventsCard() {
       setRsvpStatuses(userRsvps);
       // UpcomingEventsCard - Fetched user RSVPs
     } catch (error) {
-      console.error('Error fetching user RSVPs:', error);
+      logger.error('Error fetching user RSVPs:', { context: [error] });
     }
   };
 
@@ -105,10 +106,10 @@ export function UpcomingEventsCard() {
         }
       } else {
         const errorData = await response.json();
-        console.error('RSVP error:', errorData.error);
+        logger.error('RSVP error:', { context: [errorData.error] });
       }
     } catch (error) {
-      console.error('Error submitting RSVP:', error);
+      logger.error('Error submitting RSVP:', { context: [error] });
     }
   };
 

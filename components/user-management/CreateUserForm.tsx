@@ -12,6 +12,7 @@ import { X } from 'lucide-react';
 import { useChapters } from '@/lib/hooks/useChapters';
 import { DEVELOPER_PERMISSIONS } from '@/lib/developerPermissions';
 import { DeveloperPermission } from '@/types/profile';
+import { logger } from "@/lib/utils/logger";
 
 interface CreateUserFormProps {
   onClose: () => void;
@@ -98,7 +99,7 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
       // onSuccess(); // Remove this line
       
     } catch (error) {
-      console.error('Error creating user:', error);
+      logger.error('Error creating user:', { context: [error] });
       alert(`Error: ${error instanceof Error ? error.message : 'Failed to create user'}`);
     } finally {
       setLoading(false);

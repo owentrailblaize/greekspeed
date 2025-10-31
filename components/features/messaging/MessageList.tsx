@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/features/profile/UserAvatar';
 import { MoreHorizontal, Edit, Trash2, Check, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { logger } from "@/lib/utils/logger";
 
 interface MessageListProps {
   messages: Message[];
@@ -52,7 +53,7 @@ export function MessageList({
         setEditingMessageId(null);
         setEditContent('');
       } catch (error) {
-        console.error('Failed to edit message:', error);
+        logger.error('Failed to edit message:', { context: [error] });
       }
     }
   };
@@ -67,7 +68,7 @@ export function MessageList({
       await onDeleteMessage(messageId);
       setShowMenuFor(null);
     } catch (error) {
-      console.error('Failed to delete message:', error);
+      logger.error('Failed to delete message:', { context: [error] });
     }
   };
 

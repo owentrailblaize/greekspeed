@@ -8,6 +8,7 @@ import { Trash2, CheckCircle, Clock } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { supabase } from '@/lib/supabase/client';
 import { Task, TaskStatus } from '@/types/operations';
+import { logger } from "@/lib/utils/logger";
 
 export function AdminTasksManager() {
   const { profile } = useProfile();
@@ -37,7 +38,7 @@ export function AdminTasksManager() {
 
       setAllTasks(tasks || []);
     } catch (error) {
-      console.error('Error loading tasks:', error);
+      logger.error('Error loading tasks:', { context: [error] });
     } finally {
       setLoading(false);
     }
@@ -56,7 +57,7 @@ export function AdminTasksManager() {
       setAllTasks(prev => prev.filter(task => task.id !== taskId));
       // Task deleted successfully
     } catch (error) {
-      console.error('Error deleting task:', error);
+      logger.error('Error deleting task:', { context: [error] });
     }
   };
 

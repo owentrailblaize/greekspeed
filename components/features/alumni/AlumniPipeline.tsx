@@ -8,6 +8,7 @@ import { AlumniProfileModal } from "./AlumniProfileModal";
 import { useProfile } from "@/lib/hooks/useProfile";
 // Add these imports
 import { calculateAlumniCompleteness } from '@/lib/utils/profileCompleteness';
+import { logger } from "@/lib/utils/logger";
 
 interface FilterState {
   searchTerm: string;
@@ -158,7 +159,7 @@ export function AlumniPipeline() {
       setSortedAlumni(sortedAlumniData);
       
     } catch (err) {
-      console.error('❌ Error fetching alumni:', err);
+      logger.error('❌ Error fetching alumni:', { context: [err] });
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);

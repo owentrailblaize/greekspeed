@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { X, Calendar, MapPin, DollarSign, FileText } from 'lucide-react';
 import { Event, CreateEventRequest, UpdateEventRequest } from '@/types/events';
+import { logger } from "@/lib/utils/logger";
 
 interface EventFormProps {
   event?: Event | null;
@@ -83,7 +84,7 @@ export function EventForm({ event, onSubmit, onCancel, loading = false }: EventF
     try {
       await onSubmit(formData);
     } catch (error) {
-      console.error('Error submitting form:', error);
+      logger.error('Error submitting form:', { context: [error] });
     }
   };
 

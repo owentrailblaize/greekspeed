@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
       .range(offset, offset + limit - 1);
 
     if (error) {
-      console.error('Posts fetch error:', error);
+      logger.error('Posts fetch error:', { context: [error] });
       return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 });
     }
 
@@ -67,7 +68,7 @@ export async function GET(request: NextRequest) {
       .eq('user_id', user.id);
 
     if (likesError) {
-      console.error('Likes fetch error:', likesError);
+      logger.error('Likes fetch error:', { context: [likesError] });
     }
 
     const likedPostIds = new Set(userLikes?.map(like => like.post_id) || []);
@@ -98,7 +99,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -184,13 +185,13 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Post creation error:', createError);
+      logger.error('Post creation error:', { context: [createError] });
       return NextResponse.json({ error: 'Failed to create post' }, { status: 500 });
     }
 
     return NextResponse.json({ post });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

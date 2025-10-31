@@ -1,3 +1,5 @@
+import { logger } from "@/lib/utils/logger";
+
 // @ts-ignore
 const Telnyx = require('telnyx');
 
@@ -8,20 +10,20 @@ function getTelnyxClient() {
   if (!telnyx) {
     const apiKey = process.env.TELNYX_API_KEY;
     if (!apiKey) {
-      console.warn('TELNYX_API_KEY not found. SMS will work in sandbox mode only.');
+      logger.warn('Telnyx API key missing; SMS limited to sandbox mode', {
+        envVar: 'TELNYX_API_KEY',
+      });
       return null;
     }
     // CRITICAL FIX: Telnyx SDK is a function, NOT a constructor
     // Remove 'new' keyword - it should be called as a function
     telnyx = Telnyx(apiKey);
     
-    // Debug: Log client structure to understand API
-    console.log('🔍 Telnyx Client Debug:', {
+    logger.debug('Telnyx client initialized', {
       hasMessages: !!telnyx.messages,
       hasMessaging: !!telnyx.messaging,
-      clientKeys: Object.keys(telnyx).slice(0, 10), // First 10 keys
+      clientKeys: Object.keys(telnyx).slice(0, 10),
       messagesType: typeof telnyx.messages,
-      // Deep inspection of messages object
       messagesKeys: telnyx.messages ? Object.keys(telnyx.messages).slice(0, 20) : [],
       messagesCreateExists: !!(telnyx.messages && telnyx.messages.create),
       messagesCreateType: telnyx.messages ? typeof telnyx.messages.create : 'undefined',
@@ -49,20 +51,20 @@ export class SMSService {
       const fromNumber = process.env.TELNYX_PHONE_NUMBER;
       const isSandboxMode = process.env.TELNYX_SANDBOX_MODE === 'true';
 
-      // Debug: Log environment variables
-      console.log('🔍 Environment Debug:', {
+      logger.debug('Telnyx environment configuration', {
         TELNYX_SANDBOX_MODE: process.env.TELNYX_SANDBOX_MODE,
-        isSandboxMode: isSandboxMode,
+        isSandboxMode,
         TELNYX_PHONE_NUMBER: fromNumber ? 'SET' : 'NOT SET',
-        TELNYX_API_KEY: process.env.TELNYX_API_KEY ? 'SET' : 'NOT SET'
+        TELNYX_API_KEY: process.env.TELNYX_API_KEY ? 'SET' : 'NOT SET',
       });
 
       // Sandbox mode simulation - doesn't need real phone number
       if (isSandboxMode) {
-        console.log('🔧 SANDBOX MODE: Simulating SMS send', {
+        logger.info('Simulating Telnyx SMS send', {
+          mode: 'sandbox',
           from: fromNumber || 'SANDBOX',
           to: message.to,
-          body: message.body.substring(0, 50) + '...'
+          bodyPreview: `${message.body.substring(0, 50)}...`,
         });
         
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -81,7 +83,9 @@ export class SMSService {
       // Lazy initialization check
       const client = getTelnyxClient();
       if (!client) {
-        console.warn('Telnyx client not initialized. Running in sandbox mode.');
+        logger.warn('Telnyx client not initialized; sandbox mode active', {
+          reason: 'missing_telnyx_client',
+        });
         return {
           success: false,
           error: 'Telnyx API key not configured',
@@ -89,10 +93,10 @@ export class SMSService {
       }
 
       // Real SMS sending via Telnyx API
-      console.log('✅ Sending REAL SMS via Telnyx:', {
+      logger.info('Sending Telnyx SMS', {
         from: fromNumber,
         to: message.to,
-        body: message.body.substring(0, 50) + '...'
+        bodyPreview: `${message.body.substring(0, 50)}...`,
       });
 
       let result;
@@ -103,7 +107,9 @@ export class SMSService {
         try {
           // Pattern 1: Standard messages.create
           if (client.messages?.create && typeof client.messages.create === 'function') {
-            console.log('📡 Using SDK: client.messages.create');
+            logger.debug('Attempting Telnyx SDK send', {
+              method: 'client.messages.create',
+            });
             result = await client.messages.create({
               from: fromNumber,
               to: message.to,
@@ -113,7 +119,9 @@ export class SMSService {
           }
           // Pattern 2: Check if messages is a function
           else if (typeof client.messages === 'function') {
-            console.log('📡 Using SDK: client.messages() as function');
+            logger.debug('Attempting Telnyx SDK send', {
+              method: 'client.messages()',
+            });
             result = await client.messages({
               from: fromNumber,
               to: message.to,
@@ -123,7 +131,9 @@ export class SMSService {
           }
           // Pattern 3: Check messaging API
           else if (client.messaging?.messages?.create && typeof client.messaging.messages.create === 'function') {
-            console.log('📡 Using SDK: client.messaging.messages.create');
+            logger.debug('Attempting Telnyx SDK send', {
+              method: 'client.messaging.messages.create',
+            });
             result = await client.messaging.messages.create({
               from: fromNumber,
               to: message.to,
@@ -133,13 +143,18 @@ export class SMSService {
           }
         } catch (sdkError: any) {
           // Log SDK error but don't throw - fallback to REST API
-          console.warn('⚠️ SDK method failed, falling back to REST API:', sdkError.message);
+          logger.warn('Telnyx SDK send failed; falling back to REST API', {
+            error: {
+              message: sdkError.message,
+              stack: sdkError.stack,
+            },
+          });
         }
       }
 
       // Fallback to REST API if SDK didn't work
       if (!usedSDK) {
-        console.log('📡 Using REST API: Direct HTTP call to Telnyx');
+        logger.debug('Falling back to Telnyx REST API');
         
         // Get API key for REST API call
         const telnyxApiKey = process.env.TELNYX_API_KEY;
@@ -156,7 +171,7 @@ export class SMSService {
             text: message.body,
           };
 
-          console.log('📤 Sending to Telnyx API:', {
+          logger.debug('Dispatching Telnyx REST request', {
             url: telnyxApiUrl,
             from: fromNumber,
             to: message.to,
@@ -173,10 +188,10 @@ export class SMSService {
           });
 
           const responseText = await response.text();
-          console.log('📥 Raw Telnyx Response:', {
+          logger.debug('Received Telnyx REST response', {
             status: response.status,
             statusText: response.statusText,
-            body: responseText.substring(0, 500),
+            bodyPreview: responseText.substring(0, 500),
           });
 
           try {
@@ -197,21 +212,26 @@ export class SMSService {
           const messageId = result?.data?.id || result?.id || result?.record?.id;
           
           if (!messageId) {
-            console.error('❌ No message ID in response:', JSON.stringify(result));
+            logger.error('Telnyx REST response missing message ID', {
+              status: response.status,
+              response: JSON.stringify(result),
+            });
             throw new Error('Telnyx API did not return a message ID. Response: ' + JSON.stringify(result).substring(0, 200));
           }
 
-          console.log('✅ REST API Response Validated:', {
+          logger.debug('Validated Telnyx REST response', {
             status: response.status,
-            messageId: messageId,
+            messageId,
             recordType: result?.data?.record_type || 'unknown',
             statusField: result?.data?.to?.[0]?.status || 'unknown',
           });
 
         } catch (fetchError: any) {
-          console.error('❌ REST API Error:', {
-            message: fetchError.message,
-            stack: fetchError.stack?.split('\n').slice(0, 5),
+          logger.error('Telnyx REST API request failed', {
+            error: {
+              message: fetchError.message,
+              stack: fetchError.stack?.split('\n').slice(0, 5),
+            },
           });
           throw fetchError;
         }
@@ -227,12 +247,12 @@ export class SMSService {
         throw new Error('No message ID returned from Telnyx API');
       }
       
-      console.log('✅ REAL SMS SENT via Telnyx:', {
+      logger.info('Sent Telnyx SMS', {
         method: usedSDK ? 'SDK' : 'REST API',
-        messageId: messageId,
-        recordType: recordType,
-        status: status,
-        fullResponse: JSON.stringify(result).substring(0, 400),
+        messageId,
+        recordType,
+        status,
+        responsePreview: JSON.stringify(result).substring(0, 400),
       });
 
       return {
@@ -240,7 +260,13 @@ export class SMSService {
         messageId: messageId,
       };
     } catch (error) {
-      console.error('SMS sending error:', error);
+      logger.error('Failed to send SMS via Telnyx', {
+        error: error instanceof Error ? {
+          message: error.message,
+          stack: error.stack,
+        } : error,
+        to: message.to,
+      });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
