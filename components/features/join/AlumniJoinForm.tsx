@@ -104,6 +104,7 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
     setLoading(true);
 
     try {
+      console.log('Submitting alumni form payload', formData);
       const response = await fetch(`/api/alumni-invitations/accept/${invitation.token}`, {
         method: 'POST',
         headers: {
@@ -118,6 +119,15 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
       }
 
       const data = await response.json();
+
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+      });
+      
+      if (signInError) {
+        throw new Error(signInError.message || 'Failed to sign in after creating account');
+      }
       
       toast.success('Alumni account created successfully!');
       onSuccess(data.user);
@@ -494,7 +504,7 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
                     <span>Creating Alumni Account...</span>
                   </div>
                 ) : (
-                  'Create Alumni Account & Join Chapter'
+                  'Create Account'
                 )}
               </Button>
 
