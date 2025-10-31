@@ -6,6 +6,7 @@ import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, Users } from 'lucid
 import { useProfile } from '@/lib/hooks/useProfile';
 import { Event } from '@/types/events';
 import { parseRawTime } from '@/lib/utils/timezoneUtils';
+import { logger } from "@/lib/utils/logger";
 
 export function CompactCalendarCard() {
   const [calendarDate, setCalendarDate] = useState(new Date());
@@ -91,7 +92,7 @@ export function CompactCalendarCard() {
         // CompactCalendarCard - Fetched events
         setEvents(data);
       } catch (err) {
-        console.error('CompactCalendarCard - Error fetching events:', err);
+        logger.error('CompactCalendarCard - Error fetching events:', { context: [err] });
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
         setLoading(false);

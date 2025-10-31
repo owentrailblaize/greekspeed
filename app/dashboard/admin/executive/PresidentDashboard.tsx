@@ -19,6 +19,7 @@ import { CreateAnnouncementData } from '@/types/announcements';
 import { EventForm } from '@/components/ui/EventForm';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
+import { logger } from "@/lib/utils/logger";
 
 export function PresidentDashboard() {
   const [announcement, setAnnouncement] = useState("");
@@ -68,7 +69,7 @@ export function PresidentDashboard() {
         setMemberCount(data.count);
       }
     } catch (error) {
-      console.error('Error fetching member count:', error);
+      logger.error('Error fetching member count:', { context: [error] });
     } finally {
       setLoadingMemberCount(false);
     }
@@ -87,7 +88,7 @@ export function PresidentDashboard() {
         setActiveMemberCount(data.count);
       }
     } catch (error) {
-      console.error('Error fetching active member count:', error);
+      logger.error('Error fetching active member count:', { context: [error] });
     } finally {
       setLoadingActiveMemberCount(false);
     }
@@ -106,7 +107,7 @@ export function PresidentDashboard() {
           setMembershipGrowth(data.growth);
         }
       } catch (error) {
-        console.error('Error fetching membership growth:', error);
+        logger.error('Error fetching membership growth:', { context: [error] });
       } finally {
         setLoadingGrowth(false);
       }
@@ -128,7 +129,7 @@ export function PresidentDashboard() {
           setAlumniCount(data.count);
         }
       } catch (error) {
-        console.error('Error fetching alumni count:', error);
+        logger.error('Error fetching alumni count:', { context: [error] });
       } finally {
         setLoadingAlumniCount(false);
       }
@@ -194,7 +195,7 @@ export function PresidentDashboard() {
       toast.success('Announcement sent successfully!');
     } catch (error) {
       toast.error('Failed to send announcement');
-      console.error('Error sending announcement:', error);
+      logger.error('Error sending announcement:', { context: [error] });
     } finally {
       setIsSubmitting(false);
     }
@@ -234,7 +235,7 @@ export function PresidentDashboard() {
       setShowEventModal(false);
     } catch (error) {
       toast.error('Failed to schedule meeting');
-      console.error('Error creating event:', error);
+      logger.error('Error creating event:', { context: [error] });
     }
   };
 

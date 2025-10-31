@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
       .or(`requester_id.eq.${userId},recipient_id.eq.${userId}`);
 
     if (userError) {
-      console.error('Error fetching user connections:', userError);
+      logger.error('Error fetching user connections:', { context: [userError] });
       return NextResponse.json({ error: 'Failed to fetch user connections' }, { status: 500 });
     }
 
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
       .or(`requester_id.eq.${targetUserId},recipient_id.eq.${targetUserId}`);
 
     if (targetError) {
-      console.error('Error fetching target connections:', targetError);
+      logger.error('Error fetching target connections:', { context: [targetError] });
       return NextResponse.json({ error: 'Failed to fetch target connections' }, { status: 500 });
     }
 
@@ -75,7 +76,7 @@ export async function GET(request: NextRequest) {
       .in('id', mutualConnectionIds);
 
     if (profilesError) {
-      console.error('Error fetching profiles:', profilesError);
+      logger.error('Error fetching profiles:', { context: [profilesError] });
       return NextResponse.json({ error: 'Failed to fetch profiles' }, { status: 500 });
     }
 
@@ -91,7 +92,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

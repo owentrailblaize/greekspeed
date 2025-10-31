@@ -11,6 +11,7 @@ import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle, Lock, Menu, X } from 'lucide-react';
 import { useState } from 'react';
+import { logger } from "@/lib/utils/logger";
 
 // Small helper for consistent tab styling
 function NavLink({ href, label, locked = false }: { href: string; label: string; locked?: boolean }) {
@@ -95,7 +96,7 @@ export function DashboardHeader() {
       // Redirect to landing page after successful sign out
       window.location.href = '/';
     } catch (error) {
-      console.error('Error signing out:', error);
+      logger.error('Error signing out:', { context: [error] });
       // Even if there's an error, redirect to landing page
       window.location.href = '/';
     }

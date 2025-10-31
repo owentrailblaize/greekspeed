@@ -15,6 +15,7 @@ import { Select, SelectItem, SelectContent } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useProfile } from "@/lib/contexts/ProfileContext";
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -192,7 +193,7 @@ export function TreasurerDashboard() {
 
       setAssignments(assignmentsData || []);
     } catch (error) {
-      console.error('Error loading dues data:', error);
+      logger.error('Error loading dues data:', { context: [error] });
     } finally {
       setLoading(false);
     }
@@ -220,7 +221,7 @@ export function TreasurerDashboard() {
         .order('full_name');
 
       if (error) {
-        console.error('❌ Error loading chapter members:', error);
+        logger.error('❌ Error loading chapter members:', { context: [error] });
         return;
       }
 
@@ -228,7 +229,7 @@ export function TreasurerDashboard() {
       
       setChapterMembers(membersData || []);
     } catch (error) {
-      console.error('❌ Error loading chapter members:', error);
+      logger.error('❌ Error loading chapter members:', { context: [error] });
     }
   };
 
@@ -246,7 +247,7 @@ export function TreasurerDashboard() {
         loadDuesData();
       }
     } catch (error) {
-      console.error('Error creating cycle:', error);
+      logger.error('Error creating cycle:', { context: [error] });
     }
   };
 
@@ -271,7 +272,7 @@ export function TreasurerDashboard() {
         loadChapterMembers();
       }
     } catch (error) {
-      console.error('Error assigning dues:', error);
+      logger.error('Error assigning dues:', { context: [error] });
     }
   };
 
@@ -281,7 +282,7 @@ export function TreasurerDashboard() {
       
       // Check if we have a valid cycle selected
       if (!bulkAssignment.cycleId) {
-        console.error('❌ No dues cycle selected. Please select a cycle first.');
+        logger.error('❌ No dues cycle selected. Please select a cycle first.');
         alert('Please select a dues cycle first.');
         return;
       }
@@ -310,10 +311,10 @@ export function TreasurerDashboard() {
         loadChapterMembers();
         // Bulk dues assignment completed successfully
       } else {
-        console.error('❌ Some bulk assignments failed');
+        logger.error('❌ Some bulk assignments failed');
       }
     } catch (error) {
-      console.error('❌ Error in bulk dues assignment:', error);
+      logger.error('❌ Error in bulk dues assignment:', { context: [error] });
     }
   };
 
@@ -340,7 +341,7 @@ export function TreasurerDashboard() {
         loadChapterMembers();
       }
     } catch (error) {
-      console.error('Error updating assignment:', error);
+      logger.error('Error updating assignment:', { context: [error] });
     }
   };
 
@@ -361,11 +362,11 @@ export function TreasurerDashboard() {
         loadChapterMembers();
         // Dues assignment deleted successfully
       } else {
-        console.error('❌ Error deleting dues assignment');
+        logger.error('❌ Error deleting dues assignment');
         alert('Failed to delete dues assignment. Please try again.');
       }
     } catch (error) {
-      console.error('❌ Error deleting dues assignment:', error);
+      logger.error('❌ Error deleting dues assignment:', { context: [error] });
       alert('Failed to delete dues assignment. Please try again.');
     }
   };

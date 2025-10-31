@@ -10,6 +10,7 @@ import { Invitation, JoinFormData } from '@/types/invitations';
 import { toast } from 'react-toastify';
 import { supabase } from '@/lib/supabase/client';
 import { Checkbox } from '@/components/ui/checkbox';
+import { logger } from "@/lib/utils/logger";
 
 interface JoinFormProps {
   invitation: Invitation;
@@ -90,19 +91,19 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
         });
 
         if (signInError) {
-          console.error('Client-side sign-in failed:', signInError);
+          logger.error('Client-side sign-in failed:', { context: [signInError] });
           // Don't fail the entire process, but log the error
         } else {
           // Client-side session established successfully
         }
       } catch (signInError) {
-        console.error('Client-side sign-in error:', signInError);
+        logger.error('Client-side sign-in error:', { context: [signInError] });
       }
 
       toast.success('Account created successfully!');
       onSuccess(data.user);
     } catch (error) {
-      console.error('Error creating account:', error);
+      logger.error('Error creating account:', { context: [error] });
       const errorMessage = error instanceof Error ? error.message : 'Failed to create account';
       toast.error(errorMessage);
       

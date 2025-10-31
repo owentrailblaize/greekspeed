@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from "@/lib/utils/logger";
 
 interface FormPersistenceOptions {
   key: string;
@@ -41,7 +42,7 @@ export function useFormPersistence<T>(
       window[storage].setItem(storageKey, serializedData);
       setHasUnsavedChanges(false);
     } catch (error) {
-      console.error(`Error saving form data to ${storage}:`, error);
+      logger.error(`Error saving form data to ${storage}:`, { context: [error] });
     }
   }, [storageKey, storage]);
 
@@ -62,7 +63,7 @@ export function useFormPersistence<T>(
       
       return parsed.data;
     } catch (error) {
-      console.error(`Error loading form data from ${storage}:`, error);
+      logger.error(`Error loading form data from ${storage}:`, { context: [error] });
       return null;
     }
   }, [storageKey, storage]);
@@ -73,7 +74,7 @@ export function useFormPersistence<T>(
       window[storage].removeItem(storageKey);
       setHasUnsavedChanges(false);
     } catch (error) {
-      console.error(`Error clearing form data from ${storage}:`, error);
+      logger.error(`Error clearing form data from ${storage}:`, { context: [error] });
     }
   }, [storageKey, storage]);
 

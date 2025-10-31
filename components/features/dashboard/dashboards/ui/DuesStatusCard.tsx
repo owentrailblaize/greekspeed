@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { DollarSign, AlertTriangle, Lock, CheckCircle, Calendar } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -62,7 +63,7 @@ export function DuesStatusCard() {
       
       setAssignments(data || []);
     } catch (error) {
-      console.error('Error loading dues assignments:', error);
+      logger.error('Error loading dues assignments:', { context: [error] });
       setError('Failed to load dues data');
     } finally {
       setLoading(false);

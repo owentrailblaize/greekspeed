@@ -13,6 +13,7 @@ import { ViewUserModal } from './ViewUserModal';
 import { getRoleDisplayName } from '@/lib/permissions';
 import { EditUserModal } from './EditUserModal';
 import { Select, SelectItem } from '@/components/ui/select';
+import { logger } from "@/lib/utils/logger";
 
 interface User {
   id: string;
@@ -102,7 +103,7 @@ export function UsersTab({
       setTotalUsers(data.total || 0);
       setTotalPages(data.totalPages || 1);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      logger.error('Error fetching users:', { context: [error] });
     } finally {
       setLoading(false);
     }
@@ -166,7 +167,7 @@ export function UsersTab({
       alert(`User "${userToDelete.email}" has been deleted successfully.`);
       
     } catch (error) {
-      console.error('Error deleting user:', error);
+      logger.error('Error deleting user:', { context: [error] });
       alert(`Failed to delete user: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setDeletingUserId(null);

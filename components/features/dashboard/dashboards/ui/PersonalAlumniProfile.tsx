@@ -21,6 +21,7 @@ import {
   Linkedin
 } from 'lucide-react';
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
+import { logger } from "@/lib/utils/logger";
 
 interface AlumniData {
   id: string;
@@ -79,7 +80,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
         }
       }
     } catch (error) {
-      console.error('Error loading alumni data from cache:', error);
+      logger.error('Error loading alumni data from cache:', { context: [error] });
     }
     return null;
   }, [getCacheKey]);
@@ -95,7 +96,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
         timestamp: Date.now()
       }));
     } catch (error) {
-      console.error('Error saving alumni data to cache:', error);
+      logger.error('Error saving alumni data to cache:', { context: [error] });
     }
   }, [getCacheKey]);
 
@@ -107,7 +108,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
     try {
       sessionStorage.removeItem(cacheKey);
     } catch (error) {
-      console.error('Error clearing alumni data cache:', error);
+      logger.error('Error clearing alumni data cache:', { context: [error] });
     }
   }, [getCacheKey]);
 
@@ -145,7 +146,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
         .single();
 
       if (alumniError) {
-        console.error('Error fetching alumni data:', alumniError);
+        logger.error('Error fetching alumni data:', { context: [alumniError] });
         setError('Failed to load alumni profile');
         return;
       }
@@ -160,7 +161,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
       setAlumniData(alumniWithProfile);
       saveToCache(alumniWithProfile);
     } catch (err) {
-      console.error('Error loading alumni data:', err);
+      logger.error('Error loading alumni data:', { context: [err] });
       setError('Failed to load alumni profile');
     } finally {
       setLoading(false);
@@ -188,7 +189,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
       clearCache();
       await loadAlumniData(true);
     } catch (error) {
-      console.error('Error updating profile:', error);
+      logger.error('Error updating profile:', { context: [error] });
     }
   };
 

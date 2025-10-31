@@ -1,4 +1,5 @@
 import twilio from 'twilio';
+import { logger } from "@/lib/utils/logger";
 
 // Initialize Twilio client
 const client = twilio(
@@ -55,7 +56,7 @@ export class SMSService {
         messageId: result.sid,
       };
     } catch (error) {
-      console.error('SMS sending error:', error);
+      logger.error('SMS sending error:', { context: [error] });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',

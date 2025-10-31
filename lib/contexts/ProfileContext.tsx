@@ -3,7 +3,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { supabase } from '@/lib/supabase/client';
-import { Profile } from '@/types/profile'; // Import the correct Profile type
+import { Profile } from '@/types/profile';
+import { logger } from "@/lib/utils/logger";
 
 interface ProfileContextType {
   profile: Profile | null;
@@ -32,7 +33,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       setProfile(data);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      logger.error('Error fetching profile:', { context: [error] });
     } finally {
       setLoading(false);
     }
@@ -56,7 +57,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       setProfile(data);
     } catch (error) {
-      console.error('Error updating profile:', error);
+      logger.error('Error updating profile:', { context: [error] });
       throw error;
     }
   };

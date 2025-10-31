@@ -8,6 +8,7 @@ import { useProfile } from '@/lib/hooks/useProfile';
 import { EditProfileModal } from '@/components/features/profile/EditProfileModal';
 import { EditAlumniProfileModal } from '@/components/features/alumni/EditAlumniProfileModal';
 import { ProfileService } from '@/lib/services/profileService';
+import { logger } from "@/lib/utils/logger";
 
 export default function DashboardLayout({
   children,
@@ -54,7 +55,7 @@ function EditProfileModalWrapper() {
         closeEditProfileModal();
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
+      logger.error('Error updating profile:', { context: [error] });
     }
   };
 

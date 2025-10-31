@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X, Building2 } from 'lucide-react';
+import { logger } from "@/lib/utils/logger";
 
 interface CreateChapterFormProps {
   onClose: () => void;
@@ -113,7 +114,7 @@ export function CreateChapterForm({ onClose, onSuccess }: CreateChapterFormProps
       alert('Chapter created successfully!');
       
     } catch (error) {
-      console.error('Error creating chapter:', error);
+      logger.error('Error creating chapter:', { context: [error] });
       alert(`Failed to create chapter: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);

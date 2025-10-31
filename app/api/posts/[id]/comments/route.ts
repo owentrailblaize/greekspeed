@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 export async function GET(
   request: NextRequest,
@@ -75,7 +76,7 @@ export async function GET(
       .range(offset, offset + limit - 1);
 
     if (error) {
-      console.error('Comments fetch error:', error);
+      logger.error('Comments fetch error:', { context: [error] });
       return NextResponse.json({ error: 'Failed to fetch comments' }, { status: 500 });
     }
 
@@ -112,7 +113,7 @@ export async function GET(
       }
     });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -194,13 +195,13 @@ export async function POST(
       .single();
 
     if (createError) {
-      console.error('Comment creation error:', createError);
+      logger.error('Comment creation error:', { context: [createError] });
       return NextResponse.json({ error: 'Failed to create comment' }, { status: 500 });
     }
 
     return NextResponse.json({ comment });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

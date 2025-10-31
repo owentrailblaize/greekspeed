@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -23,13 +24,13 @@ export async function GET(request: NextRequest) {
       .order('name', { ascending: true });
 
     if (error) {
-      console.error('Error fetching vendors:', error);
+      logger.error('Error fetching vendors:', { context: [error] });
       return NextResponse.json({ error: 'Failed to fetch vendors' }, { status: 500 });
     }
 
     return NextResponse.json(vendors || []);
   } catch (error) {
-    console.error('Error in vendors API:', error);
+    logger.error('Error in vendors API:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Supabase error:', error);
+      logger.error('Supabase error:', { context: [error] });
       return NextResponse.json({ error: `Failed to create vendor: ${error.message}` }, { status: 500 });
     }
 
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error in create vendor API:', error);
+    logger.error('Error in create vendor API:', { context: [error] });
     return NextResponse.json({ error: `Internal server error: ${error}` }, { status: 500 });
   }
 }

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, ArrowLeft, Check, X, Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { logger } from "@/lib/utils/logger";
 
 interface ChangePasswordFormProps {
   showBackButton?: boolean;
@@ -112,7 +113,7 @@ export function ChangePasswordForm({
         setCurrentPasswordError(data.error || 'Invalid password');
       }
     } catch (error) {
-      console.error('Password validation error:', error);
+      logger.error('Password validation error:', { context: [error] });
       setCurrentPasswordValid(false);
       setCurrentPasswordError('Failed to validate password');
     } finally {
@@ -193,7 +194,7 @@ export function ChangePasswordForm({
       }
 
     } catch (error) {
-      console.error('Password change error:', error);
+      logger.error('Password change error:', { context: [error] });
       setError(error instanceof Error ? error.message : 'Failed to change password');
     } finally {
       setLoading(false);

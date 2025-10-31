@@ -1,3 +1,5 @@
+import { logger } from "@/lib/utils/logger";
+
 /**
  * Raw time utilities - display times exactly as stored in Supabase
  */
@@ -44,7 +46,7 @@ export const parseRawTime = (utcString: string): string => {
       timeZone: 'UTC' // Force UTC display
     });
   } catch (error) {
-    console.error('Error parsing date:', utcString, error);
+    logger.error('Error parsing date:', { context: [utcString, error] });
     return utcString; // Return original string if parsing fails
   }
 };
@@ -89,7 +91,7 @@ export const parseRawDetailedTime = (utcString: string): string => {
       timeZone: 'UTC' // Force UTC display
     });
   } catch (error) {
-    console.error('Error parsing date:', utcString, error);
+    logger.error('Error parsing date:', { context: [utcString, error] });
     return utcString;
   }
 };

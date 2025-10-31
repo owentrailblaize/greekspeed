@@ -5,6 +5,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from './client';
 import { canAccessDeveloperPortal } from '@/lib/developerPermissions';
 import { trackActivity, ActivityTypes } from '@/lib/utils/activityUtils';
+import { logger } from "@/lib/utils/logger";
 
 interface ProfileData {
   fullName: string;
@@ -44,13 +45,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('❌ AuthProvider: Session check error:', error);
+          logger.error('❌ AuthProvider: Session check error:', { context: [error] });
         }
         
         setSession(session);
         setUser(session?.user ?? null);
       } catch (error) {
-        console.error('❌ AuthProvider: Session check exception:', error);
+        logger.error('❌ AuthProvider: Session check exception:', { context: [error] });
       } finally {
         setLoading(false);
       }
@@ -74,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               timestamp: new Date().toISOString()
             });
           } catch (activityError) {
-            console.error('Failed to track automatic login activity:', activityError);
+            logger.error('Failed to track automatic login activity:', { context: [activityError] });
             // Don't throw - auth state change was successful
           }
         }
@@ -100,7 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setIsDeveloper(canAccessDeveloperPortal(profileData));
           }
         } catch (error) {
-          console.error('Error loading profile:', error);
+          logger.error('Error loading profile:', { context: [error] });
         }
       }
     };
@@ -118,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (profileError) {
-        console.error('❌ AuthContext: Profile fetch failed:', profileError);
+        logger.error('❌ AuthContext: Profile fetch failed:', { context: [profileError] });
         return;
       }
 
@@ -131,7 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .single();
 
         if (alumniCheckError && alumniCheckError.code !== 'PGRST116') {
-          console.error('❌ AuthContext: Alumni check failed:', alumniCheckError);
+          logger.error('❌ AuthContext: Alumni check failed:', { context: [alumniCheckError] });
           return;
         }
 
@@ -164,14 +165,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             });
 
           if (alumniError) {
-            console.error('❌ AuthContext: Missing alumni record creation failed:', alumniError);
+            logger.error('❌ AuthContext: Missing alumni record creation failed:', { context: [alumniError] });
           } else {
             // AuthContext: Missing alumni record created successfully
           }
         }
       }
     } catch (error) {
-      console.error('❌ AuthContext: Alumni sync exception:', error);
+      logger.error('❌ AuthContext: Alumni sync exception:', { context: [error] });
     }
   };
 
@@ -181,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) {
-        console.error('❌ AuthContext: Sign in failed:', error);
+        logger.error('❌ AuthContext: Sign in failed:', { context: [error] });
         throw error;
       }
       
@@ -196,12 +197,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             timestamp: new Date().toISOString()
           });
         } catch (activityError) {
-          console.error('Failed to track login activity:', activityError);
+          logger.error('Failed to track login activity:', { context: [activityError] });
           // Don't throw - login was successful
         }
       }
     } catch (error) {
-      console.error('❌ AuthContext: Sign in exception:', error);
+      logger.error('❌ AuthContext: Sign in exception:', { context: [error] });
       throw error;
     }
   };
@@ -219,7 +220,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       
       if (error) {
-        console.error('❌ AuthContext: Sign up failed:', error);
+        logger.error('❌ AuthContext: Sign up failed:', { context: [error] });
         throw error;
       }
 
@@ -251,7 +252,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             });
 
           if (profileError) {
-            console.error('❌ AuthContext: Profile creation failed:', profileError);
+            logger.error('❌ AuthContext: Profile creation failed:', { context: [profileError] });
           } else {
             // AuthContext: Profile created successfully
 
@@ -288,20 +289,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   });
 
                 if (alumniError) {
-                  console.error('❌ AuthContext: Alumni record creation failed:', alumniError);
+                  logger.error('❌ AuthContext: Alumni record creation failed:', { context: [alumniError] });
                   // Don't throw here - profile was created successfully
                   // We can handle alumni creation later if needed
                 } else {
                   // AuthContext: Alumni record created/updated successfully
                 }
               } catch (alumniError) {
-                console.error('❌ AuthContext: Alumni record creation exception:', alumniError);
+                logger.error('❌ AuthContext: Alumni record creation exception:', { context: [alumniError] });
                 // Don't throw here - profile was created successfully
               }
             }
           }
         } catch (profileError) {
-          console.error('❌ AuthContext: Profile creation exception:', profileError);
+          logger.error('❌ AuthContext: Profile creation exception:', { context: [profileError] });
         }
 
         // Auto sign-in after successful sign-up
@@ -314,18 +315,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
           
           if (signInError) {
-            console.error('❌ AuthContext: Auto sign-in failed:', signInError);
+            logger.error('❌ AuthContext: Auto sign-in failed:', { context: [signInError] });
           } else {
             // AuthContext: Auto sign-in successful
           }
         } catch (signInError) {
-          console.error('❌ AuthContext: Auto sign-in exception:', signInError);
+          logger.error('❌ AuthContext: Auto sign-in exception:', { context: [signInError] });
         }
       }
       
       // AuthContext: Sign up process completed
     } catch (error) {
-      console.error('❌ AuthContext: Sign up exception:', error);
+      logger.error('❌ AuthContext: Sign up exception:', { context: [error] });
       throw error;
     }
   };
@@ -336,13 +337,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        console.error('❌ AuthContext: Sign out failed:', error);
+        logger.error('❌ AuthContext: Sign out failed:', { context: [error] });
         throw error;
       }
       
       // AuthContext: Sign out successful
     } catch (error) {
-      console.error('❌ AuthContext: Sign out exception:', error);
+      logger.error('❌ AuthContext: Sign out exception:', { context: [error] });
       throw error;
     }
   };
@@ -362,7 +363,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return data;
     } catch (error) {
-      console.error('Google sign-in error:', error);
+      logger.error('Google sign-in error:', { context: [error] });
       throw error;
     }
   };

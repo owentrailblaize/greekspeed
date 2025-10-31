@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { VendorContact, CreateVendorRequest, UpdateVendorRequest } from '@/types/vendors';
+import { logger } from "@/lib/utils/logger";
 
 interface UseVendorsOptions {
   chapterId: string;
@@ -52,7 +53,7 @@ export function useVendors({ chapterId }: UseVendorsOptions) {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('API error response:', errorData);
+        logger.error('API error response:', { context: [errorData] });
         throw new Error(errorData.error || 'Failed to create vendor');
       }
 
@@ -61,7 +62,7 @@ export function useVendors({ chapterId }: UseVendorsOptions) {
       await fetchVendors(); // Refresh the vendors list
       return result.vendor;
     } catch (err) {
-      console.error('Error in createVendor:', err);
+      logger.error('Error in createVendor:', { context: [err] });
       setError(err instanceof Error ? err.message : 'Failed to create vendor');
       return null;
     }

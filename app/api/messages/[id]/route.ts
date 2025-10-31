@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 export async function PATCH(
   request: NextRequest,
@@ -47,13 +48,13 @@ export async function PATCH(
       .single();
 
     if (error) {
-      console.error('Message update error:', error);
+      logger.error('Message update error:', { context: [error] });
       return NextResponse.json({ error: 'Failed to update message' }, { status: 500 });
     }
 
     return NextResponse.json({ message });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -80,13 +81,13 @@ export async function DELETE(
       .eq('id', id); // ✅ Use the destructured id
 
     if (error) {
-      console.error('Message deletion error:', error);
+      logger.error('Message deletion error:', { context: [error] });
       return NextResponse.json({ error: 'Failed to delete message' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

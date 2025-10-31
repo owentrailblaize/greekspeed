@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import sgMail from '@sendgrid/mail';
+import { logger } from "@/lib/utils/logger";
 
 // Initialize SendGrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Contact form error:', error);
+    logger.error('Contact form error:', { context: [error] });
     return NextResponse.json(
       { error: 'Failed to submit contact request' },
       { status: 500 }

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'react-toastify';
 import { AllDocumentsModal } from './AllDocumentsModal';
+import { logger } from "@/lib/utils/logger";
 
 // Use the same interface as ChapterDocumentManager
 interface ChapterDocument {
@@ -45,7 +46,7 @@ export function DocsCompliancePanel() {
       // Get current user's chapter_id and role from their profile
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.error('No authenticated user');
+        logger.error('No authenticated user');
         setDocuments([]);
         return;
       }
@@ -57,7 +58,7 @@ export function DocsCompliancePanel() {
         .single();
 
       if (!profile?.chapter_id) {
-        console.error('No chapter_id found for user');
+        logger.error('No chapter_id found for user');
         setDocuments([]);
         return;
       }
@@ -80,12 +81,12 @@ export function DocsCompliancePanel() {
       }
 
       // User role-based access
-      console.log('User access details:', {
-        userId: user.id,
-        userRole: profile.role,
-        chapterId: profile.chapter_id,
-        visibilityFilter: visibilityFilter
-      });
+      logger.info('User access details:', {
+                userId: user.id,
+                userRole: profile.role,
+                chapterId: profile.chapter_id,
+                visibilityFilter: visibilityFilter
+              });
 
       // Fetch documents with role-based visibility filtering
       const { data: documents, error } = await supabase
@@ -101,15 +102,15 @@ export function DocsCompliancePanel() {
         .limit(3);
 
       if (error) {
-        console.error('Error loading documents:', error);
+        logger.error('Error loading documents:', { context: [error] });
         setDocuments([]);
       } else {
         // Documents loaded with role-based access
-        console.log('Documents loaded:', {
-          totalDocuments: documents?.length || 0,
-          userRole: profile.role,
-          visibilityFilter: visibilityFilter
-        });
+        logger.info('Documents loaded:', {
+                    totalDocuments: documents?.length || 0,
+                    userRole: profile.role,
+                    visibilityFilter: visibilityFilter
+                  });
 
         // Transform the data to match ChapterDocument interface
         const transformedDocuments: ChapterDocument[] = (documents || []).map(doc => ({
@@ -133,7 +134,7 @@ export function DocsCompliancePanel() {
         setDocuments(transformedDocuments);
       }
     } catch (error) {
-      console.error('Error loading documents:', error);
+      logger.error('Error loading documents:', { context: [error] });
       setDocuments([]);
     } finally {
       setLoading(false);
@@ -224,7 +225,7 @@ export function DocsCompliancePanel() {
         toast.error('Document not accessible for download');
       }
     } catch (error) {
-      console.error('Download error:', error);
+      logger.error('Download error:', { context: [error] });
       toast.error('Download failed. Please try again.');
     }
   };

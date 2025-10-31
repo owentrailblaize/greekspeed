@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 export async function GET(
   request: NextRequest,
@@ -54,7 +55,7 @@ export async function GET(
 
     return NextResponse.json(chapter);
   } catch (error) {
-    console.error('Chapter API error:', error);
+    logger.error('Chapter API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

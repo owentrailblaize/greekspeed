@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { JoinForm } from '@/components/features/join/JoinForm';
 import { Invitation } from '@/types/invitations';
+import { logger } from "@/lib/utils/logger";
 
 export default function JoinPage() {
   const params = useParams();
@@ -39,7 +40,7 @@ export default function JoinPage() {
 
         setInvitation(data.invitation);
       } catch (error) {
-        console.error('Error validating invitation:', error);
+        logger.error('Error validating invitation:', { context: [error] });
         setError(error instanceof Error ? error.message : 'Failed to validate invitation');
       } finally {
         setLoading(false);

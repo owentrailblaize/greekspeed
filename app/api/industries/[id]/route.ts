@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 export async function GET(
   request: NextRequest,
@@ -54,7 +55,7 @@ export async function GET(
 
     return NextResponse.json(industry);
   } catch (error) {
-    console.error('Industry API error:', error);
+    logger.error('Industry API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -98,7 +99,7 @@ async function createIndustryWithLLM(name: string, supabase: any) {
     if (error) throw error;
     return NextResponse.json(newIndustry);
   } catch (error) {
-    console.error('LLM enrichment failed:', error);
+    logger.error('LLM enrichment failed:', { context: [error] });
     return NextResponse.json({
       name,
       description: 'Industry information not available',
@@ -142,6 +143,6 @@ async function enrichIndustryWithLLM(industry: any, supabase: any) {
       })
       .eq('id', industry.id);
   } catch (error) {
-    console.error('Industry enrichment failed:', error);
+    logger.error('Industry enrichment failed:', { context: [error] });
   }
 }

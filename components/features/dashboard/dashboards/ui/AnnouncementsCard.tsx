@@ -8,6 +8,7 @@ import { X, MessageSquare, Clock, AlertTriangle, GraduationCap, Calendar, AlertC
 import { useAnnouncements } from '@/lib/hooks/useAnnouncements';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { Announcement, CreateAnnouncementData } from '@/types/announcements';
+import { logger } from "@/lib/utils/logger";
 
 // Helper function to get icon and color based on announcement type
 const getAnnouncementTypeConfig = (type: string) => {
@@ -72,7 +73,7 @@ export function AnnouncementsCard() {
         // since the hook now filters out read announcements
       }
     } catch (error) {
-      console.error('Failed to mark announcement as read:', error);
+      logger.error('Failed to mark announcement as read:', { context: [error] });
     } finally {
       setMarkingAsRead(null); // Clear loading state
     }

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { supabase } from '@/lib/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 export interface Message {
   id: string;
@@ -209,7 +210,7 @@ export function useMessages(connectionId: string | null) {
         method: 'POST'
       });
     } catch (err) {
-      console.error('Failed to mark message as read:', err);
+      logger.error('Failed to mark message as read:', { context: [err] });
     }
   }, [user]);
 

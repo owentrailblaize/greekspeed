@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
     const { data: users, error, count } = await query.range(offset, offset + limit - 1);
 
     if (error) {
-      console.error('Error fetching users:', error);
+      logger.error('Error fetching users:', { context: [error] });
       return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
     }
 
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil((count || 0) / limit)
     });
   } catch (error) {
-    console.error('Unexpected error:', error);
+    logger.error('Unexpected error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (authError) {
-      console.error('Auth error:', authError);
+      logger.error('Auth error:', { context: [authError] });
       return NextResponse.json({ error: 'Failed to create user account' }, { status: 500 });
     }
 
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (profileError) {
-      console.error('Profile error:', profileError);
+      logger.error('Profile error:', { context: [profileError] });
       return NextResponse.json({ error: 'Failed to create profile' }, { status: 500 });
     }
 
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
       user: authData.user 
     });
   } catch (error) {
-    console.error('Unexpected error:', error);
+    logger.error('Unexpected error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -136,7 +137,7 @@ export async function DELETE(request: NextRequest) {
     const { error: authError } = await supabase.auth.admin.deleteUser(userId);
 
     if (authError) {
-      console.error('❌ Auth user deletion failed:', authError);
+      logger.error('❌ Auth user deletion failed:', { context: [authError] });
       
       // Check if it's a permission issue or user not found
       if (authError.message.includes('not found') || authError.message.includes('does not exist')) {
@@ -157,7 +158,7 @@ export async function DELETE(request: NextRequest) {
       .eq('id', userId);
 
     if (profileError) {
-      console.error('❌ Profile deletion error:', profileError);
+      logger.error('❌ Profile deletion error:', { context: [profileError] });
       return NextResponse.json({ error: 'Failed to delete user profile' }, { status: 500 });
     }
 
@@ -196,7 +197,7 @@ export async function DELETE(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ Unexpected error during user deletion:', error);
+    logger.error('❌ Unexpected error during user deletion:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

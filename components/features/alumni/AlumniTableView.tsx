@@ -35,6 +35,7 @@ import { useRouter } from 'next/navigation';
 import { ClickableField } from "@/components/shared/ClickableField";
 import { ActivityIndicator } from "@/components/shared/ActivityIndicator";
 import { calculateAlumniCompleteness, getCompletenessBadgeColor } from '@/lib/utils/profileCompleteness';
+import { logger } from "@/lib/utils/logger";
 
 interface AlumniTableViewProps {
   alumni: Alumni[];
@@ -151,7 +152,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
           break;
       }
     } catch (error) {
-      console.error('Connection action failed:', error);
+      logger.error('Connection action failed:', { context: [error] });
     } finally {
       setConnectionLoading(null);
     }

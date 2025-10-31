@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { EmailService } from '@/lib/services/emailService';
+import { logger } from "@/lib/utils/logger";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
     const { data: events, error } = await query;
 
     if (error) {
-      console.error('Error fetching events:', error);
+      logger.error('Error fetching events:', { context: [error] });
       return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 });
     }
 
@@ -59,7 +60,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(eventsWithCounts);
   } catch (error) {
-    console.error('Error in events API:', error);
+    logger.error('Error in events API:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating event:', error);
+      logger.error('Error creating event:', { context: [error] });
       return NextResponse.json({ error: 'Failed to create event' }, { status: 500 });
     }
 
@@ -131,16 +132,16 @@ export async function POST(request: NextRequest) {
           // Event notification emails sent successfully
         } else {
           const errorText = await emailResponse.text();
-          console.error('Failed to send event notification emails');
-          console.error('Response status:', emailResponse.status);
-          console.error('Response text:', errorText);
+          logger.error('Failed to send event notification emails');
+          logger.error('Response status:', { context: [emailResponse.status] });
+          logger.error('Response text:', { context: [errorText] });
         }
       } catch (emailError) {
-        console.error('Error sending event notification emails:', emailError);
-        console.error('Error details:', {
-          message: emailError instanceof Error ? emailError.message : 'Unknown error',
-          stack: emailError instanceof Error ? emailError.stack : 'No stack trace'
-        });
+        logger.error('Error sending event notification emails:', { context: [emailError] });
+        logger.error('Error details:', {
+                    message: emailError instanceof Error ? emailError.message : 'Unknown error',
+                    stack: emailError instanceof Error ? emailError.stack : 'No stack trace'
+                  });
         // Don't fail the event creation if email fails
       }
     } else {
@@ -154,7 +155,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error in create event API:', error);
+    logger.error('Error in create event API:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

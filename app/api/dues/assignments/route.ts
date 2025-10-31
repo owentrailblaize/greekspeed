@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { canManageChapter } from '@/lib/permissions';
+import { logger } from "@/lib/utils/logger";
 
 // Create a session-aware Supabase client for API routes
 function createApiSupabaseClient(request: NextRequest) {
@@ -86,13 +87,13 @@ export async function GET(request: NextRequest) {
     const { data: assignments, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching dues assignments:', error);
+      logger.error('Error fetching dues assignments:', { context: [error] });
       return NextResponse.json({ error: 'Failed to fetch dues assignments' }, { status: 500 });
     }
 
     return NextResponse.json({ assignments: assignments || [] });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -110,17 +111,17 @@ export async function POST(request: NextRequest) {
     // Validating fields
     
     if (!memberId) {
-      console.error('❌ Missing memberId');
+      logger.error('❌ Missing memberId');
       return NextResponse.json({ error: 'Member ID is required' }, { status: 400 });
     }
     
     if (!amount || amount <= 0) {
-      console.error('❌ Invalid amount:', amount);
+      logger.error('❌ Invalid amount:', { context: [amount] });
       return NextResponse.json({ error: 'Valid amount is required' }, { status: 400 });
     }
     
     if (!cycleId) {
-      console.error('❌ Missing cycleId');
+      logger.error('❌ Missing cycleId');
       return NextResponse.json({ error: 'Cycle ID is required' }, { status: 400 });
     }
 
@@ -142,7 +143,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (assignmentError) {
-      console.error('❌ Error creating dues assignment:', assignmentError);
+      logger.error('❌ Error creating dues assignment:', { context: [assignmentError] });
       return NextResponse.json({ 
         error: 'Failed to create dues assignment', 
         details: assignmentError.message 
@@ -160,7 +161,7 @@ export async function POST(request: NextRequest) {
       .eq('id', memberId);
 
     if (profileUpdateError) {
-      console.error('⚠️ Error updating member profile:', profileUpdateError);
+      logger.error('⚠️ Error updating member profile:', { context: [profileUpdateError] });
     }
 
     // Dues assignment created successfully
@@ -170,7 +171,7 @@ export async function POST(request: NextRequest) {
       assignment
     });
   } catch (error) {
-    console.error('❌ API error:', error);
+    logger.error('❌ API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -233,7 +234,7 @@ export async function PATCH(request: NextRequest) {
         .single();
 
       if (error) {
-        console.error('❌ PATCH: Error updating dues assignment:', error);
+        logger.error('❌ PATCH: Error updating dues assignment:', { context: [error] });
         return NextResponse.json({ error: 'Failed to update dues assignment' }, { status: 500 });
       }
 
@@ -251,7 +252,7 @@ export async function PATCH(request: NextRequest) {
           .eq('id', assignment.user_id);
 
         if (profileUpdateError) {
-          console.error('⚠️ PATCH: Error updating member profile:', profileUpdateError);
+          logger.error('⚠️ PATCH: Error updating member profile:', { context: [profileUpdateError] });
         } else {
           // PATCH: Member profile updated successfully
         }
@@ -310,7 +311,7 @@ export async function PATCH(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('❌ PATCH: Error updating dues assignment:', error);
+      logger.error('❌ PATCH: Error updating dues assignment:', { context: [error] });
       return NextResponse.json({ error: 'Failed to update dues assignment' }, { status: 500 });
     }
 
@@ -328,7 +329,7 @@ export async function PATCH(request: NextRequest) {
         .eq('id', assignment.user_id);
 
       if (profileUpdateError) {
-        console.error('⚠️ PATCH: Error updating member profile:', profileUpdateError);
+        logger.error('⚠️ PATCH: Error updating member profile:', { context: [profileUpdateError] });
       } else {
         // PATCH: Member profile updated successfully
       }
@@ -339,7 +340,7 @@ export async function PATCH(request: NextRequest) {
       assignment
     });
   } catch (error) {
-    console.error('❌ PATCH: API error:', error);
+    logger.error('❌ PATCH: API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -394,7 +395,7 @@ export async function DELETE(request: NextRequest) {
         .single();
 
       if (fetchError || !assignment) {
-        console.error('❌ DELETE: Assignment not found:', fetchError);
+        logger.error('❌ DELETE: Assignment not found:', { context: [fetchError] });
         return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });
       }
 
@@ -405,7 +406,7 @@ export async function DELETE(request: NextRequest) {
         .eq('id', assignmentId);
 
       if (deleteError) {
-        console.error('❌ DELETE: Error deleting dues assignment:', deleteError);
+        logger.error('❌ DELETE: Error deleting dues assignment:', { context: [deleteError] });
         return NextResponse.json({ error: 'Failed to delete dues assignment' }, { status: 500 });
       }
 
@@ -421,7 +422,7 @@ export async function DELETE(request: NextRequest) {
         .eq('id', assignment.user_id);
 
       if (profileUpdateError) {
-        console.error('⚠️ DELETE: Error updating member profile:', profileUpdateError);
+        logger.error('⚠️ DELETE: Error updating member profile:', { context: [profileUpdateError] });
       } else {
         // DELETE: Member profile updated successfully
       }
@@ -473,7 +474,7 @@ export async function DELETE(request: NextRequest) {
       .single();
 
     if (fetchError || !assignment) {
-      console.error('❌ DELETE: Assignment not found:', fetchError);
+      logger.error('❌ DELETE: Assignment not found:', { context: [fetchError] });
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });
     }
 
@@ -484,7 +485,7 @@ export async function DELETE(request: NextRequest) {
       .eq('id', assignmentId);
 
     if (deleteError) {
-      console.error('❌ DELETE: Error deleting dues assignment:', deleteError);
+      logger.error('❌ DELETE: Error deleting dues assignment:', { context: [deleteError] });
       return NextResponse.json({ error: 'Failed to delete dues assignment' }, { status: 500 });
     }
 
@@ -500,7 +501,7 @@ export async function DELETE(request: NextRequest) {
       .eq('id', assignment.user_id);
 
     if (profileUpdateError) {
-      console.error('⚠️ DELETE: Error updating member profile:', profileUpdateError);
+      logger.error('⚠️ DELETE: Error updating member profile:', { context: [profileUpdateError] });
     } else {
       // DELETE: Member profile updated successfully
     }
@@ -511,7 +512,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Dues assignment deleted successfully'
     });
   } catch (error) {
-    console.error('❌ DELETE: API error:', error);
+    logger.error('❌ DELETE: API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

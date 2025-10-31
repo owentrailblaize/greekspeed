@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
       .gte('created_at', currentMonth.toISOString());
 
     if (currentError) {
-      console.error('Error counting current month members:', currentError);
+      logger.error('Error counting current month members:', { context: [currentError] });
       return NextResponse.json({ error: 'Failed to count current month members' }, { status: 500 });
     }
 
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
       .lt('created_at', currentMonth.toISOString());
 
     if (lastError) {
-      console.error('Error counting last month members:', lastError);
+      logger.error('Error counting last month members:', { context: [lastError] });
       return NextResponse.json({ error: 'Failed to count last month members' }, { status: 500 });
     }
 
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error in membership growth API:', error);
+    logger.error('Error in membership growth API:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

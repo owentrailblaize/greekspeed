@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
+import { logger } from "@/lib/utils/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
       pending_approvals: pendingApprovals || 0
     });
   } catch (error) {
-    console.error('Error getting invitation stats:', error);
+    logger.error('Error getting invitation stats:', { context: [error] });
     return NextResponse.json({ error: 'Failed to get invitation stats' }, { status: 500 });
   }
 }

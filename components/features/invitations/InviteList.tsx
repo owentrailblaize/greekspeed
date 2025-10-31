@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { InvitationWithUsage } from '@/types/invitations';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'react-toastify';
+import { logger } from "@/lib/utils/logger";
 
 interface InviteListProps {
   chapterId: string;
@@ -44,7 +45,7 @@ export function InviteList({ chapterId, onEdit, onDelete, className }: InviteLis
       const data = await response.json();
       setInvitations(data.invitations || []);
     } catch (error) {
-      console.error('Error fetching invitations:', error);
+      logger.error('Error fetching invitations:', { context: [error] });
       toast.error('Failed to load invitations');
     } finally {
       setLoading(false);

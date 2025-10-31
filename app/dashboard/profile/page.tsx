@@ -24,6 +24,7 @@ import { DeletePostModal } from '@/components/features/social/DeletePostModal';
 import { EmailService } from '@/lib/services/emailService';
 import { useModal } from '@/lib/contexts/ModalContext';
 import { Save, AlertTriangle } from 'lucide-react';
+import { logger } from "@/lib/utils/logger";
 
 export default function ProfilePage() {
   const { profile, loading, refreshProfile } = useProfile();
@@ -99,7 +100,7 @@ export default function ProfilePage() {
         window.location.reload(); // Simple refresh for now
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
+      logger.error('Error updating profile:', { context: [error] });
     }
   };
 
@@ -134,7 +135,7 @@ export default function ProfilePage() {
       setDeleteModalOpen(false);
       setPostToDelete(null);
     } catch (error) {
-      console.error('Failed to delete post:', error);
+      logger.error('Failed to delete post:', { context: [error] });
     } finally {
       setIsDeleting(false);
     }

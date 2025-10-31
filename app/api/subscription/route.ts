@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
+import { logger } from "@/lib/utils/logger";
 
 export async function GET(req: Request) {
   try {
@@ -20,7 +21,7 @@ export async function GET(req: Request) {
       .single();
 
     if (profileError) {
-      console.error('Error fetching profile:', profileError);
+      logger.error('Error fetching profile:', { context: [profileError] });
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
@@ -37,7 +38,7 @@ export async function GET(req: Request) {
       const stripeModule = await import('@/lib/services/stripe/stripe-server');
       stripe = stripeModule.stripe;
     } catch (stripeError) {
-      console.error('Error importing Stripe:', stripeError);
+      logger.error('Error importing Stripe:', { context: [stripeError] });
       return NextResponse.json({ 
         error: 'Stripe configuration error',
         details: stripeError instanceof Error ? stripeError.message : 'Unknown error'
@@ -100,7 +101,7 @@ export async function GET(req: Request) {
     });
 
   } catch (error) {
-    console.error('Error fetching subscription:', error);
+    logger.error('Error fetching subscription:', { context: [error] });
     return NextResponse.json({ 
       error: 'Failed to fetch subscription data',
       details: error instanceof Error ? error.message : 'Unknown error'
@@ -143,7 +144,7 @@ export async function POST(req: Request) {
     });
 
   } catch (error) {
-    console.error('Error updating subscription:', error);
+    logger.error('Error updating subscription:', { context: [error] });
     return NextResponse.json({ 
       error: 'Failed to update subscription',
       details: error instanceof Error ? error.message : 'Unknown error'

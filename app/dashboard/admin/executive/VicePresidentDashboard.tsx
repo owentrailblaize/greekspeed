@@ -12,6 +12,8 @@ import { supabase } from "@/lib/supabase/client";
 import { Event } from '@/types/events';
 import { EventForm } from "@/components/ui/EventForm";
 import { CreateEventRequest, UpdateEventRequest } from "@/types/events";
+import { logger } from "@/lib/utils/logger";
+
 const committeeStatus = [
   { name: "Risk Management", chair: "John Smith", members: 8, completion: 92, nextMeeting: "March 10" },
   { name: "Professional Development", chair: "Mike Johnson", members: 12, completion: 78, nextMeeting: "March 12" },
@@ -69,7 +71,7 @@ export function VicePresidentDashboard() {
         .eq('chapter_id', profile.chapter_id);
 
       if (error) {
-        console.error('Error fetching tasks:', error);
+        logger.error('Error fetching tasks:', { context: [error] });
         return;
       }
 
@@ -88,7 +90,7 @@ export function VicePresidentDashboard() {
         memberCompliance: Math.round(memberCompliance * 10) / 10 // Round to 1 decimal place
       });
     } catch (error) {
-      console.error('Error loading task stats:', error);
+      logger.error('Error loading task stats:', { context: [error] });
     } finally {
       setLoading(false);
     }
@@ -114,13 +116,13 @@ export function VicePresidentDashboard() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching tasks:', error);
+        logger.error('Error fetching tasks:', { context: [error] });
         return;
       }
 
       setChapterTasks(tasks || []);
     } catch (error) {
-      console.error('Error loading chapter tasks:', error);
+      logger.error('Error loading chapter tasks:', { context: [error] });
     } finally {
       setTasksLoading(false);
     }
@@ -144,7 +146,7 @@ export function VicePresidentDashboard() {
       const events = await response.json();
       setChapterEvents(events);
     } catch (error) {
-      console.error('Error loading chapter events:', error);
+      logger.error('Error loading chapter events:', { context: [error] });
     } finally {
       setEventsLoading(false);
     }
@@ -226,7 +228,7 @@ export function VicePresidentDashboard() {
       setIsEditModalOpen(false);
       setSelectedEvent(null);
     } catch (error) {
-      console.error('Error editing event:', error);
+      logger.error('Error editing event:', { context: [error] });
     } finally {
       setEditingEvent(false);
     }
@@ -255,7 +257,7 @@ export function VicePresidentDashboard() {
       await loadChapterEvents();
       setShowCreateEventModal(false);
     } catch (error) {
-      console.error('Error creating event:', error);
+      logger.error('Error creating event:', { context: [error] });
     }
   };
 

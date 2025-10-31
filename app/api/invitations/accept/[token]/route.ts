@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { validateInvitationToken, validateEmailDomain, hasEmailUsedInvitation, recordInvitationUsage } from '@/lib/utils/invitationUtils';
 import { JoinFormData } from '@/types/invitations';
+import { logger } from "@/lib/utils/logger";
 
 export async function POST(
   request: NextRequest,
@@ -67,7 +68,7 @@ export async function POST(
     });
 
     if (authError || !authData.user) {
-      console.error('❌ Invitation Accept: Auth signup error:', authError);
+      logger.error('❌ Invitation Accept: Auth signup error:', { context: [authError] });
       return NextResponse.json({ 
         error: authError?.message || 'Failed to create account' 
       }, { status: 500 });
@@ -86,7 +87,7 @@ export async function POST(
       .single();
 
     if (autoProfileError && autoProfileError.code !== 'PGRST116') {
-      console.error('❌ Invitation Accept: Error checking auto-created profile:', autoProfileError);
+      logger.error('❌ Invitation Accept: Error checking auto-created profile:', { context: [autoProfileError] });
     }
 
     if (autoProfile) {
@@ -109,13 +110,13 @@ export async function POST(
         .single();
 
       if (updateError) {
-        console.error('❌ Invitation Accept: Profile update error:', updateError);
+        logger.error('❌ Invitation Accept: Profile update error:', { context: [updateError] });
         
         // Clean up the auth user if profile update fails
         try {
           await supabase.auth.admin.deleteUser(authData.user.id);
         } catch (deleteError) {
-          console.error('❌ Invitation Accept: Failed to clean up auth user:', deleteError);
+          logger.error('❌ Invitation Accept: Failed to clean up auth user:', { context: [deleteError] });
         }
         
         return NextResponse.json({ 
@@ -136,7 +137,7 @@ export async function POST(
         .single();
         
       if (verifyError) {
-        console.error('❌ Invitation Accept: Error verifying profile update:', verifyError);
+        logger.error('❌ Invitation Accept: Error verifying profile update:', { context: [verifyError] });
       } else {
         // Invitation Accept: Profile verification completed
       }
@@ -163,13 +164,13 @@ export async function POST(
         });
 
       if (profileError) {
-        console.error('❌ Invitation Accept: Profile creation error:', profileError);
+        logger.error('❌ Invitation Accept: Profile creation error:', { context: [profileError] });
         
         // Clean up the auth user if profile creation fails
         try {
           await supabase.auth.admin.deleteUser(authData.user.id);
         } catch (deleteError) {
-          console.error('❌ Invitation Accept: Failed to clean up auth user:', deleteError);
+          logger.error('❌ Invitation Accept: Failed to clean up auth user:', { context: [deleteError] });
         }
         
         return NextResponse.json({ 
@@ -183,7 +184,7 @@ export async function POST(
     // Record invitation usage
     const usageResult = await recordInvitationUsage(invitation.id, email, authData.user.id);
     if (!usageResult.success) {
-      console.error('❌ Invitation Accept: Failed to record invitation usage:', usageResult.error);
+      logger.error('❌ Invitation Accept: Failed to record invitation usage:', { context: [usageResult.error] });
       // Don't fail the signup, just log the error
     } else {
       // Invitation Accept: Invitation usage recorded
@@ -199,7 +200,7 @@ export async function POST(
     });
 
     if (signInError) {
-      console.error('❌ Invitation Accept: Auto sign-in failed:', signInError);
+      logger.error('❌ Invitation Accept: Auto sign-in failed:', { context: [signInError] });
       // Don't fail the entire process, just log the error
     } else {
       // Invitation Accept: User signed in successfully
@@ -219,7 +220,7 @@ export async function POST(
       }
     });
   } catch (error) {
-    console.error('❌ Invitation Accept: API error:', error);
+    logger.error('❌ Invitation Accept: API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

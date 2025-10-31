@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
+import { logger } from "@/lib/utils/logger";
 
 export async function POST(req: Request) {
   try {
     const { chapterId, adminUserId, adminEmail } = await req.json();
 
     if (!chapterId || !adminUserId || !adminEmail) {
-      console.error('Missing required fields:', { chapterId, adminUserId, adminEmail });
+      logger.error('Missing required fields:', { chapterId, adminUserId, adminEmail });
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -18,12 +19,12 @@ export async function POST(req: Request) {
 
     // Validate environment variables
     if (!process.env.STRIPE_SECRET_KEY) {
-      console.error('Missing STRIPE_SECRET_KEY');
+      logger.error('Missing STRIPE_SECRET_KEY');
       return NextResponse.json({ error: 'Stripe configuration error' }, { status: 500 });
     }
 
     if (!process.env.NEXT_PUBLIC_APP_URL) {
-      console.error('Missing NEXT_PUBLIC_APP_URL');
+      logger.error('Missing NEXT_PUBLIC_APP_URL');
       return NextResponse.json({ error: 'App URL configuration error' }, { status: 500 });
     }
 
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
       .single();
 
     if (chapterError || !chapter) {
-      console.error('Error fetching chapter:', chapterError);
+      logger.error('Error fetching chapter:', { context: [chapterError] });
       return NextResponse.json({ error: 'Chapter not found' }, { status: 404 });
     }
 
@@ -50,12 +51,12 @@ export async function POST(req: Request) {
         .single();
 
       if (profileError) {
-        console.error('Error fetching profile:', profileError);
+        logger.error('Error fetching profile:', { context: [profileError] });
       } else {
         customerId = profile?.stripe_customer_id;
       }
     } catch (error) {
-      console.error('Supabase connection error:', error);
+      logger.error('Supabase connection error:', { context: [error] });
     }
 
     if (!customerId) {
@@ -80,13 +81,13 @@ export async function POST(req: Request) {
             .eq('id', adminUserId);
 
           if (updateError) {
-            console.error('Error updating profile with customer ID:', updateError);
+            logger.error('Error updating profile with customer ID:', { context: [updateError] });
           }
         } catch (updateError) {
-          console.error('Supabase update error:', updateError);
+          logger.error('Supabase update error:', { context: [updateError] });
         }
       } catch (stripeError) {
-        console.error('Error creating Stripe customer:', stripeError);
+        logger.error('Error creating Stripe customer:', { context: [stripeError] });
         return NextResponse.json({ error: 'Failed to create customer' }, { status: 500 });
       }
     }
@@ -127,7 +128,7 @@ export async function POST(req: Request) {
       isLiveMode: process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_'),
     });
   } catch (error) {
-    console.error('Error creating chapter subscription:', error);
+    logger.error('Error creating chapter subscription:', { context: [error] });
     return NextResponse.json(
       { error: 'Failed to create chapter subscription' },
       { status: 500 }

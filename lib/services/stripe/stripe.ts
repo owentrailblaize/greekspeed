@@ -1,4 +1,5 @@
 import { loadStripe } from '@stripe/stripe-js';
+import { logger } from "@/lib/utils/logger";
 
 let stripePromise: Promise<any> | null = null;
 
@@ -7,7 +8,7 @@ export const getStripe = () => {
     const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
     
     if (!publishableKey) {
-      console.error('Missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY');
+      logger.error('Missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY');
       return null;
     }
     
@@ -15,7 +16,7 @@ export const getStripe = () => {
     const isLiveInDev = process.env.NODE_ENV === 'development' && publishableKey.startsWith('pk_live_');
     
     if (isLiveInDev) {
-      console.warn('⚠️ Using LIVE Stripe keys in DEVELOPMENT mode. This may cause authentication issues.');
+      logger.warn('⚠️ Using LIVE Stripe keys in DEVELOPMENT mode. This may cause authentication issues.');
     }
     
     // Add additional options to handle potential issues

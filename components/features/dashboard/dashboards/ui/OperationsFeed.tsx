@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Clock, Users, DollarSign, FileText, Megaphone, CheckCircle, Calendar, RefreshCw } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -53,7 +54,7 @@ export function OperationsFeed() {
       const activities = await fetchActivitiesFromDatabase(limit);
       setActivities(activities);
     } catch (error) {
-      console.error('Error fetching recent activities:', error);
+      logger.error('Error fetching recent activities:', { context: [error] });
     } finally {
       setLoading(false);
     }
@@ -68,7 +69,7 @@ export function OperationsFeed() {
       const activities = await fetchActivitiesFromDatabase(50); // Get more for modal
       setAllActivities(activities);
     } catch (error) {
-      console.error('Error fetching all activities:', error);
+      logger.error('Error fetching all activities:', { context: [error] });
     } finally {
       setModalLoading(false);
     }

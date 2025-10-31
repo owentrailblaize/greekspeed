@@ -3,6 +3,7 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { updateTask, deleteTask } from '@/lib/services/taskService';
 import { canManageMembers } from '@/lib/permissions';
+import { logger } from "@/lib/utils/logger";
 
 export async function PATCH(
   request: NextRequest,
@@ -42,7 +43,7 @@ export async function PATCH(
 
     return NextResponse.json(task);
   } catch (error) {
-    console.error('Error updating task:', error);
+    logger.error('Error updating task:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -83,7 +84,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Task deleted successfully' });
   } catch (error) {
-    console.error('Error deleting task:', error);
+    logger.error('Error deleting task:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

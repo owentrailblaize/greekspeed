@@ -8,6 +8,7 @@ import { ListTodo, Loader2, Plus } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { supabase } from '@/lib/supabase/client';
 import { Task, TaskStatus } from '@/types/operations';
+import { logger } from "@/lib/utils/logger";
 
 export function MobileTasksPage() {
   const { profile } = useProfile();
@@ -53,7 +54,7 @@ export function MobileTasksPage() {
 
         setTasks(transformedTasks);
       } catch (error) {
-        console.error('Error loading my tasks:', error);
+        logger.error('Error loading my tasks:', { context: [error] });
         setError('Failed to load tasks');
         setTasks([]);
       } finally {
@@ -82,7 +83,7 @@ export function MobileTasksPage() {
         task.id === taskId ? { ...task, status: newStatus } : task
       ));
     } catch (error) {
-      console.error('Error updating task:', error);
+      logger.error('Error updating task:', { context: [error] });
     }
   };
 

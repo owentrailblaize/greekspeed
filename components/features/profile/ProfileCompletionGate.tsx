@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { EditAlumniProfileModal } from '@/components/features/alumni/EditAlumniProfileModal';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { supabase } from '@/lib/supabase/client';
+import { logger } from "@/lib/utils/logger";
 
 interface ProfileCompletionGateProps {
   isOpen: boolean;
@@ -109,7 +110,7 @@ export function ProfileCompletionGate({
           .single();
 
         if (error) {
-          console.error('❌ ProfileCompletionGate: Error loading alumni data:', error);
+          logger.error('❌ ProfileCompletionGate: Error loading alumni data:', { context: [error] });
         } else {
           currentAlumniData = alumni;
           setAlumniData(alumni);
@@ -130,7 +131,7 @@ export function ProfileCompletionGate({
         // ProfileCompletionGate: Profile is complete!
       }
     } catch (error) {
-      console.error('❌ ProfileCompletionGate: Error loading completion data:', error);
+      logger.error('❌ ProfileCompletionGate: Error loading completion data:', { context: [error] });
     } finally {
       setLoading(false);
     }
@@ -237,7 +238,7 @@ export function ProfileCompletionGate({
       
       // ProfileCompletionGate: Profile update completed successfully
     } catch (error) {
-      console.error('❌ ProfileCompletionGate: Error updating profile:', error);
+      logger.error('❌ ProfileCompletionGate: Error updating profile:', { context: [error] });
     }
   };
 

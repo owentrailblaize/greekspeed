@@ -2,6 +2,7 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
+import { logger } from "@/lib/utils/logger";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
     const { stripe } = await import('@/lib/services/stripe/stripe-server');
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err) {
-    console.error('Webhook signature verification failed:', err);
+    logger.error('Webhook signature verification failed:', { context: [err] });
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Webhook handler error:', error);
+    logger.error('Webhook handler error:', { context: [error] });
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
   }
 }
@@ -81,7 +82,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     });
     
     if (subscriptionError) {
-      console.error('Error inserting chapter subscription:', subscriptionError);
+      logger.error('Error inserting chapter subscription:', { context: [subscriptionError] });
     } else {
       // Successfully created chapter subscription
     }
@@ -99,7 +100,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     });
     
     if (subscriptionError) {
-      console.error('Error inserting subscription:', subscriptionError);
+      logger.error('Error inserting subscription:', { context: [subscriptionError] });
     }
     
     // Update user profile subscription_status
@@ -112,7 +113,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       .eq('id', session.metadata.user_id);
     
     if (profileError) {
-      console.error('Error updating profile:', profileError);
+      logger.error('Error updating profile:', { context: [profileError] });
     } else {
       // Successfully updated user profile subscription status
     }
@@ -136,7 +137,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       });
 
       if (ledgerError) {
-        console.error('Error inserting into payments ledger:', ledgerError);
+        logger.error('Error inserting into payments ledger:', { context: [ledgerError] });
       } else {
         // Successfully inserted into payments ledger
       }
@@ -152,7 +153,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         .eq('id', session.metadata.dues_assignment_id);
 
       if (assignmentError) {
-        console.error('Error updating dues assignment:', assignmentError);
+        logger.error('Error updating dues assignment:', { context: [assignmentError] });
       } else {
         // Successfully updated dues assignment to paid
       }
@@ -168,12 +169,12 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         .eq('id', session.metadata.user_id);
 
       if (profileError) {
-        console.error('Error updating user profile:', profileError);
+        logger.error('Error updating user profile:', { context: [profileError] });
       } else {
         // Successfully updated user profile dues status
       }
     } catch (error) {
-      console.error('Error in dues payment processing:', error);
+      logger.error('Error in dues payment processing:', { context: [error] });
     }
   }
 }
@@ -209,7 +210,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
       .eq('id', invoice.metadata.dues_assignment_id);
 
     if (error) {
-      console.error('Error updating dues assignment for payment plan:', error);
+      logger.error('Error updating dues assignment for payment plan:', { context: [error] });
     } else {
       // Successfully updated dues assignment for payment plan
     }
@@ -270,7 +271,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     .eq('stripe_charge_id', charge.id);
 
   if (error) {
-    console.error('Error updating payments ledger for refund:', error);
+    logger.error('Error updating payments ledger for refund:', { context: [error] });
   } else {
     // Successfully updated payments ledger for refund
   }
@@ -287,7 +288,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
       .eq('id', charge.metadata.dues_assignment_id);
 
     if (assignmentError) {
-      console.error('Error updating dues assignment for refund:', assignmentError);
+      logger.error('Error updating dues assignment for refund:', { context: [assignmentError] });
     } else {
       // Successfully updated dues assignment for refund
     }

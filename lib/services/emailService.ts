@@ -1,5 +1,6 @@
 import sgMail from '@sendgrid/mail';
 import { getEmailBaseUrl } from '@/lib/utils/urlUtils';
+import { logger } from "@/lib/utils/logger";
 
 // Initialize SendGrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
@@ -154,19 +155,19 @@ export class EmailService {
       // Chapter announcement email sent successfully
       return true;
     } catch (error) {
-      console.error('❌ Failed to send chapter announcement email:', error);
+      logger.error('❌ Failed to send chapter announcement email:', { context: [error] });
       // Add detailed error logging
       if (error && typeof error === 'object' && 'response' in error) {
         const sgError = error as any;
-        console.error('SendGrid Response Body:', JSON.stringify(sgError.response?.body, null, 2));
-        console.error('SendGrid Response Headers:', sgError.response?.headers);
+        logger.error('SendGrid Response Body:', { context: [JSON.stringify(sgError.response?.body, null, 2)] });
+        logger.error('SendGrid Response Headers:', { context: [sgError.response?.headers] });
       }
-      console.error('Error details:', {
-        to,
-        templateId: process.env.SENDGRID_ANNOUNCEMENT_TEMPLATE_ID,
-        fromEmail: this.fromEmail,
-        hasApiKey: !!process.env.SENDGRID_API_KEY
-      });
+      logger.error('Error details:', {
+                to,
+                templateId: process.env.SENDGRID_ANNOUNCEMENT_TEMPLATE_ID,
+                fromEmail: this.fromEmail,
+                hasApiKey: !!process.env.SENDGRID_API_KEY
+              });
       return false;
     }
   }
@@ -276,19 +277,19 @@ export class EmailService {
       // Event notification email sent successfully
       return true;
     } catch (error) {
-      console.error('❌ Failed to send event notification email:', error);
+      logger.error('❌ Failed to send event notification email:', { context: [error] });
       // Add detailed error logging
       if (error && typeof error === 'object' && 'response' in error) {
         const sgError = error as any;
-        console.error('SendGrid Response Body:', JSON.stringify(sgError.response?.body, null, 2));
-        console.error('SendGrid Response Headers:', sgError.response?.headers);
+        logger.error('SendGrid Response Body:', { context: [JSON.stringify(sgError.response?.body, null, 2)] });
+        logger.error('SendGrid Response Headers:', { context: [sgError.response?.headers] });
       }
-      console.error('Error details:', {
-        to,
-        templateId: process.env.SENDGRID_EVENT_TEMPLATE_ID,
-        fromEmail: this.fromEmail,
-        hasApiKey: !!process.env.SENDGRID_API_KEY
-      });
+      logger.error('Error details:', {
+                to,
+                templateId: process.env.SENDGRID_EVENT_TEMPLATE_ID,
+                fromEmail: this.fromEmail,
+                hasApiKey: !!process.env.SENDGRID_API_KEY
+              });
       return false;
     }
   }
@@ -348,7 +349,7 @@ export class EmailService {
       // Password reset email sent successfully
       return true;
     } catch (error) {
-      console.error('❌ Failed to send password reset email:', error);
+      logger.error('❌ Failed to send password reset email:', { context: [error] });
       return false;
     }
   }
@@ -373,7 +374,7 @@ export class EmailService {
       // Welcome email sent successfully
       return true;
     } catch (error) {
-      console.error('❌ Failed to send welcome email:', error);
+      logger.error('❌ Failed to send welcome email:', { context: [error] });
       return false;
     }
   }
@@ -405,7 +406,7 @@ export class EmailService {
       // Notification email sent successfully
       return true;
     } catch (error) {
-      console.error('❌ Failed to send notification email:', error);
+      logger.error('❌ Failed to send notification email:', { context: [error] });
       return false;
     }
   }
@@ -430,7 +431,7 @@ export class EmailService {
       // Custom email sent successfully
       return true;
     } catch (error) {
-      console.error('❌ Failed to send custom email:', error);
+      logger.error('❌ Failed to send custom email:', { context: [error] });
       return false;
     }
   }
@@ -478,7 +479,7 @@ export class EmailService {
       // Connection accepted email sent successfully
       return true;
     } catch (error) {
-      console.error('Error sending connection accepted email:', error);
+      logger.error('Error sending connection accepted email:', { context: [error] });
       return false;
     }
   }
@@ -530,7 +531,7 @@ export class EmailService {
       // Connection request email sent successfully
       return true;
     } catch (error) {
-      console.error('Error sending connection request email:', error);
+      logger.error('Error sending connection request email:', { context: [error] });
       return false;
     }
   }
@@ -582,7 +583,7 @@ export class EmailService {
       // Message notification email sent successfully
       return true;
     } catch (error) {
-      console.error('Error sending message notification email:', error);
+      logger.error('Error sending message notification email:', { context: [error] });
       return false;
     }
   }
@@ -921,7 +922,7 @@ export class EmailService {
       // Event reminder email sent successfully
       return true;
     } catch (error) {
-      console.error(`❌ Failed to send event reminder email to: ${to}`, error);
+      logger.error(`❌ Failed to send event reminder email to: ${to}`, { context: [error] });
       return false;
     }
   }
@@ -986,7 +987,7 @@ export class EmailService {
       await sgMail.send(msg);
       return true;
     } catch (error) {
-      console.error('❌ Failed to send password change confirmation email:', error);
+      logger.error('❌ Failed to send password change confirmation email:', { context: [error] });
       return false;
     }
   }
@@ -1026,7 +1027,7 @@ export class EmailService {
       await sgMail.send(msg);
       return true;
     } catch (error) {
-      console.error('❌ Failed to send password reset instructions email:', error);
+      logger.error('❌ Failed to send password reset instructions email:', { context: [error] });
       return false;
     }
   }

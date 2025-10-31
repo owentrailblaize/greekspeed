@@ -11,6 +11,7 @@ import { useComments } from '@/lib/hooks/useComments';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { formatDistanceToNow } from 'date-fns';
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
+import { logger } from "@/lib/utils/logger";
 
 interface CommentModalProps {
   isOpen: boolean;
@@ -41,7 +42,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
       // Notify parent component that a comment was added
       onCommentAdded?.();
     } catch (error) {
-      console.error('Failed to create comment:', error);
+      logger.error('Failed to create comment:', { context: [error] });
     } finally {
       setIsSubmitting(false);
     }

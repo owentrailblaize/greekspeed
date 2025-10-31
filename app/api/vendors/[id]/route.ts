@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -27,7 +28,7 @@ export async function PATCH(
       .single();
 
     if (error) {
-      console.error('Error updating vendor:', error);
+      logger.error('Error updating vendor:', { context: [error] });
       return NextResponse.json({ error: 'Failed to update vendor' }, { status: 500 });
     }
 
@@ -38,7 +39,7 @@ export async function PATCH(
     });
 
   } catch (error) {
-    console.error('Error in update vendor API:', error);
+    logger.error('Error in update vendor API:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -57,7 +58,7 @@ export async function DELETE(
       .eq('id', id);
 
     if (error) {
-      console.error('Error deleting vendor:', error);
+      logger.error('Error deleting vendor:', { context: [error] });
       return NextResponse.json({ error: 'Failed to delete vendor' }, { status: 500 });
     }
 
@@ -67,7 +68,7 @@ export async function DELETE(
     });
 
   } catch (error) {
-    console.error('Error in delete vendor API:', error);
+    logger.error('Error in delete vendor API:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

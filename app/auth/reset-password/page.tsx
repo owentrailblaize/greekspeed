@@ -3,7 +3,8 @@
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import { ChangePasswordForm } from '@/components/features/settings/ChangePasswordForm';
-import { supabase } from '@/lib/supabase/client'; // Use the supabase instance, not createClient
+import { supabase } from '@/lib/supabase/client';
+import { logger } from "@/lib/utils/logger";
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams();
@@ -27,14 +28,14 @@ function ResetPasswordContent() {
           });
 
           if (error) {
-            console.error('Token validation error:', error);
+            logger.error('Token validation error:', { context: [error] });
             setError('Invalid or expired reset link');
             setIsValid(false);
           } else {
             setIsValid(true);
           }
         } catch (error) {
-          console.error('Token validation error:', error);
+          logger.error('Token validation error:', { context: [error] });
           setError('Invalid or expired reset link');
           setIsValid(false);
         }

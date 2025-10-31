@@ -9,6 +9,7 @@ import { ProfileCompletionGate } from "@/components/features/profile/ProfileComp
 import { Lock, ChevronDown, ChevronUp } from "lucide-react";
 import { useProfile } from "@/lib/hooks/useProfile";
 import { supabase } from "@/lib/supabase/client";
+import { logger } from "@/lib/utils/logger";
 
 const pageTransition = {
   initial: { opacity: 0, y: 20, scale: 0.98 },
@@ -46,7 +47,7 @@ export function AlumniDashboard() {
           .single();
 
         if (error) {
-          console.error('Error loading alumni data:', error);
+          logger.error('Error loading alumni data:', { context: [error] });
         } else {
           alumniData = alumni;
         }
@@ -65,7 +66,7 @@ export function AlumniDashboard() {
 
       setProfileCompletionChecked(true);
     } catch (error) {
-      console.error('Error checking profile completion:', error);
+      logger.error('Error checking profile completion:', { context: [error] });
     }
   };
 

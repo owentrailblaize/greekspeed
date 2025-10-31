@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 import { Profile, ProfileFormData, ProfileCompletion } from '@/types/profile';
+import { logger } from "@/lib/utils/logger";
 
 export class ProfileService {
   // Get current user's profile
@@ -18,7 +19,7 @@ export class ProfileService {
         .single();
 
       if (error) {
-        console.error('Error fetching profile:', error);
+        logger.error('Error fetching profile:', { context: [error] });
         return null;
       }
 
@@ -30,7 +31,7 @@ export class ProfileService {
 
       return profile;
     } catch (error) {
-      console.error('Error in getCurrentProfile:', error);
+      logger.error('Error in getCurrentProfile:', { context: [error] });
       return null;
     }
   }
@@ -78,7 +79,7 @@ export class ProfileService {
         .single();
 
       if (error) {
-        console.error('Error updating profile:', error);
+        logger.error('Error updating profile:', { context: [error] });
         throw error;
       }
 
@@ -91,7 +92,7 @@ export class ProfileService {
       // Profile updated successfully
       return profile;
     } catch (error) {
-      console.error('Error in updateProfile:', error);
+      logger.error('Error in updateProfile:', { context: [error] });
       throw error;
     }
   }
@@ -111,7 +112,7 @@ export class ProfileService {
         .upload(filePath, file);
 
       if (uploadError) {
-        console.error('Error uploading avatar:', uploadError);
+        logger.error('Error uploading avatar:', { context: [uploadError] });
         return null;
       }
 
@@ -123,7 +124,7 @@ export class ProfileService {
 
       return publicUrl;
     } catch (error) {
-      console.error('Error in uploadAvatar:', error);
+      logger.error('Error in uploadAvatar:', { context: [error] });
       return null;
     }
   }

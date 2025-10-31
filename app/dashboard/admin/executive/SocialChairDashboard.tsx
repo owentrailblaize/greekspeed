@@ -18,6 +18,7 @@ import { VendorForm } from "@/components/ui/VendorForm";
 import { VendorContact, CreateVendorRequest, UpdateVendorRequest } from "@/types/vendors";
 import { SocialFeed } from "@/components/features/dashboard/dashboards/ui/SocialFeed";
 import { CompactCalendarCard } from "@/components/features/dashboard/dashboards/ui/CompactCalendarCard";
+import { logger } from "@/lib/utils/logger";
 
 const eventBudget = {
   totalAllocated: 12000,
@@ -160,7 +161,7 @@ export function SocialChairDashboard() {
         setEditingEvent(null);
       }
     } catch (error) {
-      console.error('Error creating event:', error);
+      logger.error('Error creating event:', { context: [error] });
     } finally {
       setIsSubmitting(false);
     }
@@ -181,7 +182,7 @@ export function SocialChairDashboard() {
         setEditingEvent(null);
       }
     } catch (error) {
-      console.error('Error updating event:', error);
+      logger.error('Error updating event:', { context: [error] });
     } finally {
       setIsSubmitting(false);
     }
@@ -236,7 +237,7 @@ export function SocialChairDashboard() {
         setEditingVendor(null);
       }
     } catch (error) {
-      console.error('Error creating vendor:', error);
+      logger.error('Error creating vendor:', { context: [error] });
     } finally {
       setIsSubmittingVendor(false);
     }
@@ -254,7 +255,7 @@ export function SocialChairDashboard() {
         setEditingVendor(null);
       }
     } catch (error) {
-      console.error('Error updating vendor:', error);
+      logger.error('Error updating vendor:', { context: [error] });
     } finally {
       setIsSubmittingVendor(false);
     }
@@ -311,10 +312,10 @@ export function SocialChairDashboard() {
         setTimeout(() => setReminderSuccess(null), 2000);
       } else {
         const error = await response.json();
-        console.error('❌ Failed to send reminder emails:', error);
+        logger.error('❌ Failed to send reminder emails:', { context: [error] });
       }
     } catch (error) {
-      console.error('Error sending reminder emails:', error);
+      logger.error('Error sending reminder emails:', { context: [error] });
     } finally {
       setSendingReminder(null);
     }

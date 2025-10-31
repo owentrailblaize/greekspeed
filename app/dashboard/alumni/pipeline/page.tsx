@@ -6,6 +6,7 @@ import { ProfileCompletionGate } from '@/components/features/profile/ProfileComp
 import { useProfile } from '@/lib/hooks/useProfile';
 import { supabase } from '@/lib/supabase/client';
 import { useState, useEffect } from 'react';
+import { logger } from "@/lib/utils/logger";
 
 export default function Page() {
   const { profile } = useProfile();
@@ -35,7 +36,7 @@ export default function Page() {
           .single();
 
         if (error) {
-          console.error('Error loading alumni data:', error);
+          logger.error('Error loading alumni data:', { context: [error] });
         } else {
           alumniData = alumni;
         }
@@ -54,7 +55,7 @@ export default function Page() {
 
       setProfileCompletionChecked(true);
     } catch (error) {
-      console.error('Error checking profile completion:', error);
+      logger.error('Error checking profile completion:', { context: [error] });
     }
   };
 

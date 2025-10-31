@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/utils/logger";
 
 export async function POST(
   request: NextRequest,
@@ -60,7 +61,7 @@ export async function POST(
       .single();
 
     if (likeCheckError && likeCheckError.code !== 'PGRST116') {
-      console.error('Like check error:', likeCheckError);
+      logger.error('Like check error:', { context: [likeCheckError] });
       return NextResponse.json({ error: 'Failed to check like status' }, { status: 500 });
     }
 
@@ -73,7 +74,7 @@ export async function POST(
         .eq('user_id', user.id);
 
       if (unlikeError) {
-        console.error('Unlike error:', unlikeError);
+        logger.error('Unlike error:', { context: [unlikeError] });
         return NextResponse.json({ error: 'Failed to unlike post' }, { status: 500 });
       }
 
@@ -105,7 +106,7 @@ export async function POST(
         });
 
       if (likeError) {
-        console.error('Like error:', likeError);
+        logger.error('Like error:', { context: [likeError] });
         return NextResponse.json({ error: 'Failed to like post' }, { status: 500 });
       }
 
@@ -129,7 +130,7 @@ export async function POST(
       return NextResponse.json({ liked: true });
     }
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

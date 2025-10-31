@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LogOut, User, Mail, Shield } from 'lucide-react';
+import { logger } from "@/lib/utils/logger";
 
 export function DashboardClient() {
   // DashboardClient: Component initializing
@@ -33,7 +34,7 @@ export function DashboardClient() {
       // DashboardClient: Sign out successful, redirecting to landing page
       router.push('/');
     } catch (error) {
-      console.error('DashboardClient: Sign out failed:', error);
+      logger.error('DashboardClient: Sign out failed:', { context: [error] });
     }
   };
 

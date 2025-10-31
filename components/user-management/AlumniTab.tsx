@@ -21,6 +21,7 @@ import {
   Plus
 } from 'lucide-react';
 import { BulkAlumniUpload } from './BulkAlumniUpload';
+import { logger } from "@/lib/utils/logger";
 
 interface Alumni {
   id: string;
@@ -73,10 +74,10 @@ export function AlumniTab() {
         setTotalPages(data.pagination?.totalPages || 1);
         // Fetched page alumni
       } else {
-        console.error('Failed to fetch alumni');
+        logger.error('Failed to fetch alumni');
       }
     } catch (error) {
-      console.error('Error fetching alumni:', error);
+      logger.error('Error fetching alumni:', { context: [error] });
     } finally {
       setLoading(false);
     }

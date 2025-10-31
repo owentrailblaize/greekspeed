@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
+import { logger } from "@/lib/utils/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
       .select('created_at, role');
 
     if (allProfilesError) {
-      console.error('API: All profiles fetch error:', allProfilesError);
+      logger.error('API: All profiles fetch error:', { context: [allProfilesError] });
       return NextResponse.json({ error: 'Failed to fetch all profiles' }, { status: 500 });
     }
 
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
       .select('created_at'); // Add created_at to get creation dates
 
     if (chaptersError) {
-      console.error('API: Chapters fetch error:', chaptersError);
+      logger.error('API: Chapters fetch error:', { context: [chaptersError] });
       return NextResponse.json({ error: 'Failed to fetch chapters' }, { status: 500 });
     }
 
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('API: Unexpected error:', error);
+    logger.error('API: Unexpected error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

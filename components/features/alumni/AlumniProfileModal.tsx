@@ -21,7 +21,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils";
 import { trackActivity, ActivityTypes } from "@/lib/utils/activityUtils";
-import { createPortal } from 'react-dom'; // Add this import
+import { createPortal } from 'react-dom';
+import { logger } from "@/lib/utils/logger";
 
 interface AlumniProfileModalProps {
   alumni: Alumni | null;
@@ -60,7 +61,7 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
         viewedProfileName: alumni.fullName,
         timestamp: new Date().toISOString()
       }).catch(error => {
-        console.error('Failed to track profile view:', error);
+        logger.error('Failed to track profile view:', { context: [error] });
       });
     }
   }, [isOpen, alumni, user]);
@@ -110,7 +111,7 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
           break;
       }
     } catch (error) {
-      console.error('Connection action failed:', error);
+      logger.error('Connection action failed:', { context: [error] });
     } finally {
       setConnectionLoading(false);
     }

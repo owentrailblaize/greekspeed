@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
+import { logger } from "@/lib/utils/logger";
 
 export class BannerService {
   private static supabaseClient = supabase;
@@ -11,13 +12,13 @@ export class BannerService {
       // Validate file type
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
       if (!allowedTypes.includes(file.type)) {
-        console.error('Invalid file type. Only JPEG, PNG, and GIF are allowed.');
+        logger.error('Invalid file type. Only JPEG, PNG, and GIF are allowed.');
         return null;
       }
 
       // Validate file size (max 10MB for banners)
       if (file.size > 10 * 1024 * 1024) {
-        console.error('File size must be less than 10MB');
+        logger.error('File size must be less than 10MB');
         return null;
       }
 
@@ -40,7 +41,7 @@ export class BannerService {
         });
 
       if (error) {
-        console.error('Error uploading banner:', error);
+        logger.error('Error uploading banner:', { context: [error] });
         return null;
       }
 
@@ -51,7 +52,7 @@ export class BannerService {
 
       return urlData.publicUrl;
     } catch (error) {
-      console.error('Error in uploadBanner:', error);
+      logger.error('Error in uploadBanner:', { context: [error] });
       return null;
     }
   }
@@ -72,7 +73,7 @@ export class BannerService {
         .from('user-banners')
         .remove([fileName]);
     } catch (error) {
-      console.error('Error deleting old banner:', error);
+      logger.error('Error deleting old banner:', { context: [error] });
     }
   }
 
@@ -87,13 +88,13 @@ export class BannerService {
         .eq('id', userId);
 
       if (error) {
-        console.error('Error updating profile banner:', error);
+        logger.error('Error updating profile banner:', { context: [error] });
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error in updateProfileBanner:', error);
+      logger.error('Error in updateProfileBanner:', { context: [error] });
       return false;
     }
   }

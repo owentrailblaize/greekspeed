@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'react-toastify';
+import { logger } from "@/lib/utils/logger";
 
 // Use the same interface as DocsCompliancePanel
 interface ChapterDocument {
@@ -47,7 +48,7 @@ export function MobileDocsCompliancePage() {
       // Get current user's chapter_id and role from their profile
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.error('No authenticated user');
+        logger.error('No authenticated user');
         setDocuments([]);
         return;
       }
@@ -59,7 +60,7 @@ export function MobileDocsCompliancePage() {
         .single();
 
       if (!profile?.chapter_id) {
-        console.error('No chapter_id found for user');
+        logger.error('No chapter_id found for user');
         setDocuments([]);
         return;
       }
@@ -96,7 +97,7 @@ export function MobileDocsCompliancePage() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading documents:', error);
+        logger.error('Error loading documents:', { context: [error] });
         setDocuments([]);
       } else {
         // Documents loaded with role-based access
@@ -123,7 +124,7 @@ export function MobileDocsCompliancePage() {
         setDocuments(transformedDocuments);
       }
     } catch (error) {
-      console.error('Error loading documents:', error);
+      logger.error('Error loading documents:', { context: [error] });
       setDocuments([]);
     } finally {
       setLoading(false);
@@ -246,7 +247,7 @@ export function MobileDocsCompliancePage() {
         toast.error('Document not accessible for download');
       }
     } catch (error) {
-      console.error('Download error:', error);
+      logger.error('Download error:', { context: [error] });
       toast.error('Download failed. Please try again.');
     }
   };

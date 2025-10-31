@@ -11,6 +11,7 @@ import { useProfile } from '@/lib/hooks/useProfile';
 import { TaskModal } from '@/components/ui/TaskModal';
 import { supabase } from '@/lib/supabase/client';
 import { Checkbox } from '@/components/ui/checkbox';
+import { logger } from "@/lib/utils/logger";
 
 interface TasksPanelProps {
   chapterId?: string;
@@ -170,7 +171,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
       
       // Data loaded successfully
     } catch (error) {
-      console.error('❌ Error loading data:', error);
+      logger.error('❌ Error loading data:', { context: [error] });
       setTasks([]);
       setAllChapterTasks([]);
       setChapterMembers([]);
@@ -225,7 +226,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
         // Errors found
         
         if (errors.length > 0) {
-          console.error('Supabase errors:', errors);
+          logger.error('Supabase errors:', { context: [errors] });
           throw new Error(`Failed to create some tasks: ${errors.map(e => e.error?.message).join(', ')}`);
         }
         
@@ -250,7 +251,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
         // Single task creation result
 
         if (error) {
-          console.error('Supabase error:', error);
+          logger.error('Supabase error:', { context: [error] });
           throw new Error(`Failed to create task: ${error.message}`);
         }
 
@@ -264,7 +265,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
       // Refresh tasks
       await loadAllData();
     } catch (error) {
-      console.error('❌ Error creating task:', error);
+      logger.error('❌ Error creating task:', { context: [error] });
     } finally {
       setCreating(false);
     }
@@ -275,7 +276,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
       await updateTask(taskId, { status: newStatus as TaskStatus });
       // Real-time update will handle the UI update
     } catch (error) {
-      console.error('Error updating task status:', error);
+      logger.error('Error updating task status:', { context: [error] });
     }
   };
 
@@ -284,7 +285,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
       await updateTask(taskId, { priority: newPriority as TaskPriority });
       // Real-time update will handle the UI update
     } catch (error) {
-      console.error('Error updating task priority:', error);
+      logger.error('Error updating task priority:', { context: [error] });
     }
   };
 
@@ -293,7 +294,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
       await updateTask(taskId, { assignee_id: newAssigneeId });
       // Real-time update will handle the UI update
     } catch (error) {
-      console.error('Error reassigning task:', error);
+      logger.error('Error reassigning task:', { context: [error] });
     }
   };
 
@@ -316,7 +317,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
       setTasks(prev => prev.filter(task => task.id !== taskId));
       
     } catch (error) {
-      console.error('Error deleting task:', error);
+      logger.error('Error deleting task:', { context: [error] });
       alert('Failed to delete task. Please try again.');
     }
   };
@@ -345,7 +346,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
       ));
 
     } catch (error) {
-      console.error('Error updating task:', error);
+      logger.error('Error updating task:', { context: [error] });
       // Could add toast notification here
     }
   };

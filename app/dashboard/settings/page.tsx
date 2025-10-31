@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { ChangePasswordForm } from '@/components/features/settings/ChangePasswordForm';
+import { logger } from "@/lib/utils/logger";
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('security');
@@ -67,11 +68,11 @@ export default function SettingsPage() {
         const data = await response.json();
         // Explicitly check for boolean true (not just truthy)
         const smsEnabled = data.sms_enabled === true;
-        console.log('📋 Settings loaded:', { 
-          sms_enabled: data.sms_enabled, 
-          parsed: smsEnabled,
-          type: typeof data.sms_enabled 
-        });
+        logger.info('📋 Settings loaded:', { 
+                    sms_enabled: data.sms_enabled, 
+                    parsed: smsEnabled,
+                    type: typeof data.sms_enabled 
+                  });
         setSmsEnabled(smsEnabled);
 
         setEmailEnabled(data.email_enabled === true);
@@ -83,10 +84,10 @@ export default function SettingsPage() {
           connection_notifications: data.connection_notifications === true,
         })
       } else {
-        console.error('Failed to fetch settings:', response.status);
+        logger.error('Failed to fetch settings:', { context: [response.status] });
       }
     } catch (error) {
-      console.error('Error fetching notification settings:', error);
+      logger.error('Error fetching notification settings:', { context: [error] });
     } finally {
       setLoadingSettings(false);
     }
@@ -113,9 +114,9 @@ export default function SettingsPage() {
       }
 
       const result = await response.json();
-      console.log('✅ SMS preference updated:', result);
+      logger.info('✅ SMS preference updated:', { context: [result] });
     } catch (error) {
-      console.error('Error updating notification setting:', error);
+      logger.error('Error updating notification setting:', { context: [error] });
       // Revert on error
       setSmsEnabled(!value);
       // You could add a toast notification here

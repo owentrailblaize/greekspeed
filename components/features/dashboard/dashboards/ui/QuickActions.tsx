@@ -9,6 +9,7 @@ import { useProfile } from '@/lib/hooks/useProfile';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { createPortal } from 'react-dom';
+import { logger } from "@/lib/utils/logger";
 
 export function QuickActions() {
   const [showEventModal, setShowEventModal] = useState(false);
@@ -50,7 +51,7 @@ export function QuickActions() {
       setShowEventModal(false);
     } catch (error) {
       toast.error('Failed to create event');
-      console.error('Error creating event:', error);
+      logger.error('Error creating event:', { context: [error] });
     }
   };
 

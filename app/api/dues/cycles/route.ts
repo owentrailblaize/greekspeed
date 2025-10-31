@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { canManageChapter } from '@/lib/permissions';
+import { logger } from "@/lib/utils/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,13 +40,13 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching dues cycles:', error);
+      logger.error('Error fetching dues cycles:', { context: [error] });
       return NextResponse.json({ error: 'Failed to fetch dues cycles' }, { status: 500 });
     }
 
     return NextResponse.json({ cycles: cycles || [] });
   } catch (error) {
-    console.error('API error:', error);
+    logger.error('API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!name || !base_amount || !due_date) {
-      console.error('❌ Missing required fields:', { name, base_amount, due_date });
+      logger.error('❌ Missing required fields:', { name, base_amount, due_date });
       return NextResponse.json({ error: 'Name, base amount, and due date are required' }, { status: 400 });
     }
 
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (cycleError) {
-      console.error('❌ Error creating dues cycle:', cycleError);
+      logger.error('❌ Error creating dues cycle:', { context: [cycleError] });
       return NextResponse.json({ 
         error: 'Failed to create dues cycle', 
         details: cycleError.message 
@@ -111,7 +112,7 @@ export async function POST(request: NextRequest) {
       cycle
     });
   } catch (error) {
-    console.error('❌ API error:', error);
+    logger.error('❌ API error:', { context: [error] });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -76,18 +76,18 @@ function emit(level: LogLevel, message: string, context?: LogContext) {
 
   switch (level) {
     case "error":
-      console.error(serialized);
+      logger.error(serialized);
       break;
     case "warn":
-      console.warn(serialized);
+      logger.warn(serialized);
       break;
     case "info":
-      console.info(serialized);
+      logger.info(serialized);
       break;
     case "debug":
     default:
       if (process.env.NODE_ENV !== "production") {
-        console.debug(serialized);
+        logger.debug(serialized);
       }
       break;
   }

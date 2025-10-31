@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/supabase/auth-context";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutualConnections } from "@/lib/hooks/useMutualConnections";
+import { logger } from "@/lib/utils/logger";
 
 interface LinkedInStyleChapterCardProps {
   member: ChapterMember;
@@ -73,7 +74,7 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
           break;
       }
     } catch (error) {
-      console.error('Connection action failed:', error);
+      logger.error('Connection action failed:', { context: [error] });
     } finally {
       setConnectionLoading(false);
     }

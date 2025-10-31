@@ -19,6 +19,7 @@ import {
   Lock,
   X
 } from 'lucide-react';
+import { logger } from "@/lib/utils/logger";
 
 interface UploadResult {
   total: number;
@@ -177,7 +178,7 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
       }
 
     } catch (error) {
-      console.error('❌ Upload error:', error);
+      logger.error('❌ Upload error:', { context: [error] });
       alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsUploading(false);

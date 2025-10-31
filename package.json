@@ -24,6 +24,7 @@
     "dotenv": "^17.2.2",
     "framer-motion": "^12.23.12",
     "frimousse": "^0.3.0",
+    "glob": "^11.0.3",
     "is-number": "^7.0.0",
     "lucide-react": "^0.542.0",
     "next": "15.4.5",
@@ -33,6 +34,7 @@
     "stripe": "^18.5.0",
     "tailwind-merge": "^3.3.1",
     "telnyx": "^3.9.0",
+    "ts-morph": "^27.0.2",
     "twilio": "^5.9.0",
     "us-state-codes": "^1.1.2",
     "xlsx": "^0.18.5"

@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { AddMemberForm } from '@/components/chapter/AddMemberForm';
-import { EventForm } from '@/components/ui/EventForm'; // Add this import
+import { EventForm } from '@/components/ui/EventForm';
+import { logger } from "@/lib/utils/logger";
 
 interface MyChapterSidebarProps {
   onNavigate: (section: string) => void;
@@ -89,7 +90,7 @@ export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebar
       setShowCreateEventForm(false);
       // Optionally refresh events or navigate to events section
     } catch (error) {
-      console.error('Error creating event:', error);
+      logger.error('Error creating event:', { context: [error] });
     }
   };
 

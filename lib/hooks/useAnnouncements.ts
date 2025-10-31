@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { supabase } from '@/lib/supabase/client';
 import { Announcement, CreateAnnouncementData } from '@/types/announcements';
+import { logger } from "@/lib/utils/logger";
 
 export function useAnnouncements(chapterId: string | null) {
   const { user, session } = useAuth();
@@ -111,7 +112,7 @@ export function useAnnouncements(chapterId: string | null) {
       
       return true;
     } catch (err) {
-      console.error('Failed to mark announcement as read:', err);
+      logger.error('Failed to mark announcement as read:', { context: [err] });
       return false;
     }
   }, [user, session]);

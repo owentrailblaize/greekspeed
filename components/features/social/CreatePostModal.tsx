@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { X, Image, Smile, Clock, Lock } from 'lucide-react';
 import { CreatePostRequest } from '@/types/posts';
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
+import { logger } from "@/lib/utils/logger";
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -62,7 +63,7 @@ export function CreatePostModal({
       setPostType('text');
       onClose();
     } catch (error) {
-      console.error('Failed to create post:', error);
+      logger.error('Failed to create post:', { context: [error] });
     } finally {
       setIsSubmitting(false);
     }

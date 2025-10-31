@@ -8,6 +8,7 @@ import { ChatWindow } from './ChatWindow';
 import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/features/profile/UserAvatar';
 import { ArrowLeft, Phone, Video, MoreHorizontal } from 'lucide-react';
+import { logger } from "@/lib/utils/logger";
 
 interface ConnectionChatProps {
   connectionId: string;
@@ -59,7 +60,7 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
     try {
       await sendMessage(content);
     } catch (error) {
-      console.error('Failed to send message:', error);
+      logger.error('Failed to send message:', { context: [error] });
       // You could show a toast notification here
     }
   };
@@ -68,7 +69,7 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
     try {
       await editMessage(messageId, newContent);
     } catch (error) {
-      console.error('Failed to edit message:', error);
+      logger.error('Failed to edit message:', { context: [error] });
       // You could show a toast notification here
     }
   };
@@ -77,7 +78,7 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
     try {
       await deleteMessage(messageId);
     } catch (error) {
-      console.error('Failed to delete message:', error);
+      logger.error('Failed to delete message:', { context: [error] });
       // You could show a toast notification here
     }
   };
