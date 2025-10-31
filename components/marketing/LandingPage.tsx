@@ -407,7 +407,6 @@ export function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {pricingPlans.map((plan, index) => {
               const price = billingPeriod === "monthly" ? plan.monthlyPrice : plan.yearlyPrice;
-              const showDiscount = billingPeriod === "yearly" && plan.name === "Premium";
               
               return (
                 <motion.div
@@ -455,11 +454,6 @@ export function LandingPage() {
                               <span className="text-sm text-gray-500">billed yearly</span>
                             )}
                           </div>
-                          {showDiscount && (
-                            <Badge className="bg-blue-600 text-white ml-2">
-                              -17%
-                            </Badge>
-                          )}
                         </div>
                       </div>
 
