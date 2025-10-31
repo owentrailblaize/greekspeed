@@ -12,6 +12,9 @@ const LEVEL_PRIORITY: Record<LogLevel, number> = {
   debug: 3,
 };
 
+const MAX_DEPTH = 3;
+const MAX_ARRAY_LENGTH = 20;
+
 const DEFAULT_LEVEL: LogLevel =
   process.env.NODE_ENV === "production" ? "info" : "debug";
 
@@ -34,29 +37,53 @@ function maskString(value: string) {
     .replace(PHONE_REGEX, "[PHONE REDACTED]");
 }
 
-function sanitize<T>(payload: T): T {
-  if (payload == null) return payload;
-  if (typeof payload === "string") return maskString(payload) as T;
-  if (Array.isArray(payload)) {
-    return payload.map((item) => sanitize(item)) as T;
-  }
-  if (payload instanceof Error) {
-    return {
-      name: payload.name,
-      message: maskString(payload.message),
-      stack: payload.stack,
-    } as T;
-  }
-  if (typeof payload === "object") {
-    return Object.entries(payload as Record<string, unknown>).reduce(
-      (acc, [key, value]) => {
-        acc[key] = sanitize(value);
-        return acc;
-      },
-      {} as Record<string, unknown>,
-    ) as T;
-  }
-  return payload;
+function sanitize<T>(payload: T, depth = 0, seen = new WeakSet<object>()): T {
+    if (payload == null) return payload;
+  
+    if (typeof payload === "string") {
+      return maskString(payload) as T;
+    }
+  
+    if (typeof payload !== "object") {
+      return payload;
+    }
+  
+    if (seen.has(payload as object)) {
+      return "[Circular]" as unknown as T;
+    }
+  
+    if (depth >= MAX_DEPTH) {
+      return "[Truncated]" as unknown as T;
+    }
+  
+    seen.add(payload as object);
+  
+    if (Array.isArray(payload)) {
+      const sanitized = payload.slice(0, MAX_ARRAY_LENGTH).map((item) =>
+        sanitize(item, depth + 1, seen),
+      );
+  
+      if (payload.length > MAX_ARRAY_LENGTH) {
+        sanitized.push(`[...${payload.length - MAX_ARRAY_LENGTH} more items]`);
+      }
+  
+      return sanitized as unknown as T;
+    }
+  
+    if (payload instanceof Error) {
+      return {
+        name: payload.name,
+        message: maskString(payload.message),
+        stack: payload.stack,
+      } as unknown as T;
+    }
+  
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(payload as Record<string, unknown>)) {
+      result[key] = sanitize(value, depth + 1, seen);
+    }
+  
+    return result as unknown as T;
 }
 
 type LogContext = Record<string, unknown>;
