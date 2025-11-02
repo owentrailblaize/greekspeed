@@ -8,7 +8,7 @@ const securityHeaders = [
       "style-src 'self' https://fonts.googleapis.com;",
       "img-src 'self' data: https:;",
       "font-src 'self' https://fonts.gstatic.com;",
-      "connect-src 'self' https://*.supabase.co;",
+      "connect-src 'self' https://ssqpfkiesxwnmphwyezb.supabase.co https://*.supabase.co https://*.supabase.in;",
       "frame-ancestors 'self';",
       "object-src 'none';",
       "base-uri 'self';",
