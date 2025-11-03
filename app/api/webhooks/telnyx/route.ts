@@ -139,50 +139,61 @@ async function handleMessageStatusUpdate(
       messageStatus: payload.to?.[0]?.status,
     });
 
-    // Build update data - only include fields that have values
+    // Build update data - only include fields that exist in sms_notification_logs
     const updateData: any = {
       status: status,
-      error_message: errorMessage,
       updated_at: new Date().toISOString(),
     };
     
-    // Only add delivered_at if the event is delivered (and column exists)
+    // Add error if it exists (check if column exists in schema)
+    if (errorMessage) {
+      updateData.error = errorMessage;
+    }
+    
+    // Only add delivered_at if the event is delivered (if column exists)
     if (deliveredAt) {
       updateData.delivered_at = deliveredAt;
     }
     
-    // Only add failed_at if the event is failed (and column exists)
+    // Only add failed_at if the event is failed (if column exists)
     if (failedAt) {
       updateData.failed_at = failedAt;
     }
 
-    // Update SMS log if exists
+    // Update SMS notification log (this is where telnyx_id exists)
     const { error } = await supabase
-      .from('sms_logs')
+      .from('sms_notification_logs')
       .update(updateData)
       .eq('telnyx_id', messageId);
 
     if (error) {
-      console.error('Failed to update SMS log:', error);
-      // If delivered_at or failed_at column doesn't exist, try without them
-      if (error.message?.includes('delivered_at') || error.message?.includes('failed_at')) {
-        console.log('⚠️ Retrying update without delivered_at/failed_at columns');
+      console.error('Failed to update SMS notification log:', error);
+      // If any columns don't exist, try with minimal fields
+      if (error.message?.includes('delivered_at') || 
+          error.message?.includes('failed_at') || 
+          error.message?.includes('error') ||
+          error.message?.includes('updated_at')) {
+        console.log('⚠️ Retrying update with minimal columns (status only)');
+        const minimalUpdate: any = {
+          status: status,
+        };
+        
         const { error: retryError } = await supabase
-          .from('sms_logs')
-          .update({
-            status: status,
-            error_message: errorMessage,
-            updated_at: new Date().toISOString(),
-          })
+          .from('sms_notification_logs')
+          .update(minimalUpdate)
           .eq('telnyx_id', messageId);
+          
         if (retryError) {
-          console.error('Failed to update SMS log (retry):', retryError);
+          console.error('Failed to update SMS notification log (retry):', retryError);
         } else {
-          console.log('✅ SMS log updated successfully (without delivered_at/failed_at)');
+          console.log('✅ SMS notification log updated successfully (with minimal fields)');
         }
+      } else {
+        // If it's a different error, log it but don't fail
+        console.error('Failed to update SMS notification log (unexpected error):', error);
       }
     } else {
-      console.log('✅ SMS log updated successfully');
+      console.log('✅ SMS notification log updated successfully');
     }
   } catch (error) {
     console.error('Error handling message status update:', error);
