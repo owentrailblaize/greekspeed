@@ -235,16 +235,72 @@ export class SMSService {
             from: fromNumber,
             bodyLength: message.body.length,
             apiKeySet: !!telnyxApiKey,
+            requestBody: JSON.stringify(requestBody),
           });
 
-          const response = await fetch(telnyxApiUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${telnyxApiKey}`,
-            },
-            body: JSON.stringify(requestBody),
-          });
+          // Add timeout to fetch request (30 seconds)
+          const fetchController = new AbortController();
+          const timeoutId = setTimeout(() => {
+            fetchController.abort();
+            console.error('⏱️ Fetch timeout after 30 seconds', logContext);
+          }, 30000);
+
+          let response: Response;
+          try {
+            console.log('🌐 Initiating fetch request to Telnyx...', logContext);
+            
+            // Add more detailed logging before fetch
+            console.log('🔍 Fetch Request Details:', {
+              ...logContext,
+              url: telnyxApiUrl,
+              method: 'POST',
+              hasApiKey: !!telnyxApiKey,
+              apiKeyLength: telnyxApiKey?.length || 0,
+              apiKeyPrefix: telnyxApiKey?.substring(0, 10) || 'N/A',
+              requestBodySize: JSON.stringify(requestBody).length,
+            });
+            
+            response = await fetch(telnyxApiUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${telnyxApiKey}`,
+              },
+              body: JSON.stringify(requestBody),
+              signal: fetchController.signal,
+            });
+            clearTimeout(timeoutId);
+            console.log('✅ Fetch request completed', {
+              ...logContext,
+              status: response.status,
+              statusText: response.statusText,
+              ok: response.ok,
+            });
+          } catch (fetchInitError: any) {
+            clearTimeout(timeoutId);
+            console.error('❌ Fetch Init Error (before response):', {
+              ...logContext,
+              error: fetchInitError.message,
+              errorName: fetchInitError.name,
+              errorType: typeof fetchInitError,
+              errorCode: fetchInitError.code,
+              errorStack: fetchInitError.stack?.split('\n').slice(0, 5),
+            });
+            
+            if (fetchInitError.name === 'AbortError') {
+              const errorMsg = 'Request to Telnyx API timed out after 30 seconds';
+              console.error('❌ REST API Timeout:', {
+                ...logContext,
+                error: errorMsg,
+                duration: Date.now() - startTime,
+              });
+              return {
+                success: false,
+                error: errorMsg,
+              };
+            }
+            throw fetchInitError;
+          }
 
           const responseText = await response.text();
           console.log('📥 Raw Telnyx REST API Response:', {
@@ -254,7 +310,24 @@ export class SMSService {
             responseLength: responseText.length,
             bodyPreview: responseText.substring(0, 500),
             headers: Object.fromEntries(response.headers.entries()),
+            ok: response.ok,
           });
+
+          // Check if response is not OK
+          if (!response.ok) {
+            const errorMsg = `Telnyx API returned error status ${response.status}: ${response.statusText}`;
+            console.error('❌ REST API HTTP Error:', {
+              ...logContext,
+              status: response.status,
+              statusText: response.statusText,
+              responseBody: responseText.substring(0, 1000),
+              error: errorMsg,
+            });
+            return {
+              success: false,
+              error: errorMsg,
+            };
+          }
 
           try {
             result = JSON.parse(responseText);
