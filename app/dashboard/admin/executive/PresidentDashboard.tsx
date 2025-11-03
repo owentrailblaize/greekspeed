@@ -19,6 +19,8 @@ import { CreateAnnouncementData } from '@/types/announcements';
 import { EventForm } from '@/components/ui/EventForm';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
+import { QuickActions, QuickAction } from '@/components/features/dashboard/dashboards/ui/QuickActions';
+import { Plus, Calendar as CalendarIcon, MessageSquare as MessageSquareIcon, UserPlus as UserPlusIcon, Users as UsersIcon } from 'lucide-react';
 
 export function PresidentDashboard() {
   const [announcement, setAnnouncement] = useState("");
@@ -237,6 +239,37 @@ export function PresidentDashboard() {
       console.error('Error creating event:', error);
     }
   };
+
+  const quickActions: QuickAction[] = [
+    {
+      id: 'schedule-meeting',
+      label: 'Schedule Meeting',
+      icon: CalendarIcon,
+      onClick: handleScheduleMeeting,
+      variant: 'outline',
+    },
+    {
+      id: 'send-message',
+      label: 'Send Message',
+      icon: MessageSquareIcon,
+      onClick: handleSendMessage,
+      variant: 'outline',
+    },
+    {
+      id: 'manage-invitations',
+      label: 'Manage Invitations',
+      icon: UserPlusIcon,
+      onClick: () => window.location.href = '#invitations',
+      variant: 'outline',
+    },
+    {
+      id: 'manage-members',
+      label: 'Manage Members',
+      icon: UsersIcon,
+      onClick: () => router.push('/dashboard/admin/members'),
+      variant: 'outline',
+    },
+  ];
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-0 sm:py-8">
@@ -633,47 +666,14 @@ export function PresidentDashboard() {
           <UpcomingEventsCard />
 
           {/* Quick Actions */}
-          <Card>
-            <CardHeader className="pb-0">
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={handleScheduleMeeting}
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule Meeting
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={handleSendMessage}
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Send Message
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => window.location.href = '#invitations'}
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Manage Invitations
-              </Button>
-              
-              {/* Manage Members - navigate to admin members page */}
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => router.push('/dashboard/admin/members')}
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Manage Members
-              </Button>
-            </CardContent>
-          </Card>
+          <QuickActions 
+            actions={quickActions}
+            showEventModal={true}
+            eventModalConfig={{
+              onSubmit: handleCreateEvent,
+              onCancel: () => setShowEventModal(false),
+            }}
+          />
 
           {/* Add Tasks Panel */}
           {chapterId && <TasksPanel chapterId={chapterId} />}

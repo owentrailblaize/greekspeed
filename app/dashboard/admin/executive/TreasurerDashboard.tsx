@@ -15,6 +15,7 @@ import { Select, SelectItem, SelectContent } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useProfile } from "@/lib/contexts/ProfileContext";
 import { createClient } from '@supabase/supabase-js';
+import { QuickActions, QuickAction } from '@/components/features/dashboard/dashboards/ui/QuickActions';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -473,6 +474,57 @@ export function TreasurerDashboard() {
     return <div className="flex items-center justify-center h-64">Loading...</div>;
   }
 
+  const quickActions: QuickAction[] = [
+    {
+      id: 'bulk-assign',
+      label: 'Bulk Assign Dues',
+      icon: Users,
+      onClick: () => setShowBulkAssignDues(true),
+      className: 'w-full justify-start bg-purple-600 hover:bg-purple-700',
+      variant: 'default',
+    },
+    {
+      id: 'assign-dues',
+      label: 'Assign Dues',
+      icon: UserPlus,
+      onClick: () => setShowAssignDues(true),
+      className: 'w-full justify-start bg-blue-600 hover:bg-blue-700',
+      variant: 'default',
+    },
+    {
+      id: 'create-cycle',
+      label: 'Create Dues Cycle',
+      icon: Plus,
+      onClick: () => setShowCreateCycle(true),
+      className: 'w-full justify-start bg-green-600 hover:bg-green-700',
+      variant: 'default',
+    },
+    {
+      id: 'export-report',
+      label: 'Export Financial Report',
+      icon: Download,
+      onClick: () => exportDuesToCSV(assignments, `financial-report-${new Date().toISOString().split('T')[0]}.csv`),
+      className: 'w-full justify-start bg-green-600 hover:bg-green-700',
+      variant: 'default',
+    },
+    {
+      id: 'payment-plans',
+      label: 'Create Payment Plans',
+      icon: DollarSign,
+      onClick: () => {},
+      variant: 'outline',
+      disabled: true,
+      showLock: true,
+      className: 'w-full justify-start opacity-60 cursor-not-allowed',
+    },
+  ];
+
+  // Mobile version with smaller buttons
+  const mobileQuickActions: QuickAction[] = quickActions.map(action => ({
+    ...action,
+    className: action.className ? `${action.className} text-sm py-2` : 'w-full justify-start text-sm py-2',
+  }));
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-0 sm:py-8">
       {/* Financial Overview */}
@@ -643,50 +695,11 @@ export function TreasurerDashboard() {
           </Card>
 
           {/* Desktop Layout - Quick Actions Sidebar (1/3 width) */}
-          <Card className="hidden lg:block lg:col-span-1">
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button 
-                onClick={() => setShowBulkAssignDues(true)} 
-                className="w-full justify-start bg-purple-600 hover:bg-purple-700"
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Bulk Assign Dues
-              </Button>
-              <Button 
-                onClick={() => setShowAssignDues(true)} 
-                className="w-full justify-start bg-blue-600 hover:bg-blue-700"
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Assign Dues
-              </Button>
-              <Button 
-                onClick={() => setShowCreateCycle(true)} 
-                className="w-full justify-start bg-green-600 hover:bg-green-700"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Dues Cycle
-              </Button>
-              <Button 
-                onClick={() => exportDuesToCSV(assignments, `financial-report-${new Date().toISOString().split('T')[0]}.csv`)}
-                className="w-full justify-start bg-green-600 hover:bg-green-700"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export Financial Report
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start opacity-60 cursor-not-allowed" 
-                disabled
-              >
-                <DollarSign className="h-4 w-4 mr-2" />
-                Create Payment Plans
-                <Lock className="h-3 w-3 ml-2 text-gray-400" />
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="hidden lg:block">
+            <QuickActions 
+              actions={quickActions}
+            />
+          </div>
 
           {/* Mobile Layout - Dues Collection Progress */}
           <Card className="lg:hidden">
@@ -726,50 +739,13 @@ export function TreasurerDashboard() {
           </Card>
 
           {/* Mobile Layout - Quick Actions */}
-          <Card className="lg:hidden">
-            <CardHeader className="pb-2">
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-2 space-y-2">
-              <Button 
-                onClick={() => setShowBulkAssignDues(true)} 
-                className="w-full justify-start bg-purple-600 hover:bg-purple-700 text-sm py-2"
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Bulk Assign Dues
-              </Button>
-              <Button 
-                onClick={() => setShowAssignDues(true)} 
-                className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-sm py-2"
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Assign Dues
-              </Button>
-              <Button 
-                onClick={() => setShowCreateCycle(true)} 
-                className="w-full justify-start bg-green-600 hover:bg-green-700 text-sm py-2"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Dues Cycle
-              </Button>
-              <Button 
-                onClick={() => exportDuesToCSV(assignments, `financial-report-${new Date().toISOString().split('T')[0]}.csv`)}
-                className="w-full justify-start bg-green-600 hover:bg-green-700 text-sm py-2"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export Financial Report
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start opacity-60 cursor-not-allowed text-sm py-2" 
-                disabled
-              >
-                <DollarSign className="h-4 w-4 mr-2" />
-                Create Payment Plans
-                <Lock className="h-3 w-3 ml-2 text-gray-400" />
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="lg:hidden">
+            <QuickActions 
+              actions={mobileQuickActions}
+              headerClassName="pb-2"
+              contentClassName="pt-2 space-y-2"
+            />
+          </div>
         </div>
       )}
 
