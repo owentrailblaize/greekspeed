@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
         : process.env.NEXT_PUBLIC_APP_URL || 'https://www.trailblaize.net';
         const emailUrl = `${baseUrl}/api/events/send-email`;
         
-        // Trigger email sending asynchronously
+        // Trigger email sending asynchronously - pass send_sms flag
         const emailResponse = await fetch(emailUrl, {
           method: 'POST',
           headers: {
@@ -120,7 +120,8 @@ export async function POST(request: NextRequest) {
           },
           body: JSON.stringify({
             eventId: newEvent.id,
-            chapterId: newEvent.chapter_id
+            chapterId: newEvent.chapter_id,
+            send_sms: eventData.send_sms || false
           })
         });
 
