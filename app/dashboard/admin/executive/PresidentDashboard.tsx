@@ -22,13 +22,13 @@ import { useRouter } from 'next/navigation';
 import { QuickActions, QuickAction } from '@/components/features/dashboard/dashboards/ui/QuickActions';
 import { Plus, Calendar as CalendarIcon, MessageSquare as MessageSquareIcon, UserPlus as UserPlusIcon, Users as UsersIcon } from 'lucide-react';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 export function PresidentDashboard() {
   const [announcement, setAnnouncement] = useState("");
   const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementType, setAnnouncementType] = useState<'general' | 'urgent' | 'event' | 'academic'>('general');
-  const [isScheduled, setIsScheduled] = useState(false);
-  const [scheduledDate, setScheduledDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // New state for event modal
@@ -203,15 +203,10 @@ export function PresidentDashboard() {
     { item: "Alumni Speaker Request", contact: "Dr. Johnson", priority: "low" }
   ];
 
-  // Update handleSendAnnouncement (around line 178)
+  // Update handleSendAnnouncement
   const handleSendAnnouncement = async () => {
     if (!announcementTitle.trim() || !announcement.trim()) {
       toast.error('Please fill in both title and content');
-      return;
-    }
-
-    if (isScheduled && !scheduledDate) {
-      toast.error('Please select a scheduled date');
       return;
     }
 
@@ -221,9 +216,7 @@ export function PresidentDashboard() {
         title: announcementTitle.trim(),
         content: announcement.trim(),
         announcement_type: announcementType,
-        is_scheduled: isScheduled,
-        scheduled_at: isScheduled ? scheduledDate : undefined,
-        send_sms: sendSMS,  // Add this line
+        send_sms: sendSMS,
         metadata: {}
       };
 
@@ -233,8 +226,6 @@ export function PresidentDashboard() {
       setAnnouncement("");
       setAnnouncementTitle("");
       setAnnouncementType('general');
-      setIsScheduled(false);
-      setScheduledDate("");
       setSendSMS(false);  // Reset SMS checkbox
       
       toast.success('Announcement sent successfully!');
@@ -492,16 +483,16 @@ export function PresidentDashboard() {
         <div className="lg:col-span-2 space-y-6">
           {/* Chapter Announcements */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2">
                 <MessageSquare className="h-5 w-5 text-purple-600" />
                 <span>Chapter Announcements</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-2">
               {/* Desktop Layout - Preserved */}
-              <div className="hidden md:block space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="hidden md:block space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <Input
                     placeholder="Announcement title..."
                     value={announcementTitle}
@@ -525,35 +516,18 @@ export function PresidentDashboard() {
                 
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col space-y-3 flex-1">
-                    <div className="flex items-center space-x-4">
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={isScheduled}
-                          onChange={(e) => setIsScheduled(e.target.checked)}
-                          className="rounded"
-                        />
-                        <span className="text-sm">Schedule for later</span>
-                      </label>
+                    <div className="flex items-center space-x-4 flex-wrap">
                       
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="send-sms-notification"
                           checked={sendSMS}
-                          onChange={(e) => setSendSMS(e.target.checked)}
-                          className="rounded"
+                          onCheckedChange={(checked) => setSendSMS(checked as boolean)}
                         />
-                        <span className="text-sm">Send SMS notification</span>
-                      </label>
-                      
-                      {isScheduled && (
-                        <Input
-                          type="datetime-local"
-                          value={scheduledDate}
-                          onChange={(e) => setScheduledDate(e.target.value)}
-                          className="w-auto"
-                        />
-                      )}
+                        <Label htmlFor="send-sms-notification" className="text-sm cursor-pointer whitespace-nowrap">
+                          Send SMS notification
+                        </Label>
+                      </div>
                     </div>
                     
                     {/* Notification disclaimers */}
@@ -590,8 +564,8 @@ export function PresidentDashboard() {
               </div>
 
               {/* Mobile Layout */}
-              <div className="md:hidden space-y-4">
-                <div className="space-y-3">
+              <div className="md:hidden space-y-3">
+                <div className="space-y-2">
                   <Input
                     placeholder="Announcement title..."
                     value={announcementTitle}
@@ -615,34 +589,18 @@ export function PresidentDashboard() {
                 />
                 
                 <div className="space-y-3">
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={isScheduled}
-                      onChange={(e) => setIsScheduled(e.target.checked)}
-                      className="rounded"
-                    />
-                    <span className="text-sm">Schedule for later</span>
-                  </label>
                   
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="send-sms-notification-mobile"
                       checked={sendSMS}
-                      onChange={(e) => setSendSMS(e.target.checked)}
-                      className="rounded"
+                      onCheckedChange={(checked) => setSendSMS(checked as boolean)}
                     />
-                    <span className="text-sm">Send SMS notification</span>
-                  </label>
+                    <Label htmlFor="send-sms-notification-mobile" className="text-sm cursor-pointer">
+                      Send SMS notification
+                    </Label>
+                  </div>
                   
-                  {isScheduled && (
-                    <Input
-                      type="datetime-local"
-                      value={scheduledDate}
-                      onChange={(e) => setScheduledDate(e.target.value)}
-                      className="w-full"
-                    />
-                  )}
                   
                   {/* Notification disclaimers */}
                   <div className="text-xs text-gray-600 space-y-1 pl-1 pt-1 border-t">
@@ -678,49 +636,6 @@ export function PresidentDashboard() {
             </CardContent>
           </Card>
           
-          {/* Pending Approvals */}
-          {/*
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <AlertCircle className="h-5 w-5 text-orange-600" />
-                <span>Pending Approvals</span>
-                <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                  {pendingApprovals.length}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {pendingApprovals.map((approval, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                    <div className="flex-1">
-                      <h4 className="font-medium">{approval.item}</h4>
-                      <p className="text-sm text-gray-600">
-                        {approval.amount && `Amount: ${approval.amount}`}
-                        {approval.date && `Date: ${approval.date}`}
-                        {approval.contact && `Contact: ${approval.contact}`}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <Badge 
-                        variant={approval.priority === 'high' ? 'destructive' : 
-                                approval.priority === 'medium' ? 'default' : 'secondary'}
-                      >
-                        {approval.priority}
-                      </Badge>
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="outline">Deny</Button>
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700">Approve</Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          */}
-
           {/* NEW: Chapter Document Management */}
           {chapterId && (
             <ChapterDocumentManager 
