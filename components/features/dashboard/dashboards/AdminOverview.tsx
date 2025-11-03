@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { QuickActions } from './ui/QuickActions';
+import { QuickActions, QuickAction } from './ui/QuickActions'; // Add QuickAction import
 import { DuesSnapshot } from './ui/DuesSnapshot';
 import { ComplianceSnapshot } from './ui/ComplianceSnapshot';
 import { OperationsFeed } from './ui/OperationsFeed';
@@ -18,7 +18,7 @@ import { MobileAdminTasksPage } from './ui/MobileAdminTasksPage';
 import { MobileDocsCompliancePage } from './ui/MobileDocsCompliancePage';
 import { MobileOperationsFeedPage } from './ui/MobileOperationsFeedPage';
 import { MobileCalendarPage } from './ui/MobileCalendarPage';
-import { Calendar, Users, TrendingUp, MessageSquare, Lock } from 'lucide-react';
+import { Calendar, Users, MessageSquare, UserPlus, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EventForm } from '@/components/ui/EventForm';
 import { useRouter } from 'next/navigation';
@@ -27,7 +27,7 @@ import { createPortal } from 'react-dom';
 
 export function AdminOverview() {
   const { profile } = useProfile();
-  const chapterId = profile?.chapter_id; // Get the chapter_id from profile
+  const chapterId = profile?.chapter_id;
   const [activeMobileTab, setActiveMobileTab] = useState('home');
   const [showQuickActionsModal, setShowQuickActionsModal] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
@@ -68,6 +68,47 @@ export function AdminOverview() {
       console.error('Error creating event:', error);
     }
   };
+
+  // Define quickActions array for the admin dashboard
+  const quickActions: QuickAction[] = [
+    {
+      id: 'create-event',
+      label: 'Create Event',
+      icon: Calendar,
+      onClick: handleScheduleMeeting,
+      variant: 'outline',
+    },
+    {
+      id: 'send-message',
+      label: 'Send Message',
+      icon: MessageSquare,
+      onClick: handleSendMessage,
+      variant: 'outline',
+    },
+    {
+      id: 'manage-members',
+      label: 'Manage Members',
+      icon: Users,
+      onClick: () => router.push('/dashboard/admin/members'),
+      variant: 'outline',
+    },
+    {
+      id: 'view-invitations',
+      label: 'View Invitations',
+      icon: UserPlus,
+      onClick: () => {
+        router.push('/dashboard/admin#invitations');
+        // Scroll to invitations section after navigation
+        setTimeout(() => {
+          const element = document.getElementById('invitations');
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
+      },
+      variant: 'outline',
+    },
+  ];
 
   const renderMobileContent = () => {
     switch (activeMobileTab) {
@@ -121,7 +162,14 @@ export function AdminOverview() {
         <div className="hidden sm:grid sm:grid-cols-12 sm:gap-6">
           {/* Left Column - 3 columns wide */}
           <div className="col-span-3 space-y-6">
-            <QuickActions />
+            <QuickActions 
+              actions={quickActions}
+              showEventModal={true}
+              eventModalConfig={{
+                onSubmit: handleCreateEvent,
+                onCancel: () => setShowEventModal(false),
+              }}
+            />
             <DuesStatusCard />
             <OperationsFeed />
           </div>
@@ -197,23 +245,27 @@ export function AdminOverview() {
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start opacity-60 cursor-not-allowed" 
-                    disabled
-                    title="Feature coming soon!"
+                    className="w-full justify-start"
+                    onClick={() => router.push('/dashboard/admin/members')}
                   >
                     <Users className="h-4 w-4 mr-2" />
                     Manage Members
-                    <Lock className="h-3 w-3 ml-2 text-gray-400" />
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start opacity-60 cursor-not-allowed" 
-                    disabled
-                    title="Feature coming soon!"
+                    className="w-full justify-start"
+                    onClick={() => {
+                      router.push('/dashboard/admin#invitations');
+                      setTimeout(() => {
+                        const element = document.getElementById('invitations');
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }, 100);
+                    }}
                   >
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    View Reports
-                    <Lock className="h-3 w-3 ml-2 text-gray-400" />
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    View Invitations
                   </Button>
                 </div>
               </div>
