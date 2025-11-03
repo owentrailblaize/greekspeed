@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, TrendingUp, Calendar, MessageSquare, AlertCircle, CheckCircle, Clock, Crown, Send, Image, Clock as ClockIcon, Lock, X, UserPlus, Smartphone } from "lucide-react";
+import { Users, TrendingUp, Calendar, MessageSquare, AlertCircle, CheckCircle, Clock, Crown, Send, Image, Clock as ClockIcon, Lock, X, UserPlus, Smartphone, Mail } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { QuickActions, QuickAction } from '@/components/features/dashboard/dashboards/ui/QuickActions';
 import { Plus, Calendar as CalendarIcon, MessageSquare as MessageSquareIcon, UserPlus as UserPlusIcon, Users as UsersIcon } from 'lucide-react';
+import { useAuth } from '@/lib/supabase/auth-context';
 
 export function PresidentDashboard() {
   const [announcement, setAnnouncement] = useState("");
@@ -51,8 +52,12 @@ export function PresidentDashboard() {
 
   // Add SMS-related state variables
   const [sendSMS, setSendSMS] = useState(false);
+  const [emailRecipientCount, setEmailRecipientCount] = useState<number | null>(null);
+  const [smsRecipientCount, setSmsRecipientCount] = useState<number | null>(null);
+  const [loadingRecipients, setLoadingRecipients] = useState(false);
 
   const { profile } = useProfile();
+  const { session } = useAuth();
   const chapterId = profile?.chapter_id;
   const { createAnnouncement, loading: announcementsLoading } = useAnnouncements(chapterId || null);
   const router = useRouter();
@@ -139,6 +144,42 @@ export function PresidentDashboard() {
     fetchAlumniCount();
   }, [chapterId]);
 
+
+  useEffect(() => {
+    setSendSMS(announcementType === 'urgent');
+  }, [announcementType]);
+
+  // Fetch recipient counts when chapterId changes
+  useEffect(() => {
+    const fetchRecipientCounts = async () => {
+      if (!chapterId || !session?.access_token) return;
+      
+      setLoadingRecipients(true);
+      try {
+        const response = await fetch(
+          `/api/announcements/recipient-counts?chapter_id=${chapterId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          setEmailRecipientCount(data.email_recipients);
+          setSmsRecipientCount(data.sms_recipients);
+        }
+      } catch (error) {
+        console.error('Error fetching recipient counts:', error);
+      } finally {
+        setLoadingRecipients(false);
+      }
+    };
+
+    fetchRecipientCounts();
+  }, [chapterId, session?.access_token]);
+
   // Fetch both counts when component mounts
   useEffect(() => {
     if (chapterId) {
@@ -162,6 +203,7 @@ export function PresidentDashboard() {
     { item: "Alumni Speaker Request", contact: "Dr. Johnson", priority: "low" }
   ];
 
+  // Update handleSendAnnouncement (around line 178)
   const handleSendAnnouncement = async () => {
     if (!announcementTitle.trim() || !announcement.trim()) {
       toast.error('Please fill in both title and content');
@@ -181,6 +223,7 @@ export function PresidentDashboard() {
         announcement_type: announcementType,
         is_scheduled: isScheduled,
         scheduled_at: isScheduled ? scheduledDate : undefined,
+        send_sms: sendSMS,  // Add this line
         metadata: {}
       };
 
@@ -192,6 +235,7 @@ export function PresidentDashboard() {
       setAnnouncementType('general');
       setIsScheduled(false);
       setScheduledDate("");
+      setSendSMS(false);  // Reset SMS checkbox
       
       toast.success('Announcement sent successfully!');
     } catch (error) {
@@ -201,7 +245,7 @@ export function PresidentDashboard() {
       setIsSubmitting(false);
     }
   };
-
+  
   // New function for send message navigation
   const handleSendMessage = () => {
     router.push('/dashboard/messages');
@@ -480,37 +524,56 @@ export function PresidentDashboard() {
                 />
                 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={isScheduled}
-                        onChange={(e) => setIsScheduled(e.target.checked)}
-                        className="rounded"
-                      />
-                      <span className="text-sm">Schedule for later</span>
-                    </label>
+                  <div className="flex flex-col space-y-3 flex-1">
+                    <div className="flex items-center space-x-4">
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={isScheduled}
+                          onChange={(e) => setIsScheduled(e.target.checked)}
+                          className="rounded"
+                        />
+                        <span className="text-sm">Schedule for later</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={sendSMS}
+                          onChange={(e) => setSendSMS(e.target.checked)}
+                          className="rounded"
+                        />
+                        <span className="text-sm">Send SMS notification</span>
+                      </label>
+                      
+                      {isScheduled && (
+                        <Input
+                          type="datetime-local"
+                          value={scheduledDate}
+                          onChange={(e) => setScheduledDate(e.target.value)}
+                          className="w-auto"
+                        />
+                      )}
+                    </div>
                     
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={false} // Always false
-                        onChange={() => {}} // No-op function
-                        className="rounded"
-                        disabled={true} // Disable the checkbox
-                      />
-                      <span className="text-sm text-gray-400">Send SMS notification</span>
-                      <span className="text-xs text-gray-400">(Coming Soon)</span>
-                    </label>
-                    
-                    {isScheduled && (
-                      <Input
-                        type="datetime-local"
-                        value={scheduledDate}
-                        onChange={(e) => setScheduledDate(e.target.value)}
-                        className="w-auto"
-                      />
-                    )}
+                    {/* Notification disclaimers */}
+                    <div className="text-xs text-gray-600 space-y-1 pl-1">
+                      {emailRecipientCount !== null && (
+                        <p className="flex items-center gap-1">
+                          <Mail className="h-3 w-3" />
+                          Email will be sent to <span className="font-medium">{emailRecipientCount}</span> {emailRecipientCount === 1 ? 'member' : 'members'} with email notifications enabled
+                        </p>
+                      )}
+                      {sendSMS && smsRecipientCount !== null && (
+                        <p className="flex items-center gap-1">
+                          <Smartphone className="h-3 w-3" />
+                          SMS will be sent to <span className="font-medium">{smsRecipientCount}</span> {smsRecipientCount === 1 ? 'member' : 'members'} with SMS consent
+                        </p>
+                      )}
+                      {loadingRecipients && (
+                        <p className="text-gray-400">Loading recipient counts...</p>
+                      )}
+                    </div>
                   </div>
                   
                   <div className="flex space-x-2">
@@ -565,13 +628,11 @@ export function PresidentDashboard() {
                   <label className="flex items-center space-x-2">
                     <input
                       type="checkbox"
-                      checked={false} // Always false
-                      onChange={() => {}} // No-op function
+                      checked={sendSMS}
+                      onChange={(e) => setSendSMS(e.target.checked)}
                       className="rounded"
-                      disabled={true} // Disable the checkbox
                     />
-                    <span className="text-sm text-gray-400">Send SMS notification</span>
-                    <span className="text-xs text-gray-400">(Coming Soon)</span>
+                    <span className="text-sm">Send SMS notification</span>
                   </label>
                   
                   {isScheduled && (
@@ -582,6 +643,25 @@ export function PresidentDashboard() {
                       className="w-full"
                     />
                   )}
+                  
+                  {/* Notification disclaimers */}
+                  <div className="text-xs text-gray-600 space-y-1 pl-1 pt-1 border-t">
+                    {emailRecipientCount !== null && (
+                      <p className="flex items-center gap-1">
+                        <Mail className="h-3 w-3" />
+                        Email: {emailRecipientCount} {emailRecipientCount === 1 ? 'recipient' : 'recipients'}
+                      </p>
+                    )}
+                    {sendSMS && smsRecipientCount !== null && (
+                      <p className="flex items-center gap-1">
+                        <Smartphone className="h-3 w-3" />
+                        SMS: {smsRecipientCount} {smsRecipientCount === 1 ? 'recipient' : 'recipients'}
+                      </p>
+                    )}
+                    {loadingRecipients && (
+                      <p className="text-gray-400">Loading...</p>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="flex flex-col space-y-2 pt-2">

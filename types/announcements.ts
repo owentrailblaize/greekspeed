@@ -64,5 +64,6 @@ export interface CreateAnnouncementData {
   announcement_type: 'general' | 'urgent' | 'event' | 'academic';
   is_scheduled?: boolean;
   scheduled_at?: string;
+  send_sms?: boolean;
   metadata?: Record<string, any>;
 }
