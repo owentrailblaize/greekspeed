@@ -314,6 +314,8 @@ export class SMSService {
   }
 
   static isInSandboxMode(): boolean {
-    return process.env.TELNYX_SANDBOX_MODE !== 'false';
+    // Only sandbox if explicitly set to 'true'
+    // Default to production mode if not set
+    return process.env.TELNYX_SANDBOX_MODE === 'true';
   }
 }
