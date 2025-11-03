@@ -1,117 +1,125 @@
 'use client';
 
-import { useState } from 'react';
-import { Calendar, Users, TrendingUp, MessageSquare, Lock } from 'lucide-react';
+import { useState, ReactNode } from 'react';
+import { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EventForm } from '@/components/ui/EventForm';
 import { useProfile } from '@/lib/hooks/useProfile';
-import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { createPortal } from 'react-dom';
+import { Lock } from 'lucide-react';
 
-export function QuickActions() {
-  const [showEventModal, setShowEventModal] = useState(false);
+// Action configuration interface
+export interface QuickAction {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  onClick: () => void;
+  variant?: 'default' | 'outline' | 'ghost';
+  className?: string;
+  disabled?: boolean;
+  showLock?: boolean;
+  title?: string;
+}
+
+// Component props
+export interface QuickActionsProps {
+  actions: QuickAction[];
+  title?: string;
+  headerClassName?: string;
+  contentClassName?: string;
+  showEventModal?: boolean; // If true, handles event modal internally
+  eventModalConfig?: {
+    onSubmit?: (eventData: any) => Promise<void>;
+    onCancel?: () => void;
+    modalTitle?: string;
+  };
+}
+
+export function QuickActions({ 
+  actions, 
+  title = "Quick Actions",
+  headerClassName = "pb-0",
+  contentClassName = "space-y-3",
+  showEventModal = false,
+  eventModalConfig
+}: QuickActionsProps) {
+  const [showEventModalState, setShowEventModalState] = useState(false);
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
-  const router = useRouter();
 
-  // Handle schedule meeting/event
-  const handleScheduleMeeting = () => {
-    setShowEventModal(true);
-  };
-
-  // Handle send message navigation
-  const handleSendMessage = () => {
-    router.push('/dashboard/messages');
-  };
-
-  // Handle creating events
+  // Handle event creation if event modal is enabled
   const handleCreateEvent = async (eventData: any) => {
-    try {
-      const response = await fetch('/api/events', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...eventData,
-          chapter_id: chapterId,
-          created_by: profile?.id || 'system',
-          updated_by: profile?.id || 'system',
-        }),
-      });
+    if (!eventModalConfig?.onSubmit) {
+      try {
+        const response = await fetch('/api/events', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...eventData,
+            chapter_id: chapterId,
+            created_by: profile?.id || 'system',
+            updated_by: profile?.id || 'system',
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to create event');
+        if (!response.ok) {
+          throw new Error('Failed to create event');
+        }
+
+        toast.success('Meeting scheduled successfully!');
+        setShowEventModalState(false);
+      } catch (error) {
+        toast.error('Failed to schedule meeting');
+        console.error('Error creating event:', error);
       }
-
-      toast.success('Event created successfully!');
-      setShowEventModal(false);
-    } catch (error) {
-      toast.error('Failed to create event');
-      console.error('Error creating event:', error);
+    } else {
+      await eventModalConfig.onSubmit(eventData);
+      setShowEventModalState(false);
     }
   };
 
   return (
     <>
       <Card>
-        <CardHeader className="pb-0">
-          <CardTitle>Quick Actions</CardTitle>
+        <CardHeader className={headerClassName}>
+          <CardTitle>{title}</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <Button 
-            variant="outline" 
-            className="w-full justify-start"
-            onClick={handleScheduleMeeting}
-          >
-            <Calendar className="h-4 w-4 mr-2" />
-            Create Event
-          </Button>
-          <Button 
-            variant="outline" 
-            className="w-full justify-start"
-            onClick={handleSendMessage}
-          >
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Send Message
-          </Button>
-          <Button 
-            variant="outline" 
-            className="w-full justify-start opacity-60 cursor-not-allowed" 
-            disabled
-            title="Feature coming soon!"
-          >
-            <Users className="h-4 w-4 mr-2" />
-            Manage Members
-            <Lock className="h-3 w-3 ml-2 text-gray-400" />
-          </Button>
-          <Button 
-            variant="outline" 
-            className="w-full justify-start opacity-60 cursor-not-allowed" 
-            disabled
-            title="Feature coming soon!"
-          >
-            <TrendingUp className="h-4 w-4 mr-2" />
-            View Reports
-            <Lock className="h-3 w-3 ml-2 text-gray-400" />
-          </Button>
+        <CardContent className={contentClassName}>
+          {actions.map((action) => (
+            <Button
+              key={action.id}
+              variant={action.variant || 'outline'}
+              className={action.className || 'w-full justify-start'}
+              onClick={action.onClick}
+              disabled={action.disabled}
+              title={action.title}
+            >
+              <action.icon className="h-4 w-4 mr-2" />
+              {action.label}
+              {action.showLock && (
+                <Lock className="h-3 w-3 ml-2 text-gray-400" />
+              )}
+            </Button>
+          ))}
         </CardContent>
       </Card>
 
-      {/* Event Creation Modal with Portal for full screen coverage */}
-      {showEventModal && typeof window !== 'undefined' && createPortal(
+      {/* Event Creation Modal - Only shown if showEventModal is true */}
+      {showEventModal && showEventModalState && typeof window !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-50">
-          {/* Full screen overlay */}
           <div className="absolute inset-0 bg-black bg-opacity-50" />
-          
-          {/* Modal content centered */}
           <div className="relative flex items-center justify-center min-h-screen p-4">
             <EventForm
               event={null}
               onSubmit={handleCreateEvent}
-              onCancel={() => setShowEventModal(false)}
+              onCancel={() => {
+                setShowEventModalState(false);
+                eventModalConfig?.onCancel?.();
+              }}
               loading={false}
             />
           </div>
@@ -120,4 +128,11 @@ export function QuickActions() {
       )}
     </>
   );
-} 
+}
+
+// Helper to open event modal from action
+export const createEventModalHandler = (
+  setShowModal: (show: boolean) => void
+) => () => {
+  setShowModal(true);
+}; 

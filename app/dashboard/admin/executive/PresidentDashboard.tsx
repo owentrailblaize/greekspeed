@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, TrendingUp, Calendar, MessageSquare, AlertCircle, CheckCircle, Clock, Crown, Send, Image, Clock as ClockIcon, Lock, X, UserPlus, Smartphone } from "lucide-react";
+import { Users, TrendingUp, Calendar, MessageSquare, AlertCircle, CheckCircle, Clock, Crown, Send, Image, Clock as ClockIcon, Lock, X, UserPlus, Smartphone, Mail } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,13 +19,16 @@ import { CreateAnnouncementData } from '@/types/announcements';
 import { EventForm } from '@/components/ui/EventForm';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
+import { QuickActions, QuickAction } from '@/components/features/dashboard/dashboards/ui/QuickActions';
+import { Plus, Calendar as CalendarIcon, MessageSquare as MessageSquareIcon, UserPlus as UserPlusIcon, Users as UsersIcon } from 'lucide-react';
+import { useAuth } from '@/lib/supabase/auth-context';
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 export function PresidentDashboard() {
   const [announcement, setAnnouncement] = useState("");
   const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementType, setAnnouncementType] = useState<'general' | 'urgent' | 'event' | 'academic'>('general');
-  const [isScheduled, setIsScheduled] = useState(false);
-  const [scheduledDate, setScheduledDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // New state for event modal
@@ -49,8 +52,12 @@ export function PresidentDashboard() {
 
   // Add SMS-related state variables
   const [sendSMS, setSendSMS] = useState(false);
+  const [emailRecipientCount, setEmailRecipientCount] = useState<number | null>(null);
+  const [smsRecipientCount, setSmsRecipientCount] = useState<number | null>(null);
+  const [loadingRecipients, setLoadingRecipients] = useState(false);
 
   const { profile } = useProfile();
+  const { session } = useAuth();
   const chapterId = profile?.chapter_id;
   const { createAnnouncement, loading: announcementsLoading } = useAnnouncements(chapterId || null);
   const router = useRouter();
@@ -137,6 +144,42 @@ export function PresidentDashboard() {
     fetchAlumniCount();
   }, [chapterId]);
 
+
+  useEffect(() => {
+    setSendSMS(announcementType === 'urgent');
+  }, [announcementType]);
+
+  // Fetch recipient counts when chapterId changes
+  useEffect(() => {
+    const fetchRecipientCounts = async () => {
+      if (!chapterId || !session?.access_token) return;
+      
+      setLoadingRecipients(true);
+      try {
+        const response = await fetch(
+          `/api/announcements/recipient-counts?chapter_id=${chapterId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          setEmailRecipientCount(data.email_recipients);
+          setSmsRecipientCount(data.sms_recipients);
+        }
+      } catch (error) {
+        console.error('Error fetching recipient counts:', error);
+      } finally {
+        setLoadingRecipients(false);
+      }
+    };
+
+    fetchRecipientCounts();
+  }, [chapterId, session?.access_token]);
+
   // Fetch both counts when component mounts
   useEffect(() => {
     if (chapterId) {
@@ -160,14 +203,10 @@ export function PresidentDashboard() {
     { item: "Alumni Speaker Request", contact: "Dr. Johnson", priority: "low" }
   ];
 
+  // Update handleSendAnnouncement
   const handleSendAnnouncement = async () => {
     if (!announcementTitle.trim() || !announcement.trim()) {
       toast.error('Please fill in both title and content');
-      return;
-    }
-
-    if (isScheduled && !scheduledDate) {
-      toast.error('Please select a scheduled date');
       return;
     }
 
@@ -177,8 +216,7 @@ export function PresidentDashboard() {
         title: announcementTitle.trim(),
         content: announcement.trim(),
         announcement_type: announcementType,
-        is_scheduled: isScheduled,
-        scheduled_at: isScheduled ? scheduledDate : undefined,
+        send_sms: sendSMS,
         metadata: {}
       };
 
@@ -188,8 +226,7 @@ export function PresidentDashboard() {
       setAnnouncement("");
       setAnnouncementTitle("");
       setAnnouncementType('general');
-      setIsScheduled(false);
-      setScheduledDate("");
+      setSendSMS(false);  // Reset SMS checkbox
       
       toast.success('Announcement sent successfully!');
     } catch (error) {
@@ -199,7 +236,7 @@ export function PresidentDashboard() {
       setIsSubmitting(false);
     }
   };
-
+  
   // New function for send message navigation
   const handleSendMessage = () => {
     router.push('/dashboard/messages');
@@ -237,6 +274,37 @@ export function PresidentDashboard() {
       console.error('Error creating event:', error);
     }
   };
+
+  const quickActions: QuickAction[] = [
+    {
+      id: 'schedule-meeting',
+      label: 'Schedule Meeting',
+      icon: CalendarIcon,
+      onClick: handleScheduleMeeting,
+      variant: 'outline',
+    },
+    {
+      id: 'send-message',
+      label: 'Send Message',
+      icon: MessageSquareIcon,
+      onClick: handleSendMessage,
+      variant: 'outline',
+    },
+    {
+      id: 'manage-invitations',
+      label: 'Manage Invitations',
+      icon: UserPlusIcon,
+      onClick: () => window.location.href = '#invitations',
+      variant: 'outline',
+    },
+    {
+      id: 'manage-members',
+      label: 'Manage Members',
+      icon: UsersIcon,
+      onClick: () => router.push('/dashboard/admin/members'),
+      variant: 'outline',
+    },
+  ];
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-0 sm:py-8">
@@ -415,16 +483,16 @@ export function PresidentDashboard() {
         <div className="lg:col-span-2 space-y-6">
           {/* Chapter Announcements */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2">
                 <MessageSquare className="h-5 w-5 text-purple-600" />
                 <span>Chapter Announcements</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-2">
               {/* Desktop Layout - Preserved */}
-              <div className="hidden md:block space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="hidden md:block space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <Input
                     placeholder="Announcement title..."
                     value={announcementTitle}
@@ -447,37 +515,39 @@ export function PresidentDashboard() {
                 />
                 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={isScheduled}
-                        onChange={(e) => setIsScheduled(e.target.checked)}
-                        className="rounded"
-                      />
-                      <span className="text-sm">Schedule for later</span>
-                    </label>
+                  <div className="flex flex-col space-y-3 flex-1">
+                    <div className="flex items-center space-x-4 flex-wrap">
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="send-sms-notification"
+                          checked={sendSMS}
+                          onCheckedChange={(checked) => setSendSMS(checked as boolean)}
+                        />
+                        <Label htmlFor="send-sms-notification" className="text-sm cursor-pointer whitespace-nowrap">
+                          Send SMS notification
+                        </Label>
+                      </div>
+                    </div>
                     
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={false} // Always false
-                        onChange={() => {}} // No-op function
-                        className="rounded"
-                        disabled={true} // Disable the checkbox
-                      />
-                      <span className="text-sm text-gray-400">Send SMS notification</span>
-                      <span className="text-xs text-gray-400">(Coming Soon)</span>
-                    </label>
-                    
-                    {isScheduled && (
-                      <Input
-                        type="datetime-local"
-                        value={scheduledDate}
-                        onChange={(e) => setScheduledDate(e.target.value)}
-                        className="w-auto"
-                      />
-                    )}
+                    {/* Notification disclaimers */}
+                    <div className="text-xs text-gray-600 space-y-1 pl-1">
+                      {emailRecipientCount !== null && (
+                        <p className="flex items-center gap-1">
+                          <Mail className="h-3 w-3" />
+                          Email will be sent to <span className="font-medium">{emailRecipientCount}</span> {emailRecipientCount === 1 ? 'member' : 'members'} with email notifications enabled
+                        </p>
+                      )}
+                      {sendSMS && smsRecipientCount !== null && (
+                        <p className="flex items-center gap-1">
+                          <Smartphone className="h-3 w-3" />
+                          SMS will be sent to <span className="font-medium">{smsRecipientCount}</span> {smsRecipientCount === 1 ? 'member' : 'members'} with SMS consent
+                        </p>
+                      )}
+                      {loadingRecipients && (
+                        <p className="text-gray-400">Loading recipient counts...</p>
+                      )}
+                    </div>
                   </div>
                   
                   <div className="flex space-x-2">
@@ -494,8 +564,8 @@ export function PresidentDashboard() {
               </div>
 
               {/* Mobile Layout */}
-              <div className="md:hidden space-y-4">
-                <div className="space-y-3">
+              <div className="md:hidden space-y-3">
+                <div className="space-y-2">
                   <Input
                     placeholder="Announcement title..."
                     value={announcementTitle}
@@ -519,36 +589,37 @@ export function PresidentDashboard() {
                 />
                 
                 <div className="space-y-3">
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={isScheduled}
-                      onChange={(e) => setIsScheduled(e.target.checked)}
-                      className="rounded"
-                    />
-                    <span className="text-sm">Schedule for later</span>
-                  </label>
                   
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={false} // Always false
-                      onChange={() => {}} // No-op function
-                      className="rounded"
-                      disabled={true} // Disable the checkbox
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="send-sms-notification-mobile"
+                      checked={sendSMS}
+                      onCheckedChange={(checked) => setSendSMS(checked as boolean)}
                     />
-                    <span className="text-sm text-gray-400">Send SMS notification</span>
-                    <span className="text-xs text-gray-400">(Coming Soon)</span>
-                  </label>
+                    <Label htmlFor="send-sms-notification-mobile" className="text-sm cursor-pointer">
+                      Send SMS notification
+                    </Label>
+                  </div>
                   
-                  {isScheduled && (
-                    <Input
-                      type="datetime-local"
-                      value={scheduledDate}
-                      onChange={(e) => setScheduledDate(e.target.value)}
-                      className="w-full"
-                    />
-                  )}
+                  
+                  {/* Notification disclaimers */}
+                  <div className="text-xs text-gray-600 space-y-1 pl-1 pt-1 border-t">
+                    {emailRecipientCount !== null && (
+                      <p className="flex items-center gap-1">
+                        <Mail className="h-3 w-3" />
+                        Email: {emailRecipientCount} {emailRecipientCount === 1 ? 'recipient' : 'recipients'}
+                      </p>
+                    )}
+                    {sendSMS && smsRecipientCount !== null && (
+                      <p className="flex items-center gap-1">
+                        <Smartphone className="h-3 w-3" />
+                        SMS: {smsRecipientCount} {smsRecipientCount === 1 ? 'recipient' : 'recipients'}
+                      </p>
+                    )}
+                    {loadingRecipients && (
+                      <p className="text-gray-400">Loading...</p>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="flex flex-col space-y-2 pt-2">
@@ -565,49 +636,6 @@ export function PresidentDashboard() {
             </CardContent>
           </Card>
           
-          {/* Pending Approvals */}
-          {/*
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <AlertCircle className="h-5 w-5 text-orange-600" />
-                <span>Pending Approvals</span>
-                <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                  {pendingApprovals.length}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {pendingApprovals.map((approval, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                    <div className="flex-1">
-                      <h4 className="font-medium">{approval.item}</h4>
-                      <p className="text-sm text-gray-600">
-                        {approval.amount && `Amount: ${approval.amount}`}
-                        {approval.date && `Date: ${approval.date}`}
-                        {approval.contact && `Contact: ${approval.contact}`}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <Badge 
-                        variant={approval.priority === 'high' ? 'destructive' : 
-                                approval.priority === 'medium' ? 'default' : 'secondary'}
-                      >
-                        {approval.priority}
-                      </Badge>
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="outline">Deny</Button>
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700">Approve</Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          */}
-
           {/* NEW: Chapter Document Management */}
           {chapterId && (
             <ChapterDocumentManager 
@@ -633,47 +661,14 @@ export function PresidentDashboard() {
           <UpcomingEventsCard />
 
           {/* Quick Actions */}
-          <Card>
-            <CardHeader className="pb-0">
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={handleScheduleMeeting}
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule Meeting
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={handleSendMessage}
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Send Message
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => window.location.href = '#invitations'}
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Manage Invitations
-              </Button>
-              
-              {/* Manage Members - navigate to admin members page */}
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => router.push('/dashboard/admin/members')}
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Manage Members
-              </Button>
-            </CardContent>
-          </Card>
+          <QuickActions 
+            actions={quickActions}
+            showEventModal={true}
+            eventModalConfig={{
+              onSubmit: handleCreateEvent,
+              onCancel: () => setShowEventModal(false),
+            }}
+          />
 
           {/* Add Tasks Panel */}
           {chapterId && <TasksPanel chapterId={chapterId} />}

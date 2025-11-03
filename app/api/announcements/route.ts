@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServerSupabaseClient();
     const body = await request.json();
-    const { title, content, announcement_type, is_scheduled, scheduled_at, metadata } = body;
+    const { title, content, announcement_type, is_scheduled, scheduled_at, send_sms, metadata } = body;
 
     // Get authenticated user
     const authHeader = request.headers.get('authorization');
@@ -255,63 +255,65 @@ export async function POST(request: NextRequest) {
         // Don't fail the announcement creation if email fails
       }
 
-      // Send SMS notifications (parallel to email, don't block if SMS fails)
-      try {
-        // Get chapter members with phone numbers and SMS consent
-        const { data: smsMembers, error: smsMembersError } = await supabase
-          .from('profiles')
-          .select(`
-            id,
-            phone,
-            first_name,
-            chapter_id,
-            role
-          `)
-          .eq('chapter_id', profile.chapter_id)
-          .in('role', ['active_member', 'admin'])
-          .not('phone', 'is', null)
-          .neq('phone', '')
-          .eq('sms_consent', true);  // ← Add this line
+      // Send SMS notifications only if send_sms is true (parallel to email, don't block if SMS fails)
+      if (send_sms === true) {
+        try {
+          // Get chapter members with phone numbers and SMS consent
+          const { data: smsMembers, error: smsMembersError } = await supabase
+            .from('profiles')
+            .select(`
+              id,
+              phone,
+              first_name,
+              chapter_id,
+              role
+            `)
+            .eq('chapter_id', profile.chapter_id)
+            .in('role', ['active_member', 'admin'])
+            .not('phone', 'is', null)
+            .neq('phone', '')
+            .eq('sms_consent', true);
 
-        if (!smsMembersError && smsMembers && smsMembers.length > 0) {
-          // Format and validate phone numbers
-          const validSMSMembers = smsMembers
-            .map(member => ({
-              ...member,
-              formattedPhone: SMSService.formatPhoneNumber(member.phone!),
-            }))
-            .filter(member => SMSService.isValidPhoneNumber(member.phone!));
+          if (!smsMembersError && smsMembers && smsMembers.length > 0) {
+            // Format and validate phone numbers
+            const validSMSMembers = smsMembers
+              .map(member => ({
+                ...member,
+                formattedPhone: SMSService.formatPhoneNumber(member.phone!),
+              }))
+              .filter(member => SMSService.isValidPhoneNumber(member.phone!));
 
-          if (validSMSMembers.length > 0) {
-            // Create SMS message (truncate if needed - SMS has 160 char limit per message)
-            const smsMessage = `${announcement.title}: ${announcement.content.substring(0, 120)}...${announcement.id ? `\n\nView: ${process.env.NEXT_PUBLIC_APP_URL || ''}/dashboard` : ''}`.substring(0, 160);
+            if (validSMSMembers.length > 0) {
+              // Create SMS message (truncate if needed - SMS has 160 char limit per message)
+              const smsMessage = `${announcement.title}: ${announcement.content.substring(0, 120)}...${announcement.id ? `\n\nView: ${process.env.NEXT_PUBLIC_APP_URL || ''}/dashboard` : ''}`.substring(0, 160);
 
-            // Get phone numbers
-            const phoneNumbers = validSMSMembers.map(member => member.formattedPhone);
+              // Get phone numbers
+              const phoneNumbers = validSMSMembers.map(member => member.formattedPhone);
 
-            // Determine if we should use test mode (same logic as email)
-            const isSandbox = SMSService.isInSandboxMode();
-            const recipientsToUse = isSandbox ? phoneNumbers.slice(0, 3) : phoneNumbers;
+              // Determine if we should use test mode (same logic as email)
+              const isSandbox = SMSService.isInSandboxMode();
+              const recipientsToUse = isSandbox ? phoneNumbers.slice(0, 3) : phoneNumbers;
 
-            // Send SMS in background (don't await - fire and forget)
-            SMSService.sendBulkSMS(recipientsToUse, smsMessage)
-              .then(result => {
-                console.log('✅ Announcement SMS sent:', {
-                  total: recipientsToUse.length,
-                  success: result.success,
-                  failed: result.failed,
-                  announcementId: announcement.id
+              // Send SMS in background (don't await - fire and forget)
+              SMSService.sendBulkSMS(recipientsToUse, smsMessage)
+                .then(result => {
+                  console.log('✅ Announcement SMS sent:', {
+                    total: recipientsToUse.length,
+                    success: result.success,
+                    failed: result.failed,
+                    announcementId: announcement.id
+                  });
+                })
+                .catch(error => {
+                  console.error('❌ Announcement SMS failed:', error);
+                  // Don't throw - SMS failure shouldn't block announcement creation
                 });
-              })
-              .catch(error => {
-                console.error('❌ Announcement SMS failed:', error);
-                // Don't throw - SMS failure shouldn't block announcement creation
-              });
+            }
           }
+        } catch (smsError) {
+          console.error('❌ Error sending announcement SMS:', smsError);
+          // Don't fail the announcement creation if SMS fails
         }
-      } catch (smsError) {
-        console.error('❌ Error sending announcement SMS:', smsError);
-        // Don't fail the announcement creation if SMS fails
       }
     }
 

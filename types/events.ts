@@ -43,6 +43,7 @@ export interface CreateEventRequest {
   end_time: string;
   budget_label?: string;
   budget_amount?: number;
+  send_sms?: boolean;
   created_by?: string;
   updated_by?: string;
 }

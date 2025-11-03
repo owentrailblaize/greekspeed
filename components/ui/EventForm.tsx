@@ -7,8 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { X, Calendar, MapPin, DollarSign, FileText } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { X, Calendar, MapPin, DollarSign, FileText, Mail, Smartphone } from 'lucide-react';
 import { Event, CreateEventRequest, UpdateEventRequest } from '@/types/events';
+import { useAuth} from '@/lib/supabase/auth-context';
+import { useProfile } from '@/lib/hooks/useProfile';
 
 interface EventFormProps {
   event?: Event | null;
@@ -18,6 +21,10 @@ interface EventFormProps {
 }
 
 export function EventForm({ event, onSubmit, onCancel, loading = false }: EventFormProps) {
+  const { session } = useAuth();
+  const { profile } = useProfile();
+  const chapterId = profile?.chapter_id;
+
   const [formData, setFormData] = useState<CreateEventRequest>({
     title: '',
     description: '',
@@ -26,9 +33,14 @@ export function EventForm({ event, onSubmit, onCancel, loading = false }: EventF
     end_time: '',
     budget_label: '',
     budget_amount: undefined,
+    send_sms: false,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const [emailRecipientCount, setEmailRecipientCount] = useState<number | null>(null);
+  const [smsRecipientCount, setSmsRecipientCount] = useState<number | null>(null);
+  const [loadingRecipients, setLoadingRecipients] = useState(false);
 
   useEffect(() => {
     if (event) {
@@ -40,9 +52,71 @@ export function EventForm({ event, onSubmit, onCancel, loading = false }: EventF
         end_time: event.end_time,
         budget_label: event.budget_label || '',
         budget_amount: event.budget_amount || undefined,
+        send_sms: false,
       });
     }
   }, [event]);
+
+  // Smart default: Check SMS for important events
+  useEffect(() => {
+    if (!event && formData.title && formData.start_time) {
+      const isImportant = checkIfEventIsImportant(formData.title, formData.start_time);
+      setFormData(prev => ({ ...prev, send_sms: isImportant }));
+    }
+  }, [formData.title, formData.start_time, event]);
+
+  // Fetch recipient counts
+  useEffect(() => {
+    const fetchRecipientCounts = async () => {
+      if (!chapterId || !session?.access_token) return;
+      
+      setLoadingRecipients(true);
+      try {
+        const response = await fetch(
+          `/api/events/recipient-counts?chapter_id=${chapterId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          setEmailRecipientCount(data.email_recipients);
+          setSmsRecipientCount(data.sms_recipients);
+        }
+      } catch (error) {
+        console.error('Error fetching recipient counts:', error);
+      } finally {
+        setLoadingRecipients(false);
+      }
+    };
+
+    fetchRecipientCounts();
+  }, [chapterId, session?.access_token]);
+
+  // Helper function to determine if event is important
+  const checkIfEventIsImportant = (title: string, startTime: string): boolean => {
+    const importantKeywords = ['meeting', 'required', 'mandatory', 'urgent', 'important', 'must'];
+    const titleLower = title.toLowerCase();
+    
+    // Check for keywords
+    const hasKeyword = importantKeywords.some(keyword => titleLower.includes(keyword));
+    
+    // Check if event is within 7 days (time-sensitive)
+    if (startTime) {
+      const eventDate = new Date(startTime);
+      const now = new Date();
+      const daysUntil = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      
+      if (hasKeyword || daysUntil <= 7) {
+        return true;
+      }
+    }
+    
+    return false;
+  };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -87,7 +161,7 @@ export function EventForm({ event, onSubmit, onCancel, loading = false }: EventF
     }
   };
 
-  const handleInputChange = (field: keyof CreateEventRequest, value: string | number | undefined) => {
+  const handleInputChange = (field: keyof CreateEventRequest, value: string | number | boolean | undefined) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear error when user starts typing
@@ -228,6 +302,39 @@ export function EventForm({ event, onSubmit, onCancel, loading = false }: EventF
                 />
                 {errors.budget_amount && (
                   <p className="text-sm text-red-500">{errors.budget_amount}</p>
+                )}
+              </div>
+            </div>
+            
+            {/* SMS Notification Checkbox */}
+            <div className="space-y-3 sm:space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="send_sms"
+                  checked={formData.send_sms || false}
+                  onCheckedChange={(checked) => handleInputChange('send_sms', checked as boolean)}
+                />
+                <Label htmlFor="send_sms" className="text-base sm:text-sm cursor-pointer">
+                  Send SMS notification
+                </Label>
+              </div>
+              
+              {/* Notification disclaimers */}
+              <div className="text-xs text-gray-600 space-y-1 pl-6">
+                {emailRecipientCount !== null && (
+                  <p className="flex items-center gap-1">
+                    <Mail className="h-3 w-3" />
+                    Email will be sent to <span className="font-medium">{emailRecipientCount}</span> {emailRecipientCount === 1 ? 'member' : 'members'} with email notifications enabled
+                  </p>
+                )}
+                {formData.send_sms && smsRecipientCount !== null && (
+                  <p className="flex items-center gap-1">
+                    <Smartphone className="h-3 w-3" />
+                    SMS will be sent to <span className="font-medium">{smsRecipientCount}</span> {smsRecipientCount === 1 ? 'member' : 'members'} with SMS consent
+                  </p>
+                )}
+                {loadingRecipients && (
+                  <p className="text-gray-400">Loading recipient counts...</p>
                 )}
               </div>
             </div>

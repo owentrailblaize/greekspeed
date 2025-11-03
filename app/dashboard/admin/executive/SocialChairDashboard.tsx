@@ -18,6 +18,7 @@ import { VendorForm } from "@/components/ui/VendorForm";
 import { VendorContact, CreateVendorRequest, UpdateVendorRequest } from "@/types/vendors";
 import { SocialFeed } from "@/components/features/dashboard/dashboards/ui/SocialFeed";
 import { CompactCalendarCard } from "@/components/features/dashboard/dashboards/ui/CompactCalendarCard";
+import { QuickActions, QuickAction } from '@/components/features/dashboard/dashboards/ui/QuickActions';
 
 const eventBudget = {
   totalAllocated: 12000,
@@ -527,6 +528,56 @@ export function SocialChairDashboard() {
     );
   };
 
+  const quickActions: QuickAction[] = [
+    {
+      id: 'plan-event',
+      label: 'Plan New Event',
+      icon: Plus,
+      onClick: () => setShowEventForm(true),
+      className: 'w-full justify-start bg-orange-600 hover:bg-orange-700',
+      variant: 'default',
+    },
+    {
+      id: 'view-calendar',
+      label: 'View Full Calendar',
+      icon: Calendar,
+      onClick: () => {
+        setSelectedTab("calendar");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+      variant: 'outline',
+    },
+    {
+      id: 'manage-vendors',
+      label: 'Manage Vendors',
+      icon: Users,
+      onClick: () => {
+        setSelectedTab("contacts");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+      variant: 'outline',
+    },
+    {
+      id: 'budget-report',
+      label: 'Budget Report',
+      icon: DollarSign,
+      onClick: () => {
+        setSelectedTab("budget");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+      variant: 'outline',
+    },
+    {
+      id: 'book-feti',
+      label: 'Book Feti',
+      icon: Lock,
+      onClick: () => {},
+      variant: 'outline',
+      disabled: true,
+      className: 'w-full justify-start opacity-60',
+    },
+  ];
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
       {/* Quick Stats - Desktop Layout */}
@@ -870,61 +921,12 @@ export function SocialChairDashboard() {
           </Card>
 
           {/* Quick Actions */}
-          <Card>
-            <CardHeader className="pb-2 md:pb-2">
-              <CardTitle className="text-lg md:text-xl">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-2 md:pt-2 space-y-2 md:space-y-3">
-              <Button 
-                className="w-full justify-start bg-orange-600 hover:bg-orange-700"
-                onClick={() => setShowEventForm(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Plan New Event
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => {
-                  setSelectedTab("calendar")
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                View Full Calendar
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => {
-                  setSelectedTab("contacts")
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Manage Vendors
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => {
-                  setSelectedTab("budget")
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-              >
-                <DollarSign className="h-4 w-4 mr-2" />
-                Budget Report
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start opacity-60 cursor-not-allowed"
-                disabled
-              >
-                <Lock className="h-4 w-4 mr-2 text-gray-400" />
-                Book Feti
-              </Button>
-            </CardContent>
-          </Card>
+          
+              <QuickActions 
+                actions={quickActions}
+                headerClassName="pb-2 md:pb-2"
+                contentClassName="pt-2 md:pt-2 space-y-2 md:space-y-3"
+              />
         </div>
       )}
 
