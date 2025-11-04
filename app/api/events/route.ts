@@ -81,15 +81,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'End time must be after start time' }, { status: 400 });
     }
 
-    // For now, we'll use the service role key to bypass RLS
-    // In production, you'd want proper JWT validation here
+    // Extract send_sms flag (it's not a database column, just a notification flag)
+    const { send_sms, ...dbEventData } = eventData;
     
     // Create the event
     const insertData = {
-      ...eventData,
-      status: eventData.status || 'published',
-      created_by: eventData.created_by || 'system', // Will be updated when we add proper auth
-      updated_by: eventData.updated_by || 'system'
+      ...dbEventData,
+      status: dbEventData.status || 'published',
+      created_by: dbEventData.created_by || 'system', // Will be updated when we add proper auth
+      updated_by: dbEventData.updated_by || 'system'
     };
 
     const { data: newEvent, error } = await supabase
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify({
             eventId: newEvent.id,
             chapterId: newEvent.chapter_id,
-            send_sms: eventData.send_sms || false
+            send_sms: send_sms || false
           })
         });
 
