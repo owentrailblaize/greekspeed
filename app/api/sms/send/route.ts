@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { SMSService } from '@/lib/services/sms/smsServiceTelnyx';
 
+// Configure function timeout for Vercel (60 seconds for Pro plan)
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   try {
     // SMS Send API called

@@ -43,6 +43,12 @@ export interface SMSResult {
 }
 
 export class SMSService {
+  // Retry configuration constants
+  private static readonly MAX_RETRIES = 3;
+  private static readonly FETCH_TIMEOUT_MS = 8000; // 8 seconds - well under Vercel's 15s default
+  private static readonly BASE_RETRY_DELAY_MS = 1000; // 1 second base delay
+  private static readonly MAX_RETRY_DELAY_MS = 5000; // Max 5 seconds between retries
+
   static async sendSMS(message: SMSMessage): Promise<SMSResult> {
     const startTime = Date.now();
     const logContext = {
@@ -149,64 +155,112 @@ export class SMSService {
         body: message.body.substring(0, 50) + '...',
       });
 
-      let result;
+      let result: any;
       let usedSDK = false;
       
-      // Try SDK methods first
+      // Try SDK methods first (with retry logic)
       if (client) {
-        try {
-          // Pattern 1: Standard messages.create
-          if (client.messages?.create && typeof client.messages.create === 'function') {
-            console.log('📡 Attempting SDK: client.messages.create', logContext);
-            result = await client.messages.create({
-              from: fromNumber,
-              to: message.to,
-              text: message.body,
+        for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
+          try {
+            // Pattern 1: Standard messages.create
+            if (client.messages?.create && typeof client.messages.create === 'function') {
+              console.log(`📡 Attempting SDK: client.messages.create (Attempt ${attempt}/${this.MAX_RETRIES})`, logContext);
+              result = await Promise.race([
+                client.messages.create({
+                  from: fromNumber,
+                  to: message.to,
+                  text: message.body,
+                }),
+                // Add timeout for SDK call too
+                new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('SDK call timeout')), this.FETCH_TIMEOUT_MS)
+                )
+              ]);
+              usedSDK = true;
+              console.log('✅ SDK method succeeded: client.messages.create', {
+                ...logContext,
+                attempt: attempt,
+              });
+              break; // Success - exit retry loop
+            }
+            // Pattern 2: Check if messages is a function
+            else if (typeof client.messages === 'function') {
+              console.log(`📡 Attempting SDK: client.messages() as function (Attempt ${attempt}/${this.MAX_RETRIES})`, logContext);
+              result = await Promise.race([
+                client.messages({
+                  from: fromNumber,
+                  to: message.to,
+                  text: message.body,
+                }),
+                new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('SDK call timeout')), this.FETCH_TIMEOUT_MS)
+                )
+              ]);
+              usedSDK = true;
+              console.log('✅ SDK method succeeded: client.messages() as function', {
+                ...logContext,
+                attempt: attempt,
+              });
+              break; // Success - exit retry loop
+            }
+            // Pattern 3: Check messaging API
+            else if (client.messaging?.messages?.create && typeof client.messaging.messages.create === 'function') {
+              console.log(`📡 Attempting SDK: client.messaging.messages.create (Attempt ${attempt}/${this.MAX_RETRIES})`, logContext);
+              result = await Promise.race([
+                client.messaging.messages.create({
+                  from: fromNumber,
+                  to: message.to,
+                  text: message.body,
+                }),
+                new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('SDK call timeout')), this.FETCH_TIMEOUT_MS)
+                )
+              ]);
+              usedSDK = true;
+              console.log('✅ SDK method succeeded: client.messaging.messages.create', {
+                ...logContext,
+                attempt: attempt,
+              });
+              break; // Success - exit retry loop
+            } else {
+              // No SDK methods available - break to use REST API
+              break;
+            }
+          } catch (sdkError: any) {
+            const isLastAttempt = attempt === this.MAX_RETRIES;
+            console.warn(`⚠️ SDK method failed (Attempt ${attempt}/${this.MAX_RETRIES}):`, {
+              ...logContext,
+              error: sdkError.message,
+              errorStack: sdkError.stack?.split('\n').slice(0, 3),
+              errorName: sdkError.name,
+              attempt: attempt,
+              willRetry: !isLastAttempt,
             });
-            usedSDK = true;
-            console.log('✅ SDK method succeeded: client.messages.create', logContext);
+            
+            if (isLastAttempt) {
+              // Last attempt failed - fallback to REST API
+              console.log('📡 All SDK attempts failed, falling back to REST API', logContext);
+              break;
+            }
+            
+            // Wait before retrying (exponential backoff)
+            const delay = Math.min(
+              this.BASE_RETRY_DELAY_MS * Math.pow(2, attempt - 1),
+              this.MAX_RETRY_DELAY_MS
+            );
+            console.log(`⏳ Waiting ${delay}ms before SDK retry...`, logContext);
+            await new Promise(resolve => setTimeout(resolve, delay));
           }
-          // Pattern 2: Check if messages is a function
-          else if (typeof client.messages === 'function') {
-            console.log('📡 Attempting SDK: client.messages() as function', logContext);
-            result = await client.messages({
-              from: fromNumber,
-              to: message.to,
-              text: message.body,
-            });
-            usedSDK = true;
-            console.log('✅ SDK method succeeded: client.messages() as function', logContext);
-          }
-          // Pattern 3: Check messaging API
-          else if (client.messaging?.messages?.create && typeof client.messaging.messages.create === 'function') {
-            console.log('📡 Attempting SDK: client.messaging.messages.create', logContext);
-            result = await client.messaging.messages.create({
-              from: fromNumber,
-              to: message.to,
-              text: message.body,
-            });
-            usedSDK = true;
-            console.log('✅ SDK method succeeded: client.messaging.messages.create', logContext);
-          }
-        } catch (sdkError: any) {
-          // Log SDK error but don't throw - fallback to REST API
-          console.warn('⚠️ SDK method failed, falling back to REST API:', {
-            ...logContext,
-            error: sdkError.message,
-            errorStack: sdkError.stack?.split('\n').slice(0, 3),
-            errorName: sdkError.name,
-          });
         }
       }
 
-      // Fallback to REST API if SDK didn't work
+      // Fallback to REST API if SDK didn't work (with retry logic)
       if (!usedSDK) {
         console.log('📡 Using REST API: Direct HTTP call to Telnyx', {
           ...logContext,
           reason: 'SDK methods not available or failed',
         });
         
-        // Get API key for REST API call
         const telnyxApiKey = process.env.TELNYX_API_KEY;
         if (!telnyxApiKey) {
           const errorMsg = 'TELNYX_API_KEY not configured for REST API fallback';
@@ -221,170 +275,313 @@ export class SMSService {
         }
         
         const telnyxApiUrl = 'https://api.telnyx.com/v2/messages';
+        let lastError: any = null;
         
-        try {
-          const requestBody = {
-            from: fromNumber,
-            to: message.to,
-            text: message.body,
-          };
-
-          console.log('📤 Sending to Telnyx REST API:', {
-            ...logContext,
-            url: telnyxApiUrl,
-            from: fromNumber,
-            bodyLength: message.body.length,
-            apiKeySet: !!telnyxApiKey,
-            requestBody: JSON.stringify(requestBody),
-          });
-
-          // Add timeout to fetch request (30 seconds)
-          const fetchController = new AbortController();
-          const timeoutId = setTimeout(() => {
-            fetchController.abort();
-            console.error('⏱️ Fetch timeout after 30 seconds', logContext);
-          }, 30000);
-
-          let response: Response;
+        // Retry loop for REST API
+        for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
           try {
-            console.log('🌐 Initiating fetch request to Telnyx...', logContext);
-            
-            // Add more detailed logging before fetch
-            console.log('🔍 Fetch Request Details:', {
+            const requestBody = {
+              from: fromNumber,
+              to: message.to,
+              text: message.body,
+            };
+
+            console.log(`📤 Sending to Telnyx REST API (Attempt ${attempt}/${this.MAX_RETRIES}):`, {
               ...logContext,
               url: telnyxApiUrl,
-              method: 'POST',
-              hasApiKey: !!telnyxApiKey,
-              apiKeyLength: telnyxApiKey?.length || 0,
-              apiKeyPrefix: telnyxApiKey?.substring(0, 10) || 'N/A',
-              requestBodySize: JSON.stringify(requestBody).length,
+              from: fromNumber,
+              bodyLength: message.body.length,
+              apiKeySet: !!telnyxApiKey,
+              attempt: attempt,
+              timeout: this.FETCH_TIMEOUT_MS,
             });
-            
-            response = await fetch(telnyxApiUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${telnyxApiKey}`,
-              },
-              body: JSON.stringify(requestBody),
-              signal: fetchController.signal,
-            });
-            clearTimeout(timeoutId);
-            console.log('✅ Fetch request completed', {
-              ...logContext,
-              status: response.status,
-              statusText: response.statusText,
-              ok: response.ok,
-            });
-          } catch (fetchInitError: any) {
-            clearTimeout(timeoutId);
-            console.error('❌ Fetch Init Error (before response):', {
-              ...logContext,
-              error: fetchInitError.message,
-              errorName: fetchInitError.name,
-              errorType: typeof fetchInitError,
-              errorCode: fetchInitError.code,
-              errorStack: fetchInitError.stack?.split('\n').slice(0, 5),
-            });
-            
-            if (fetchInitError.name === 'AbortError') {
-              const errorMsg = 'Request to Telnyx API timed out after 30 seconds';
-              console.error('❌ REST API Timeout:', {
+
+            // Reduced timeout to 8 seconds (fail fast, well under Vercel's 15s default)
+            const fetchController = new AbortController();
+            const timeoutId = setTimeout(() => {
+              fetchController.abort();
+              console.error(`⏱️ Fetch timeout after ${this.FETCH_TIMEOUT_MS}ms (Attempt ${attempt}/${this.MAX_RETRIES})`, logContext);
+            }, this.FETCH_TIMEOUT_MS);
+
+            let response: Response;
+            try {
+              console.log('🌐 Initiating fetch request to Telnyx...', {
                 ...logContext,
-                error: errorMsg,
-                duration: Date.now() - startTime,
+                attempt: attempt,
               });
+              
+              // Add more detailed logging before fetch
+              console.log('🔍 Fetch Request Details:', {
+                ...logContext,
+                url: telnyxApiUrl,
+                method: 'POST',
+                hasApiKey: !!telnyxApiKey,
+                apiKeyLength: telnyxApiKey?.length || 0,
+                apiKeyPrefix: telnyxApiKey?.substring(0, 10) || 'N/A',
+                requestBodySize: JSON.stringify(requestBody).length,
+                attempt: attempt,
+              });
+              
+              // Use a more reliable fetch configuration per Telnyx best practices
+              response = await fetch(telnyxApiUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${telnyxApiKey}`,
+                  'User-Agent': 'Trailblaize-SMS/1.0',
+                },
+                body: JSON.stringify(requestBody),
+                signal: fetchController.signal,
+                // Add keepalive to help with connection reuse
+                keepalive: true,
+                // Explicitly set redirect mode
+                redirect: 'follow',
+              });
+              
+              clearTimeout(timeoutId);
+              
+              console.log('✅ Fetch request completed', {
+                ...logContext,
+                status: response.status,
+                statusText: response.statusText,
+                ok: response.ok,
+                attempt: attempt,
+              });
+              
+              // Read response text
+              const responseText = await response.text();
+              console.log('📥 Raw Telnyx REST API Response:', {
+                ...logContext,
+                status: response.status,
+                statusText: response.statusText,
+                responseLength: responseText.length,
+                bodyPreview: responseText.substring(0, 500),
+                headers: Object.fromEntries(response.headers.entries()),
+                ok: response.ok,
+                attempt: attempt,
+              });
+
+              // Check if response is successful
+              if (response.ok) {
+                try {
+                  result = JSON.parse(responseText);
+                } catch (parseError) {
+                  throw new Error(`Failed to parse Telnyx response: ${responseText}`);
+                }
+
+                // Check for errors in response (Telnyx API returns errors in response even with 200 status)
+                if (result.errors && result.errors.length > 0) {
+                  const errorMessages = result.errors.map((e: any) => 
+                    `${e.code || 'UNKNOWN'}: ${e.title || e.detail || JSON.stringify(e)}`
+                  ).join(', ');
+                  
+                  // Check if it's a retryable error
+                  const isRetryable = result.errors.some((e: any) => {
+                    const code = e.code?.toString() || '';
+                    // Retry on 5xx-like errors or rate limiting
+                    return code.startsWith('5') || code === '429' || code === '408';
+                  });
+                  
+                  if (!isRetryable || attempt === this.MAX_RETRIES) {
+                    // Non-retryable error or last attempt
+                    throw new Error(`Telnyx API errors: ${errorMessages}`);
+                  }
+                  
+                  // Retryable error - continue to retry logic
+                  lastError = new Error(`Telnyx API errors: ${errorMessages}`);
+                  const delay = Math.min(
+                    this.BASE_RETRY_DELAY_MS * Math.pow(2, attempt - 1),
+                    this.MAX_RETRY_DELAY_MS
+                  );
+                  console.log(`⏳ Waiting ${delay}ms before retry after API error...`, logContext);
+                  await new Promise(resolve => setTimeout(resolve, delay));
+                  continue;
+                }
+
+                // Validate response structure
+                const messageId = result?.data?.id || result?.id || result?.record?.id;
+                
+                if (!messageId) {
+                  const errorMsg = 'Telnyx API did not return a message ID. Response: ' + JSON.stringify(result).substring(0, 200);
+                  console.error('❌ REST API Response Validation Failed:', {
+                    ...logContext,
+                    status: response.status,
+                    error: errorMsg,
+                    fullResponse: JSON.stringify(result).substring(0, 1000),
+                    attempt: attempt,
+                  });
+                  
+                  if (attempt === this.MAX_RETRIES) {
+                    return {
+                      success: false,
+                      error: errorMsg,
+                    };
+                  }
+                  
+                  // Retry on validation failure
+                  lastError = new Error(errorMsg);
+                  const delay = Math.min(
+                    this.BASE_RETRY_DELAY_MS * Math.pow(2, attempt - 1),
+                    this.MAX_RETRY_DELAY_MS
+                  );
+                  console.log(`⏳ Waiting ${delay}ms before retry after validation failure...`, logContext);
+                  await new Promise(resolve => setTimeout(resolve, delay));
+                  continue;
+                }
+
+                console.log('✅ REST API Response Validated:', {
+                  ...logContext,
+                  status: response.status,
+                  messageId: messageId,
+                  recordType: result?.data?.record_type || 'unknown',
+                  statusField: result?.data?.to?.[0]?.status || 'unknown',
+                  responseStructure: {
+                    hasData: !!result?.data,
+                    hasId: !!result?.id,
+                    hasRecord: !!result?.record,
+                  },
+                  attempt: attempt,
+                });
+                
+                // Success! Break out of retry loop
+                break;
+              } else {
+                // Non-200 response
+                const errorMsg = `Telnyx API returned error status ${response.status}: ${response.statusText}`;
+                
+                // Check if it's a retryable error (5xx or 429)
+                const isRetryable = response.status >= 500 || response.status === 429 || response.status === 408;
+                const isLastAttempt = attempt === this.MAX_RETRIES;
+                
+                if (!isRetryable || isLastAttempt) {
+                  // Client errors (4xx) - don't retry, or last attempt
+                  console.error(`❌ REST API HTTP Error (${isRetryable ? 'Server Error' : 'Client Error'} - ${isLastAttempt ? 'No Retry' : 'No Retry'}):`, {
+                    ...logContext,
+                    status: response.status,
+                    statusText: response.statusText,
+                    responseBody: responseText.substring(0, 1000),
+                    error: errorMsg,
+                    attempt: attempt,
+                  });
+                  return {
+                    success: false,
+                    error: errorMsg,
+                  };
+                }
+                
+                // Server errors (5xx) or rate limiting (429) - retry
+                lastError = new Error(errorMsg);
+                console.warn(`⚠️ REST API HTTP Error (Server Error - Will Retry):`, {
+                  ...logContext,
+                  status: response.status,
+                  statusText: response.statusText,
+                  responseBody: responseText.substring(0, 500),
+                  error: errorMsg,
+                  attempt: attempt,
+                  willRetry: !isLastAttempt,
+                });
+                
+                const delay = Math.min(
+                  this.BASE_RETRY_DELAY_MS * Math.pow(2, attempt - 1),
+                  this.MAX_RETRY_DELAY_MS
+                );
+                console.log(`⏳ Waiting ${delay}ms before retry...`, logContext);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                continue;
+              }
+            } catch (fetchInitError: any) {
+              clearTimeout(timeoutId);
+              const isLastAttempt = attempt === this.MAX_RETRIES;
+              
+              console.error(`❌ Fetch Init Error (before response) - Attempt ${attempt}/${this.MAX_RETRIES}:`, {
+                ...logContext,
+                error: fetchInitError.message,
+                errorName: fetchInitError.name,
+                errorType: typeof fetchInitError,
+                errorCode: fetchInitError.code,
+                errorStack: fetchInitError.stack?.split('\n').slice(0, 5),
+                attempt: attempt,
+                willRetry: !isLastAttempt,
+              });
+              
+              if (fetchInitError.name === 'AbortError') {
+                lastError = new Error(`Request to Telnyx API timed out after ${this.FETCH_TIMEOUT_MS}ms`);
+                console.error(`❌ REST API Timeout - Attempt ${attempt}/${this.MAX_RETRIES}:`, {
+                  ...logContext,
+                  error: lastError.message,
+                  duration: Date.now() - startTime,
+                  attempt: attempt,
+                  willRetry: !isLastAttempt,
+                });
+                
+                if (isLastAttempt) {
+                  return {
+                    success: false,
+                    error: lastError.message,
+                  };
+                }
+                
+                // Wait before retrying (exponential backoff)
+                const delay = Math.min(
+                  this.BASE_RETRY_DELAY_MS * Math.pow(2, attempt - 1),
+                  this.MAX_RETRY_DELAY_MS
+                );
+                console.log(`⏳ Waiting ${delay}ms before retry after timeout...`, logContext);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                continue;
+              }
+              
+              // Other errors - retry if not last attempt
+              lastError = fetchInitError;
+              if (isLastAttempt) {
+                throw fetchInitError;
+              }
+              
+              const delay = Math.min(
+                this.BASE_RETRY_DELAY_MS * Math.pow(2, attempt - 1),
+                this.MAX_RETRY_DELAY_MS
+              );
+              console.log(`⏳ Waiting ${delay}ms before retry after error...`, logContext);
+              await new Promise(resolve => setTimeout(resolve, delay));
+              continue;
+            }
+          } catch (fetchError: any) {
+            lastError = fetchError;
+            const isLastAttempt = attempt === this.MAX_RETRIES;
+            
+            console.error(`❌ REST API Error - Attempt ${attempt}/${this.MAX_RETRIES}:`, {
+              ...logContext,
+              error: fetchError.message,
+              errorName: fetchError.name,
+              errorStack: fetchError.stack?.split('\n').slice(0, 10),
+              errorCode: fetchError.code,
+              duration: Date.now() - startTime,
+              attempt: attempt,
+              willRetry: !isLastAttempt,
+            });
+            
+            if (isLastAttempt) {
               return {
                 success: false,
-                error: errorMsg,
+                error: fetchError instanceof Error ? fetchError.message : 'Unknown REST API error',
               };
             }
-            throw fetchInitError;
+            
+            const delay = Math.min(
+              this.BASE_RETRY_DELAY_MS * Math.pow(2, attempt - 1),
+              this.MAX_RETRY_DELAY_MS
+            );
+            console.log(`⏳ Waiting ${delay}ms before retry...`, logContext);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
           }
-
-          const responseText = await response.text();
-          console.log('📥 Raw Telnyx REST API Response:', {
-            ...logContext,
-            status: response.status,
-            statusText: response.statusText,
-            responseLength: responseText.length,
-            bodyPreview: responseText.substring(0, 500),
-            headers: Object.fromEntries(response.headers.entries()),
-            ok: response.ok,
-          });
-
-          // Check if response is not OK
-          if (!response.ok) {
-            const errorMsg = `Telnyx API returned error status ${response.status}: ${response.statusText}`;
-            console.error('❌ REST API HTTP Error:', {
-              ...logContext,
-              status: response.status,
-              statusText: response.statusText,
-              responseBody: responseText.substring(0, 1000),
-              error: errorMsg,
-            });
-            return {
-              success: false,
-              error: errorMsg,
-            };
-          }
-
-          try {
-            result = JSON.parse(responseText);
-          } catch (parseError) {
-            throw new Error(`Failed to parse Telnyx response: ${responseText}`);
-          }
-
-          // Check for errors in response
-          if (result.errors && result.errors.length > 0) {
-            const errorMessages = result.errors.map((e: any) => 
-              `${e.code || 'UNKNOWN'}: ${e.title || e.detail || JSON.stringify(e)}`
-            ).join(', ');
-            throw new Error(`Telnyx API errors: ${errorMessages}`);
-          }
-
-          // Validate response structure
-          const messageId = result?.data?.id || result?.id || result?.record?.id;
-          
-          if (!messageId) {
-            const errorMsg = 'Telnyx API did not return a message ID. Response: ' + JSON.stringify(result).substring(0, 200);
-            console.error('❌ REST API Response Validation Failed:', {
-              ...logContext,
-              status: response.status,
-              error: errorMsg,
-              fullResponse: JSON.stringify(result).substring(0, 1000),
-            });
-            return {
-              success: false,
-              error: errorMsg,
-            };
-          }
-
-          console.log('✅ REST API Response Validated:', {
-            ...logContext,
-            status: response.status,
-            messageId: messageId,
-            recordType: result?.data?.record_type || 'unknown',
-            statusField: result?.data?.to?.[0]?.status || 'unknown',
-            responseStructure: {
-              hasData: !!result?.data,
-              hasId: !!result?.id,
-              hasRecord: !!result?.record,
-            },
-          });
-
-        } catch (fetchError: any) {
-          console.error('❌ REST API Error:', {
-            ...logContext,
-            error: fetchError.message,
-            errorName: fetchError.name,
-            errorStack: fetchError.stack?.split('\n').slice(0, 10),
-            errorCode: fetchError.code,
-            duration: Date.now() - startTime,
-          });
+        }
+        
+        // If we get here and result is not set, all retries failed
+        if (!result) {
           return {
             success: false,
-            error: fetchError instanceof Error ? fetchError.message : 'Unknown REST API error',
+            error: lastError?.message || 'Failed to send SMS after all retry attempts',
           };
         }
       }

@@ -10,6 +10,9 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Configure function timeout for Vercel (60 seconds for Pro plan)
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   // Event email API called
   

@@ -3,6 +3,9 @@ import { createClient } from '@supabase/supabase-js';
 import { EmailService } from '@/lib/services/emailService';
 import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
 
+// Configure function timeout for Vercel (60 seconds for Pro plan)
+export const maxDuration = 60;
+
 export async function GET(request: NextRequest) {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
