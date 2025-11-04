@@ -115,7 +115,7 @@ export class SMSNotificationService {
     // Build event content - match sample format: "Event reminder: {details}"
     // Sample uses: "Chapter formal is this Saturday at 8 PM. Check your email for details."
     // We'll use: "{eventTitle} on {eventDate}. Check your email for details."
-    const eventContent = `${eventTitle} on ${eventDate}. Check your email for details.`;
+    const eventContent = `${eventTitle} on ${eventDate}.`;
     const truncatedContent = eventContent.substring(0, Math.max(0, availableForContent));
     const needsEllipsis = eventContent.length > truncatedContent.length;
 
