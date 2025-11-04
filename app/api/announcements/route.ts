@@ -297,20 +297,79 @@ export async function POST(request: NextRequest) {
               const isSandbox = SMSService.isInSandboxMode();
               const recipientsToUse = isSandbox ? phoneNumbers.slice(0, 3) : phoneNumbers;
 
-              // Send SMS in background (don't await - fire and forget)
-              SMSService.sendBulkSMS(recipientsToUse, smsMessage)
-                .then(result => {
-                  console.log('✅ Announcement SMS sent:', {
-                    total: recipientsToUse.length,
-                    success: result.success,
-                    failed: result.failed,
-                    announcementId: announcement.id
-                  });
+              // Send SMS via dedicated processing route (async but tracked)
+              if (recipientsToUse.length > 0) {
+                const getBaseUrl = () => {
+                  // In production, use NEXT_PUBLIC_APP_URL if set
+                  if (process.env.NEXT_PUBLIC_APP_URL) {
+                    return process.env.NEXT_PUBLIC_APP_URL;
+                  }
+                  
+                  // Fallback to VERCEL_URL (preview deployments)
+                  if (process.env.VERCEL_URL) {
+                    return `https://${process.env.VERCEL_URL}`;
+                  }
+                  
+                  // Local development fallback
+                  return 'http://localhost:3000';
+                };
+
+                const smsProcessingUrl = `${getBaseUrl()}/api/sms/process`;    
+                            
+                const fetchController = new AbortController();
+                const timeoutId = setTimeout(() => {
+                  fetchController.abort();
+                }, 10000); // 10 second timeout for the fetch call
+
+                fetch(smsProcessingUrl, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    // Add internal auth header if needed
+                    'X-Internal-Request': 'true',
+                  },
+                  body: JSON.stringify({
+                    recipients: recipientsToUse,
+                    message: smsMessage,
+                    announcementId: announcement.id,
+                    chapterId: profile.chapter_id,
+                    sentBy: user.id,
+                  }),
+                  signal: fetchController.signal, // Add abort signal
                 })
-                .catch(error => {
-                  console.error('❌ Announcement SMS failed:', error);
-                  // Don't throw - SMS failure shouldn't block announcement creation
-                });
+                  .then(async (response) => {
+                    clearTimeout(timeoutId);
+                    if (!response.ok) {
+                      const errorText = await response.text();
+                      throw new Error(`SMS processing failed: ${response.status} - ${errorText}`);
+                    }
+                    return response.json();
+                  })
+                  .then((result) => {
+                    console.log('✅ Announcement SMS sent:', {
+                      total: recipientsToUse.length,
+                      success: result.stats?.success || 0,
+                      failed: result.stats?.failed || 0,
+                      announcementId: announcement.id
+                    });
+                  })
+                  .catch((error) => {
+                    clearTimeout(timeoutId);
+                    if (error.name === 'AbortError') {
+                      console.error('❌ SMS processing request timed out:', {
+                        announcementId: announcement.id,
+                        timeout: '10s'
+                      });
+                    } else {
+                      console.error('❌ Announcement SMS failed:', {
+                        error: error.message,
+                        announcementId: announcement.id,
+                        stack: error.stack
+                      });
+                    }
+                    // Don't throw - SMS failure shouldn't block announcement creation
+                  });
+              }
             }
           }
         } catch (smsError) {
