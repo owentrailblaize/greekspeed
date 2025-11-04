@@ -125,50 +125,109 @@ async function handleMessageStatusUpdate(
 ) {
   try {
     const messageId = payload.id;
-    const status = mapEventTypeToStatus(eventType);
-    const deliveredAt = eventType === 'message.delivered' ? new Date().toISOString() : null;
-    const failedAt = eventType === 'message.delivery.failed' ? new Date().toISOString() : null;
     const errorMessage = payload.errors?.[0]?.detail || null;
 
     console.log('📊 Updating message status:', {
       messageId,
-      status,
       eventType,
       to: payload.to?.[0]?.phone_number,
       from: payload.from?.phone_number,
       messageStatus: payload.to?.[0]?.status,
+      hasErrors: !!(payload.errors && payload.errors.length > 0)
     });
 
-    // Build update data - only include fields that exist in schema
-    const updateData: any = {
-      status: status,
-      updated_at: new Date().toISOString(),
-    };
+    // First, check if the record exists in sms_notification_logs
+    const { data: existingLog, error: fetchError } = await supabase
+      .from('sms_notification_logs')
+      .select('id, status, telnyx_id')
+      .eq('telnyx_id', messageId)
+      .single();
 
-    // Note: error_message, delivered_at, failed_at columns don't exist in sms_logs table
-    // Log error details to console if present (but don't store in DB)
-    if (errorMessage) {
-      console.warn('⚠️ SMS delivery error (logged to console):', {
+    if (fetchError || !existingLog) {
+      console.log('ℹ️ SMS notification log not found for update:', {
         messageId,
-        error: errorMessage,
-        status: status,
-        to: payload.to?.[0]?.phone_number,
+        reason: fetchError?.message || 'No matching record',
+        hint: 'This might be a bulk SMS or log was not created during send'
       });
+      return; // Exit gracefully if log doesn't exist
     }
 
-    // Update SMS log if exists
+    // Map Telnyx delivery status to our status values
+    let updateStatus = 'sent'; // default
+    
+    // Check for delivery errors first (highest priority)
+    if (payload.errors && payload.errors.length > 0) {
+      updateStatus = 'failed';
+    } 
+    // Check individual recipient status
+    else if (payload.to && payload.to.length > 0) {
+      const recipientStatus = payload.to[0].status;
+      
+      if (recipientStatus === 'delivered') {
+        updateStatus = 'delivered';
+      } else if (recipientStatus === 'delivery_failed' || recipientStatus === 'failed') {
+        updateStatus = 'failed';
+      } else if (recipientStatus === 'sent' || recipientStatus === 'queued') {
+        updateStatus = 'sent';
+      } else if (eventType === 'message.finalized') {
+        // message.finalized can have different statuses
+        if (payload.errors && payload.errors.length > 0) {
+          updateStatus = 'failed';
+        } else {
+          // Keep current status or default to sent
+          updateStatus = existingLog.status || 'sent';
+        }
+      }
+    }
+
+    // Build update data - only include fields that exist in sms_notification_logs
+    const updateData: any = {
+      status: updateStatus,
+    };
+
+    // Update error field if there's an error message
+    if (errorMessage) {
+      updateData.error = errorMessage;
+    }
+
+    // Update SMS notification log
     const { error } = await supabase
-      .from('sms_logs')
+      .from('sms_notification_logs')
       .update(updateData)
       .eq('telnyx_id', messageId);
 
     if (error) {
-      console.error('Failed to update SMS log:', error);
+      console.error('Failed to update SMS notification log:', {
+        error,
+        messageId,
+        attemptedUpdate: updateData,
+        existingRecord: existingLog
+      });
     } else {
-      console.log('✅ SMS log updated successfully');
+      console.log('✅ SMS notification log updated successfully:', {
+        messageId,
+        oldStatus: existingLog.status,
+        newStatus: updateStatus,
+        to: payload.to?.[0]?.phone_number
+      });
+    }
+
+    // Log error details to console if present
+    if (errorMessage) {
+      console.warn('⚠️ SMS delivery error:', {
+        messageId,
+        error: errorMessage,
+        status: updateStatus,
+        to: payload.to?.[0]?.phone_number,
+        carrier: payload.to?.[0]?.carrier
+      });
     }
   } catch (error) {
-    console.error('Error handling message status update:', error);
+    console.error('Error handling message status update:', {
+      error,
+      messageId: payload?.id,
+      eventType
+    });
   }
 }
 

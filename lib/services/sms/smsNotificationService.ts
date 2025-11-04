@@ -36,7 +36,7 @@ export class SMSNotificationService {
   // Log SMS attempt to database
   private static async logSMS(data: SMSNotificationData, success: boolean, messageId?: string, error?: string) {
     try {
-      await supabase.from('sms_logs').insert({
+      await supabase.from('sms_notification_logs').insert({
         user_id: data.userId,
         chapter_id: data.chapterId,
         message_type: data.messageType,
