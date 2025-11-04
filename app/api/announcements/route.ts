@@ -287,8 +287,40 @@ export async function POST(request: NextRequest) {
               .filter(member => SMSService.isValidPhoneNumber(member.phone!));
 
             if (validSMSMembers.length > 0) {
+              // Get Chapter Name for Personalization
+              const { data: chapter } = await supabase
+                .from('chapters')
+                .select('name')
+                .eq('id', profile.chapter_id)
+                .single();
+              
+              // Format message to match your Telnyx approved sample messages exactly
+              // CRITICAL: Must match case and format from your Telnyx campaign samples
+              const senderPrefix = '[Trailblaize]'; // Match your sample messages (capitalized, not all caps)
+              const optOutText = ' Reply STOP to unsubscribe or HELP for help.';
+              const complianceText = ' Msg & data rates may apply. Message frequency varies.';
+              const contactText = ' Contact support@trailblaize.net';
+
+              // Calculate available space (160-char SMS limit)
+              const fixedTextLength = 
+                senderPrefix.length + 1 + // +1 for space after prefix
+                ': '.length + // Space after title colon
+                optOutText.length + 
+                complianceText.length + 
+                contactText.length;
+              
+              // Account for title length and ellipsis (3 chars)
+              const titlePrefix = `${senderPrefix} ${announcement.title}: `;
+              const availableForContent = 160 - fixedTextLength - titlePrefix.length;
+              
+              // Truncate content if needed
+              const truncatedContent = announcement.content.substring(0, Math.max(0, availableForContent - 3));
+              const needsEllipsis = announcement.content.length > truncatedContent.length;
+
+              // Build compliant message matching your Telnyx samples exactly
+              const smsMessage = `${titlePrefix}${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}${contactText}`.substring(0, 160);
+
               // Create SMS message (truncate if needed - SMS has 160 char limit per message)
-              const smsMessage = `${announcement.title}: ${announcement.content.substring(0, 120)}...${announcement.id ? `\n\nView: ${process.env.NEXT_PUBLIC_APP_URL || ''}/dashboard` : ''}`.substring(0, 160);
 
               // Get phone numbers
               const phoneNumbers = validSMSMembers.map(member => member.formattedPhone);
