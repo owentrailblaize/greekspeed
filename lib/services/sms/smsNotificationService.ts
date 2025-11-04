@@ -97,14 +97,35 @@ export class SMSNotificationService {
     // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
 
-    // Build compliant message content
-    const content = `Event: ${eventTitle} on ${eventDate}. View: trailblaize.net/dashboard`;
-    const message = this.formatCompliantMessage(content);
+    // Format message to match Telnyx campaign sample EXACTLY
+    // Sample: [Trailblaize] Event reminder: Chapter formal is this Saturday at 8 PM. Check your email for details. Reply STOP to unsubscribe or HELP for help. Msg & data rates may apply. Message frequency varies. Contact support@trailblaize.net
+    const senderPrefix = '[Trailblaize]';
+    const reminderPrefix = 'Event reminder: ';
+    const optOutText = ' Reply STOP to unsubscribe or HELP for help.';
+    const complianceText = ' Msg & data rates may apply';
+
+    // Build message prefix
+    const messagePrefix = `${senderPrefix} ${reminderPrefix}`;
+    const fixedComplianceLength = optOutText.length + complianceText.length;
+    
+    // Calculate available space for content (account for ellipsis if needed: 3 chars)
+    // Note: SMS has 160 char limit, but we'll truncate if needed
+    const availableForContent = 160 - messagePrefix.length - fixedComplianceLength - 3;
+    
+    // Build event content - match sample format: "Event reminder: {details}"
+    // Sample uses: "Chapter formal is this Saturday at 8 PM. Check your email for details."
+    // We'll use: "{eventTitle} on {eventDate}. Check your email for details."
+    const eventContent = `${eventTitle} on ${eventDate}. Check your email for details.`;
+    const truncatedContent = eventContent.substring(0, Math.max(0, availableForContent));
+    const needsEllipsis = eventContent.length > truncatedContent.length;
+
+    // Build compliant message matching Telnyx sample exactly
+    const message = `${messagePrefix}${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}`.substring(0, 160);
     
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
       messageLength: message.length,
-      messagePreview: message.substring(0, 50) + '...'
+      messagePreview: message.substring(0, 80) + '...'
     });
 
     const result = await SMSService.sendSMS({ to: formattedPhone, body: message });
