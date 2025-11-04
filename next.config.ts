@@ -1,25 +1,4 @@
 /** @type {import('next').NextConfig} */
-const securityHeaders = [
-  {
-    key: 'Content-Security-Policy',
-    value: [
-      "default-src 'self';",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com;",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;",
-      "img-src 'self' data: https:;",
-      "font-src 'self' https://fonts.gstatic.com;",
-      "connect-src 'self' https://ssqpfkiesxwnmphwyezb.supabase.co https://*.supabase.co https://*.supabase.in;",
-      "frame-ancestors 'self';",
-      "object-src 'none';",
-      "base-uri 'self';",
-      "upgrade-insecure-requests;"
-    ].join(' ')
-  },
-  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-  { key: 'X-Content-Type-Options', value: 'nosniff' },
-]
-
-
 const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true, // Temporarily ignore ESLint during builds
@@ -44,14 +23,6 @@ const nextConfig = {
   env: {
     CUSTOM_ENV: process.env.CUSTOM_ENV,
   },
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: securityHeaders
-      }
-    ];
-  }
 };
 
 export default nextConfig;
