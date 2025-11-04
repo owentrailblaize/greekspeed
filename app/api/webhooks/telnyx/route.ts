@@ -142,10 +142,18 @@ async function handleMessageStatusUpdate(
     // Build update data - only include fields that have values
     const updateData: any = {
       status: status,
-      error_message: errorMessage,
       updated_at: new Date().toISOString(),
     };
-    
+
+    if (errorMessage) {
+      console.warn('SMS Delivery Error (logged to console):', {
+        messageId,
+        error: errorMessage,
+        status: status,
+        to: payload.to?.[0]?.phone_number,
+      });
+    }
+
     // Only add delivered_at if the event is delivered (and column exists)
     if (deliveredAt) {
       updateData.delivered_at = deliveredAt;
@@ -164,23 +172,6 @@ async function handleMessageStatusUpdate(
 
     if (error) {
       console.error('Failed to update SMS log:', error);
-      // If delivered_at or failed_at column doesn't exist, try without them
-      if (error.message?.includes('delivered_at') || error.message?.includes('failed_at')) {
-        console.log('⚠️ Retrying update without delivered_at/failed_at columns');
-        const { error: retryError } = await supabase
-          .from('sms_logs')
-          .update({
-            status: status,
-            error_message: errorMessage,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('telnyx_id', messageId);
-        if (retryError) {
-          console.error('Failed to update SMS log (retry):', retryError);
-        } else {
-          console.log('✅ SMS log updated successfully (without delivered_at/failed_at)');
-        }
-      }
     } else {
       console.log('✅ SMS log updated successfully');
     }

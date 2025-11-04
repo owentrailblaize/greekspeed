@@ -290,15 +290,13 @@ export async function POST(request: NextRequest) {
               // Format message to match your Telnyx approved sample messages exactly
               // CRITICAL: Must match case and format from your Telnyx campaign samples
               const senderPrefix = '[Trailblaize]'; // Match your sample messages (capitalized, not all caps)
-              const optOutText = ' Reply STOP to unsubscribe or HELP for help.';
-              const complianceText = ' Msg & data rates may apply. Message frequency varies.';
-              const contactText = ' Contact support@trailblaize.net';
+              const optOutText = ' Reply STOP to opt out.';
+              const complianceText = ' Msg & data rates may apply';
 
-              const fixedComplianceLength = optOutText.length + complianceText.length + contactText.length;
-              
               // Build title prefix (includes sender prefix, space, title, and colon)
               const titlePrefix = `${senderPrefix} ${announcement.title}: `;
-              
+              const fixedComplianceLength = optOutText.length + complianceText.length;
+
               // Calculate available space for content (account for ellipsis if needed: 3 chars)
               const availableForContent = 160 - titlePrefix.length - fixedComplianceLength - 3;
               
@@ -307,8 +305,8 @@ export async function POST(request: NextRequest) {
               const needsEllipsis = announcement.content.length > truncatedContent.length;
 
               // Build compliant message matching your Telnyx samples exactly
-              const smsMessage = `${titlePrefix}${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}${contactText}`.substring(0, 160);
-              
+              const smsMessage = `${titlePrefix}${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}`.substring(0, 160);
+                            
               // Get phone numbers
               const phoneNumbers = validSMSMembers.map(member => member.formattedPhone);
 
