@@ -121,15 +121,37 @@ export async function POST(request: NextRequest) {
 
     const phoneNumbers = recipientsToUse.map(member => member.formattedPhone);
 
+    // Format message with compliance text (if not already included)
+    const senderPrefix = '[Trailblaize]';
+    const optOutText = ' Reply STOP to opt out.';
+    const complianceText = ' Msg & data rates may apply';
+    
+    // Check if message already has compliance text
+    const hasCompliance = message.includes('Reply STOP') || message.includes('[Trailblaize]');
+    
+    let compliantMessage: string;
+    if (hasCompliance) {
+      // Message already has compliance text, use as-is (but ensure it's under 160)
+      compliantMessage = message.substring(0, 160);
+    } else {
+      // Add compliance text
+      const fixedLength = senderPrefix.length + 1 + optOutText.length + complianceText.length;
+      const availableForContent = 160 - fixedLength - 3;
+      const truncatedContent = message.substring(0, Math.max(0, availableForContent));
+      const needsEllipsis = message.length > truncatedContent.length;
+      
+      compliantMessage = `${senderPrefix} ${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}`.substring(0, 160);
+    }
+
     // Send SMS messages
-    const result = await SMSService.sendBulkSMS(phoneNumbers, message);
+    const result = await SMSService.sendBulkSMS(phoneNumbers, compliantMessage);
 
     // Log the SMS sending activity
     try {
       await supabase.from('sms_logs').insert({
         chapter_id: chapterId,
         sent_by: user.id,
-        message: message,
+        message: compliantMessage, // Log the formatted message
         recipients_count: phoneNumbers.length,
         success_count: result.success,
         failed_count: result.failed,

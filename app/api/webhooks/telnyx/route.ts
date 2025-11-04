@@ -139,29 +139,21 @@ async function handleMessageStatusUpdate(
       messageStatus: payload.to?.[0]?.status,
     });
 
-    // Build update data - only include fields that have values
+    // Build update data - only include fields that exist in schema
     const updateData: any = {
       status: status,
       updated_at: new Date().toISOString(),
     };
 
+    // Note: error_message, delivered_at, failed_at columns don't exist in sms_logs table
+    // Log error details to console if present (but don't store in DB)
     if (errorMessage) {
-      console.warn('SMS Delivery Error (logged to console):', {
+      console.warn('⚠️ SMS delivery error (logged to console):', {
         messageId,
         error: errorMessage,
         status: status,
         to: payload.to?.[0]?.phone_number,
       });
-    }
-
-    // Only add delivered_at if the event is delivered (and column exists)
-    if (deliveredAt) {
-      updateData.delivered_at = deliveredAt;
-    }
-    
-    // Only add failed_at if the event is failed (and column exists)
-    if (failedAt) {
-      updateData.failed_at = failedAt;
     }
 
     // Update SMS log if exists

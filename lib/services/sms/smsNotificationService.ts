@@ -15,6 +15,24 @@ interface SMSNotificationData {
 
 export class SMSNotificationService {
   
+  // Helper function to format compliant SMS messages
+  private static formatCompliantMessage(
+    content: string,
+    maxLength: number = 160
+  ): string {
+    const senderPrefix = '[Trailblaize]';
+    const optOutText = ' Reply STOP to opt out.';
+    const complianceText = ' Msg & data rates may apply';
+    
+    const fixedLength = senderPrefix.length + 1 + optOutText.length + complianceText.length;
+    const availableForContent = maxLength - fixedLength - 3; // -3 for ellipsis safety
+    
+    const truncatedContent = content.substring(0, Math.max(0, availableForContent));
+    const needsEllipsis = content.length > truncatedContent.length;
+    
+    return `${senderPrefix} ${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}`.substring(0, maxLength);
+  }
+
   // Log SMS attempt to database
   private static async logSMS(data: SMSNotificationData, success: boolean, messageId?: string, error?: string) {
     try {
@@ -79,7 +97,9 @@ export class SMSNotificationService {
     // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
 
-    const message = `New event: ${eventTitle} on ${eventDate}. RSVP: trailblaize.net/dashboard`;
+    // Build compliant message content
+    const content = `Event: ${eventTitle} on ${eventDate}. View: trailblaize.net/dashboard`;
+    const message = this.formatCompliantMessage(content);
     
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
@@ -127,7 +147,10 @@ export class SMSNotificationService {
     // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
 
-    const message = `New message from ${senderName}: ${preview.substring(0, 50)}... View: trailblaize.net/dashboard/messages`;
+    // Build compliant message content
+    const previewText = preview.substring(0, 60);
+    const content = `New message from ${senderName}: ${previewText}${preview.length > 60 ? '...' : ''}. View: trailblaize.net/dashboard/messages`;
+    const message = this.formatCompliantMessage(content);
     
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
@@ -174,7 +197,9 @@ export class SMSNotificationService {
     // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
 
-    const message = `${requesterName} wants to connect with you on Trailblaize. View: trailblaize.net/dashboard/notifications`;
+    // Build compliant message content
+    const content = `${requesterName} wants to connect with you on Trailblaize. View: trailblaize.net/dashboard/notifications`;
+    const message = this.formatCompliantMessage(content);
     
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
@@ -221,7 +246,9 @@ export class SMSNotificationService {
     // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
 
-    const message = `${accepterName} accepted your connection request on Trailblaize!`;
+    // Build compliant message content
+    const content = `${accepterName} accepted your connection request on Trailblaize! View: trailblaize.net/dashboard/connections`;
+    const message = this.formatCompliantMessage(content);
     
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
