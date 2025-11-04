@@ -314,6 +314,15 @@ export async function POST(request: NextRequest) {
                   return 'http://localhost:3000';
                 };
 
+                console.log('🚀 Initiating SMS processing for announcement:', {
+                  announcementId: announcement.id,
+                  recipientsCount: recipientsToUse.length,
+                  messagePreview: smsMessage.substring(0, 50) + '...',
+                  processingUrl: `${getBaseUrl()}/api/sms/process`,
+                  timestamp: new Date().toISOString(),
+                });                
+
+
                 const smsProcessingUrl = `${getBaseUrl()}/api/sms/process`;    
                             
                 const fetchController = new AbortController();
