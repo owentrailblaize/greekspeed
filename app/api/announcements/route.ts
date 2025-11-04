@@ -299,85 +299,47 @@ export async function POST(request: NextRequest) {
 
               // Send SMS via dedicated processing route (async but tracked)
               if (recipientsToUse.length > 0) {
-                const getBaseUrl = () => {
-                  // In production, use NEXT_PUBLIC_APP_URL if set
-                  if (process.env.NEXT_PUBLIC_APP_URL) {
-                    return process.env.NEXT_PUBLIC_APP_URL;
-                  }
-                  
-                  // Fallback to VERCEL_URL (preview deployments)
-                  if (process.env.VERCEL_URL) {
-                    return `https://${process.env.VERCEL_URL}`;
-                  }
-                  
-                  // Local development fallback
-                  return 'http://localhost:3000';
-                };
-
                 console.log('🚀 Initiating SMS processing for announcement:', {
                   announcementId: announcement.id,
                   recipientsCount: recipientsToUse.length,
                   messagePreview: smsMessage.substring(0, 50) + '...',
-                  processingUrl: `${getBaseUrl()}/api/sms/process`,
                   timestamp: new Date().toISOString(),
-                });                
+                });
 
-
-                const smsProcessingUrl = `${getBaseUrl()}/api/sms/process`;    
-                            
-                const fetchController = new AbortController();
-                const timeoutId = setTimeout(() => {
-                  fetchController.abort();
-                }, 10000); // 10 second timeout for the fetch call
-
-                fetch(smsProcessingUrl, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    // Add internal auth header if needed
-                    'X-Internal-Request': 'true',
-                  },
-                  body: JSON.stringify({
-                    recipients: recipientsToUse,
-                    message: smsMessage,
-                    announcementId: announcement.id,
-                    chapterId: profile.chapter_id,
-                    sentBy: user.id,
-                  }),
-                  signal: fetchController.signal, // Add abort signal
-                })
-                  .then(async (response) => {
-                    clearTimeout(timeoutId);
-                    if (!response.ok) {
-                      const errorText = await response.text();
-                      throw new Error(`SMS processing failed: ${response.status} - ${errorText}`);
-                    }
-                    return response.json();
-                  })
-                  .then((result) => {
-                    console.log('✅ Announcement SMS sent:', {
-                      total: recipientsToUse.length,
-                      success: result.stats?.success || 0,
-                      failed: result.stats?.failed || 0,
-                      announcementId: announcement.id
-                    });
-                  })
-                  .catch((error) => {
-                    clearTimeout(timeoutId);
-                    if (error.name === 'AbortError') {
-                      console.error('❌ SMS processing request timed out:', {
-                        announcementId: announcement.id,
-                        timeout: '10s'
-                      });
-                    } else {
-                      console.error('❌ Announcement SMS failed:', {
-                        error: error.message,
-                        announcementId: announcement.id,
-                        stack: error.stack
-                      });
-                    }
-                    // Don't throw - SMS failure shouldn't block announcement creation
+                // Await the SMS call to ensure it completes before function returns
+                try {
+                  const result = await SMSService.sendBulkSMS(recipientsToUse, smsMessage);
+                  
+                  console.log('✅ Announcement SMS sent:', {
+                    total: recipientsToUse.length,
+                    success: result.success,
+                    failed: result.failed,
+                    announcementId: announcement.id
                   });
+
+                  // Log to database
+                  try {
+                    const supabase = createServerSupabaseClient();
+                    await supabase.from('sms_logs').insert({
+                      chapter_id: profile.chapter_id,
+                      sent_by: user.id,
+                      message: smsMessage,
+                      recipients_count: recipientsToUse.length,
+                      success_count: result.success,
+                      failed_count: result.failed,
+                      test_mode: false,
+                    });
+                  } catch (logError) {
+                    console.error('Failed to log SMS to database:', logError);
+                  }
+                } catch (error) {
+                  console.error('❌ Announcement SMS failed:', {
+                    error: error instanceof Error ? error.message : String(error),
+                    announcementId: announcement.id,
+                    stack: error instanceof Error ? error.stack : undefined
+                  });
+                  // Don't throw - SMS failure shouldn't block announcement creation
+                }
               }
             }
           }
