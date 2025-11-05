@@ -46,3 +46,5 @@ greekspeed.code-workspace
 # cursor
 .cursor/
 .cursorrules
+# Sentry Config File
+.env.sentry-build-plugin
