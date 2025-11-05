@@ -169,30 +169,25 @@ export class SMSNotificationService {
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
 
     // Format message to match Telnyx campaign sample pattern
-    // Pattern: [Trailblaize] Message notification: {content}. Check your email for details. Reply STOP to unsubscribe or HELP for help. Msg & data rates may apply
+    // Pattern: [Trailblaize] Message notification: New message from {name}. Reply STOP to opt-out. Msg & data rates may apply
     const senderPrefix = '[Trailblaize]';
     const messagePrefix = 'Message notification: ';
-    const optOutText = ' Reply STOP to unsubscribe or HELP for help.';
+    const optOutText = ' Reply STOP to opt-out.';
     const complianceText = ' Msg & data rates may apply';
 
     // Build message prefix
     const fullPrefix = `${senderPrefix} ${messagePrefix}`;
     const fixedComplianceLength = optOutText.length + complianceText.length;
     
-    // Calculate available space for content (account for ellipsis if needed: 3 chars)
-    const availableForContent = 160 - fullPrefix.length - fixedComplianceLength - 3 - 32; // -32 for "Check your email for details. "
+    // Calculate available space for sender name (account for ellipsis if needed: 3 chars)
+    const availableForSender = 160 - fullPrefix.length - fixedComplianceLength - 3 - 21; // -21 for "New message from " and "."
     
-    // Build message content - match sample format
-    // Sample pattern: "New message from {sender}: {preview}. Check your email for details."
-    const previewText = preview.substring(0, Math.min(60, availableForContent - 30)); // Reserve space for sender name
-    const senderPart = `New message from ${senderName}: ${previewText}${preview.length > previewText.length ? '...' : ''}. Check your email for details.`;
-    
-    // Truncate if needed to fit available space
-    const truncatedContent = senderPart.substring(0, Math.max(0, availableForContent));
-    const needsEllipsis = senderPart.length > truncatedContent.length;
+    // Truncate sender name if needed
+    const truncatedSenderName = senderName.substring(0, Math.max(0, availableForSender));
+    const needsEllipsis = senderName.length > truncatedSenderName.length;
 
     // Build compliant message matching Telnyx sample pattern
-    const message = `${fullPrefix}${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}`.substring(0, 160);
+    const message = `${fullPrefix}New message from ${truncatedSenderName}${needsEllipsis ? '...' : ''}.${optOutText}${complianceText}`.substring(0, 160);
     
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
@@ -239,14 +234,35 @@ export class SMSNotificationService {
     // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
 
-    // Build compliant message content
-    const content = `${requesterName} wants to connect with you on Trailblaize. View: trailblaize.net/dashboard/notifications`;
-    const message = this.formatCompliantMessage(content);
+    // Format message to match Telnyx campaign sample pattern
+    // Pattern: [Trailblaize] Connection request: {content}. Check your email for details. Reply STOP to unsubscribe or HELP for help. Msg & data rates may apply
+    const senderPrefix = '[Trailblaize]';
+    const connectionPrefix = 'Connection request: ';
+    const optOutText = ' Reply STOP to unsubscribe or HELP for help.';
+    const complianceText = ' Msg & data rates may apply';
+
+    // Build message prefix
+    const fullPrefix = `${senderPrefix} ${connectionPrefix}`;
+    const fixedComplianceLength = optOutText.length + complianceText.length;
+    
+    // Calculate available space for content (account for ellipsis if needed: 3 chars)
+    const availableForContent = 160 - fullPrefix.length - fixedComplianceLength - 3 - 32; // -32 for "Check your email for details. "
+    
+    // Build connection content - match sample format
+    // Sample: "{requesterName} wants to connect with you on Trailblaize. Check your email for details."
+    const connectionContent = `${requesterName} wants to connect with you on Trailblaize. Check your email for details.`;
+    
+    // Truncate if needed to fit available space
+    const truncatedContent = connectionContent.substring(0, Math.max(0, availableForContent));
+    const needsEllipsis = connectionContent.length > truncatedContent.length;
+
+    // Build compliant message matching Telnyx sample pattern
+    const message = `${fullPrefix}${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}`.substring(0, 160);
     
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
       messageLength: message.length,
-      messagePreview: message.substring(0, 50) + '...'
+      messagePreview: message.substring(0, 80) + '...'
     });
 
     const result = await SMSService.sendSMS({ to: formattedPhone, body: message });
@@ -288,14 +304,35 @@ export class SMSNotificationService {
     // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
 
-    // Build compliant message content
-    const content = `${accepterName} accepted your connection request on Trailblaize! View: trailblaize.net/dashboard/connections`;
-    const message = this.formatCompliantMessage(content);
+    // Format message to match Telnyx campaign sample pattern
+    // Pattern: [Trailblaize] Connection update: {content}. Check your email for details. Reply STOP to unsubscribe or HELP for help. Msg & data rates may apply
+    const senderPrefix = '[Trailblaize]';
+    const connectionPrefix = 'Connection update: ';
+    const optOutText = ' Reply STOP to unsubscribe or HELP for help.';
+    const complianceText = ' Msg & data rates may apply';
+
+    // Build message prefix
+    const fullPrefix = `${senderPrefix} ${connectionPrefix}`;
+    const fixedComplianceLength = optOutText.length + complianceText.length;
+    
+    // Calculate available space for content (account for ellipsis if needed: 3 chars)
+    const availableForContent = 160 - fullPrefix.length - fixedComplianceLength - 3 - 32; // -32 for "Check your email for details. "
+    
+    // Build connection content - match sample format
+    // Sample: "{accepterName} accepted your connection request on Trailblaize! Check your email for details."
+    const connectionContent = `${accepterName} accepted your connection request on Trailblaize! Check your email for details.`;
+    
+    // Truncate if needed to fit available space
+    const truncatedContent = connectionContent.substring(0, Math.max(0, availableForContent));
+    const needsEllipsis = connectionContent.length > truncatedContent.length;
+
+    // Build compliant message matching Telnyx sample pattern
+    const message = `${fullPrefix}${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}`.substring(0, 160);
     
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
       messageLength: message.length,
-      messagePreview: message.substring(0, 50) + '...'
+      messagePreview: message.substring(0, 80) + '...'
     });
 
     const result = await SMSService.sendSMS({ to: formattedPhone, body: message });
