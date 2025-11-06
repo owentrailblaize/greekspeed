@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { getStripe } from '@/lib/services/stripe/stripe';
 import { supabase } from '@/lib/supabase/client';
 import { PAYWALL_CONFIG } from '@/lib/config/paywall';
@@ -12,6 +13,7 @@ interface SubscriptionPaywallProps {
 
 export default function SubscriptionPaywall({ children }: SubscriptionPaywallProps) {
   const { user, loading } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
   const [isPaywallVisible, setIsPaywallVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,13 +22,13 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
   const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && !profileLoading && user && profile) {
       checkSubscriptionStatus();
     }
-  }, [user, loading]);
+  }, [user, loading, profile, profileLoading]);
 
   const checkSubscriptionStatus = async () => {
-    if (!user) return;
+    if (!user || !profile) return;
 
     // PAYWALL DISABLED: Always grant access when paywall is disabled
     if (!PAYWALL_CONFIG.enabled) {
@@ -35,20 +37,6 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
     }
 
     try {
-      // Get user profile with role and chapter_id
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role, chapter_id')
-        .eq('id', user.id)
-        .single();
-
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-        return;
-      }
-
-      if (!profile) return;
-
       // Store user role for conditional rendering
       setUserRole(profile.role);
 
@@ -188,7 +176,7 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
     }
   };
 
-  if (loading) {
+  if (loading || profileLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

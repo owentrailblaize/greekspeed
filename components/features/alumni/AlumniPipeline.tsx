@@ -5,7 +5,7 @@ import { AlumniPipelineLayout } from "./AlumniPipelineLayout";
 import { AlumniSubHeader } from "./AlumniSubHeader";
 import { Alumni } from "@/lib/alumniConstants";
 import { AlumniProfileModal } from "./AlumniProfileModal";
-import { useProfile } from "@/lib/hooks/useProfile";
+import { useProfile } from "@/lib/contexts/ProfileContext";
 // Add these imports
 import { calculateAlumniCompleteness } from '@/lib/utils/profileCompleteness';
 import { useAuth } from "@/lib/supabase/auth-context";

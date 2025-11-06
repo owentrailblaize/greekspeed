@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectItem } from "@/components/ui/select";
 import { graduationYears, industries, chapters, locations } from "@/lib/alumniConstants";
 import { US_STATES, getStateNameByCode } from "@/lib/usStates";
-import { useProfile } from "@/lib/hooks/useProfile";
+import { useProfile } from "@/lib/contexts/ProfileContext";
 
 interface FilterState {
   searchTerm: string;

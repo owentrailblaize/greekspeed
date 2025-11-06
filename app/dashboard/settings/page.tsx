@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Settings, Shield, Bell, ArrowLeft, ToggleLeft, ToggleRight, Mail, User, Phone, Calendar, Lock, User as UserIcon, HelpCircle, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { ChangePasswordForm } from '@/components/features/settings/ChangePasswordForm';
 
 export default function SettingsPage() {

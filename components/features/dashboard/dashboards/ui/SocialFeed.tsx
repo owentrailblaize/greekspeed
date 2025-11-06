@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { usePosts } from '@/lib/hooks/usePosts';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { CreatePostModal } from '@/components/features/social/CreatePostModal';
 import { PostCard } from '@/components/features/social/PostCard';
 import { Post, CreatePostRequest } from '@/types/posts';

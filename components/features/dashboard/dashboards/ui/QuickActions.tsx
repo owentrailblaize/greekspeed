@@ -5,7 +5,7 @@ import { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EventForm } from '@/components/ui/EventForm';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { toast } from 'react-toastify';
 import { createPortal } from 'react-dom';
 import { Lock } from 'lucide-react';

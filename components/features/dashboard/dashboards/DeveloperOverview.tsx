@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/supabase/auth-context';
-import { useProfile } from '@/lib/contexts/ProfileContext'; // ADD THIS IMPORT
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { getUserPermissions } from '@/lib/developerPermissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,8 +16,7 @@ import {
 } from 'lucide-react';
 
 export function DeveloperOverview() {
-  const { } = useAuth(); // REMOVE profile and isDeveloper
-  const { profile, isDeveloper } = useProfile(); // ADD THIS LINE
+  const { profile, isDeveloper } = useProfile();
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalChapters: 0,
@@ -181,7 +179,6 @@ export function DeveloperOverview() {
                   </div>
                   <div>
                     <span className="text-gray-900">User Management</span>
-
                   </div>
                 </CardTitle>
                 <p className="text-gray-600 mt-2">

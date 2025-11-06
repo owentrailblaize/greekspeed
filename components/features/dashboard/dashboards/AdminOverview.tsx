@@ -10,7 +10,7 @@ import { TasksPanel } from './ui/TasksPanel';
 import { DocsCompliancePanel } from './ui/DocsCompliancePanel';
 import { AlertsStrip } from './ui/AlertsStrip';
 import { CompactCalendarCard } from './ui/CompactCalendarCard';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { SocialFeed } from './ui/SocialFeed';
 import { DuesStatusCard } from './ui/DuesStatusCard';
 import { AdminMobileBottomNavigation } from './ui/AdminMobileBottomNavigation';

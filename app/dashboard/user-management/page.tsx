@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/supabase/auth-context';
-import { useProfile } from '@/lib/contexts/ProfileContext'; // ADD THIS IMPORT
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { hasDeveloperPermission } from '@/lib/developerPermissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,8 +16,7 @@ import { ViewChapterModal } from '@/components/user-management/ViewChapterModal'
 
 export default function UserManagementPage() {
   const router = useRouter();
-  const { } = useAuth(); // REMOVE profile and isDeveloper
-  const { profile, isDeveloper } = useProfile(); // ADD THIS LINE
+  const { profile, isDeveloper } = useProfile();
   const [activeTab, setActiveTab] = useState('users');
 
   if (!isDeveloper) {

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { FileText, AlertCircle, CheckCircle, Clock, Upload, Download, User, Calendar, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'react-toastify';
 

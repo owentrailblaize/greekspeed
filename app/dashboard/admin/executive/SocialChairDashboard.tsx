@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Progress } from "@/components/ui/progress";
 import { EventForm } from "@/components/ui/EventForm";
 import { useEvents } from "@/lib/hooks/useEvents";
-import { useProfile } from "@/lib/hooks/useProfile";
+import { useProfile } from "@/lib/contexts/ProfileContext";
 import { Event as EventType, CreateEventRequest, UpdateEventRequest } from "@/types/events";
 import { useVendors } from "@/lib/hooks/useVendors";
 import { VendorForm } from "@/components/ui/VendorForm";

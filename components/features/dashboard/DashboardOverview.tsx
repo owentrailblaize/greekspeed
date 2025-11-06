@@ -4,19 +4,15 @@ import { AlumniOverview } from './dashboards/AlumniOverview';
 import { ActiveMemberOverview } from './dashboards/ActiveMemberOverview';
 import { AdminOverview } from './dashboards/AdminOverview';
 import { DeveloperOverview } from './dashboards/DeveloperOverview';
-import { useAuth } from '@/lib/supabase/auth-context';
-import { useProfile } from '@/lib/contexts/ProfileContext'; // ADD THIS IMPORT
+import { useProfile } from '@/lib/contexts/ProfileContext';
 
 export function DashboardOverview({ userRole }: { userRole: string | null }) {
-  const { } = useAuth(); // REMOVE isDeveloper
-  const { isDeveloper } = useProfile(); // ADD THIS LINE
+  const { isDeveloper } = useProfile();
 
-  // Check if user is a developer first
   if (isDeveloper) {
     return <DeveloperOverview />;
   }
 
-  // Render role-specific dashboard based on userRole
   if (userRole === 'alumni') {
     return <AlumniOverview />;
   }
@@ -29,7 +25,6 @@ export function DashboardOverview({ userRole }: { userRole: string | null }) {
     return <AdminOverview />;
   }
   
-  // Default dashboard for fallback
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200 px-6 py-4">
@@ -39,7 +34,6 @@ export function DashboardOverview({ userRole }: { userRole: string | null }) {
         </div>
       </div>
       
-      {/* Placeholder content for fallback */}
       <div className="max-w-7xl mx-auto px-6 py-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white p-6 rounded-lg shadow-sm">

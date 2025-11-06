@@ -13,7 +13,7 @@ import { MobileTasksPage } from './ui/MobileTasksPage';
 import { MobileAnnouncementsPage } from './ui/MobileAnnouncementsPage';
 import { MobileCalendarPage } from './ui/MobileCalendarPage';
 import { MobileEventsPage } from './ui/MobileEventsPage';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 
 export function ActiveMemberOverview() {
   const { profile } = useProfile();
