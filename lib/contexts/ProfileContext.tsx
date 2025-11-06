@@ -3,11 +3,13 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { supabase } from '@/lib/supabase/client';
-import { Profile } from '@/types/profile'; // Import the correct Profile type
+import { Profile } from '@/types/profile';
+import { canAccessDeveloperPortal } from '@/lib/developerPermissions';
 
 interface ProfileContextType {
   profile: Profile | null;
   loading: boolean;
+  isDeveloper: boolean;
   refreshProfile: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
 }
@@ -18,9 +20,15 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDeveloper, setIsDeveloper] = useState(false);
 
   const fetchProfile = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setProfile(null);
+      setIsDeveloper(false);
+      setLoading(false);
+      return;
+    }
     
     try {
       const { data, error } = await supabase
@@ -31,8 +39,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
       setProfile(data);
+      setIsDeveloper(canAccessDeveloperPortal(data));
     } catch (error) {
       console.error('Error fetching profile:', error);
+      setIsDeveloper(false);
     } finally {
       setLoading(false);
     }
@@ -55,6 +65,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
       setProfile(data);
+      setIsDeveloper(canAccessDeveloperPortal(data));
     } catch (error) {
       console.error('Error updating profile:', error);
       throw error;
@@ -66,7 +77,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }, [user?.id]);
 
   return (
-    <ProfileContext.Provider value={{ profile, loading, refreshProfile, updateProfile }}>
+    <ProfileContext.Provider value={{ profile, loading, isDeveloper, refreshProfile, updateProfile }}>
       {children}
     </ProfileContext.Provider>
   );

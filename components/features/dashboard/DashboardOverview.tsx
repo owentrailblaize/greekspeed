@@ -5,9 +5,11 @@ import { ActiveMemberOverview } from './dashboards/ActiveMemberOverview';
 import { AdminOverview } from './dashboards/AdminOverview';
 import { DeveloperOverview } from './dashboards/DeveloperOverview';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { useProfile } from '@/lib/contexts/ProfileContext'; // ADD THIS IMPORT
 
 export function DashboardOverview({ userRole }: { userRole: string | null }) {
-  const { isDeveloper } = useAuth();
+  const { } = useAuth(); // REMOVE isDeveloper
+  const { isDeveloper } = useProfile(); // ADD THIS LINE
 
   // Check if user is a developer first
   if (isDeveloper) {

@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from './client';
-import { canAccessDeveloperPortal } from '@/lib/developerPermissions';
 import { trackActivity, ActivityTypes } from '@/lib/utils/activityUtils';
 
 interface ProfileData {
@@ -23,8 +22,6 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, profileData?: ProfileData) => Promise<void>;
   signOut: () => Promise<void>;
-  profile: any | null;
-  isDeveloper: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,8 +30,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<any | null>(null);
-  const [isDeveloper, setIsDeveloper] = useState(false);
 
   useEffect(() => {
     
@@ -83,30 +78,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  // Add profile loading logic
-  useEffect(() => {
-    const loadProfile = async () => {
-      if (user) {
-        try {
-          const { data: profileData, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-
-          if (profileData) {
-            setProfile(profileData);
-            setIsDeveloper(canAccessDeveloperPortal(profileData));
-          }
-        } catch (error) {
-          console.error('Error loading profile:', error);
-        }
-      }
-    };
-
-    loadProfile();
-  }, [user]);
 
   const syncExistingAlumni = async (userId: string) => {
     try {
@@ -371,8 +342,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     loading,
-    profile,
-    isDeveloper,
     signIn,
     signUp,
     signOut

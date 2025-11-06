@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { useProfile } from '@/lib/contexts/ProfileContext'; // ADD THIS IMPORT
 import { getUserPermissions } from '@/lib/developerPermissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,7 +17,8 @@ import {
 } from 'lucide-react';
 
 export function DeveloperOverview() {
-  const { profile, isDeveloper } = useAuth();
+  const { } = useAuth(); // REMOVE profile and isDeveloper
+  const { profile, isDeveloper } = useProfile(); // ADD THIS LINE
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalChapters: 0,
