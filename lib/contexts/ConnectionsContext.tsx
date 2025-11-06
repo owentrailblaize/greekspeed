@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
 
 export interface Connection {
@@ -50,6 +50,9 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Use useRef to store stable function reference
+  const fetchConnectionsRef = useRef<(() => Promise<void>) | null>(null);
+
   const fetchConnections = useCallback(async () => {
     if (!user?.id) return;
     
@@ -71,7 +74,11 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
     }
   }, [user?.id]);
 
-  const sendConnectionRequest = async (recipientId: string, message?: string) => {
+  // Store the latest fetchConnections in ref
+  fetchConnectionsRef.current = fetchConnections;
+
+  // Wrap other functions that use fetchConnections with useCallback
+  const sendConnectionRequest = useCallback(async (recipientId: string, message?: string) => {
     if (!user) throw new Error('User not authenticated');
     
     try {
@@ -91,14 +98,17 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
       }
       
       const data = await response.json();
-      await fetchConnections(); // Refresh connections
+      // Use ref to call the latest function
+      if (fetchConnectionsRef.current) {
+        await fetchConnectionsRef.current();
+      }
       return data.connection;
     } catch (err) {
       throw err;
     }
-  };
+  }, [user]);
 
-  const updateConnectionStatus = async (connectionId: string, status: 'accepted' | 'declined' | 'blocked') => {
+  const updateConnectionStatus = useCallback(async (connectionId: string, status: 'accepted' | 'declined' | 'blocked') => {
     try {
       const response = await fetch(`/api/connections/${connectionId}`, {
         method: 'PATCH',
@@ -112,14 +122,17 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
       }
       
       const data = await response.json();
-      await fetchConnections(); // Refresh connections
+      // Use ref to call the latest function
+      if (fetchConnectionsRef.current) {
+        await fetchConnectionsRef.current();
+      }
       return data.connection;
     } catch (err) {
       throw err;
     }
-  };
+  }, []);
 
-  const cancelConnectionRequest = async (connectionId: string) => {
+  const cancelConnectionRequest = useCallback(async (connectionId: string) => {
     try {
       const response = await fetch(`/api/connections/${connectionId}`, {
         method: 'DELETE'
@@ -130,13 +143,16 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
         throw new Error(errorData.error || 'Failed to cancel connection request');
       }
       
-      await fetchConnections(); // Refresh connections
+      // Use ref to call the latest function
+      if (fetchConnectionsRef.current) {
+        await fetchConnectionsRef.current();
+      }
     } catch (err) {
       throw err;
     }
-  };
+  }, []);
 
-  const getConnectionStatus = (otherUserId: string): 'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'declined' | 'blocked' => {
+  const getConnectionStatus = useCallback((otherUserId: string): 'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'declined' | 'blocked' => {
     if (!user || !connections.length) return 'none';
     
     const connection = connections.find(conn => 
@@ -151,9 +167,9 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
     }
     
     return connection.status as 'accepted' | 'declined' | 'blocked';
-  };
+  }, [user, connections]);
 
-  const getConnectionId = (otherUserId: string): string | null => {
+  const getConnectionId = useCallback((otherUserId: string): string | null => {
     if (!user || !connections.length) return null;
     
     const connection = connections.find(conn => 
@@ -162,13 +178,15 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
     );
     
     return connection?.id || null;
-  };
+  }, [user, connections]);
 
+  // Fixed: Remove fetchConnections from dependency array, use user?.id only
   useEffect(() => {
-    if (user?.id) {
-      fetchConnections();
+    if (user?.id && fetchConnectionsRef.current) {
+      fetchConnectionsRef.current();
     }
-  }, [user?.id, fetchConnections]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]); // Only depend on user?.id, not fetchConnections
 
   const value = {
     connections,

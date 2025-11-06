@@ -34,6 +34,7 @@ export interface ChapterMember {
   avatar?: string;
   verified: boolean;
   mutualConnections: Array<{
+    id: string; // ✅ Add this
     name: string;
     avatar?: string;
   }>;

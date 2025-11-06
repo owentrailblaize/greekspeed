@@ -8,6 +8,7 @@ import { AlumniProfileModal } from "./AlumniProfileModal";
 import { useProfile } from "@/lib/hooks/useProfile";
 // Add these imports
 import { calculateAlumniCompleteness } from '@/lib/utils/profileCompleteness';
+import { useAuth } from "@/lib/supabase/auth-context";
 
 interface FilterState {
   searchTerm: string;
@@ -29,6 +30,7 @@ interface PaginationState {
 
 export function AlumniPipeline() {
   const { profile, loading: profileLoading } = useProfile();
+  const { session } = useAuth(); // ✅ Add this
   const [alumni, setAlumni] = useState<Alumni[]>([]);
   const [sortedAlumni, setSortedAlumni] = useState<Alumni[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,7 +138,15 @@ export function AlumniPipeline() {
         params.append('userChapter', profile.chapter);
       }
         
-      const response = await fetch(`/api/alumni?${params.toString()}`);
+      // ✅ Add auth headers like chapter members does
+      const headers: HeadersInit = {};
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
+      const response = await fetch(`/api/alumni?${params.toString()}`, {
+        headers // ✅ Include headers
+      });
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -163,7 +173,7 @@ export function AlumniPipeline() {
     } finally {
       setLoading(false);
     }
-  }, [filters, profile, pagination.page]);
+  }, [filters, profile, pagination.page, session?.access_token]); // ✅ Add session to dependencies
 
   // Only fetch alumni when profile is loaded and not loading
   useEffect(() => {

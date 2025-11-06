@@ -42,8 +42,8 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
         : undefined,
       avatar: member.avatar_url || undefined,
       verified: member.role === 'admin',
-      mutualConnections: [],
-      mutualConnectionsCount: 0,
+      mutualConnections: (member as any).mutualConnections || [], // ✅ Use from API
+      mutualConnectionsCount: (member as any).mutualConnectionsCount || 0, // ✅ Use from API
       description: memberDescription
     };
   });
