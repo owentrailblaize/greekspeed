@@ -291,21 +291,94 @@ Current baseline metrics for the Trailblaize application to establish capacity p
 
 ## Scaling Capacity Estimates
 
-### Current Capacity (Conservative Estimate)
+### Preliminary Capacity Analysis
 
-Based on current metrics:
+#### Database Connection Pool Capacity
 
-| Metric | Current Usage | Estimated Max | Confidence |
-|--------|---------------|---------------|------------|
-| **Concurrent Users** | [Estimate: 5-10] | **50-100** | Medium |
-| **Daily Active Users** | [Estimate: 20-50] | **200-500** | Medium |
-| **API Requests/Hour** | [Estimate: 500-1000] | **10,000-20,000** | Medium |
-| **Database Queries/Second** | [Estimate: 50-100] | **500-1000** | Low |
+| Metric | Current | Theoretical Limit | Estimated Max (Safe) | Confidence |
+|--------|---------|-------------------|----------------------|------------|
+| **Total Connections** | 24 | 200 | 150-180 (75-90%) | Medium |
+| **Active Connections** | 2 | 200 | N/A | Medium |
+| **Connection Pool Usage** | 12% | 100% | 75-90% (safe operating range) | Medium |
+| **Available Headroom** | 176 connections | - | ~6-7x current usage | Medium |
 
-**Assumptions**:
-- Current connection usage: 12% (24/200)
-- Query performance remains stable
-- No major bottlenecks are hit
+**Analysis**:
+- Current usage is very healthy (12% of capacity)
+- Theoretical maximum: 200 connections
+- Safe operating range: 150-180 connections (75-90%) to maintain buffer
+- **Estimated capacity multiplier**: ~6-7x current usage before hitting safe limits
+- **Limitation**: Does not account for user-to-connection ratio or other bottlenecks
+
+**Confidence**: Medium - Based on clear connection pool math, but actual user capacity unknown without load testing.
+
+---
+
+#### Application Layer Capacity
+
+| Component | Current Performance | Status | Estimated Impact on Capacity | Confidence |
+|-----------|---------------------|--------|------------------------------|------------|
+| **Average Query Time** | 3.76ms | ✅ Excellent | Positive - Good performance | Medium |
+| **Slow Queries (>1s)** | Multiple queries with 7+ second max times | ⚠️ Problematic | Negative - Will limit capacity before connection pool | Medium |
+| **Cache Hit Rate** | 99.99%+ | ✅ Excellent | Positive - Efficient caching | High |
+| **API Success Rate** | 100% | ✅ Excellent | Positive - Stable system | Low (small sample) |
+| **Query Performance Bottlenecks** | 7+ second max times | ⚠️ Critical | **Will likely limit capacity** | High |
+
+**Analysis**:
+- Average query performance is excellent (3.76ms)
+- **Critical Issue**: Slow queries with 7+ second max times will likely become the bottleneck before connection pool limits
+- Must fix slow queries before accurate capacity can be determined
+- Cache performance is excellent, reducing database load
+
+**Confidence**: Medium - Performance data is good, but slow queries are a known limitation.
+
+---
+
+#### Overall Capacity Estimate (Preliminary)
+
+| Capacity Type | Estimated Multiplier | Estimated Max | Confidence | Notes |
+|---------------|---------------------|---------------|------------|-------|
+| **Database Connection Capacity** | ~6-7x current | ~150-180 connections | Medium | Based on connection pool math |
+| **Concurrent User Capacity** | Unknown | Unknown | Low | Requires load testing to determine |
+| **Safe Operating Capacity** | ~6-7x current | Conservative estimate | Low-Medium | Assumes no other bottlenecks appear |
+
+**Key Findings**:
+
+1. **Database Connection Pool**: Can theoretically handle ~6-7x current usage based on connection math
+   - **Confidence**: Medium
+   - **Limitation**: Unknown user-to-connection ratio
+
+2. **Application Performance**: Good on average, but slow queries are a concern
+   - **Confidence**: Medium
+   - **Critical Issue**: 7+ second query times will limit capacity
+
+3. **Overall Capacity**: **Roughly 6-7x current usage** (very conservative estimate)
+   - **Confidence**: Low-Medium
+   - **Assumptions**: 
+     - Connection usage scales linearly with users
+     - Slow queries are fixed or don't impact all users simultaneously
+     - No other bottlenecks appear (API routes, external services, etc.)
+   - **Needs Validation**: Load testing required for accurate numbers
+
+---
+
+### What We Cannot Determine Without Load Testing
+
+**Critical Unknowns**:
+1. ❌ **Actual Concurrent User Capacity**: How many simultaneous users can the app handle?
+2. ❌ **Performance Degradation Curve**: How do response times change under load?
+3. ❌ **Bottleneck Identification**: What fails first - database, API routes, or external services?
+4. ❌ **Resource Utilization**: Memory, CPU usage patterns under load
+5. ❌ **Error Patterns**: When and how do errors start appearing?
+6. ❌ **Breaking Point**: Absolute maximum capacity before system failure
+
+**Why Load Testing is Required**:
+- Connection pool math gives us theoretical limits, but not actual user capacity
+- Performance degradation is unknown (will slow queries become worse under load?)
+- Other bottlenecks may appear before connection limits are reached
+- Real-world user behavior patterns are unknown
+- Cascading failures and recovery behavior cannot be predicted
+
+---
 
 ### Scaling Triggers
 
@@ -313,8 +386,10 @@ Based on current metrics:
 |--------|-------------------|-------------------|-----------------|
 | Connection Pool Usage | >80% (160 connections) | >90% (180 connections) | Upgrade compute or optimize |
 | Query P95 Time | >200ms | >500ms | Add indexes, optimize queries |
+| Query Max Time | >1s | >5s | **URGENT**: Fix slow queries immediately |
 | Error Rate | >1% | >5% | Investigate immediately |
 | Database Size | >80% of plan limit | >95% of plan limit | Upgrade plan or archive data |
+| Response Time (P95) | >1000ms | >2000ms | Optimize API routes, add caching |
 
 ---
 
