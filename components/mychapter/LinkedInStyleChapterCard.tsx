@@ -154,10 +154,13 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
         return (
           <Button
             onClick={handleMessageClick}
-            className="w-full bg-navy-600 hover:bg-navy-700 text-white rounded-full font-medium h-7 sm:h-10 text-xs sm:text-sm"
+            className="w-full text-white rounded-full font-medium h-7 sm:h-10 text-xs sm:text-sm flex items-center justify-center shadow-sm border border-blue-300/20"
+            style={{
+              background: 'linear-gradient(340deg, rgba(228, 236, 255, 1) 0%, rgba(130, 130, 255, 0.95) 34%, rgba(35, 70, 224, 0.93) 85%)'
+            }}
           >
-            <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-            Message
+            <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+            Connected
           </Button>
         );
       
