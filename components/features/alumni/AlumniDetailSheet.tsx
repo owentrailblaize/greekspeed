@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { Alumni } from "@/lib/alumniConstants";
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
-import { useMutualConnections } from "@/lib/hooks/useMutualConnections";
 
 interface AlumniDetailSheetProps {
   alumni: Alumni | null;
@@ -27,8 +26,10 @@ interface AlumniDetailSheetProps {
 }
 
 export function AlumniDetailSheet({ alumni, isOpen, onClose }: AlumniDetailSheetProps) {
-  // Fetch real mutual connections
-  const { mutualConnections, count: mutualConnectionsCount, loading: mutualLoading } = useMutualConnections(alumni?.id);
+  // Use mutual connections from alumni prop (already calculated by API)
+  const mutualConnections = alumni?.mutualConnections || [];
+  const mutualConnectionsCount = alumni?.mutualConnectionsCount || 0;
+  const mutualLoading = false; // No longer loading since it comes from API
   
   if (!alumni) return null;
 
@@ -150,8 +151,8 @@ export function AlumniDetailSheet({ alumni, isOpen, onClose }: AlumniDetailSheet
             <div className="space-y-3">
               <h3 className="font-medium text-gray-900">Mutual Connections</h3>
               <div className="flex flex-wrap gap-2">
-                {mutualConnections.slice(0, 5).map((connection) => (
-                  <Badge key={connection.id} variant="outline" className="text-xs">
+                {mutualConnections.slice(0, 5).map((connection, i) => (
+                  <Badge key={connection.id || `mutual-${i}`} variant="outline" className="text-xs">
                     {connection.name}
                   </Badge>
                 ))}

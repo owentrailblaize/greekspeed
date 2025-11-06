@@ -10,7 +10,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ClickableField } from '@/components/shared/ClickableField';
 import { ActivityIndicator } from '@/components/shared/ActivityIndicator';
-import { useMutualConnections } from "@/lib/hooks/useMutualConnections";
 
 // Add this function at the top of the file, outside the component
 const getChapterName = (chapterId: string, isMobile: boolean = false): string => {
@@ -49,8 +48,10 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
   
-  // Fetch real mutual connections
-  const { mutualConnections, count: mutualConnectionsCount, loading: mutualLoading } = useMutualConnections(alumni.id);
+  // Use mutual connections from alumni prop (already calculated by API)
+  const mutualConnections = alumni.mutualConnections || [];
+  const mutualConnectionsCount = alumni.mutualConnectionsCount || 0;
+  const mutualLoading = false; // No longer loading since it comes from API
 
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel', e: React.MouseEvent) => {
     // Stop event propagation to prevent card click from triggering
@@ -305,7 +306,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
               <>
                 <div className="flex -space-x-1">
                   {mutualConnections.slice(0, 3).map((c, i) => (
-                    <div key={c.id} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative z-10" style={{ zIndex: 10 - i }}>
+                    <div key={c.id || `mutual-${i}`} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative z-10" style={{ zIndex: 10 - i }}>
                       {c.avatar ? (
                         <ImageWithFallback 
                           src={c.avatar} 

@@ -7,7 +7,6 @@ import { useConnections } from "@/lib/contexts/ConnectionsContext";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutualConnections } from "@/lib/hooks/useMutualConnections";
 
 interface LinkedInStyleChapterCardProps {
   member: ChapterMember;
@@ -39,8 +38,10 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
   // Generate description if not provided
   const memberDescription = description || '';
   
-  // Fetch real mutual connections
-  const { mutualConnections, count: connectionsCount, loading: mutualLoading } = useMutualConnections(member.id);
+  // Use mutual connections from member prop (already calculated by API)
+  const mutualConnections = member.mutualConnections || [];
+  const connectionsCount = member.mutualConnectionsCount || 0;
+  const mutualLoading = false; // No longer loading since it comes from API
 
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel', e: React.MouseEvent) => {
     e.stopPropagation();
@@ -239,8 +240,8 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
             ) : (
               <>
                 <div className="flex -space-x-1 justify-center">
-                  {mutualConnections.slice(0, 3).map((c) => (
-                    <div key={c.id} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
+                  {mutualConnections.slice(0, 3).map((c, i) => (
+                    <div key={c.id || `mutual-${i}`} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
                       {c.avatar ? (
                         <img 
                           src={c.avatar} 

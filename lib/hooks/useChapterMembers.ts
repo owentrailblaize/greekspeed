@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { ChapterMemberData } from '@/types/chapter';
+import { useAuth } from '@/lib/supabase/auth-context';
 
 export function useChapterMembers(chapterId?: string | null, excludeAlumni: boolean = false) {
+  const { session } = useAuth();
   const [members, setMembers] = useState<ChapterMemberData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -16,26 +17,27 @@ export function useChapterMembers(chapterId?: string | null, excludeAlumni: bool
     const fetchMembers = async () => {
       try {
         setLoading(true);
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
+        
+        const params = new URLSearchParams({
+          chapter_id: chapterId,
+          exclude_alumni: excludeAlumni.toString()
+        });
 
-        let query = supabase
-          .from('chapter_members_view')
-          .select('*')
-          .eq('chapter_id', chapterId);
-
-        // Only exclude alumni if explicitly requested
-        if (excludeAlumni) {
-          query = query.neq('role', 'alumni');
+        const headers: HeadersInit = {};
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
         }
 
-        const { data, error } = await query.order('created_at', { ascending: false });
+        const response = await fetch(`/api/chapter/members?${params.toString()}`, {
+          headers
+        });
 
-        if (error) throw error;
+        if (!response.ok) {
+          throw new Error('Failed to fetch members');
+        }
 
-        setMembers(data || []);
+        const data = await response.json();
+        setMembers(data.members || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch members');
       } finally {
@@ -44,7 +46,7 @@ export function useChapterMembers(chapterId?: string | null, excludeAlumni: bool
     };
 
     fetchMembers();
-  }, [chapterId, excludeAlumni]);
+  }, [chapterId, excludeAlumni, session?.access_token]);
 
   return { members, loading, error };
 } 

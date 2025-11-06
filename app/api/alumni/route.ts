@@ -18,6 +18,152 @@ const getChapterId = async (supabase: any, chapterIdentifier: string): Promise<s
   return data?.id || null;
 };
 
+/**
+ * Calculate mutual connections for all alumni in a single efficient query
+ * @param supabase - Supabase client
+ * @param viewerId - Current user's ID
+ * @param alumniUserIds - Array of alumni user IDs to check mutual connections for
+ * @returns Map of alumniUserId -> mutual connections array
+ */
+async function getMutualConnectionsForAlumni(
+  supabase: any,
+  viewerId: string,
+  alumniUserIds: string[]
+): Promise<Map<string, Array<{ id: string; name: string; avatar: string | null }>>> {
+  if (!viewerId || alumniUserIds.length === 0) {
+    return new Map();
+  }
+
+  try {
+    // Step 1: Get viewer's accepted connections (single query)
+    const { data: viewerConnections, error: viewerError } = await supabase
+      .from('connections')
+      .select('requester_id, recipient_id')
+      .eq('status', 'accepted')
+      .or(`requester_id.eq.${viewerId},recipient_id.eq.${viewerId}`);
+
+    if (viewerError || !viewerConnections) {
+      console.error('Error fetching viewer connections:', viewerError);
+      return new Map();
+    }
+
+    // Extract viewer's connection IDs
+    const viewerConnectionIds = new Set(
+      viewerConnections.map((conn: any) =>
+        conn.requester_id === viewerId ? conn.recipient_id : conn.requester_id
+      )
+    );
+
+    if (viewerConnectionIds.size === 0) {
+      return new Map(); // No connections, so no mutual connections
+    }
+
+    // Step 2: Get all accepted connections for all alumni in one query
+    // This is much more efficient than N separate queries
+    const { data: allAlumniConnections, error: alumniConnectionsError } = await supabase
+      .from('connections')
+      .select('requester_id, recipient_id')
+      .eq('status', 'accepted')
+      .or(
+        alumniUserIds
+          .map((id) => `requester_id.eq.${id},recipient_id.eq.${id}`)
+          .join(',')
+      );
+
+    if (alumniConnectionsError || !allAlumniConnections) {
+      console.error('Error fetching alumni connections:', alumniConnectionsError);
+      return new Map();
+    }
+
+    // Step 3: Group connections by alumni user ID
+    const alumniConnectionsMap = new Map<string, Set<string>>();
+    
+    for (const conn of allAlumniConnections) {
+      const alumniId = alumniUserIds.find(
+        (id) => conn.requester_id === id || conn.recipient_id === id
+      );
+      
+      if (alumniId) {
+        const otherUserId = conn.requester_id === alumniId 
+          ? conn.recipient_id 
+          : conn.requester_id;
+        
+        if (!alumniConnectionsMap.has(alumniId)) {
+          alumniConnectionsMap.set(alumniId, new Set());
+        }
+        alumniConnectionsMap.get(alumniId)!.add(otherUserId);
+      }
+    }
+
+    // Step 4: Find mutual connections (intersection of viewer's and each alumni's connections)
+    const mutualConnectionsMap = new Map<
+      string,
+      Array<{ id: string; name: string; avatar: string | null }>
+    >();
+
+    const mutualConnectionIds = new Set<string>();
+    
+    for (const [alumniId, alumniConnectionIds] of alumniConnectionsMap.entries()) {
+      // Find intersection
+      const mutualIds = Array.from(alumniConnectionIds).filter((id) =>
+        viewerConnectionIds.has(id)
+      );
+      
+      if (mutualIds.length > 0) {
+        mutualConnectionsMap.set(alumniId, []); // Initialize with empty array
+        mutualIds.forEach((id) => mutualConnectionIds.add(id));
+      }
+    }
+
+    // Step 5: Fetch profile details for all mutual connections in one query
+    if (mutualConnectionIds.size > 0) {
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, first_name, last_name, avatar_url')
+        .in('id', Array.from(mutualConnectionIds));
+
+      if (!profilesError && profiles) {
+        const profilesMap = new Map(
+          profiles.map((profile: any) => [
+            profile.id,
+            {
+              id: profile.id,
+              name:
+                profile.full_name ||
+                `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
+              avatar: profile.avatar_url,
+            },
+          ])
+        );
+
+        // Step 6: Build final mutual connections map
+        for (const [alumniId, alumniConnectionIds] of alumniConnectionsMap.entries()) {
+          const mutualIds = Array.from(alumniConnectionIds).filter((id) =>
+            viewerConnectionIds.has(id)
+          );
+          
+          if (mutualIds.length > 0) {
+            const mutualConnections = mutualIds
+              .map((id) => profilesMap.get(id))
+              .filter((profile) => profile !== undefined) as Array<{
+              id: string;
+              name: string;
+              avatar: string | null;
+            }>;
+            
+            mutualConnectionsMap.set(alumniId, mutualConnections);
+          }
+        }
+      }
+    }
+
+    return mutualConnectionsMap;
+  } catch (error) {
+    console.error('Error calculating mutual connections:', error);
+    return new Map();
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Check environment variables
@@ -235,6 +381,23 @@ export async function GET(request: NextRequest) {
         // Calculate total count
         const totalCount = Math.max(chapterNameResult.count || 0, chapterIdResult.count || 0);
         
+        // Calculate mutual connections for all alumni if viewer is logged in
+        let mutualConnectionsMap = new Map<string, Array<{ id: string; name: string; avatar: string | null }>>();
+
+        if (viewerId && uniqueResults && uniqueResults.length > 0) {
+          const alumniUserIds = uniqueResults
+            .map((a: any) => a.user_id || a.id)
+            .filter((id: string | null) => id && id !== viewerId);
+          
+          if (alumniUserIds.length > 0) {
+            mutualConnectionsMap = await getMutualConnectionsForAlumni(
+              supabase,
+              viewerId,
+              alumniUserIds
+            );
+          }
+        }
+        
         // 🔥 KEY CHANGE: Use main branch transformation with activity fields and privacy
         const transformedAlumni = uniqueResults?.map(alumni => {
           const alumniUserId = alumni.user_id || alumni.id;
@@ -242,6 +405,14 @@ export async function GET(request: NextRequest) {
           const isAdmin = viewerRole === 'admin';
           const canSeeEmail = isOwner || isAdmin || (alumni.is_email_public !== false);
           const canSeePhone = isOwner || isAdmin || (alumni.is_phone_public !== false);
+          
+          // Get mutual connections from our calculated map and transform to match type
+          const mutualConnectionsData = mutualConnectionsMap.get(alumniUserId) || [];
+          const mutualConnections = mutualConnectionsData.map(mc => ({
+            id: mc.id,  // ✅ Add the id field
+            name: mc.name,
+            avatar: mc.avatar || undefined
+          }));
           
           return {
             id: alumniUserId,
@@ -260,8 +431,8 @@ export async function GET(request: NextRequest) {
             isPhonePublic: alumni.is_phone_public !== false,
             location: alumni.location,                    // ✅ Direct from alumni table
             description: alumni.description || `Experienced professional in ${alumni.industry}.`,
-            mutualConnections: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections : [],
-            mutualConnectionsCount: Array.isArray(alumni.mutual_connections) ? alumni.mutual_connections.length : 0,
+            mutualConnections: mutualConnections, // ✅ Use calculated mutual connections
+            mutualConnectionsCount: mutualConnections.length, // ✅ Use calculated count
             avatar: alumni.avatar_url || alumni.profile?.avatar_url,
             verified: alumni.verified,
             isActivelyHiring: alumni.is_actively_hiring,  // ✅ Direct from alumni table
@@ -638,13 +809,38 @@ export async function GET(request: NextRequest) {
       }, { status: 500 })
     }
 
+    // Calculate mutual connections for all alumni if viewer is logged in
+    let mutualConnectionsMap = new Map<string, Array<{ id: string; name: string; avatar: string | null }>>();
+
+    if (viewerId && alumni && alumni.length > 0) {
+      const alumniUserIds = alumni
+        .map((a: any) => a.user_id || a.id)
+        .filter((id: string | null) => id && id !== viewerId);
+      
+      if (alumniUserIds.length > 0) {
+        mutualConnectionsMap = await getMutualConnectionsForAlumni(
+          supabase,
+          viewerId,
+          alumniUserIds
+        );
+      }
+    }
+
     // 🔥 KEY CHANGE: Use main branch transformation with activity fields and privacy
-    const transformedAlumni = alumni?.map(alumni => {
+    const transformedAlumni = alumni?.map((alumni: any) => {
       const alumniUserId = alumni.user_id || alumni.id;
-      const isOwner = viewerId && (viewerId === alumniUserId);
+      const isOwner = viewerId && viewerId === alumniUserId;
       const isAdmin = viewerRole === 'admin';
       const canSeeEmail = isOwner || isAdmin || (alumni.is_email_public !== false);
       const canSeePhone = isOwner || isAdmin || (alumni.is_phone_public !== false);
+      
+      // Get mutual connections from our calculated map and transform to match type
+      const mutualConnectionsData = mutualConnectionsMap.get(alumniUserId) || [];
+      const mutualConnections = mutualConnectionsData.map(mc => ({
+        id: mc.id,
+        name: mc.name,
+        avatar: mc.avatar || undefined
+      }));
       
       return {
         id: alumniUserId,
@@ -663,15 +859,15 @@ export async function GET(request: NextRequest) {
         isPhonePublic: alumni.is_phone_public !== false,
         location: alumni.location,                    // ✅ Direct from alumni table
         description: alumni.description || `Experienced professional in ${alumni.industry}.`,
-        mutualConnections: alumni.mutual_connections || [],
-        mutualConnectionsCount: alumni.mutual_connections?.length || 0,
+        mutualConnections: mutualConnections, // ✅ Use calculated mutual connections
+        mutualConnectionsCount: mutualConnections.length, // ✅ Use calculated count
         avatar: alumni.avatar_url || alumni.profile?.avatar_url,
         verified: alumni.verified,
         isActivelyHiring: alumni.is_actively_hiring,  // ✅ Direct from alumni table
         lastContact: alumni.last_contact,
         tags: alumni.tags || [],
         hasProfile: !!alumni.user_id,
-        // 🔥 NEW: Activity data from profiles table
+        // ✅ NEW: Activity data from profiles table
         lastActiveAt: alumni.profile?.last_active_at,
         lastLoginAt: alumni.profile?.last_login_at
       };
