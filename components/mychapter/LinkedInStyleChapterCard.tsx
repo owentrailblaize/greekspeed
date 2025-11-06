@@ -264,7 +264,7 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
                 <span className="text-xs sm:text-sm text-gray-600 leading-tight text-center">
                   {connectionsCount > 0 
                     ? `${connectionsCount} mutual connection${connectionsCount !== 1 ? 's' : ''}`
-                    : 'No mutual connections'
+                    : ''
                   }
                 </span>
               </>

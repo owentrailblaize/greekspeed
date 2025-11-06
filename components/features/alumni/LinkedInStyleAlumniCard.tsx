@@ -257,7 +257,7 @@ export function LinkedInStyleAlumniCard({
                 <span className="text-sm text-gray-600">
                   {mutualConnections.length > 0 
                     ? `${mutualConnections[0]?.name || 'Unknown'} and ${mutualConnectionsCount - 1} other mutual connections`
-                    : 'No mutual connections'
+                    : ''
                   }
                 </span>
               </>

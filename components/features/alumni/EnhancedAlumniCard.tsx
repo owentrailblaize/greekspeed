@@ -344,10 +344,8 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
                 </span>
               </>
             ) : (
-              /* Mobile: Show nothing, Desktop: Show "No mutual connections" */
-              <div className="text-xs sm:text-sm text-gray-400 text-center hidden sm:block">
-                No mutual connections
-              </div>
+              /* Mobile: Show nothing, Desktop: Show nothing when no mutual connections */
+              null
             )}
           </div>
 
