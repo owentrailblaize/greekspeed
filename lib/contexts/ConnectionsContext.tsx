@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, useEffect, useMemo, useCallback, ReactNode } from 'react';
+import { useCallback, useMemo } from 'react';
+import type { ReactNode } from 'react';
 
 import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
 import {
@@ -33,23 +34,17 @@ interface ConnectionsContextType {
   refreshConnections: () => Promise<void>;
 }
 
-const ConnectionsContext = createContext<ConnectionsContextType | undefined>(undefined);
-
 export function ConnectionsProvider({ children }: { children: ReactNode }) {
+  return <>{children}</>;
+}
+
+export function useConnections(): ConnectionsContextType {
   const dispatch = useAppDispatch();
   const { loading, error } = useAppSelector(selectConnectionsState);
   const connections = useAppSelector(selectAllConnections);
   const connectionEntities = useAppSelector(selectConnectionEntities);
   const userId = useAppSelector((state) => state.auth.user?.id);
   const requesterProfile = useAppSelector((state) => state.profile.profile);
-
-  useEffect(() => {
-    if (userId) {
-      void dispatch(fetchConnections({ force: false }));
-    } else {
-      dispatch(clearConnectionsAction());
-    }
-  }, [dispatch, userId]);
 
   const sendConnectionRequest = useCallback(
     async (recipientId: string, message?: string) => {
@@ -217,7 +212,7 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
     }
   }, [dispatch, userId]);
 
-  const value = useMemo(
+  return useMemo(
     () => ({
       connections,
       loading,
@@ -241,18 +236,4 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
       updateConnectionStatus,
     ],
   );
-
-  return (
-    <ConnectionsContext.Provider value={value}>
-      {children}
-    </ConnectionsContext.Provider>
-  );
-}
-
-export function useConnections() {
-  const context = useContext(ConnectionsContext);
-  if (context === undefined) {
-    throw new Error('useConnections must be used within a ConnectionsProvider');
-  }
-  return context;
 }
