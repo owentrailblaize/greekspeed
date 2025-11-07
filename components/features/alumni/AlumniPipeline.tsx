@@ -53,6 +53,8 @@ export function AlumniPipeline() {
     activelyHiring: false,
     showActiveOnly: false, // 🔥 NEW: Active alumni filter
   });
+  // Debounced filters for API calls (500ms delay)
+  const [debouncedFilters, setDebouncedFilters] = useState<FilterState>(filters);
   const [selectedAlumniForModal, setSelectedAlumniForModal] = useState<Alumni | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -120,17 +122,46 @@ export function AlumniPipeline() {
   
   // Add refs to prevent concurrent fetches
   const fetchingRef = useRef(false);
-  const filtersRef = useRef(filters);
+  const filtersRef = useRef(debouncedFilters);
   const paginationRef = useRef(pagination);
+  const fetchAlumniRef = useRef<((currentFilters?: FilterState, currentPage?: number) => Promise<void>) | undefined>(undefined);
+
+  // Debounce filter changes - 500ms delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedFilters(filters);
+    }, 500); // 500ms debounce as per requirements
+
+    return () => clearTimeout(timer); // Cleanup on unmount or filter change
+  }, [filters]);
 
   // Keep refs in sync with state
   useEffect(() => {
-    filtersRef.current = filters;
-  }, [filters]);
+    filtersRef.current = debouncedFilters;
+  }, [debouncedFilters]);
 
   useEffect(() => {
     paginationRef.current = pagination;
   }, [pagination]);
+
+  // Memoize filter dependencies for stable comparison
+  const filterDependency = useMemo(() => {
+    return {
+      searchTerm: debouncedFilters.searchTerm,
+      graduationYear: debouncedFilters.graduationYear,
+      industry: debouncedFilters.industry,
+      state: debouncedFilters.state,
+      activelyHiring: debouncedFilters.activelyHiring,
+      showActiveOnly: debouncedFilters.showActiveOnly,
+    };
+  }, [
+    debouncedFilters.searchTerm,
+    debouncedFilters.graduationYear,
+    debouncedFilters.industry,
+    debouncedFilters.state,
+    debouncedFilters.activelyHiring,
+    debouncedFilters.showActiveOnly,
+  ]);
 
   const fetchAlumni = useCallback(async (currentFilters?: FilterState, currentPage?: number) => {
     // Prevent concurrent fetches
@@ -197,31 +228,35 @@ export function AlumniPipeline() {
     }
   }, [profileChapter, accessToken]); // Only depend on stable values
 
-  // Single useEffect - fetch when profile is ready
+  // Keep fetchAlumni ref in sync
   useEffect(() => {
-    if (profileLoading || profileId === undefined || !profileChapter) {
-      return;
-    }
-    
-    if (fetchingRef.current) {
-      return;
-    }
-    
-    fetchAlumni();
-  }, [profileId, profileLoading, profileChapter, accessToken, fetchAlumni]);
+    fetchAlumniRef.current = fetchAlumni;
+  }, [fetchAlumni]);
 
-  // Separate effect for filters and pagination changes
+  // Consolidated useEffect - handles all fetch triggers
   useEffect(() => {
+    // Don't fetch if profile is still loading or not available
     if (profileLoading || profileId === undefined || !profileChapter) {
       return;
     }
     
+    // Don't fetch if already fetching
     if (fetchingRef.current) {
       return;
     }
     
-    fetchAlumni();
-  }, [filters, pagination.page, fetchAlumni]);
+    // Call fetchAlumni using the ref (avoids dependency loop)
+    if (fetchAlumniRef.current) {
+      fetchAlumniRef.current();
+    }
+  }, [
+    profileId,
+    profileLoading,
+    profileChapter,
+    accessToken,
+    filterDependency, // Memoized filter dependency
+    pagination.page, // Pagination changes trigger fetch
+  ]);
 
   const handleClearSelection = () => {
     setSelectedAlumni([]);
@@ -247,7 +282,7 @@ export function AlumniPipeline() {
 
   const handlePageChange = (newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }));
-    fetchAlumni(filters, newPage);
+    // Fetch will be triggered by the consolidated useEffect when pagination.page changes
   };
 
   // Show loading state while profile is loading
