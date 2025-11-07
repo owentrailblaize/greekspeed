@@ -11,11 +11,13 @@ import {
 
 import { createPersistConfig } from './persistConfig';
 import authReducer from './slices/authSlice';
+import connectionsReducer from './slices/connectionsSlice';
 import profileReducer from './slices/profileSlice';
 
 const rootReducer = combineReducers({
   auth: authReducer,
   profile: profileReducer,
+  connections: connectionsReducer,
 });
 
 const persistConfig = createPersistConfig<ReturnType<typeof rootReducer>>({

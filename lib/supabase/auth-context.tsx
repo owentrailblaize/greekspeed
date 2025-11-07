@@ -15,6 +15,7 @@ import {
   signIn as signInThunk,
   signOut as signOutThunk,
 } from '@/lib/store/slices/authSlice';
+import { clearConnections, fetchConnections } from '@/lib/store/slices/connectionsSlice';
 import { clearProfile, fetchProfile } from '@/lib/store/slices/profileSlice';
 import { ActivityTypes, trackActivity } from '@/lib/utils/activityUtils';
 import { supabase } from './client';
@@ -65,10 +66,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         void dispatch(fetchProfile({ force: true }));
+        void dispatch(fetchConnections({ force: true }));
       }
 
       if (event === 'SIGNED_OUT') {
         dispatch(clearAuth());
+        dispatch(clearConnections());
         dispatch(clearProfile());
       }
     });

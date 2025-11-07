@@ -18,7 +18,7 @@ export const createPersistConfig = <S>(
   key: 'root',
   storage,
   version: 1,
-  whitelist: ['auth', 'profile'],
+  whitelist: ['auth', 'profile', 'connections'],
   ...overrides,
 });
 
