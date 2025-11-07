@@ -26,6 +26,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, profileData?: ProfileData) => Promise<void>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  getAuthHeaders: () => Record<string, string>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -346,6 +347,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const getAuthHeaders = useCallback(() => {
+    if (!session?.access_token) {
+      throw new Error('Authentication required');
+    }
+
+    return {
+      Authorization: `Bearer ${session.access_token}`,
+    };
+  }, [session?.access_token]);
+
   const value = useMemo(
     () => ({
       user,
@@ -356,8 +367,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUp,
       signOut,
       signInWithGoogle,
+      getAuthHeaders,
     }),
-    [user, session, loading, error, signIn, signUp, signOut, signInWithGoogle],
+    [error, getAuthHeaders, loading, session, signIn, signInWithGoogle, signOut, signUp, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

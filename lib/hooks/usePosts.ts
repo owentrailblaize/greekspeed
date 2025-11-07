@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
-import { supabase } from '@/lib/supabase/client';
 import { Post, PostsResponse, CreatePostRequest } from '@/types/posts';
 
 export function usePosts(chapterId: string) {
-  const { user } = useAuth();
+  const { user, session, getAuthHeaders } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,24 +17,17 @@ export function usePosts(chapterId: string) {
   });
 
   const fetchPosts = useCallback(async (page = 1) => {
-    if (!user || !chapterId) return;
+    if (!user || !chapterId || !session) return;
 
     try {
       setLoading(true);
       setError(null);
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setError('Authentication required');
-        return;
-      }
-
+      const headers = getAuthHeaders();
       const response = await fetch(
         `/api/posts?chapterId=${chapterId}&page=${page}&limit=20`,
         {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
+          headers,
         }
       );
 
@@ -51,24 +43,21 @@ export function usePosts(chapterId: string) {
     } finally {
       setLoading(false);
     }
-  }, [user, chapterId]);
+  }, [chapterId, getAuthHeaders, session, user]);
 
   const createPost = useCallback(async (postData: CreatePostRequest) => {
-    if (!user || !chapterId) return null;
+    if (!user || !chapterId || !session) return null;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Authentication required');
-      }
+      const headers = {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      };
 
       const response = await fetch('/api/posts', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify(postData)
+        headers,
+        body: JSON.stringify(postData),
       });
 
       if (!response.ok) {
@@ -85,22 +74,15 @@ export function usePosts(chapterId: string) {
       setError(err instanceof Error ? err.message : 'Failed to create post');
       return null;
     }
-  }, [user, chapterId]);
+  }, [chapterId, getAuthHeaders, session, user]);
 
   const likePost = useCallback(async (postId: string) => {
-    if (!user) return;
+    if (!user || !session) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Authentication required');
-      }
-
       const response = await fetch(`/api/posts/${postId}/like`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -124,22 +106,15 @@ export function usePosts(chapterId: string) {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to like post');
     }
-  }, [user]);
+  }, [getAuthHeaders, session, user]);
 
   const deletePost = useCallback(async (postId: string) => {
-    if (!user) return;
+    if (!user || !session) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Authentication required');
-      }
-
       const response = await fetch(`/api/posts/${postId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -154,7 +129,7 @@ export function usePosts(chapterId: string) {
       setError(err instanceof Error ? err.message : 'Failed to delete post');
       return false;
     }
-  }, [user]);
+  }, [getAuthHeaders, session, user]);
 
   useEffect(() => {
     fetchPosts();

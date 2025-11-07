@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
-import { supabase } from '@/lib/supabase/client';
 import { PostComment, CommentsResponse, CreateCommentRequest } from '@/types/posts';
 
 type CommentsCacheEntry = {
@@ -22,7 +21,7 @@ interface UseCommentsOptions {
 }
 
 export function useComments(postId: string, options: UseCommentsOptions = {}) {
-  const { user } = useAuth();
+  const { user, session, getAuthHeaders } = useAuth();
   const enabled = options.enabled ?? true;
   const [comments, setComments] = useState<PostComment[]>([]);
   const [loading, setLoading] = useState(enabled);
@@ -45,24 +44,14 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
 
   const fetchComments = useCallback(
     async (page = 1) => {
-      if (!enabled || !user || !postId) return;
+      if (!enabled || !user || !postId || !session) return;
 
       try {
         setLoading(true);
         setError(null);
 
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session) {
-          setError('Authentication required');
-          return;
-        }
-
         const response = await fetch(`/api/posts/${postId}/comments?page=${page}&limit=20`, {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
+          headers: getAuthHeaders(),
         });
 
         if (!response.ok) {
@@ -82,26 +71,19 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
         setLoading(false);
       }
     },
-    [enabled, postId, setStateFromCache, user],
+    [enabled, getAuthHeaders, postId, session, setStateFromCache, user],
   );
 
   const createComment = useCallback(
     async (commentData: CreateCommentRequest) => {
-      if (!user || !postId) return null;
+      if (!user || !postId || !session) return null;
 
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session) {
-          throw new Error('Authentication required');
-        }
-
         const response = await fetch(`/api/posts/${postId}/comments`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.access_token}`,
+            ...getAuthHeaders(),
           },
           body: JSON.stringify(commentData),
         });
@@ -135,26 +117,17 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
         return null;
       }
     },
-    [pagination, postId, user],
+    [getAuthHeaders, pagination, postId, session, user],
   );
 
   const deleteComment = useCallback(
     async (commentId: string) => {
-      if (!user) return false;
+      if (!user || !session) return false;
 
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session) {
-          throw new Error('Authentication required');
-        }
-
         const response = await fetch(`/api/posts/${postId}/comments/${commentId}`, {
           method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
+          headers: getAuthHeaders(),
         });
 
         if (!response.ok) {
@@ -184,26 +157,17 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
         return false;
       }
     },
-    [pagination, postId, user],
+    [getAuthHeaders, pagination, postId, session, user],
   );
 
   const likeComment = useCallback(
     async (commentId: string) => {
-      if (!user) return false;
+      if (!user || !session) return false;
 
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session) {
-          throw new Error('Authentication required');
-        }
-
         const response = await fetch(`/api/posts/${postId}/comments/${commentId}/like`, {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
+          headers: getAuthHeaders(),
         });
 
         if (!response.ok) {
@@ -240,7 +204,7 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
         return false;
       }
     },
-    [postId, user],
+    [getAuthHeaders, postId, session, user],
   );
 
   useEffect(() => {
