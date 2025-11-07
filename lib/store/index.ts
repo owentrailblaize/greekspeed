@@ -11,9 +11,17 @@ import {
 } from 'redux-persist';
 
 import { createPersistConfig } from './persistConfig';
+import { createSlice } from '@reduxjs/toolkit';
+
+const placeholderSlice = createSlice({
+    name: 'placeholder',
+    initialState: {},
+    reducers: {},
+});
 
 const rootReducer = combineReducers({
-  // register slice reducers here
+  placeholder: placeholderSlice.reducer,
+  // add real slices here later
 });
 
 const persistConfig = createPersistConfig<ReturnType<typeof rootReducer>>({
