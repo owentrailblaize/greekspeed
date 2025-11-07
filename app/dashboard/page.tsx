@@ -3,19 +3,20 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
-import { Profile } from '@/types/profile';
+import { useProfile } from '@/lib/contexts/ProfileContext'; // ✅ Add this
 import { DashboardOverview } from '@/components/features/dashboard/DashboardOverview';
 import { useRouter } from 'next/navigation';
 import { WelcomeModal } from '@/components/shared/WelcomeModal';
 
 export default function DashboardPage() {
-  const { user, isDeveloper, loading: authLoading, profile } = useAuth();
+  const { user, loading: authLoading } = useAuth(); // ✅ Removed profile and isDeveloper
+  const { profile, isDeveloper, loading: profileLoading } = useProfile(); // ✅ Add this
   const router = useRouter();
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   useEffect(() => {
-    // Wait for auth to finish loading
-    if (authLoading) return;
+    // Wait for both auth and profile to finish loading
+    if (authLoading || profileLoading) return; // ✅ Check profileLoading too
 
     // No user means not authenticated
     if (!user) {
@@ -36,10 +37,10 @@ export default function DashboardPage() {
         return;
       }
     }
-  }, [user, profile, authLoading, isDeveloper, router]);
+  }, [user, profile, authLoading, profileLoading, isDeveloper, router]); // ✅ Add profileLoading
 
-  // Show loading while auth is loading
-  if (authLoading) {
+  // Show loading while auth or profile is loading
+  if (authLoading || profileLoading) { // ✅ Check profileLoading too
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

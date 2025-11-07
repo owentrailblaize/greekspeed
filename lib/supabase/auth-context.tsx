@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from './client';
-import { canAccessDeveloperPortal } from '@/lib/developerPermissions';
 import { trackActivity, ActivityTypes } from '@/lib/utils/activityUtils';
 
 interface ProfileData {
@@ -18,13 +17,12 @@ interface ProfileData {
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null; // ✅ Make sure session is exposed
+  session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, profileData?: ProfileData) => Promise<void>;
   signOut: () => Promise<void>;
-  profile: any | null;
-  isDeveloper: boolean;
+  // REMOVED: profile and isDeveloper - use ProfileContext instead
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,11 +31,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<any | null>(null);
-  const [isDeveloper, setIsDeveloper] = useState(false);
+  // REMOVED: profile and isDeveloper state
 
   useEffect(() => {
-    
     // Get initial session
     const getInitialSession = async () => {
       try {
@@ -61,12 +57,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Track login activity for automatic logins (session restoration, etc.)
+        // Track login activity for automatic logins
         if (event === 'SIGNED_IN' && session?.user) {
           try {
             await trackActivity(session.user.id, ActivityTypes.LOGIN, {
@@ -75,7 +70,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             });
           } catch (activityError) {
             console.error('Failed to track automatic login activity:', activityError);
-            // Don't throw - auth state change was successful
           }
         }
       }
@@ -84,29 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Add profile loading logic
-  useEffect(() => {
-    const loadProfile = async () => {
-      if (user) {
-        try {
-          const { data: profileData, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-
-          if (profileData) {
-            setProfile(profileData);
-            setIsDeveloper(canAccessDeveloperPortal(profileData));
-          }
-        } catch (error) {
-          console.error('Error loading profile:', error);
-        }
-      }
-    };
-
-    loadProfile();
-  }, [user]);
+  // REMOVED: Profile loading useEffect (lines 88-109)
 
   const syncExistingAlumni = async (userId: string) => {
     try {
@@ -371,11 +343,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     loading,
-    profile,
-    isDeveloper,
     signIn,
     signUp,
     signOut
+    // REMOVED: profile and isDeveloper
   };
 
   return (

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { AlumniPipelineLayout } from "./AlumniPipelineLayout";
 import { AlumniSubHeader } from "./AlumniSubHeader";
 import { Alumni } from "@/lib/alumniConstants";
 import { AlumniProfileModal } from "./AlumniProfileModal";
-import { useProfile } from "@/lib/hooks/useProfile";
+import { useProfile } from "@/lib/contexts/ProfileContext";
 // Add these imports
 import { calculateAlumniCompleteness } from '@/lib/utils/profileCompleteness';
 import { useAuth } from "@/lib/supabase/auth-context";
@@ -111,41 +111,64 @@ export function AlumniPipeline() {
     setSelectedAlumniForModal(null);
   };
 
+  // Extract stable primitive values from profile
+  const profileChapter = useMemo(() => profile?.chapter, [profile?.chapter]);
+  const profileId = useMemo(() => profile?.id, [profile?.id]);
+  
+  // Stabilize session access token
+  const accessToken = useMemo(() => session?.access_token, [session?.access_token]);
+  
+  // Add refs to prevent concurrent fetches
+  const fetchingRef = useRef(false);
+  const filtersRef = useRef(filters);
+  const paginationRef = useRef(pagination);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
+
+  useEffect(() => {
+    paginationRef.current = pagination;
+  }, [pagination]);
+
   const fetchAlumni = useCallback(async (currentFilters?: FilterState, currentPage?: number) => {
+    // Prevent concurrent fetches
+    if (fetchingRef.current) {
+      return;
+    }
+    
     try {
+      fetchingRef.current = true;
       setLoading(true);
       setError(null);
 
-      const filterParams = currentFilters || filters;
-      const pageToFetch = currentPage || pagination.page;
+      const filterParams = currentFilters || filtersRef.current;
+      const pageToFetch = currentPage || paginationRef.current.page;
       const params = new URLSearchParams();
 
-      // Add all filter parameters including state
+      // Add all filter parameters
       if (filterParams.searchTerm) params.append('search', filterParams.searchTerm);
       if (filterParams.industry) params.append('industry', filterParams.industry);
       if (filterParams.graduationYear) params.append('graduationYear', filterParams.graduationYear);
       if (filterParams.state) params.append('state', filterParams.state);
       if (filterParams.activelyHiring) params.append('activelyHiring', 'true');
-      // 🔥 NEW: Add showActiveOnly parameter
       if (filterParams.showActiveOnly) params.append('showActiveOnly', 'true');
       
-      // Add pagination parameters with optimized limit
-      params.append('limit', '100'); // Fixed to 100 for consistent performance
+      params.append('limit', '100');
       params.append('page', pageToFetch.toString());
       
-      // Always filter by user's chapter - pipeline now only shows current user's chapter alumni
-      if (profile?.chapter) {
-        params.append('userChapter', profile.chapter);
+      if (profileChapter) {
+        params.append('userChapter', profileChapter);
       }
         
-      // ✅ Add auth headers like chapter members does
       const headers: HeadersInit = {};
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
       }
 
       const response = await fetch(`/api/alumni?${params.toString()}`, {
-        headers // ✅ Include headers
+        headers
       });
       
       if (!response.ok) {
@@ -158,12 +181,10 @@ export function AlumniPipeline() {
       
       setAlumni(alumniData);
       
-      // Update pagination state
       if (data.pagination) {
         setPagination(data.pagination);
       }
       
-      // Apply hybrid sorting: Activity + Completeness
       const sortedAlumniData = sortAlumniWithHybridLogic(alumniData);
       setSortedAlumni(sortedAlumniData);
       
@@ -172,24 +193,35 @@ export function AlumniPipeline() {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
-  }, [filters, profile, pagination.page, session?.access_token]); // ✅ Add session to dependencies
+  }, [profileChapter, accessToken]); // Only depend on stable values
 
-  // Only fetch alumni when profile is loaded and not loading
+  // Single useEffect - fetch when profile is ready
   useEffect(() => {
-    if (!profileLoading && profile !== undefined) {
-      fetchAlumni();
+    if (profileLoading || profileId === undefined || !profileChapter) {
+      return;
     }
-  }, [profile, profileLoading, fetchAlumni]);
+    
+    if (fetchingRef.current) {
+      return;
+    }
+    
+    fetchAlumni();
+  }, [profileId, profileLoading, profileChapter, accessToken, fetchAlumni]);
 
-  // Handle filter changes
+  // Separate effect for filters and pagination changes
   useEffect(() => {
-    if (!profileLoading && profile !== undefined && Object.values(filters).some(value => 
-      typeof value === 'boolean' ? value : value !== ''
-    )) {
-      fetchAlumni();
+    if (profileLoading || profileId === undefined || !profileChapter) {
+      return;
     }
-  }, [filters, profile, profileLoading, fetchAlumni]);
+    
+    if (fetchingRef.current) {
+      return;
+    }
+    
+    fetchAlumni();
+  }, [filters, pagination.page, fetchAlumni]);
 
   const handleClearSelection = () => {
     setSelectedAlumni([]);
