@@ -21,31 +21,31 @@ export function MobileEventsPage() {
   const chapterId = profile?.chapter_id;
 
   // Fetch events for the user's chapter
-  useEffect(() => {
-    const fetchEvents = async () => {
-      if (!chapterId || !profile?.id) return;
+  const fetchEvents = async () => {
+    if (!chapterId || !profile?.id) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
       
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=upcoming`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch events');
-        }
-        
-        const data = await response.json();
-        setEvents(data);
-
-        // Fetch user's RSVP statuses for all events
-        await fetchUserRSVPs(data, profile.id);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
+      const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=upcoming`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
       }
-    };
+      
+      const data = await response.json();
+      setEvents(data);
 
+      // Fetch user's RSVP statuses for all events
+      await fetchUserRSVPs(data, profile.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchEvents();
   }, [chapterId, profile?.id]);
 
@@ -155,7 +155,7 @@ export function MobileEventsPage() {
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => window.location.reload()}
+              onClick={() => fetchEvents()}
               className="text-navy-600 border-navy-600 hover:bg-navy-50"
             >
               Retry

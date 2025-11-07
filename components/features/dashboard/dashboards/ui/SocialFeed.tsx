@@ -55,7 +55,7 @@ export function SocialFeed({ chapterId }: SocialFeedProps) {
     return (
       <div className="text-center py-8">
         <p className="text-red-500">Error loading posts: {error}</p>
-        <Button onClick={() => window.location.reload()} className="mt-2">
+        <Button onClick={() => refetch()} className="mt-2">
           Retry
         </Button>
       </div>

@@ -20,33 +20,33 @@ export function UpcomingEventsCard() {
   const chapterId = profile?.chapter_id;
 
   // Fetch events for the user's chapter
-  useEffect(() => {
-    const fetchEvents = async () => {
-      if (!chapterId || !profile?.id) return;
+  const fetchEvents = async () => {
+    if (!chapterId || !profile?.id) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
       
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // UpcomingEventsCard - Fetching events for chapter
-        const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=upcoming`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch events');
-        }
-        
-        const data = await response.json();
-        // UpcomingEventsCard - Fetched events
-        setEvents(data);
-
-        // Fetch user's RSVP statuses for all events
-        await fetchUserRSVPs(data, profile.id);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
+      // UpcomingEventsCard - Fetching events for chapter
+      const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=upcoming`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
       }
-    };
+      
+      const data = await response.json();
+      // UpcomingEventsCard - Fetched events
+      setEvents(data);
 
+      // Fetch user's RSVP statuses for all events
+      await fetchUserRSVPs(data, profile.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchEvents();
   }, [chapterId, profile?.id]);
 
@@ -162,7 +162,7 @@ export function UpcomingEventsCard() {
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => window.location.reload()}
+              onClick={() => fetchEvents()}
               className="text-navy-600 border-navy-600 hover:bg-navy-50 h-10 sm:h-8"
             >
               Retry
@@ -356,6 +356,7 @@ export function UpcomingEventsCard() {
         events={events}
         loading={loading}
         error={error}
+        onRetry={fetchEvents}
       />
     </>
   );

@@ -51,22 +51,9 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
     { label: 'View Profile', href: '/dashboard/profile', icon: User, locked: false },
     { label: 'Notifications', href: '/dashboard/notifications', icon: Bell, key: 'notifications', locked: false },
     { label: 'Settings', href: '/dashboard/settings', icon: Settings, locked: false },
-    { label: 'Chapter & Role', href: '#', icon: Users, locked: true },
-    { label: 'Help & Support', href: '#', icon: HelpCircle, locked: true },
-    {
-      label: 'Subscription Management',
-      href: '/dashboard/subscription',
-      icon: DollarSign,
-      show: profile?.role === 'admin'
-    },
   ];
 
-  // Filter menuItems based on show condition
-  // Show items that either don't have a show property OR have show: true
-  const visibleMenuItems = menuItems.filter(item => 
-    item.show === undefined || item.show === true
-  );
-
+  const visibleMenuItems = menuItems.filter(item => !item.locked);
   const handleSignOut = () => {
     onSignOut();
     setIsMobileMenuOpen(false);

@@ -19,9 +19,10 @@ interface AllEventsModalProps {
   events: Event[];
   loading: boolean;
   error: string | null;
+  onRetry?: () => void;
 }
 
-export function AllEventsModal({ isOpen, onClose, events, loading, error }: AllEventsModalProps) {
+export function AllEventsModal({ isOpen, onClose, events, loading, error, onRetry }: AllEventsModalProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -142,7 +143,7 @@ export function AllEventsModal({ isOpen, onClose, events, loading, error }: AllE
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => window.location.reload()}
+                  onClick={() => onRetry?.()}
                 >
                   Retry
                 </Button>

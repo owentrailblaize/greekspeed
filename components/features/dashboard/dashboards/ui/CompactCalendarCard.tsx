@@ -73,31 +73,31 @@ export function CompactCalendarCard() {
   }, [hoveredEvent, hoverPosition, calculatePopupPosition]);
 
   // Fetch events for the calendar - ONLY for this chapter
-  useEffect(() => {
-    const fetchEvents = async () => {
-      if (!chapterId) return;
+  const fetchEvents = async () => {
+    if (!chapterId) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
       
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // CompactCalendarCard - Fetching events for chapter
-        const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=all`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch events');
-        }
-        
-        const data = await response.json();
-        // CompactCalendarCard - Fetched events
-        setEvents(data);
-      } catch (err) {
-        console.error('CompactCalendarCard - Error fetching events:', err);
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
+      // CompactCalendarCard - Fetching events for chapter
+      const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=all`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
       }
-    };
+      
+      const data = await response.json();
+      // CompactCalendarCard - Fetched events
+      setEvents(data);
+    } catch (err) {
+      console.error('CompactCalendarCard - Error fetching events:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchEvents();
   }, [chapterId]);
 
@@ -253,7 +253,7 @@ export function CompactCalendarCard() {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => window.location.reload()}
+            onClick={() => fetchEvents()}
             className="text-navy-600 border-navy-600 hover:bg-navy-50 h-8"
           >
             Retry

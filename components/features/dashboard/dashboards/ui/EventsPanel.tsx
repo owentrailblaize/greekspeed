@@ -18,31 +18,31 @@ export function EventsPanel() {
   const chapterId = profile?.chapter_id;
 
   // Fetch events for the user's chapter
-  useEffect(() => {
-    const fetchEvents = async () => {
-      if (!chapterId) return;
+  const fetchEvents = async () => {
+    if (!chapterId) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
       
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // EventsPanel - Fetching events for chapter
-        const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=upcoming`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch events');
-        }
-        
-        const data = await response.json();
-        // EventsPanel - Fetched events
-        setEvents(data);
-      } catch (err) {
-        console.error('EventsPanel - Error fetching events:', err);
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
+      // EventsPanel - Fetching events for chapter
+      const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=upcoming`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
       }
-    };
+      
+      const data = await response.json();
+      // EventsPanel - Fetched events
+      setEvents(data);
+    } catch (err) {
+      console.error('EventsPanel - Error fetching events:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchEvents();
   }, [chapterId]);
 
@@ -86,7 +86,7 @@ export function EventsPanel() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => window.location.reload()}
+                onClick={() => fetchEvents()}
                 className="mt-2"
               >
                 Retry
@@ -186,7 +186,7 @@ export function EventsPanel() {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => window.location.reload()}
+                    onClick={() => fetchEvents()}
                     className="mt-2"
                   >
                     Retry
