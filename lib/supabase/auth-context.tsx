@@ -1,20 +1,9 @@
 'use client';
 
-import { createContext, useContext, useEffect, useMemo, useCallback } from 'react';
+import { createContext, useContext, useEffect, useMemo, useCallback, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 
-import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
-import {
-  clearAuth,
-  initializeAuth,
-  setError,
-  setLoading,
-  setSession,
-  setUser,
-  signIn as signInThunk,
-  signOut as signOutThunk,
-} from '@/lib/store/slices/authSlice';
 import { ActivityTypes, trackActivity } from '@/lib/utils/activityUtils';
 import { supabase } from './client';
 
@@ -32,26 +21,113 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, profileData?: ProfileData) => Promise<void>;
   signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const syncExistingAlumni = async (userId: string) => {
+  try {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (profileError) {
+      console.error('❌ AuthContext: Profile fetch failed:', profileError);
+      return;
+    }
+
+    if (profile?.role?.toLowerCase() === 'alumni') {
+      const { data: existingAlumni, error: alumniCheckError } = await supabase
+        .from('alumni')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+
+      if (alumniCheckError && alumniCheckError.code !== 'PGRST116') {
+        console.error('❌ AuthContext: Alumni check failed:', alumniCheckError);
+        return;
+      }
+
+      if (!existingAlumni) {
+        const { error: alumniError } = await supabase.from('alumni').insert({
+          user_id: userId,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          full_name: profile.full_name,
+          chapter: profile.chapter,
+          industry: 'Not specified',
+          graduation_year: new Date().getFullYear(),
+          company: 'Not specified',
+          job_title: 'Not specified',
+          email: profile.email,
+          phone: null,
+          location: 'Not specified',
+          description: `Alumni from ${profile.chapter}`,
+          avatar_url: null,
+          verified: false,
+          is_actively_hiring: false,
+          last_contact: null,
+          tags: null,
+          mutual_connections: [],
+        });
+
+        if (alumniError) {
+          console.error('❌ AuthContext: Missing alumni record creation failed:', alumniError);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('❌ AuthContext: Alumni sync exception:', error);
+  }
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const dispatch = useAppDispatch();
-  const { user, session, loading } = useAppSelector((state) => state.auth);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const initializeAuth = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
+      if (error) {
+        setError(error.message);
+      }
+
+      setSession(session ?? null);
+      setUser(session?.user ?? null);
+    } catch (authError) {
+      const message =
+        authError instanceof Error ? authError.message : 'Failed to initialize auth session';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    dispatch(initializeAuth());
+    initializeAuth();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      dispatch(setSession(currentSession ?? null));
-      dispatch(setUser(currentSession?.user ?? null));
-      dispatch(setLoading(false));
+      setSession(currentSession ?? null);
+      setUser(currentSession?.user ?? null);
+      setLoading(false);
 
       if (event === 'SIGNED_IN' && currentSession?.user) {
         try {
@@ -65,24 +141,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (event === 'SIGNED_OUT') {
-        dispatch(clearAuth());
+        setUser(null);
+        setSession(null);
+        setError(null);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [dispatch]);
+  }, [initializeAuth]);
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    const action = await dispatch(signInThunk({ email, password }));
+  const signIn = useCallback(
+    async (email: string, password: string) => {
+      setLoading(true);
+      setError(null);
 
-    if (signInThunk.rejected.match(action)) {
-      throw action.payload ?? action.error;
-    }
-  }, [dispatch]);
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+        if (error) {
+          setError(error.message);
+          throw error;
+        }
+
+        if (data.user) {
+          await syncExistingAlumni(data.user.id);
+
+          try {
+            await trackActivity(data.user.id, ActivityTypes.LOGIN, {
+              loginMethod: 'email',
+              timestamp: new Date().toISOString(),
+            });
+          } catch (activityError) {
+            console.error('AuthContext: Failed to track login activity:', activityError);
+          }
+        }
+
+        setSession(data.session ?? null);
+        setUser(data.user ?? null);
+      } catch (signInError) {
+        const message = signInError instanceof Error ? signInError.message : 'Failed to sign in';
+        setError(message);
+        throw signInError;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   const signUp = useCallback(async (email: string, password: string, profileData?: ProfileData) => {
-    dispatch(setLoading(true));
-    dispatch(setError(null));
+    setLoading(true);
+    setError(null);
 
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -95,6 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('❌ AuthContext: Sign up failed:', error);
+        setError(error.message);
         throw error;
       }
 
@@ -178,26 +288,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (signInError) {
             console.error('❌ AuthContext: Auto sign-in failed:', signInError);
+            setError(signInError.message);
           }
         } catch (signInError) {
           console.error('❌ AuthContext: Auto sign-in exception:', signInError);
+          setError(signInError instanceof Error ? signInError.message : 'Auto sign-in failed');
         }
       }
     } catch (error) {
       console.error('❌ AuthContext: Sign up exception:', error);
+      setError(error instanceof Error ? error.message : 'Failed to sign up');
       throw error;
     } finally {
-      dispatch(setLoading(false));
+      setLoading(false);
     }
-  }, [dispatch]);
+  }, []);
 
   const signOut = useCallback(async () => {
-    const action = await dispatch(signOutThunk());
+    setLoading(true);
+    setError(null);
 
-    if (signOutThunk.rejected.match(action)) {
-      throw action.payload ?? action.error;
+    try {
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        setError(error.message);
+        throw error;
+      }
+
+      setUser(null);
+      setSession(null);
+    } catch (signOutError) {
+      const message = signOutError instanceof Error ? signOutError.message : 'Failed to sign out';
+      setError(message);
+      throw signOutError;
+    } finally {
+      setLoading(false);
     }
-  }, [dispatch]);
+  }, []);
 
   const signInWithGoogle = async () => {
     try {
@@ -212,7 +340,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
 
-      return data;
     } catch (error) {
       console.error('Google sign-in error:', error);
       throw error;
@@ -224,11 +351,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       session,
       loading,
+      error,
       signIn,
       signUp,
       signOut,
+      signInWithGoogle,
     }),
-    [user, session, loading, signIn, signUp, signOut]
+    [user, session, loading, error, signIn, signUp, signOut, signInWithGoogle],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
