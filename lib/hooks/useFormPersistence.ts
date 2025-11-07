@@ -10,7 +10,9 @@ interface FormPersistenceOptions {
 }
 
 /**
- * Enhanced form persistence hook that prevents data loss during navigation
+ * Enhanced form persistence hook that saves form data to storage during navigation
+ * and restores it when the form is reopened. Allows normal browser navigation
+ * while preserving unsaved changes.
  */
 export function useFormPersistence<T>(
   initialData: T,
@@ -45,6 +47,16 @@ export function useFormPersistence<T>(
     }
   }, [storageKey, storage]);
 
+  // Clear storage function - defined before loadFromStorage to fix dependency issue
+  const clearStorage = useCallback(() => {
+    try {
+      window[storage].removeItem(storageKey);
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      console.error(`Error clearing form data from ${storage}:`, error);
+    }
+  }, [storageKey, storage]);
+
   // Load from storage function
   const loadFromStorage = useCallback((): T | null => {
     try {
@@ -65,17 +77,7 @@ export function useFormPersistence<T>(
       console.error(`Error loading form data from ${storage}:`, error);
       return null;
     }
-  }, [storageKey, storage]);
-
-  // Clear storage function
-  const clearStorage = useCallback(() => {
-    try {
-      window[storage].removeItem(storageKey);
-      setHasUnsavedChanges(false);
-    } catch (error) {
-      console.error(`Error clearing form data from ${storage}:`, error);
-    }
-  }, [storageKey, storage]);
+  }, [storageKey, storage, clearStorage]);
 
   // Debounced save function
   const debouncedSave = useCallback(
@@ -116,13 +118,11 @@ export function useFormPersistence<T>(
       }
     };
 
-    // Prevent page navigation if there are unsaved changes
-    const handlePopState = (e: PopStateEvent) => {
+    // Save state on navigation instead of blocking (allows browser back button to work)
+    const handlePopState = () => {
       if (hasUnsavedChanges) {
-        e.preventDefault();
-        // Push the current state back to prevent navigation
-        window.history.pushState(null, '', window.location.href);
-        return false;
+        // Save current state before navigation happens
+        saveToStorage(formData);
       }
     };
 
