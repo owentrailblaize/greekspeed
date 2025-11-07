@@ -18,7 +18,7 @@ import {
   updateConnection,
   updateConnectionStatus as updateConnectionStatusThunk,
 } from '@/lib/store/slices/connectionsSlice';
-
+export type { Connection } from '@/lib/store/slices/connectionsSlice';
 interface ConnectionsContextType {
   connections: Connection[];
   loading: boolean;
