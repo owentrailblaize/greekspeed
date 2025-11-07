@@ -23,7 +23,9 @@ interface CommentModalProps {
 export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: CommentModalProps) {
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { comments, loading, error, createComment, deleteComment, likeComment } = useComments(post.id);
+  const { comments, loading, error, createComment, deleteComment, likeComment } = useComments(post.id, {
+    enabled: isOpen,
+  });
   const { profile } = useProfile();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 

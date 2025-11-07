@@ -293,13 +293,15 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
       </Card>
 
       {/* Comment Modal */}
-      <CommentModal
-        isOpen={isCommentModalOpen}
-        onClose={() => setIsCommentModalOpen(false)}
-        post={post}
-        onLike={onLike}
-        onCommentAdded={onCommentAdded}
-      />
+      {isCommentModalOpen && (
+        <CommentModal
+          isOpen={isCommentModalOpen}
+          onClose={() => setIsCommentModalOpen(false)}
+          post={post}
+          onLike={onLike}
+          onCommentAdded={onCommentAdded}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
       <DeletePostModal
