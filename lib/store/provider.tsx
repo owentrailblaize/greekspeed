@@ -6,6 +6,8 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { persistStore, type Persistor } from 'redux-persist';
 
+import { AuthBootstrapper } from '@/lib/supabase/auth-context';
+
 import { makeStore } from './index';
 import type { AppStore } from './types';
 
@@ -25,6 +27,7 @@ export function ReduxProvider({ children }: ReduxProviderProps) {
   return (
     <Provider store={storeRef.current}>
       <PersistGate loading={null} persistor={persistorRef.current!}>
+        <AuthBootstrapper />
         {children}
       </PersistGate>
     </Provider>

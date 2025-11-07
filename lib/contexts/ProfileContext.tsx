@@ -1,10 +1,16 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef, ReactNode } from 'react';
-import { useAuth } from '@/lib/supabase/auth-context';
-import { supabase } from '@/lib/supabase/client';
+import { useCallback, useMemo } from 'react';
+import type { ReactNode } from 'react';
+
+import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
+import {
+  clearProfile as clearProfileAction,
+  fetchProfile,
+  updateProfile as updateProfileAction,
+  updateProfileAsync,
+} from '@/lib/store/slices/profileSlice';
 import { Profile } from '@/types/profile';
-import { canAccessDeveloperPortal } from '@/lib/developerPermissions';
 import { ProfileService } from '@/lib/services/profileService';
 
 interface ProfileContextType {
@@ -17,165 +23,79 @@ interface ProfileContextType {
   uploadAvatar: (file: File) => Promise<string>;
 }
 
-const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
-
-const profilesEqual = (a: Profile | null, b: Profile | null): boolean => {
-  if (a === b) return true;
-  if (!a || !b) return false;
-  
-  // Compare key fields that matter for re-renders
-  return (
-    a.id === b.id &&
-    a.chapter === b.chapter &&
-    a.email === b.email &&
-    a.first_name === b.first_name &&
-    a.last_name === b.last_name &&
-    a.role === b.role &&
-    a.avatar_url === b.avatar_url
-  );
-};
-
 export function ProfileProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isDeveloper, setIsDeveloper] = useState(false);
-  const fetchingRef = useRef(false); // Prevent concurrent fetches
+  return <>{children}</>;
+}
 
-  const fetchProfile = useCallback(async () => {
-    if (!user?.id) {
-      setProfile(null);
-      setIsDeveloper(false);
-      setError(null);
-      setLoading(false);
-      return;
-    }
-    
-    // Prevent concurrent fetches
-    if (fetchingRef.current) {
-      return;
-    }
-    
-    try {
-      fetchingRef.current = true;
-      setLoading(true);
-      setError(null);
-      
-      const { data, error: fetchError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (fetchError) throw fetchError;
-      
-      // Only update if data actually changed (deep comparison)
-      setProfile(prevProfile => {
-        if (prevProfile && profilesEqual(prevProfile, data)) {
-          return prevProfile; // Return same reference if data unchanged
-        }
-        return data;
-      });
-      setIsDeveloper(canAccessDeveloperPortal(data));
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load profile';
-      console.error('Error fetching profile:', err);
-      setError(errorMessage);
-      setIsDeveloper(false);
-    } finally {
-      setLoading(false);
-      fetchingRef.current = false;
-    }
-  }, [user?.id]);
+export function useProfile(): ProfileContextType {
+  const dispatch = useAppDispatch();
+  const { profile, loading, error, isDeveloper } = useAppSelector((state) => state.profile);
+  const userId = useAppSelector((state) => state.auth.user?.id);
 
   const refreshProfile = useCallback(async () => {
-    await fetchProfile();
-  }, [fetchProfile]);
-
-  const updateProfile = useCallback(async (updates: Partial<Profile>) => {
-    if (!user?.id) {
-      throw new Error('User not authenticated');
+    if (!userId) {
+      dispatch(clearProfileAction());
+      return;
     }
-    
-    try {
-      setError(null);
-      
-      const { data, error: updateError } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', user.id)
-        .select()
-        .single();
 
-      if (updateError) throw updateError;
-      
-      setProfile(data);
-      setIsDeveloper(canAccessDeveloperPortal(data));
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update profile';
-      console.error('Error updating profile:', err);
-      setError(errorMessage);
-      throw err;
-    }
-  }, [user?.id]);
+    const action = await dispatch(fetchProfile({ force: true }));
 
-  const uploadAvatar = useCallback(async (file: File): Promise<string> => {
-    if (!user?.id) {
-      throw new Error('User not authenticated');
+    if (fetchProfile.rejected.match(action)) {
+      const message =
+        typeof action.payload === 'string'
+          ? action.payload
+          : action.error?.message ?? 'Failed to refresh profile';
+      throw new Error(message);
     }
-    
-    try {
-      setError(null);
+  }, [dispatch, userId]);
+
+  const updateProfile = useCallback(
+    async (updates: Partial<Profile>) => {
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+
+      const action = await dispatch(updateProfileAsync(updates));
+
+      if (updateProfileAsync.rejected.match(action)) {
+        const message =
+          typeof action.payload === 'string'
+            ? action.payload
+            : action.error?.message ?? 'Failed to update profile';
+        throw new Error(message);
+      }
+    },
+    [dispatch, userId],
+  );
+
+  const uploadAvatar = useCallback(
+    async (file: File): Promise<string> => {
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+
       const avatarUrl = await ProfileService.uploadAvatar(file);
-      
+
       if (!avatarUrl) {
         throw new Error('Failed to upload avatar');
       }
-      
-      // Update profile with new avatar URL
-      setProfile(prevProfile => {
-        if (!prevProfile) return prevProfile;
-        const updatedProfile = { ...prevProfile, avatar_url: avatarUrl };
-        setIsDeveloper(canAccessDeveloperPortal(updatedProfile));
-        return updatedProfile;
-      });
-      
+
+      dispatch(updateProfileAction({ avatar_url: avatarUrl }));
       return avatarUrl;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to upload avatar';
-      console.error('Error uploading avatar:', err);
-      setError(errorMessage);
-      throw err;
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
-
-  // Memoize context value to prevent unnecessary re-renders
-  const contextValue = useMemo(() => ({
-    profile,
-    loading,
-    error,
-    isDeveloper,
-    refreshProfile,
-    updateProfile,
-    uploadAvatar
-  }), [profile, loading, error, isDeveloper, refreshProfile, updateProfile, uploadAvatar]);
-
-  return (
-    <ProfileContext.Provider value={contextValue}>
-      {children}
-    </ProfileContext.Provider>
+    },
+    [dispatch, userId],
   );
-}
 
-export function useProfile() {
-  const context = useContext(ProfileContext);
-  if (context === undefined) {
-    throw new Error('useProfile must be used within a ProfileProvider');
-  }
-  return context;
+  return useMemo(
+    () => ({
+      profile,
+      loading,
+      error,
+      isDeveloper,
+      refreshProfile,
+      updateProfile,
+      uploadAvatar,
+    }),
+    [error, isDeveloper, loading, profile, refreshProfile, updateProfile, uploadAvatar],
+  );
 }

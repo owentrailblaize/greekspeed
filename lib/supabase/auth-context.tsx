@@ -1,7 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useMemo, useCallback } from 'react';
-import type { ReactNode } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 
 import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
@@ -15,6 +14,8 @@ import {
   signIn as signInThunk,
   signOut as signOutThunk,
 } from '@/lib/store/slices/authSlice';
+import { clearConnections, fetchConnections } from '@/lib/store/slices/connectionsSlice';
+import { clearProfile, fetchProfile } from '@/lib/store/slices/profileSlice';
 import { ActivityTypes, trackActivity } from '@/lib/utils/activityUtils';
 import { supabase } from './client';
 
@@ -28,20 +29,9 @@ interface ProfileData {
   smsConsent?: boolean;
 }
 
-interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, profileData?: ProfileData) => Promise<void>;
-  signOut: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthBootstrapper() {
   const dispatch = useAppDispatch();
-  const { user, session, loading } = useAppSelector((state) => state.auth);
+  const userId = useAppSelector((state) => state.auth.user?.id);
 
   useEffect(() => {
     dispatch(initializeAuth());
@@ -62,15 +52,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (activityError) {
           console.error('Failed to track automatic login activity:', activityError);
         }
+
+        void dispatch(fetchProfile({ force: true }));
+        void dispatch(fetchConnections({ force: true }));
       }
 
       if (event === 'SIGNED_OUT') {
         dispatch(clearAuth());
+        dispatch(clearConnections());
+        dispatch(clearProfile());
       }
     });
 
     return () => subscription.unsubscribe();
   }, [dispatch]);
+
+  useEffect(() => {
+    if (userId) {
+      void dispatch(fetchProfile({ force: false }));
+      void dispatch(fetchConnections({ force: false }));
+    } else {
+      dispatch(clearProfile());
+      dispatch(clearConnections());
+    }
+  }, [dispatch, userId]);
+
+  return null;
+}
+
+export function useAuth() {
+  const dispatch = useAppDispatch();
+  const { user, session, loading } = useAppSelector((state) => state.auth);
 
   const signIn = useCallback(async (email: string, password: string) => {
     const action = await dispatch(signInThunk({ email, password }));
@@ -199,7 +211,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [dispatch]);
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = useCallback(async () => {
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -217,27 +229,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Google sign-in error:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const value = useMemo(
+  return useMemo(
     () => ({
-      user,
-      session,
+      user: user as User | null,
+      session: session as Session | null,
       loading,
       signIn,
       signUp,
       signOut,
+      signInWithGoogle,
     }),
-    [user, session, loading, signIn, signUp, signOut]
+    [loading, session, signIn, signInWithGoogle, signOut, signUp, user]
   );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }

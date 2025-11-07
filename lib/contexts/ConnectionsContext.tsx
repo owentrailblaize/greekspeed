@@ -1,216 +1,239 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
-import { useAuth } from '@/lib/supabase/auth-context';
+import { useCallback, useMemo } from 'react';
+import type { ReactNode } from 'react';
 
-export interface Connection {
-  id: string;
-  requester_id: string;
-  recipient_id: string;
-  status: 'pending' | 'accepted' | 'declined' | 'blocked';
-  message?: string;
-  created_at: string;
-  updated_at: string;
-  // Add profile information
-  requester: {
-    id: string;
-    full_name: string;
-    first_name: string | null;
-    last_name: string | null;
-    chapter: string | null;
-    avatar_url: string | null;
-  };
-  recipient: {
-    id: string;
-    full_name: string;
-    first_name: string | null;
-    last_name: string | null;
-    chapter: string | null;
-    avatar_url: string | null;
-  };
-}
-
+import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
+import {
+  addConnection,
+  cancelConnectionRequest as cancelConnectionRequestThunk,
+  clearConnections as clearConnectionsAction,
+  fetchConnections,
+  removeConnection,
+  selectAllConnections,
+  selectConnectionEntities,
+  selectConnectionsState,
+  sendConnectionRequest as sendConnectionRequestThunk,
+  type Connection,
+  updateConnection,
+  updateConnectionStatus as updateConnectionStatusThunk,
+} from '@/lib/store/slices/connectionsSlice';
+export type { Connection } from '@/lib/store/slices/connectionsSlice';
 interface ConnectionsContextType {
   connections: Connection[];
   loading: boolean;
   error: string | null;
-  sendConnectionRequest: (recipientId: string, message?: string) => Promise<any>;
-  updateConnectionStatus: (connectionId: string, status: 'accepted' | 'declined' | 'blocked') => Promise<any>;
+  sendConnectionRequest: (recipientId: string, message?: string) => Promise<Connection>;
+  updateConnectionStatus: (
+    connectionId: string,
+    status: 'accepted' | 'declined' | 'blocked',
+  ) => Promise<Connection>;
   cancelConnectionRequest: (connectionId: string) => Promise<void>;
   getConnectionStatus: (otherUserId: string) => 'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'declined' | 'blocked';
   getConnectionId: (otherUserId: string) => string | null;
   refreshConnections: () => Promise<void>;
 }
 
-const ConnectionsContext = createContext<ConnectionsContextType | undefined>(undefined);
-
 export function ConnectionsProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  const [connections, setConnections] = useState<Connection[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Use useRef to store stable function reference
-  const fetchConnectionsRef = useRef<(() => Promise<void>) | null>(null);
-
-  const fetchConnections = useCallback(async () => {
-    if (!user?.id) return;
-    
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await fetch(`/api/connections?userId=${user.id}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch connections');
-      }
-      
-      const data = await response.json();
-      setConnections(data.connections || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch connections');
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
-
-  // Store the latest fetchConnections in ref
-  fetchConnectionsRef.current = fetchConnections;
-
-  // Wrap other functions that use fetchConnections with useCallback
-  const sendConnectionRequest = useCallback(async (recipientId: string, message?: string) => {
-    if (!user) throw new Error('User not authenticated');
-    
-    try {
-      const response = await fetch('/api/connections', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requesterId: user.id,
-          recipientId,
-          message
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to send connection request');
-      }
-      
-      const data = await response.json();
-      // Use ref to call the latest function
-      if (fetchConnectionsRef.current) {
-        await fetchConnectionsRef.current();
-      }
-      return data.connection;
-    } catch (err) {
-      throw err;
-    }
-  }, [user]);
-
-  const updateConnectionStatus = useCallback(async (connectionId: string, status: 'accepted' | 'declined' | 'blocked') => {
-    try {
-      const response = await fetch(`/api/connections/${connectionId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update connection');
-      }
-      
-      const data = await response.json();
-      // Use ref to call the latest function
-      if (fetchConnectionsRef.current) {
-        await fetchConnectionsRef.current();
-      }
-      return data.connection;
-    } catch (err) {
-      throw err;
-    }
-  }, []);
-
-  const cancelConnectionRequest = useCallback(async (connectionId: string) => {
-    try {
-      const response = await fetch(`/api/connections/${connectionId}`, {
-        method: 'DELETE'
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to cancel connection request');
-      }
-      
-      // Use ref to call the latest function
-      if (fetchConnectionsRef.current) {
-        await fetchConnectionsRef.current();
-      }
-    } catch (err) {
-      throw err;
-    }
-  }, []);
-
-  const getConnectionStatus = useCallback((otherUserId: string): 'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'declined' | 'blocked' => {
-    if (!user || !connections.length) return 'none';
-    
-    const connection = connections.find(conn => 
-      (conn.requester_id === user.id && conn.recipient_id === otherUserId) ||
-      (conn.requester_id === otherUserId && conn.recipient_id === user.id)
-    );
-    
-    if (!connection) return 'none';
-    
-    if (connection.status === 'pending') {
-      return connection.requester_id === user.id ? 'pending_sent' : 'pending_received';
-    }
-    
-    return connection.status as 'accepted' | 'declined' | 'blocked';
-  }, [user, connections]);
-
-  const getConnectionId = useCallback((otherUserId: string): string | null => {
-    if (!user || !connections.length) return null;
-    
-    const connection = connections.find(conn => 
-      (conn.requester_id === user.id && conn.recipient_id === otherUserId) ||
-      (conn.requester_id === otherUserId && conn.recipient_id === user.id)
-    );
-    
-    return connection?.id || null;
-  }, [user, connections]);
-
-  // Fixed: Remove fetchConnections from dependency array, use user?.id only
-  useEffect(() => {
-    if (user?.id && fetchConnectionsRef.current) {
-      fetchConnectionsRef.current();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]); // Only depend on user?.id, not fetchConnections
-
-  const value = {
-    connections,
-    loading,
-    error,
-    sendConnectionRequest,
-    updateConnectionStatus,
-    cancelConnectionRequest,
-    getConnectionStatus,
-    getConnectionId,
-    refreshConnections: fetchConnections
-  };
-
-  return (
-    <ConnectionsContext.Provider value={value}>
-      {children}
-    </ConnectionsContext.Provider>
-  );
+  return <>{children}</>;
 }
 
-export function useConnections() {
-  const context = useContext(ConnectionsContext);
-  if (context === undefined) {
-    throw new Error('useConnections must be used within a ConnectionsProvider');
-  }
-  return context;
+export function useConnections(): ConnectionsContextType {
+  const dispatch = useAppDispatch();
+  const { loading, error } = useAppSelector(selectConnectionsState);
+  const connections = useAppSelector(selectAllConnections);
+  const connectionEntities = useAppSelector(selectConnectionEntities);
+  const userId = useAppSelector((state) => state.auth.user?.id);
+  const requesterProfile = useAppSelector((state) => state.profile.profile);
+
+  const sendConnectionRequest = useCallback(
+    async (recipientId: string, message?: string) => {
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+
+      const optimisticId = `optimistic-${Date.now()}`;
+      const timestamp = new Date().toISOString();
+      const optimisticConnection: Connection = {
+        id: optimisticId,
+        requester_id: userId,
+        recipient_id: recipientId,
+        status: 'pending',
+        message,
+        created_at: timestamp,
+        updated_at: timestamp,
+        requester: {
+          id: userId,
+          full_name: requesterProfile?.full_name ?? '',
+          first_name: requesterProfile?.first_name ?? null,
+          last_name: requesterProfile?.last_name ?? null,
+          chapter: requesterProfile?.chapter ?? null,
+          avatar_url: requesterProfile?.avatar_url ?? null,
+        },
+        recipient: {
+          id: recipientId,
+          full_name: '',
+          first_name: null,
+          last_name: null,
+          chapter: null,
+          avatar_url: null,
+        },
+      };
+
+      dispatch(addConnection(optimisticConnection));
+
+      const action = await dispatch(sendConnectionRequestThunk({ recipientId, message }));
+
+      dispatch(removeConnection(optimisticId));
+
+      if (sendConnectionRequestThunk.fulfilled.match(action)) {
+        return action.payload;
+      }
+
+      const messageText =
+        typeof action.payload === 'string'
+          ? action.payload
+          : action.error?.message ?? 'Failed to send connection request';
+      throw new Error(messageText);
+    },
+    [dispatch, requesterProfile, userId],
+  );
+
+  const updateConnectionStatus = useCallback(
+    async (connectionId: string, status: 'accepted' | 'declined' | 'blocked') => {
+      const existing = connectionEntities[connectionId];
+      const previousStatus = existing?.status;
+
+      if (existing) {
+        dispatch(updateConnection({ id: connectionId, changes: { status } }));
+      }
+
+      const action = await dispatch(updateConnectionStatusThunk({ connectionId, status }));
+
+      if (updateConnectionStatusThunk.fulfilled.match(action)) {
+        return action.payload;
+      }
+
+      if (previousStatus) {
+        dispatch(updateConnection({ id: connectionId, changes: { status: previousStatus } }));
+      }
+
+      const messageText =
+        typeof action.payload === 'string'
+          ? action.payload
+          : action.error?.message ?? 'Failed to update connection';
+      throw new Error(messageText);
+    },
+    [connectionEntities, dispatch],
+  );
+
+  const cancelConnectionRequest = useCallback(
+    async (connectionId: string) => {
+      const existing = connectionEntities[connectionId];
+      if (existing) {
+        dispatch(removeConnection(connectionId));
+      }
+
+      const action = await dispatch(cancelConnectionRequestThunk({ connectionId }));
+
+      if (cancelConnectionRequestThunk.fulfilled.match(action)) {
+        return;
+      }
+
+      if (existing) {
+        dispatch(addConnection(existing));
+      }
+
+      const messageText =
+        typeof action.payload === 'string'
+          ? action.payload
+          : action.error?.message ?? 'Failed to cancel connection request';
+      throw new Error(messageText);
+    },
+    [connectionEntities, dispatch],
+  );
+
+  const getConnectionStatus = useCallback(
+    (otherUserId: string): 'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'declined' | 'blocked' => {
+      if (!userId || !connections.length) {
+        return 'none';
+      }
+
+      const connection = connections.find(
+        (conn) =>
+          (conn.requester_id === userId && conn.recipient_id === otherUserId) ||
+          (conn.requester_id === otherUserId && conn.recipient_id === userId),
+      );
+
+      if (!connection) {
+        return 'none';
+      }
+
+      if (connection.status === 'pending') {
+        return connection.requester_id === userId ? 'pending_sent' : 'pending_received';
+      }
+
+      return connection.status;
+    },
+    [connections, userId],
+  );
+
+  const getConnectionId = useCallback(
+    (otherUserId: string): string | null => {
+      if (!userId || !connections.length) {
+        return null;
+      }
+
+      const connection = connections.find(
+        (conn) =>
+          (conn.requester_id === userId && conn.recipient_id === otherUserId) ||
+          (conn.requester_id === otherUserId && conn.recipient_id === userId),
+      );
+
+      return connection?.id ?? null;
+    },
+    [connections, userId],
+  );
+
+  const refreshConnections = useCallback(async () => {
+    if (!userId) {
+      dispatch(clearConnectionsAction());
+      return;
+    }
+
+    const action = await dispatch(fetchConnections({ force: true }));
+
+    if (fetchConnections.rejected.match(action)) {
+      const messageText =
+        typeof action.payload === 'string'
+          ? action.payload
+          : action.error?.message ?? 'Failed to refresh connections';
+      throw new Error(messageText);
+    }
+  }, [dispatch, userId]);
+
+  return useMemo(
+    () => ({
+      connections,
+      loading,
+      error,
+      sendConnectionRequest,
+      updateConnectionStatus,
+      cancelConnectionRequest,
+      getConnectionStatus,
+      getConnectionId,
+      refreshConnections,
+    }),
+    [
+      cancelConnectionRequest,
+      connections,
+      error,
+      getConnectionId,
+      getConnectionStatus,
+      loading,
+      refreshConnections,
+      sendConnectionRequest,
+      updateConnectionStatus,
+    ],
+  );
 }
