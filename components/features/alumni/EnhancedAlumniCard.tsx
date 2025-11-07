@@ -6,7 +6,7 @@ import { MessageCircle, UserPlus, Shield, Building2, MapPin, GraduationCap, Cloc
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
 import { useConnections } from "@/lib/contexts/ConnectionsContext";
 import { useAuth } from "@/lib/supabase/auth-context";
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useRouter } from "next/navigation";
 import { ClickableField } from '@/components/shared/ClickableField';
 import { ActivityIndicator } from '@/components/shared/ActivityIndicator';
@@ -36,7 +36,8 @@ interface EnhancedAlumniCardProps {
   onClick?: (alumni: Alumni) => void;
 }
 
-export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps) {
+// Memoized component for performance optimization - prevents re-renders when props haven't changed
+function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProps) {
   const { user } = useAuth();
   const router = useRouter();
   const { 
@@ -357,4 +358,8 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
       </CardContent>
     </Card>
   );
-} 
+}
+
+// Export memoized version for performance optimization
+// Using default shallow comparison - React.memo will prevent re-renders when props haven't changed
+export const EnhancedAlumniCard = memo(EnhancedAlumniCardComponent); 
