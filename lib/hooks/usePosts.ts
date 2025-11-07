@@ -1,103 +1,124 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo } from 'react';
+import {
+  useInfiniteQuery,
+  useQueryClient,
+  type InfiniteData,
+  type QueryFunctionContext,
+} from '@tanstack/react-query';
 import { useAuth } from '@/lib/supabase/auth-context';
-import { Post, PostsResponse, CreatePostRequest } from '@/types/posts';
+import type { Post, PostsResponse, CreatePostRequest } from '@/types/posts';
 
-interface InitialFeedData {
-  posts: Post[];
-  pagination: PostsResponse['pagination'];
+interface InitialFeedData extends PostsResponse {
   chapterId: string;
 }
 
 interface UsePostsOptions {
   initialData?: InitialFeedData;
+  pageSize?: number;
 }
 
-const DEFAULT_PAGINATION = {
-  page: 1,
-  limit: 20,
-  total: 0,
-  totalPages: 0,
+type PostsQueryKey = ['posts', string, number];
+
+const EMPTY_RESPONSE: PostsResponse = {
+  posts: [],
+  pagination: {
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+  },
 };
 
 export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
   const { user, session, getAuthHeaders } = useAuth();
+  const queryClient = useQueryClient();
 
   const normalizedInitialData = useMemo(() => {
     if (!options.initialData) return undefined;
-    if (!options.initialData.chapterId) return options.initialData;
     if (!chapterId) return options.initialData;
     return options.initialData.chapterId === chapterId ? options.initialData : undefined;
   }, [chapterId, options.initialData]);
 
-  const [posts, setPosts] = useState<Post[]>(() => normalizedInitialData?.posts ?? []);
-  const [loading, setLoading] = useState(() => (normalizedInitialData ? false : true));
-  const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState(() => normalizedInitialData?.pagination ?? DEFAULT_PAGINATION);
+  const pageSize = Math.min(Math.max(options.pageSize ?? 10, 1), 50);
+  const queryKey = useMemo<PostsQueryKey>(() => ['posts', chapterId, pageSize], [chapterId, pageSize]);
+  const enabled = Boolean(user && session && chapterId);
 
-  const skipInitialFetchRef = useRef(Boolean(normalizedInitialData));
-  const lastInitialDataRef = useRef<InitialFeedData | undefined>(normalizedInitialData);
-
-  useEffect(() => {
-    if (
-      normalizedInitialData &&
-      (!lastInitialDataRef.current ||
-        lastInitialDataRef.current.chapterId !== normalizedInitialData.chapterId ||
-        lastInitialDataRef.current.pagination.total !== normalizedInitialData.pagination.total ||
-        lastInitialDataRef.current.pagination.page !== normalizedInitialData.pagination.page)
-    ) {
-      setPosts(normalizedInitialData.posts);
-      setPagination(normalizedInitialData.pagination);
-      setLoading(false);
-      skipInitialFetchRef.current = true;
-      lastInitialDataRef.current = normalizedInitialData;
-    }
-  }, [normalizedInitialData]);
-
-  useEffect(() => {
-    if (!normalizedInitialData && lastInitialDataRef.current) {
-      lastInitialDataRef.current = undefined;
-    }
-  }, [normalizedInitialData]);
-
-  const fetchPosts = useCallback(
-    async (page = 1, { showLoading = true }: { showLoading?: boolean } = {}) => {
-      if (!user || !chapterId || !session) return;
-
-      try {
-        if (showLoading) {
-          setLoading(true);
-        }
-        setError(null);
-
-        const headers = getAuthHeaders();
-        const response = await fetch(`/api/posts?chapterId=${chapterId}&page=${page}&limit=20`, {
-          headers,
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch posts');
-        }
-
-        const data: PostsResponse = await response.json();
-        setPosts(data.posts);
-        setPagination(data.pagination);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch posts');
-      } finally {
-        if (showLoading) {
-          setLoading(false);
-        }
+  const fetchPage = useCallback(
+    async ({ pageParam = 1 }: QueryFunctionContext<PostsQueryKey, number>) => {
+      if (!session || !chapterId) {
+        return EMPTY_RESPONSE;
       }
+
+      const headers = getAuthHeaders();
+      const response = await fetch(
+        `/api/posts?chapterId=${chapterId}&page=${pageParam}&limit=${pageSize}`,
+        {
+          headers,
+        },
+      );
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error?.error ?? 'Failed to fetch posts');
+      }
+
+      const data: PostsResponse = await response.json();
+      return data;
     },
-    [chapterId, getAuthHeaders, session, user],
+    [chapterId, getAuthHeaders, session, pageSize],
   );
 
-  const createPost = useCallback(async (postData: CreatePostRequest) => {
-    if (!user || !chapterId || !session) return null;
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isInitialLoading,
+    isRefetching,
+  } = useInfiniteQuery<PostsResponse, Error, InfiniteData<PostsResponse, number>, PostsQueryKey, number>({
+    queryKey,
+    queryFn: fetchPage,
+    enabled,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.pagination;
+      return page < totalPages ? page + 1 : undefined;
+    },
+    initialData: normalizedInitialData
+      ? {
+          pages: [normalizedInitialData],
+          pageParams: [1],
+        }
+      : undefined,
+  });
 
-    try {
+  const posts = useMemo(() => {
+    const pages = data?.pages ?? [];
+    return pages.flatMap((page) => page.posts);
+  }, [data]);
+
+  const updateCachedPages = useCallback(
+    (updater: (pages: PostsResponse[]) => PostsResponse[]) => {
+      queryClient.setQueryData<InfiniteData<PostsResponse>>(queryKey, (existing) => {
+        if (!existing) return existing;
+        const updatedPages = updater(existing.pages);
+        return {
+          ...existing,
+          pages: updatedPages,
+        };
+      });
+    },
+    [queryClient, queryKey],
+  );
+
+  const createPost = useCallback(
+    async (postData: CreatePostRequest) => {
+      if (!user || !chapterId || !session) return null;
+
       const headers = {
         'Content-Type': 'application/json',
         ...getAuthHeaders(),
@@ -110,101 +131,125 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create post');
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error?.error ?? 'Failed to create post');
       }
 
       const { post } = await response.json();
-      
-      // Add the new post to the beginning of the list
-      setPosts(prevPosts => [post, ...prevPosts]);
-      
+
+      updateCachedPages((pages) => {
+        if (pages.length === 0) {
+          return [
+            {
+              ...EMPTY_RESPONSE,
+              posts: [post],
+            },
+          ];
+        }
+
+        const [first, ...rest] = pages;
+        const updatedFirst: PostsResponse = {
+          ...first,
+          posts: [post, ...first.posts],
+          pagination: {
+            ...first.pagination,
+            total: first.pagination.total + 1,
+          },
+        };
+
+        return [updatedFirst, ...rest];
+      });
+
       return post;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create post');
-      return null;
-    }
-  }, [chapterId, getAuthHeaders, session, user]);
+    },
+    [chapterId, getAuthHeaders, session, updateCachedPages, user],
+  );
 
-  const likePost = useCallback(async (postId: string) => {
-    if (!user || !session) return;
+  const likePost = useCallback(
+    async (postId: string) => {
+      if (!user || !session) return;
 
-    try {
       const response = await fetch(`/api/posts/${postId}/like`, {
         method: 'POST',
         headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to like post');
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error?.error ?? 'Failed to like post');
       }
 
       const { liked } = await response.json();
 
-      // Update the post in the local state
-      setPosts(prevPosts => 
-        prevPosts.map(post => 
-          post.id === postId 
-            ? { 
-                ...post, 
-                is_liked: liked,
-                likes_count: liked ? post.likes_count + 1 : Math.max(0, post.likes_count - 1)
-              }
-            : post
-        )
+      updateCachedPages((pages) =>
+        pages.map((page) => ({
+          ...page,
+          posts: page.posts.map((post) =>
+            post.id === postId
+              ? {
+                  ...post,
+                  is_liked: liked,
+                  likes_count: liked ? post.likes_count + 1 : Math.max(0, post.likes_count - 1),
+                }
+              : post,
+          ),
+        })),
       );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to like post');
-    }
-  }, [getAuthHeaders, session, user]);
+    },
+    [getAuthHeaders, session, updateCachedPages, user],
+  );
 
-  const deletePost = useCallback(async (postId: string) => {
-    if (!user || !session) return;
+  const deletePost = useCallback(
+    async (postId: string) => {
+      if (!user || !session) return false;
 
-    try {
       const response = await fetch(`/api/posts/${postId}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete post');
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error?.error ?? 'Failed to delete post');
       }
 
-      // Remove the post from the local state
-      setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
-      
+      updateCachedPages((pages) =>
+        pages.map((page) => ({
+          ...page,
+          posts: page.posts.filter((post) => post.id !== postId),
+          pagination: {
+            ...page.pagination,
+            total: Math.max(
+              0,
+              page.pagination.total -
+                (page.posts.some((post) => post.id === postId) ? 1 : 0),
+            ),
+          },
+        })),
+      );
+
       return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete post');
-      return false;
-    }
-  }, [getAuthHeaders, session, user]);
+    },
+    [getAuthHeaders, session, updateCachedPages, user],
+  );
 
-  useEffect(() => {
-    if (!chapterId) {
-      setPosts([]);
-      setPagination(DEFAULT_PAGINATION);
-      return;
-    }
-
-    if (skipInitialFetchRef.current) {
-      skipInitialFetchRef.current = false;
-      fetchPosts(1, { showLoading: false });
-      return;
-    }
-
-    fetchPosts();
-  }, [chapterId, fetchPosts]);
+  const refresh = useCallback(
+    () => queryClient.invalidateQueries({ queryKey }),
+    [queryClient, queryKey],
+  );
 
   return {
     posts,
-    loading,
-    error,
-    pagination,
-    fetchPosts,
+    error: error?.message ?? null,
+    isInitialLoading,
+    isLoading: isLoading || isRefetching,
+    isRefetching,
+    isFetchingNextPage,
+    hasNextPage: hasNextPage ?? false,
+    fetchNextPage,
+    refresh,
     createPost,
     likePost,
     deletePost,
-    refetch: () => fetchPosts(1)
   };
 }
