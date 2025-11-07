@@ -4,8 +4,7 @@ import { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { X, Heart, MessageCircle, Share, Trash2, Send } from 'lucide-react';
+import { X, Heart, MessageCircle, Share, Trash2, Send, RefreshCcw } from 'lucide-react';
 import { Post, PostComment, CreateCommentRequest } from '@/types/posts';
 import { useComments } from '@/lib/hooks/useComments';
 import { useProfile } from '@/lib/contexts/ProfileContext';
@@ -23,7 +22,18 @@ interface CommentModalProps {
 export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: CommentModalProps) {
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { comments, loading, error, createComment, deleteComment, likeComment } = useComments(post.id, {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const {
+    comments,
+    loading,
+    error,
+    createComment,
+    deleteComment,
+    likeComment,
+    refresh,
+    lastFetchedAt,
+    loadedFromCache,
+  } = useComments(post.id, {
     enabled: isOpen,
     initialComments: post.comments_preview,
     initialTotal: post.comments_count,
@@ -68,11 +78,32 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
     await likeComment(commentId);
   };
 
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await refresh();
+    } catch (err) {
+      console.error('Failed to refresh comments:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const formatTimestamp = (timestamp: string) => {
     try {
       return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
     } catch {
       return 'recently';
+    }
+  };
+
+  const formatRelativeMoment = (timestamp: number | null) => {
+    if (!timestamp) return null;
+    try {
+      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+    } catch {
+      return null;
     }
   };
 
@@ -90,10 +121,27 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
       <DialogContent className="sm:max-w-[700px] max-w-[95vw] h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden p-0 m-0 rounded-none sm:rounded-lg">
         {/* Compact Header */}
         <DialogHeader className="flex-shrink-0 border-b border-gray-200 -mx-4 sm:mx-0 px-4 py-1 sm:px-6 sm:py-1">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-lg sm:text-xl font-semibold">
-              Comments
-            </DialogTitle>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-col">
+              <DialogTitle className="text-lg sm:text-xl font-semibold">
+                Comments
+              </DialogTitle>
+              {lastFetchedAt && (
+                <span className="text-[11px] text-gray-400">
+                  {loadedFromCache ? 'Cached' : 'Updated'} {formatRelativeMoment(lastFetchedAt)}
+                </span>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={loading || isRefreshing}
+              className="text-gray-500 hover:text-blue-600 hover:bg-blue-50 h-8 px-2"
+              title="Refresh comments"
+            >
+              <RefreshCcw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </Button>
           </div>
         </DialogHeader>
 
