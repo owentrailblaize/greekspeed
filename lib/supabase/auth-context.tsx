@@ -15,6 +15,7 @@ import {
   signIn as signInThunk,
   signOut as signOutThunk,
 } from '@/lib/store/slices/authSlice';
+import { clearProfile, fetchProfile } from '@/lib/store/slices/profileSlice';
 import { ActivityTypes, trackActivity } from '@/lib/utils/activityUtils';
 import { supabase } from './client';
 
@@ -62,10 +63,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (activityError) {
           console.error('Failed to track automatic login activity:', activityError);
         }
+
+        void dispatch(fetchProfile({ force: true }));
       }
 
       if (event === 'SIGNED_OUT') {
         dispatch(clearAuth());
+        dispatch(clearProfile());
       }
     });
 
