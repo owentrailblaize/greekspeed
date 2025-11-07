@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { X, Calendar, MapPin, DollarSign, FileText, Mail, Smartphone } from 'lucide-react';
 import { Event, CreateEventRequest, UpdateEventRequest } from '@/types/events';
 import { useAuth} from '@/lib/supabase/auth-context';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 
 interface EventFormProps {
   event?: Event | null;

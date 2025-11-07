@@ -7,7 +7,7 @@ import { ActivelyHiringPage } from "./ActivelyHiringPage";
 import { MyChapterPage } from "@/components/mychapter/MyChapterPage";
 import { ProfileCompletionGate } from "@/components/features/profile/ProfileCompletionGate";
 import { Lock, ChevronDown, ChevronUp } from "lucide-react";
-import { useProfile } from "@/lib/hooks/useProfile";
+import { useProfile } from "@/lib/contexts/ProfileContext";
 import { supabase } from "@/lib/supabase/client";
 
 const pageTransition = {

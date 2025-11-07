@@ -1,4 +1,4 @@
-import { useProfile } from './useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { ChapterRole } from '@/types/profile';
 
 export function useChapterRoleAccess(allowedChapterRoles: ChapterRole[]) {

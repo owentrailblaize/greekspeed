@@ -5,7 +5,7 @@ import { LinkedInStyleChapterCard } from "./LinkedInStyleChapterCard";
 import { ChapterMember } from "@/types/chapter";
 import { useChapterRoleAccess } from '@/lib/hooks/useChapterRoleAccess';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { CHAPTER_ADMIN_ROLES, getRoleDisplayName } from '@/lib/permissions';
 
 interface MyChapterContentProps {

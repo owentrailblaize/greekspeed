@@ -1,4 +1,4 @@
-import { useProfile } from './useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 

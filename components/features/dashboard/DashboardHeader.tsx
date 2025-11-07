@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserDropdown } from '@/components/features/profile/UserDropdown';
 import { useAuth } from '@/lib/supabase/auth-context';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle, Lock, Menu, X } from 'lucide-react';

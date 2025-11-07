@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { useProfile } from "@/lib/hooks/useProfile";
+import { useProfile } from "@/lib/contexts/ProfileContext";
 
 // Mock job data
 const mockJobs = [

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Activity, AlertCircle, CheckCircle, Clock, Users, DollarSign, Calendar, FileText, Megaphone } from 'lucide-react';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(

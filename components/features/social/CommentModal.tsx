@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { X, Heart, MessageCircle, Share, Trash2, Send } from 'lucide-react';
 import { Post, PostComment, CreateCommentRequest } from '@/types/posts';
 import { useComments } from '@/lib/hooks/useComments';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { formatDistanceToNow } from 'date-fns';
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
 

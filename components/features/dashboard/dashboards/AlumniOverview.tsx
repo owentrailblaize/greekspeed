@@ -12,7 +12,7 @@ import { MobileNetworkPage } from './ui/MobileNetworkPage';
 import { MobileProfilePage } from './ui/MobileProfilePage';
 import { AlumniPipeline } from '@/components/features/alumni/AlumniPipeline';
 import { MyChapterPage } from '@/components/mychapter/MyChapterPage';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useRouter } from 'next/navigation';

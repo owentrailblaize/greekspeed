@@ -5,7 +5,7 @@ import { CheckSquare, Clock, AlertCircle, Users, Calendar, FileText, Plus, Loade
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { Task, TaskStatus, TaskPriority, CreateTaskRequest } from '@/types/operations';
 import { getTasksByChapter, updateTask, getChapterMembersForTasks } from '@/lib/services/taskService';
 import { TaskModal } from '@/components/ui/TaskModal';

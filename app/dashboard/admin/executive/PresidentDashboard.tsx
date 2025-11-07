@@ -12,7 +12,7 @@ import { Select, SelectItem } from "@/components/ui/select";
 import { TasksPanel } from '@/components/features/dashboard/dashboards/ui/TasksPanel';
 import { ChapterDocumentManager } from '@/components/features/dashboard/dashboards/ui/ChapterDocumentManager';
 import { InviteManagement } from '@/components/features/invitations/InviteManagement';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useAnnouncements } from '@/lib/hooks/useAnnouncements';
 import { UpcomingEventsCard } from '@/components/features/dashboard/dashboards/ui/UpcomingEventsCard';
 import { CreateAnnouncementData } from '@/types/announcements';

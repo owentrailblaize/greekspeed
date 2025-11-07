@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, MessageSquare, Clock, AlertTriangle, GraduationCap, Calendar, AlertCircle, TrendingUp, Minus, RefreshCw } from 'lucide-react';
 import { useAnnouncements } from '@/lib/hooks/useAnnouncements';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { Announcement } from '@/types/announcements';
 
 // Helper function to get icon and color based on announcement type
