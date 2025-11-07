@@ -91,7 +91,8 @@ export function SocialChairDashboard() {
     error: eventsError, 
     createEvent, 
     updateEvent, 
-    deleteEvent 
+    deleteEvent,
+    fetchEvents 
   } = useEvents({ 
     chapterId: chapterId || '', 
     scope: 'all' 
@@ -104,7 +105,8 @@ export function SocialChairDashboard() {
     error: vendorsError, 
     createVendor, 
     updateVendor, 
-    deleteVendor 
+    deleteVendor,
+    fetchVendors 
   } = useVendors({ 
     chapterId: chapterId || '' 
   });
@@ -836,7 +838,7 @@ export function SocialChairDashboard() {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => window.location.reload()}
+                    onClick={() => fetchEvents()}
                     className="mt-2"
                   >
                     Retry
@@ -1000,7 +1002,7 @@ export function SocialChairDashboard() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => window.location.reload()}
+                  onClick={() => fetchVendors()}
                   className="mt-2"
                 >
                   Retry

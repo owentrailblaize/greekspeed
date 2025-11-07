@@ -16,51 +16,51 @@ export function MobileTasksPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Load tasks for the current user
-  useEffect(() => {
+  const loadMyTasks = async () => {
     if (!profile?.chapter_id || !profile?.id) {
       setLoading(false);
       return;
     }
 
-    const loadMyTasks = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const { data: allTasks, error: fetchError } = await supabase
-          .from('tasks')
-          .select(`
-            *,
-            assignee:profiles!tasks_assignee_id_fkey(full_name),
-            assigned_by:profiles!tasks_assigned_by_fkey(full_name),
-            chapter:chapters!tasks_chapter_id_fkey(name)
-          `)
-          .eq('chapter_id', profile.chapter_id)
-          .eq('assignee_id', profile.id)
-          .order('created_at', { ascending: false });
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const { data: allTasks, error: fetchError } = await supabase
+        .from('tasks')
+        .select(`
+          *,
+          assignee:profiles!tasks_assignee_id_fkey(full_name),
+          assigned_by:profiles!tasks_assigned_by_fkey(full_name),
+          chapter:chapters!tasks_chapter_id_fkey(name)
+        `)
+        .eq('chapter_id', profile.chapter_id)
+        .eq('assignee_id', profile.id)
+        .order('created_at', { ascending: false });
 
-        if (fetchError) {
-          throw fetchError;
-        }
-
-        const transformedTasks = allTasks.map(task => ({
-          ...task,
-          assignee_name: task.assignee?.full_name || 'Unassigned',
-          assigned_by_name: task.assigned_by?.full_name || 'Unknown',
-          chapter_name: task.chapter?.name || 'Unknown Chapter',
-          is_overdue: task.due_date && task.status !== 'completed' && new Date(task.due_date) < new Date()
-        }));
-
-        setTasks(transformedTasks);
-      } catch (error) {
-        console.error('Error loading my tasks:', error);
-        setError('Failed to load tasks');
-        setTasks([]);
-      } finally {
-        setLoading(false);
+      if (fetchError) {
+        throw fetchError;
       }
-    };
 
+      const transformedTasks = allTasks.map(task => ({
+        ...task,
+        assignee_name: task.assignee?.full_name || 'Unassigned',
+        assigned_by_name: task.assigned_by?.full_name || 'Unknown',
+        chapter_name: task.chapter?.name || 'Unknown Chapter',
+        is_overdue: task.due_date && task.status !== 'completed' && new Date(task.due_date) < new Date()
+      }));
+
+      setTasks(transformedTasks);
+    } catch (error) {
+      console.error('Error loading my tasks:', error);
+      setError('Failed to load tasks');
+      setTasks([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadMyTasks();
   }, [profile?.chapter_id, profile?.id]);
 
@@ -111,7 +111,7 @@ export function MobileTasksPage() {
             <p className="font-medium mb-2">Error loading tasks</p>
             <p className="text-sm">{error}</p>
             <Button 
-              onClick={() => window.location.reload()} 
+              onClick={() => loadMyTasks()} 
               className="mt-3 bg-navy-600 hover:bg-navy-700"
             >
               Try Again
