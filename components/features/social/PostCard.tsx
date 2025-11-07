@@ -21,6 +21,11 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const commentsPreview = post.comments_preview ?? [];
+  const hasComments = (post.comments_count ?? 0) > 0;
+  const commentCountLabel = hasComments
+    ? `View ${post.comments_count} ${post.comments_count === 1 ? 'comment' : 'comments'}`
+    : 'Add a comment';
 
   const getPostTypeColor = (type: string) => {
     switch (type) {
@@ -37,6 +42,44 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
     } catch {
       return 'recently';
     }
+  };
+
+  const formatCommentSnippet = (content: string) => {
+    if (!content) return '';
+    const trimmed = content.trim();
+    if (trimmed.length <= 140) return trimmed;
+    return `${trimmed.slice(0, 137)}…`;
+  };
+
+  const renderCommentsPreview = () => {
+    if (commentsPreview.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="mt-3 sm:mt-4 rounded-lg border border-gray-100 bg-gray-50 p-3 sm:p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+          {commentsPreview.length > 1 ? 'Most recent comments' : 'Most recent comment'}
+        </p>
+        <div className="mt-2 space-y-3">
+          {commentsPreview.map((comment) => (
+            <div key={comment.id} className="text-sm text-gray-700">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-medium text-gray-900">
+                  {comment.author?.full_name || 'Member'}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {formatTimestamp(comment.created_at)}
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-gray-600">
+                {formatCommentSnippet(comment.content)}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   const handleDeleteClick = () => {
@@ -136,6 +179,7 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
                 />
               </div>
             )}
+            {renderCommentsPreview()}
           </div>
 
           {/* Post Actions */}
@@ -161,7 +205,7 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
                 className="text-gray-500 hover:text-blue-500 hover:bg-blue-50 h-8 px-2"
               >
                 <MessageCircle className="h-4 w-4 mr-1" />
-                <span className="text-xs">{post.comments_count}</span>
+                <span className="text-xs">{commentCountLabel}</span>
               </Button>
               <Button 
                 variant="ghost" 
@@ -249,6 +293,7 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
                 className="w-full max-h-96 object-cover rounded-lg"
               />
             )}
+            {renderCommentsPreview()}
           </div>
 
           {/* Post Actions */}
@@ -274,7 +319,7 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
                 className="text-gray-500 hover:text-blue-500 hover:bg-blue-50 h-10 sm:h-8 px-3 sm:px-2"
               >
                 <MessageCircle className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1" />
-                <span className="text-sm sm:text-xs">{post.comments_count}</span>
+                <span className="text-sm sm:text-xs whitespace-nowrap">{commentCountLabel}</span>
               </Button>
               <Button 
                 variant="ghost" 

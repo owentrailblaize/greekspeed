@@ -50,10 +50,28 @@ export async function GET(request: NextRequest) {
           avatar_url,
           chapter_role,
           member_status
+        ),
+        comments_preview:post_comments(
+          id,
+          post_id,
+          author_id,
+          content,
+          likes_count,
+          created_at,
+          updated_at,
+          author:profiles!post_comments_author_id_fkey(
+            id,
+            full_name,
+            first_name,
+            last_name,
+            avatar_url
+          )
         )
       `)
       .eq('chapter_id', chapterId)
       .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false, foreignTable: 'post_comments' })
+      .limit(2, { foreignTable: 'post_comments' })
       .range(offset, offset + limit - 1);
 
     if (error) {
@@ -74,14 +92,23 @@ export async function GET(request: NextRequest) {
     const likedPostIds = new Set(userLikes?.map(like => like.post_id) || []);
 
     // Transform the data to include like status and author info
-    const transformedPosts = posts?.map(post => ({
-      ...post,
-      is_liked: likedPostIds.has(post.id),
-      is_author: post.author_id === user.id,
-      likes_count: post.likes_count || 0,
-      comments_count: post.comments_count || 0,
-      shares_count: post.shares_count || 0
-    })) || [];
+    const transformedPosts = posts?.map(post => {
+      const preview = Array.isArray(post.comments_preview)
+        ? [...post.comments_preview]
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            .slice(0, 2)
+        : [];
+
+      return {
+        ...post,
+        is_liked: likedPostIds.has(post.id),
+        is_author: post.author_id === user.id,
+        likes_count: post.likes_count || 0,
+        comments_count: post.comments_count || preview.length,
+        shares_count: post.shares_count || 0,
+        comments_preview: preview
+      };
+    }) || [];
 
     // Get total count for pagination
     const { count: totalCount } = await supabase
@@ -89,6 +116,9 @@ export async function GET(request: NextRequest) {
       .select('*', { count: 'exact', head: true })
       .eq('chapter_id', chapterId);
 
+    // The posts payload includes `comments_count` and a lightweight `comments_preview`
+    // array so the client feed can render comment metadata without triggering the full
+    // comments API upfront.
     return NextResponse.json({
       posts: transformedPosts,
       pagination: {
@@ -189,7 +219,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create post' }, { status: 500 });
     }
 
-    return NextResponse.json({ post });
+    return NextResponse.json({
+      post: {
+        ...post,
+        comments_count: post?.comments_count || 0,
+        comments_preview: []
+      }
+    });
   } catch (error) {
     console.error('API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

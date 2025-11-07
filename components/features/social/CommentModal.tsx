@@ -25,6 +25,8 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { comments, loading, error, createComment, deleteComment, likeComment } = useComments(post.id, {
     enabled: isOpen,
+    initialComments: post.comments_preview,
+    initialTotal: post.comments_count,
   });
   const { profile } = useProfile();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
