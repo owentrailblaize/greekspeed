@@ -1,5 +1,4 @@
-import { combineReducers } from '@reduxjs/toolkit';
-import { configureStore } from '@reduxjs/toolkit';
+import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import {
   FLUSH,
   PAUSE,
@@ -11,17 +10,10 @@ import {
 } from 'redux-persist';
 
 import { createPersistConfig } from './persistConfig';
-import { createSlice } from '@reduxjs/toolkit';
-
-const placeholderSlice = createSlice({
-    name: 'placeholder',
-    initialState: {},
-    reducers: {},
-});
+import authReducer from './slices/authSlice';
 
 const rootReducer = combineReducers({
-  placeholder: placeholderSlice.reducer,
-  // add real slices here later
+  auth: authReducer,
 });
 
 const persistConfig = createPersistConfig<ReturnType<typeof rootReducer>>({

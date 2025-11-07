@@ -13,12 +13,12 @@ const storage =
     : createNoopStorage();
 
 export const createPersistConfig = <S>(
-    overrides: Partial<PersistConfig<S>> = {},
+  overrides: Partial<PersistConfig<S>> = {},
 ): PersistConfig<S> => ({
-    key: 'root',
-    storage,
-    version: 1,
-    whitelist: [],
-    ...overrides,
+  key: 'root',
+  storage,
+  version: 1,
+  whitelist: ['auth'],
+  ...overrides,
 });
 
