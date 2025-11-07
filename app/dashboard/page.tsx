@@ -1,77 +1,124 @@
-'use client';
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/lib/supabase/auth-context';
-import { useProfile } from '@/lib/contexts/ProfileContext'; // ✅ Add this
-import { DashboardOverview } from '@/components/features/dashboard/DashboardOverview';
-import { useRouter } from 'next/navigation';
-import { WelcomeModal } from '@/components/shared/WelcomeModal';
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
+import DashboardPageClient from './DashboardPageClient';
+import type { Post, PostsResponse } from '@/types/posts';
 
-export default function DashboardPage() {
-  const { user, loading: authLoading } = useAuth(); // ✅ Removed profile and isDeveloper
-  const { profile, isDeveloper, loading: profileLoading } = useProfile(); // ✅ Add this
-  const router = useRouter();
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+const POSTS_PAGE_LIMIT = 20;
 
-  useEffect(() => {
-    // Wait for both auth and profile to finish loading
-    if (authLoading || profileLoading) return; // ✅ Check profileLoading too
+export default async function DashboardPage() {
+  const cookieStore = await cookies();
 
-    // No user means not authenticated
-    if (!user) {
-      router.push('/sign-in');
-      return;
-    }
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...(options ?? {}) });
+        },
+        remove(name: string, options: any) {
+          cookieStore.delete({ name, ...(options ?? {}) });
+        },
+      },
+    },
+  );
 
-    // If we have profile data, check if it's complete
-    if (profile) {
-      // Check if this is a new user who hasn't seen the welcome modal
-      if (!profile.welcome_seen && !isDeveloper) {
-        setShowWelcomeModal(true);
-      }
-      
-      // Check if profile is incomplete (only for non-developers)
-      if (!isDeveloper && (!profile.chapter || !profile.role)) {
-        router.push('/profile/complete');
-        return;
-      }
-    }
-  }, [user, profile, authLoading, profileLoading, isDeveloper, router]); // ✅ Add profileLoading
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  // Show loading while auth or profile is loading
-  if (authLoading || profileLoading) { // ✅ Check profileLoading too
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
-    );
+  if (!session) {
+    return <DashboardPageClient />;
   }
 
-  // No user = will redirect (handled in useEffect)
-  if (!user) {
-    return null;
-  }
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select(
+      `
+        id,
+        chapter_id,
+        role,
+        welcome_seen,
+        chapter,
+        role_display,
+        first_name,
+        last_name
+      `,
+    )
+    .eq('id', session.user.id)
+    .maybeSingle();
 
-  // Don't render dashboard if profile is incomplete (will redirect)
-  if (!isDeveloper && (!profile?.chapter || !profile?.role)) {
-    return null;
+  let initialFeed:
+    | (PostsResponse & {
+        chapterId: string;
+      })
+    | null = null;
+
+  if (profile?.chapter_id) {
+    const { data: posts, error: postsError } = await supabase
+      .from('posts')
+      .select(
+        `
+          *,
+          author:profiles!author_id(
+            id,
+            full_name,
+            first_name,
+            last_name,
+            avatar_url,
+            chapter_role,
+            member_status
+          )
+        `,
+      )
+      .eq('chapter_id', profile.chapter_id)
+      .order('created_at', { ascending: false })
+      .range(0, POSTS_PAGE_LIMIT - 1);
+
+    if (!postsError && posts) {
+      const { data: userLikes } = await supabase
+        .from('post_likes')
+        .select('post_id')
+        .eq('user_id', session.user.id);
+
+      const likedPostIds = new Set(userLikes?.map((like) => like.post_id) ?? []);
+
+      const transformedPosts: Post[] = posts.map((post) => ({
+        ...post,
+        is_liked: likedPostIds.has(post.id),
+        is_author: post.author_id === session.user.id,
+        likes_count: post.likes_count ?? 0,
+        comments_count: post.comments_count ?? 0,
+        shares_count: post.shares_count ?? 0,
+      }));
+
+      const { count: totalCount } = await supabase
+        .from('posts')
+        .select('*', { count: 'exact', head: true })
+        .eq('chapter_id', profile.chapter_id);
+
+      initialFeed = {
+        posts: transformedPosts,
+        pagination: {
+          page: 1,
+          limit: POSTS_PAGE_LIMIT,
+          total: totalCount ?? transformedPosts.length,
+          totalPages: Math.ceil((totalCount ?? transformedPosts.length) / POSTS_PAGE_LIMIT),
+        },
+        chapterId: profile.chapter_id,
+      };
+    }
   }
 
   return (
-    <div>
-      <div style={{ display: 'none' }}>Dashboard Page Wrapper</div>
-      <DashboardOverview userRole={profile?.role || null} />
-      
-      {showWelcomeModal && profile && (
-        <WelcomeModal
-          profile={profile}
-          onClose={() => setShowWelcomeModal(false)}
-        />
-      )}
-    </div>
+    <DashboardPageClient
+      initialFeed={initialFeed ?? undefined}
+      fallbackChapterId={profile?.chapter_id ?? null}
+    />
   );
-} 
+}

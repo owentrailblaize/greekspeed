@@ -8,16 +8,25 @@ import { usePosts } from '@/lib/hooks/usePosts';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { CreatePostModal } from '@/components/features/social/CreatePostModal';
 import { PostCard } from '@/components/features/social/PostCard';
-import { Post, CreatePostRequest } from '@/types/posts';
+import type { Post, CreatePostRequest, PostsResponse } from '@/types/posts';
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
 
-interface SocialFeedProps {
+export interface SocialFeedInitialData {
+  posts: Post[];
+  pagination: PostsResponse['pagination'];
   chapterId: string;
 }
 
-export function SocialFeed({ chapterId }: SocialFeedProps) {
+interface SocialFeedProps {
+  chapterId: string;
+  initialData?: SocialFeedInitialData;
+}
+
+export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const { posts, loading, error, createPost, likePost, deletePost, refetch } = usePosts(chapterId);
+  const { posts, loading, error, createPost, likePost, deletePost, refetch } = usePosts(chapterId, {
+    initialData,
+  });
   const { profile } = useProfile();
 
   const handleCreatePost = async (postData: CreatePostRequest) => {
@@ -38,7 +47,7 @@ export function SocialFeed({ chapterId }: SocialFeedProps) {
     }
   };
 
-  if (loading) {
+  if (loading && posts.length === 0) {
     return (
       <div className="space-y-4">
         <div className="animate-pulse">
@@ -111,6 +120,11 @@ export function SocialFeed({ chapterId }: SocialFeedProps) {
               onCommentAdded={handleCommentAdded}
             />
           ))
+        )}
+        {loading && posts.length > 0 && (
+          <div className="flex justify-center py-4">
+            <div className="w-6 h-6 border-2 border-navy-500 border-t-transparent rounded-full animate-spin" />
+          </div>
         )}
       </div>
 

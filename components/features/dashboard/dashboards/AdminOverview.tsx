@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { QuickActions, QuickAction } from './ui/QuickActions'; // Add QuickAction import
 import { DuesSnapshot } from './ui/DuesSnapshot';
 import { ComplianceSnapshot } from './ui/ComplianceSnapshot';
@@ -11,7 +11,7 @@ import { DocsCompliancePanel } from './ui/DocsCompliancePanel';
 import { AlertsStrip } from './ui/AlertsStrip';
 import { CompactCalendarCard } from './ui/CompactCalendarCard';
 import { useProfile } from '@/lib/contexts/ProfileContext';
-import { SocialFeed } from './ui/SocialFeed';
+import { SocialFeed, type SocialFeedInitialData } from './ui/SocialFeed';
 import { DuesStatusCard } from './ui/DuesStatusCard';
 import { AdminMobileBottomNavigation } from './ui/AdminMobileBottomNavigation';
 import { MobileAdminTasksPage } from './ui/MobileAdminTasksPage';
@@ -25,13 +25,24 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { createPortal } from 'react-dom';
 
-export function AdminOverview() {
+interface AdminOverviewProps {
+  initialFeed?: SocialFeedInitialData;
+  fallbackChapterId?: string | null;
+}
+
+export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewProps) {
   const { profile } = useProfile();
-  const chapterId = profile?.chapter_id;
+  const chapterId = profile?.chapter_id ?? fallbackChapterId ?? null;
   const [activeMobileTab, setActiveMobileTab] = useState('home');
   const [showQuickActionsModal, setShowQuickActionsModal] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
   const router = useRouter();
+
+  const feedData = useMemo(() => {
+    if (!initialFeed) return undefined;
+    if (!chapterId) return initialFeed;
+    return initialFeed.chapterId === chapterId ? initialFeed : undefined;
+  }, [chapterId, initialFeed]);
 
   // Quick Actions handlers
   const handleScheduleMeeting = () => {
@@ -121,7 +132,7 @@ export function AdminOverview() {
             </div>
             {/* Primary Feature: Social Feed */}
             <div className="w-full">
-              <SocialFeed chapterId={chapterId || ''} />
+              <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
             </div>
           </div>
         );
@@ -137,7 +148,7 @@ export function AdminOverview() {
         return (
           <div className="space-y-4">
             <div className="w-full">
-              <SocialFeed chapterId={chapterId || ''} />
+              <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
             </div>
           </div>
         );
@@ -176,7 +187,7 @@ export function AdminOverview() {
           
           {/* Center Column - 6 columns wide */}
           <div className="col-span-6 space-y-6">
-            <SocialFeed chapterId={chapterId || ''} />
+            <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
           </div>
           
           {/* Right Column - 3 columns wide */}
