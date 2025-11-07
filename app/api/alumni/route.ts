@@ -19,6 +19,41 @@ const getChapterId = async (supabase: any, chapterIdentifier: string): Promise<s
 };
 
 /**
+ * Calculate a simple completeness score for sorting (server-side)
+ * Higher score = more complete profile
+ */
+function calculateCompletenessScore(alumni: any): number {
+  let score = 0;
+  
+  // Basic info (30 points)
+  if (alumni.fullName) score += 10;
+  if (alumni.chapter) score += 8;
+  if (alumni.graduationYear) score += 7;
+  if (alumni.avatar) score += 5;
+  
+  // Professional info (30 points)
+  if (alumni.jobTitle) score += 12;
+  if (alumni.company) score += 10;
+  if (alumni.industry) score += 8;
+  
+  // Contact info (20 points)
+  if (alumni.email) score += 10;
+  if (alumni.phone) score += 6;
+  if (alumni.location) score += 4;
+  
+  // Social info (15 points)
+  if (alumni.description && alumni.description !== `Experienced professional in ${alumni.industry}.`) score += 8;
+  if (alumni.mutualConnectionsCount > 0) score += 4;
+  if (alumni.tags && alumni.tags.length > 0) score += 3;
+  
+  // Verification (5 points)
+  if (alumni.verified) score += 3;
+  if (alumni.hasProfile) score += 2;
+  
+  return score;
+}
+
+/**
  * Calculate mutual connections for all alumni in a single efficient query
  * @param supabase - Supabase client
  * @param viewerId - Current user's ID
@@ -474,7 +509,7 @@ export async function GET(request: NextRequest) {
           })
         }
 
-        // 🔥 ADD: Activity sorting logic
+        // 🔥 OPTIMIZED: Server-side sorting with activity priority + completeness score
         filteredAlumni.sort((a, b) => {
           const aActive = a.lastActiveAt ? new Date(a.lastActiveAt) : null
           const bActive = b.lastActiveAt ? new Date(b.lastActiveAt) : null
@@ -495,21 +530,28 @@ export async function GET(request: NextRequest) {
           const aPriority = getActivityPriority(aActive)
           const bPriority = getActivityPriority(bActive)
           
-          // First sort by activity priority
+          // 1. Primary sort by activity priority
           if (aPriority !== bPriority) {
             return aPriority - bPriority
           }
           
-          // If same priority, sort by most recent activity
+          // 2. Secondary sort by completeness score (within same activity level)
+          const aCompleteness = calculateCompletenessScore(a)
+          const bCompleteness = calculateCompletenessScore(b)
+          if (aCompleteness !== bCompleteness) {
+            return bCompleteness - aCompleteness // Higher completeness first
+          }
+          
+          // 3. Tertiary sort by most recent activity time
           if (aActive && bActive) {
             return bActive.getTime() - aActive.getTime()
           }
           
-          // If only one has activity, prioritize it
+          // 4. If only one has activity, prioritize it
           if (aActive && !bActive) return -1
           if (!aActive && bActive) return 1
           
-          // If neither has activity, sort by name
+          // 5. Fallback to name
           return a.fullName.localeCompare(b.fullName)
         })
 
@@ -705,7 +747,7 @@ export async function GET(request: NextRequest) {
           })
         }
 
-        // Activity sorting logic
+        // 🔥 OPTIMIZED: Server-side sorting with activity priority + completeness score
         filteredAlumni.sort((a, b) => {
           const aActive = a.lastActiveAt ? new Date(a.lastActiveAt) : null
           const bActive = b.lastActiveAt ? new Date(b.lastActiveAt) : null
@@ -724,10 +766,19 @@ export async function GET(request: NextRequest) {
           const aPriority = getActivityPriority(aActive)
           const bPriority = getActivityPriority(bActive)
           
+          // 1. Primary sort by activity priority
           if (aPriority !== bPriority) {
             return aPriority - bPriority
           }
           
+          // 2. Secondary sort by completeness score
+          const aCompleteness = calculateCompletenessScore(a)
+          const bCompleteness = calculateCompletenessScore(b)
+          if (aCompleteness !== bCompleteness) {
+            return bCompleteness - aCompleteness
+          }
+          
+          // 3. Tertiary sort by most recent activity
           if (aActive && bActive) {
             return bActive.getTime() - aActive.getTime()
           }
@@ -902,7 +953,7 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // 🔥 ADD: Activity sorting logic
+    // 🔥 OPTIMIZED: Server-side sorting with activity priority + completeness score
     filteredAlumni.sort((a, b) => {
       const aActive = a.lastActiveAt ? new Date(a.lastActiveAt) : null
       const bActive = b.lastActiveAt ? new Date(b.lastActiveAt) : null
@@ -923,21 +974,28 @@ export async function GET(request: NextRequest) {
       const aPriority = getActivityPriority(aActive)
       const bPriority = getActivityPriority(bActive)
       
-      // First sort by activity priority
+      // 1. Primary sort by activity priority
       if (aPriority !== bPriority) {
         return aPriority - bPriority
       }
       
-      // If same priority, sort by most recent activity
+      // 2. Secondary sort by completeness score
+      const aCompleteness = calculateCompletenessScore(a)
+      const bCompleteness = calculateCompletenessScore(b)
+      if (aCompleteness !== bCompleteness) {
+        return bCompleteness - aCompleteness
+      }
+      
+      // 3. Tertiary sort by most recent activity
       if (aActive && bActive) {
         return bActive.getTime() - aActive.getTime()
       }
       
-      // If only one has activity, prioritize it
+      // 4. If only one has activity, prioritize it
       if (aActive && !bActive) return -1
       if (!aActive && bActive) return 1
       
-      // If neither has activity, sort by name
+      // 5. Fallback to name
       return a.fullName.localeCompare(b.fullName)
     })
 
