@@ -4,7 +4,8 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, MessageCircle, Trash2, Lock } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Heart, MessageCircle, Trash2 } from 'lucide-react';
 import { Post } from '@/types/posts';
 import { formatDistanceToNow } from 'date-fns';
 import { CommentModal } from './CommentModal';
@@ -48,24 +49,16 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
     }
 
     return (
-      <div className="mt-3 sm:mt-4 rounded-lg border border-gray-100 bg-gray-50 p-3 sm:p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+      <div className="mt-4 space-y-3 rounded-2xl border border-gray-100 bg-gray-50/70 p-4 shadow-inner">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">
           {commentsPreview.length > 1 ? 'Most recent comments' : 'Most recent comment'}
         </p>
-        <div className="mt-2 space-y-3">
+        <div className="space-y-3">
           {commentsPreview.map((comment) => (
-            <div key={comment.id} className="text-sm text-gray-700">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-medium text-gray-900">
-                  {comment.author?.full_name || 'Member'}
-                </span>
-                <span className="text-xs text-gray-400">
-                  {formatTimestamp(comment.created_at)}
-                </span>
-              </div>
-              <p className="mt-1 text-sm text-gray-600">
-                {formatCommentSnippet(comment.content)}
-              </p>
+            <div key={comment.id} className="text-sm text-gray-600">
+              <p className="font-medium text-gray-900">{comment.author?.full_name || 'Member'}</p>
+              <p className="text-xs text-gray-400">{formatTimestamp(comment.created_at)}</p>
+              <p className="mt-1 leading-relaxed">{formatCommentSnippet(comment.content)}</p>
             </div>
           ))}
         </div>
@@ -104,59 +97,41 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
     <>
       {/* Mobile Layout - Card-less Feed */}
       <div className="sm:hidden">
-        <div className="px-4 py-4 border-b border-gray-100 last:border-b-0">
+        <div className="px-4 py-5 border-b border-gray-100 last:border-b-0 bg-white/80">
           {/* Post Header */}
-          <div className="flex items-start space-x-3 mb-3">
-            <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0 overflow-hidden">
-              {post.author?.avatar_url ? (
-                <div className="relative h-full w-full">
-                  <Image
-                    src={post.author.avatar_url}
-                    alt={post.author.full_name || 'User'}
-                    fill
-                    className="rounded-full object-cover"
-                    sizes="40px"
-                    priority={false}
-                  />
-                </div>
-              ) : (
-                post.author?.first_name?.charAt(0) || 'U'
-              )}
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h4 className="font-medium text-gray-900 text-sm break-words">
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 bg-navy-100/80 rounded-full flex items-center justify-center text-navy-700 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
+                {post.author?.avatar_url ? (
+                  <div className="relative h-full w-full">
+                    <Image
+                      src={post.author.avatar_url}
+                      alt={post.author.full_name || 'User'}
+                      fill
+                      className="rounded-full object-cover"
+                      sizes="40px"
+                      priority={false}
+                    />
+                  </div>
+                ) : (
+                  post.author?.first_name?.charAt(0) || 'U'
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-semibold text-gray-900 text-sm break-words">
                   {post.author?.full_name || 'Unknown User'}
                 </h4>
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-                  {post.post_type.replace('_', ' ')}
-                </span>
+                <p className="text-xs text-gray-500">{formatTimestamp(post.created_at)}</p>
               </div>
-              <div className="flex items-center gap-2 mb-1">
-                {post.author?.chapter_role && (
-                  <span className="text-xs text-gray-600 break-words">
-                    {post.author.chapter_role}
-                  </span>
-                )}
-                {post.author?.member_status && (
-                  <span className="text-xs text-gray-600 break-words">
-                    {post.author.member_status}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-gray-500">
-                {formatTimestamp(post.created_at)}
-              </p>
             </div>
-            
+
             <div className="flex items-center space-x-1">
               {post.is_author && onDelete && (
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={handleDeleteClick}
-                  className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1"
+                  className="text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full p-2"
                   title="Delete post"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -166,12 +141,12 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
           </div>
 
           {/* Post Content */}
-          <div className="mb-3">
+          <div className="mb-4">
             {post.content && (
-              <p className="text-gray-900 text-sm leading-relaxed mb-3 break-words">{post.content}</p>
+              <p className="text-gray-700 text-sm leading-relaxed mb-3 break-words">{post.content}</p>
             )}
             {post.image_url && (
-              <div className="-mx-4 relative w-auto overflow-hidden rounded-lg aspect-[4/3]" style={{ maxHeight: '20rem' }}>
+              <div className="-mx-4 relative w-auto overflow-hidden rounded-2xl aspect-[4/3] shadow-inner" style={{ maxHeight: '20rem' }}>
                 <Image
                   src={post.image_url}
                   alt="Post content"
@@ -187,31 +162,28 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
 
           {/* Post Actions */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <div className="relative">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => onLike(post.id)}
-                  className={`${
-                    post.is_liked 
-                      ? 'text-red-500 hover:text-red-700 hover:bg-red-50' 
-                      : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
-                  } h-8 px-2`}
-                >
-                  <Heart className={`h-4 w-4 mr-1 ${post.is_liked ? 'fill-current' : ''}`} />
-                  <span className="text-xs">{post.likes_count}</span>
-                </Button>
-
-              </div>
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => onLike(post.id)}
+                className={`gap-2 rounded-full px-3 text-sm transition ${
+                  post.is_liked 
+                    ? 'bg-rose-50 text-rose-500 hover:bg-rose-100' 
+                    : 'text-gray-500 hover:bg-gray-100'
+                }`}
+              >
+                <Heart className={`h-4 w-4 ${post.is_liked ? 'fill-current' : ''}`} />
+                <span>{post.likes_count}</span>
+              </Button>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setIsCommentModalOpen(true)}
-                className="text-gray-500 hover:text-blue-500 hover:bg-blue-50 h-8 px-2"
+                className="gap-2 rounded-full px-3 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
               >
-                <MessageCircle className="h-4 w-4 mr-1" />
-                <span className="text-xs">{commentCountLabel}</span>
+                <MessageCircle className="h-4 w-4 text-blue-500" />
+                <span>{commentCountLabel}</span>
               </Button>
             </div>
           </div>
@@ -219,58 +191,48 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
       </div>
 
       {/* Desktop Layout - Preserved Card Design */}
-      <Card className="bg-white hidden sm:block">
-        <CardContent className="p-4 sm:p-6">
+      <Card className="hidden sm:block rounded-3xl border border-gray-100 bg-white/80 shadow-sm transition hover:shadow-lg">
+        <CardContent className="space-y-4 p-6 sm:p-7">
           {/* Post Header */}
-          <div className="flex items-start space-x-3 sm:space-x-4 mb-4 sm:mb-3">
-            <div className="w-12 h-12 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0 overflow-hidden">
-              {post.author?.avatar_url ? (
-                <div className="relative h-full w-full">
-                  <Image
-                    src={post.author.avatar_url}
-                    alt={post.author.full_name || 'User'}
-                    fill
-                    className="rounded-full object-cover"
-                    sizes="(max-width: 640px) 48px, 40px"
-                    priority={false}
-                  />
-                </div>
-              ) : (
-                post.author?.first_name?.charAt(0) || 'U'
-              )}
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h4 className="font-medium text-gray-900 text-base sm:text-sm break-words">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 sm:h-11 sm:w-11 bg-navy-100/80 rounded-full flex items-center justify-center text-navy-700 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
+                {post.author?.avatar_url ? (
+                  <div className="relative h-full w-full">
+                    <Image
+                      src={post.author.avatar_url}
+                      alt={post.author.full_name || 'User'}
+                      fill
+                      className="rounded-full object-cover"
+                      sizes="(max-width: 640px) 48px, 40px"
+                      priority={false}
+                    />
+                  </div>
+                ) : (
+                  post.author?.first_name?.charAt(0) || 'U'
+                )}
+              </div>
+
+              <div className="flex-1 min-w-0 space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <h4 className="font-semibold text-gray-900 text-base sm:text-sm break-words">
                   {post.author?.full_name || 'Unknown User'}
                 </h4>
+              </div>
 
-              </div>
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                {post.author?.chapter_role && (
-                  <span className="text-xs text-gray-600 break-words">
-                    {post.author.chapter_role}
-                  </span>
-                )}
-                {post.author?.member_status && (
-                  <span className="text-xs text-gray-600 break-words">
-                    {post.author.member_status}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs uppercase tracking-wide text-gray-400">
                 {formatTimestamp(post.created_at)}
               </p>
             </div>
+            </div>
             
-            <div className="flex items-center space-x-1">
+            <div>
               {post.is_author && onDelete && (
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={handleDeleteClick}
-                  className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 sm:p-1"
+                  className="rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50"
                   title="Delete post"
                 >
                   <Trash2 className="h-5 w-5 sm:h-4 sm:w-4" />
@@ -280,12 +242,12 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
           </div>
 
           {/* Post Content */}
-          <div className="mb-4 sm:mb-4">
+          <div className="space-y-4">
             {post.content && (
-              <p className="text-gray-900 text-base sm:text-sm leading-relaxed mb-3 break-words">{post.content}</p>
+              <p className="text-gray-700 text-base sm:text-[0.95rem] leading-relaxed break-words">{post.content}</p>
             )}
             {post.image_url && (
-              <div className="relative w-full overflow-hidden rounded-lg aspect-[4/3]" style={{ maxHeight: '24rem' }}>
+              <div className="relative w-full overflow-hidden rounded-3xl aspect-[4/3] shadow-inner" style={{ maxHeight: '24rem' }}>
                 <Image
                   src={post.image_url}
                   alt="Post content"
@@ -300,31 +262,29 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
           </div>
 
           {/* Post Actions */}
-          <div className="flex items-center justify-between pt-4 sm:pt-3 border-t border-gray-100">
-            <div className="flex items-center space-x-4 sm:space-x-6">
-              <div className="relative">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleLikeClick}
-                  className={`${
-                    post.is_liked 
-                      ? 'text-red-500 hover:text-red-700 hover:bg-red-50' 
-                      : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
-                  } h-10 sm:h-8 px-3 sm:px-2`}
-                >
-                  <Heart className={`h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1 ${post.is_liked ? 'fill-current' : ''}`} />
-                  <span className="text-sm sm:text-xs">{post.likes_count}</span>
-                </Button>
-              </div>
+          <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleLikeClick}
+                className={`gap-2 rounded-full px-3 py-2 text-sm transition ${
+                  post.is_liked 
+                    ? 'bg-rose-50 text-rose-500 hover:bg-rose-100' 
+                    : 'text-gray-500 hover:bg-gray-100'
+                }`}
+              >
+                <Heart className={`h-4 w-4 ${post.is_liked ? 'fill-current' : ''}`} />
+                <span>{post.likes_count}</span>
+              </Button>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setIsCommentModalOpen(true)}
-                className="text-gray-500 hover:text-blue-500 hover:bg-blue-50 h-10 sm:h-8 px-3 sm:px-2"
+                className="gap-2 rounded-full px-3 py-2 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
               >
-                <MessageCircle className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1" />
-                <span className="text-sm sm:text-xs whitespace-nowrap">{commentCountLabel}</span>
+                <MessageCircle className="h-4 w-4 text-blue-500" />
+                <span className="whitespace-nowrap">{commentCountLabel}</span>
               </Button>
             </div>
           </div>

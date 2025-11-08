@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Image as ImageIcon, Paperclip, Calendar, Smile } from 'lucide-react';
 import { usePosts } from '@/lib/hooks/usePosts';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { CreatePostModal } from '@/components/features/social/CreatePostModal';
@@ -124,11 +124,11 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
 
   return (
     <>
-      <div className="space-y-4">
-        <Card className="bg-white hidden sm:block">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-start space-x-3 sm:space-x-4">
-              <div className="w-12 h-12 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0 overflow-hidden">
+      <div className="space-y-6 sm:space-y-5 max-w-2xl mx-auto">
+        <Card className="hidden sm:block rounded-2xl border border-gray-100 bg-white/80 shadow-sm transition hover:shadow-md">
+          <CardContent className="p-0">
+            <div className="flex items-center gap-3 px-5 py-4">
+              <div className="h-12 w-12 rounded-full bg-navy-100/80 flex items-center justify-center text-navy-700 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
                 {profile?.avatar_url ? (
                   <ImageWithFallback
                     src={profile.avatar_url}
@@ -144,11 +144,36 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
               <div className="flex-1">
                 <Button
                   variant="outline"
-                  className="w-full justify-start text-gray-500 hover:text-gray-700 hover:bg-gray-50 h-12 sm:h-10 text-left px-4"
+                  className="flex w-full items-center justify-start rounded-full border border-dashed border-gray-200 bg-gray-50 px-5 py-2.5 text-left text-gray-500 transition hover:border-gray-300 hover:bg-white hover:text-gray-700 focus-visible:ring-2 focus-visible:ring-navy-200"
                   onClick={() => setIsCreateModalOpen(true)}
                 >
-                  Start a post...
+                  Start a post…
                 </Button>
+              </div>
+            </div>
+            <div className="border-t border-gray-100 bg-gray-50/70 px-5 py-3">
+              <div className="flex items-center gap-5 text-sm text-gray-500">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="gap-2 rounded-full px-2 py-1 text-gray-500 transition hover:bg-white hover:text-gray-700"
+                  onClick={() => setIsCreateModalOpen(true)}
+                >
+                  <ImageIcon className="h-4 w-4 text-blue-500" />
+                  Photo
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="gap-2 rounded-full px-2 py-1 text-gray-500 transition hover:bg-white hover:text-gray-700"
+                  onClick={() => setIsCreateModalOpen(true)}
+                >
+                  <Smile className="h-4 w-4 text-slate-500" />
+                  Emoji
+                </Button>
+                
               </div>
             </div>
           </CardContent>
