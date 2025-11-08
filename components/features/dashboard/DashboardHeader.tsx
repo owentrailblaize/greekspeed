@@ -8,7 +8,7 @@ import { UserDropdown } from '@/components/features/profile/UserDropdown';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
-import { Badge } from '@/components/ui/badge';
+import { ProfileService } from '@/lib/services/profileService';
 import { MessageCircle, Lock, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
@@ -65,7 +65,8 @@ export function DashboardHeader() {
   ).length;
   
   // Hardcoded values for now - will be replaced with real data later
-  const completionPercent = 72; // Mock profile completion percentage
+  const completion = profile ? ProfileService.calculateCompletion(profile) : null;
+  const completionPercent = completion?.percentage ?? 0;
   const hasUnread = pendingConnections > 0; // Now based on actual pending connections
 
   // Define navigation tabs with role-based access
