@@ -5,15 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, Mail, MapPin, Building, Shield, FileText, Phone, MessageCircle, Users, Calendar, Settings, Edit, UserCheck, UserPlus, Clock, Lock, Upload, Heart, Trash2 } from 'lucide-react';
+import { User, Mail, MapPin, Building, Shield, FileText, Phone, MessageCircle, Users, Calendar, Settings, Edit, UserCheck, UserPlus, Lock, Upload, Heart, Trash2 } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { UserAvatar } from '@/components/features/profile/UserAvatar';
 import { ProfileService } from '@/lib/services/profileService';
 import Link from 'next/link';
-import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { useRouter } from 'next/navigation';
+import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { AvatarService } from '@/lib/services/avatarService';
@@ -348,16 +348,6 @@ export default function ProfilePage() {
                           Connections
                         </button>
                         <button
-                          onClick={() => setActiveTab('connected')}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                            activeTab === 'connected'
-                              ? 'bg-navy-600 text-white'
-                              : ' text-gray-700 hover:bg-gray-200'
-                          }`}
-                        >
-                          Connected
-                        </button>
-                        <button
                           onClick={() => setActiveTab('posts')}
                           className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                             activeTab === 'posts'
@@ -372,9 +362,8 @@ export default function ProfilePage() {
                   </div>
 
                   {/* Desktop: Standard grid tabs */}
-                  <TabsList className="hidden sm:grid w-full grid-cols-3">
+                  <TabsList className="hidden sm:grid w-full grid-cols-2">
                     <TabsTrigger value="connections" className="text-sm">Connections</TabsTrigger>
-                    <TabsTrigger value="connected" className="text-sm">Connected</TabsTrigger>
                     <TabsTrigger value="posts" className="text-sm">Posts</TabsTrigger>
                   </TabsList>
                   
@@ -429,60 +418,6 @@ export default function ProfilePage() {
                         <UserCheck className="w-12 h-12 mx-auto mb-2 text-gray-300" />
                         <p>No connections yet</p>
                         <p className="text-sm mt-1">Start connecting with other members!</p>
-                      </div>
-                    )}
-                  </TabsContent>
-                  
-                  <TabsContent value="connected" className="mt-4">
-                    {connectionsLoading ? (
-                      <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600 mx-auto mb-4"></div>
-                        <p className="text-gray-500">Loading requests...</p>
-                      </div>
-                    ) : pendingRequests.length > 0 ? (
-                      <div className="space-y-3">
-                        {pendingRequests.map((connection) => {
-                          const partner = getConnectionPartner(connection);
-                          if (!partner) return null;
-                          
-                          return (
-                            <div key={connection.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-[#FBFCFD]">
-                              <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                <UserAvatar
-                                  user={{
-                                    user_metadata: {
-                                      avatar_url: partner?.avatar_url, // Use partner's avatar_url
-                                      full_name: partner?.full_name
-                                    }
-                                  }}
-                                  completionPercent={0}
-                                  hasUnread={false}
-                                  size="md"
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-gray-900 truncate">{partner?.full_name || 'Unknown User'}</p>
-                                  <p className="text-sm text-gray-500 truncate">{partner?.email || 'No email provided'}</p>
-                                  <div className="flex items-center mt-1">
-                                    <Clock className="w-3 h-3 text-red-400 mr-1" />
-                                    <span className="text-xs text-red-400">Request sent</span>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex-shrink-0 ml-2">
-                                <Button size="sm" variant="outline" className="text-gray-500 border-gray-200 hover:bg-gray-100 px-2 sm:px-3">
-                                  <UserPlus className="w-4 h-4 sm:mr-2" />
-                                  <span className="hidden sm:inline">Pending</span>
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-gray-500">
-                        <Clock className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                        <p>No pending requests</p>
-                        <p className="text-sm mt-1">All your connection requests have been processed</p>
                       </div>
                     )}
                   </TabsContent>
