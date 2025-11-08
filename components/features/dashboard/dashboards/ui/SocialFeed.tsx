@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -39,7 +39,6 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     deletePost,
   } = usePosts(chapterId, { initialData });
   const { profile } = useProfile();
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const mergedPosts = useMemo(() => posts, [posts]);
 
@@ -64,9 +63,8 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     };
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  const rowVirtualizer = useVirtualizer({
+  const rowVirtualizer = useWindowVirtualizer({
     count: mergedPosts.length,
-    getScrollElement: () => containerRef.current,
     estimateSize: () => 420,
     measureElement: (el) => el?.getBoundingClientRect().height ?? 420,
     overscan: 8,
@@ -169,11 +167,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
             <p className="text-sm text-gray-400 mt-2">Be the first to share something!</p>
           </div>
         ) : (
-          <div
-            ref={containerRef}
-            className="relative overflow-y-auto"
-            style={{ height: 'min(1800px, 75vh)', maxHeight: '80vh' }}
-          >
+          <div className="relative">
             <div
               className="relative w-full"
               style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
