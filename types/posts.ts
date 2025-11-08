@@ -22,6 +22,11 @@ export interface Post {
   };
   is_liked?: boolean;
   is_author?: boolean;
+  /**
+   * Lightweight snapshot of the most recent comments returned with the feed payload.
+   * Use this to show counts/teasers without triggering the full comments fetch.
+   */
+  comments_preview?: PostCommentPreview[];
 }
 
 export interface PostLike {
@@ -55,6 +60,8 @@ export interface PostComment {
   };
   is_liked?: boolean;
 }
+
+export type PostCommentPreview = Omit<PostComment, 'is_liked'>;
 
 export interface CreatePostRequest {
   content: string;

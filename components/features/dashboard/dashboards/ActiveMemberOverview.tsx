@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { SocialFeed } from './ui/SocialFeed';
+import { useMemo, useState } from 'react';
+import { SocialFeed, type SocialFeedInitialData } from './ui/SocialFeed';
 import { DuesStatusCard } from './ui/DuesStatusCard';
 import { MyTasksCard } from './ui/MyTasksCard';
 import { UpcomingEventsCard } from './ui/UpcomingEventsCard';
@@ -15,9 +15,21 @@ import { MobileCalendarPage } from './ui/MobileCalendarPage';
 import { MobileEventsPage } from './ui/MobileEventsPage';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 
-export function ActiveMemberOverview() {
+interface ActiveMemberOverviewProps {
+  initialFeed?: SocialFeedInitialData;
+  fallbackChapterId?: string | null;
+}
+
+export function ActiveMemberOverview({ initialFeed, fallbackChapterId }: ActiveMemberOverviewProps) {
   const { profile } = useProfile();
+  const chapterId = profile?.chapter_id ?? fallbackChapterId ?? null;
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>('home');
+
+  const feedData = useMemo(() => {
+    if (!initialFeed) return undefined;
+    if (!chapterId) return initialFeed;
+    return initialFeed.chapterId === chapterId ? initialFeed : undefined;
+  }, [chapterId, initialFeed]);
   
   const renderMobileContent = () => {
     switch (activeMobileTab) {
@@ -31,7 +43,7 @@ export function ActiveMemberOverview() {
 
             {/* Primary Feature: Social Feed */}
             <div className="w-full">
-              <SocialFeed chapterId={profile?.chapter_id || ''} />
+              <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
             </div>
           </div>
         );
@@ -70,7 +82,7 @@ export function ActiveMemberOverview() {
 
           {/* Center Column - Social Feed */}
           <div className="col-span-6">
-            <SocialFeed chapterId={profile?.chapter_id || ''} />
+            <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
           </div>
 
           {/* Right Sidebar - Events & Networking */}
