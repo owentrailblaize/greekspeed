@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ import { EmailService } from '@/lib/services/emailService';
 import { useModal } from '@/lib/contexts/ModalContext';
 import { Save, AlertTriangle } from 'lucide-react';
 import ImageWithFallback from '@/components/figma/ImageWithFallback';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function ProfilePage() {
   const { profile, loading, refreshProfile } = useProfile();
@@ -36,6 +37,7 @@ export default function ProfilePage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isConnectionsModalOpen, setIsConnectionsModalOpen] = useState(false);
   
   // Calculate completion percentage
   const completion = profile ? ProfileService.calculateCompletion(profile) : null;
@@ -82,6 +84,16 @@ export default function ProfilePage() {
   };
 
   const suggestedUsers = getSuggestedUsers();
+  const MAX_VISIBLE_CONNECTIONS = 6;
+  const sortedConnections = useMemo(() => {
+    return [...acceptedConnections].sort((a, b) => {
+      const aDate = new Date(a.updated_at || a.created_at || 0).getTime();
+      const bDate = new Date(b.updated_at || b.created_at || 0).getTime();
+      return bDate - aDate;
+    });
+  }, [acceptedConnections]);
+  const visibleConnections = sortedConnections.slice(0, MAX_VISIBLE_CONNECTIONS);
+  const hasMoreConnections = sortedConnections.length > MAX_VISIBLE_CONNECTIONS;
 
   // Handle message button click
   const handleMessageClick = (connectionId: string) => {
@@ -143,6 +155,51 @@ export default function ProfilePage() {
   const handleDeleteCancel = () => {
     setDeleteModalOpen(false);
     setPostToDelete(null);
+  };
+
+  const renderConnectionRow = (connection: any) => {
+    const partner = getConnectionPartner(connection);
+    if (!partner) return null;
+
+    return (
+      <div
+        key={connection.id}
+        className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-navy-300 transition-colors"
+      >
+        <div className="flex items-center space-x-3 flex-1 min-w-0">
+          <UserAvatar
+            user={{
+              user_metadata: {
+                avatar_url: partner?.avatar_url,
+                full_name: partner?.full_name,
+              },
+            }}
+            completionPercent={0}
+            hasUnread={false}
+            size="md"
+          />
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-gray-900 truncate">
+              {partner?.full_name || 'Unknown User'}
+            </p>
+            <p className="text-sm text-gray-500 truncate">
+              {partner?.email || 'No email provided'}
+            </p>
+          </div>
+        </div>
+        <div className="flex-shrink-0 ml-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-navy-600 border-navy-300 hover:bg-navy-50 px-2 sm:px-3"
+            onClick={() => handleMessageClick(connection.id)}
+          >
+            <MessageCircle className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Message</span>
+          </Button>
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -367,52 +424,27 @@ export default function ProfilePage() {
                     <TabsTrigger value="posts" className="text-sm">Posts</TabsTrigger>
                   </TabsList>
                   
-                  <TabsContent value="connections" className="mt-4">
+                  <TabsContent value="connections" className="mt-4 space-y-4">
                     {connectionsLoading ? (
                       <div className="text-center py-8">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600 mx-auto mb-4"></div>
                         <p className="text-gray-500">Loading connections...</p>
                       </div>
-                    ) : acceptedConnections.length > 0 ? (
-                      <div className="space-y-3">
-                        {acceptedConnections.map((connection) => {
-                          const partner = getConnectionPartner(connection);
-                          if (!partner) return null;
-                          
-                          return (
-                            <div key={connection.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-navy-300 transition-colors">
-                              <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                <UserAvatar
-                                  user={{
-                                    user_metadata: {
-                                      avatar_url: partner?.avatar_url, // Use partner's avatar_url
-                                      full_name: partner?.full_name
-                                    }
-                                  }}
-                                  completionPercent={0}
-                                  hasUnread={false}
-                                  size="md"
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-gray-900 truncate">{partner?.full_name || 'Unknown User'}</p>
-                                  <p className="text-sm text-gray-500 truncate">{partner?.email || 'No email provided'}</p>
-                                </div>
-                              </div>
-                              <div className="flex-shrink-0 ml-2">
-                                <Button 
-                                  size="sm" 
-                                  variant="outline" 
-                                  className="text-navy-600 border-navy-300 hover:bg-navy-50 px-2 sm:px-3"
-                                  onClick={() => handleMessageClick(connection.id)}
-                                >
-                                  <MessageCircle className="w-4 h-4 sm:mr-2" />
-                                  <span className="hidden sm:inline">Message</span>
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                    ) : sortedConnections.length > 0 ? (
+                      <>
+                        <div className="space-y-3">
+                          {visibleConnections.map((connection) => renderConnectionRow(connection))}
+                        </div>
+                        {hasMoreConnections && (
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => setIsConnectionsModalOpen(true)}
+                          >
+                            View all connections
+                          </Button>
+                        )}
+                      </>
                     ) : (
                       <div className="text-center py-8 text-gray-500">
                         <UserCheck className="w-12 h-12 mx-auto mb-2 text-gray-300" />
@@ -648,6 +680,25 @@ export default function ProfilePage() {
           post={userPosts.find(p => p.id === postToDelete) || null}
           isDeleting={isDeleting}
         />
+
+        <Dialog open={isConnectionsModalOpen} onOpenChange={setIsConnectionsModalOpen}>
+          <DialogContent className="max-w-lg w-full">
+            <DialogHeader>
+              <DialogTitle>All Connections</DialogTitle>
+            </DialogHeader>
+            <div className="mt-4 max-h-[70vh] overflow-y-auto space-y-3 pr-1">
+              {sortedConnections.length > 0 ? (
+                sortedConnections.map((connection) => renderConnectionRow(connection))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <UserCheck className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                  <p>No connections yet</p>
+                  <p className="text-sm mt-1">Start connecting with other members!</p>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
