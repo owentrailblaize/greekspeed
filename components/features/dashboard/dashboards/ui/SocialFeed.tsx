@@ -180,7 +180,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
                   <div
                     key={post.id}
                     data-index={virtualRow.index}
-                    className="absolute left-0 right-0"
+                    className="absolute left-0 right-0 pb-3 sm:pb-6"
                     style={{
                       transform: `translateY(${virtualRow.start}px)`,
                       width: '100%',

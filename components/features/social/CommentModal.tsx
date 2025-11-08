@@ -135,22 +135,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
               <DialogTitle className="text-lg sm:text-xl font-semibold">
                 Comments
               </DialogTitle>
-              {lastFetchedAt && (
-                <span className="text-[11px] text-gray-400">
-                  {loadedFromCache ? 'Cached' : 'Updated'} {formatRelativeMoment(lastFetchedAt)}
-                </span>
-              )}
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={loading || isRefreshing}
-              className="text-gray-500 hover:text-blue-600 hover:bg-blue-50 h-8 px-2"
-              title="Refresh comments"
-            >
-              <RefreshCcw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            </Button>
           </div>
         </DialogHeader>
 

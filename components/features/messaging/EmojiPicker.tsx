@@ -4,14 +4,26 @@ import { EmojiPicker as FrimousseEmojiPicker } from "frimousse";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Smile } from "lucide-react";
-import { useState } from "react";
+import { useState, ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 interface EmojiPickerProps {
   onEmojiSelect: (emoji: string) => void;
   disabled?: boolean;
+  buttonClassName?: string;
+  iconClassName?: string;
+  label?: ReactNode;
+  labelClassName?: string;
 }
 
-export function EmojiPicker({ onEmojiSelect, disabled = false }: EmojiPickerProps) {
+export function EmojiPicker({
+  onEmojiSelect,
+  disabled = false,
+  buttonClassName,
+  iconClassName,
+  label,
+  labelClassName,
+}: EmojiPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleEmojiSelect = (emoji: string) => {
@@ -26,9 +38,18 @@ export function EmojiPicker({ onEmojiSelect, disabled = false }: EmojiPickerProp
           variant="ghost"
           size="sm"
           disabled={disabled}
-          className="text-gray-400 hover:text-navy-600 hover:bg-navy-50 p-2 h-10 w-10"
+          className={cn(
+            "inline-flex items-center justify-center gap-0 text-gray-400 hover:text-navy-600 hover:bg-navy-50 p-2 h-10 w-10",
+            label ? "w-auto px-4" : "",
+            buttonClassName,
+          )}
         >
-          <Smile className="h-5 w-5" />
+          <Smile className={cn("h-5 w-5", iconClassName)} />
+          {label ? (
+            <span className={cn("ml-2 text-sm font-medium text-gray-500", labelClassName)}>
+              {label}
+            </span>
+          ) : null}
         </Button>
       </PopoverTrigger>
       <PopoverContent 

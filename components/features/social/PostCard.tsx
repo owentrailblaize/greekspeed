@@ -25,17 +25,8 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
   const commentsPreview = post.comments_preview ?? [];
   const hasComments = (post.comments_count ?? 0) > 0;
   const commentCountLabel = hasComments
-    ? `View ${post.comments_count} ${post.comments_count === 1 ? 'comment' : 'comments'}`
-    : 'Add a comment';
-
-  const getPostTypeColor = (type: string) => {
-    switch (type) {
-      case 'text': return 'bg-blue-100 text-blue-800';
-      case 'image': return 'bg-green-100 text-green-800';
-      case 'text_image': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+    ? 'View Comments'
+    : 'Add Comment';
 
   const formatTimestamp = (timestamp: string) => {
     try {
@@ -259,9 +250,7 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
                 <h4 className="font-medium text-gray-900 text-base sm:text-sm break-words">
                   {post.author?.full_name || 'Unknown User'}
                 </h4>
-                <Badge className={`${getPostTypeColor(post.post_type)} text-xs`}>
-                  {post.post_type.replace('_', ' ')}
-                </Badge>
+
               </div>
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 {post.author?.chapter_role && (
