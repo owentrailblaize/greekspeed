@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { X, Heart, MessageCircle, Share, Trash2, Send, RefreshCcw } from 'lucide-react';
-import { Post, PostComment, CreateCommentRequest } from '@/types/posts';
+import { Post, CreateCommentRequest } from '@/types/posts';
 import { useComments } from '@/lib/hooks/useComments';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { formatDistanceToNow } from 'date-fns';
-import ImageWithFallback from "@/components/figma/ImageWithFallback";
+import Image from 'next/image';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 interface CommentModalProps {
   isOpen: boolean;
@@ -40,6 +41,14 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
   });
   const { profile } = useProfile();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const commentsScrollRef = useRef<HTMLDivElement | null>(null);
+  const commentItems = useMemo(() => comments, [comments]);
+  const commentsVirtualizer = useVirtualizer({
+    count: commentItems.length,
+    getScrollElement: () => commentsScrollRef.current,
+    estimateSize: () => 120,
+    overscan: 6,
+  });
 
   const handleSubmitComment = async () => {
     if (!newComment.trim() || isSubmitting) return;
@@ -152,12 +161,13 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
             <div className="flex items-start space-x-3 sm:space-x-4">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm sm:text-base font-semibold shrink-0 overflow-hidden">
                 {post.author?.avatar_url ? (
-                  <ImageWithFallback 
-                    src={post.author.avatar_url} 
-                    alt={post.author.full_name || 'User'} 
-                    width={48} 
-                    height={48} 
-                    className="w-full h-full object-cover" 
+                  <Image
+                    src={post.author.avatar_url}
+                    alt={post.author.full_name || 'User'}
+                    width={48}
+                    height={48}
+                    className="h-full w-full rounded-full object-cover"
+                    sizes="48px"
                   />
                 ) : (
                   post.author?.first_name?.charAt(0) || 'U'
@@ -187,11 +197,14 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                   <p className="text-gray-900 text-sm sm:text-base leading-relaxed mb-3 sm:mb-4 break-words">{post.content}</p>
                 )}
                 {post.image_url && (
-                  <div className="mb-3 sm:mb-4">
-                    <img 
-                      src={post.image_url} 
-                      alt="Post content" 
-                      className="w-full max-h-[50vh] object-contain rounded-lg border border-gray-200"
+                  <div className="mb-3 sm:mb-4 relative w-full overflow-hidden rounded-lg border border-gray-200">
+                    <Image
+                      src={post.image_url}
+                      alt="Post content"
+                      width={1200}
+                      height={1200}
+                      className="h-full w-full object-contain"
+                      sizes="(max-width: 768px) 100vw, 700px"
                     />
                   </div>
                 )}
@@ -257,69 +270,104 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
               <p className="text-xs sm:text-sm text-gray-400">Be the first to comment!</p>
             </div>
           ) : (
-            <div className="px-4 py-4 sm:px-6 sm:py-5 space-y-3 sm:space-y-4">
-              {comments.map((comment) => (
-                <div key={comment.id}>
-                  <div className="flex items-start space-x-3 sm:space-x-4">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-xs sm:text-sm font-semibold shrink-0 overflow-hidden">
-                      {comment.author?.avatar_url ? (
-                        <ImageWithFallback 
-                          src={comment.author.avatar_url} 
-                          alt={comment.author.full_name || 'User'} 
-                          width={40} 
-                          height={40} 
-                          className="w-full h-full object-cover" 
-                        />
-                      ) : (
-                        comment.author?.first_name?.charAt(0) || 'U'
-                      )}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-1 sm:mb-2">
-                        <h5 className="font-medium text-gray-900 text-sm sm:text-base break-words">
-                          {comment.author?.full_name || 'Unknown User'}
-                        </h5>
-                        <p className="text-xs sm:text-sm text-gray-500">
-                          {formatTimestamp(comment.created_at)}
-                        </p>
+            <div
+              ref={commentsScrollRef}
+              className="relative max-h-[60vh] overflow-y-auto px-4 py-4 sm:px-6 sm:py-5"
+            >
+              <div
+                className="relative w-full"
+                style={{ height: `${commentsVirtualizer.getTotalSize()}px` }}
+              >
+                {commentsVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const comment = commentItems[virtualRow.index];
+                  if (!comment) return null;
+                  const isLast = virtualRow.index === commentItems.length - 1;
+
+                  return (
+                    <div
+                      key={comment.id}
+                      data-index={virtualRow.index}
+                      className="absolute left-0 right-0 pt-0"
+                      style={{
+                        transform: `translateY(${virtualRow.start}px)`,
+                      }}
+                      ref={(el) => {
+                        if (el) {
+                          commentsVirtualizer.measureElement(el);
+                        }
+                      }}
+                    >
+                      <div
+                        className={`flex items-start space-x-3 sm:space-x-4 ${
+                          isLast ? '' : 'border-b border-gray-100 pb-3 sm:pb-4 mb-3 sm:mb-4'
+                        }`}
+                      >
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-xs sm:text-sm font-semibold shrink-0 overflow-hidden">
+                          {comment.author?.avatar_url ? (
+                            <Image
+                              src={comment.author.avatar_url}
+                              alt={comment.author.full_name || 'User'}
+                              width={40}
+                              height={40}
+                              className="h-full w-full rounded-full object-cover"
+                              sizes="40px"
+                            />
+                          ) : (
+                            comment.author?.first_name?.charAt(0) || 'U'
+                          )}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 mb-1 sm:mb-2">
+                            <h5 className="font-medium text-gray-900 text-sm sm:text-base break-words">
+                              {comment.author?.full_name || 'Unknown User'}
+                            </h5>
+                            <p className="text-xs sm:text-sm text-gray-500">
+                              {formatTimestamp(comment.created_at)}
+                            </p>
+                          </div>
+
+                          <p className="text-gray-900 text-sm sm:text-base leading-relaxed mb-2 sm:mb-3 break-words">
+                            {comment.content}
+                          </p>
+
+                          {/* Comment Actions */}
+                          <div className="flex items-center space-x-3">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleLikeComment(comment.id)}
+                              className={`${
+                                comment.is_liked
+                                  ? 'text-red-500 hover:text-red-700'
+                                  : 'text-gray-500 hover:text-gray-700'
+                              } text-xs sm:text-sm h-7 sm:h-8 px-2`}
+                            >
+                              <Heart
+                                className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 ${
+                                  comment.is_liked ? 'fill-current' : ''
+                                }`}
+                              />
+                              {comment.likes_count || 0}
+                            </Button>
+                            {comment.author_id === profile?.id && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteComment(comment.id)}
+                                className="text-red-500 hover:text-red-700 text-xs sm:text-sm h-7 sm:h-8 px-2"
+                              >
+                                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                Delete
+                              </Button>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      
-                      <p className="text-gray-900 text-sm sm:text-base leading-relaxed mb-2 sm:mb-3 break-words">
-                        {comment.content}
-                      </p>
-                      
-                      {/* Comment Actions */}
-                      <div className="flex items-center space-x-3">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleLikeComment(comment.id)}
-                          className={`${
-                            comment.is_liked 
-                              ? 'text-red-500 hover:text-red-700' 
-                              : 'text-gray-500 hover:text-gray-700'
-                          } text-xs sm:text-sm h-7 sm:h-8 px-2`}
-                        >
-                          <Heart className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 ${comment.is_liked ? 'fill-current' : ''}`} />
-                          {comment.likes_count || 0}
-                        </Button>
-                        {comment.author_id === profile?.id && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => handleDeleteComment(comment.id)}
-                            className="text-red-500 hover:text-red-700 text-xs sm:text-sm h-7 sm:h-8 px-2"
-                          >
-                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                            Delete
-                          </Button>
-                        )}
-                      </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
@@ -329,12 +377,13 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
           <div className="flex items-end space-x-3 sm:space-x-4">
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-xs sm:text-sm font-semibold shrink-0 overflow-hidden">
               {profile?.avatar_url ? (
-                <ImageWithFallback 
-                  src={profile.avatar_url} 
-                  alt={profile.full_name || 'User'} 
-                  width={40} 
-                  height={40} 
-                  className="w-full h-full object-cover" 
+                <Image
+                  src={profile.avatar_url}
+                  alt={profile.full_name || 'User'}
+                  width={40}
+                  height={40}
+                  className="h-full w-full rounded-full object-cover"
+                  sizes="40px"
                 />
               ) : (
                 profile?.first_name?.charAt(0) || 'U'

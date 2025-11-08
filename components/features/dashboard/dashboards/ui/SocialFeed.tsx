@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -38,7 +39,9 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     deletePost,
   } = usePosts(chapterId, { initialData });
   const { profile } = useProfile();
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const mergedPosts = useMemo(() => posts, [posts]);
 
   useEffect(() => {
     const node = loadMoreRef.current;
@@ -51,7 +54,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
           fetchNextPage();
         }
       },
-      { rootMargin: '200px 0px' },
+      { rootMargin: '400px 0px' },
     );
 
     observer.observe(node);
@@ -60,6 +63,14 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
       observer.disconnect();
     };
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  const rowVirtualizer = useVirtualizer({
+    count: mergedPosts.length,
+    getScrollElement: () => containerRef.current,
+    estimateSize: () => 420,
+    measureElement: (el) => el?.getBoundingClientRect().height ?? 420,
+    overscan: 8,
+  });
 
   const handleCreatePost = async (postData: CreatePostRequest) => {
     try {
@@ -158,17 +169,45 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
             <p className="text-sm text-gray-400 mt-2">Be the first to share something!</p>
           </div>
         ) : (
-          <>
-            {posts.map((post: Post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                onLike={handleLikePost}
-                onDelete={handleDeletePost}
-                onCommentAdded={handleCommentAdded}
-              />
-            ))}
-            <div ref={loadMoreRef} />
+          <div
+            ref={containerRef}
+            className="relative overflow-y-auto"
+            style={{ height: 'min(1800px, 75vh)', maxHeight: '80vh' }}
+          >
+            <div
+              className="relative w-full"
+              style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+            >
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const post = mergedPosts[virtualRow.index];
+                if (!post) return null;
+
+                return (
+                  <div
+                    key={post.id}
+                    data-index={virtualRow.index}
+                    className="absolute left-0 right-0"
+                    style={{
+                      transform: `translateY(${virtualRow.start}px)`,
+                      width: '100%',
+                    }}
+                    ref={(el) => {
+                      if (el) {
+                        rowVirtualizer.measureElement(el);
+                      }
+                    }}
+                  >
+                    <PostCard
+                      post={post}
+                      onLike={handleLikePost}
+                      onDelete={handleDeletePost}
+                      onCommentAdded={handleCommentAdded}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            <div ref={loadMoreRef} className="h-px w-full" />
             {isFetchingNextPage && (
               <div className="flex justify-center py-4">
                 <div className="w-6 h-6 border-2 border-navy-500 border-t-transparent rounded-full animate-spin" />
@@ -177,7 +216,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
             {!hasNextPage && posts.length > 0 && (
               <div className="text-center py-4 text-sm text-gray-400">You’re all caught up.</div>
             )}
-          </>
+          </div>
         )}
       </div>
 

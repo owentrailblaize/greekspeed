@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -112,13 +113,18 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
         <div className="px-4 py-4 border-b border-gray-100 last:border-b-0">
           {/* Post Header */}
           <div className="flex items-start space-x-3 mb-3">
-            <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
+            <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0 overflow-hidden">
               {post.author?.avatar_url ? (
-                <img 
-                  src={post.author.avatar_url} 
-                  alt={post.author.full_name || 'User'}
-                  className="w-full h-full rounded-full object-cover"
-                />
+                <div className="relative h-full w-full">
+                  <Image
+                    src={post.author.avatar_url}
+                    alt={post.author.full_name || 'User'}
+                    fill
+                    className="rounded-full object-cover"
+                    sizes="40px"
+                    priority={false}
+                  />
+                </div>
               ) : (
                 post.author?.first_name?.charAt(0) || 'U'
               )}
@@ -171,11 +177,14 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
               <p className="text-gray-900 text-sm leading-relaxed mb-3 break-words">{post.content}</p>
             )}
             {post.image_url && (
-              <div className="-mx-4">
-                <img 
-                  src={post.image_url} 
-                  alt="Post content" 
-                  className="w-full max-h-80 object-cover"
+              <div className="-mx-4 relative w-auto overflow-hidden rounded-lg aspect-[4/3]" style={{ maxHeight: '20rem' }}>
+                <Image
+                  src={post.image_url}
+                  alt="Post content"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, 600px"
+                  priority={false}
                 />
               </div>
             )}
@@ -228,13 +237,18 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
         <CardContent className="p-4 sm:p-6">
           {/* Post Header */}
           <div className="flex items-start space-x-3 sm:space-x-4 mb-4 sm:mb-3">
-            <div className="w-12 h-12 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
+            <div className="w-12 h-12 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0 overflow-hidden">
               {post.author?.avatar_url ? (
-                <img 
-                  src={post.author.avatar_url} 
-                  alt={post.author.full_name || 'User'}
-                  className="w-full h-full rounded-full object-cover"
-                />
+                <div className="relative h-full w-full">
+                  <Image
+                    src={post.author.avatar_url}
+                    alt={post.author.full_name || 'User'}
+                    fill
+                    className="rounded-full object-cover"
+                    sizes="(max-width: 640px) 48px, 40px"
+                    priority={false}
+                  />
+                </div>
               ) : (
                 post.author?.first_name?.charAt(0) || 'U'
               )}
@@ -287,11 +301,16 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
               <p className="text-gray-900 text-base sm:text-sm leading-relaxed mb-3 break-words">{post.content}</p>
             )}
             {post.image_url && (
-              <img 
-                src={post.image_url} 
-                alt="Post content" 
-                className="w-full max-h-96 object-cover rounded-lg"
-              />
+              <div className="relative w-full overflow-hidden rounded-lg aspect-[4/3]" style={{ maxHeight: '24rem' }}>
+                <Image
+                  src={post.image_url}
+                  alt="Post content"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, 700px"
+                  priority={false}
+                />
+              </div>
             )}
             {renderCommentsPreview()}
           </div>
