@@ -27,7 +27,8 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
     sendMessage,
     editMessage,
     deleteMessage,
-    loadMore
+    loadMore,
+    refreshMessages
   } = useMessages(connectionId);
 
   const [connection, setConnection] = useState<Connection | null>(null);
@@ -111,7 +112,7 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
             <p className="text-red-600 text-lg font-medium mb-2">Error loading chat</p>
             <p className="text-gray-500 mb-4">{error}</p>
             <Button
-              onClick={() => window.location.reload()}
+              onClick={() => refreshMessages()}
               className="bg-navy-600 hover:bg-navy-700 text-white"
             >
               Try Again

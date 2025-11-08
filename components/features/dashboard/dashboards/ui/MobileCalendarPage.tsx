@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, Users, ChevronDown, ChevronUp } from 'lucide-react';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { Event } from '@/types/events';
 import { parseRawTime } from '@/lib/utils/timezoneUtils';
 
@@ -19,29 +19,29 @@ export function MobileCalendarPage() {
   const chapterId = profile?.chapter_id;
 
   // Fetch events for the calendar
-  useEffect(() => {
-    const fetchEvents = async () => {
-      if (!chapterId) return;
+  const fetchEvents = async () => {
+    if (!chapterId) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
       
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=all`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch events');
-        }
-        
-        const data = await response.json();
-        setEvents(data);
-      } catch (err) {
-        console.error('Error fetching events:', err);
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
+      const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=all`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
       }
-    };
+      
+      const data = await response.json();
+      setEvents(data);
+    } catch (err) {
+      console.error('Error fetching events:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchEvents();
   }, [chapterId]);
 
@@ -244,7 +244,7 @@ export function MobileCalendarPage() {
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => window.location.reload()}
+              onClick={() => fetchEvents()}
               className="text-navy-600 border-navy-600 hover:bg-navy-50"
             >
               Retry

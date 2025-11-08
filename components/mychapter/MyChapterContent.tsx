@@ -5,7 +5,7 @@ import { LinkedInStyleChapterCard } from "./LinkedInStyleChapterCard";
 import { ChapterMember } from "@/types/chapter";
 import { useChapterRoleAccess } from '@/lib/hooks/useChapterRoleAccess';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { CHAPTER_ADMIN_ROLES, getRoleDisplayName } from '@/lib/permissions';
 
 interface MyChapterContentProps {
@@ -42,8 +42,8 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
         : undefined,
       avatar: member.avatar_url || undefined,
       verified: member.role === 'admin',
-      mutualConnections: [],
-      mutualConnectionsCount: 0,
+      mutualConnections: (member as any).mutualConnections || [], // ✅ Use from API
+      mutualConnectionsCount: (member as any).mutualConnectionsCount || 0, // ✅ Use from API
       description: memberDescription
     };
   });

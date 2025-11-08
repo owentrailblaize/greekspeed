@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Progress } from "@/components/ui/progress";
 import { EventForm } from "@/components/ui/EventForm";
 import { useEvents } from "@/lib/hooks/useEvents";
-import { useProfile } from "@/lib/hooks/useProfile";
+import { useProfile } from "@/lib/contexts/ProfileContext";
 import { Event as EventType, CreateEventRequest, UpdateEventRequest } from "@/types/events";
 import { useVendors } from "@/lib/hooks/useVendors";
 import { VendorForm } from "@/components/ui/VendorForm";
@@ -91,7 +91,8 @@ export function SocialChairDashboard() {
     error: eventsError, 
     createEvent, 
     updateEvent, 
-    deleteEvent 
+    deleteEvent,
+    fetchEvents 
   } = useEvents({ 
     chapterId: chapterId || '', 
     scope: 'all' 
@@ -104,7 +105,8 @@ export function SocialChairDashboard() {
     error: vendorsError, 
     createVendor, 
     updateVendor, 
-    deleteVendor 
+    deleteVendor,
+    fetchVendors 
   } = useVendors({ 
     chapterId: chapterId || '' 
   });
@@ -836,7 +838,7 @@ export function SocialChairDashboard() {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => window.location.reload()}
+                    onClick={() => fetchEvents()}
                     className="mt-2"
                   >
                     Retry
@@ -1000,7 +1002,7 @@ export function SocialChairDashboard() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => window.location.reload()}
+                  onClick={() => fetchVendors()}
                   className="mt-2"
                 >
                   Retry

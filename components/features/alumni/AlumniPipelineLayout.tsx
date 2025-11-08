@@ -14,13 +14,14 @@ import { exportAlumniToCSV, exportSelectedAlumniToCSV } from "@/lib/csvExport";
 import { AlumniProfileModal } from "./AlumniProfileModal";
 import { AlumniPagination } from "./AlumniPagination";
 import { AlumniSubHeader } from "./AlumniSubHeader";
+import { AlumniCardSkeletonGrid } from "./AlumniCardSkeleton";
 import { ViewToggle } from "@/components/shared/ViewToggle";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectItem } from "@/components/ui/select";
 import { graduationYears, industries, chapters, locations } from "@/lib/alumniConstants";
 import { US_STATES, getStateNameByCode } from "@/lib/usStates";
-import { useProfile } from "@/lib/hooks/useProfile";
+import { useProfile } from "@/lib/contexts/ProfileContext";
 
 interface FilterState {
   searchTerm: string;
@@ -57,7 +58,7 @@ interface AlumniPipelineLayoutProps {
 }
 
 // Performance optimization: Only render visible items
-const ITEMS_PER_PAGE = 100; // Match the API limit for consistency
+const ITEMS_PER_PAGE = 24; // Optimized: Reduced from 100 to 24 to match API limit for consistency
 
 export function AlumniPipelineLayout({
   alumni,
@@ -282,11 +283,8 @@ export function AlumniPipelineLayout({
         {/* Content with scrollable container */}
         <div className="flex-1 overflow-hidden relative z-10">
           {loading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading alumni...</p>
-              </div>
+            <div className="flex-1 overflow-y-auto p-2 sm:p-6 pb-20">
+              <AlumniCardSkeletonGrid count={24} />
             </div>
           ) : error ? (
             <div className="flex items-center justify-center h-full">
@@ -325,7 +323,10 @@ export function AlumniPipelineLayout({
                       key={alumniItem.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.05 }}
+                      transition={{ 
+                        duration: 0.2, 
+                        delay: Math.min(index * 0.01, 0.2) // Optimized: Faster animation, limited delay to max 0.2s
+                      }}
                     >
                       <EnhancedAlumniCard
                         alumni={alumniItem}

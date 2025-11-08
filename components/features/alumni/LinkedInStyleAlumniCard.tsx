@@ -13,18 +13,11 @@ import {
   Check,
   X
 } from "lucide-react";
-import { useMutualConnections } from "@/lib/hooks/useMutualConnections";
-
-interface MutualConnection {
-  name: string;
-  avatar?: string;
-}
-
 interface LinkedInStyleAlumniCardProps {
   name: string;
   description: string;
-  mutualConnections: MutualConnection[];
-  mutualConnectionsCount: number;
+  mutualConnections?: Array<{ id: string; name: string; avatar: string | null }>;
+  mutualConnectionsCount?: number;
   avatar?: string;
   verified?: boolean;
   alumniId?: string; // Add alumni ID for connection management
@@ -34,8 +27,8 @@ interface LinkedInStyleAlumniCardProps {
 export function LinkedInStyleAlumniCard({
   name,
   description,
-  mutualConnections: _mutualConnections, // Keep for backward compatibility but don't use
-  mutualConnectionsCount: _mutualConnectionsCount, // Keep for backward compatibility but don't use
+  mutualConnections: propMutualConnections = [],
+  mutualConnectionsCount: propMutualConnectionsCount = 0,
   avatar,
   verified = false,
   alumniId,
@@ -51,8 +44,10 @@ export function LinkedInStyleAlumniCard({
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
   
-  // Fetch real mutual connections
-  const { mutualConnections, count: mutualConnectionsCount, loading: mutualLoading } = useMutualConnections(alumniId);
+  // Use props instead of hook results
+  const mutualConnections = propMutualConnections;
+  const mutualConnectionsCount = propMutualConnectionsCount;
+  const mutualLoading = false; // No longer loading since it comes from API
 
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel') => {
     if (!user || !alumniId) return;
@@ -242,8 +237,8 @@ export function LinkedInStyleAlumniCard({
             ) : (
               <>
                 <div className="flex -space-x-1">
-                  {mutualConnections.slice(0, 3).map((c) => (
-                    <div key={c.id} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
+                  {mutualConnections.slice(0, 3).map((c, i) => (
+                    <div key={c.id || `mutual-${i}`} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
                       {c.avatar ? (
                         <ImageWithFallback src={c.avatar} alt={c.name || 'Unknown'} width={64} height={64} className="w-full h-full object-cover" />
                       ) : (
@@ -262,7 +257,7 @@ export function LinkedInStyleAlumniCard({
                 <span className="text-sm text-gray-600">
                   {mutualConnections.length > 0 
                     ? `${mutualConnections[0]?.name || 'Unknown'} and ${mutualConnectionsCount - 1} other mutual connections`
-                    : 'No mutual connections'
+                    : ''
                   }
                 </span>
               </>

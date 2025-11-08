@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Users, UserPlus, X, CheckCircle } from 'lucide-react';
 import { PersonalAlumniProfile } from './ui/PersonalAlumniProfile';
-import { SocialFeed } from './ui/SocialFeed';
+import { SocialFeed, type SocialFeedInitialData } from './ui/SocialFeed';
 import { AlumniMobileBottomNavigation } from './ui/AlumniMobileBottomNavigation';
 import { MobileNetworkPage } from './ui/MobileNetworkPage';
 import { MobileProfilePage } from './ui/MobileProfilePage';
 import { AlumniPipeline } from '@/components/features/alumni/AlumniPipeline';
 import { MyChapterPage } from '@/components/mychapter/MyChapterPage';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useRouter } from 'next/navigation';
@@ -32,9 +32,15 @@ interface Profile {
   mutualConnections: number;
 }
 
-export function AlumniOverview() {
+interface AlumniOverviewProps {
+  initialFeed?: SocialFeedInitialData;
+  fallbackChapterId?: string | null;
+}
+
+export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOverviewProps) {
   const { profile } = useProfile();
-  const { members: chapterMembers, loading: membersLoading } = useChapterMembers(profile?.chapter_id || undefined);
+  const chapterId = profile?.chapter_id ?? fallbackChapterId ?? null;
+  const { members: chapterMembers, loading: membersLoading } = useChapterMembers(chapterId || undefined);
   const { connections, sendConnectionRequest, loading: connectionsLoading } = useConnections();
   const router = useRouter();
   const [connectModalOpen, setConnectModalOpen] = useState(false);
@@ -45,6 +51,12 @@ export function AlumniOverview() {
   const [connectedUserName, setConnectedUserName] = useState<string>('');
   const [localConnectionsSnapshot, setLocalConnectionsSnapshot] = useState<any[]>([]);
   const [snapshotTaken, setSnapshotTaken] = useState(false);
+
+  const feedData = useMemo(() => {
+    if (!initialFeed) return undefined;
+    if (!chapterId) return initialFeed;
+    return initialFeed.chapterId === chapterId ? initialFeed : undefined;
+  }, [chapterId, initialFeed]);
 
   // Take snapshot of connections when they're loaded and we haven't taken one yet
   useEffect(() => {
@@ -135,7 +147,7 @@ export function AlumniOverview() {
           <div className="space-y-4">
             {/* Social Feed - Primary feature for alumni */}
             <div className="w-full">
-              <SocialFeed chapterId={profile?.chapter_id || ''} />
+              <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
             </div>
           </div>
         );
@@ -147,7 +159,7 @@ export function AlumniOverview() {
         return (
           <div className="space-y-4">
             <div className="w-full">
-              <SocialFeed chapterId={profile?.chapter_id || ''} />
+              <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
             </div>
           </div>
         );
@@ -268,7 +280,7 @@ export function AlumniOverview() {
 
           {/* Center Column - Social Feed */}
           <div className="col-span-6">
-            <SocialFeed chapterId={profile?.chapter_id || ''} />
+            <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
           </div>
 
           {/* Right Sidebar - Personal Alumni Profile */}

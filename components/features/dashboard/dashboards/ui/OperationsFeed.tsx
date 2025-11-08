@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Clock, Users, DollarSign, FileText, Megaphone, CheckCircle, Calendar, RefreshCw } from 'lucide-react';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(

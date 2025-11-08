@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { CreateUserForm } from '@/components/user-management/CreateUserForm';
 
 interface AddMemberFormProps {

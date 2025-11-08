@@ -114,38 +114,6 @@ export default function NotificationsPage() {
       <div className="max-w-7xl mx-auto px-6 py-6">
         {/* Connection Management */}
         <ConnectionManagement variant={isMobile ? "mobile" : "desktop"} />
-
-        {/* Future Notification Types Placeholder */}
-        <div className="mt-8">
-          <Card className="bg-navy-50 border-navy-200">
-            <CardHeader>
-              <CardTitle className="text-navy-900 text-lg">Coming Soon</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-navy-700 mb-3">
-                More notification types will be added here, including:
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-navy-600">
-                <div className="flex items-center space-x-2">
-                  <MessageCircle className="h-4 w-4" />
-                  <span>Direct messages</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Users className="h-4 w-4" />
-                  <span>Chapter updates</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4" />
-                  <span>Event reminders</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <FileText className="h-4 w-4" />
-                  <span>Document updates</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   );

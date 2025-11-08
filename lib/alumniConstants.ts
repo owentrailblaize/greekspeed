@@ -31,6 +31,7 @@ export interface Alumni {
 }
 
 export interface MutualConnection {
+  id?: string; // Optional ID for React keys
   name: string;
   avatar?: string;
 }

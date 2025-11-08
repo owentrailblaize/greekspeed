@@ -6,11 +6,10 @@ import { MessageCircle, UserPlus, Shield, Building2, MapPin, GraduationCap, Cloc
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
 import { useConnections } from "@/lib/contexts/ConnectionsContext";
 import { useAuth } from "@/lib/supabase/auth-context";
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useRouter } from "next/navigation";
 import { ClickableField } from '@/components/shared/ClickableField';
 import { ActivityIndicator } from '@/components/shared/ActivityIndicator';
-import { useMutualConnections } from "@/lib/hooks/useMutualConnections";
 
 // Add this function at the top of the file, outside the component
 const getChapterName = (chapterId: string, isMobile: boolean = false): string => {
@@ -37,7 +36,8 @@ interface EnhancedAlumniCardProps {
   onClick?: (alumni: Alumni) => void;
 }
 
-export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps) {
+// Memoized component for performance optimization - prevents re-renders when props haven't changed
+function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProps) {
   const { user } = useAuth();
   const router = useRouter();
   const { 
@@ -49,8 +49,10 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
   
-  // Fetch real mutual connections
-  const { mutualConnections, count: mutualConnectionsCount, loading: mutualLoading } = useMutualConnections(alumni.id);
+  // Use mutual connections from alumni prop (already calculated by API)
+  const mutualConnections = alumni.mutualConnections || [];
+  const mutualConnectionsCount = alumni.mutualConnectionsCount || 0;
+  const mutualLoading = false; // No longer loading since it comes from API
 
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel', e: React.MouseEvent) => {
     // Stop event propagation to prevent card click from triggering
@@ -305,7 +307,7 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
               <>
                 <div className="flex -space-x-1">
                   {mutualConnections.slice(0, 3).map((c, i) => (
-                    <div key={c.id} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative z-10" style={{ zIndex: 10 - i }}>
+                    <div key={c.id || `mutual-${i}`} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative z-10" style={{ zIndex: 10 - i }}>
                       {c.avatar ? (
                         <ImageWithFallback 
                           src={c.avatar} 
@@ -343,10 +345,8 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
                 </span>
               </>
             ) : (
-              /* Mobile: Show nothing, Desktop: Show "No mutual connections" */
-              <div className="text-xs sm:text-sm text-gray-400 text-center hidden sm:block">
-                No mutual connections
-              </div>
+              /* Mobile: Show nothing, Desktop: Show nothing when no mutual connections */
+              null
             )}
           </div>
 
@@ -358,4 +358,8 @@ export function EnhancedAlumniCard({ alumni, onClick }: EnhancedAlumniCardProps)
       </CardContent>
     </Card>
   );
-} 
+}
+
+// Export memoized version for performance optimization
+// Using default shallow comparison - React.memo will prevent re-renders when props haven't changed
+export const EnhancedAlumniCard = memo(EnhancedAlumniCardComponent); 

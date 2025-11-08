@@ -7,7 +7,6 @@ import { useConnections } from "@/lib/contexts/ConnectionsContext";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutualConnections } from "@/lib/hooks/useMutualConnections";
 
 interface LinkedInStyleChapterCardProps {
   member: ChapterMember;
@@ -39,8 +38,10 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
   // Generate description if not provided
   const memberDescription = description || '';
   
-  // Fetch real mutual connections
-  const { mutualConnections, count: connectionsCount, loading: mutualLoading } = useMutualConnections(member.id);
+  // Use mutual connections from member prop (already calculated by API)
+  const mutualConnections = member.mutualConnections || [];
+  const connectionsCount = member.mutualConnectionsCount || 0;
+  const mutualLoading = false; // No longer loading since it comes from API
 
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel', e: React.MouseEvent) => {
     e.stopPropagation();
@@ -153,10 +154,13 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
         return (
           <Button
             onClick={handleMessageClick}
-            className="w-full bg-navy-600 hover:bg-navy-700 text-white rounded-full font-medium h-7 sm:h-10 text-xs sm:text-sm"
+            className="w-full text-white rounded-full font-medium h-7 sm:h-10 text-xs sm:text-sm flex items-center justify-center shadow-sm border border-blue-300/20"
+            style={{
+              background: 'linear-gradient(340deg, rgba(228, 236, 255, 1) 0%, rgba(130, 130, 255, 0.95) 34%, rgba(35, 70, 224, 0.93) 85%)'
+            }}
           >
-            <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-            Message
+            <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+            Connected
           </Button>
         );
       
@@ -239,8 +243,8 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
             ) : (
               <>
                 <div className="flex -space-x-1 justify-center">
-                  {mutualConnections.slice(0, 3).map((c) => (
-                    <div key={c.id} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
+                  {mutualConnections.slice(0, 3).map((c, i) => (
+                    <div key={c.id || `mutual-${i}`} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
                       {c.avatar ? (
                         <img 
                           src={c.avatar} 
@@ -263,7 +267,7 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
                 <span className="text-xs sm:text-sm text-gray-600 leading-tight text-center">
                   {connectionsCount > 0 
                     ? `${connectionsCount} mutual connection${connectionsCount !== 1 ? 's' : ''}`
-                    : 'No mutual connections'
+                    : ''
                   }
                 </span>
               </>

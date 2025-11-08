@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { User, Mail, MapPin, Building, Shield, FileText, Phone, MessageCircle, Users, Calendar, Settings, Edit, UserCheck, UserPlus, Clock, Lock, Upload, Heart, Trash2 } from 'lucide-react';
-import { useProfile } from '@/lib/hooks/useProfile';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { UserAvatar } from '@/components/features/profile/UserAvatar';
@@ -94,9 +94,8 @@ export default function ProfilePage() {
       const result = await ProfileService.updateProfile(updatedProfile);
       
       if (result) {
-        // Refresh profile data
-        // You might want to add a refresh function to your useProfile hook
-        window.location.reload(); // Simple refresh for now
+        // Refresh profile data using context refresh method
+        await refreshProfile();
       }
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -606,12 +605,10 @@ export default function ProfilePage() {
                     <Link href="/dashboard/notifications">
                       <Button 
                         variant="outline" 
-                        className="w-full justify-start opacity-50 cursor-not-allowed" 
-                        disabled
+                        className="w-full justify-start"
                       >
                         <Calendar className="w-4 h-4 mr-2" />
                         Notifications
-                        <Lock className="w-3 h-3 ml-auto text-gray-400" />
                       </Button>
                     </Link>
                     <Link href="/dashboard/settings">

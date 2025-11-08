@@ -4,10 +4,21 @@ import { AlumniOverview } from './dashboards/AlumniOverview';
 import { ActiveMemberOverview } from './dashboards/ActiveMemberOverview';
 import { AdminOverview } from './dashboards/AdminOverview';
 import { DeveloperOverview } from './dashboards/DeveloperOverview';
-import { useAuth } from '@/lib/supabase/auth-context';
+import { useProfile } from '@/lib/contexts/ProfileContext';
+import type { SocialFeedInitialData } from './dashboards/ui/SocialFeed';
 
-export function DashboardOverview({ userRole }: { userRole: string | null }) {
-  const { isDeveloper } = useAuth();
+interface DashboardOverviewProps {
+  userRole: string | null;
+  initialFeed?: SocialFeedInitialData;
+  fallbackChapterId?: string | null;
+}
+
+export function DashboardOverview({
+  userRole,
+  initialFeed,
+  fallbackChapterId,
+}: DashboardOverviewProps) {
+  const { isDeveloper } = useProfile();
 
   // Check if user is a developer first
   if (isDeveloper) {
@@ -16,15 +27,15 @@ export function DashboardOverview({ userRole }: { userRole: string | null }) {
 
   // Render role-specific dashboard based on userRole
   if (userRole === 'alumni') {
-    return <AlumniOverview />;
+    return <AlumniOverview initialFeed={initialFeed} fallbackChapterId={fallbackChapterId} />;
   }
   
   if (userRole === 'active_member') {
-    return <ActiveMemberOverview />;
+    return <ActiveMemberOverview initialFeed={initialFeed} fallbackChapterId={fallbackChapterId} />;
   }
   
   if (userRole === 'admin') {
-    return <AdminOverview />;
+    return <AdminOverview initialFeed={initialFeed} fallbackChapterId={fallbackChapterId} />;
   }
   
   // Default dashboard for fallback
