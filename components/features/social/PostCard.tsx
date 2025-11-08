@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, MessageCircle, Share, Trash2, Lock } from 'lucide-react';
+import { Heart, MessageCircle, Trash2, Lock } from 'lucide-react';
 import { Post } from '@/types/posts';
 import { formatDistanceToNow } from 'date-fns';
 import { CommentModal } from './CommentModal';
@@ -213,17 +213,6 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
                 <MessageCircle className="h-4 w-4 mr-1" />
                 <span className="text-xs">{commentCountLabel}</span>
               </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                disabled
-                className="text-gray-400 hover:text-gray-400 cursor-not-allowed h-8 px-2"
-                title="Share functionality coming soon"
-              >
-                <Share className="h-4 w-4 mr-1" />
-                <span className="text-xs">{post.shares_count}</span>
-                <Lock className="h-3 w-3 ml-1 text-gray-400" />
-              </Button>
             </div>
           </div>
         </div>
@@ -336,17 +325,6 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
               >
                 <MessageCircle className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1" />
                 <span className="text-sm sm:text-xs whitespace-nowrap">{commentCountLabel}</span>
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                disabled
-                className="text-gray-400 hover:text-gray-400 cursor-not-allowed h-10 sm:h-8 px-3 sm:px-2"
-                title="Share functionality coming soon"
-              >
-                <Share className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1" />
-                <span className="text-sm sm:text-xs">{post.shares_count}</span>
-                <Lock className="h-4 w-4 sm:h-3 sm:w-3 ml-1 text-gray-400" />
               </Button>
             </div>
           </div>
