@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Heart, MessageCircle, Share, Trash2, Lock } from 'lucide-react';
 import { Post } from '@/types/posts';
 import { formatDistanceToNow } from 'date-fns';
@@ -97,6 +96,10 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
     setIsDeleteModalOpen(false);
   };
 
+  const handleLikeClick = () => {
+    onLike(post.id);
+  };
+
   return (
     <>
       {/* Mobile Layout - Card-less Feed */}
@@ -185,19 +188,22 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
           {/* Post Actions */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => onLike(post.id)}
-                className={`${
-                  post.is_liked 
-                    ? 'text-red-500 hover:text-red-700 hover:bg-red-50' 
-                    : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
-                } h-8 px-2`}
-              >
-                <Heart className={`h-4 w-4 mr-1 ${post.is_liked ? 'fill-current' : ''}`} />
-                <span className="text-xs">{post.likes_count}</span>
-              </Button>
+              <div className="relative">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => onLike(post.id)}
+                  className={`${
+                    post.is_liked 
+                      ? 'text-red-500 hover:text-red-700 hover:bg-red-50' 
+                      : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
+                  } h-8 px-2`}
+                >
+                  <Heart className={`h-4 w-4 mr-1 ${post.is_liked ? 'fill-current' : ''}`} />
+                  <span className="text-xs">{post.likes_count}</span>
+                </Button>
+
+              </div>
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -307,19 +313,21 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
           {/* Post Actions */}
           <div className="flex items-center justify-between pt-4 sm:pt-3 border-t border-gray-100">
             <div className="flex items-center space-x-4 sm:space-x-6">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => onLike(post.id)}
-                className={`${
-                  post.is_liked 
-                    ? 'text-red-500 hover:text-red-700 hover:bg-red-50' 
-                    : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
-                } h-10 sm:h-8 px-3 sm:px-2`}
-              >
-                <Heart className={`h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1 ${post.is_liked ? 'fill-current' : ''}`} />
-                <span className="text-sm sm:text-xs">{post.likes_count}</span>
-              </Button>
+              <div className="relative">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleLikeClick}
+                  className={`${
+                    post.is_liked 
+                      ? 'text-red-500 hover:text-red-700 hover:bg-red-50' 
+                      : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
+                  } h-10 sm:h-8 px-3 sm:px-2`}
+                >
+                  <Heart className={`h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1 ${post.is_liked ? 'fill-current' : ''}`} />
+                  <span className="text-sm sm:text-xs">{post.likes_count}</span>
+                </Button>
+              </div>
               <Button 
                 variant="ghost" 
                 size="sm" 
