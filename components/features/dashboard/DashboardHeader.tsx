@@ -64,7 +64,6 @@ export function DashboardHeader() {
     conn.status === 'pending' && conn.recipient_id === user?.id
   ).length;
   
-  // Hardcoded values for now - will be replaced with real data later
   const completion = profile ? ProfileService.calculateCompletion(profile) : null;
   const completionPercent = completion?.percentage ?? 0;
   const hasUnread = pendingConnections > 0; // Now based on actual pending connections
