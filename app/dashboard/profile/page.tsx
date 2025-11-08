@@ -24,6 +24,7 @@ import { DeletePostModal } from '@/components/features/social/DeletePostModal';
 import { EmailService } from '@/lib/services/emailService';
 import { useModal } from '@/lib/contexts/ModalContext';
 import { Save, AlertTriangle } from 'lucide-react';
+import ImageWithFallback from '@/components/figma/ImageWithFallback';
 
 export default function ProfilePage() {
   const { profile, loading, refreshProfile } = useProfile();
@@ -499,9 +500,19 @@ export default function ProfilePage() {
                             <CardContent className="p-4 sm:p-6">
                               {/* Post Header */}
                               <div className="flex items-start space-x-3 sm:space-x-4 mb-4 sm:mb-3">
-                                <div className="w-12 h-12 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
-                                  {post.author?.avatar_url || post.author?.first_name?.charAt(0) || 'U'}
-                                </div>
+                              <div className="w-12 h-12 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
+                                {post.author?.avatar_url ? (
+                                  <ImageWithFallback
+                                    src={post.author.avatar_url}
+                                    alt={post.author.full_name || 'User'}
+                                    width={48}
+                                    height={48}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  post.author?.first_name?.charAt(0) || 'U'
+                                )}
+                              </div>
                                 
                                 <div className="flex-1 min-w-0">
                                   <div className="flex flex-wrap items-center gap-2 mb-1">
