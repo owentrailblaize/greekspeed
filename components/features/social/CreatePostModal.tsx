@@ -32,6 +32,9 @@ export function CreatePostModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const sanitizeContent = (value: string) =>
+    value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
   const determinePostType = (nextContent: string, nextImageUrl: string) => {
     const trimmedContent = nextContent.trim();
     if (trimmedContent && nextImageUrl) return 'text_image';
@@ -40,6 +43,8 @@ export function CreatePostModal({
     return 'text';
   };
 
+  const sanitizedContent = sanitizeContent(content);
+
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -47,7 +52,7 @@ export function CreatePostModal({
       reader.onload = (e) => {
         const result = e.target?.result as string;
         setImageUrl(result);
-        setPostType(determinePostType(content, result));
+        setPostType(determinePostType(sanitizedContent, result));
       };
       reader.readAsDataURL(file);
     }
@@ -59,7 +64,9 @@ export function CreatePostModal({
 
     const start = textarea.selectionStart ?? content.length;
     const end = textarea.selectionEnd ?? content.length;
-    const nextContent = content.slice(0, start) + emoji + content.slice(end);
+    const nextContent = sanitizeContent(
+      content.slice(0, start) + emoji + content.slice(end)
+    );
 
     setContent(nextContent);
     setPostType(determinePostType(nextContent, imageUrl));
@@ -72,12 +79,13 @@ export function CreatePostModal({
   };
 
   const handleSubmit = async () => {
-    if (!content.trim() && !imageUrl) return;
+    const sanitized = sanitizeContent(content);
+    if (!sanitized.trim() && !imageUrl) return;
 
     setIsSubmitting(true);
     try {
       await onSubmit({
-        content: content.trim(),
+        content: sanitized,
         post_type: postType,
         image_url: imageUrl || undefined,
         metadata: {}
@@ -94,7 +102,7 @@ export function CreatePostModal({
     }
   };
 
-  const canSubmit = (content.trim() || imageUrl) && !isSubmitting;
+  const canSubmit = (sanitizedContent.trim() || imageUrl) && !isSubmitting;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -141,7 +149,7 @@ export function CreatePostModal({
               placeholder="What do you want to talk about?"
               value={content}
               onChange={(e) => {
-                const nextValue = e.target.value;
+                const nextValue = sanitizeContent(e.target.value);
                 setContent(nextValue);
                 setPostType(determinePostType(nextValue, imageUrl));
               }}
@@ -159,7 +167,7 @@ export function CreatePostModal({
                   variant="ghost"
                   onClick={() => {
                     setImageUrl('');
-                    setPostType(determinePostType(content, ''));
+                    setPostType(determinePostType(sanitizedContent, ''));
                   }}
                   className="absolute top-3 right-3 sm:top-2 sm:right-2 h-9 w-9 sm:h-8 sm:w-8 rounded-full bg-slate-900/70 text-white hover:bg-slate-900/80"
                 >
