@@ -18,13 +18,24 @@ interface PostCardProps {
   onLike: (postId: string) => void;
   onDelete?: (postId: string) => void;
   onCommentAdded?: () => void;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
-export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardProps) {
+export function PostCard({
+  post,
+  onLike,
+  onDelete,
+  onCommentAdded,
+  isExpanded: isExpandedProp,
+  onToggleExpand,
+}: PostCardProps) {
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [localExpanded, setLocalExpanded] = useState(false);
+  const isExpanded = isExpandedProp ?? localExpanded;
+  const handleExpandToggle = onToggleExpand ?? (() => setLocalExpanded((prev) => !prev));
 
   const { displayContent, shouldTruncate } = useMemo(() => {
     const content = post.content ?? '';
@@ -53,7 +64,7 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
         {shouldTruncate && (
           <button
             type="button"
-            onClick={() => setIsExpanded((prev) => !prev)}
+            onClick={handleExpandToggle}
             className={buttonClassName}
           >
             {isExpanded ? 'View less' : 'View more'}

@@ -25,6 +25,7 @@ interface SocialFeedProps {
 
 export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
   const {
     posts,
     error,
@@ -41,6 +42,14 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
   const { profile } = useProfile();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const mergedPosts = useMemo(() => posts, [posts]);
+
+  useEffect(() => {
+    if (!expandedPostId) return;
+    const stillExists = mergedPosts.some((post) => post.id === expandedPostId);
+    if (!stillExists) {
+      setExpandedPostId(null);
+    }
+  }, [expandedPostId, mergedPosts]);
 
   useEffect(() => {
     const node = loadMoreRef.current;
@@ -221,6 +230,11 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
                       onLike={handleLikePost}
                       onDelete={handleDeletePost}
                       onCommentAdded={handleCommentAdded}
+                      isExpanded={expandedPostId === post.id}
+                      onToggleExpand={() => {
+                        setExpandedPostId((prev) => (prev === post.id ? null : post.id));
+                        requestAnimationFrame(() => rowVirtualizer.measure());
+                      }}
                     />
                   </div>
                 );
