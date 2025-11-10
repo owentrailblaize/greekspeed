@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,17 +11,69 @@ import { formatDistanceToNow } from 'date-fns';
 import { CommentModal } from './CommentModal';
 import { DeletePostModal } from './DeletePostModal';
 
+const MAX_COLLAPSED_CHARS = 220;
+
 interface PostCardProps {
   post: Post;
   onLike: (postId: string) => void;
   onDelete?: (postId: string) => void;
   onCommentAdded?: () => void;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
-export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardProps) {
+export function PostCard({
+  post,
+  onLike,
+  onDelete,
+  onCommentAdded,
+  isExpanded: isExpandedProp,
+  onToggleExpand,
+}: PostCardProps) {
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [localExpanded, setLocalExpanded] = useState(false);
+  const isExpanded = isExpandedProp ?? localExpanded;
+  const handleExpandToggle = onToggleExpand ?? (() => setLocalExpanded((prev) => !prev));
+
+  const { displayContent, shouldTruncate } = useMemo(() => {
+    const content = post.content ?? '';
+
+    if (content.length <= MAX_COLLAPSED_CHARS) {
+      return {
+        displayContent: content,
+        shouldTruncate: false,
+      };
+    }
+
+    const truncated = content.slice(0, MAX_COLLAPSED_CHARS).trimEnd();
+
+    return {
+      displayContent: isExpanded ? content : `${truncated}…`,
+      shouldTruncate: true,
+    };
+  }, [isExpanded, post.content]);
+
+  const renderPostContent = (textClassName: string, buttonClassName: string) => {
+    if (!post.content) return null;
+
+    return (
+      <div className="space-y-2">
+        <p className={`${textClassName} break-words whitespace-pre-wrap`}>{displayContent}</p>
+        {shouldTruncate && (
+          <button
+            type="button"
+            onClick={handleExpandToggle}
+            className={buttonClassName}
+          >
+            {isExpanded ? 'View less' : 'View more'}
+          </button>
+        )}
+      </div>
+    );
+  };
+
   const commentsPreview = post.comments_preview ?? [];
   const hasComments = (post.comments_count ?? 0) > 0;
   const commentCountLabel = hasComments
@@ -141,9 +193,10 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
           </div>
 
           {/* Post Content */}
-          <div className="mb-4">
-            {post.content && (
-              <p className="text-gray-700 text-sm leading-relaxed mb-3 break-words">{post.content}</p>
+          <div className="mb-4 space-y-4">
+            {renderPostContent(
+              'text-gray-700 text-sm leading-relaxed',
+              'text-xs font-medium text-navy-600 hover:text-navy-700 transition-colors'
             )}
             {post.image_url && (
               <div className="-mx-4 relative w-auto overflow-hidden rounded-2xl aspect-[4/3] shadow-inner" style={{ maxHeight: '20rem' }}>
@@ -243,8 +296,9 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
 
           {/* Post Content */}
           <div className="space-y-4">
-            {post.content && (
-              <p className="text-gray-700 text-base sm:text-[0.95rem] leading-relaxed break-words">{post.content}</p>
+            {renderPostContent(
+              'text-gray-700 text-base sm:text-[0.95rem] leading-relaxed',
+              'text-xs font-medium text-navy-600 hover:text-navy-700 transition-colors'
             )}
             {post.image_url && (
               <div className="relative w-full overflow-hidden rounded-3xl aspect-[4/3] shadow-inner" style={{ maxHeight: '24rem' }}>
