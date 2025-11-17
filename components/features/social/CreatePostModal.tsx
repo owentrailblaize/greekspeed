@@ -216,9 +216,10 @@ export function CreatePostModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="sm:max-w-[600px] max-w-[85vw] max-h-[90vh] sm:max-h-[80vh] overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-sm shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] sm:rounded-3xl rounded-2xl p-0"
+        className="sm:max-w-[600px] max-w-[85vw] max-h-[90vh] sm:max-h-[80vh] overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-sm shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] sm:rounded-3xl rounded-2xl p-0 flex flex-col"
       >
-        <div className="p-6 sm:p-8 space-y-8 sm:space-y-6 overflow-y-auto max-h-[90vh] sm:max-h-[80vh]">
+        {/* Fixed Header */}
+        <div className="shrink-0 p-6 sm:p-8 pb-4 sm:pb-4 border-b border-slate-200/50">
           <DialogHeader className="flex flex-row items-start justify-between pb-2">
             <div>
               <DialogTitle className="text-xl font-semibold tracking-tight text-slate-900">
@@ -230,7 +231,7 @@ export function CreatePostModal({
             </div>
           </DialogHeader>
 
-          <div className="flex items-start gap-4 sm:gap-3">
+          <div className="flex items-start gap-4 sm:gap-3 mt-4">
             <div className="w-12 h-12 sm:w-11 sm:w-11 bg-navy-100/70 rounded-full flex items-center justify-center text-navy-700 text-base sm:text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
               {userAvatar ? (
                 <ImageWithFallback 
@@ -251,7 +252,10 @@ export function CreatePostModal({
               </Badge>
             </div>
           </div>
+        </div>
 
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto min-h-0 px-6 sm:px-8 py-4 sm:py-6">
           <div className="space-y-4 sm:space-y-3">
             <Textarea
               ref={textareaRef}
@@ -262,20 +266,27 @@ export function CreatePostModal({
                 setContent(nextValue);
                 setPostType(determinePostType(nextValue, imageUrls));
               }}
-              className="min-h-[160px] sm:min-h-[140px] resize-none rounded-2xl border border-transparent bg-slate-50/80 p-5 text-base sm:text-lg text-slate-800 placeholder:text-slate-400 focus:border-navy-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-200 transition"
+              className="min-h-[120px] sm:min-h-[100px] resize-none rounded-2xl border border-transparent bg-slate-50/80 p-5 text-base sm:text-lg text-slate-800 placeholder:text-slate-400 focus:border-navy-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-200 transition"
             />
 
             {/* Error message */}
             {uploadError && (
-              <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+              <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700 shrink-0">
                 {uploadError}
               </div>
             )}
 
-            {/* Multiple images in horizontal scrollable row */}
+            {/* Multiple images in horizontal scrollable row - Fixed height container */}
             {imageUrls.length > 0 && (
-              <div className="relative">
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+              <div className="relative shrink-0">
+                {/* Constrained height container for horizontal scrolling */}
+                <div 
+                  className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent"
+                  style={{ 
+                    maxHeight: '140px',
+                    WebkitOverflowScrolling: 'touch' // Smooth scrolling on iOS
+                  }}
+                >
                   {imageUrls.map((url, index) => (
                     <div
                       key={index}
@@ -305,49 +316,50 @@ export function CreatePostModal({
               </div>
             )}
           </div>
-
-          <div className="rounded-2xl border border-slate-200/70 bg-slate-50/70 p-4 sm:p-3 shadow-inner">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-3">
-              <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={imageUrls.length >= MAX_IMAGES || isSubmitting}
-                  className="h-11 sm:h-9 rounded-full border border-slate-200 bg-white/90 px-5 text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Image className="h-5 w-5 sm:h-4 sm:w-4 mr-2" />
-                  <span className="text-sm font-medium">Photo</span>
-                </Button>
-                <EmojiPicker
-                  onEmojiSelect={handleEmojiSelect}
-                  disabled={isSubmitting}
-                  buttonClassName="h-11 sm:h-9 rounded-full border border-slate-200 bg-white/90 px-5 text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-800"
-                  iconClassName="h-5 w-5 sm:h-4 sm:w-4 mr-2"
-                  label="Emoji"
-                  labelClassName="text-sm font-medium text-slate-500"
-                />
-              </div>
-
-              <Button
-                onClick={handleSubmit}
-                disabled={!canSubmit}
-                className="w-full sm:w-auto h-12 sm:h-10 rounded-full bg-navy-600/90 px-8 text-sm font-semibold tracking-wide text-white shadow-[0_18px_45px_-24px_rgba(30,64,175,0.9)] transition-all duration-200 hover:bg-navy-600 hover:-translate-y-0.5 hover:shadow-[0_22px_55px_-28px_rgba(30,64,175,0.85)] disabled:translate-y-0 disabled:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? 'Posting…' : 'Post'}
-              </Button>
-            </div>
-          </div>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleImageUpload}
-            className="hidden"
-          />
         </div>
+
+        {/* Fixed Footer with Form Controls */}
+        <div className="shrink-0 border-t border-slate-200/70 bg-slate-50/70 p-4 sm:p-3 shadow-inner">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={imageUrls.length >= MAX_IMAGES || isSubmitting}
+                className="h-11 sm:h-9 rounded-full border border-slate-200 bg-white/90 px-5 text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Image className="h-5 w-5 sm:h-4 sm:w-4 mr-2" />
+                <span className="text-sm font-medium">Photo</span>
+              </Button>
+              <EmojiPicker
+                onEmojiSelect={handleEmojiSelect}
+                disabled={isSubmitting}
+                buttonClassName="h-11 sm:h-9 rounded-full border border-slate-200 bg-white/90 px-5 text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-800"
+                iconClassName="h-5 w-5 sm:h-4 sm:w-4 mr-2"
+                label="Emoji"
+                labelClassName="text-sm font-medium text-slate-500"
+              />
+            </div>
+
+            <Button
+              onClick={handleSubmit}
+              disabled={!canSubmit}
+              className="w-full sm:w-auto h-12 sm:h-10 rounded-full bg-navy-600/90 px-8 text-sm font-semibold tracking-wide text-white shadow-[0_18px_45px_-24px_rgba(30,64,175,0.9)] transition-all duration-200 hover:bg-navy-600 hover:-translate-y-0.5 hover:shadow-[0_22px_55px_-28px_rgba(30,64,175,0.85)] disabled:translate-y-0 disabled:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? 'Posting…' : 'Post'}
+            </Button>
+          </div>
+        </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleImageUpload}
+          className="hidden"
+        />
       </DialogContent>
     </Dialog>
   );

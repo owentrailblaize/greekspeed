@@ -1,16 +1,17 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { X, Heart, MessageCircle, Share, Trash2, Send, RefreshCcw } from 'lucide-react';
+import { X, Heart, MessageCircle, Share, Trash2, Send, RefreshCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Post, CreateCommentRequest } from '@/types/posts';
 import { useComments } from '@/lib/hooks/useComments';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { formatDistanceToNow } from 'date-fns';
 import Image from 'next/image';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { createPortal } from 'react-dom';
 
 interface CommentModalProps {
   isOpen: boolean;
@@ -51,6 +52,51 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
   });
   const lastUpdatedLabel =
     typeof lastFetchedAt === 'number' ? formatRelativeMoment(lastFetchedAt) : null;
+
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  // Get images from metadata or single image_url
+  const imageUrls = useMemo<string[]>(() => {
+    return post.metadata?.image_urls || (post.image_url ? [post.image_url] : []);
+  }, [post.metadata?.image_urls, post.image_url]);
+
+  // Handle mounting for portal
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Handle keyboard navigation in image modal
+  useEffect(() => {
+    if (!isImageModalOpen || imageUrls.length <= 1) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        setSelectedImageIndex((prev) => (prev > 0 ? prev - 1 : imageUrls.length - 1));
+      } else if (e.key === 'ArrowRight') {
+        setSelectedImageIndex((prev) => (prev < imageUrls.length - 1 ? prev + 1 : 0));
+      } else if (e.key === 'Escape') {
+        setIsImageModalOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isImageModalOpen, imageUrls.length]);
+
+  const handleImageClick = (index: number) => {
+    setSelectedImageIndex(index);
+    setIsImageModalOpen(true);
+  };
+
+  const handleNextImage = () => {
+    setSelectedImageIndex((prev) => (prev < imageUrls.length - 1 ? prev + 1 : 0));
+  };
+
+  const handlePrevImage = () => {
+    setSelectedImageIndex((prev) => (prev > 0 ? prev - 1 : imageUrls.length - 1));
+  };
 
   const handleSubmitComment = async () => {
     if (!newComment.trim() || isSubmitting) return;
@@ -118,6 +164,77 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
     }
   }
 
+  // Image Viewer Modal Component (same as PostCard)
+  const ImageViewerModal = () => {
+    if (!mounted || !isImageModalOpen || imageUrls.length === 0) return null;
+
+    return createPortal(
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+        <div 
+          className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+          onClick={() => setIsImageModalOpen(false)}
+        />
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsImageModalOpen(false)}
+          className="absolute top-4 right-4 z-10 h-10 w-10 p-0 bg-white/10 hover:bg-white/20 text-white rounded-full border border-white/20"
+          aria-label="Close image viewer"
+        >
+          <X className="h-5 w-5" />
+        </Button>
+
+        {imageUrls.length > 1 && (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePrevImage();
+              }}
+              className="absolute left-4 z-10 h-12 w-12 p-0 bg-white/10 hover:bg-white/20 text-white rounded-full border border-white/20"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNextImage();
+              }}
+              className="absolute right-4 z-10 h-12 w-12 p-0 bg-white/10 hover:bg-white/20 text-white rounded-full border border-white/20"
+              aria-label="Next image"
+            >
+              <ChevronRight className="h-6 w-6" />
+            </Button>
+          </>
+        )}
+
+        <div 
+          className="relative max-w-[95vw] max-h-[95vh] w-full h-full flex items-center justify-center p-4"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <img
+            src={imageUrls[selectedImageIndex]}
+            alt={`Post image ${selectedImageIndex + 1} of ${imageUrls.length}`}
+            className="max-w-full max-h-full object-contain rounded-lg"
+          />
+        </div>
+
+        {imageUrls.length > 1 && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-black/50 text-white px-4 py-2 rounded-full text-sm">
+            {selectedImageIndex + 1} / {imageUrls.length}
+          </div>
+        )}
+      </div>,
+      document.body
+    );
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[720px] max-w-[95vw] h-[100dvh] sm:h-[85vh] flex flex-col overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-md shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] sm:rounded-3xl rounded-2xl p-0">
@@ -168,22 +285,54 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                   )}
                 </div>
                 
-                {/* Post Content with better image handling */}
+                {/* Post Content with multiple image support */}
                 {post.content && (
                   <p className="text-slate-800 text-sm sm:text-base leading-relaxed break-words">{post.content}</p>
                 )}
-                {post.image_url && (
-                  <div className="relative w-full overflow-hidden rounded-2xl border border-slate-200 bg-white/70">
-                    <Image
-                      src={post.image_url}
-                      alt="Post content"
-                      width={1200}
-                      height={1200}
-                      className="h-full w-full object-contain"
-                      sizes="(max-width: 768px) 100vw, 700px"
-                    />
-                  </div>
-                )}
+                
+                {/* Replace the single image_url display (lines 175-186) with: */}
+                {(() => {
+                  if (imageUrls.length === 0) return null;
+                  
+                  // Single image - display large and make clickable
+                  if (imageUrls.length === 1) {
+                    return (
+                      <div 
+                        className="relative w-full overflow-hidden rounded-2xl border border-slate-200 bg-white/70 cursor-pointer hover:opacity-90 transition-opacity mt-3"
+                        style={{ maxHeight: '400px' }}
+                        onClick={() => handleImageClick(0)}
+                      >
+                        <img
+                          src={imageUrls[0]}
+                          alt="Post content"
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    );
+                  }
+                  
+                  // Multiple images - display in horizontal scrollable row (clickable)
+                  return (
+                    <div className="relative mt-3">
+                      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+                        {imageUrls.map((url, index) => (
+                          <div
+                            key={index}
+                            className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => handleImageClick(index)}
+                          >
+                            <img
+                              src={url}
+                              alt={`Post image ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      {/* Removed image count text */}
+                    </div>
+                  );
+                })()}
 
                 {/* Post Actions */}
                 <div className="flex flex-wrap items-center gap-3">
@@ -388,6 +537,9 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
           </div>
         </div>
       </DialogContent>
+      
+      {/* Image Viewer Modal */}
+      <ImageViewerModal />
     </Dialog>
   );
 }
