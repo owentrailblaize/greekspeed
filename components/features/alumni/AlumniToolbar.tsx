@@ -207,7 +207,7 @@ export function AlumniToolbar({
 
       {/* Mobile Layout */}
       <div className="md:hidden">
-        <div className="flex items-center space-x-2 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
+        <div className="flex items-center space-x-2 overflow-x-auto pt-2 pb-2 -mx-6 px-6 scrollbar-hide">
           {/* Export - Direct CSV download button */}
           <Button 
             variant="outline"
