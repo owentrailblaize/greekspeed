@@ -72,8 +72,8 @@ export function AnnouncementsCard() {
   // Add state for modal
   const [isViewAllOpen, setIsViewAllOpen] = useState(false);
   
-  // Limit announcements shown in sidebar (e.g., first 5)
-  const MAX_SIDEBAR_ANNOUNCEMENTS = 5;
+  // Limit announcements shown in sidebar (first 3)
+  const MAX_SIDEBAR_ANNOUNCEMENTS = 3;
   const sidebarAnnouncements = announcements.slice(0, MAX_SIDEBAR_ANNOUNCEMENTS);
   const hasMoreAnnouncements = announcements.length > MAX_SIDEBAR_ANNOUNCEMENTS;
 
@@ -119,36 +119,34 @@ export function AnnouncementsCard() {
     return (
       <div 
         key={announcement.id} 
-        className={`p-3 sm:p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors relative group ${isInModal ? 'mb-3' : ''}`}
+        className={`p-3 border border-gray-200 rounded-lg hover:border-navy-300 hover:shadow-sm transition-all duration-200 bg-white ${isInModal ? 'mb-3' : ''}`}
       >
-        <div className="flex items-start space-x-3 sm:space-x-4">
+        <div className="flex items-start space-x-3">
           {/* Type icon */}
-          <div className={`w-10 h-10 sm:w-8 sm:h-8 ${typeConfig.bgColor} rounded-full flex items-center justify-center shrink-0`}>
-            <TypeIcon className={`h-5 w-5 sm:h-4 sm:w-4 ${typeConfig.color}`} />
+          <div className={`w-10 h-10 ${typeConfig.bgColor} rounded-full flex items-center justify-center shrink-0`}>
+            <TypeIcon className={`h-5 w-5 ${typeConfig.color}`} />
           </div>
           
           <div className="flex-1 min-w-0">
-            {/* Header with title and priority icon */}
-            <div className="flex items-start justify-between mb-2 sm:mb-1">
-              <div className="flex items-center space-x-2 flex-1 min-w-0">
-                <h4 className="font-medium text-gray-900 text-base sm:text-sm line-clamp-2 break-words">
-                  {announcement.title}
-                </h4>
-              </div>
+            {/* Header with title */}
+            <div className="flex items-start justify-between mb-2">
+              <h4 className="font-semibold text-gray-900 text-sm line-clamp-2 break-words flex-1">
+                {announcement.title}
+              </h4>
             </div>
             
             {/* Content */}
-            <p className={`text-sm sm:text-xs text-gray-600 mb-3 sm:mb-2 ${isInModal ? '' : 'line-clamp-2'} break-words`}>
+            <p className={`text-xs text-gray-600 mb-3 ${isInModal ? '' : 'line-clamp-2'} break-words`}>
               {announcement.content}
             </p>
             
-            {/* Footer with sender and time */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm sm:text-xs text-gray-500 break-words">
+            {/* Footer with sender, time, and action */}
+            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                <span className="break-words">
                   {announcement.sender?.full_name || 'Unknown'}
                 </span>
-                <span className="text-sm sm:text-xs text-gray-400">
+                <span className="text-gray-400">
                   {formatRelativeTime(announcement.created_at)}
                 </span>
               </div>
@@ -158,13 +156,13 @@ export function AnnouncementsCard() {
                 variant="outline"
                 onClick={() => handleMarkAsRead(announcement.id)}
                 disabled={markingAsRead === announcement.id}
-                className="text-navy-600 border-navy-600 hover:bg-navy-50 h-8 sm:h-6 px-2 sm:px-1 w-auto shrink-0"
+                className="text-navy-600 border-navy-600 hover:bg-navy-50 h-6 px-2 shrink-0"
                 title="Mark as read"
               >
                 {markingAsRead === announcement.id ? (
-                  <Loader2 className="h-4 w-4 sm:h-3 sm:w-3 animate-spin" />
+                  <Loader2 className="h-3 w-3 animate-spin" />
                 ) : (
-                  <Check className="h-4 w-4 sm:h-3 sm:w-3" />
+                  <Check className="h-3 w-3" />
                 )}
               </Button>
             </div>
@@ -176,11 +174,11 @@ export function AnnouncementsCard() {
 
   if (loading) {
     return (
-      <Card className="bg-white">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center space-x-2">
+      <Card className="bg-white shadow-sm border border-gray-200">
+        <CardHeader className="pb-3 border-b border-gray-100">
+          <CardTitle className="text-lg font-semibold flex items-center space-x-2">
             <MessageSquare className="h-5 w-5 text-navy-600" />
-            <span>Chapter Announcements</span>
+            <span className="text-gray-900">Chapter Announcements</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
@@ -194,11 +192,11 @@ export function AnnouncementsCard() {
 
   if (announcements.length === 0) {
     return (
-      <Card className="bg-white">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center space-x-2">
+      <Card className="bg-white shadow-sm border border-gray-200">
+        <CardHeader className="pb-3 border-b border-gray-100">
+          <CardTitle className="text-lg font-semibold flex items-center space-x-2">
             <MessageSquare className="h-5 w-5 text-navy-600" />
-            <span>Chapter Announcements</span>
+            <span className="text-gray-900">Chapter Announcements</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
@@ -216,47 +214,35 @@ export function AnnouncementsCard() {
 
   return (
     <>
-      <Card className="bg-white">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center space-x-2">
-            <MessageSquare className="h-5 w-5 text-navy-600" />
-            <span>Chapter Announcements</span>
+      <Card className="bg-white shadow-sm border border-gray-200">
+        <CardHeader className="pb-3 border-b border-gray-100">
+          <CardTitle className="text-lg font-semibold flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <MessageSquare className="h-5 w-5 text-navy-600" />
+              <span className="text-gray-900">Announcements</span>
+            </div>
             {announcements.length > 0 && (
-              <Badge variant="secondary" className="ml-2 bg-navy-100 text-navy-800">
+              <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                 {announcements.length}
-              </Badge>
+              </span>
             )}
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-0">
-          {/* Scrollable announcements list with max height */}
-          <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+        <CardContent className="pt-3">
+          <div className="space-y-2.5">
             {sidebarAnnouncements.map((announcement) => renderAnnouncementItem(announcement))}
           </div>
           
           {/* View All button if there are more announcements */}
           {hasMoreAnnouncements && (
-            <div className="pt-4 border-t border-gray-100 mt-4">
+            <div className="pt-3 border-t border-gray-200 mt-3">
               <Button 
                 variant="outline" 
-                className="w-full text-navy-600 border-navy-600 hover:bg-navy-50 h-10 sm:h-8"
+                className="w-full text-slate-600 border-gray-400 hover:bg-navy-50 h-8"
                 onClick={() => setIsViewAllOpen(true)}
               >
                 <Eye className="h-4 w-4 mr-2" />
                 View All ({announcements.length})
-              </Button>
-            </div>
-          )}
-          
-          {/* Refresh button - only show if no "View All" button */}
-          {!hasMoreAnnouncements && announcements.length > 0 && (
-            <div className="pt-4 border-t border-gray-100 mt-4">
-              <Button 
-                variant="outline" 
-                className="w-full text-navy-600 border-navy-600 hover:bg-navy-50 h-10 sm:h-8"
-                onClick={refresh}
-              >
-                Refresh Announcements
               </Button>
             </div>
           )}
@@ -269,7 +255,7 @@ export function AnnouncementsCard() {
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <MessageSquare className="h-5 w-5 text-navy-600" />
-              <span>All Chapter Announcements</span>
+              <span>All Announcements</span>
               {announcements.length > 0 && (
                 <Badge variant="secondary" className="ml-2 bg-navy-100 text-navy-800">
                   {announcements.length}
