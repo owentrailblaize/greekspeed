@@ -187,18 +187,55 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
               'text-gray-700 text-sm leading-relaxed',
               'text-xs font-medium text-navy-600 hover:text-navy-700 transition-colors'
             )}
-            {post.image_url && (
-              <div className="relative w-full overflow-hidden rounded-2xl aspect-[4/3] shadow-inner" style={{ maxHeight: '20rem' }}>
-                <Image
-                  src={post.image_url}
-                  alt="Post content"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 100vw, 600px"
-                  priority={false}
-                />
-              </div>
-            )}
+            {/* Display images - support both single (backward compat) and multiple */}
+            {(() => {
+              // Get images from metadata if available, otherwise fall back to single image_url
+              const imageUrls = post.metadata?.image_urls || (post.image_url ? [post.image_url] : []);
+              
+              if (imageUrls.length === 0) return null;
+              
+              // Single image - display large
+              if (imageUrls.length === 1) {
+                return (
+                  <div className="relative w-full overflow-hidden rounded-3xl aspect-[4/3] shadow-inner" style={{ maxHeight: '24rem' }}>
+                    <Image
+                      src={imageUrls[0]}
+                      alt="Post content"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, 700px"
+                      priority={false}
+                    />
+                  </div>
+                );
+              }
+              
+              // Multiple images - display in horizontal scrollable row
+              return (
+                <div className="relative">
+                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+                    {imageUrls.map((url, index) => (
+                      <div
+                        key={index}
+                        className="relative shrink-0 w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100"
+                      >
+                        <Image
+                          src={url}
+                          alt={`Post image ${index + 1}`}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 640px) 128px, 160px"
+                          priority={false}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    {imageUrls.length} image{imageUrls.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              );
+            })()}
             {renderCommentsPreview()}
           </div>
 
@@ -289,18 +326,55 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
               'text-gray-700 text-base sm:text-[0.95rem] leading-relaxed',
               'text-xs font-medium text-navy-600 hover:text-navy-700 transition-colors'
             )}
-            {post.image_url && (
-              <div className="relative w-full overflow-hidden rounded-3xl aspect-[4/3] shadow-inner" style={{ maxHeight: '24rem' }}>
-                <Image
-                  src={post.image_url}
-                  alt="Post content"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 100vw, 700px"
-                  priority={false}
-                />
-              </div>
-            )}
+            {/* Display images - support both single (backward compat) and multiple */}
+            {(() => {
+              // Get images from metadata if available, otherwise fall back to single image_url
+              const imageUrls = post.metadata?.image_urls || (post.image_url ? [post.image_url] : []);
+              
+              if (imageUrls.length === 0) return null;
+              
+              // Single image - display large
+              if (imageUrls.length === 1) {
+                return (
+                  <div className="relative w-full overflow-hidden rounded-3xl aspect-[4/3] shadow-inner" style={{ maxHeight: '24rem' }}>
+                    <Image
+                      src={imageUrls[0]}
+                      alt="Post content"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, 700px"
+                      priority={false}
+                    />
+                  </div>
+                );
+              }
+              
+              // Multiple images - display in horizontal scrollable row
+              return (
+                <div className="relative">
+                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+                    {imageUrls.map((url, index) => (
+                      <div
+                        key={index}
+                        className="relative shrink-0 w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100"
+                      >
+                        <Image
+                          src={url}
+                          alt={`Post image ${index + 1}`}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 640px) 100vw, 700px"
+                          priority={false}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    {imageUrls.length} image{imageUrls.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              );
+            })()}
             {renderCommentsPreview()}
           </div>
 
