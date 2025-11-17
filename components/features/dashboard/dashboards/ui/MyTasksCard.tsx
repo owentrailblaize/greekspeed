@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ListTodo, Loader2 } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
-import { supabase } from '@/lib/supabase/client'; // Add this import
+import { supabase } from '@/lib/supabase/client';
 import { Task, TaskStatus } from '@/types/operations';
+import { toast } from 'react-toastify';
 
 export function MyTasksCard() {
   const { profile } = useProfile();
@@ -75,7 +76,7 @@ export function MyTasksCard() {
         .from('tasks')
         .update({ 
           status: newStatus,
-          updated_at: new Date().toISOString() // Track when it was updated
+          updated_at: new Date().toISOString()
         })
         .eq('id', taskId);
 
@@ -86,10 +87,37 @@ export function MyTasksCard() {
         task.id === taskId ? { ...task, status: newStatus } : task
       ));
 
-      // Task marked as newStatus
+      // Show toast notification on desktop only
+      if (window.innerWidth >= 640) { // sm breakpoint
+        if (newStatus === 'completed') {
+          toast.success('Task marked as complete and will be removed upon admin approval', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        } else {
+          toast.info('Task marked as incomplete', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
+      }
     } catch (error) {
       console.error('Error updating task:', error);
-      // Could add toast notification here
+      // Show error toast on desktop
+      if (window.innerWidth >= 640) {
+        toast.error('Failed to update task. Please try again.', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+      }
     }
   };
 

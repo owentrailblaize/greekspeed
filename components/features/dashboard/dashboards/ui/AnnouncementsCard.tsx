@@ -15,6 +15,7 @@ import { X, MessageSquare, Clock, AlertTriangle, GraduationCap, Calendar, AlertC
 import { useAnnouncements } from '@/lib/hooks/useAnnouncements';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { Announcement, CreateAnnouncementData } from '@/types/announcements';
+import { toast } from 'react-toastify';
 
 // Helper function to get icon and color based on announcement type
 const getAnnouncementTypeConfig = (type: string) => {
@@ -82,11 +83,29 @@ export function AnnouncementsCard() {
       setMarkingAsRead(announcementId); // Set loading state
       const success = await markAsRead(announcementId);
       if (success) {
+        // Show toast notification on desktop only
+        if (window.innerWidth >= 640) { // sm breakpoint
+          toast.success('Announcement marked as read and removed from your list', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
         // The announcement will automatically be removed from the list
         // since the hook now filters out read announcements
       }
     } catch (error) {
       console.error('Failed to mark announcement as read:', error);
+      // Show error toast on desktop
+      if (window.innerWidth >= 640) {
+        toast.error('Failed to mark announcement as read. Please try again.', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+      }
     } finally {
       setMarkingAsRead(null); // Clear loading state
     }
