@@ -21,13 +21,13 @@ function NavLink({ href, label, locked = false }: { href: string; label: string;
     return (
       <div
         className={cn(
-          'relative flex items-center justify-center h-9 rounded-md px-2 sm:px-4 text-sm font-medium transition-colors duration-200 opacity-60 cursor-not-allowed',
+          'relative flex items-center justify-center h-8 rounded-full px-3 sm:px-4 text-sm font-medium transition-all duration-200 opacity-60 cursor-not-allowed shadow-sm',
           'text-gray-400'
         )}
         title="Feature coming soon!"
       >
         {label}
-        <Lock className="h-3 w-3 ml-1 text-gray-400" />
+        <Lock className="h-3 w-3 ml-1.5 text-gray-400" />
       </div>
     );
   }
@@ -36,17 +36,13 @@ function NavLink({ href, label, locked = false }: { href: string; label: string;
     <Link
       href={href}
       className={cn(
-        'relative flex items-center justify-center h-9 rounded-md px-2 sm:px-4 text-sm font-medium transition-colors duration-200 focus-visible:ring-2 ring-offset-2 ring-navy-500',
-        isActive ? 'bg-navy-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50 hover:text-navy-700'
+        'relative flex items-center justify-center h-8 rounded-full px-3 sm:px-4 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-300',
+        isActive 
+          ? 'bg-sky-50 text-sky-700 font-medium shadow-sm hover:bg-sky-100 hover:shadow-md' 
+          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm shadow-sm'
       )}
     >
       {label}
-      {isActive && (
-        <motion.div
-          layoutId="nav-indicator"
-          className="absolute -bottom-0.5 left-0 right-0 h-0.5 bg-white"
-        />
-      )}
     </Link>
   );
 }
@@ -93,28 +89,31 @@ export function DashboardHeader() {
   };
 
   return (
-    <header className="border-b border-gray-200 bg-white/80 backdrop-blur z-50">
+    <header className="border-b border-gray-200/60 bg-white/95 backdrop-blur-sm z-50">
       <div className="w-full px-4 sm:px-6 h-14 flex items-center justify-between">
-        {/* Left side - Logo/Branding (Mobile) and Navigation tabs (Desktop) */}
-        <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-          {/* Mobile Logo/Branding */}
+        {/* Left side - Logo/Branding + Divider + Navigation tabs */}
+        <div className="flex items-center space-x-4 sm:space-x-6 flex-shrink-0">
+          {/* Logo/Branding - Now visible on both mobile and desktop */}
           <Link 
             href="/dashboard" 
-            className="sm:hidden flex items-center space-x-2 hover:opacity-80 transition-opacity"
+            className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
           >
             <Image
               src="/logo.jpeg"
               alt="Trailblaize"
-              width={24}
-              height={24}
+              width={32}
+              height={32}
               className="rounded"
               priority
             />
             <span className="text-lg font-semibold text-slate-900">Trailblaize</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden sm:flex items-center space-x-1 sm:space-x-2">
+          {/* Vertical Divider */}
+          <div className="hidden sm:block h-6 w-px bg-slate-200" />
+
+          {/* Desktop Navigation - Now appears next to logo with divider */}
+          <div className="hidden sm:flex items-center space-x-1">
             {visibleTabs.map((tab) => (
               <NavLink key={tab.href} href={tab.href} label={tab.label} locked={tab.locked} />
             ))}
@@ -122,18 +121,18 @@ export function DashboardHeader() {
         </div>
 
         {/* Right side - Messages icon and User dropdown */}
-        <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+        <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
           {/* Messages Icon Button */}
           <Link
             href="/dashboard/messages"
             className={cn(
-              'relative flex items-center justify-center p-2 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2',
+              'relative flex items-center justify-center h-8 w-8 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300 shadow-sm',
               pathname === '/dashboard/messages' 
-                ? 'bg-navy-50 text-navy-700' 
-                : 'text-gray-600 hover:bg-gray-50 hover:text-navy-700'
+                ? 'bg-sky-50 text-sky-700 hover:bg-sky-100 hover:shadow-md' 
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-md'
             )}
           >
-            <MessageCircle className="w-5 h-5" />
+            <MessageCircle className="w-4.5 h-4.5" />
           </Link>
 
           <UserDropdown
@@ -145,7 +144,6 @@ export function DashboardHeader() {
           />
         </div>
       </div>
-
     </header>
   );
 } 
