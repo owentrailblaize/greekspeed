@@ -108,7 +108,7 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
         <div className="hidden sm:grid sm:grid-cols-12 sm:gap-6">
           {/* Left Sidebar - Dues, Tasks, Calendar & Documents */}
           <div className="col-span-3">
-            <div className="sticky top-6 space-y-6">
+            <div className="top-6 space-y-6">
               <AnnouncementsCard />
               <MyTasksCard />
               <CompactCalendarCard />

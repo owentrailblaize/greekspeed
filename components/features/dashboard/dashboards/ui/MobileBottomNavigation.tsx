@@ -16,6 +16,7 @@ export function MobileBottomNavigation({ activeTab, onTabChange }: MobileBottomN
   const pathname = usePathname();
   const router = useRouter();
   const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
+  const [buttonPosition, setButtonPosition] = useState<{ left: number; bottom: number } | null>(null);
   const toolsMenuRef = useRef<HTMLDivElement>(null);
   const toolsButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -44,6 +45,7 @@ export function MobileBottomNavigation({ activeTab, onTabChange }: MobileBottomN
         !toolsButtonRef.current.contains(event.target as Node)
       ) {
         setIsToolsMenuOpen(false);
+        setButtonPosition(null); // Clear position when closing
       }
     };
 
@@ -61,7 +63,24 @@ export function MobileBottomNavigation({ activeTab, onTabChange }: MobileBottomN
   // Close tools menu on route change
   useEffect(() => {
     setIsToolsMenuOpen(false);
+    setButtonPosition(null);
   }, [pathname]);
+
+  // Recalculate button position on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (isToolsMenuOpen && toolsButtonRef.current) {
+        const rect = toolsButtonRef.current.getBoundingClientRect();
+        setButtonPosition({
+          left: rect.left + rect.width / 2,
+          bottom: window.innerHeight - rect.top + 8
+        });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isToolsMenuOpen]);
 
   const handleHomeClick = () => {
     if (pathname !== '/dashboard') {
@@ -79,11 +98,49 @@ export function MobileBottomNavigation({ activeTab, onTabChange }: MobileBottomN
   };
 
   const handleToolsClick = () => {
+    if (!isToolsMenuOpen && toolsButtonRef.current) {
+      // Wait for the scale animation to complete (200ms) + one frame
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          if (toolsButtonRef.current) {
+            const rect = toolsButtonRef.current.getBoundingClientRect();
+            
+            // The button's center X position (getBoundingClientRect accounts for scale)
+            const centerX = rect.left + rect.width / 2;
+            
+            // Calculate bottom position from bottom of viewport
+            // rect.bottom is the distance from top of viewport to bottom of button
+            // So distance from bottom of viewport = window.innerHeight - rect.bottom
+            const bottomPosition = window.innerHeight - rect.bottom + 8; // 8px spacing
+            
+            console.log('Button rect:', {
+              left: rect.left,
+              right: rect.right,
+              width: rect.width,
+              top: rect.top,
+              bottom: rect.bottom,
+              centerX,
+              windowWidth: window.innerWidth,
+              windowHeight: window.innerHeight,
+              calculatedBottom: bottomPosition
+            });
+            
+            setButtonPosition({
+              left: centerX,
+              bottom: bottomPosition
+            });
+          }
+        });
+      }, 200); // Wait for scale animation (duration-200 from className)
+    } else {
+      setButtonPosition(null);
+    }
     setIsToolsMenuOpen(!isToolsMenuOpen);
   };
 
   const handleToolsOptionClick = (option: 'tasks' | 'docs' | 'ops') => {
     setIsToolsMenuOpen(false);
+    setButtonPosition(null); // Clear position when option is selected
     // Navigate to dashboard with query param to show the specific tool
     router.push(`/dashboard?tool=${option}`);
     // Also trigger tab change if handler exists
@@ -224,35 +281,6 @@ export function MobileBottomNavigation({ activeTab, onTabChange }: MobileBottomN
                     <Wrench className="h-6 w-6" />
                   )}
                 </button>
-
-                {/* Tools Popup Menu */}
-                <AnimatePresence>
-                  {isToolsMenuOpen && (
-                    <motion.div
-                      ref={toolsMenuRef}
-                      initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.9 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex gap-2 bg-white rounded-2xl shadow-xl p-2 border border-gray-100"
-                    >
-                      {toolsOptions.map((option) => {
-                        const Icon = option.icon;
-                        return (
-                          <button
-                            key={option.id}
-                            onClick={option.onClick}
-                            className="flex flex-col items-center justify-center h-12 w-12 rounded-full bg-gray-50 hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors group"
-                            title={option.label}
-                          >
-                            <Icon className="h-5 w-5 mb-0.5 group-hover:text-blue-600" />
-                            <span className="text-[10px] font-medium group-hover:text-blue-600">{option.label}</span>
-                          </button>
-                        );
-                      })}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
 
               {/* Right Section: Messages */}
@@ -275,7 +303,7 @@ export function MobileBottomNavigation({ activeTab, onTabChange }: MobileBottomN
               </button>
 
               {/* Right Section: Profile */}
-              <button
+            <button
                 onClick={handleProfileClick}
                 className={`flex flex-col items-center justify-center flex-1 min-w-0 transition-colors relative ${
                   currentActiveTab === 'profile' ? 'text-blue-600' : 'text-gray-500'
@@ -284,7 +312,7 @@ export function MobileBottomNavigation({ activeTab, onTabChange }: MobileBottomN
                 <User className={`h-5 w-5 mb-0.5 ${currentActiveTab === 'profile' ? 'text-blue-600' : 'text-gray-500'}`} />
                 <span className={`text-xs font-medium truncate ${currentActiveTab === 'profile' ? 'text-blue-600' : 'text-gray-500'}`}>
                   Profile
-                </span>
+              </span>
                 {currentActiveTab === 'profile' && (
                   <motion.div
                     layoutId="activeTabIndicator"
@@ -297,16 +325,38 @@ export function MobileBottomNavigation({ activeTab, onTabChange }: MobileBottomN
         </div>
       </div>
 
-      {/* Backdrop overlay when tools menu is open */}
+      {/* Tools Popup Menu - Fixed positioning based on button center */}
       <AnimatePresence>
-        {isToolsMenuOpen && (
+        {isToolsMenuOpen && buttonPosition && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/20 z-40 sm:hidden"
-            onClick={() => setIsToolsMenuOpen(false)}
-          />
+            ref={toolsMenuRef}
+            initial={{ opacity: 0, y: 10, scale: 0.9, x:'-50%' }}
+            animate={{ opacity: 1, y: 0, scale: 1, x: '-50%' }}
+            exit={{ opacity: 0, y: 10, scale: 0.9, x: '-50%' }}
+            transition={{ duration: 0.2 }}
+            className="fixed flex gap-3 z-50 sm:hidden"
+            style={{
+              left: `${buttonPosition.left}px`,
+              bottom: `${buttonPosition.bottom}px`,
+              transform: 'translateY(50%)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {toolsOptions.map((option) => {
+              const Icon = option.icon;
+              return (
+                <button
+                  key={option.id}
+                  onClick={option.onClick}
+                  className="flex flex-col items-center justify-center h-14 w-14 rounded-full bg-white shadow-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 text-gray-700 hover:text-blue-600 transition-all duration-200 group shrink-0"
+                  title={option.label}
+                >
+                  <Icon className="h-5 w-5 mb-0.5 group-hover:text-blue-600 transition-colors" />
+                  <span className="text-[10px] font-medium group-hover:text-blue-600 whitespace-nowrap transition-colors">{option.label}</span>
+            </button>
+          );
+        })}
+          </motion.div>
         )}
       </AnimatePresence>
     </>
