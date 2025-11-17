@@ -5,6 +5,7 @@ import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { Message } from '@/lib/hooks/useMessages';
 import { Button } from '@/components/ui/button';
+import { UserAvatar } from '@/components/features/profile/UserAvatar'; // Add this import
 import { ArrowLeft } from 'lucide-react';
 
 interface ChatWindowProps {
@@ -19,6 +20,8 @@ interface ChatWindowProps {
   disabled?: boolean;
   onBack?: () => void;
   contactName?: string;
+  contactAvatarUrl?: string | null; // Add this prop
+  contactFullName?: string; // Add this prop
 }
 
 export function ChatWindow({
@@ -32,7 +35,9 @@ export function ChatWindow({
   typingUsers,
   disabled = false,
   onBack,
-  contactName = "Contact"
+  contactName = "Contact",
+  contactAvatarUrl = null, // Add default
+  contactFullName = "Contact" // Add default
 }: ChatWindowProps) {
   const handleTyping = () => {
     // This function is called when user types
@@ -72,11 +77,20 @@ export function ChatWindow({
               </Button>
             )}
             
-            {/* Contact Info */}
+            {/* Contact Info - Updated to use UserAvatar */}
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                <span className="text-white font-medium text-sm">U</span>
-              </div>
+              <UserAvatar
+                user={{
+                  email: null,
+                  user_metadata: {
+                    avatar_url: contactAvatarUrl,
+                    full_name: contactFullName || contactName
+                  }
+                }}
+                completionPercent={100}
+                hasUnread={false}
+                size="md"
+              />
               <div>
                 <h3 className="font-medium text-gray-900">{contactName}</h3>
               </div>

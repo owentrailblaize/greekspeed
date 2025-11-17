@@ -87,6 +87,13 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
     loadMore();
   };
 
+  // Add debug logging (remove after fixing)
+  useEffect(() => {
+    if (messages.length > 0) {
+      console.log('Message sender data:', messages[0].sender);
+      console.log('Avatar URL:', messages[0].sender?.avatar_url);
+    }
+  }, [messages]);
 
 
   if (error) {
@@ -155,9 +162,10 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
         onLoadMore={handleLoadMore}
         typingUsers={[]}
         disabled={loading}
-        // 🔴 NEW: Pass navigation props
         onBack={onBack}
         contactName={otherUser?.full_name || 'Contact'}
+        contactAvatarUrl={otherUser?.avatar_url || null}
+        contactFullName={otherUser?.full_name || 'Contact'}
       />
     </div>
   );
