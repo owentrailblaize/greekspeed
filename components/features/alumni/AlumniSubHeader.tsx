@@ -22,7 +22,7 @@ export function AlumniSubHeader({
   userChapter
 }: AlumniSubHeaderProps) {
   return (
-    <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 pb-6 sm:pb-4">
+    <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
       {/* Mobile Layout - Row */}
       <div className="sm:hidden flex items-center justify-between gap-3">
         {/* Total count and selected count - smaller text */}

@@ -212,7 +212,7 @@ export function AlumniDashboard() {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <div className="flex space-x-2 pt-3">
+                <div className="flex space-x-2 pt-3 pb-2 pl-2">
                   {tabs.map((t) => (
                     <button
                       key={t.id}
