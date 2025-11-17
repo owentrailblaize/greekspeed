@@ -38,6 +38,44 @@ export function PostCard({
   const isExpanded = isExpandedProp ?? localExpanded;
   const handleExpandToggle = onToggleExpand ?? (() => setLocalExpanded((prev) => !prev));
 
+  // Image viewer state
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  // Extract image URLs from post
+  const imageUrls = useMemo(() => {
+    if (!post.image_url) {
+      return [];
+    }
+    // Support single image_url
+    return [post.image_url];
+  }, [post.image_url]);
+
+  // Handle mount state for portal
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Image click handler
+  const handleImageClick = (index: number) => {
+    setSelectedImageIndex(index);
+    setIsImageModalOpen(true);
+  };
+
+  // Navigation handlers
+  const handlePrevImage = () => {
+    setSelectedImageIndex((prev) => 
+      prev > 0 ? prev - 1 : imageUrls.length - 1
+    );
+  };
+
+  const handleNextImage = () => {
+    setSelectedImageIndex((prev) => 
+      prev < imageUrls.length - 1 ? prev + 1 : 0
+    );
+  };
+
   const { displayContent, shouldTruncate } = useMemo(() => {
     const content = post.content ?? '';
 
