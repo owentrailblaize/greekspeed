@@ -29,14 +29,6 @@ export function AlumniSubHeader({
         <p className="text-gray-600 text-sm">
           {totalCount} alumni found • {selectedCount} selected
         </p>
-        
-        {/* Chapter filter badge - underneath the count */}
-        {userChapter && (
-          <Badge variant="outline" className="bg-navy-50 border-navy-200 text-navy-700 text-xs">
-            Filtered by {userChapter}
-          </Badge>
-        )}
-        
         {/* View Toggle - Centered on mobile */}
         <div className="flex justify-center">
           <ViewToggle viewMode={viewMode} onViewChange={onViewModeChange} />
@@ -47,17 +39,12 @@ export function AlumniSubHeader({
       <div className="hidden sm:flex items-center justify-between">
         {/* Left side - Title and Info */}
         <div className="flex items-center space-x-2">
-          <h1 className="text-navy-900 font-semibold text-lg">
+          <h1 className="text-slate-800 font-semibold text-lg">
             Alumni Pipeline
           </h1>
           <p className="text-gray-600 text-sm">
             {totalCount} alumni found • {selectedCount} selected
           </p>
-          {userChapter && (
-            <Badge variant="outline" className="bg-navy-50 border-navy-200 text-navy-700 text-xs">
-              Filtered by {userChapter}
-            </Badge>
-          )}
         </div>
 
         {/* Right side - View Toggle */}

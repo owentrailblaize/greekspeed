@@ -18,6 +18,7 @@ import {
   Tag,
   Lock
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface AlumniToolbarProps {
   selectedCount: number;
@@ -39,15 +40,22 @@ export function AlumniToolbar({
     // Could add a toast notification here
   };
 
+  // Shared button styling to match header
+  const buttonBaseStyles = "h-8 rounded-full px-3 sm:px-4 text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300";
+  const buttonActiveStyles = "bg-gray-100 text-gray-900 hover:bg-gray-50";
+  const buttonInactiveStyles = "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900";
+  const buttonDisabledStyles = "opacity-60 cursor-not-allowed bg-gray-50 text-gray-400 border border-gray-200";
+
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-3">
       {/* Desktop Layout */}
       <div className="hidden md:flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
           {/* Export - Direct CSV download button */}
           <Button 
             variant="outline"
             onClick={() => onExport()}
+            className={cn(buttonBaseStyles, buttonInactiveStyles)}
           >
             <Download className="h-4 w-4 mr-2" />
             Export All
@@ -56,7 +64,11 @@ export function AlumniToolbar({
           {/* Create Workflow - LOCKED */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="bg-gray-50 opacity-60 cursor-not-allowed" disabled>
+              <Button 
+                variant="outline" 
+                disabled
+                className={cn(buttonBaseStyles, buttonDisabledStyles)}
+              >
                 <Workflow className="h-4 w-4 mr-2" />
                 Create workflow
                 <Lock className="h-3 w-3 ml-2 text-gray-400" />
@@ -85,8 +97,8 @@ export function AlumniToolbar({
           <Button 
             variant="outline" 
             onClick={() => handleNonFunctionalFeature('Save List')}
-            className="opacity-60 cursor-not-allowed"
             disabled
+            className={cn(buttonBaseStyles, buttonDisabledStyles)}
           >
             <Save className="h-4 w-4 mr-2" />
             Save list
@@ -96,7 +108,11 @@ export function AlumniToolbar({
           {/* Research with AI - LOCKED */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="opacity-60 cursor-not-allowed" disabled>
+              <Button 
+                variant="outline" 
+                disabled
+                className={cn(buttonBaseStyles, buttonDisabledStyles)}
+              >
                 <Star className="h-4 w-4 mr-2" />
                 Research with AI
                 <Lock className="h-3 w-3 ml-2 text-gray-400" />
@@ -121,7 +137,11 @@ export function AlumniToolbar({
           {/* Import - LOCKED */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="opacity-60 cursor-not-allowed" disabled>
+              <Button 
+                variant="outline" 
+                disabled
+                className={cn(buttonBaseStyles, buttonDisabledStyles)}
+              >
                 <Upload className="h-4 w-4 mr-2" />
                 Import
                 <Lock className="h-3 w-3 ml-2 text-gray-400" />
@@ -151,7 +171,11 @@ export function AlumniToolbar({
             </span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className={cn(buttonBaseStyles, buttonInactiveStyles, "h-8")}
+                >
                   Bulk Actions
                 </Button>
               </DropdownMenuTrigger>
@@ -183,12 +207,12 @@ export function AlumniToolbar({
 
       {/* Mobile Layout */}
       <div className="md:hidden">
-        <div className="flex items-center space-x-3 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
+        <div className="flex items-center space-x-2 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
           {/* Export - Direct CSV download button */}
           <Button 
             variant="outline"
             onClick={() => onExport()}
-            className="flex-shrink-0"
+            className={cn(buttonBaseStyles, buttonInactiveStyles, "flex-shrink-0")}
           >
             <Download className="h-4 w-4 mr-2" />
             Export All
@@ -197,7 +221,11 @@ export function AlumniToolbar({
           {/* Create Workflow - LOCKED */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="bg-gray-50 opacity-60 cursor-not-allowed flex-shrink-0" disabled>
+              <Button 
+                variant="outline" 
+                disabled
+                className={cn(buttonBaseStyles, buttonDisabledStyles, "flex-shrink-0")}
+              >
                 <Workflow className="h-4 w-4 mr-2" />
                 Create workflow
                 <Lock className="h-3 w-3 ml-2 text-gray-400" />
@@ -226,8 +254,8 @@ export function AlumniToolbar({
           <Button 
             variant="outline" 
             onClick={() => handleNonFunctionalFeature('Save List')}
-            className="opacity-60 cursor-not-allowed flex-shrink-0"
             disabled
+            className={cn(buttonBaseStyles, buttonDisabledStyles, "flex-shrink-0")}
           >
             <Save className="h-4 w-4 mr-2" />
             Save list
@@ -237,7 +265,11 @@ export function AlumniToolbar({
           {/* Research with AI - LOCKED */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="opacity-60 cursor-not-allowed flex-shrink-0" disabled>
+              <Button 
+                variant="outline" 
+                disabled
+                className={cn(buttonBaseStyles, buttonDisabledStyles, "flex-shrink-0")}
+              >
                 <Star className="h-4 w-4 mr-2" />
                 Research with AI
                 <Lock className="h-3 w-3 ml-2 text-gray-400" />
@@ -262,7 +294,11 @@ export function AlumniToolbar({
           {/* Import - LOCKED */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="opacity-60 cursor-not-allowed flex-shrink-0" disabled>
+              <Button 
+                variant="outline" 
+                disabled
+                className={cn(buttonBaseStyles, buttonDisabledStyles, "flex-shrink-0")}
+              >
                 <Upload className="h-4 w-4 mr-2" />
                 Import
                 <Lock className="h-3 w-3 ml-2 text-gray-400" />
@@ -288,7 +324,11 @@ export function AlumniToolbar({
           {selectedCount > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="flex-shrink-0">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className={cn(buttonBaseStyles, buttonInactiveStyles, "flex-shrink-0 h-8")}
+                >
                   Bulk Actions
                 </Button>
               </DropdownMenuTrigger>

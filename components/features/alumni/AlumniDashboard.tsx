@@ -10,6 +10,7 @@ import { Lock, ChevronDown, ChevronUp } from "lucide-react";
 import { useProfile } from "@/lib/contexts/ProfileContext";
 import { supabase } from "@/lib/supabase/client";
 import { MobileBottomNavigation } from "@/components/features/dashboard/dashboards/ui/MobileBottomNavigation";
+import { cn } from "@/lib/utils";
 
 const pageTransition = {
   initial: { opacity: 0, y: 20, scale: 0.98 },
@@ -217,13 +218,14 @@ export function AlumniDashboard() {
                       key={t.id}
                       onClick={() => handleTabClick(t.id, t.disabled)}
                       disabled={t.disabled}
-                      className={`text-sm font-medium px-3 py-2 rounded-md transition-colors flex items-center ${
+                      className={cn(
+                        'text-sm font-medium px-3 py-2 rounded-full transition-all duration-200 flex items-center shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300',
                         t.disabled 
                           ? "opacity-60 cursor-not-allowed text-gray-400 bg-gray-50" 
                           : active === t.id 
-                            ? "bg-navy-600 text-white" 
-                            : "text-gray-700 hover:bg-gray-100"
-                      }`}
+                            ? "bg-sky-50 text-sky-700 font-medium hover:bg-sky-100 hover:shadow-md" 
+                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm"
+                      )}
                     >
                       {/* Mobile: Short text, Desktop: Full text */}
                       <span className="sm:hidden">
@@ -233,7 +235,7 @@ export function AlumniDashboard() {
                       </span>
                       <span className="hidden sm:inline">{t.label}</span>
                       {t.disabled && (
-                        <Lock className="h-3 w-3 ml-1 text-gray-400" />
+                        <Lock className="h-3 w-3 ml-1.5 text-gray-400" />
                       )}
                     </button>
                   ))}
@@ -244,21 +246,22 @@ export function AlumniDashboard() {
         </div>
       </div>
 
-      {/* Desktop Tabs - Preserved Layout */}
+      {/* Desktop Tabs - Updated with pill styling */}
       <div className="hidden sm:block bg-white/95 backdrop-blur-lg border-b border-gray-200 shadow-sm">
-        <div className="px-6 py-4 flex space-x-4">
+        <div className="px-6 py-4 flex space-x-2">
           {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => handleTabClick(t.id, t.disabled)}
               disabled={t.disabled}
-              className={`text-sm font-medium px-4 py-2 rounded-md transition-colors ${
+              className={cn(
+                'text-sm font-medium px-4 py-2 rounded-full transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300',
                 t.disabled 
                   ? "opacity-60 cursor-not-allowed text-gray-400 bg-gray-50" 
                   : active === t.id 
-                    ? "bg-navy-600 text-white" 
-                    : "text-gray-700 hover:bg-gray-100"
-              }`}
+                    ? "bg-sky-50 text-sky-700 font-medium hover:bg-sky-100 hover:shadow-md" 
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm"
+              )}
             >
               {t.label}
               {t.disabled && (
