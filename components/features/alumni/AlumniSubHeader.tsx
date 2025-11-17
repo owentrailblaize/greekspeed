@@ -23,14 +23,14 @@ export function AlumniSubHeader({
 }: AlumniSubHeaderProps) {
   return (
     <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
-      {/* Mobile Layout - Column */}
-      <div className="sm:hidden space-y-4">
-        {/* Total count and selected count */}
-        <p className="text-gray-600 text-sm">
+      {/* Mobile Layout - Row */}
+      <div className="sm:hidden flex items-center justify-between gap-3">
+        {/* Total count and selected count - smaller text */}
+        <p className="text-gray-600 text-xs flex-shrink-0">
           {totalCount} alumni found • {selectedCount} selected
         </p>
-        {/* View Toggle - Centered on mobile */}
-        <div className="flex justify-center">
+        {/* View Toggle - aligned on same row */}
+        <div className="flex-shrink-0">
           <ViewToggle viewMode={viewMode} onViewChange={onViewModeChange} />
         </div>
       </div>
@@ -43,7 +43,7 @@ export function AlumniSubHeader({
             Alumni Pipeline
           </h1>
           <p className="text-gray-600 text-sm">
-            {totalCount} alumni found • {selectedCount} selected
+            {totalCount} alumni • {selectedCount} selected
           </p>
         </div>
 

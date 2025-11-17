@@ -182,8 +182,9 @@ export function AnnouncementsCard() {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="flex items-center justify-center py-8">
-            <div className="text-gray-500">Loading announcements...</div>
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-navy-600 mb-2"></div>
+            <p className="text-gray-500 text-sm">Loading announcements...</p>
           </div>
         </CardContent>
       </Card>
