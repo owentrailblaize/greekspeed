@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getStateNameByCode } from '@/lib/usStates'
 
 // Add this helper function at the top of the file
 const getChapterId = async (supabase: any, chapterIdentifier: string): Promise<string | null> => {
@@ -199,6 +200,27 @@ async function getMutualConnectionsForAlumni(
   }
 }
 
+// Helper function to check if location matches state (handles various formats)
+const locationMatchesState = (location: string | null | undefined, stateCode: string): boolean => {
+  if (!location || !stateCode) return false;
+  
+  const stateName = getStateNameByCode(stateCode);
+  if (!stateName) return false;
+  
+  const locationLower = location.toLowerCase().trim();
+  const stateCodeLower = stateCode.toLowerCase();
+  const stateNameLower = stateName.toLowerCase();
+  
+  return (
+    locationLower.endsWith(`, ${stateCodeLower}`) ||
+    locationLower.endsWith(`, ${stateNameLower}`) ||
+    locationLower.includes(`, ${stateCodeLower},`) ||
+    locationLower.includes(`, ${stateNameLower},`) ||
+    locationLower === stateCodeLower ||
+    locationLower === stateNameLower
+  );
+};
+
 export async function GET(request: NextRequest) {
   try {
     // Check environment variables
@@ -370,8 +392,16 @@ export async function GET(request: NextRequest) {
         }
         
         if (state) {
-          chapterNameQuery = chapterNameQuery.ilike('location', `%, ${state}`);
-          chapterIdQuery = chapterIdQuery.ilike('location', `%, ${state}`);
+          // Use a broader database filter (matches any location containing the state)
+          const stateName = getStateNameByCode(state);
+          if (stateName) {
+            // Match locations that contain the state code or name anywhere
+            chapterNameQuery = chapterNameQuery.or(`location.ilike.%${state}%,location.ilike.%${stateName}%`);
+            chapterIdQuery = chapterIdQuery.or(`location.ilike.%${state}%,location.ilike.%${stateName}%`);
+          } else {
+            chapterNameQuery = chapterNameQuery.ilike('location', `%${state}%`);
+            chapterIdQuery = chapterIdQuery.ilike('location', `%${state}%`);
+          }
         }
         
         if (graduationYear && graduationYear !== 'All Years') {
@@ -638,8 +668,15 @@ export async function GET(request: NextRequest) {
         }
         
         if (state) {
-          chapterNameQuery = chapterNameQuery.ilike('location', `%, ${state}`);
-          chapterIdQuery = chapterIdQuery.ilike('location', `%, ${state}`);
+          // Use a broader database filter (matches any location containing the state)
+          const stateName = getStateNameByCode(state);
+          if (stateName) {
+            chapterNameQuery = chapterNameQuery.or(`location.ilike.%${state}%,location.ilike.%${stateName}%`);
+            chapterIdQuery = chapterIdQuery.or(`location.ilike.%${state}%,location.ilike.%${stateName}%`);
+          } else {
+            chapterNameQuery = chapterNameQuery.ilike('location', `%${state}%`);
+            chapterIdQuery = chapterIdQuery.ilike('location', `%${state}%`);
+          }
         }
         
         if (graduationYear && graduationYear !== 'All Years') {
@@ -828,7 +865,13 @@ export async function GET(request: NextRequest) {
     }
 
     if (state) {
-      query = query.ilike('location', `%, ${state}`)
+      // Use a broader database filter (matches any location containing the state)
+      const stateName = getStateNameByCode(state);
+      if (stateName) {
+        query = query.or(`location.ilike.%${state}%,location.ilike.%${stateName}%`);
+      } else {
+        query = query.ilike('location', `%${state}%`);
+      }
     }
     
     if (graduationYear && graduationYear !== 'All Years') {

@@ -324,29 +324,33 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
       const newBannerUrl = await BannerService.uploadBanner(file, profile.id);
       
       if (newBannerUrl) {
-        // Delete old banner if it exists
+        // Delete old banner if it exists (don't await - do it in background)
         if (profile.banner_url) {
-          await BannerService.deleteOldBanner(profile.banner_url);
+          BannerService.deleteOldBanner(profile.banner_url).catch(err => 
+            console.error('Error deleting old banner:', err)
+          );
         }
 
-        // Update profile with new banner URL
+        // Update profile with new banner URL in database
         await BannerService.updateProfileBanner(profile.id, newBannerUrl);
         
-        // Update global profile state
+        // Update global profile state (this already updates the context)
         await updateProfile({ banner_url: newBannerUrl });
         
-        // Update local state
+        // Update local state immediately for preview
         setBannerFile(file);
         setBannerPreview(newBannerUrl);
         
-        // Refresh profile data everywhere
-        await refreshProfile();
+        // Remove refreshProfile() call - it's unnecessary and causes reload
+        // The updateProfile() call above already updates the context state
       }
     } catch (error) {
       console.error('Error uploading banner:', error);
       alert('Failed to upload banner. Please try again.');
     } finally {
       setBannerUploading(false);
+      // Reset the input so the same file can be selected again if needed
+      e.target.value = '';
     }
   };
 

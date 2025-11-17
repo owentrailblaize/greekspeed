@@ -1,11 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, MessageCircle, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, Trash2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Post } from '@/types/posts';
 import { formatDistanceToNow } from 'date-fns';
 import { CommentModal } from './CommentModal';
@@ -36,6 +37,44 @@ export function PostCard({
   const [localExpanded, setLocalExpanded] = useState(false);
   const isExpanded = isExpandedProp ?? localExpanded;
   const handleExpandToggle = onToggleExpand ?? (() => setLocalExpanded((prev) => !prev));
+
+  // Image viewer state
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  // Extract image URLs from post
+  const imageUrls = useMemo(() => {
+    if (!post.image_url) {
+      return [];
+    }
+    // Support single image_url
+    return [post.image_url];
+  }, [post.image_url]);
+
+  // Handle mount state for portal
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Image click handler
+  const handleImageClick = (index: number) => {
+    setSelectedImageIndex(index);
+    setIsImageModalOpen(true);
+  };
+
+  // Navigation handlers
+  const handlePrevImage = () => {
+    setSelectedImageIndex((prev) => 
+      prev > 0 ? prev - 1 : imageUrls.length - 1
+    );
+  };
+
+  const handleNextImage = () => {
+    setSelectedImageIndex((prev) => 
+      prev < imageUrls.length - 1 ? prev + 1 : 0
+    );
+  };
 
   const { displayContent, shouldTruncate } = useMemo(() => {
     const content = post.content ?? '';
@@ -145,6 +184,82 @@ export function PostCard({
     onLike(post.id);
   };
 
+  // Image Viewer Modal Component
+  const ImageViewerModal = () => {
+    if (!mounted || !isImageModalOpen || imageUrls.length === 0) return null;
+
+    return createPortal(
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+        {/* Backdrop */}
+        <div 
+          className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+          onClick={() => setIsImageModalOpen(false)}
+        />
+        
+        {/* Close Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsImageModalOpen(false)}
+          className="absolute top-4 right-4 z-10 h-10 w-10 p-0 bg-white/10 hover:bg-white/20 text-white rounded-full border border-white/20"
+          aria-label="Close image viewer"
+        >
+          <X className="h-5 w-5" />
+        </Button>
+
+        {/* Navigation Buttons (only show if multiple images) */}
+        {imageUrls.length > 1 && (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePrevImage();
+              }}
+              className="absolute left-4 z-10 h-12 w-12 p-0 bg-white/10 hover:bg-white/20 text-white rounded-full border border-white/20"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNextImage();
+              }}
+              className="absolute right-4 z-10 h-12 w-12 p-0 bg-white/10 hover:bg-white/20 text-white rounded-full border border-white/20"
+              aria-label="Next image"
+            >
+              <ChevronRight className="h-6 w-6" />
+            </Button>
+          </>
+        )}
+
+        {/* Image Container */}
+        <div 
+          className="relative max-w-[95vw] max-h-[95vh] w-full h-full flex items-center justify-center p-4"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <img
+            src={imageUrls[selectedImageIndex]}
+            alt={`Post image ${selectedImageIndex + 1} of ${imageUrls.length}`}
+            className="max-w-full max-h-full object-contain rounded-lg"
+          />
+        </div>
+
+        {/* Image Counter (only show if multiple images) */}
+        {imageUrls.length > 1 && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-black/50 text-white px-4 py-2 rounded-full text-sm">
+            {selectedImageIndex + 1} / {imageUrls.length}
+          </div>
+        )}
+      </div>,
+      document.body
+    );
+  };
+
   return (
     <>
       {/* Mobile Layout - Card-less Feed */}
@@ -198,18 +313,55 @@ export function PostCard({
               'text-gray-700 text-sm leading-relaxed',
               'text-xs font-medium text-navy-600 hover:text-navy-700 transition-colors'
             )}
-            {post.image_url && (
-              <div className="relative w-full overflow-hidden rounded-2xl aspect-[4/3] shadow-inner" style={{ maxHeight: '20rem' }}>
-                <Image
-                  src={post.image_url}
-                  alt="Post content"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 100vw, 600px"
-                  priority={false}
-                />
-              </div>
-            )}
+            {/* Display images - support both single (backward compat) and multiple */}
+            {(() => {
+              if (imageUrls.length === 0) return null;
+              
+              // Single image - display large and make clickable
+              if (imageUrls.length === 1) {
+                return (
+                  <div 
+                    className="relative w-full overflow-hidden rounded-3xl aspect-[4/3] shadow-inner cursor-pointer hover:opacity-90 transition-opacity"
+                    style={{ maxHeight: '24rem' }}
+                    onClick={() => handleImageClick(0)}
+                  >
+                    <Image
+                      src={imageUrls[0]}
+                      alt="Post content"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, 700px"
+                      priority={false}
+                    />
+                  </div>
+                );
+              }
+              
+              // Multiple images - display in horizontal scrollable row (clickable)
+              return (
+                <div className="relative">
+                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+                    {imageUrls.map((url, index) => (
+                      <div
+                        key={index}
+                        className="relative shrink-0 w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => handleImageClick(index)}
+                      >
+                        <Image
+                          src={url}
+                          alt={`Post image ${index + 1}`}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 640px) 128px, 160px"
+                          priority={false}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {/* Removed image count text */}
+                </div>
+              );
+            })()}
             {renderCommentsPreview()}
           </div>
 
@@ -219,7 +371,7 @@ export function PostCard({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => onLike(post.id)}
+                onClick={handleLikeClick}
                 className={`gap-2 rounded-full px-3 text-sm transition ${
                   post.is_liked 
                     ? 'bg-rose-50 text-rose-500 hover:bg-rose-100' 
@@ -300,18 +452,55 @@ export function PostCard({
               'text-gray-700 text-base sm:text-[0.95rem] leading-relaxed',
               'text-xs font-medium text-navy-600 hover:text-navy-700 transition-colors'
             )}
-            {post.image_url && (
-              <div className="relative w-full overflow-hidden rounded-3xl aspect-[4/3] shadow-inner" style={{ maxHeight: '24rem' }}>
-                <Image
-                  src={post.image_url}
-                  alt="Post content"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 100vw, 700px"
-                  priority={false}
-                />
-              </div>
-            )}
+            {/* Display images - support both single (backward compat) and multiple */}
+            {(() => {
+              if (imageUrls.length === 0) return null;
+              
+              // Single image - display large and make clickable
+              if (imageUrls.length === 1) {
+                return (
+                  <div 
+                    className="relative w-full overflow-hidden rounded-3xl aspect-[4/3] shadow-inner cursor-pointer hover:opacity-90 transition-opacity"
+                    style={{ maxHeight: '24rem' }}
+                    onClick={() => handleImageClick(0)}
+                  >
+                    <Image
+                      src={imageUrls[0]}
+                      alt="Post content"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, 700px"
+                      priority={false}
+                    />
+                  </div>
+                );
+              }
+              
+              // Multiple images - display in horizontal scrollable row (clickable)
+              return (
+                <div className="relative">
+                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+                    {imageUrls.map((url, index) => (
+                      <div
+                        key={index}
+                        className="relative shrink-0 w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => handleImageClick(index)}
+                      >
+                        <Image
+                          src={url}
+                          alt={`Post image ${index + 1}`}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 640px) 100vw, 700px"
+                          priority={false}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {/* Removed image count text */}
+                </div>
+              );
+            })()}
             {renderCommentsPreview()}
           </div>
 
@@ -344,6 +533,9 @@ export function PostCard({
           </div>
         </CardContent>
       </Card>
+
+      {/* Image Viewer Modal */}
+      <ImageViewerModal />
 
       {/* Comment Modal */}
       {isCommentModalOpen && (
