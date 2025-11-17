@@ -39,9 +39,6 @@ export function AlumniSubHeader({
       <div className="hidden sm:flex items-center justify-between">
         {/* Left side - Title and Info */}
         <div className="flex items-center space-x-2">
-          <h1 className="text-slate-800 font-semibold text-lg">
-            Alumni Pipeline
-          </h1>
           <p className="text-gray-600 text-sm">
             {totalCount} alumni • {selectedCount} selected
           </p>
