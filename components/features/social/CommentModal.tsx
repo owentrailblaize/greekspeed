@@ -357,14 +357,6 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                     <MessageCircle className={`h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2`} />
                     <span className="text-xs sm:text-sm">{post.comments_count}</span>
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-9 rounded-full px-4 bg-white/90 text-slate-500 border border-transparent hover:bg-emerald-50 hover:text-emerald-500 shadow-sm transition"
-                  >
-                    <Share className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
-                    <span className="text-xs sm:text-sm">{post.shares_count}</span>
-                  </Button>
                 </div>
               </div>
             </div>
