@@ -73,7 +73,7 @@ export function MobileBottomNavigation({ activeTab, onTabChange }: MobileBottomN
         const rect = toolsButtonRef.current.getBoundingClientRect();
         setButtonPosition({
           left: rect.left + rect.width / 2,
-          bottom: window.innerHeight - rect.top + 8
+          bottom: window.innerHeight - rect.bottom + 80 // Match the increased spacing
         });
       }
     };
@@ -109,25 +109,12 @@ export function MobileBottomNavigation({ activeTab, onTabChange }: MobileBottomN
             const centerX = rect.left + rect.width / 2;
             
             // Calculate bottom position from bottom of viewport
-            // rect.bottom is the distance from top of viewport to bottom of button
-            // So distance from bottom of viewport = window.innerHeight - rect.bottom
-            const bottomPosition = window.innerHeight - rect.bottom + 8; // 8px spacing
-            
-            console.log('Button rect:', {
-              left: rect.left,
-              right: rect.right,
-              width: rect.width,
-              top: rect.top,
-              bottom: rect.bottom,
-              centerX,
-              windowWidth: window.innerWidth,
-              windowHeight: window.innerHeight,
-              calculatedBottom: bottomPosition
-            });
+            // Increase the spacing to move buttons higher (e.g., 80px instead of 8px)
+            const baseBottomPosition = window.innerHeight - rect.bottom + 80; // Increased from 8px
             
             setButtonPosition({
               left: centerX,
-              bottom: bottomPosition
+              bottom: baseBottomPosition
             });
           }
         });
@@ -325,38 +312,68 @@ export function MobileBottomNavigation({ activeTab, onTabChange }: MobileBottomN
         </div>
       </div>
 
-      {/* Tools Popup Menu - Fixed positioning based on button center */}
+      {/* Tools Popup Menu - Fixed positioning with pyramid effect */}
       <AnimatePresence>
         {isToolsMenuOpen && buttonPosition && (
-          <motion.div
-            ref={toolsMenuRef}
-            initial={{ opacity: 0, y: 10, scale: 0.9, x:'-50%' }}
-            animate={{ opacity: 1, y: 0, scale: 1, x: '-50%' }}
-            exit={{ opacity: 0, y: 10, scale: 0.9, x: '-50%' }}
-            transition={{ duration: 0.2 }}
-            className="fixed flex gap-3 z-50 sm:hidden"
+          <div
+            className="fixed z-50 sm:hidden"
             style={{
               left: `${buttonPosition.left}px`,
               bottom: `${buttonPosition.bottom}px`,
-              transform: 'translateY(50%)',
+              transform: 'translateX(-50%)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {toolsOptions.map((option) => {
-              const Icon = option.icon;
-              return (
-                <button
-                  key={option.id}
-                  onClick={option.onClick}
-                  className="flex flex-col items-center justify-center h-14 w-14 rounded-full bg-white shadow-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 text-gray-700 hover:text-blue-600 transition-all duration-200 group shrink-0"
-                  title={option.label}
-                >
-                  <Icon className="h-5 w-5 mb-0.5 group-hover:text-blue-600 transition-colors" />
-                  <span className="text-[10px] font-medium group-hover:text-blue-600 whitespace-nowrap transition-colors">{option.label}</span>
-            </button>
-          );
-        })}
-          </motion.div>
+            <div className="relative flex items-end gap-3">
+              {/* Left Button (Tasks) - Lower position */}
+              <motion.button
+                key="tasks"
+                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                transition={{ duration: 0.2, delay: 0.05 }}
+                onClick={() => handleToolsOptionClick('tasks')}
+                className="flex flex-col items-center justify-center h-14 w-14 rounded-full bg-white shadow-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 text-gray-700 hover:text-blue-600 transition-all duration-200 group shrink-0 relative"
+                style={{ marginBottom: '0px' }}
+                title="Tasks"
+              >
+                <CheckSquare className="h-5 w-5 mb-0.5 group-hover:text-blue-600 transition-colors" />
+                <span className="text-[10px] font-medium group-hover:text-blue-600 whitespace-nowrap transition-colors">Tasks</span>
+              </motion.button>
+
+              {/* Center Button (Docs) - Higher position (pyramid peak) */}
+              <motion.button
+                key="docs"
+                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                transition={{ duration: 0.2, delay: 0.1 }}
+                onClick={() => handleToolsOptionClick('docs')}
+                className="flex flex-col items-center justify-center h-14 w-14 rounded-full bg-white shadow-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 text-gray-700 hover:text-blue-600 transition-all duration-200 group shrink-0 relative"
+                style={{ marginBottom: '12px' }} // Higher than others
+                title="Docs"
+              >
+                <FileText className="h-5 w-5 mb-0.5 group-hover:text-blue-600 transition-colors" />
+                <span className="text-[10px] font-medium group-hover:text-blue-600 whitespace-nowrap transition-colors">Docs</span>
+              </motion.button>
+
+              {/* Right Button (Ops) - Lower position */}
+              <motion.button
+                key="ops"
+                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                transition={{ duration: 0.2, delay: 0.05 }}
+                onClick={() => handleToolsOptionClick('ops')}
+                className="flex flex-col items-center justify-center h-14 w-14 rounded-full bg-white shadow-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 text-gray-700 hover:text-blue-600 transition-all duration-200 group shrink-0 relative"
+                style={{ marginBottom: '0px' }}
+                title="Ops"
+              >
+                <Activity className="h-5 w-5 mb-0.5 group-hover:text-blue-600 transition-colors" />
+                <span className="text-[10px] font-medium group-hover:text-blue-600 whitespace-nowrap transition-colors">Ops</span>
+              </motion.button>
+            </div>
+          </div>
         )}
       </AnimatePresence>
     </>
