@@ -95,6 +95,15 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
     }
   };
   
+  // Add this handler function to fix the type mismatch
+  const handleTabChange = (tab: MobileTab | string) => {
+    // Type guard to ensure we're setting a valid MobileTab
+    const validTabs: MobileTab[] = ['home', 'tasks', 'announcements', 'calendar', 'events'];
+    if (validTabs.includes(tab as MobileTab)) {
+      setActiveMobileTab(tab as MobileTab);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Main Content - Mobile-First Layout */}
@@ -133,7 +142,7 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
       {/* Mobile Bottom Navigation */}
       <MobileBottomNavigation 
         activeTab={activeMobileTab} 
-        onTabChange={setActiveMobileTab} 
+        onTabChange={handleTabChange}
       />
     </div>
   );
