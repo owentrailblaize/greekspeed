@@ -19,57 +19,24 @@ interface PostCardProps {
   onLike: (postId: string) => void;
   onDelete?: (postId: string) => void;
   onCommentAdded?: () => void;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
-export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardProps) {
+export function PostCard({
+  post,
+  onLike,
+  onDelete,
+  onCommentAdded,
+  isExpanded: isExpandedProp,
+  onToggleExpand,
+}: PostCardProps) {
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [mounted, setMounted] = useState(false);
-
-  // Get images from metadata or single image_url
-  const imageUrls = useMemo<string[]>(() => {
-    return post.metadata?.image_urls || (post.image_url ? [post.image_url] : []);
-  }, [post.metadata?.image_urls, post.image_url]);
-
-  // Handle mounting for portal
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Handle keyboard navigation in image modal
-  useEffect(() => {
-    if (!isImageModalOpen || imageUrls.length <= 1) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') {
-        setSelectedImageIndex((prev) => (prev > 0 ? prev - 1 : imageUrls.length - 1));
-      } else if (e.key === 'ArrowRight') {
-        setSelectedImageIndex((prev) => (prev < imageUrls.length - 1 ? prev + 1 : 0));
-      } else if (e.key === 'Escape') {
-        setIsImageModalOpen(false);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isImageModalOpen, imageUrls.length]);
-
-  const handleImageClick = (index: number) => {
-    setSelectedImageIndex(index);
-    setIsImageModalOpen(true);
-  };
-
-  const handleNextImage = () => {
-    setSelectedImageIndex((prev) => (prev < imageUrls.length - 1 ? prev + 1 : 0));
-  };
-
-  const handlePrevImage = () => {
-    setSelectedImageIndex((prev) => (prev > 0 ? prev - 1 : imageUrls.length - 1));
-  };
+  const [localExpanded, setLocalExpanded] = useState(false);
+  const isExpanded = isExpandedProp ?? localExpanded;
+  const handleExpandToggle = onToggleExpand ?? (() => setLocalExpanded((prev) => !prev));
 
   const { displayContent, shouldTruncate } = useMemo(() => {
     const content = post.content ?? '';
@@ -98,7 +65,7 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
         {shouldTruncate && (
           <button
             type="button"
-            onClick={() => setIsExpanded((prev) => !prev)}
+            onClick={handleExpandToggle}
             className={buttonClassName}
           >
             {isExpanded ? 'View less' : 'View more'}
