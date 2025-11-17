@@ -31,6 +31,14 @@ export function MessageList({
   const [editContent, setEditContent] = useState('');
   const [showMenuFor, setShowMenuFor] = useState<string | null>(null);
 
+  // Add debug logging (remove after fixing)
+  useEffect(() => {
+    if (messages.length > 0) {
+      console.log('Message sender data:', messages[0].sender);
+      console.log('Avatar URL:', messages[0].sender?.avatar_url);
+    }
+  }, [messages]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -174,8 +182,8 @@ export function MessageList({
                         user={{ 
                           email: null, 
                           user_metadata: { 
-                            avatar_url: message.sender.avatar_url, 
-                            full_name: message.sender.full_name 
+                            avatar_url: message.sender?.avatar_url || null, // Ensure null fallback
+                            full_name: message.sender?.full_name || 'Unknown User' // Ensure fallback
                           } 
                         }}
                         completionPercent={100}
@@ -327,8 +335,8 @@ export function MessageList({
                         user={{ 
                           email: null, 
                           user_metadata: { 
-                            avatar_url: message.sender.avatar_url, 
-                            full_name: message.sender.full_name 
+                            avatar_url: message.sender?.avatar_url || null, // Ensure null fallback
+                            full_name: message.sender?.full_name || 'You' // Ensure fallback
                           } 
                         }}
                         completionPercent={100}

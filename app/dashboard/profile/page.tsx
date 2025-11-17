@@ -26,6 +26,7 @@ import { useModal } from '@/lib/contexts/ModalContext';
 import { Save, AlertTriangle } from 'lucide-react';
 import ImageWithFallback from '@/components/figma/ImageWithFallback';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { MobileBottomNavigation } from '@/components/features/dashboard/dashboards/ui/MobileBottomNavigation';
 
 export default function ProfilePage() {
   const { profile, loading, refreshProfile } = useProfile();
@@ -244,7 +245,7 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 pb-20 sm:pb-0">
       <div className="max-w-full mx-auto px-6 py-10">
         {/* Profile Completion Banner - Moved above banner for maximum visibility */}
         {completion && completion.percentage < 100 && (
@@ -700,6 +701,9 @@ export default function ProfilePage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNavigation />
     </div>
   );
 } 
