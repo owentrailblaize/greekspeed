@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserDropdown } from '@/components/features/profile/UserDropdown';
@@ -94,15 +95,30 @@ export function DashboardHeader() {
   return (
     <header className="border-b border-gray-200 bg-white/80 backdrop-blur z-50">
       <div className="w-full px-4 sm:px-6 h-14 flex items-center justify-between">
-        {/* Left side - Navigation tabs */}
+        {/* Left side - Logo/Branding (Mobile) and Navigation tabs (Desktop) */}
         <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-          {/* Desktop Navigation - All Roles */}
+          {/* Mobile Logo/Branding */}
+          <Link 
+            href="/dashboard" 
+            className="sm:hidden flex items-center space-x-2 hover:opacity-80 transition-opacity"
+          >
+            <Image
+              src="/logo.jpeg"
+              alt="Trailblaize"
+              width={24}
+              height={24}
+              className="rounded"
+              priority
+            />
+            <span className="text-lg font-semibold text-slate-900">Trailblaize</span>
+          </Link>
+
+          {/* Desktop Navigation */}
           <div className="hidden sm:flex items-center space-x-1 sm:space-x-2">
             {visibleTabs.map((tab) => (
               <NavLink key={tab.href} href={tab.href} label={tab.label} locked={tab.locked} />
             ))}
           </div>
-
         </div>
 
         {/* Right side - Messages icon and User dropdown */}
