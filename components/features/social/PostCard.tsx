@@ -138,7 +138,7 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
     <>
       {/* Mobile Layout - Card-less Feed */}
       <div className="sm:hidden">
-        <div className="px-4 py-5 border-b border-gray-100 last:border-b-0 bg-white/80">
+        <div className="mx-1 mb-4 px-4 py-5 rounded-2xl border border-gray-100 bg-white/80 shadow-sm last:mb-0">
           {/* Post Header */}
           <div className="flex items-start justify-between gap-3 mb-4">
             <div className="flex items-center gap-3">
@@ -188,7 +188,7 @@ export function PostCard({ post, onLike, onDelete, onCommentAdded }: PostCardPro
               'text-xs font-medium text-navy-600 hover:text-navy-700 transition-colors'
             )}
             {post.image_url && (
-              <div className="-mx-4 relative w-auto overflow-hidden rounded-2xl aspect-[4/3] shadow-inner" style={{ maxHeight: '20rem' }}>
+              <div className="relative w-full overflow-hidden rounded-2xl aspect-[4/3] shadow-inner" style={{ maxHeight: '20rem' }}>
                 <Image
                   src={post.image_url}
                   alt="Post content"

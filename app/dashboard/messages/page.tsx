@@ -8,6 +8,7 @@ import { MessagesMainChat } from '@/components/features/messaging/MessagesMainCh
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { MobileBottomNavigation } from '@/components/features/dashboard/dashboards/ui/MobileBottomNavigation'; // Add this import
 
 // ✅ Create a separate component that uses useSearchParams
 function MessagesPageContent() {
@@ -81,8 +82,8 @@ function MessagesPageContent() {
   }, []);
 
   return (
-    // 🔴 FIXED: Use calc to account for header height
-    <div className="h-[calc(100vh-4rem)] flex flex-col">
+    // Adjust height to account for mobile footer (pb-20 = 80px for footer)
+    <div className="h-[calc(100vh-4rem)] sm:h-[calc(100vh-4rem)] flex flex-col pb-20 sm:pb-0">
       {/* Mobile Header */}
       <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
         <h1 className="text-lg font-semibold text-gray-900">Messages</h1>
@@ -131,6 +132,9 @@ function MessagesPageContent() {
           />
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNavigation />
     </div>
   );
 }

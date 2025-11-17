@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Users, Wrench, MessageCircle, User, CheckSquare, FileText, Activity, X } from 'lucide-react';
+import { Home, Users, Wrench, CreditCard, User, CheckSquare, FileText, Activity, X } from 'lucide-react'; // Replace MessageCircle with CreditCard
 
 export type MobileTab = 'home' | 'tasks' | 'announcements' | 'calendar' | 'events';
 
@@ -21,9 +21,9 @@ export function MobileBottomNavigation({ activeTab, onTabChange }: MobileBottomN
   const toolsButtonRef = useRef<HTMLButtonElement>(null);
 
   // Determine active tab based on pathname
-  const getActiveTab = (): 'home' | 'alumni' | 'tools' | 'messages' | 'profile' => {
+  const getActiveTab = (): 'home' | 'alumni' | 'tools' | 'dues' | 'profile' => { // Change 'messages' to 'dues'
     if (pathname === '/dashboard/alumni') return 'alumni';
-    if (pathname === '/dashboard/messages') return 'messages';
+    if (pathname === '/dashboard/dues') return 'dues'; // Change from messages to dues
     if (pathname === '/dashboard/profile') return 'profile';
     if (pathname === '/dashboard' && activeTab) {
       // If we're on dashboard and have an activeTab prop, we're on home
@@ -141,8 +141,9 @@ export function MobileBottomNavigation({ activeTab, onTabChange }: MobileBottomN
     }
   };
 
-  const handleMessagesClick = () => {
-    router.push('/dashboard/messages');
+  // Replace handleMessagesClick with handleDuesClick
+  const handleDuesClick = () => {
+    router.push('/dashboard/dues');
     setIsToolsMenuOpen(false);
   };
 
@@ -167,11 +168,11 @@ export function MobileBottomNavigation({ activeTab, onTabChange }: MobileBottomN
       isActive: currentActiveTab === 'alumni',
     },
     {
-      id: 'messages',
-      label: 'Messages',
-      icon: MessageCircle,
-      onClick: handleMessagesClick,
-      isActive: currentActiveTab === 'messages',
+      id: 'dues', // Change from 'messages' to 'dues'
+      label: 'Dues', // Change label
+      icon: CreditCard, // Change icon
+      onClick: handleDuesClick, // Change handler
+      isActive: currentActiveTab === 'dues', // Change active check
     },
     {
       id: 'profile',
@@ -270,18 +271,18 @@ export function MobileBottomNavigation({ activeTab, onTabChange }: MobileBottomN
                 </button>
               </div>
 
-              {/* Right Section: Messages */}
+              {/* Right Section: Dues (replaces Messages) */}
               <button
-                onClick={handleMessagesClick}
+                onClick={handleDuesClick}
                 className={`flex flex-col items-center justify-center flex-1 min-w-0 transition-colors relative ${
-                  currentActiveTab === 'messages' ? 'text-blue-600' : 'text-gray-500'
+                  currentActiveTab === 'dues' ? 'text-blue-600' : 'text-gray-500'
                 }`}
               >
-                <MessageCircle className={`h-5 w-5 mb-0.5 ${currentActiveTab === 'messages' ? 'text-blue-600' : 'text-gray-500'}`} />
-                <span className={`text-xs font-medium truncate ${currentActiveTab === 'messages' ? 'text-blue-600' : 'text-gray-500'}`}>
-                  Messages
+                <CreditCard className={`h-5 w-5 mb-0.5 ${currentActiveTab === 'dues' ? 'text-blue-600' : 'text-gray-500'}`} />
+                <span className={`text-xs font-medium truncate ${currentActiveTab === 'dues' ? 'text-blue-600' : 'text-gray-500'}`}>
+                  Dues
                 </span>
-                {currentActiveTab === 'messages' && (
+                {currentActiveTab === 'dues' && (
                   <motion.div
                     layoutId="activeTabIndicator"
                     className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-blue-600 rounded-full"

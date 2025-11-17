@@ -9,6 +9,7 @@ import { ProfileCompletionGate } from "@/components/features/profile/ProfileComp
 import { Lock, ChevronDown, ChevronUp } from "lucide-react";
 import { useProfile } from "@/lib/contexts/ProfileContext";
 import { supabase } from "@/lib/supabase/client";
+import { MobileBottomNavigation } from "@/components/features/dashboard/dashboards/ui/MobileBottomNavigation";
 
 const pageTransition = {
   initial: { opacity: 0, y: 20, scale: 0.98 },
@@ -269,7 +270,7 @@ export function AlumniDashboard() {
       </div>
       
       {/* Content Area */}
-      <div className="flex-1">
+      <div className="flex-1 pb-20 sm:pb-0"> {/* Add pb-20 for mobile, remove on desktop */}
         <AnimatePresence mode="wait">
           {tabs.map(
             (t) =>
@@ -291,6 +292,9 @@ export function AlumniDashboard() {
           requiredCompletionPercentage={80}
         />
       )}
+
+      {/* Mobile Bottom Navigation - Add this */}
+      <MobileBottomNavigation />
     </div>
   );
 } 
