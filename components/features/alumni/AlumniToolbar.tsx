@@ -227,7 +227,8 @@ export function AlumniToolbar({
                 className={cn(buttonBaseStyles, buttonDisabledStyles, "flex-shrink-0")}
               >
                 <Workflow className="h-4 w-4 mr-2" />
-                Create workflow
+                <span className="md:hidden">Workflow</span>
+                <span className="hidden md:inline">Create workflow</span>
                 <Lock className="h-3 w-3 ml-2 text-gray-400" />
               </Button>
             </DropdownMenuTrigger>
@@ -271,7 +272,8 @@ export function AlumniToolbar({
                 className={cn(buttonBaseStyles, buttonDisabledStyles, "flex-shrink-0")}
               >
                 <Star className="h-4 w-4 mr-2" />
-                Research with AI
+                <span className="md:hidden">Research</span>
+                <span className="hidden md:inline">Research with AI</span>
                 <Lock className="h-3 w-3 ml-2 text-gray-400" />
               </Button>
             </DropdownMenuTrigger>
