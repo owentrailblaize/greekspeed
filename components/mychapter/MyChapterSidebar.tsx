@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, GraduationCap, UserPlus, Calendar, Lock, X, ChevronRight } from "lucide-react";
+import { Users, GraduationCap, UserPlus, Calendar, Lock, X, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useProfile } from '@/lib/contexts/ProfileContext';
@@ -210,7 +210,11 @@ export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebar
                                   <div className="flex items-center space-x-2">
                                     {item.count !== null && (
                                       <Badge variant="secondary" className="text-xs">
-                                        {membersLoading ? "..." : item.count}
+                                        {membersLoading ? (
+                                          <Loader2 className="h-3 w-3 animate-spin" />
+                                        ) : (
+                                          item.count
+                                        )}
                                       </Badge>
                                     )}
                                     {item.locked && (

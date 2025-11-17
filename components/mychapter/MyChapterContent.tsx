@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { LinkedInStyleChapterCard } from "./LinkedInStyleChapterCard";
+import { ChapterCardSkeletonGrid } from "./ChapterCardSkeleton";
 import { ChapterMember } from "@/types/chapter";
 import { useChapterRoleAccess } from '@/lib/hooks/useChapterRoleAccess';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { CHAPTER_ADMIN_ROLES, getRoleDisplayName } from '@/lib/permissions';
+import { Loader2 } from "lucide-react";
 
 interface MyChapterContentProps {
   onNavigate: (section: string) => void;
@@ -24,6 +26,9 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
   
   // Role checking
   const { hasChapterRoleAccess } = useChapterRoleAccess(CHAPTER_ADMIN_ROLES);
+
+  // Show loading state while profile or members are loading
+  const isLoading = profileLoading || membersLoading;
 
   // Update the transformation logic to handle null values better
   const transformedMembers: ChapterMember[] = members.map(member => {
@@ -110,6 +115,39 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
 
   const displayMembers = getFilteredMembers();
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex-1 bg-gray-50">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
+                <h1 className="text-lg sm:text-xl font-semibold text-gray-900">My Chapter</h1>
+                {profile?.chapter && (
+                  <span className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-0">({profile.chapter})</span>
+                )}
+              </div>
+            </div>
+            
+            {/* Search Bar Skeleton */}
+            <div className="flex items-center space-x-4">
+              <div className="flex-1 relative">
+                <div className="w-full h-8 sm:h-10 bg-gray-200 rounded-md animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content - Skeleton Loaders */}
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 py-6">
+          <ChapterCardSkeletonGrid count={8} />
+        </div>
+      </div>
+    );
+  }
+
   // Show original view for "all" section
   if (activeSection === "all") {
     return (
@@ -183,7 +221,7 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
           )}
 
           {/* No Results Message */}
-          {filteredMembers.length === 0 && (
+          {filteredMembers.length === 0 && !isLoading && (
             <div className="text-center py-12">
               <h3 className="text-lg font-medium text-gray-900 mb-2">No members found</h3>
               <p className="text-gray-500">Try adjusting your search criteria.</p>
@@ -228,9 +266,7 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
         ) : (
           <div className="text-center py-12">
             <h3 className="text-lg font-medium text-gray-900 mb-2">No members found</h3>
-            <p className="text-gray-500">
-              {/* No placeholder text needed since all sections are functional */}
-            </p>
+            <p className="text-gray-500"></p>
           </div>
         )}
       </div>
