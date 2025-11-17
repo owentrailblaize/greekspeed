@@ -45,12 +45,18 @@ export function PostCard({
 
   // Extract image URLs from post
   const imageUrls = useMemo(() => {
-    if (!post.image_url) {
-      return [];
+    // First check for multiple images in metadata (new format)
+    if (post.metadata?.image_urls && Array.isArray(post.metadata.image_urls) && post.metadata.image_urls.length > 0) {
+      return post.metadata.image_urls;
     }
-    // Support single image_url
-    return [post.image_url];
-  }, [post.image_url]);
+    
+    // Fall back to single image_url for backward compatibility
+    if (post.image_url) {
+      return [post.image_url];
+    }
+    
+    return [];
+  }, [post.image_url, post.metadata]);
 
   // Handle mount state for portal
   useEffect(() => {

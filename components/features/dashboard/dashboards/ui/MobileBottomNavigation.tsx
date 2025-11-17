@@ -248,7 +248,7 @@ export function MobileBottomNavigation({
       {/* Detached Footer Navigation Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-50 sm:hidden pointer-events-none">
         <div className="mx-2 mb-2 pointer-events-auto">
-          <div className="relative bg-white/95 backdrop-blur-sm rounded-t-3xl shadow-2xl border border-gray-100">
+          <div className="relative bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-gray-100">
             <div className="flex items-center justify-between px-2 py-3 h-16">
               {/* Left Section: First 2 tabs */}
               <div className="flex items-center flex-1 min-w-0">
