@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { Footer } from "@/components/marketing/Footer";
 import { HeroIcon } from "./icons/HeroIcon";
+import { TrustedBySection } from "./TrustedBySection";
 
 // Logo served from public directory
 
@@ -99,7 +100,7 @@ export function LandingPage() {
       <MarketingHeader activeSection={activeSection} onSectionChange={setActiveSection} />
 
       {/* Hero Section */}
-      <section id="home" className="relative pt-28 md:pt-24 pb-8 md:pb-16 overflow-hidden">
+      <section id="home" className="relative pt-28 md:pt-24 pb-4 md:pb-8 overflow-hidden">
         {/* Background - make sure it covers full height */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white to-navy-50/30">
           <div className="absolute inset-0 bg-white/50 md:bg-white/30"></div>
@@ -165,7 +166,7 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6 md:mb-12 px-4"
+              className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8 md:mb-12 px-4"
             >
               <Link href="/sign-up">
                 <Button size="lg" className="bg-navy-600 hover:bg-navy-700 text-white px-6 py-4 text-lg rounded-lg shadow-lg hover:shadow-xl transition-all group">
@@ -183,32 +184,10 @@ export function LandingPage() {
               </Button>
             </motion.div>
 
-            {/* Statistics - Always show in one row */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-              className="grid grid-cols-3 gap-2 md:gap-8 max-w-3xl mx-auto pt-6 md:pt-12 border-t border-gray-200 px-1 md:px-0"
-            >
-              <div className="text-center">
-                <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-br from-navy-600 to-blue-600 bg-clip-text text-transparent mb-2">
-                  3+
-                </div>
-                <div className="text-xs md:text-sm lg:text-base text-gray-600 font-medium">Active Chapters</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-br from-navy-600 to-blue-600 bg-clip-text text-transparent mb-2">
-                  5,000+
-                </div>
-                <div className="text-xs md:text-sm lg:text-base text-gray-600 font-medium">Connected Alumni</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-br from-navy-600 to-blue-600 bg-clip-text text-transparent mb-2">
-                  1,000+
-                </div>
-                <div className="text-xs md:text-sm lg:text-base text-gray-600 font-medium">Connected Members</div>
-              </div>
-            </motion.div>
+            {/* Trusted By Section - Inside Hero */}
+            <div className="w-full mt-8 md:mt-12">
+              <TrustedBySection />
+            </div>
           </div>
         </div>
       </section>
