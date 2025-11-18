@@ -88,8 +88,8 @@ export function DashboardHeader() {
     }
   };
 
-  // Only show messages icon for admin and alumni (not active_member)
-  const showMessagesIcon = userRole === 'admin' || userRole === 'alumni';
+  // Only show messages icon for alumni (not admin/exec)
+  const showMessagesIcon = userRole === 'alumni';
 
   return (
     <header className="border-b border-gray-200/60 bg-white/95 backdrop-blur-sm z-50 sticky top-0">
