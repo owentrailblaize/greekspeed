@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { DollarSign, TrendingUp, Users, AlertTriangle, CheckCircle, Download, Mail, Plus, Calendar, Edit, Eye, UserPlus, X, Lock } from "lucide-react";
+import { DollarSign, TrendingUp, Users, AlertTriangle, CheckCircle, Download, Mail, Plus, Calendar, Edit, Eye, UserPlus, X, Lock, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -128,6 +128,8 @@ export function TreasurerDashboard() {
   const [assignments, setAssignments] = useState<DuesAssignment[]>([]);
   const [chapterMembers, setChapterMembers] = useState<ChapterMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const membersPerPage = 10;
   const [showCreateCycle, setShowCreateCycle] = useState(false);
   const [showAssignDues, setShowAssignDues] = useState(false);
   const [showBulkAssignDues, setShowBulkAssignDues] = useState(false);
@@ -159,6 +161,11 @@ export function TreasurerDashboard() {
       loadChapterMembers();
     }
   }, [profile?.chapter_id]);
+
+  // Reset to page 1 when chapterMembers changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [chapterMembers.length]);
 
   const loadDuesData = async () => {
     try {
@@ -480,42 +487,32 @@ export function TreasurerDashboard() {
       label: 'Bulk Assign Dues',
       icon: Users,
       onClick: () => setShowBulkAssignDues(true),
-      className: 'w-full justify-start bg-purple-600 hover:bg-purple-700',
-      variant: 'default',
+      className: 'w-full justify-start text-sm whitespace-nowrap',
+      variant: 'outline',
     },
     {
       id: 'assign-dues',
       label: 'Assign Dues',
       icon: UserPlus,
       onClick: () => setShowAssignDues(true),
-      className: 'w-full justify-start bg-blue-600 hover:bg-blue-700',
-      variant: 'default',
+      className: 'w-full justify-start text-sm whitespace-nowrap',
+      variant: 'outline',
     },
     {
       id: 'create-cycle',
       label: 'Create Dues Cycle',
       icon: Plus,
       onClick: () => setShowCreateCycle(true),
-      className: 'w-full justify-start bg-green-600 hover:bg-green-700',
-      variant: 'default',
+      className: 'w-full justify-start text-sm whitespace-nowrap',
+      variant: 'outline',
     },
     {
       id: 'export-report',
       label: 'Export Financial Report',
       icon: Download,
       onClick: () => exportDuesToCSV(assignments, `financial-report-${new Date().toISOString().split('T')[0]}.csv`),
-      className: 'w-full justify-start bg-green-600 hover:bg-green-700',
-      variant: 'default',
-    },
-    {
-      id: 'payment-plans',
-      label: 'Create Payment Plans',
-      icon: DollarSign,
-      onClick: () => {},
+      className: 'w-full justify-start text-sm whitespace-nowrap',
       variant: 'outline',
-      disabled: true,
-      showLock: true,
-      className: 'w-full justify-start opacity-60 cursor-not-allowed',
     },
   ];
 
@@ -636,7 +633,6 @@ export function TreasurerDashboard() {
       <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
           {[
             { value: "overview", label: "Overview" },
-            { value: "dues", label: "Dues" },
             { value: "members", label: "Members" }
           ].map((tab) => (
             <button
@@ -749,240 +745,67 @@ export function TreasurerDashboard() {
         </div>
       )}
 
-      {selectedTab === "dues" && (
-        <Card>
-          <CardHeader className="pb-2 sm:pb-6">
-            {/* Desktop Layout - Preserved */}
-            <div className="hidden sm:flex justify-between items-center">
-              <CardTitle>Member Dues Status</CardTitle>
-              <div className="flex space-x-2">
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => exportDuesToCSV(assignments, `dues-export-${new Date().toISOString().split('T')[0]}.csv`)}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
-                <Button 
-                  size="sm" 
-                  className="bg-green-600 hover:bg-green-700 opacity-60 cursor-not-allowed" 
-                  disabled
-                >
-                  <Mail className="h-4 w-4 mr-2" />
-                  Send Reminders
-                  <Lock className="h-3 w-3 ml-2 text-gray-400" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Mobile Layout */}
-            <div className="sm:hidden">
-              <CardTitle className="text-lg mb-3">Member Dues Status</CardTitle>
-              <div className="flex space-x-2">
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => exportDuesToCSV(assignments, `dues-export-${new Date().toISOString().split('T')[0]}.csv`)}
-                  className="flex-1 justify-center text-sm py-2"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
-                <Button 
-                  size="sm" 
-                  className="bg-green-600 hover:bg-green-700 opacity-60 cursor-not-allowed flex-1 justify-center text-sm py-2" 
-                  disabled
-                >
-                  <Mail className="h-4 w-4 mr-2" />
-                  Remind
-                  <Lock className="h-3 w-3 ml-2 text-gray-400" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-2 sm:pt-6">
-            {assignments.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <DollarSign className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-lg font-medium mb-2">No dues assignments</p>
-                <p className="text-sm">No dues have been assigned to chapter members yet.</p>
-              </div>
-            ) : (
-              <>
-                {/* Desktop Table */}
-                <div className="hidden md:block">
-                  <div className="overflow-x-auto">
-                    <div className="max-h-[70vh] overflow-y-auto border border-gray-200 rounded-lg">
-                      <table className="w-full border-collapse">
-                        <thead className="sticky top-0 bg-gray-50 z-10">
-                          <tr className="border-b">
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Member Name</th>
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Class</th>
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Amount</th>
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Status</th>
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Due Date</th>
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {assignments.map((assignment) => (
-                            <tr key={assignment.id} className="border-b hover:bg-gray-50">
-                              <td className="p-3">
-                                <div>
-                                  <p className="font-medium">{assignment.user.full_name}</p>
-                                  <p className="text-sm text-gray-600">{assignment.user.email}</p>
-                                </div>
-                              </td>
-                              <td className="p-3">
-                                <Badge variant="outline">{assignment.user.member_status}</Badge>
-                              </td>
-                              <td className="p-3">
-                                <p className="font-medium">${assignment.amount_due.toFixed(2)}</p>
-                                {assignment.amount_paid > 0 && (
-                                  <p className="text-sm text-gray-600">Paid: ${assignment.amount_paid.toFixed(2)}</p>
-                                )}
-                              </td>
-                              <td className="p-3">
-                                <Badge className={getStatusColor(assignment.status)}>
-                                  {assignment.status}
-                                </Badge>
-                              </td>
-                              <td className="p-3">
-                                <div>
-                                  <p className="text-sm">{new Date(assignment.cycle.due_date).toLocaleDateString()}</p>
-                                  {assignment.status === 'required' && new Date(assignment.cycle.due_date) < new Date() && (
-                                    <p className="text-xs text-red-600 font-medium">Overdue</p>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="p-3">
-                                <div className="flex items-center space-x-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedAssignment(assignment);
-                                      setShowEditAssignment(true);
-                                    }}
-                                    className="hover:bg-blue-50 hover:text-blue-600"
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleDeleteAssignment(assignment.id)}
-                                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                  
-                  {/* Summary Footer */}
-                  <div className="mt-4 text-sm text-gray-600">
-                    <p>Showing {assignments.length} dues assignments</p>
-                  </div>
-                </div>
-
-                {/* Mobile Card Layout */}
-                <div className="md:hidden space-y-3">
-                  {assignments.map((assignment) => (
-                    <div key={assignment.id} className="border border-gray-200 rounded-lg p-3 space-y-2">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm text-gray-900 truncate">
-                            {assignment.user.full_name}
-                          </h4>
-                          <p className="text-xs text-gray-600 mt-1">
-                            {assignment.user.email}
-                          </p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant="outline" className="text-xs px-2 py-1">
-                              {assignment.user.member_status}
-                            </Badge>
-                            <Badge className={`text-xs px-2 py-1 ${getStatusColor(assignment.status)}`}>
-                              {assignment.status}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-end space-y-1 ml-2">
-                          <p className="text-sm font-medium text-gray-900">
-                            ${assignment.amount_due.toFixed(2)}
-                          </p>
-                          {assignment.amount_paid > 0 && (
-                            <p className="text-xs text-gray-600">
-                              Paid: ${assignment.amount_paid.toFixed(2)}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                        <div className="text-xs text-gray-600">
-                          <span>Due: {new Date(assignment.cycle.due_date).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric'
-                          })}</span>
-                          {assignment.status === 'required' && new Date(assignment.cycle.due_date) < new Date() && (
-                            <span className="text-red-600 font-medium ml-2">(Overdue)</span>
-                          )}
-                        </div>
-                        
-                        <div className="flex space-x-1">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedAssignment(assignment);
-                              setShowEditAssignment(true);
-                            }}
-                            className="h-7 px-2 text-xs"
-                          >
-                            <Edit className="h-3 w-3 mr-1" />
-                            Edit
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleDeleteAssignment(assignment.id)}
-                            className="h-7 px-2 text-xs text-red-600 hover:bg-red-50 hover:text-red-700"
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
       {selectedTab === "members" && (
         <Card>
           <CardHeader className="pb-2 sm:pb-6">
-            {/* Desktop Layout - Preserved */}
+            {/* Desktop Layout */}
             <div className="hidden sm:flex justify-between items-center">
               <CardTitle>All Chapter Members ({chapterMembers.length})</CardTitle>
-              <div className="flex space-x-2">
-                <Button onClick={() => setShowBulkAssignDues(true)} className="bg-purple-600 hover:bg-purple-700">
-                  <Users className="h-4 w-4 mr-2" />
-                  Bulk Assign Dues
-                </Button>
-                <Button onClick={() => setShowAssignDues(true)} className="bg-blue-600 hover:bg-blue-700">
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Assign Dues
-                </Button>
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-600">
+                  {chapterMembers.length} {chapterMembers.length === 1 ? 'member' : 'members'}
+                </span>
+                {Math.ceil(chapterMembers.length / membersPerPage) > 1 && (
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1 || loading}
+                      className="h-8 px-3 text-xs"
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                      Previous
+                    </Button>
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.ceil(chapterMembers.length / membersPerPage) }, (_, i) => i + 1).map((page) => (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(page)}
+                          className={`h-8 w-8 p-0 text-xs flex-shrink-0 ${
+                            currentPage === page
+                              ? 'bg-navy-600 text-white hover:bg-navy-700'
+                              : 'hover:bg-gray-50'
+                          }`}
+                        >
+                          {page}
+                        </Button>
+                      ))}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(Math.ceil(chapterMembers.length / membersPerPage), prev + 1))}
+                      disabled={currentPage === Math.ceil(chapterMembers.length / membersPerPage) || loading}
+                      className="h-8 px-3 text-xs"
+                    >
+                      Next
+                      <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                    </Button>
+                  </div>
+                )}
+                <div className="flex space-x-2">
+                  <Button onClick={() => setShowBulkAssignDues(true)} variant="outline">
+                    <Users className="h-4 w-4 mr-2" />
+                    Bulk Assign Dues
+                  </Button>
+                  <Button onClick={() => setShowAssignDues(true)} variant="outline">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Assign Dues
+                  </Button>
+                </div>
               </div>
             </div>
 
@@ -992,14 +815,16 @@ export function TreasurerDashboard() {
               <div className="flex space-x-2">
                 <Button 
                   onClick={() => setShowBulkAssignDues(true)} 
-                  className="bg-purple-600 hover:bg-purple-700 flex-1 justify-center text-sm py-2"
+                  variant="outline"
+                  className="flex-1 justify-center text-sm py-2"
                 >
                   <Users className="h-4 w-4 mr-2" />
                   Bulk Assign
                 </Button>
                 <Button 
                   onClick={() => setShowAssignDues(true)} 
-                  className="bg-blue-600 hover:bg-blue-700 flex-1 justify-center text-sm py-2"
+                  variant="outline"
+                  className="flex-1 justify-center text-sm py-2"
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
                   Assign Dues
@@ -1016,111 +841,140 @@ export function TreasurerDashboard() {
               </div>
             ) : (
               <>
-                {/* Desktop Table */}
-                <div className="hidden md:block">
-                  <div className="overflow-x-auto">
-                    <div className="max-h-[70vh] overflow-y-auto border border-gray-200 rounded-lg">
-                      <table className="w-full border-collapse">
-                        <thead className="sticky top-0 bg-gray-50 z-10">
-                          <tr className="border-b">
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Member Info</th>
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Role & Status</th>
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Dues Information</th>
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Last Assignment</th>
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {chapterMembers.map((member) => (
-                            <tr key={member.id} className="border-b hover:bg-gray-50">
-                              <td className="p-3">
-                                <div>
-                                  <p className="font-medium">{member.full_name}</p>
-                                  <p className="text-sm text-gray-600">{member.email}</p>
-                                </div>
-                              </td>
-                              <td className="p-3">
-                                <div className="space-y-1">
-                                  <Badge variant="secondary">{member.chapter_role || member.role}</Badge>
-                                  <Badge variant="outline">{member.member_status}</Badge>
-                                </div>
-                              </td>
-                              <td className="p-3">
-                                <div className="space-y-1">
-                                  <p className="font-medium">${member.current_dues_amount.toFixed(2)}</p>
-                                  <Badge className={getStatusColor(member.dues_status)}>
-                                    {member.dues_status}
-                                  </Badge>
-                                </div>
-                              </td>
-                              <td className="p-3">
-                                <p className="text-sm text-gray-600">
-                                  {member.last_dues_assignment_date 
-                                    ? new Date(member.last_dues_assignment_date).toLocaleDateString()
-                                    : 'Never'
-                                  }
-                                </p>
-                              </td>
-                              <td className="p-3">
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => {
-                                    setNewAssignment({
-                                      memberId: member.id,
-                                      amount: member.current_dues_amount,
-                                      status: 'required',
-                                      notes: ''
-                                    });
-                                    setShowAssignDues(true);
-                                  }}
-                                  className="hover:bg-green-50 hover:text-green-600"
-                                >
-                                  <DollarSign className="h-4 w-4 mr-1" />
-                                  Assign Dues
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+                {/* Calculate pagination */}
+                {(() => {
+                  const totalPages = Math.ceil(chapterMembers.length / membersPerPage);
+                  const startIndex = (currentPage - 1) * membersPerPage;
+                  const endIndex = startIndex + membersPerPage;
+                  const paginatedMembers = chapterMembers.slice(startIndex, endIndex);
                   
-                  {/* Summary Footer */}
-                  <div className="mt-4 text-sm text-gray-600">
-                    <p>Showing {chapterMembers.length} chapter members</p>
-                  </div>
-                </div>
+                  return (
+                    <>
+                      {/* Desktop Table */}
+                      <div className="hidden md:block">
+                        <div className="overflow-x-auto">
+                          <div className="border border-gray-200 rounded-lg">
+                            <table className="w-full border-collapse">
+                              <thead className="sticky top-0 bg-gray-50 z-10">
+                                <tr className="border-b">
+                                  <th className="text-left p-3 font-medium text-sm bg-gray-50">Member</th>
+                                  <th className="text-left p-3 font-medium text-sm bg-gray-50">Amount</th>
+                                  <th className="text-left p-3 font-medium text-sm bg-gray-50">Last Assigned</th>
+                                  <th className="text-left p-3 font-medium text-sm bg-gray-50">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {paginatedMembers.map((member) => (
+                                  <tr key={member.id} className="border-b hover:bg-gray-50 whitespace-nowrap">
+                                    <td className="p-3 max-w-[250px]">
+                                      <div>
+                                        <p className="font-medium truncate" title={member.full_name}>{member.full_name}</p>
+                                        <p className="text-sm text-gray-600 truncate" title={member.email}>{member.email}</p>
+                                      </div>
+                                    </td>
+                                    <td className="p-3">
+                                      <p className="font-medium">${member.current_dues_amount.toFixed(2)}</p>
+                                    </td>
+                                    <td className="p-3">
+                                      <p className="text-sm text-gray-600">
+                                        {member.last_dues_assignment_date 
+                                          ? new Date(member.last_dues_assignment_date).toLocaleDateString()
+                                          : 'Never'
+                                        }
+                                      </p>
+                                    </td>
+                                    <td className="p-3">
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        onClick={() => {
+                                          setNewAssignment({
+                                            memberId: member.id,
+                                            amount: member.current_dues_amount,
+                                            status: 'required',
+                                            notes: ''
+                                          });
+                                          setShowAssignDues(true);
+                                        }}
+                                        className="hover:bg-green-50 hover:text-green-600"
+                                      >
+                                        <DollarSign className="h-4 w-4 mr-1 flex-shrink-0" />
+                                        Assign
+                                      </Button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                        
+                        {/* Pagination Footer */}
+                        {totalPages > 1 && (
+                          <div className="mt-4 flex items-center justify-between">
+                            <div className="text-sm text-gray-600">
+                              <p>Showing {startIndex + 1} to {Math.min(endIndex, chapterMembers.length)} of {chapterMembers.length} members</p>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1 || loading}
+                                className="h-8 px-3 text-xs"
+                              >
+                                <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                                Previous
+                              </Button>
+                              <div className="flex items-center space-x-1">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                  <Button
+                                    key={page}
+                                    variant={currentPage === page ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`h-8 w-8 p-0 text-xs flex-shrink-0 ${
+                                      currentPage === page
+                                        ? 'bg-navy-600 text-white hover:bg-navy-700'
+                                        : 'hover:bg-gray-50'
+                                    }`}
+                                  >
+                                    {page}
+                                  </Button>
+                                ))}
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages || loading}
+                                className="h-8 px-3 text-xs"
+                              >
+                                Next
+                                <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
 
-                {/* Mobile Card Layout */}
-                <div className="md:hidden space-y-3">
-                  {chapterMembers.map((member) => (
+                      {/* Mobile Card Layout */}
+                      <div className="md:hidden space-y-3">
+                        {paginatedMembers.map((member) => (
                     <div key={member.id} className="border border-gray-200 rounded-lg p-3 space-y-2">
                       <div className="flex justify-between items-start">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm text-gray-900 truncate">
+                          <h4 className="font-medium text-sm text-gray-900 truncate" title={member.full_name}>
                             {member.full_name}
                           </h4>
-                          <p className="text-xs text-gray-600 mt-1">
+                          <p className="text-xs text-gray-600 mt-1 truncate" title={member.email}>
                             {member.email}
                           </p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant="secondary" className="text-xs px-2 py-1">
-                              {member.chapter_role || member.role}
-                            </Badge>
-                            <Badge variant="outline" className="text-xs px-2 py-1">
-                              {member.member_status}
-                            </Badge>
-                          </div>
                         </div>
                         <div className="flex flex-col items-end space-y-1 ml-2">
                           <p className="text-sm font-medium text-gray-900">
                             ${member.current_dues_amount.toFixed(2)}
                           </p>
-                          <Badge className={`text-xs px-2 py-1 ${getStatusColor(member.dues_status)}`}>
-                            {member.dues_status}
-                          </Badge>
                         </div>
                       </div>
                       
@@ -1151,13 +1005,62 @@ export function TreasurerDashboard() {
                           }}
                           className="h-7 px-2 text-xs hover:bg-green-50 hover:text-green-600"
                         >
-                          <DollarSign className="h-3 w-3 mr-1" />
+                          <DollarSign className="h-3 w-3 mr-1 flex-shrink-0" />
                           Assign
                         </Button>
                       </div>
                     </div>
                   ))}
-                </div>
+                  
+                        {/* Mobile Pagination */}
+                        {totalPages > 1 && (
+                          <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                            <div className="text-xs text-gray-600">
+                              <p>Showing {startIndex + 1} to {Math.min(endIndex, chapterMembers.length)} of {chapterMembers.length}</p>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1 || loading}
+                                className="h-8 px-2 text-xs"
+                              >
+                                <ChevronLeft className="h-3 w-3" />
+                              </Button>
+                              <div className="flex items-center space-x-1">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).slice(0, 5).map((page) => (
+                                  <Button
+                                    key={page}
+                                    variant={currentPage === page ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`h-8 w-8 p-0 text-xs flex-shrink-0 ${
+                                      currentPage === page
+                                        ? 'bg-navy-600 text-white hover:bg-navy-700'
+                                        : 'hover:bg-gray-50'
+                                    }`}
+                                  >
+                                    {page}
+                                  </Button>
+                                ))}
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages || loading}
+                                className="h-8 px-2 text-xs"
+                              >
+                                <ChevronRight className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
               </>
             )}
           </CardContent>

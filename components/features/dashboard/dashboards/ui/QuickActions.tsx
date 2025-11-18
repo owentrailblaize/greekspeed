@@ -93,15 +93,15 @@ export function QuickActions({
             <Button
               key={action.id}
               variant={action.variant || 'outline'}
-              className={action.className || 'w-full justify-start'}
+              className={action.className || 'w-full justify-start text-sm whitespace-nowrap'}
               onClick={action.onClick}
               disabled={action.disabled}
               title={action.title}
             >
-              <action.icon className="h-4 w-4 mr-2" />
-              {action.label}
+              <action.icon className="h-4 w-4 mr-2 flex-shrink-0" />
+              <span className="truncate">{action.label}</span>
               {action.showLock && (
-                <Lock className="h-3 w-3 ml-2 text-gray-400" />
+                <Lock className="h-3 w-3 ml-2 text-gray-400 flex-shrink-0" />
               )}
             </Button>
           ))}
