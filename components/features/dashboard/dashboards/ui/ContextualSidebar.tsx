@@ -22,19 +22,6 @@ export function ContextualSidebar({ activeFeature, selectedRole }: ContextualSid
   // Feature-specific contextual content
   const renderContextualContent = () => {
     switch (activeFeature) {
-      case 'announcements':
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Notification Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-gray-600">
-              <p>Email notifications are enabled by default for all members with email preferences.</p>
-              <p>SMS notifications require member consent and phone number on file.</p>
-            </CardContent>
-          </Card>
-        );
-
       case 'events':
         return (
           <Card>
@@ -157,25 +144,6 @@ export function ContextualSidebar({ activeFeature, selectedRole }: ContextualSid
           </Card>
         );
 
-      case 'documents':
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Document Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button variant="outline" size="sm" className="w-full justify-start">
-                <Plus className="h-4 w-4 mr-2" />
-                Upload Document
-              </Button>
-              <div className="text-xs text-gray-500 space-y-1">
-                <p>• Filter by category</p>
-                <p>• Sort by date</p>
-                <p>• Search documents</p>
-              </div>
-            </CardContent>
-          </Card>
-        );
 
       case 'invitations':
         return (

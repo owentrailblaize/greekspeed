@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Megaphone, Calendar, CheckSquare, Users, DollarSign, TrendingUp, BookOpen, FileText, UserPlus, Settings, ChevronRight, X } from 'lucide-react';
+import { LayoutDashboard, Megaphone, Calendar, CheckSquare, Users, DollarSign, TrendingUp, BookOpen, UserPlus, Settings, ChevronRight, X } from 'lucide-react';
 import { FeatureView } from '../UnifiedExecutiveDashboard';
 import { cn } from '@/lib/utils';
 import { CollapsibleNavGroup } from './CollapsibleNavGroup';
@@ -31,7 +31,6 @@ const navigationGroups = [
     items: [
       { id: 'members' as FeatureView, label: 'Members', icon: Users },
       { id: 'dues' as FeatureView, label: 'Dues', icon: DollarSign },
-      { id: 'documents' as FeatureView, label: 'Documents', icon: FileText },
       { id: 'invitations' as FeatureView, label: 'Invitations', icon: UserPlus },
     ]
   },

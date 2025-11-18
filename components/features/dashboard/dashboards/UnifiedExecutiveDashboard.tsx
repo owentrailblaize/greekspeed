@@ -12,7 +12,6 @@ import { MembersView } from './ui/feature-views/MembersView';
 import { DuesView } from './ui/feature-views/DuesView';
 import { BudgetView } from './ui/feature-views/BudgetView';
 import { VendorsView } from './ui/feature-views/VendorsView';
-import { DocumentsView } from './ui/feature-views/DocumentsView';
 import { InvitationsView } from './ui/feature-views/InvitationsView';
 
 export type FeatureView = 
@@ -23,7 +22,6 @@ export type FeatureView =
   | 'dues'
   | 'budget'
   | 'vendors'
-  | 'documents'
   | 'invitations';
 
 interface UnifiedExecutiveDashboardProps {
@@ -55,8 +53,6 @@ export function UnifiedExecutiveDashboard({
         return <BudgetView />;
       case 'vendors':
         return <VendorsView />;
-      case 'documents':
-        return <DocumentsView />;
       case 'invitations':
         return <InvitationsView />;
       default:
