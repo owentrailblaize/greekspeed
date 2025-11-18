@@ -1,27 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Settings } from 'lucide-react';
+import { Plus, Settings, CheckCircle, Clock, UserCheck, Bell, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { supabase } from '@/lib/supabase/client';
+import { Progress } from '@/components/ui/progress';
+import { Task } from '@/types/operations';
 
 export function TasksView() {
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
-  const [tasks, setTasks] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const tasksPerPage = 10;
 
-  useEffect(() => {
-    if (chapterId) {
-      loadTasks();
-    }
-  }, [chapterId]);
-
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -49,7 +47,13 @@ export function TasksView() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [profile?.chapter_id]);
+
+  useEffect(() => {
+    if (chapterId) {
+      loadTasks();
+    }
+  }, [chapterId, loadTasks]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -62,15 +66,76 @@ export function TasksView() {
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "high": return "bg-red-100 text-red-800";
+      case "urgent": return "bg-red-100 text-red-800";
+      case "high": return "bg-orange-100 text-orange-800";
       case "medium": return "bg-yellow-100 text-yellow-800";
       case "low": return "bg-gray-100 text-gray-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
 
+  // Calculate task statistics
+  const taskStats = useMemo(() => {
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.status === 'completed').length;
+    const pending = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
+    const compliance = total > 0 ? Math.round((completed / total) * 100 * 10) / 10 : 0;
+    
+    return {
+      total,
+      completed,
+      pending,
+      compliance
+    };
+  }, [tasks]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(tasks.length / tasksPerPage);
+  const startIndex = (currentPage - 1) * tasksPerPage;
+  const endIndex = startIndex + tasksPerPage;
+  const paginatedTasks = tasks.slice(startIndex, endIndex);
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Reset to page 1 when tasks change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [tasks.length]);
+
+  const handleSendReminder = async (taskId: string) => {
+    // TODO: Implement reminder functionality
+    console.log('Send reminder for task:', taskId);
+  };
+
+  const handleMarkComplete = async (taskId: string) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ status: 'completed' })
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      // Reload tasks
+      loadTasks();
+    } catch (error) {
+      console.error('Error marking task as complete:', error);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-gray-900">Tasks</h2>
@@ -82,14 +147,162 @@ export function TasksView() {
         </Button>
       </div>
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-600 text-sm font-medium mb-1">Total Tasks</p>
+                <p className="text-2xl font-semibold text-blue-900">
+                  {loading ? '...' : taskStats.total}
+                </p>
+              </div>
+              <Settings className="h-8 w-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-600 text-sm font-medium mb-1">Completed</p>
+                <p className="text-2xl font-semibold text-green-900">
+                  {loading ? '...' : taskStats.completed}
+                </p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-600 text-sm font-medium mb-1">Pending</p>
+                <p className="text-2xl font-semibold text-yellow-900">
+                  {loading ? '...' : taskStats.pending}
+                </p>
+              </div>
+              <Clock className="h-8 w-8 text-yellow-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-600 text-sm font-medium mb-1">Compliance</p>
+                <p className="text-2xl font-semibold text-purple-900">
+                  {loading ? '...' : `${taskStats.compliance}%`}
+                </p>
+              </div>
+              <UserCheck className="h-8 w-8 text-purple-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Task Completion Progress */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Settings className="h-5 w-5 mr-2 text-blue-600" />
-            Member Task Tracking
-          </CardTitle>
+          <CardTitle>Task Completion Progress</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Overall Progress</span>
+              <span className="font-medium text-sm">
+                {loading ? '...' : taskStats.total > 0 ? `${((taskStats.completed / taskStats.total) * 100).toFixed(1)}%` : '0%'}
+              </span>
+            </div>
+            <Progress 
+              value={loading ? 0 : taskStats.total > 0 ? ((taskStats.completed / taskStats.total) * 100) : 0} 
+              className="h-3" 
+            />
+            
+            <div className="flex justify-between items-center mt-6">
+              <div>
+                <p className="text-xl font-semibold text-green-600">
+                  {loading ? '...' : taskStats.completed}
+                </p>
+                <p className="text-sm text-gray-600">Completed</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xl font-semibold text-yellow-600">
+                  {loading ? '...' : taskStats.pending}
+                </p>
+                <p className="text-sm text-gray-600">Pending</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Member Task Tracking Table */}
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center">
+              <Settings className="h-5 w-5 mr-2 text-blue-600" />
+              Member Task Tracking
+            </CardTitle>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
+              </span>
+              {totalPages > 1 && (
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className="h-8 px-3 text-xs"
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                    Previous
+                  </Button>
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(page)}
+                        className={`h-8 w-8 p-0 text-xs flex-shrink-0 ${
+                          currentPage === page
+                            ? 'bg-navy-600 text-white hover:bg-navy-700'
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="h-8 px-3 text-xs"
+                  >
+                    Next
+                    <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                  </Button>
+                </div>
+              )}
+              <Button variant="outline" size="sm">
+                <Bell className="h-4 w-4 mr-2" />
+                Send Reminders
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-2">
           {loading ? (
             <div className="text-center py-8">
               <p className="text-gray-500">Loading tasks...</p>
@@ -100,44 +313,62 @@ export function TasksView() {
               <p className="text-sm">No tasks have been assigned to chapter members yet.</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Member</TableHead>
-                  <TableHead>Task</TableHead>
-                  <TableHead>Deadline</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Priority</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tasks.map((task) => (
-                  <TableRow key={task.id}>
-                    <TableCell className="font-medium">
-                      {task.assignee?.full_name || 'Unassigned'}
-                    </TableCell>
-                    <TableCell>{task.title}</TableCell>
-                    <TableCell>
-                      {task.due_date ? new Date(task.due_date).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      }) : 'No due date'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(task.status)}>
-                        {task.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getPriorityColor(task.priority)}>
-                        {task.priority}
-                      </Badge>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Member</TableHead>
+                    <TableHead>Task</TableHead>
+                    <TableHead>Deadline</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {paginatedTasks.map((task) => (
+                    <TableRow key={task.id}>
+                      <TableCell className="font-medium">
+                        {(task as any).assignee?.full_name || 'Unassigned'}
+                      </TableCell>
+                      <TableCell>{task.title}</TableCell>
+                      <TableCell>
+                        {task.due_date ? new Date(task.due_date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        }) : 'No due date'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(task.status)}>
+                          {task.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getPriorityColor(task.priority)}>
+                          {task.priority}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {task.status === 'completed' ? (
+                          <span className="text-sm text-green-600">Done</span>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleSendReminder(task.id)}
+                            className="text-xs"
+                          >
+                            <Bell className="h-3 w-3 mr-1" />
+                            Follow Up
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
