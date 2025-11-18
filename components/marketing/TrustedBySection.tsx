@@ -2,62 +2,39 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 interface Logo {
   name: string;
-  icon: React.ReactNode;
+  imagePath: string;
 }
 
 export const TrustedBySection: React.FC = () => {
-  // You can replace these with actual chapter logos or organization logos
+  // Update these paths to match your actual image filenames
   const logos: Logo[] = [
     {
       name: 'Sigma Chi Eta',
-      icon: (
-        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-navy-600 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
-          ΣΧ
-        </div>
-      ),
+      imagePath: '/chapter-logos/Beta_Theta_Pi_Coat_Arms.png', // Update with your actual filename
     },
     {
       name: 'Alpha Beta Gamma',
-      icon: (
-        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-600 to-navy-600 flex items-center justify-center text-white font-bold text-lg">
-          ΑΒΓ
-        </div>
-      ),
+      imagePath: '/chapter-logos/Beta_Theta_Pi_Coat_Arms.png', // Update with your actual filename
     },
     {
       name: 'Delta Epsilon',
-      icon: (
-        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-navy-500 to-blue-500 flex items-center justify-center text-white font-bold text-lg">
-          ΔΕ
-        </div>
-      ),
+      imagePath: '/chapter-logos/Beta_Theta_Pi_Coat_Arms.png', // Update with your actual filename
     },
     {
       name: 'Theta Iota',
-      icon: (
-        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-navy-500 flex items-center justify-center text-white font-bold text-lg">
-          ΘΙ
-        </div>
-      ),
+      imagePath: '/chapter-logos/Beta_Theta_Pi_Coat_Arms.png', // Update with your actual filename
     },
     {
       name: 'Kappa Lambda',
-      icon: (
-        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-navy-600 to-blue-500 flex items-center justify-center text-white font-bold text-lg">
-          ΚΛ
-        </div>
-      ),
+      imagePath: '/chapter-logos/Beta_Theta_Pi_Coat_Arms.png', // Update with your actual filename
     },
     {
       name: 'Mu Nu',
-      icon: (
-        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-600 to-navy-500 flex items-center justify-center text-white font-bold text-lg">
-          ΜΝ
-        </div>
-      ),
+      imagePath: '/chapter-logos/Beta_Theta_Pi_Coat_Arms.png', // Update with your actual filename
     },
   ];
 
@@ -82,7 +59,7 @@ export const TrustedBySection: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.5 }}
             className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900"
           >
-            Industry Leaders
+            Leading Chapters
           </motion.h2>
         </div>
 
@@ -118,8 +95,15 @@ export const TrustedBySection: React.FC = () => {
                       key={index}
                       className="flex items-center justify-center min-w-[120px] md:min-w-[160px] group"
                     >
-                      <div className="opacity-60 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        {logo.icon}
+                      <div className="opacity-60 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center h-12 w-12 md:h-16 md:w-16">
+                        <Image
+                          src={logo.imagePath}
+                          alt={logo.name}
+                          width={64}
+                          height={64}
+                          className="h-12 w-12 md:h-16 md:w-16 object-contain"
+                          unoptimized={false}
+                        />
                       </div>
                     </div>
                   ))}
@@ -141,7 +125,7 @@ export const TrustedBySection: React.FC = () => {
           className="text-center mt-4 md:mt-6"
         >
           <p className="text-xs md:text-sm text-gray-600">
-            Join thousands of companies building with our platform
+            Join thousands of chapters building stronger alumni networks
           </p>
         </motion.div>
       </div>
