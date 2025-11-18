@@ -6,7 +6,6 @@ import { useProfile } from '@/lib/contexts/ProfileContext';
 import { DashboardSidebar } from './ui/DashboardSidebar';
 import { ContextualSidebar } from './ui/ContextualSidebar';
 import { OverviewView } from './ui/feature-views/OverviewView';
-import { AnnouncementsView } from './ui/feature-views/AnnouncementsView';
 import { EventsView } from './ui/feature-views/EventsView';
 import { TasksView } from './ui/feature-views/TasksView';
 import { MembersView } from './ui/feature-views/MembersView';
@@ -18,7 +17,6 @@ import { InvitationsView } from './ui/feature-views/InvitationsView';
 
 export type FeatureView = 
   | 'overview'
-  | 'announcements'
   | 'events'
   | 'tasks'
   | 'members'
@@ -45,8 +43,6 @@ export function UnifiedExecutiveDashboard({
     switch (activeFeature) {
       case 'overview':
         return <OverviewView selectedRole={selectedRole} />;
-      case 'announcements':
-        return <AnnouncementsView />;
       case 'events':
         return <EventsView />;
       case 'tasks':

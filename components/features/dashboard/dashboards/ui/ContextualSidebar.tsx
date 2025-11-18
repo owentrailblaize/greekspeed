@@ -1,8 +1,6 @@
 'use client';
 
 import { FeatureView } from '../UnifiedExecutiveDashboard';
-import { QuickActions } from './QuickActions';
-import { UpcomingEventsCard } from './UpcomingEventsCard';
 import { TasksPanel } from './TasksPanel';
 import { CompactCalendarCard } from './CompactCalendarCard';
 import { useProfile } from '@/lib/contexts/ProfileContext';
@@ -20,33 +18,6 @@ export function ContextualSidebar({ activeFeature, selectedRole }: ContextualSid
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
   const router = useRouter();
-
-  // Default quick actions - available to all admins
-  const getDefaultQuickActions = () => {
-    return [
-      {
-        id: 'create-event',
-        label: 'Create Event',
-        icon: Calendar,
-        onClick: () => router.push('/dashboard/admin?feature=events'),
-        variant: 'outline' as const,
-      },
-      {
-        id: 'send-message',
-        label: 'Send Message',
-        icon: MessageSquare,
-        onClick: () => router.push('/dashboard/messages'),
-        variant: 'outline' as const,
-      },
-      {
-        id: 'manage-members',
-        label: 'Manage Members',
-        icon: Users,
-        onClick: () => router.push('/dashboard/admin?feature=members'),
-        variant: 'outline' as const,
-      },
-    ];
-  };
 
   // Feature-specific contextual content
   const renderContextualContent = () => {
@@ -235,11 +206,9 @@ export function ContextualSidebar({ activeFeature, selectedRole }: ContextualSid
     <div className="w-80 bg-white border-l border-gray-200 flex flex-col h-full overflow-y-auto">
       <div className="p-4 space-y-4">
         {/* Default Widgets - Always Visible */}
-        <QuickActions actions={getDefaultQuickActions()} />
         
         {chapterId && (
           <>
-            <UpcomingEventsCard />
             <TasksPanel chapterId={chapterId} />
             <CompactCalendarCard />
           </>

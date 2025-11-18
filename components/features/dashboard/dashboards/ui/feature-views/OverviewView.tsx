@@ -1,12 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, CheckCircle, Crown, TrendingUp, Settings, Clock, UserCheck, DollarSign, Calendar, BookOpen } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, MessageSquare, UserPlus, Users as UsersIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectItem } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Megaphone, Send, Mail, Smartphone } from 'lucide-react';
+import { useAnnouncements } from '@/lib/hooks/useAnnouncements';
+import { CreateAnnouncementData } from '@/types/announcements';
+import { toast } from 'react-toastify';
+import { useAuth } from '@/lib/supabase/auth-context';
 
 interface OverviewViewProps {
   selectedRole: string;
@@ -14,6 +24,7 @@ interface OverviewViewProps {
 
 export function OverviewView({ selectedRole }: OverviewViewProps) {
   const { profile } = useProfile();
+  const { session } = useAuth();
   const chapterId = profile?.chapter_id;
   const router = useRouter();
   
@@ -30,11 +41,89 @@ export function OverviewView({ selectedRole }: OverviewViewProps) {
   const [totalAttendees, setTotalAttendees] = useState<number>(0);
   const [vendorCount, setVendorCount] = useState<number>(0);
 
+  // Announcement form state
+  const { createAnnouncement, loading: announcementsLoading } = useAnnouncements(chapterId || null);
+  const [announcement, setAnnouncement] = useState("");
+  const [announcementTitle, setAnnouncementTitle] = useState("");
+  const [announcementType, setAnnouncementType] = useState<'general' | 'urgent' | 'event' | 'academic'>('general');
+  const [sendSMS, setSendSMS] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emailRecipientCount, setEmailRecipientCount] = useState<number | null>(null);
+  const [smsRecipientCount, setSmsRecipientCount] = useState<number | null>(null);
+  const [loadingRecipients, setLoadingRecipients] = useState(false);
+
   useEffect(() => {
     if (chapterId) {
       fetchOverviewData();
     }
   }, [chapterId, selectedRole]);
+
+  useEffect(() => {
+    setSendSMS(announcementType === 'urgent');
+  }, [announcementType]);
+
+  useEffect(() => {
+    const fetchRecipientCounts = async () => {
+      if (!chapterId || !session?.access_token) return;
+      
+      setLoadingRecipients(true);
+      try {
+        const response = await fetch(
+          `/api/announcements/recipient-counts?chapter_id=${chapterId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          setEmailRecipientCount(data.email_recipients);
+          setSmsRecipientCount(data.sms_recipients);
+        }
+      } catch (error) {
+        console.error('Error fetching recipient counts:', error);
+      } finally {
+        setLoadingRecipients(false);
+      }
+    };
+
+    fetchRecipientCounts();
+  }, [chapterId, session?.access_token]);
+
+  const handleSendAnnouncement = async () => {
+    if (!announcementTitle.trim() || !announcement.trim()) {
+      toast.error('Please fill in both title and content');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const announcementData: CreateAnnouncementData = {
+        title: announcementTitle.trim(),
+        content: announcement.trim(),
+        announcement_type: announcementType,
+        send_sms: sendSMS,
+        metadata: {}
+      };
+
+      await createAnnouncement(announcementData);
+      
+      // Reset form
+      setAnnouncement("");
+      setAnnouncementTitle("");
+      setAnnouncementType('general');
+      setSendSMS(false);
+      
+      toast.success('Announcement sent successfully!');
+    } catch (error) {
+      toast.error('Failed to send announcement');
+      console.error('Error sending announcement:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const fetchOverviewData = async () => {
     // Fetch member stats
@@ -186,7 +275,7 @@ export function OverviewView({ selectedRole }: OverviewViewProps) {
     if (selectedRole === 'president' || selectedRole === 'vice-president') {
       baseActions.push({
         id: 'manage-members',
-        label: 'Manage Members',
+        label: 'Members',
         icon: UsersIcon,
         onClick: () => router.push('/dashboard/admin?feature=members'),
       });
@@ -195,7 +284,7 @@ export function OverviewView({ selectedRole }: OverviewViewProps) {
     if (selectedRole === 'president') {
       baseActions.push({
         id: 'manage-invitations',
-        label: 'Manage Invitations',
+        label: 'Invitations',
         icon: UserPlus,
         onClick: () => router.push('/dashboard/admin?feature=invitations'),
       });
@@ -231,28 +320,111 @@ export function OverviewView({ selectedRole }: OverviewViewProps) {
         })}
       </div>
 
-      {/* Quick Actions */}
-      <Card>
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {quickActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <Button
-                  key={action.id}
-                  variant="outline"
-                  className="h-auto flex flex-col items-center justify-center p-4 space-y-2 hover:bg-gray-50"
-                  onClick={action.onClick}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="text-sm">{action.label}</span>
-                </Button>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Announcements and Quick Actions - Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 max-h-[500px]">
+        {/* Announcements Card - Left side, 3/4 width */}
+        <Card className="w-full lg:col-span-3 flex flex-col max-h-[500px]">
+          <CardHeader className="pb-3 flex-shrink-0">
+            <CardTitle className="flex items-center space-x-2">
+              <Megaphone className="h-5 w-5 text-purple-600" />
+              <span>Chapter Announcements</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 flex-1 overflow-y-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <Input
+                placeholder="Announcement title..."
+                value={announcementTitle}
+                onChange={(e) => setAnnouncementTitle(e.target.value)}
+                className="md:col-span-2"
+              />
+              <Select 
+                value={announcementType} 
+                onValueChange={(value: string) => setAnnouncementType(value as 'general' | 'urgent' | 'event' | 'academic')}
+              >
+                <SelectItem value="general">General</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+                <SelectItem value="event">Event</SelectItem>
+                <SelectItem value="academic">Academic</SelectItem>
+              </Select>
+            </div>
+            
+            <Textarea
+              placeholder="Write a chapter announcement..."
+              value={announcement}
+              onChange={(e) => setAnnouncement(e.target.value)}
+              className="min-h-[100px]"
+            />
+            
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+              <div className="flex flex-col space-y-2 flex-1">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="send-sms-notification"
+                    checked={sendSMS}
+                    onCheckedChange={(checked) => setSendSMS(checked as boolean)}
+                  />
+                  <Label htmlFor="send-sms-notification" className="text-sm cursor-pointer">
+                    Send SMS notification
+                  </Label>
+                </div>
+                
+                <div className="text-xs text-gray-600 space-y-1 pl-6">
+                  {emailRecipientCount !== null && (
+                    <p className="flex items-center gap-1 whitespace-nowrap">
+                      <Mail className="h-3 w-3 flex-shrink-0" />
+                      <span>Email will be sent to <span className="font-medium">{emailRecipientCount}</span> Members</span>
+                    </p>
+                  )}
+                  {sendSMS && smsRecipientCount !== null && (
+                    <p className="flex items-center gap-1 whitespace-nowrap">
+                      <Smartphone className="h-3 w-3 flex-shrink-0" />
+                      <span>SMS will be sent to <span className="font-medium">{smsRecipientCount}</span> Members</span>
+                    </p>
+                  )}
+                  {loadingRecipients && (
+                    <p className="text-gray-400 whitespace-nowrap">Loading recipient counts...</p>
+                  )}
+                </div>
+              </div>
+              
+              <Button 
+                className="bg-purple-600 hover:bg-purple-700 w-full md:w-auto"
+                onClick={handleSendAnnouncement}
+                disabled={isSubmitting || announcementsLoading}
+              >
+                <Send className="h-4 w-4 mr-2" />
+                {isSubmitting ? 'Sending...' : 'Send Announcement'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions - Right side, 1/4 width */}
+        <Card className="w-full lg:col-span-1 flex flex-col max-h-[500px]">
+          <CardHeader className="pb-3 flex-shrink-0">
+            <CardTitle className="text-lg font-semibold text-gray-900">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 flex-1 overflow-y-auto">
+            <div className="space-y-3">
+              {quickActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <Button
+                    key={action.id}
+                    variant="outline"
+                    className="w-full justify-start text-sm whitespace-nowrap"
+                    onClick={action.onClick}
+                  >
+                    <Icon className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{action.label}</span>
+                  </Button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

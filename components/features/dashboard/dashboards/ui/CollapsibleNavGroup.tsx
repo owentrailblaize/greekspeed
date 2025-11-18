@@ -36,16 +36,16 @@ export function CollapsibleNavGroup({
       <button
         onClick={onToggle}
         className={cn(
-          "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+          "w-full flex items-center justify-between px-3 py-2 rounded-full text-sm font-medium transition-all duration-200",
           hasActiveItem || isOpen
-            ? "bg-gray-50 text-gray-900"
+            ? "bg-gray-100 text-gray-900"
             : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
         )}
       >
         <div className="flex items-center space-x-3">
           <Icon className={cn(
             "h-5 w-5 transition-colors",
-            hasActiveItem || isOpen ? "text-gray-900" : "text-gray-400"
+            hasActiveItem || isOpen ? "text-gray-700" : "text-gray-500"
           )} />
           <span>{label}</span>
         </div>
@@ -69,15 +69,15 @@ export function CollapsibleNavGroup({
                 key={item.id}
                 onClick={() => onFeatureChange(item.id)}
                 className={cn(
-                  "w-full flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-all duration-150",
+                  "w-full flex items-center space-x-3 px-3 py-2 rounded-full text-sm font-medium transition-all duration-150",
                   isActive
-                    ? "bg-blue-50 text-blue-700 border-l-2 border-blue-600"
+                    ? "bg-white text-gray-900 shadow-lg"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 )}
               >
                 <ItemIcon className={cn(
                   "h-4 w-4 transition-colors",
-                  isActive ? "text-blue-600" : "text-gray-400"
+                  isActive ? "text-gray-700" : "text-gray-500"
                 )} />
                 <span>{item.label}</span>
               </button>

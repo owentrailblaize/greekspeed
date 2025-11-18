@@ -18,7 +18,6 @@ interface DashboardSidebarProps {
 // Top-level navigation items
 const topLevelItems = [
   { id: 'overview' as FeatureView, label: 'Overview', icon: LayoutDashboard },
-  { id: 'announcements' as FeatureView, label: 'Announcements', icon: Megaphone },
   { id: 'events' as FeatureView, label: 'Events', icon: Calendar },
   { id: 'tasks' as FeatureView, label: 'Tasks', icon: CheckSquare },
 ];
@@ -123,7 +122,7 @@ export function DashboardSidebar({
                         exit={{ opacity: 0 }}
                         className="font-semibold text-gray-900"
                       >
-                        Navigation
+                        Administration
                       </motion.h3>
                     )}
                   </div>
@@ -168,10 +167,10 @@ export function DashboardSidebar({
                             variant="ghost"
                             size="sm"
                             className={cn(
-                              "h-10 w-10 p-0",
+                              "h-10 w-10 p-0 rounded-lg transition-colors",
                               isActive
-                                ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
-                                : "hover:bg-gray-50"
+                                ? "bg-white text-gray-900 hover:bg-white shadow-lg"
+                                : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                             )}
                             onClick={() => onFeatureChange(item.id)}
                             title={item.label}
@@ -192,10 +191,10 @@ export function DashboardSidebar({
                             variant="ghost"
                             size="sm"
                             className={cn(
-                              "h-10 w-10 p-0",
+                              "h-10 w-10 p-0 rounded-lg transition-colors",
                               hasActiveItem
-                                ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
-                                : "hover:bg-gray-50"
+                                ? "bg-gray-100 text-gray-900 hover:bg-gray-100"
+                                : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                             )}
                             onClick={() => {
                               setSidebarCollapsed(false);
@@ -226,15 +225,15 @@ export function DashboardSidebar({
                           key={item.id}
                           onClick={() => onFeatureChange(item.id)}
                           className={cn(
-                            "w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
+                            "w-full flex items-center space-x-3 px-3 py-2 rounded-full text-sm font-medium transition-all duration-150",
                             isActive
-                              ? "bg-blue-50 text-blue-700 font-semibold"
+                              ? "bg-white text-gray-900 font-medium shadow-lg"
                               : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                           )}
                         >
                           <Icon className={cn(
                             "h-5 w-5 transition-colors",
-                            isActive ? "text-blue-600" : "text-gray-400"
+                            isActive ? "text-gray-700" : "text-gray-500"
                           )} />
                           <span>{item.label}</span>
                         </button>
