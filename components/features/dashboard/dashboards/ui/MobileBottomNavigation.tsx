@@ -175,13 +175,13 @@ export function MobileBottomNavigation({
         },
         {
           id: 'announcements',
-          label: 'Announcements',
+          label: 'News', // Changed from 'Announcements'
           icon: Megaphone,
           onClick: () => handleToolsOptionClick('announcements'),
         },
         {
           id: 'calendar',
-          label: 'Calendar',
+          label: 'Calendar', // Changed from 'Calendar' for better fit
           icon: Calendar,
           onClick: () => handleToolsOptionClick('calendar'),
         },
@@ -499,10 +499,10 @@ export function MobileBottomNavigation({
                       onClick={option.onClick}
                       className="flex flex-col items-center justify-center h-14 w-14 rounded-full bg-white shadow-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 text-gray-700 hover:text-blue-600 transition-all duration-200 group shrink-0 relative"
                       style={{ marginBottom: isCenter ? '12px' : '0px' }}
-                      title={option.label}
+                      title={option.label} 
                     >
                       <Icon className="h-5 w-5 mb-0.5 group-hover:text-blue-600 transition-colors" />
-                      <span className="text-[10px] font-medium group-hover:text-blue-600 whitespace-nowrap transition-colors">
+                      <span className="text-[10px] font-medium group-hover:text-blue-600 transition-colors px-1 text-center leading-tight">
                         {option.label}
                       </span>
                     </motion.button>
