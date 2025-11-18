@@ -24,6 +24,8 @@ import { EventForm } from '@/components/ui/EventForm';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { createPortal } from 'react-dom';
+import { SendAnnouncementButton } from './ui/SendAnnouncementButton';
+import { EXECUTIVE_ROLES } from '@/lib/permissions';
 
 interface AdminOverviewProps {
   initialFeed?: SocialFeedInitialData;
@@ -123,13 +125,22 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
 
   // Remove the manual tab configuration - MobileBottomNavigation will auto-detect role
 
+  // Check if user is an executive member
+  const isExecutiveMember = profile?.role === 'admin' || 
+    (profile?.chapter_role && EXECUTIVE_ROLES.includes(profile.chapter_role as any));
+
   const renderMobileContent = () => {
     switch (activeMobileTab) {
       case 'home':
         return (
           <div className="space-y-4">
             <div className="w-full">
-              <DuesStatusCard />
+              {/* Show Send Announcement for executive members, DuesStatusCard for others */}
+              {isExecutiveMember ? (
+                <SendAnnouncementButton />
+              ) : (
+                <DuesStatusCard />
+              )}
             </div>
             <div className="w-full">
               <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
