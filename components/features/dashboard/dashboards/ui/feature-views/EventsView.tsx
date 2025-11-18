@@ -1,20 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Calendar, Edit, Trash2, MapPin, Clock, Users, DollarSign } from 'lucide-react';
+import { Plus, Calendar, Edit, Trash2, MapPin, Clock, Users, DollarSign, TrendingUp, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useEvents } from '@/lib/hooks/useEvents';
 import { EventForm } from '@/components/ui/EventForm';
 import { Event, CreateEventRequest, UpdateEventRequest } from '@/types/events';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { CompactCalendarCard } from '../CompactCalendarCard';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export function EventsView() {
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
   const [showEventForm, setShowEventForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [sortColumn, setSortColumn] = useState<'title' | 'date' | 'location' | 'budget' | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const eventsPerPage = 6;
   
   const { 
     events, 
@@ -27,6 +34,22 @@ export function EventsView() {
     chapterId: chapterId || '', 
     scope: 'all' 
   });
+
+  // Calculate budget statistics
+  const budgetStats = useMemo(() => {
+    const eventsWithBudget = events.filter(e => e.budget_amount && parseFloat(String(e.budget_amount)) > 0);
+    const totalBudgetAllocated = eventsWithBudget.reduce((sum, e) => sum + parseFloat(String(e.budget_amount || 0)), 0);
+    const startingBudget = 12000; // Default starting budget
+    const remaining = startingBudget - totalBudgetAllocated;
+    
+    return {
+      totalBudgetAllocated,
+      eventsWithBudget: eventsWithBudget.length,
+      totalEvents: events.length,
+      startingBudget,
+      remaining
+    };
+  }, [events]);
 
   const handleCreateEvent = async (eventData: CreateEventRequest) => {
     if (!chapterId) return;
@@ -83,12 +106,83 @@ export function EventsView() {
     });
   };
 
-  const upcomingEvents = events.filter(event => 
-    event.status === 'published' && new Date(event.start_time) >= new Date()
-  ).sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+
+  // Sort all events based on selected column and direction
+  const sortedEvents = useMemo(() => {
+    const eventsCopy = [...events];
+    
+    if (!sortColumn) {
+      // Default: sort by date (newest first)
+      return eventsCopy.sort((a, b) => 
+        new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
+      );
+    }
+
+    return eventsCopy.sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortColumn) {
+        case 'title':
+          comparison = a.title.localeCompare(b.title);
+          break;
+        case 'date':
+          comparison = new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+          break;
+        case 'location':
+          const locationA = a.location || '';
+          const locationB = b.location || '';
+          comparison = locationA.localeCompare(locationB);
+          break;
+        case 'budget':
+          const budgetA = parseFloat(String(a.budget_amount || 0));
+          const budgetB = parseFloat(String(b.budget_amount || 0));
+          comparison = budgetA - budgetB;
+          break;
+      }
+
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [events, sortColumn, sortDirection]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(sortedEvents.length / eventsPerPage);
+  const startIndex = (currentPage - 1) * eventsPerPage;
+  const endIndex = startIndex + eventsPerPage;
+  const paginatedEvents = sortedEvents.slice(startIndex, endIndex);
+
+  // Reset to page 1 when sort changes
+  const handleSort = (column: 'title' | 'date' | 'location' | 'budget') => {
+    if (sortColumn === column) {
+      // Toggle direction if clicking the same column
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new column and default to ascending
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+    setCurrentPage(1); // Reset to first page when sorting changes
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Reset to page 1 when events change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [events.length]);
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-gray-900">Events</h2>
@@ -106,23 +200,156 @@ export function EventsView() {
         </Button>
       </div>
 
-      {loading ? (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <p className="text-gray-500">Loading events...</p>
+      {/* Dashboard Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-600 text-sm font-medium mb-1">Total Budget Allocated</p>
+                <p className="text-2xl font-semibold text-orange-900">
+                  ${budgetStats.totalBudgetAllocated.toLocaleString()}
+                </p>
+              </div>
+              <DollarSign className="h-8 w-8 text-orange-600" />
+            </div>
           </CardContent>
         </Card>
-      ) : error ? (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <p className="text-red-500">Error: {error}</p>
+
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-600 text-sm font-medium mb-1">Events with Budgets</p>
+                <p className="text-2xl font-semibold text-blue-900">
+                  {budgetStats.eventsWithBudget}
+                </p>
+              </div>
+              <Calendar className="h-8 w-8 text-blue-600" />
+            </div>
           </CardContent>
         </Card>
-      ) : upcomingEvents.length === 0 ? (
+
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-600 text-sm font-medium mb-1">Total Events</p>
+                <p className="text-2xl font-semibold text-purple-900">
+                  {budgetStats.totalEvents}
+                </p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-purple-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Calendar and Budget Overview - Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Calendar Component */}
+        <div>
+          <CompactCalendarCard />
+        </div>
+
+        {/* Budget Overview */}
         <Card>
-          <CardContent className="p-8 text-center">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <DollarSign className="h-5 w-5 text-green-600" />
+              <span>Budget Overview</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Starting Budget</span>
+              <span className="font-semibold">${budgetStats.startingBudget.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Total Allocated</span>
+              <span className="font-semibold text-orange-600">${budgetStats.totalBudgetAllocated.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Remaining</span>
+              <span className="font-semibold text-green-600">${budgetStats.remaining.toLocaleString()}</span>
+            </div>
+            <Progress 
+              value={(budgetStats.totalBudgetAllocated / budgetStats.startingBudget) * 100} 
+              className="h-2"
+            />
+            <p className="text-xs text-gray-500 text-center">
+              {((budgetStats.totalBudgetAllocated / budgetStats.startingBudget) * 100).toFixed(1)}% of budget allocated
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* All Events Table/List */}
+        <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle>All Events</CardTitle>
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-600">
+                  {sortedEvents.length} {sortedEvents.length === 1 ? 'event' : 'events'}
+                </span>
+                {totalPages > 1 && (
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className="h-8 px-3 text-xs"
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                    Previous
+                  </Button>
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(page)}
+                        className={`h-8 w-8 p-0 text-xs flex-shrink-0 ${
+                          currentPage === page
+                            ? 'bg-navy-600 text-white hover:bg-navy-700'
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="h-8 px-3 text-xs"
+                  >
+                    Next
+                    <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-2">
+          {loading ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">Loading events...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <p className="text-red-500">Error: {error}</p>
+            </div>
+          ) : sortedEvents.length === 0 ? (
+            <div className="text-center py-8">
             <Calendar className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-            <p className="text-gray-500 mb-2">No upcoming events</p>
+              <p className="text-gray-500 mb-2">No events found</p>
             <Button 
               variant="outline" 
               onClick={() => {
@@ -132,17 +359,100 @@ export function EventsView() {
             >
               Create First Event
             </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {upcomingEvents.map((event) => (
-            <Card key={event.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">{event.title}</h3>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>
+                      <button
+                        onClick={() => handleSort('title')}
+                        className="flex items-center space-x-1 hover:text-gray-900 transition-colors"
+                      >
+                        <span>Title</span>
+                        {sortColumn === 'title' && (
+                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        )}
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button
+                        onClick={() => handleSort('date')}
+                        className="flex items-center space-x-1 hover:text-gray-900 transition-colors"
+                      >
+                        <span>Date & Time</span>
+                        {sortColumn === 'date' && (
+                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        )}
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button
+                        onClick={() => handleSort('location')}
+                        className="flex items-center space-x-1 hover:text-gray-900 transition-colors"
+                      >
+                        <span>Location</span>
+                        {sortColumn === 'location' && (
+                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        )}
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button
+                        onClick={() => handleSort('budget')}
+                        className="flex items-center space-x-1 hover:text-gray-900 transition-colors"
+                      >
+                        <span>Budget</span>
+                        {sortColumn === 'budget' && (
+                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        )}
+                      </button>
+                    </TableHead>
+                    <TableHead>Attendees</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedEvents.map((event) => (
+                    <TableRow key={event.id} className="whitespace-nowrap">
+                      <TableCell className="font-medium max-w-[200px]">
+                        <span className="truncate block" title={event.title}>{event.title}</span>
+                      </TableCell>
+                      <TableCell className="max-w-[180px]">
+                        <div className="flex items-center text-sm whitespace-nowrap">
+                          <Clock className="h-3 w-3 mr-1 text-gray-400 flex-shrink-0" />
+                          <span className="truncate">{formatEventDate(event.start_time)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="max-w-[150px]">
+                        {event.location ? (
+                          <div className="flex items-center text-sm whitespace-nowrap">
+                            <MapPin className="h-3 w-3 mr-1 text-gray-400 flex-shrink-0" />
+                            <span className="truncate" title={event.location}>{event.location}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-sm">TBD</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="max-w-[120px]">
+                        {event.budget_amount ? (
+                          <div className="flex items-center text-sm whitespace-nowrap">
+                            <DollarSign className="h-3 w-3 mr-1 text-gray-400 flex-shrink-0" />
+                            <span className="truncate">${parseFloat(String(event.budget_amount)).toLocaleString()}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-sm">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <div className="flex items-center text-sm">
+                          <Users className="h-3 w-3 mr-1 text-gray-400 flex-shrink-0" />
+                          {event.attendee_count || 0}
+                        </div>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
                       <Badge 
                         className={
                           event.status === 'published' ? 'bg-green-100 text-green-800' :
@@ -152,45 +462,14 @@ export function EventsView() {
                       >
                         {event.status}
                       </Badge>
-                    </div>
-                    
-                    {event.description && (
-                      <p className="text-sm text-gray-600 mb-3">{event.description}</p>
-                    )}
-                    
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                      <div className="flex items-center">
-                        <Clock className="h-4 w-4 mr-2 text-gray-400" />
-                        {formatEventDate(event.start_time)}
-                      </div>
-                      
-                      {event.location && (
-                        <div className="flex items-center">
-                          <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                          {event.location}
-                        </div>
-                      )}
-                      
-                      {event.budget_amount && (
-                        <div className="flex items-center">
-                          <DollarSign className="h-4 w-4 mr-2 text-gray-400" />
-                          ${event.budget_amount.toLocaleString()}
-                        </div>
-                      )}
-                      
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-2 text-gray-400" />
-                        {event.attendee_count || 0} attending
-                        {event.maybe_count ? `, ${event.maybe_count} maybe` : ''}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex space-x-2 ml-4">
+                      </TableCell>
+                      <TableCell className="text-right whitespace-nowrap">
+                        <div className="flex justify-end space-x-2">
                     <Button 
                       size="sm" 
                       variant="outline"
                       onClick={() => handleEditEvent(event)}
+                            className="flex-shrink-0"
                     >
                       <Edit className="h-4 w-4 mr-1" />
                       Edit
@@ -199,17 +478,20 @@ export function EventsView() {
                       size="sm" 
                       variant="outline"
                       onClick={() => handleDeleteEvent(event.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
                 </div>
+          )}
               </CardContent>
             </Card>
-          ))}
-        </div>
-      )}
 
       {/* Event Form Modal */}
       {showEventForm && (
@@ -234,7 +516,13 @@ export function EventsView() {
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
               <EventForm
                 event={editingEvent}
-                onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
+                onSubmit={async (data) => {
+                  if (editingEvent) {
+                    await handleUpdateEvent(data as UpdateEventRequest);
+                  } else {
+                    await handleCreateEvent(data as CreateEventRequest);
+                  }
+                }}
                 onCancel={() => {
                   setShowEventForm(false);
                   setEditingEvent(null);

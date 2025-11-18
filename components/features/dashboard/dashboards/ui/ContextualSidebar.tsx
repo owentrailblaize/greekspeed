@@ -210,7 +210,6 @@ export function ContextualSidebar({ activeFeature, selectedRole }: ContextualSid
         {chapterId && (
           <>
             <TasksPanel chapterId={chapterId} />
-            <CompactCalendarCard />
           </>
         )}
 

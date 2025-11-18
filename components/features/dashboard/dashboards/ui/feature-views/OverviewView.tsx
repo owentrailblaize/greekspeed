@@ -17,6 +17,7 @@ import { useAnnouncements } from '@/lib/hooks/useAnnouncements';
 import { CreateAnnouncementData } from '@/types/announcements';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { ChapterDocumentManager } from '../ChapterDocumentManager';
 
 interface OverviewViewProps {
   selectedRole: string;
@@ -425,6 +426,14 @@ export function OverviewView({ selectedRole }: OverviewViewProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Chapter Documents Section */}
+      {chapterId && (
+        <ChapterDocumentManager 
+          chapterId={chapterId} 
+          className="w-full"
+        />
+      )}
     </div>
   );
 }
