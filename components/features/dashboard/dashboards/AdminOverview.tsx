@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { QuickActions, QuickAction } from './ui/QuickActions'; // Add QuickAction import
+import { QuickActions, QuickAction } from './ui/QuickActions';
 import { DuesSnapshot } from './ui/DuesSnapshot';
 import { ComplianceSnapshot } from './ui/ComplianceSnapshot';
 import { OperationsFeed } from './ui/OperationsFeed';
@@ -13,12 +13,12 @@ import { CompactCalendarCard } from './ui/CompactCalendarCard';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { SocialFeed, type SocialFeedInitialData } from './ui/SocialFeed';
 import { DuesStatusCard } from './ui/DuesStatusCard';
-import { AdminMobileBottomNavigation } from './ui/AdminMobileBottomNavigation';
+import { MobileBottomNavigation } from './ui/MobileBottomNavigation'; // Changed import
 import { MobileAdminTasksPage } from './ui/MobileAdminTasksPage';
 import { MobileDocsCompliancePage } from './ui/MobileDocsCompliancePage';
 import { MobileOperationsFeedPage } from './ui/MobileOperationsFeedPage';
 import { MobileCalendarPage } from './ui/MobileCalendarPage';
-import { Calendar, Users, MessageSquare, UserPlus, Lock } from 'lucide-react';
+import { Calendar, Users, MessageSquare, UserPlus, Home, Wrench, CheckSquare, FileText, Activity, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EventForm } from '@/components/ui/EventForm';
 import { useRouter } from 'next/navigation';
@@ -121,16 +121,16 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
     },
   ];
 
+  // Remove the manual tab configuration - MobileBottomNavigation will auto-detect role
+
   const renderMobileContent = () => {
     switch (activeMobileTab) {
       case 'home':
         return (
           <div className="space-y-4">
-            {/* Dues Status - At the top for quick access */}
             <div className="w-full">
               <DuesStatusCard />
             </div>
-            {/* Primary Feature: Social Feed */}
             <div className="w-full">
               <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
             </div>
@@ -199,10 +199,10 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <AdminMobileBottomNavigation 
+      {/* Mobile Bottom Navigation - Auto-configures based on admin role */}
+      <MobileBottomNavigation 
         activeTab={activeMobileTab} 
-        onTabChange={setActiveMobileTab} 
+        onTabChange={setActiveMobileTab}
       />
 
       {/* Quick Actions Floating Action Button - Only on Home Page */}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { SocialFeed, type SocialFeedInitialData } from './ui/SocialFeed';
 import { DuesStatusCard } from './ui/DuesStatusCard';
 import { MyTasksCard } from './ui/MyTasksCard';
@@ -29,6 +29,7 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
   const chapterId = profile?.chapter_id ?? fallbackChapterId ?? null;
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>('home');
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const feedData = useMemo(() => {
     if (!initialFeed) return undefined;
@@ -36,34 +37,21 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
     return initialFeed.chapterId === chapterId ? initialFeed : undefined;
   }, [chapterId, initialFeed]);
 
-  // Handle tool query param from Tools menu
+  // Handle tool query param from Tools menu - Updated for new options
   useEffect(() => {
     const tool = searchParams.get('tool');
-    if (tool === 'tasks') {
-      setActiveMobileTab('tasks');
-    } else if (tool === 'docs') {
-      // Docs doesn't have a direct tab, we'll handle it in renderMobileContent
-      setActiveMobileTab('tasks'); // Temporary, will be handled by renderMobileContent
-    } else if (tool === 'ops') {
-      // Ops doesn't have a direct tab, we'll handle it in renderMobileContent
-      setActiveMobileTab('tasks'); // Temporary, will be handled by renderMobileContent
+    if (tool === 'dues') {
+      router.push('/dashboard/dues');
+    } else if (tool === 'announcements') {
+      setActiveMobileTab('announcements');
+    } else if (tool === 'calendar') {
+      setActiveMobileTab('calendar');
     } else if (!tool) {
-      // If no tool param, default to home
       setActiveMobileTab('home');
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
   
   const renderMobileContent = () => {
-    const tool = searchParams.get('tool');
-    
-    // Handle Tools sub-menu navigation
-    if (tool === 'docs') {
-      return <MobileDocsCompliancePage />;
-    }
-    if (tool === 'ops') {
-      return <MobileOperationsFeedPage />;
-    }
-
     // Handle regular tabs
     switch (activeMobileTab) {
       case 'home':
@@ -139,7 +127,7 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Mobile Bottom Navigation - Now auto-configures based on role */}
       <MobileBottomNavigation 
         activeTab={activeMobileTab} 
         onTabChange={handleTabChange}
