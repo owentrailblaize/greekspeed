@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, CheckCircle, Crown, TrendingUp, Settings, Clock, UserCheck, DollarSign, Calendar, BookOpen } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon, MessageSquare, UserPlus, Users as UsersIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, UserPlus, Users as UsersIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -25,9 +25,10 @@ import { CreateEventRequest, UpdateEventRequest } from '@/types/events';
 
 interface OverviewViewProps {
   selectedRole: string;
+  onFeatureChange?: (feature: 'members' | 'dues' | 'invitations' | 'events' | 'tasks' | 'overview') => void;
 }
 
-export function OverviewView({ selectedRole }: OverviewViewProps) {
+export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProps) {
   const { profile } = useProfile();
   const { session } = useAuth();
   const chapterId = profile?.chapter_id;
@@ -402,10 +403,10 @@ export function OverviewView({ selectedRole }: OverviewViewProps) {
         onClick: () => setShowEventForm(true),
       },
       {
-        id: 'send-message',
-        label: 'Send Message',
-        icon: MessageSquare,
-        onClick: () => router.push('/dashboard/messages'),
+        id: 'dues',
+        label: 'Dues',
+        icon: DollarSign,
+        onClick: () => onFeatureChange?.('dues'),
       },
     ];
 
@@ -414,7 +415,7 @@ export function OverviewView({ selectedRole }: OverviewViewProps) {
         id: 'manage-members',
         label: 'Members',
         icon: UsersIcon,
-        onClick: () => router.push('/dashboard/admin?feature=members'),
+        onClick: () => onFeatureChange?.('members'),
       });
     }
 
@@ -423,7 +424,7 @@ export function OverviewView({ selectedRole }: OverviewViewProps) {
         id: 'manage-invitations',
         label: 'Invitations',
         icon: UserPlus,
-        onClick: () => router.push('/dashboard/admin?feature=invitations'),
+        onClick: () => onFeatureChange?.('invitations'),
       });
     }
 

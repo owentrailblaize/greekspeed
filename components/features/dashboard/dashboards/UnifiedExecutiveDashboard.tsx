@@ -39,7 +39,7 @@ export function UnifiedExecutiveDashboard({
   const renderFeatureView = () => {
     switch (activeFeature) {
       case 'overview':
-        return <OverviewView selectedRole={selectedRole} />;
+        return <OverviewView selectedRole={selectedRole} onFeatureChange={setActiveFeature} />;
       case 'events':
         return <EventsView />;
       case 'tasks':
