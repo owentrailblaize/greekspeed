@@ -491,7 +491,7 @@ export function OverviewView({ selectedRole }: OverviewViewProps) {
               </div>
               
               <Button 
-                className="bg-purple-600 hover:bg-purple-700 w-full md:w-auto"
+                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 w-full md:w-auto transition-all duration-300"
                 onClick={handleSendAnnouncement}
                 disabled={isSubmitting || announcementsLoading}
               >
@@ -515,7 +515,7 @@ export function OverviewView({ selectedRole }: OverviewViewProps) {
                   <Button
                     key={action.id}
                     variant="outline"
-                    className="w-full justify-start text-sm whitespace-nowrap"
+                    className="w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-navy-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
                     onClick={action.onClick}
                   >
                     <Icon className="h-4 w-4 mr-2 flex-shrink-0" />

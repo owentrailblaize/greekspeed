@@ -567,7 +567,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
             <div className="mb-4">
               <Button 
                 onClick={handleUpload}
-                className="w-full bg-navy-600 hover:bg-navy-700"
+                className="w-full rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Upload New Document
@@ -752,7 +752,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
             <div className="mb-4">
               <Button 
                 onClick={handleUpload}
-                className="w-full bg-navy-600 hover:bg-navy-700"
+                className="w-full rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Upload New Document
