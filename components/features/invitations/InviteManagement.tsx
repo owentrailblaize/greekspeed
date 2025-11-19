@@ -300,7 +300,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
               </p>
               <Button
                 onClick={() => setShowCreateModal(true)}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Create Invitation
