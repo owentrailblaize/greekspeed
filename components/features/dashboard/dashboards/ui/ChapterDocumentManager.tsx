@@ -207,23 +207,6 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
     setShowUploadModal(true);
   };
 
-  const handleViewDocument = async (doc: ChapterDocument) => {
-    // Functionality is locked - show toast message
-    toast.info('Document viewing is currently locked. This feature will be available soon!');
-    
-    // TODO: Implement when signed URLs are working
-    // try {
-    //   if (doc.file_url) {
-    //     window.open(doc.file_url, '_blank');
-    //   } else {
-    //     toast.error('Document not accessible');
-    //   }
-    // } catch (error) {
-    //   console.error('Error viewing document:', error);
-    //   toast.error('Unable to open document. Please try again.');
-    // }
-  };
-
   const handleEditDocument = (doc: ChapterDocument) => {
     // Functionality is locked - show toast message
     toast.info('Document editing is currently locked. This feature will be available soon!');
@@ -718,17 +701,6 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
 
                       {/* Action Buttons */}
                       <div className="flex items-center gap-2 ml-4">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewDocument(doc)}
-                          title="Document viewing is locked - coming soon!"
-                          className="opacity-60 cursor-not-allowed"
-                          disabled
-                        >
-                          <Eye className="h-4 w-4" />
-                          <Lock className="h-3 w-3 ml-1 text-gray-400" />
-                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"

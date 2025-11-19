@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CompactCalendarCard } from '../CompactCalendarCard';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { createPortal } from 'react-dom';
 
 export function EventsView() {
   const { profile } = useProfile();
@@ -494,44 +495,27 @@ export function EventsView() {
             </Card>
 
       {/* Event Form Modal */}
-      {showEventForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-xl font-semibold">
-                {editingEvent ? 'Edit Event' : 'Create Event'}
-              </h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setShowEventForm(false);
-                  setEditingEvent(null);
-                }}
-              >
-                ×
-              </Button>
-            </div>
-            
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-              <EventForm
-                event={editingEvent}
-                onSubmit={async (data) => {
-                  if (editingEvent) {
-                    await handleUpdateEvent(data as UpdateEventRequest);
-                  } else {
-                    await handleCreateEvent(data as CreateEventRequest);
-                  }
-                }}
-                onCancel={() => {
-                  setShowEventForm(false);
-                  setEditingEvent(null);
-                }}
-                loading={false}
-              />
-            </div>
+      {showEventForm && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+          <div className="relative max-w-2xl w-full max-h-[90vh]">
+            <EventForm
+              event={editingEvent}
+              onSubmit={async (data) => {
+                if (editingEvent) {
+                  await handleUpdateEvent(data as UpdateEventRequest);
+                } else {
+                  await handleCreateEvent(data as CreateEventRequest);
+                }
+              }}
+              onCancel={() => {
+                setShowEventForm(false);
+                setEditingEvent(null);
+              }}
+              loading={false}
+            />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
