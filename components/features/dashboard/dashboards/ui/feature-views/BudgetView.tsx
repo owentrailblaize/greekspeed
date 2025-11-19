@@ -155,54 +155,54 @@ export function BudgetView() {
     <div className="space-y-6">
       {/* Summary Cards - Top Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        <Card>
+        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Budget Allocated</p>
-                <p className="text-xl md:text-2xl font-semibold text-gray-900">
+                <p className="text-sm font-medium text-navy-700">Total Budget Allocated</p>
+                <p className="text-xl md:text-2xl font-semibold text-navy-900">
                   ${budgetData.totalAllocated.toLocaleString()}
                 </p>
               </div>
-              <DollarSign className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
+              <DollarSign className="h-6 w-6 md:h-8 md:w-8 text-navy-500" />
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Events with Budgets</p>
-                <p className="text-xl md:text-2xl font-semibold text-blue-600">
+                <p className="text-sm font-medium text-navy-700">Events with Budgets</p>
+                <p className="text-xl md:text-2xl font-semibold text-navy-900">
                   {budgetData.eventsWithBudget.length}
                 </p>
               </div>
-              <Calendar className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
+              <Calendar className="h-6 w-6 md:h-8 md:w-8 text-navy-500" />
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Events</p>
-                <p className="text-xl md:text-2xl font-semibold text-gray-600">
+                <p className="text-sm font-medium text-navy-700">Total Events</p>
+                <p className="text-xl md:text-2xl font-semibold text-navy-900">
                   {events?.length || 0}
                 </p>
               </div>
-              <Users className="h-6 w-6 md:h-8 md:w-8 text-gray-600" />
+              <Users className="h-6 w-6 md:h-8 md:w-8 text-navy-500" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Budget Overview Card */}
-      <Card>
-        <CardHeader className="pb-2 md:pb-2">
-          <CardTitle className="flex items-center text-lg md:text-xl">
-            <DollarSign className="h-5 w-5 mr-2 text-green-600" />
+      <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+        <CardHeader className="pb-2 md:pb-2 border-b border-navy-100/30">
+          <CardTitle className="flex items-center text-lg md:text-xl text-navy-900">
+            <DollarSign className="h-5 w-5 mr-2 text-navy-600" />
             Budget Overview
           </CardTitle>
         </CardHeader>
@@ -235,8 +235,8 @@ export function BudgetView() {
       </Card>
 
       {/* All Events Budget Summary */}
-      <Card>
-        <CardHeader className="pb-2 md:pb-6">
+      <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+        <CardHeader className="pb-2 md:pb-6 border-b border-navy-100/30">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg md:text-xl">All Events Budget Summary</CardTitle>
             <div className="flex items-center space-x-4">

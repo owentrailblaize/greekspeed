@@ -224,32 +224,130 @@ export function OverviewView({ selectedRole }: OverviewViewProps) {
     switch (selectedRole) {
       case 'president':
         return [
-          { label: 'Total Members', value: memberCount ?? 0, icon: Users, color: 'from-purple-50 to-purple-100', borderColor: 'border-purple-200', textColor: 'text-purple-600' },
-          { label: 'Active Members', value: activeMemberCount ?? 0, icon: CheckCircle, color: 'from-green-50 to-green-100', borderColor: 'border-green-200', textColor: 'text-green-600' },
-          { label: 'Alumni', value: alumniCount ?? 0, icon: Crown, color: 'from-blue-50 to-blue-100', borderColor: 'border-blue-200', textColor: 'text-blue-600' },
-          { label: 'Membership Growth', value: `${membershipGrowth >= 0 ? '+' : ''}${membershipGrowth}%`, icon: TrendingUp, color: 'from-orange-50 to-orange-100', borderColor: 'border-orange-200', textColor: 'text-orange-600' },
+          { 
+            label: 'Total Members', 
+            value: memberCount ?? 0, 
+            icon: Users, 
+            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-navy-700',
+            iconColor: 'text-navy-500'
+          },
+          { 
+            label: 'Active Members', 
+            value: activeMemberCount ?? 0, 
+            icon: CheckCircle, 
+            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-navy-700',
+            iconColor: 'text-navy-500'
+          },
+          { 
+            label: 'Alumni', 
+            value: alumniCount ?? 0, 
+            icon: Crown, 
+            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-navy-700',
+            iconColor: 'text-navy-500'
+          },
+          { 
+            label: 'Membership Growth', 
+            value: `${membershipGrowth >= 0 ? '+' : ''}${membershipGrowth}%`, 
+            icon: TrendingUp, 
+            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-navy-700',
+            iconColor: 'text-navy-500'
+          },
         ];
       
       case 'vice-president':
         return [
-          { label: 'Total Tasks', value: totalTasks, icon: Settings, color: 'from-blue-50 to-blue-100', borderColor: 'border-blue-200', textColor: 'text-blue-600' },
-          { label: 'Completed', value: completedTasks, icon: CheckCircle, color: 'from-green-50 to-green-100', borderColor: 'border-green-200', textColor: 'text-green-600' },
-          { label: 'Pending', value: pendingTasks, icon: Clock, color: 'from-yellow-50 to-yellow-100', borderColor: 'border-yellow-200', textColor: 'text-yellow-600' },
-          { label: 'Compliance', value: `${compliance}%`, icon: UserCheck, color: 'from-purple-50 to-purple-100', borderColor: 'border-purple-200', textColor: 'text-purple-600' },
+          { 
+            label: 'Total Tasks', 
+            value: totalTasks, 
+            icon: Settings, 
+            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-navy-700',
+            iconColor: 'text-navy-500'
+          },
+          { 
+            label: 'Completed', 
+            value: completedTasks, 
+            icon: CheckCircle, 
+            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-navy-700',
+            iconColor: 'text-navy-500'
+          },
+          { 
+            label: 'Pending', 
+            value: pendingTasks, 
+            icon: Clock, 
+            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-navy-700',
+            iconColor: 'text-navy-500'
+          },
+          { 
+            label: 'Compliance', 
+            value: `${compliance}%`, 
+            icon: UserCheck, 
+            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-navy-700',
+            iconColor: 'text-navy-500'
+          },
         ];
       
       case 'social-chair':
         return [
-          { label: 'Event Budget', value: `$${eventBudget.toLocaleString()}`, icon: DollarSign, color: 'from-orange-50 to-orange-100', borderColor: 'border-orange-200', textColor: 'text-orange-600' },
-          { label: 'Upcoming Events', value: upcomingEvents, icon: Calendar, color: 'from-blue-50 to-blue-100', borderColor: 'border-blue-200', textColor: 'text-blue-600' },
-          { label: 'Total Attendees', value: totalAttendees, icon: Users, color: 'from-green-50 to-green-100', borderColor: 'border-green-200', textColor: 'text-green-600' },
-          { label: 'Vendor Contacts', value: vendorCount, icon: BookOpen, color: 'from-purple-50 to-purple-100', borderColor: 'border-purple-200', textColor: 'text-purple-600' },
+          { 
+            label: 'Event Budget', 
+            value: `$${eventBudget.toLocaleString()}`, 
+            icon: DollarSign, 
+            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-navy-700',
+            iconColor: 'text-navy-500'
+          },
+          { 
+            label: 'Upcoming Events', 
+            value: upcomingEvents, 
+            icon: Calendar, 
+            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-navy-700',
+            iconColor: 'text-navy-500'
+          },
+          { 
+            label: 'Total Attendees', 
+            value: totalAttendees, 
+            icon: Users, 
+            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-navy-700',
+            iconColor: 'text-navy-500'
+          },
+          { 
+            label: 'Vendor Contacts', 
+            value: vendorCount, 
+            icon: BookOpen, 
+            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-navy-700',
+            iconColor: 'text-navy-500'
+          },
         ];
       
       case 'treasurer':
         return [
-          { label: 'Total Members', value: memberCount ?? 0, icon: Users, color: 'from-green-50 to-green-100', borderColor: 'border-green-200', textColor: 'text-green-600' },
-          { label: 'Active Members', value: activeMemberCount ?? 0, icon: CheckCircle, color: 'from-blue-50 to-blue-100', borderColor: 'border-blue-200', textColor: 'text-blue-600' },
+          { 
+            label: 'Total Members', 
+            value: memberCount ?? 0, 
+            icon: Users, 
+            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-navy-700',
+            iconColor: 'text-navy-500'
+          },
+          { 
+            label: 'Active Members', 
+            value: activeMemberCount ?? 0, 
+            icon: CheckCircle, 
+            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-navy-700',
+            iconColor: 'text-navy-500'
+          },
         ];
       
       default:
@@ -304,16 +402,19 @@ export function OverviewView({ selectedRole }: OverviewViewProps) {
         {statsCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={index} className={`bg-gradient-to-br ${stat.color} ${stat.borderColor} border`}>
+            <Card 
+              key={index} 
+              className={`${stat.color} transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90`}
+            >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className={`${stat.textColor} text-sm font-medium mb-1`}>{stat.label}</p>
-                    <p className={`text-2xl font-semibold ${stat.textColor.replace('600', '900')}`}>
+                    <p className={`text-2xl font-semibold ${stat.textColor.replace('700', '900')}`}>
                       {stat.value}
                     </p>
                   </div>
-                  <Icon className={`h-8 w-8 ${stat.textColor}`} />
+                  <Icon className={`h-8 w-8 ${stat.iconColor}`} />
                 </div>
               </CardContent>
             </Card>
@@ -324,11 +425,11 @@ export function OverviewView({ selectedRole }: OverviewViewProps) {
       {/* Announcements and Quick Actions - Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 max-h-[500px]">
         {/* Announcements Card - Left side, 3/4 width */}
-        <Card className="w-full lg:col-span-3 flex flex-col max-h-[500px]">
-          <CardHeader className="pb-3 flex-shrink-0">
+        <Card className="w-full lg:col-span-3 flex flex-col max-h-[500px] bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+          <CardHeader className="pb-3 flex-shrink-0 border-b border-navy-100/30">
             <CardTitle className="flex items-center space-x-2">
-              <Megaphone className="h-5 w-5 text-purple-600" />
-              <span>Chapter Announcements</span>
+              <Megaphone className="h-5 w-5 text-navy-600" />
+              <span className="text-navy-900">Chapter Announcements</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 flex-1 overflow-y-auto">
@@ -402,9 +503,9 @@ export function OverviewView({ selectedRole }: OverviewViewProps) {
         </Card>
 
         {/* Quick Actions - Right side, 1/4 width */}
-        <Card className="w-full lg:col-span-1 flex flex-col max-h-[500px]">
-          <CardHeader className="pb-3 flex-shrink-0">
-            <CardTitle className="text-lg font-semibold text-gray-900">Quick Actions</CardTitle>
+        <Card className="w-full lg:col-span-1 flex flex-col max-h-[500px] bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+          <CardHeader className="pb-3 flex-shrink-0 border-b border-navy-100/30">
+            <CardTitle className="text-lg font-semibold text-navy-900">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="p-6 flex-1 overflow-y-auto">
             <div className="space-y-3">

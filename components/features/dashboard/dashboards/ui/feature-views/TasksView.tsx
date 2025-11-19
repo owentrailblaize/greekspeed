@@ -149,67 +149,67 @@ export function TasksView() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-600 text-sm font-medium mb-1">Total Tasks</p>
-                <p className="text-2xl font-semibold text-blue-900">
+                <p className="text-navy-700 text-sm font-medium mb-1">Total Tasks</p>
+                <p className="text-2xl font-semibold text-navy-900">
                   {loading ? '...' : taskStats.total}
                 </p>
               </div>
-              <Settings className="h-8 w-8 text-blue-600" />
+              <Settings className="h-8 w-8 text-navy-500" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-600 text-sm font-medium mb-1">Completed</p>
-                <p className="text-2xl font-semibold text-green-900">
+                <p className="text-navy-700 text-sm font-medium mb-1">Completed</p>
+                <p className="text-2xl font-semibold text-navy-900">
                   {loading ? '...' : taskStats.completed}
                 </p>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-600" />
+              <CheckCircle className="h-8 w-8 text-navy-500" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
+        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-yellow-600 text-sm font-medium mb-1">Pending</p>
-                <p className="text-2xl font-semibold text-yellow-900">
+                <p className="text-navy-700 text-sm font-medium mb-1">Pending</p>
+                <p className="text-2xl font-semibold text-navy-900">
                   {loading ? '...' : taskStats.pending}
                 </p>
               </div>
-              <Clock className="h-8 w-8 text-yellow-600" />
+              <Clock className="h-8 w-8 text-navy-500" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-600 text-sm font-medium mb-1">Compliance</p>
-                <p className="text-2xl font-semibold text-purple-900">
+                <p className="text-navy-700 text-sm font-medium mb-1">Compliance</p>
+                <p className="text-2xl font-semibold text-navy-900">
                   {loading ? '...' : `${taskStats.compliance}%`}
                 </p>
               </div>
-              <UserCheck className="h-8 w-8 text-purple-600" />
+              <UserCheck className="h-8 w-8 text-navy-500" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Task Completion Progress */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Task Completion Progress</CardTitle>
+      <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+        <CardHeader className="border-b border-navy-100/30">
+          <CardTitle className="text-navy-900">Task Completion Progress</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -243,11 +243,11 @@ export function TasksView() {
       </Card>
 
       {/* Member Task Tracking Table */}
-      <Card>
-        <CardHeader className="pb-2">
+      <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+        <CardHeader className="pb-2 border-b border-navy-100/30">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center">
-              <Settings className="h-5 w-5 mr-2 text-blue-600" />
+            <CardTitle className="flex items-center text-navy-900">
+              <Settings className="h-5 w-5 mr-2 text-navy-600" />
               Member Task Tracking
             </CardTitle>
             <div className="flex items-center space-x-4">

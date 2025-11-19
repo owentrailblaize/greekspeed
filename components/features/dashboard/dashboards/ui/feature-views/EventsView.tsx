@@ -202,44 +202,44 @@ export function EventsView() {
 
       {/* Dashboard Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-600 text-sm font-medium mb-1">Total Budget Allocated</p>
-                <p className="text-2xl font-semibold text-orange-900">
+                <p className="text-navy-700 text-sm font-medium mb-1">Total Budget Allocated</p>
+                <p className="text-2xl font-semibold text-navy-900">
                   ${budgetStats.totalBudgetAllocated.toLocaleString()}
                 </p>
               </div>
-              <DollarSign className="h-8 w-8 text-orange-600" />
+              <DollarSign className="h-8 w-8 text-navy-500" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-600 text-sm font-medium mb-1">Events with Budgets</p>
-                <p className="text-2xl font-semibold text-blue-900">
+                <p className="text-navy-700 text-sm font-medium mb-1">Events with Budgets</p>
+                <p className="text-2xl font-semibold text-navy-900">
                   {budgetStats.eventsWithBudget}
                 </p>
               </div>
-              <Calendar className="h-8 w-8 text-blue-600" />
+              <Calendar className="h-8 w-8 text-navy-500" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-600 text-sm font-medium mb-1">Total Events</p>
-                <p className="text-2xl font-semibold text-purple-900">
+                <p className="text-navy-700 text-sm font-medium mb-1">Total Events</p>
+                <p className="text-2xl font-semibold text-navy-900">
                   {budgetStats.totalEvents}
                 </p>
               </div>
-              <TrendingUp className="h-8 w-8 text-purple-600" />
+              <TrendingUp className="h-8 w-8 text-navy-500" />
             </div>
           </CardContent>
         </Card>
@@ -253,11 +253,11 @@ export function EventsView() {
         </div>
 
         {/* Budget Overview */}
-        <Card>
-          <CardHeader>
+        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+          <CardHeader className="border-b border-navy-100/30">
             <CardTitle className="flex items-center space-x-2">
-              <DollarSign className="h-5 w-5 text-green-600" />
-              <span>Budget Overview</span>
+              <DollarSign className="h-5 w-5 text-navy-600" />
+              <span className="text-navy-900">Budget Overview</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -267,7 +267,7 @@ export function EventsView() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Total Allocated</span>
-              <span className="font-semibold text-orange-600">${budgetStats.totalBudgetAllocated.toLocaleString()}</span>
+              <span className="font-semibold text-navy-600">${budgetStats.totalBudgetAllocated.toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Remaining</span>
@@ -285,8 +285,8 @@ export function EventsView() {
       </div>
 
       {/* All Events Table/List */}
-        <Card>
-        <CardHeader className="pb-2">
+        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+        <CardHeader className="pb-2 border-b border-navy-100/30">
           <div className="flex items-center justify-between">
             <CardTitle>All Events</CardTitle>
               <div className="flex items-center space-x-4">
