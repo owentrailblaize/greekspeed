@@ -28,6 +28,8 @@ import {
   X,
   Lock
 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { documentUploadService, DocumentUploadData } from '@/lib/services/documentUploadService';
 import { toast } from 'react-toastify';
 import { supabase } from '@/lib/supabase/client'; // Fixed import path
@@ -984,12 +986,12 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                       { value: 'alumni', label: 'Alumni' },
                       { value: 'chapter_all', label: 'Everyone in Chapter' }
                     ].map(option => (
-                      <label key={option.value} className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
+                      <div key={option.value} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`visibility-${option.value}`}
                           checked={uploadFormData.visibility.includes(option.value)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
+                          onCheckedChange={(checked) => {
+                            if (checked) {
                               setUploadFormData(prev => ({
                                 ...prev,
                                 visibility: [...prev.visibility, option.value]
@@ -1001,10 +1003,14 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                               }));
                             }
                           }}
-                          className="rounded border-gray-300 text-navy-600 focus:ring-navy-500"
                         />
-                        <span className="text-sm">{option.label}</span>
-                      </label>
+                        <Label 
+                          htmlFor={`visibility-${option.value}`} 
+                          className="text-sm cursor-pointer"
+                        >
+                          {option.label}
+                        </Label>
+                      </div>
                     ))}
                   </div>
                 </div>
