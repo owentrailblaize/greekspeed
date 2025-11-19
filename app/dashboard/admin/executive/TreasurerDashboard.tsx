@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { createPortal } from 'react-dom';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -1111,11 +1112,20 @@ export function TreasurerDashboard() {
               />
               <Label htmlFor="paymentPlans">Allow Payment Plans</Label>
             </div>
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowCreateCycle(false)}>
+            <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowCreateCycle(false)}
+                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+              >
                 Cancel
               </Button>
-              <Button onClick={handleCreateCycle} className="bg-green-600 hover:bg-green-700">
+              <Button
+                type="button"
+                onClick={handleCreateCycle}
+                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+              >
                 Create Cycle
               </Button>
             </div>
@@ -1124,248 +1134,347 @@ export function TreasurerDashboard() {
       </Dialog>
 
       {/* Assign Dues Dialog */}
-      <Dialog open={showAssignDues} onOpenChange={setShowAssignDues}>
-        <DialogContent className="bg-white border border-gray-200 shadow-lg">
-          <DialogHeader>
-            <DialogTitle>Assign Dues to Member</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="member">Select Member</Label>
-              <Select
-                value={newAssignment.memberId}
-                onValueChange={(value) => setNewAssignment({ ...newAssignment, memberId: value })}
-              >
-                <SelectItem value="">Choose a member</SelectItem>
-                {chapterMembers.map((member) => (
-                  <SelectItem key={member.id} value={member.id}>
-                    {member.full_name} ({member.email})
-                  </SelectItem>
-                ))}
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="amount">Dues Amount ($)</Label>
-              <Input
-                id="amount"
-                type="number"
-                value={newAssignment.amount}
-                onChange={(e) => setNewAssignment({ ...newAssignment, amount: parseFloat(e.target.value) || 0 })}
-                placeholder="150.00"
-              />
-            </div>
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={newAssignment.status}
-                onValueChange={(value: any) => setNewAssignment({ ...newAssignment, status: value })}
-              >
-                <SelectItem value="required">Required</SelectItem>
-                <SelectItem value="exempt">Exempt</SelectItem>
-                <SelectItem value="reduced">Reduced</SelectItem>
-                <SelectItem value="waived">Waived</SelectItem>
-                <SelectItem value="paid">Paid</SelectItem>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                value={newAssignment.notes}
-                onChange={(e) => setNewAssignment({ ...newAssignment, notes: e.target.value })}
-                placeholder="Optional notes about this assignment"
-              />
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowAssignDues(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleAssignDues} className="bg-blue-600 hover:bg-blue-700">
-                Assign Dues
-              </Button>
+      {showAssignDues && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999]">
+          {/* Backdrop - click to close */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+            onClick={() => setShowAssignDues(false)}
+          />
+          
+          {/* Modal container - centers content */}
+          <div className="relative flex items-center justify-center min-h-screen p-4">
+            {/* Modal - styled like TaskModal */}
+            <div 
+              className="relative transform rounded-lg bg-white text-left shadow-xl transition-all w-full max-w-[95vw] sm:max-w-lg flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header - Fixed, styled like TaskModal */}
+              <div className="rounded-t-lg bg-white px-4 pt-4 pb-3 sm:px-6 sm:pt-4 sm:pb-3 flex-shrink-0 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium leading-6 text-gray-900">
+                    Assign Dues to Member
+                  </h3>
+                  <button
+                    onClick={() => setShowAssignDues(false)}
+                    className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 p-1"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Body - Scrollable */}
+              <div className="bg-white px-4 pt-3 pb-4 sm:px-6 sm:pt-4 sm:pb-4 flex-1 overflow-y-auto">
+                <div className="space-y-4 sm:space-y-3">
+                  <div>
+                    <Label htmlFor="member" className="block text-sm font-medium text-gray-700 mb-1">
+                      Select Member
+                    </Label>
+                    <Select
+                      value={newAssignment.memberId}
+                      onValueChange={(value) => setNewAssignment({ ...newAssignment, memberId: value })}
+                    >
+                      <SelectItem value="">Choose a member</SelectItem>
+                      {chapterMembers.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.full_name} ({member.email})
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
+                      Dues Amount ($)
+                    </Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      value={newAssignment.amount}
+                      onChange={(e) => setNewAssignment({ ...newAssignment, amount: parseFloat(e.target.value) || 0 })}
+                      placeholder="150.00"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 text-sm h-9"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </Label>
+                    <Select
+                      value={newAssignment.status}
+                      onValueChange={(value: any) => setNewAssignment({ ...newAssignment, status: value })}
+                    >
+                      <SelectItem value="required">Required</SelectItem>
+                      <SelectItem value="exempt">Exempt</SelectItem>
+                      <SelectItem value="reduced">Reduced</SelectItem>
+                      <SelectItem value="waived">Waived</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+                      Notes
+                    </Label>
+                    <Textarea
+                      id="notes"
+                      value={newAssignment.notes}
+                      onChange={(e) => setNewAssignment({ ...newAssignment, notes: e.target.value })}
+                      placeholder="Optional notes about this assignment"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer - Fixed, styled like TaskModal */}
+              <div className="rounded-b-lg bg-gray-50 px-4 py-2 sm:px-6 sm:py-3 flex-shrink-0 border-t border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowAssignDues(false)}
+                    className="rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleAssignDues}
+                    className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+                  >
+                    Assign Dues
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>,
+        document.body
+      )}
 
       {/* Bulk Assign Dues Dialog */}
-      <Dialog open={showBulkAssignDues} onOpenChange={setShowBulkAssignDues}>
-        <DialogContent className="w-auto max-w-7xl h-[90vh] bg-white border border-gray-200 shadow-lg p-0 flex flex-col">
-          {/* DialogHeader with DialogTitle for accessibility */}
-          <DialogHeader className="flex items-left justify-between p-4 border-b border-gray-200 flex-shrink-0">
-            <DialogTitle className="text-2xl font-bold text-navy-900">Assign Dues to Members</DialogTitle>
-          </DialogHeader>
-
-          {/* Scrollable Content Area */}
-          <div className="flex-1 overflow-y-auto p-4" style={{ minHeight: 0 }}>
-            <div className="space-y-2">
-              {/* Select All Header */}
-              <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <Checkbox
-                  id="selectAll"
-                  checked={bulkAssignment.selectedMembers.length === chapterMembers.length}
-                  onCheckedChange={handleSelectAllMembers}
-                />
-                <Label htmlFor="selectAll" className="font-medium">
-                  Select All Members ({chapterMembers.length})
-                </Label>
+      {showBulkAssignDues && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999]">
+          {/* Backdrop - click to close */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+            onClick={() => setShowBulkAssignDues(false)}
+          />
+          
+          {/* Modal container - centers content */}
+          <div className="relative flex items-center justify-center min-h-screen p-4">
+            {/* Modal - styled like TaskModal */}
+            <div 
+              className="relative transform rounded-lg bg-white text-left shadow-xl transition-all w-full max-w-[95vw] sm:max-w-4xl max-h-[90vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header - Fixed, styled like TaskModal */}
+              <div className="rounded-t-lg bg-white px-4 pt-4 pb-3 sm:px-6 sm:pt-4 sm:pb-3 flex-shrink-0 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium leading-6 text-gray-900">
+                    Assign Dues to Members
+                  </h3>
+                  <button
+                    onClick={() => setShowBulkAssignDues(false)}
+                    className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 p-1"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
-              
-              {/* Members Table */}
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50 border-b border-gray-200 hover:bg-gray-50">
-                      <TableHead className="bg-gray-50 border-r border-gray-200 w-12">
-                        <div className="flex justify-center items-center h-full p-2">
-                          <Checkbox
-                            checked={bulkAssignment.selectedMembers.length === chapterMembers.length}
-                            onCheckedChange={handleSelectAllMembers}
-                            indeterminate={bulkAssignment.selectedMembers.length > 0 && bulkAssignment.selectedMembers.length < chapterMembers.length}
-                            className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
-                          />
-                        </div>
-                      </TableHead>
-                      <TableHead className="bg-gray-50 border-r border-gray-200">
-                        <span className="font-medium text-gray-900">NAME</span>
-                      </TableHead>
-                      <TableHead className="bg-gray-50">
-                        <span className="font-medium text-gray-900">EMAIL</span>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {chapterMembers.map((member) => (
-                      <TableRow 
-                        key={member.id} 
-                        className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
-                          bulkAssignment.selectedMembers.includes(member.id) ? 'bg-navy-50 border-navy-200' : ''
-                        }`}
+
+              {/* Scrollable Content Area - flex-1 for remaining space */}
+              <div className="bg-white px-4 pt-3 pb-4 sm:px-6 sm:pt-4 sm:pb-4 flex-1 overflow-y-auto">
+                <div className="space-y-4 sm:space-y-3">
+                  {/* Select All Header */}
+                  <div className="flex items-center space-x-2 p-3 bg-white rounded-lg border border-gray-200">
+                    <Checkbox
+                      id="selectAll"
+                      checked={bulkAssignment.selectedMembers.length === chapterMembers.length}
+                      onCheckedChange={handleSelectAllMembers}
+                    />
+                    <Label htmlFor="selectAll" className="font-medium">
+                      Select All Members ({chapterMembers.length})
+                    </Label>
+                  </div>
+                  
+                  {/* Members Table - with internal scrolling */}
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="max-h-[400px] overflow-y-auto">
+                      <Table>
+                        <TableHeader className="sticky top-0 z-10 bg-white">
+                          <TableRow className="bg-white border-b border-gray-200 hover:bg-white">
+                            <TableHead className="bg-white border-r border-gray-200 w-12 sticky top-0">
+                              <div className="flex justify-center items-center h-full p-2">
+                                <Checkbox
+                                  checked={bulkAssignment.selectedMembers.length === chapterMembers.length}
+                                  onCheckedChange={handleSelectAllMembers}
+                                  indeterminate={bulkAssignment.selectedMembers.length > 0 && bulkAssignment.selectedMembers.length < chapterMembers.length}
+                                  className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
+                                />
+                              </div>
+                            </TableHead>
+                            <TableHead className="bg-white border-r border-gray-200 sticky top-0">
+                              <span className="font-medium text-gray-900">NAME</span>
+                            </TableHead>
+                            <TableHead className="bg-white sticky top-0">
+                              <span className="font-medium text-gray-900">EMAIL</span>
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {chapterMembers.map((member) => (
+                            <TableRow 
+                              key={member.id} 
+                              className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
+                                bulkAssignment.selectedMembers.includes(member.id) ? 'bg-navy-50 border-navy-200' : ''
+                              }`}
+                            >
+                              {/* Checkbox Column */}
+                              <TableCell className="bg-white border-r border-gray-200 w-12">
+                                <div className="flex justify-center items-center h-full p-2">
+                                  <Checkbox
+                                    checked={bulkAssignment.selectedMembers.includes(member.id)}
+                                    onCheckedChange={(checked) => handleMemberSelection(member.id, checked as boolean)}
+                                    className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
+                                  />
+                                </div>
+                              </TableCell>
+                              
+                              {/* Name Column */}
+                              <TableCell className="bg-white border-r border-gray-200">
+                                <div className="flex items-start space-x-3">
+                                  {/* Avatar */}
+                                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center flex-shrink-0">
+                                    <span className="text-white text-sm font-medium">
+                                      {member.full_name?.[0] || ''}{member.full_name?.split(' ')[1]?.[0] || ''}
+                                    </span>
+                                  </div>
+                                  
+                                  {/* Name */}
+                                  <div className="flex-1 min-w-0">
+                                    <span className="font-medium text-gray-900 break-words">
+                                      {member.full_name}
+                                    </span>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              
+                              {/* Email Column */}
+                              <TableCell className="bg-white">
+                                <span className="text-gray-900 text-sm">{member.email}</span>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+
+                  {/* Assignment Details */}
+                  <div className="border-t pt-4 space-y-4">
+                    {/* Add Cycle Selection */}
+                    <div>
+                      <Label htmlFor="bulkCycle" className="block text-sm font-medium text-gray-700 mb-1">
+                        Dues Cycle
+                      </Label>
+                      <Select 
+                        value={bulkAssignment.cycleId || ''} 
+                        onValueChange={(value: string) => setBulkAssignment({ ...bulkAssignment, cycleId: value })}
+                        placeholder="Select a dues cycle"
                       >
-                        {/* Checkbox Column */}
-                        <TableCell className="bg-white border-r border-gray-200 w-12">
-                          <div className="flex justify-center items-center h-full p-2">
-                            <Checkbox
-                              checked={bulkAssignment.selectedMembers.includes(member.id)}
-                              onCheckedChange={(checked) => handleMemberSelection(member.id, checked as boolean)}
-                              className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
-                            />
-                          </div>
-                        </TableCell>
-                        
-                        {/* Name Column */}
-                        <TableCell className="bg-white border-r border-gray-200">
-                          <div className="flex items-start space-x-3">
-                            {/* Avatar */}
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center flex-shrink-0">
-                              <span className="text-white text-sm font-medium">
-                                {member.full_name?.[0] || ''}{member.full_name?.split(' ')[1]?.[0] || ''}
-                              </span>
-                            </div>
-                            
-                            {/* Name */}
-                            <div className="flex-1 min-w-0">
-                              <span className="font-medium text-gray-900 break-words">
-                                {member.full_name}
-                              </span>
-                            </div>
-                          </div>
-                        </TableCell>
-                        
-                        {/* Email Column */}
-                        <TableCell className="bg-white">
-                          <span className="text-gray-900 text-sm">{member.email}</span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                        <SelectItem value="">Select a dues cycle</SelectItem>
+                        {cycles.map((cycle) => (
+                          <SelectItem key={cycle.id} value={cycle.id}>
+                            {cycle.name} - ${cycle.base_amount} (Due: {new Date(cycle.due_date).toLocaleDateString()})
+                          </SelectItem>
+                        ))}
+                      </Select>
+                      {cycles.length === 0 && (
+                        <p className="text-sm text-red-600 mt-1">
+                          No dues cycles available. Please create a cycle first.
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="bulkAmount" className="block text-sm font-medium text-gray-700 mb-1">
+                        Dues Amount ($)
+                      </Label>
+                      <Input
+                        id="bulkAmount"
+                        type="number"
+                        step="5"
+                        min="0"
+                        value={bulkAssignment.amount}
+                        onChange={(e) => setBulkAssignment({ ...bulkAssignment, amount: parseFloat(e.target.value) || 0 })}
+                        placeholder="150.00"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 text-sm h-9"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="bulkStatus" className="block text-sm font-medium text-gray-700 mb-1">
+                        Status
+                      </Label>
+                      <Select 
+                        value={bulkAssignment.status} 
+                        onValueChange={(value: string) => setBulkAssignment({ ...bulkAssignment, status: value as 'required' | 'exempt' | 'reduced' | 'waived' })}
+                        placeholder="Select status"
+                      >
+                        <SelectItem value="">Select status</SelectItem>
+                        <SelectItem value="required">Required</SelectItem>
+                        <SelectItem value="exempt">Exempt</SelectItem>
+                        <SelectItem value="reduced">Reduced</SelectItem>
+                        <SelectItem value="waived">Waived</SelectItem>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="bulkNotes" className="block text-sm font-medium text-gray-700 mb-1">
+                        Notes
+                      </Label>
+                      <Textarea
+                        id="bulkNotes"
+                        value={bulkAssignment.notes}
+                        onChange={(e) => setBulkAssignment({ ...bulkAssignment, notes: e.target.value })}
+                        placeholder="Optional notes about this assignment"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Assignment Details */}
-              <div className="border-t pt-4 space-y-4">
-                {/* Add Cycle Selection */}
-                <div>
-                  <Label htmlFor="bulkCycle">Dues Cycle</Label>
-                  <Select 
-                    value={bulkAssignment.cycleId || ''} 
-                    onValueChange={(value: string) => setBulkAssignment({ ...bulkAssignment, cycleId: value })}
-                    placeholder="Select a dues cycle"
-                  >
-                    <SelectItem value="">Select a dues cycle</SelectItem>
-                    {cycles.map((cycle) => (
-                      <SelectItem key={cycle.id} value={cycle.id}>
-                        {cycle.name} - ${cycle.base_amount} (Due: {new Date(cycle.due_date).toLocaleDateString()})
-                      </SelectItem>
-                    ))}
-                  </Select>
-                  {cycles.length === 0 && (
-                    <p className="text-sm text-red-600 mt-1">
-                      No dues cycles available. Please create a cycle first.
-                    </p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label htmlFor="bulkAmount">Dues Amount ($)</Label>
-                  <Input
-                    id="bulkAmount"
-                    type="number"
-                    step="5"
-                    min="0"
-                    value={bulkAssignment.amount}
-                    onChange={(e) => setBulkAssignment({ ...bulkAssignment, amount: parseFloat(e.target.value) || 0 })}
-                    placeholder="150.00"
-                    className="w-full"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="bulkStatus">Status</Label>
-                  <Select 
-                    value={bulkAssignment.status} 
-                    onValueChange={(value: string) => setBulkAssignment({ ...bulkAssignment, status: value as 'required' | 'exempt' | 'reduced' | 'waived' })}
-                    placeholder="Select status"
-                  >
-                    <SelectItem value="">Select status</SelectItem>
-                    <SelectItem value="required">Required</SelectItem>
-                    <SelectItem value="exempt">Exempt</SelectItem>
-                    <SelectItem value="reduced">Reduced</SelectItem>
-                    <SelectItem value="waived">Waived</SelectItem>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="bulkNotes">Notes</Label>
-                  <Textarea
-                    id="bulkNotes"
-                    value={bulkAssignment.notes}
-                    onChange={(e) => setBulkAssignment({ ...bulkAssignment, notes: e.target.value })}
-                    placeholder="Optional notes about this assignment"
-                  />
+              {/* Persistent Footer - styled like TaskModal */}
+              <div className="rounded-b-lg bg-gray-50 px-4 py-2 sm:px-6 sm:py-3 flex-shrink-0 border-t border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                  <p className="text-sm text-gray-600">
+                    Selected: {bulkAssignment.selectedMembers.length} members
+                  </p>
+                  <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowBulkAssignDues(false)}
+                      className="rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleBulkAssignDues}
+                      disabled={bulkAssignment.selectedMembers.length === 0 || !bulkAssignment.cycleId}
+                      className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Assign Dues to {bulkAssignment.selectedMembers.length} Members
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Persistent Footer */}
-          <div className="flex justify-between items-center p-6 border-t border-gray-200 flex-shrink-0">
-            <p className="text-sm text-gray-600">
-              Selected: {bulkAssignment.selectedMembers.length} members
-            </p>
-            <div className="flex space-x-2">
-              <Button variant="outline" onClick={() => setShowBulkAssignDues(false)}>
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleBulkAssignDues} 
-                className="bg-purple-600 hover:bg-purple-700"
-                disabled={bulkAssignment.selectedMembers.length === 0 || !bulkAssignment.cycleId}
-              >
-                Assign Dues to {bulkAssignment.selectedMembers.length} Members
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>,
+      document.body
+      )}
 
       {/* Edit Assignment Dialog */}
       <Dialog open={showEditAssignment} onOpenChange={setShowEditAssignment}>
@@ -1418,11 +1527,20 @@ export function TreasurerDashboard() {
                   })}
                 />
               </div>
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setShowEditAssignment(false)}>
+              <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowEditAssignment(false)}
+                  className="rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+                >
                   Cancel
                 </Button>
-                <Button onClick={handleEditAssignment} className="bg-green-600 hover:bg-green-700">
+                <Button
+                  type="button"
+                  onClick={handleEditAssignment}
+                  className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+                >
                   Update Assignment
                 </Button>
               </div>
