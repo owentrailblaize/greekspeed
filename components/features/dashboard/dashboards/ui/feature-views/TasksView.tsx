@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Settings, CheckCircle, Clock, UserCheck, Bell, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Settings, CheckCircle, Clock, UserCheck, Bell, ChevronLeft, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { supabase } from '@/lib/supabase/client';
 import { Progress } from '@/components/ui/progress';
@@ -17,6 +17,8 @@ export function TasksView() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortColumn, setSortColumn] = useState<'deadline' | 'status' | 'priority' | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const tasksPerPage = 10;
 
   const loadTasks = useCallback(async () => {
@@ -89,11 +91,63 @@ export function TasksView() {
     };
   }, [tasks]);
 
+  // Sort tasks based on selected column and direction
+  const sortedTasks = useMemo(() => {
+    const tasksCopy = [...tasks];
+    
+    if (!sortColumn) {
+      // Default: sort by deadline (earliest first)
+      return tasksCopy.sort((a, b) => {
+        const dateA = a.due_date ? new Date(a.due_date).getTime() : Infinity;
+        const dateB = b.due_date ? new Date(b.due_date).getTime() : Infinity;
+        return dateA - dateB;
+      });
+    }
+
+    return tasksCopy.sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortColumn) {
+        case 'deadline':
+          const dateA = a.due_date ? new Date(a.due_date).getTime() : Infinity;
+          const dateB = b.due_date ? new Date(b.due_date).getTime() : Infinity;
+          comparison = dateA - dateB;
+          break;
+        case 'status':
+          // Sort by status order: completed, pending, overdue
+          const statusOrder: Record<string, number> = {
+            'completed': 1,
+            'pending': 2,
+            'in_progress': 2,
+            'overdue': 3
+          };
+          const statusA = statusOrder[a.status] || 99;
+          const statusB = statusOrder[b.status] || 99;
+          comparison = statusA - statusB;
+          break;
+        case 'priority':
+          // Sort by priority order: urgent, high, medium, low
+          const priorityOrder: Record<string, number> = {
+            'urgent': 1,
+            'high': 2,
+            'medium': 3,
+            'low': 4
+          };
+          const priorityA = priorityOrder[a.priority] || 99;
+          const priorityB = priorityOrder[b.priority] || 99;
+          comparison = priorityA - priorityB;
+          break;
+      }
+
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [tasks, sortColumn, sortDirection]);
+
   // Calculate pagination
-  const totalPages = Math.ceil(tasks.length / tasksPerPage);
+  const totalPages = Math.ceil(sortedTasks.length / tasksPerPage);
   const startIndex = (currentPage - 1) * tasksPerPage;
   const endIndex = startIndex + tasksPerPage;
-  const paginatedTasks = tasks.slice(startIndex, endIndex);
+  const paginatedTasks = sortedTasks.slice(startIndex, endIndex);
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
@@ -107,10 +161,22 @@ export function TasksView() {
     }
   };
 
-  // Reset to page 1 when tasks change
+  // Reset to page 1 when tasks change or sort changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [tasks.length]);
+  }, [tasks.length, sortColumn, sortDirection]);
+
+  const handleSort = (column: 'deadline' | 'status' | 'priority') => {
+    if (sortColumn === column) {
+      // Toggle direction if clicking the same column
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new column and default to ascending
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+    setCurrentPage(1); // Reset to first page when sorting changes
+  };
 
   const handleSendReminder = async (taskId: string) => {
     // TODO: Implement reminder functionality
@@ -252,7 +318,7 @@ export function TasksView() {
             </CardTitle>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">
-                {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
+                {sortedTasks.length} {sortedTasks.length === 1 ? 'task' : 'tasks'}
               </span>
               {totalPages > 1 && (
                 <div className="flex items-center space-x-2">
@@ -319,9 +385,39 @@ export function TasksView() {
                   <TableRow>
                     <TableHead>Member</TableHead>
                     <TableHead>Task</TableHead>
-                    <TableHead>Deadline</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Priority</TableHead>
+                    <TableHead>
+                      <button
+                        onClick={() => handleSort('deadline')}
+                        className="flex items-center space-x-1 hover:text-gray-900 transition-colors"
+                      >
+                        <span>Deadline</span>
+                        {sortColumn === 'deadline' && (
+                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        )}
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button
+                        onClick={() => handleSort('status')}
+                        className="flex items-center space-x-1 hover:text-gray-900 transition-colors"
+                      >
+                        <span>Status</span>
+                        {sortColumn === 'status' && (
+                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        )}
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button
+                        onClick={() => handleSort('priority')}
+                        className="flex items-center space-x-1 hover:text-gray-900 transition-colors"
+                      >
+                        <span>Priority</span>
+                        {sortColumn === 'priority' && (
+                          sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                        )}
+                      </button>
+                    </TableHead>
                     <TableHead className="text-right">Action</TableHead>
                   </TableRow>
                 </TableHeader>

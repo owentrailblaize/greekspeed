@@ -361,14 +361,14 @@ export function EventForm({ event, onSubmit, onCancel, loading = false }: EventF
             variant="outline"
             onClick={onCancel}
             disabled={loading}
-            className="h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+            className="rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={loading}
-            className="bg-orange-600 hover:bg-orange-700 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+            className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
             onClick={handleSubmit}
           >
             {loading ? 'Saving...' : (event ? 'Update Event' : 'Create Event')}

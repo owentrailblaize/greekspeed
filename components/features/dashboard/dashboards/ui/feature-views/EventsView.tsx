@@ -194,7 +194,7 @@ export function EventsView() {
             setEditingEvent(null);
             setShowEventForm(true);
           }}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
         >
           <Plus className="h-4 w-4 mr-2" />
           Create Event
