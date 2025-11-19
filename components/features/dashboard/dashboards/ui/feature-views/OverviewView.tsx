@@ -18,6 +18,10 @@ import { CreateAnnouncementData } from '@/types/announcements';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { ChapterDocumentManager } from '../ChapterDocumentManager';
+import { createPortal } from 'react-dom';
+import { EventForm } from '@/components/ui/EventForm';
+import { useEvents } from '@/lib/hooks/useEvents';
+import { CreateEventRequest, UpdateEventRequest } from '@/types/events';
 
 interface OverviewViewProps {
   selectedRole: string;
@@ -52,6 +56,16 @@ export function OverviewView({ selectedRole }: OverviewViewProps) {
   const [emailRecipientCount, setEmailRecipientCount] = useState<number | null>(null);
   const [smsRecipientCount, setSmsRecipientCount] = useState<number | null>(null);
   const [loadingRecipients, setLoadingRecipients] = useState(false);
+
+  // Event form state
+  const [showEventForm, setShowEventForm] = useState(false);
+  const [isSubmittingEvent, setIsSubmittingEvent] = useState(false);
+
+  // Events hook for creating events
+  const { createEvent } = useEvents({ 
+    chapterId: chapterId || '', 
+    scope: 'all' 
+  });
 
   useEffect(() => {
     if (chapterId) {
@@ -123,6 +137,30 @@ export function OverviewView({ selectedRole }: OverviewViewProps) {
       console.error('Error sending announcement:', error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleCreateEvent = async (eventData: CreateEventRequest | UpdateEventRequest) => {
+    if (!chapterId) {
+      toast.error('Chapter ID is required');
+      return;
+    }
+
+    setIsSubmittingEvent(true);
+    try {
+      await createEvent({
+        ...eventData,
+        created_by: profile?.id || 'system',
+        updated_by: profile?.id || 'system'
+      } as CreateEventRequest);
+      
+      setShowEventForm(false);
+      toast.success('Event created successfully!');
+    } catch (error) {
+      toast.error('Failed to create event');
+      console.error('Error creating event:', error);
+    } finally {
+      setIsSubmittingEvent(false);
     }
   };
 
@@ -361,7 +399,7 @@ export function OverviewView({ selectedRole }: OverviewViewProps) {
         id: 'create-event',
         label: 'Create Event',
         icon: CalendarIcon,
-        onClick: () => router.push('/dashboard/admin?feature=events'),
+        onClick: () => setShowEventForm(true),
       },
       {
         id: 'send-message',
@@ -534,6 +572,21 @@ export function OverviewView({ selectedRole }: OverviewViewProps) {
           chapterId={chapterId} 
           className="w-full"
         />
+      )}
+
+      {/* Event Form Modal */}
+      {showEventForm && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+          <div className="relative max-w-2xl w-full max-h-[90vh]">
+            <EventForm
+              event={null}
+              onSubmit={handleCreateEvent}
+              onCancel={() => setShowEventForm(false)}
+              loading={isSubmittingEvent}
+            />
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
