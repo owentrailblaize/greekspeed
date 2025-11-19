@@ -4,7 +4,6 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { DashboardSidebar } from './ui/DashboardSidebar';
-import { ContextualSidebar } from './ui/ContextualSidebar';
 import { OverviewView } from './ui/feature-views/OverviewView';
 import { EventsView } from './ui/feature-views/EventsView';
 import { TasksView } from './ui/feature-views/TasksView';
@@ -61,7 +60,7 @@ export function UnifiedExecutiveDashboard({
   };
 
   return (
-    <div className="flex h-[calc(100vh-80px)] bg-gray-50">
+    <div className="flex h-full bg-gray-50 overflow-hidden">
       {/* Left Sidebar */}
       <DashboardSidebar
         selectedRole={selectedRole}
@@ -86,12 +85,6 @@ export function UnifiedExecutiveDashboard({
           </AnimatePresence>
         </div>
       </div>
-
-      {/* Right Sidebar */}
-      <ContextualSidebar
-        activeFeature={activeFeature}
-        selectedRole={selectedRole}
-      />
     </div>
   );
 }

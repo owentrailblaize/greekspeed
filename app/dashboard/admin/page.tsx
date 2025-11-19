@@ -9,12 +9,10 @@ function ExecAdminPage() {
   const [selectedRole, setSelectedRole] = useState("president");
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <UnifiedExecutiveDashboard 
-        selectedRole={selectedRole}
-        onRoleChange={setSelectedRole}
-      />
-    </div>
+    <UnifiedExecutiveDashboard 
+      selectedRole={selectedRole}
+      onRoleChange={setSelectedRole}
+    />
   );
 }
 
@@ -26,7 +24,7 @@ export default function AdminPage() {
   if (!hasAccess) return <div>Access denied. Admin access required.</div>;
 
   return (
-    <div className="h-screen overflow-hidden">
+    <div className="h-[calc(100vh-80px)] overflow-hidden">
       <ExecAdminPage />
     </div>
   );
