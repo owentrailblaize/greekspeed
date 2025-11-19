@@ -487,7 +487,7 @@ export function TreasurerDashboard() {
       label: 'Bulk Assign Dues',
       icon: Users,
       onClick: () => setShowBulkAssignDues(true),
-      className: 'w-full justify-start text-sm whitespace-nowrap',
+      className: 'w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-navy-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300',
       variant: 'outline',
     },
     {
@@ -495,7 +495,7 @@ export function TreasurerDashboard() {
       label: 'Assign Dues',
       icon: UserPlus,
       onClick: () => setShowAssignDues(true),
-      className: 'w-full justify-start text-sm whitespace-nowrap',
+      className: 'w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-navy-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300',
       variant: 'outline',
     },
     {
@@ -503,7 +503,7 @@ export function TreasurerDashboard() {
       label: 'Create Dues Cycle',
       icon: Plus,
       onClick: () => setShowCreateCycle(true),
-      className: 'w-full justify-start text-sm whitespace-nowrap',
+      className: 'w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-navy-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300',
       variant: 'outline',
     },
     {
@@ -511,7 +511,7 @@ export function TreasurerDashboard() {
       label: 'Export Financial Report',
       icon: Download,
       onClick: () => exportDuesToCSV(assignments, `financial-report-${new Date().toISOString().split('T')[0]}.csv`),
-      className: 'w-full justify-start text-sm whitespace-nowrap',
+      className: 'w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-navy-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300',
       variant: 'outline',
     },
   ];

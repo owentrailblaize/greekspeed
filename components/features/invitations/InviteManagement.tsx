@@ -210,7 +210,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
 
   if (loading) {
     return (
-      <Card className={className}>
+      <Card className={`${className} bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20`}>
         <CardContent className="p-6">
           <div className="flex flex-col items-center space-y-4">
             <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
@@ -226,13 +226,13 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
 
   return (
     <div className={className}>
-      <Card>
-        <CardHeader className="pb-4">
+      <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+        <CardHeader className="pb-4 border-b border-navy-100/30">
           {/* Desktop Layout */}
           <div className="hidden md:flex items-center justify-between">
-            <CardTitle className="flex items-center space-x-2">
+            <CardTitle className="flex items-center space-x-2 text-navy-900">
               <Users className="h-5 w-5 text-purple-600" />
-              <span>Invitation Management</span>
+              <span>Manage Invites</span>
             </CardTitle>
             <div className="flex space-x-2">
               <Button
@@ -259,7 +259,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
           <div className="md:hidden">
             <div className="flex items-center space-x-3 mb-3">
               <Users className="h-6 w-6 text-purple-600 flex-shrink-0" />
-              <CardTitle className="text-lg whitespace-nowrap overflow-hidden text-ellipsis">
+              <CardTitle className="text-lg whitespace-nowrap overflow-hidden text-ellipsis text-navy-900">
                 Invitation Management
               </CardTitle>
             </div>

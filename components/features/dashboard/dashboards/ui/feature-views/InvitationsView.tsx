@@ -16,14 +16,10 @@ export function InvitationsView() {
       </div>
 
       {chapterId && (
-        <Card>
-          <CardContent className="p-6">
-            <InviteManagement 
-              chapterId={chapterId} 
-              className="w-full"
-            />
-          </CardContent>
-        </Card>
+        <InviteManagement 
+          chapterId={chapterId} 
+          className="w-full"
+        />
       )}
     </div>
   );
