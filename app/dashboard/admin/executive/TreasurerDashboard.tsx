@@ -533,14 +533,14 @@ export function TreasurerDashboard() {
           transition={{ delay: 0.1 }}
           className="hidden md:block"
         >
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-600 text-sm font-medium">Total Collected</p>
-                  <p className="text-2xl font-semibold text-green-900">${financialOverview.totalCollected.toLocaleString()}</p>
+                  <p className="text-navy-700 text-sm font-medium">Total Collected</p>
+                  <p className="text-2xl font-semibold text-navy-900">${financialOverview.totalCollected.toLocaleString()}</p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-green-600" />
+                <CheckCircle className="h-8 w-8 text-navy-500" />
               </div>
             </CardContent>
           </Card>
@@ -552,14 +552,14 @@ export function TreasurerDashboard() {
           transition={{ delay: 0.2 }}
           className="hidden md:block"
         >
-          <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-red-600 text-sm font-medium">Outstanding</p>
-                  <p className="text-2xl font-semibold text-red-900">${financialOverview.totalOutstanding.toLocaleString()}</p>
+                  <p className="text-navy-700 text-sm font-medium">Outstanding</p>
+                  <p className="text-2xl font-semibold text-navy-900">${financialOverview.totalOutstanding.toLocaleString()}</p>
                 </div>
-                <AlertTriangle className="h-8 w-8 text-red-600" />
+                <AlertTriangle className="h-8 w-8 text-navy-500" />
               </div>
             </CardContent>
           </Card>
@@ -571,14 +571,14 @@ export function TreasurerDashboard() {
           transition={{ delay: 0.3 }}
           className="hidden md:block"
         >
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-600 text-sm font-medium">Collection Rate</p>
-                  <p className="text-2xl font-semibold text-blue-900">{financialOverview.collectionRate.toFixed(1)}%</p>
+                  <p className="text-navy-700 text-sm font-medium">Collection Rate</p>
+                  <p className="text-2xl font-semibold text-navy-900">{financialOverview.collectionRate.toFixed(1)}%</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-blue-600" />
+                <TrendingUp className="h-8 w-8 text-navy-500" />
               </div>
             </CardContent>
           </Card>
@@ -594,34 +594,34 @@ export function TreasurerDashboard() {
           className="grid grid-cols-3 gap-2"
         >
           {/* Total Collected */}
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
             <CardContent className="p-2">
               <div className="flex flex-col items-center text-center space-y-1">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                <p className="text-base font-semibold text-green-900">${financialOverview.totalCollected.toLocaleString()}</p>
-                <p className="text-green-600 text-xs font-medium">Collected</p>
+                <CheckCircle className="h-5 w-5 text-navy-500" />
+                <p className="text-base font-semibold text-navy-900">${financialOverview.totalCollected.toLocaleString()}</p>
+                <p className="text-navy-700 text-xs font-medium">Collected</p>
               </div>
             </CardContent>
           </Card>
 
           {/* Outstanding */}
-          <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
             <CardContent className="p-2">
               <div className="flex flex-col items-center text-center space-y-1">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-                <p className="text-base font-semibold text-red-900">${financialOverview.totalOutstanding.toLocaleString()}</p>
-                <p className="text-red-600 text-xs font-medium">Outstanding</p>
+                <AlertTriangle className="h-5 w-5 text-navy-500" />
+                <p className="text-base font-semibold text-navy-900">${financialOverview.totalOutstanding.toLocaleString()}</p>
+                <p className="text-navy-700 text-xs font-medium">Outstanding</p>
               </div>
             </CardContent>
           </Card>
 
           {/* Collection Rate */}
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
             <CardContent className="p-2">
               <div className="flex flex-col items-center text-center space-y-1">
-                <TrendingUp className="h-5 w-5 text-blue-600" />
-                <p className="text-base font-semibold text-blue-900">{financialOverview.collectionRate.toFixed(1)}%</p>
-                <p className="text-blue-600 text-xs font-medium">Rate</p>
+                <TrendingUp className="h-5 w-5 text-navy-500" />
+                <p className="text-base font-semibold text-navy-900">{financialOverview.collectionRate.toFixed(1)}%</p>
+                <p className="text-navy-700 text-xs font-medium">Rate</p>
               </div>
             </CardContent>
           </Card>
