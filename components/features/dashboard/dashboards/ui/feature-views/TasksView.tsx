@@ -9,7 +9,11 @@ import { Plus, Settings, CheckCircle, Clock, UserCheck, Bell, ChevronLeft, Chevr
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { supabase } from '@/lib/supabase/client';
 import { Progress } from '@/components/ui/progress';
-import { Task } from '@/types/operations';
+import { Task, CreateTaskRequest } from '@/types/operations';
+import { TaskModal } from '@/components/ui/TaskModal';
+import { getChapterMembersForTasks } from '@/lib/services/taskService';
+import { createPortal } from 'react-dom';
+import { toast } from 'react-toastify';
 
 export function TasksView() {
   const { profile } = useProfile();
@@ -19,6 +23,9 @@ export function TasksView() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortColumn, setSortColumn] = useState<'deadline' | 'status' | 'priority' | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [chapterMembers, setChapterMembers] = useState<Array<{ id: string; full_name: string; role: string; chapter_role: string | null }>>([]);
   const tasksPerPage = 10;
 
   const loadTasks = useCallback(async () => {
@@ -51,11 +58,29 @@ export function TasksView() {
     }
   }, [profile?.chapter_id]);
 
+  const loadChapterMembers = useCallback(async () => {
+    if (!chapterId) return;
+    
+    try {
+      const members = await getChapterMembersForTasks(chapterId);
+      setChapterMembers(members);
+    } catch (error) {
+      console.error('Error loading chapter members:', error);
+      setChapterMembers([]);
+    }
+  }, [chapterId]);
+
   useEffect(() => {
     if (chapterId) {
       loadTasks();
     }
   }, [chapterId, loadTasks]);
+
+  useEffect(() => {
+    if (chapterId) {
+      loadChapterMembers();
+    }
+  }, [chapterId, loadChapterMembers]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -199,6 +224,69 @@ export function TasksView() {
     }
   };
 
+  const handleCreateTask = async (taskData: CreateTaskRequest) => {
+    if (!chapterId || !profile?.id) {
+      toast.error('Chapter ID and profile are required');
+      return;
+    }
+
+    try {
+      setCreating(true);
+
+      // Handle multiple assignees by creating separate tasks
+      if (Array.isArray(taskData.assignee_id)) {
+        const tasks = await Promise.all(
+          taskData.assignee_id.map((assigneeId) => {
+            return supabase
+              .from('tasks')
+              .insert({
+                ...taskData,
+                assignee_id: assigneeId,
+                chapter_id: chapterId,
+                assigned_by: profile.id,
+                status: 'pending'
+              })
+              .select()
+              .single();
+          })
+        );
+
+        const errors = tasks.filter(result => result.error);
+        if (errors.length > 0) {
+          console.error('Supabase errors:', errors);
+          throw new Error(`Failed to create some tasks: ${errors.map(e => e.error?.message).join(', ')}`);
+        }
+      } else {
+        const { error } = await supabase
+          .from('tasks')
+          .insert({
+            ...taskData,
+            assignee_id: taskData.assignee_id as string,
+            chapter_id: chapterId,
+            assigned_by: profile.id,
+            status: 'pending'
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Supabase error:', error);
+          throw new Error(`Failed to create task: ${error.message}`);
+        }
+      }
+
+      // Close modal and refresh tasks
+      setShowTaskModal(false);
+      await loadTasks();
+      toast.success('Task created successfully!');
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast.error('Failed to create task');
+    } finally {
+      setCreating(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -207,7 +295,10 @@ export function TasksView() {
           <h2 className="text-2xl font-semibold text-gray-900">Tasks</h2>
           <p className="text-sm text-gray-600 mt-1">Track and manage chapter tasks</p>
         </div>
-        <Button variant="outline">
+        <Button 
+          onClick={() => setShowTaskModal(true)}
+          className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Create Task
         </Button>
@@ -468,6 +559,18 @@ export function TasksView() {
           )}
         </CardContent>
       </Card>
+
+      {/* Task Modal */}
+      {showTaskModal && typeof window !== 'undefined' && createPortal(
+        <TaskModal
+          isOpen={showTaskModal}
+          onClose={() => setShowTaskModal(false)}
+          onSubmit={handleCreateTask}
+          chapterMembers={chapterMembers}
+          creating={creating}
+        />,
+        document.body
+      )}
     </div>
   );
 }

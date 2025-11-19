@@ -654,9 +654,9 @@ export function TreasurerDashboard() {
       {selectedTab === "overview" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Desktop Layout - Dues Collection Progress (2/3 width) */}
-          <Card className="hidden lg:block lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Dues Collection Progress</CardTitle>
+          <Card className="hidden lg:block lg:col-span-2 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+            <CardHeader className="border-b border-navy-100/30">
+              <CardTitle className="text-navy-900">Dues Collection Progress</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -698,9 +698,9 @@ export function TreasurerDashboard() {
           </div>
 
           {/* Mobile Layout - Dues Collection Progress */}
-          <Card className="lg:hidden">
-            <CardHeader className="pb-2">
-              <CardTitle>Dues Collection Progress</CardTitle>
+          <Card className="lg:hidden bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+            <CardHeader className="pb-2 border-b border-navy-100/30">
+              <CardTitle className="text-navy-900">Dues Collection Progress</CardTitle>
             </CardHeader>
             <CardContent className="pt-2">
               <div className="space-y-3">
@@ -746,11 +746,11 @@ export function TreasurerDashboard() {
       )}
 
       {selectedTab === "members" && (
-        <Card>
-          <CardHeader className="pb-2 sm:pb-6">
+        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+          <CardHeader className="pb-2 sm:pb-6 border-b border-navy-100/30">
             {/* Desktop Layout */}
             <div className="hidden sm:flex justify-between items-center">
-              <CardTitle>All Chapter Members ({chapterMembers.length})</CardTitle>
+              <CardTitle className="text-navy-900">All Chapter Members ({chapterMembers.length})</CardTitle>
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-600">
                   {chapterMembers.length} {chapterMembers.length === 1 ? 'member' : 'members'}
@@ -811,7 +811,7 @@ export function TreasurerDashboard() {
 
             {/* Mobile Layout */}
             <div className="sm:hidden">
-              <CardTitle className="text-lg mb-3">All Chapter Members ({chapterMembers.length})</CardTitle>
+              <CardTitle className="text-lg mb-3 text-navy-900">All Chapter Members ({chapterMembers.length})</CardTitle>
               <div className="flex space-x-2">
                 <Button 
                   onClick={() => setShowBulkAssignDues(true)} 

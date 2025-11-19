@@ -84,9 +84,9 @@ export function QuickActions({
 
   return (
     <>
-      <Card>
-        <CardHeader className={headerClassName}>
-          <CardTitle>{title}</CardTitle>
+      <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+        <CardHeader className={`${headerClassName} border-b border-navy-100/30`}>
+          <CardTitle className="text-navy-900">{title}</CardTitle>
         </CardHeader>
         <CardContent className={contentClassName}>
           {actions.map((action) => (
