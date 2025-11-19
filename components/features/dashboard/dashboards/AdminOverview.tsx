@@ -26,6 +26,7 @@ import { toast } from 'react-toastify';
 import { createPortal } from 'react-dom';
 import { SendAnnouncementButton } from './ui/SendAnnouncementButton';
 import { EXECUTIVE_ROLES } from '@/lib/permissions';
+import { UpcomingEventsCard } from './ui/UpcomingEventsCard';
 
 interface AdminOverviewProps {
   initialFeed?: SocialFeedInitialData;
@@ -184,14 +185,6 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
         <div className="hidden sm:grid sm:grid-cols-12 sm:gap-6">
           {/* Left Column - 3 columns wide */}
           <div className="col-span-3 space-y-6">
-            <QuickActions 
-              actions={quickActions}
-              showEventModal={true}
-              eventModalConfig={{
-                onSubmit: handleCreateEvent,
-                onCancel: () => setShowEventModal(false),
-              }}
-            />
             <DuesStatusCard />
             <OperationsFeed />
           </div>
@@ -203,6 +196,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
           
           {/* Right Column - 3 columns wide */}
           <div className="col-span-3 space-y-6">
+            <UpcomingEventsCard />
             {chapterId && <TasksPanel chapterId={chapterId} />}
             <DocsCompliancePanel />
             <CompactCalendarCard />

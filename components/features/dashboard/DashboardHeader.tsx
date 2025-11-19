@@ -126,11 +126,25 @@ export function DashboardHeader() {
         {/* Right side - Messages icon and User dropdown */}
         <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
           {/* Messages Icon Button */}
+          {/* Desktop: Show for ALL roles */}
+          <Link
+            href="/dashboard/messages"
+            className={cn(
+              'hidden sm:flex items-center justify-center h-8 w-8 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300 shadow-sm',
+              pathname === '/dashboard/messages' 
+                ? 'bg-sky-50 text-sky-700 hover:bg-sky-100 hover:shadow-md' 
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-md'
+            )}
+          >
+            <MessageCircle className="w-4.5 h-4.5" />
+          </Link>
+
+          {/* Mobile: Only show for alumni */}
           {showMessagesIcon && (
             <Link
               href="/dashboard/messages"
               className={cn(
-                'relative flex items-center justify-center h-8 w-8 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300 shadow-sm',
+                'sm:hidden flex items-center justify-center h-8 w-8 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300 shadow-sm',
                 pathname === '/dashboard/messages' 
                   ? 'bg-sky-50 text-sky-700 hover:bg-sky-100 hover:shadow-md' 
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-md'

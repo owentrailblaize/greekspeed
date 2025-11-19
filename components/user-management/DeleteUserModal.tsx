@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Trash2, X } from 'lucide-react';
@@ -21,8 +22,8 @@ interface DeleteUserModalProps {
 export function DeleteUserModal({ isOpen, onClose, onConfirm, user, isDeleting }: DeleteUserModalProps) {
   if (!isOpen || !user) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  const modal = (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
       <Card className="w-full max-w-md mx-4">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
@@ -127,4 +128,7 @@ export function DeleteUserModal({ isOpen, onClose, onConfirm, user, isDeleting }
       </Card>
     </div>
   );
+
+  if (typeof window === 'undefined') return null;
+  return createPortal(modal, document.body);
 }

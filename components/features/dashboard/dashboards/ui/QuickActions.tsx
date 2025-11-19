@@ -84,24 +84,24 @@ export function QuickActions({
 
   return (
     <>
-      <Card>
-        <CardHeader className={headerClassName}>
-          <CardTitle>{title}</CardTitle>
+      <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+        <CardHeader className={`${headerClassName} border-b border-navy-100/30`}>
+          <CardTitle className="text-navy-900">{title}</CardTitle>
         </CardHeader>
         <CardContent className={contentClassName}>
           {actions.map((action) => (
             <Button
               key={action.id}
               variant={action.variant || 'outline'}
-              className={action.className || 'w-full justify-start'}
+              className={action.className || 'w-full justify-start text-sm whitespace-nowrap'}
               onClick={action.onClick}
               disabled={action.disabled}
               title={action.title}
             >
-              <action.icon className="h-4 w-4 mr-2" />
-              {action.label}
+              <action.icon className="h-4 w-4 mr-2 flex-shrink-0" />
+              <span className="truncate">{action.label}</span>
               {action.showLock && (
-                <Lock className="h-3 w-3 ml-2 text-gray-400" />
+                <Lock className="h-3 w-3 ml-2 text-gray-400 flex-shrink-0" />
               )}
             </Button>
           ))}

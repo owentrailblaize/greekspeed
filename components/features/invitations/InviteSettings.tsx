@@ -195,7 +195,10 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
 
           {/* Close Button */}
           <div className="flex justify-end pt-3 border-t">
-            <Button onClick={onClose} className="bg-blue-600 hover:bg-blue-700">
+            <Button 
+              onClick={onClose} 
+              className="rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               Close
             </Button>
           </div>
