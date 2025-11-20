@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { QuickActions, QuickAction } from './ui/QuickActions';
 import { DuesSnapshot } from './ui/DuesSnapshot';
 import { ComplianceSnapshot } from './ui/ComplianceSnapshot';
@@ -18,10 +18,12 @@ import { MobileAdminTasksPage } from './ui/MobileAdminTasksPage';
 import { MobileDocsCompliancePage } from './ui/MobileDocsCompliancePage';
 import { MobileOperationsFeedPage } from './ui/MobileOperationsFeedPage';
 import { MobileCalendarPage } from './ui/MobileCalendarPage';
+import { MobileOperationsPage } from './ui/MobileOperationsPage';
+import { MobileEventsVendorsPage } from './ui/MobileEventsVendorsPage';
 import { Calendar, Users, MessageSquare, UserPlus, Home, Wrench, CheckSquare, FileText, Activity, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EventForm } from '@/components/ui/EventForm';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { createPortal } from 'react-dom';
 import { SendAnnouncementButton } from './ui/SendAnnouncementButton';
@@ -40,12 +42,33 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
   const [showQuickActionsModal, setShowQuickActionsModal] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const feedData = useMemo(() => {
     if (!initialFeed) return undefined;
     if (!chapterId) return initialFeed;
     return initialFeed.chapterId === chapterId ? initialFeed : undefined;
   }, [chapterId, initialFeed]);
+
+  // Handle tool query param from FAB menu
+  useEffect(() => {
+    const tool = searchParams.get('tool');
+    if (tool === 'tasks') {
+      setActiveMobileTab('tasks');
+    } else if (tool === 'operations') {
+      setActiveMobileTab('operations');
+    } else if (tool === 'events') {
+      setActiveMobileTab('events');
+    } else if (tool === 'docs') {
+      setActiveMobileTab('docs');
+    } else if (tool === 'ops') {
+      setActiveMobileTab('ops');
+    } else if (tool === 'calendar') {
+      setActiveMobileTab('calendar');
+    } else if (!tool) {
+      setActiveMobileTab('home');
+    }
+  }, [searchParams]);
 
   // Quick Actions handlers
   const handleScheduleMeeting = () => {
@@ -150,9 +173,13 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
         );
       case 'tasks':
         return <MobileAdminTasksPage />;
+      case 'operations':
+        return <MobileOperationsPage />;
+      case 'events':
+        return <MobileEventsVendorsPage />;
       case 'docs':
         return <MobileDocsCompliancePage />;
-      case 'operations':
+      case 'ops':
         return <MobileOperationsFeedPage />;
       case 'calendar':
         return <MobileCalendarPage />;

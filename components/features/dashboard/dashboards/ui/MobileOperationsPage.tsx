@@ -1,0 +1,824 @@
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import { Users, DollarSign, TrendingUp, Plus, Search, Eye, Edit, Trash2, Calendar, AlertCircle, CheckCircle, Clock, UserCheck, Settings, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { useProfile } from '@/lib/contexts/ProfileContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ViewUserModal } from '@/components/user-management/ViewUserModal';
+import { EditUserModal } from '@/components/user-management/EditUserModal';
+import { DeleteUserModal } from '@/components/user-management/DeleteUserModal';
+import { AddMemberForm } from '@/components/chapter/AddMemberForm';
+import { execColumns } from '@/components/user-management/columns';
+import { createPortal } from 'react-dom';
+import { toast } from 'react-toastify';
+import { supabase } from '@/lib/supabase/client';
+import { useEvents } from '@/lib/hooks/useEvents';
+
+interface User {
+  id: string;
+  email: string;
+  full_name: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  role: string | null;
+  chapter_role: string | null;
+  member_status: string | null;
+  chapter?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface DuesCycle {
+  id: string;
+  name: string;
+  base_amount: number;
+  due_date: string;
+  status: string;
+}
+
+interface DuesAssignment {
+  id: string;
+  user: {
+    id: string;
+    full_name: string;
+    email: string;
+    member_status: string;
+  };
+  status: 'required' | 'exempt' | 'reduced' | 'waived' | 'paid';
+  amount_assessed: number;
+  amount_due: number;
+  amount_paid: number;
+  cycle: {
+    name: string;
+    due_date: string;
+  };
+}
+
+export function MobileOperationsPage() {
+  const { profile } = useProfile();
+  const chapterId = profile?.chapter_id;
+  const [activeTab, setActiveTab] = useState<'members' | 'dues' | 'budget'>('members');
+  
+  // Members state
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [membersLoading, setMembersLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchDebounced, setSearchDebounced] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const membersPerPage = 6;
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [userToView, setUserToView] = useState<User | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [userToEdit, setUserToEdit] = useState<User | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  
+  // Dues state
+  const [cycles, setCycles] = useState<DuesCycle[]>([]);
+  const [assignments, setAssignments] = useState<DuesAssignment[]>([]);
+  const [duesLoading, setDuesLoading] = useState(true);
+  
+  // Budget state
+  const { events, loading: eventsLoading } = useEvents({ 
+    chapterId: chapterId || '', 
+    scope: 'all' 
+  });
+  const [budgetEventsPage, setBudgetEventsPage] = useState(1);
+  const budgetEventsPerPage = 6;
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => setSearchDebounced(searchTerm.trim()), 300);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchDebounced]);
+
+  // Load members
+  useEffect(() => {
+    if (chapterId && activeTab === 'members') {
+      fetchUsers();
+    }
+  }, [chapterId, activeTab, searchDebounced]);
+
+  // Load dues
+  useEffect(() => {
+    if (chapterId && activeTab === 'dues') {
+      loadDuesData();
+    }
+  }, [chapterId, activeTab]);
+
+  // Reset budget events page when switching tabs
+  useEffect(() => {
+    if (activeTab !== 'budget') {
+      setBudgetEventsPage(1);
+    }
+  }, [activeTab]);
+
+  const fetchUsers = async () => {
+    if (!chapterId) return;
+    
+    try {
+      setMembersLoading(true);
+      const q = searchDebounced ? `&q=${encodeURIComponent(searchDebounced)}` : '';
+      
+      const response = await fetch(`/api/developer/users?page=1&limit=1000&chapterId=${encodeURIComponent(chapterId)}${q}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+
+      const data = await response.json();
+      const fetchedUsers = data.users || [];
+      
+      const filteredUsers = fetchedUsers.filter((user: User) => 
+        user.role === 'active_member' || user.role === 'admin'
+      );
+
+      setAllUsers(filteredUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      setAllUsers([]);
+    } finally {
+      setMembersLoading(false);
+    }
+  };
+
+  const loadDuesData = async () => {
+    if (!chapterId) return;
+    
+    try {
+      setDuesLoading(true);
+      
+      const { data: cyclesData } = await supabase
+        .from('dues_cycles')
+        .select('*')
+        .eq('chapter_id', chapterId)
+        .order('created_at', { ascending: false });
+
+      setCycles(cyclesData || []);
+
+      const { data: assignmentsData } = await supabase
+        .from('dues_assignments')
+        .select(`
+          *,
+          user:profiles!dues_assignments_user_id_fkey(
+            id,
+            full_name,
+            email,
+            member_status
+          ),
+          cycle:dues_cycles!dues_assignments_dues_cycle_id_fkey(
+            name,
+            due_date
+          )
+        `)
+        .eq('cycle.chapter_id', chapterId);
+
+      setAssignments(assignmentsData || []);
+    } catch (error) {
+      console.error('Error loading dues data:', error);
+    } finally {
+      setDuesLoading(false);
+    }
+  };
+
+  // Budget calculations
+  const budgetData = useMemo(() => {
+    if (!events || events.length === 0) {
+      return {
+        totalAllocated: 0,
+        totalSpent: 0,
+        remaining: 0,
+        eventsWithBudget: 0,
+        startingBudget: 12000
+      };
+    }
+
+    const eventsWithBudget = events.filter(event => 
+      event.budget_amount && parseFloat(String(event.budget_amount)) > 0
+    );
+
+    const totalAllocated = eventsWithBudget.reduce((sum, event) => 
+      sum + parseFloat(String(event.budget_amount || '0')), 0
+    );
+
+    const STARTING_BUDGET = 12000;
+    const remaining = STARTING_BUDGET - totalAllocated;
+
+    return {
+      totalAllocated,
+      totalSpent: totalAllocated, // MVP: spent = allocated
+      remaining,
+      eventsWithBudget: eventsWithBudget.length,
+      startingBudget: STARTING_BUDGET
+    };
+  }, [events]);
+
+  // Dues statistics
+  const duesStats = useMemo(() => {
+    const total = assignments.length;
+    const paid = assignments.filter(a => a.status === 'paid').length;
+    const required = assignments.filter(a => a.status === 'required').length;
+    const totalDue = assignments.reduce((sum, a) => sum + a.amount_due, 0);
+    const totalPaid = assignments.reduce((sum, a) => sum + a.amount_paid, 0);
+    
+    return {
+      total,
+      paid,
+      required,
+      totalDue,
+      totalPaid,
+      collectionRate: total > 0 ? Math.round((paid / total) * 100) : 0
+    };
+  }, [assignments]);
+
+  // Modal handlers
+  const openViewModal = (user: User) => {
+    setUserToView(user);
+    setViewModalOpen(true);
+  };
+
+  const openEditModal = (user: User) => {
+    setUserToEdit(user);
+    setEditModalOpen(true);
+  };
+
+  const openDeleteModal = (user: User) => {
+    setUserToDelete(user);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      const response = await fetch(`/api/developer/users?userId=${userToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete user');
+      }
+
+      setAllUsers(prevUsers => prevUsers.filter(user => user.id !== userToDelete.id));
+      setDeleteModalOpen(false);
+      toast.success(`User "${userToDelete.email}" has been deleted successfully.`);
+      await fetchUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error(`Failed to delete user: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  // Filter users based on search (already filtered by API, but keeping for client-side filtering if needed)
+  const filteredUsers = useMemo(() => {
+    return allUsers;
+  }, [allUsers]);
+
+  // Paginate filtered users
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (currentPage - 1) * membersPerPage;
+    const endIndex = startIndex + membersPerPage;
+    return filteredUsers.slice(startIndex, endIndex);
+  }, [filteredUsers, currentPage, membersPerPage]);
+
+  // Calculate pagination info
+  const totalPages = Math.ceil(filteredUsers.length / membersPerPage);
+  const totalUsers = filteredUsers.length;
+  const startIndex = (currentPage - 1) * membersPerPage;
+  const endIndex = Math.min(currentPage * membersPerPage, totalUsers);
+
+  return (
+    <div className="min-h-screen bg-gray-50 pt-4 pb-20 px-4">
+      <div className="max-w-md mx-auto">
+        {/* Header */}
+        <div className="flex items-center space-x-2 mb-4">
+          <Settings className="h-6 w-6 text-navy-600" />
+          <h1 className="text-xl font-semibold text-gray-900">Operations</h1>
+        </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-4">
+            <TabsTrigger value="members" className="text-xs">Members</TabsTrigger>
+            <TabsTrigger value="dues" className="text-xs">Dues</TabsTrigger>
+            <TabsTrigger value="budget" className="text-xs">Budget</TabsTrigger>
+          </TabsList>
+
+          {/* Members Tab */}
+          <TabsContent value="members" className="space-y-4">
+            {/* Search and Add */}
+            <div className="space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search members..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Button 
+                onClick={() => setShowAddMemberModal(true)}
+                className="w-full bg-navy-600 hover:bg-navy-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Member
+              </Button>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-600">Total Members</p>
+                      <p className="text-xl font-semibold">{filteredUsers.length}</p>
+                    </div>
+                    <Users className="h-5 w-5 text-navy-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-600">Active</p>
+                      <p className="text-xl font-semibold">
+                        {filteredUsers.filter(u => u.member_status === 'active').length}
+                      </p>
+                    </div>
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Members List */}
+            {membersLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="text-center py-12">
+                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No members found</p>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  {paginatedUsers.map((user) => (
+                    <Card key={user.id} className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-sm truncate">{user.full_name}</h3>
+                          <p className="text-xs text-gray-600 truncate">{user.email}</p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            {user.role && (
+                              <Badge variant="secondary" className="text-xs">
+                                {user.role}
+                              </Badge>
+                            )}
+                            {user.chapter_role && (
+                              <Badge variant="outline" className="text-xs">
+                                {user.chapter_role}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-1 ml-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openViewModal(user)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openEditModal(user)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openDeleteModal(user)}
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex flex-col items-center space-y-3 pt-4 border-t border-gray-200">
+                    <div className="text-xs text-gray-600">
+                      Showing {startIndex + 1} to {endIndex} of {totalUsers} members
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1 || membersLoading}
+                        className="h-8 px-3 text-xs"
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                        Previous
+                      </Button>
+                      <div className="flex items-center space-x-1 px-2">
+                        <span className="text-xs text-gray-600">Page</span>
+                        <span className="text-xs font-medium">{currentPage}</span>
+                        <span className="text-xs text-gray-600">of</span>
+                        <span className="text-xs font-medium">{totalPages}</span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages || membersLoading}
+                        className="h-8 px-3 text-xs"
+                      >
+                        Next
+                        <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                      </Button>
+                    </div>
+                    {/* Page Number Buttons - Show up to 5 pages */}
+                    {totalPages <= 5 && (
+                      <div className="flex items-center space-x-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(page)}
+                            className={`h-8 w-8 p-0 text-xs ${
+                              currentPage === page
+                                ? 'bg-navy-600 text-white hover:bg-navy-700'
+                                : 'hover:bg-gray-50'
+                            }`}
+                            disabled={membersLoading}
+                          >
+                            {page}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </TabsContent>
+
+          {/* Dues Tab */}
+          <TabsContent value="dues" className="space-y-4">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-600">Total Due</p>
+                      <p className="text-lg font-semibold">${duesStats.totalDue.toLocaleString()}</p>
+                    </div>
+                    <DollarSign className="h-5 w-5 text-orange-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-600">Paid</p>
+                      <p className="text-lg font-semibold">${duesStats.totalPaid.toLocaleString()}</p>
+                    </div>
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Collection Rate */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Collection Rate</span>
+                    <span className="font-semibold">{duesStats.collectionRate}%</span>
+                  </div>
+                  <Progress value={duesStats.collectionRate} className="h-2" />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Cycles */}
+            <div>
+              <h3 className="text-sm font-semibold mb-2">Dues Cycles</h3>
+              {duesLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+                </div>
+              ) : cycles.length === 0 ? (
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-sm text-gray-500">No dues cycles found</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {cycles.map((cycle) => (
+                    <Card key={cycle.id} className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium text-sm">{cycle.name}</h4>
+                          <p className="text-xs text-gray-600">
+                            ${cycle.base_amount.toLocaleString()} • Due {new Date(cycle.due_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Badge className={cycle.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                          {cycle.status}
+                        </Badge>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Recent Assignments */}
+            <div>
+              <h3 className="text-sm font-semibold mb-2">Recent Assignments</h3>
+              {assignments.length === 0 ? (
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-sm text-gray-500">No assignments found</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {assignments.slice(0, 5).map((assignment) => (
+                    <Card key={assignment.id} className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm truncate">{assignment.user.full_name}</h4>
+                          <p className="text-xs text-gray-600">
+                            ${assignment.amount_due.toLocaleString()} • {assignment.cycle.name}
+                          </p>
+                        </div>
+                        <Badge className={
+                          assignment.status === 'paid' ? 'bg-green-100 text-green-800' :
+                          assignment.status === 'required' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }>
+                          {assignment.status}
+                        </Badge>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Budget Tab */}
+          <TabsContent value="budget" className="space-y-4">
+            {/* Budget Overview Cards */}
+            <div className="grid grid-cols-2 gap-3">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-600">Allocated</p>
+                      <p className="text-lg font-semibold">${budgetData.totalAllocated.toLocaleString()}</p>
+                    </div>
+                    <TrendingUp className="h-5 w-5 text-blue-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-600">Remaining</p>
+                      <p className="text-lg font-semibold text-green-600">${budgetData.remaining.toLocaleString()}</p>
+                    </div>
+                    <DollarSign className="h-5 w-5 text-green-500" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Budget Progress */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">Budget Overview</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-600">Starting Budget</span>
+                  <span className="font-semibold text-sm">${budgetData.startingBudget.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-600">Total Allocated</span>
+                  <span className="font-semibold text-sm text-orange-600">${budgetData.totalAllocated.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-600">Remaining</span>
+                  <span className="font-semibold text-sm text-green-600">${budgetData.remaining.toLocaleString()}</span>
+                </div>
+                <Progress 
+                  value={(budgetData.totalAllocated / budgetData.startingBudget) * 100} 
+                  className="h-2"
+                />
+                <p className="text-xs text-gray-500 text-center">
+                  {((budgetData.totalAllocated / budgetData.startingBudget) * 100).toFixed(1)}% allocated
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Events with Budget */}
+            <div>
+              <h3 className="text-sm font-semibold mb-2">Events with Budget ({budgetData.eventsWithBudget})</h3>
+              {eventsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+                </div>
+              ) : (() => {
+                const eventsWithBudget = events.filter(e => e.budget_amount && parseFloat(String(e.budget_amount)) > 0);
+                const budgetEventsTotalPages = Math.ceil(eventsWithBudget.length / budgetEventsPerPage);
+                const budgetEventsStartIndex = (budgetEventsPage - 1) * budgetEventsPerPage;
+                const budgetEventsEndIndex = budgetEventsStartIndex + budgetEventsPerPage;
+                const paginatedBudgetEvents = eventsWithBudget.slice(budgetEventsStartIndex, budgetEventsEndIndex);
+                const budgetEventsTotal = eventsWithBudget.length;
+                const budgetEventsStart = budgetEventsStartIndex + 1;
+                const budgetEventsEnd = Math.min(budgetEventsPage * budgetEventsPerPage, budgetEventsTotal);
+
+                return eventsWithBudget.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <p className="text-sm text-gray-500">No events with budgets</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      {paginatedBudgetEvents.map((event) => (
+                        <Card key={event.id} className="p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm truncate">{event.title}</h4>
+                              <p className="text-xs text-gray-600">
+                                {new Date(event.start_time).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <div className="text-right ml-2">
+                              <p className="font-semibold text-sm text-green-600">
+                                ${parseFloat(String(event.budget_amount)).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+
+                    {/* Pagination Controls */}
+                    {budgetEventsTotalPages > 1 && (
+                      <div className="flex flex-col items-center space-y-3 pt-4 border-t border-gray-200 mt-4">
+                        <div className="text-xs text-gray-600">
+                          Showing {budgetEventsStart} to {budgetEventsEnd} of {budgetEventsTotal} events
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setBudgetEventsPage(prev => Math.max(1, prev - 1))}
+                            disabled={budgetEventsPage === 1 || eventsLoading}
+                            className="h-8 px-3 text-xs"
+                          >
+                            <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                            Previous
+                          </Button>
+                          <div className="flex items-center space-x-1 px-2">
+                            <span className="text-xs text-gray-600">Page</span>
+                            <span className="text-xs font-medium">{budgetEventsPage}</span>
+                            <span className="text-xs text-gray-600">of</span>
+                            <span className="text-xs font-medium">{budgetEventsTotalPages}</span>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setBudgetEventsPage(prev => Math.min(budgetEventsTotalPages, prev + 1))}
+                            disabled={budgetEventsPage === budgetEventsTotalPages || eventsLoading}
+                            className="h-8 px-3 text-xs"
+                          >
+                            Next
+                            <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                          </Button>
+                        </div>
+                        {/* Page Number Buttons - Show up to 5 pages */}
+                        {budgetEventsTotalPages <= 5 && (
+                          <div className="flex items-center space-x-1">
+                            {Array.from({ length: budgetEventsTotalPages }, (_, i) => i + 1).map((page) => (
+                              <Button
+                                key={page}
+                                variant={budgetEventsPage === page ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setBudgetEventsPage(page)}
+                                className={`h-8 w-8 p-0 text-xs ${
+                                  budgetEventsPage === page
+                                    ? 'bg-navy-600 text-white hover:bg-navy-700'
+                                    : 'hover:bg-gray-50'
+                                }`}
+                                disabled={eventsLoading}
+                              >
+                                {page}
+                              </Button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Modals */}
+        {showAddMemberModal && (
+          <AddMemberForm
+            onClose={() => setShowAddMemberModal(false)}
+            onSuccess={() => {
+              setShowAddMemberModal(false);
+              fetchUsers();
+            }}
+            chapterContext={{
+              chapterId: chapterId || '',
+              chapterName: profile?.chapter || '',
+              isChapterAdmin: true
+            }}
+          />
+        )}
+
+        {viewModalOpen && typeof window !== 'undefined' && userToView && createPortal(
+          <ViewUserModal
+            isOpen={viewModalOpen}
+            onClose={() => setViewModalOpen(false)}
+            user={userToView as any}
+          />,
+          document.body
+        )}
+
+        {editModalOpen && typeof window !== 'undefined' && (
+          <EditUserModal
+            isOpen={editModalOpen}
+            onClose={() => setEditModalOpen(false)}
+            user={userToEdit}
+            onSaved={() => {
+              fetchUsers();
+              setEditModalOpen(false);
+            }}
+          />
+        )}
+
+        {deleteModalOpen && typeof window !== 'undefined' && userToDelete && createPortal(
+          <DeleteUserModal
+            isOpen={deleteModalOpen}
+            onClose={() => setDeleteModalOpen(false)}
+            onConfirm={handleDeleteUser}
+            user={{
+              email: userToDelete.email,
+              full_name: userToDelete.full_name,
+              role: userToDelete.role,
+              chapter: userToDelete.chapter || null
+            }}
+            isDeleting={false}
+          />,
+          document.body
+        )}
+      </div>
+    </div>
+  );
+}
+
