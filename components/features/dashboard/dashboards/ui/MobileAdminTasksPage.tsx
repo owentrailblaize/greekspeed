@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { CheckSquare, Clock, AlertCircle, Users, Calendar, FileText, Plus, Loader2, Trash2, Upload, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckSquare, Clock, AlertCircle, Users, Calendar, FileText, Plus, Loader2, Trash2, Upload, Download, ChevronLeft, ChevronRight, Check, UserMinus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -276,22 +276,6 @@ export function MobileAdminTasksPage() {
     }
   };
 
-  const handleStatusChange = async (taskId: string, newStatus: string) => {
-    try {
-      await updateTask(taskId, { status: newStatus as TaskStatus });
-    } catch (error) {
-      console.error('Error updating task status:', error);
-    }
-  };
-
-  const handlePriorityChange = async (taskId: string, newPriority: string) => {
-    try {
-      await updateTask(taskId, { priority: newPriority as TaskPriority });
-    } catch (error) {
-      console.error('Error updating task priority:', error);
-    }
-  };
-
   const handleReassign = async (taskId: string, newAssigneeId: string) => {
     try {
       await updateTask(taskId, { assignee_id: newAssigneeId });
@@ -313,6 +297,26 @@ export function MobileAdminTasksPage() {
     } catch (error) {
       console.error('Error deleting task:', error);
       toast.error('Failed to delete task');
+    }
+  };
+
+  const handleMarkComplete = async (taskId: string) => {
+    try {
+      await updateTask(taskId, { status: 'completed' as TaskStatus });
+      toast.success('Task marked as complete!');
+    } catch (error) {
+      console.error('Error marking task as complete:', error);
+      toast.error('Failed to mark task as complete');
+    }
+  };
+
+  const handleUnassign = async (taskId: string) => {
+    try {
+      await updateTask(taskId, { assignee_id: null });
+      toast.success('Task unassigned successfully!');
+    } catch (error) {
+      console.error('Error unassigning task:', error);
+      toast.error('Failed to unassign task');
     }
   };
 
@@ -594,46 +598,38 @@ export function MobileAdminTasksPage() {
                           </div>
                         </div>
                         
-                        <div className="flex space-x-1 pt-2">
-                          <Select 
-                            value={task.status} 
-                            onValueChange={(value) => handleStatusChange(task.id, value)}
-                          >
-                            <SelectTrigger className="h-7 text-xs flex-1">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pending">Pending</SelectItem>
-                              <SelectItem value="in_progress">In Progress</SelectItem>
-                              <SelectItem value="completed">Completed</SelectItem>
-                              <SelectItem value="overdue">Overdue</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          
-                          <Select
-                            value={task.priority}
-                            onValueChange={(value) => handlePriorityChange(task.id, value)}
-                          >
-                            <SelectTrigger className="h-7 text-xs flex-1">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="low">Low</SelectItem>
-                              <SelectItem value="medium">Medium</SelectItem>
-                              <SelectItem value="high">High</SelectItem>
-                              <SelectItem value="urgent">Urgent</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          
-                          {task.status === 'completed' && (
+                        <div className="flex space-x-2 pt-2 border-t border-gray-100">
+                          {task.status !== 'completed' ? (
                             <Button
                               size="sm"
-                              onClick={() => handleDeleteTask(task.id)}
-                              className="h-7 px-2"
-                              variant="ghost"
+                              onClick={() => handleMarkComplete(task.id)}
+                              className="h-7 px-3 text-xs flex-1"
+                              variant="default"
                             >
-                              <Trash2 className="h-3 w-3 text-red-600" />
+                              <Check className="h-3 w-3 mr-1" />
+                              Mark Complete
                             </Button>
+                          ) : (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => handleUnassign(task.id)}
+                                className="h-7 px-3 text-xs flex-1"
+                                variant="outline"
+                              >
+                                <UserMinus className="h-3 w-3 mr-1" />
+                                Unassign
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleDeleteTask(task.id)}
+                                className="h-7 px-3 text-xs flex-1"
+                                variant="outline"
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Delete
+                              </Button>
+                            </>
                           )}
                         </div>
                       </div>
