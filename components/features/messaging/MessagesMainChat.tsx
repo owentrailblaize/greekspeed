@@ -10,15 +10,23 @@ interface MessagesMainChatProps {
   connections: Connection[];
   onBack: () => void;
   onConnectionSelect: (connectionId: string) => void;
+  isMobile?: boolean;
 }
 
 export function MessagesMainChat({
   selectedConnectionId,
   connections,
   onBack,
-  onConnectionSelect
+  onConnectionSelect,
+  isMobile = false
 }: MessagesMainChatProps) {
-  // If no connection is selected, show welcome state
+  // On mobile, if no connection is selected, don't show welcome screen
+  // (the list view will be shown instead)
+  if (!selectedConnectionId && isMobile) {
+    return null;
+  }
+
+  // If no connection is selected, show welcome state (desktop only)
   if (!selectedConnectionId) {
     return (
       // 🔴 FIXED: Use h-full instead of h-full min-h-0
