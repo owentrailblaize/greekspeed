@@ -300,14 +300,8 @@ export function MobileOperationsPage() {
   const endIndex = Math.min(currentPage * membersPerPage, totalUsers);
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-4 pb-20 px-4">
+    <div className="min-h-screen bg-gray-50 pt-0 pb-20 px-4">
       <div className="max-w-md mx-auto">
-        {/* Header */}
-        <div className="flex items-center space-x-2 mb-4">
-          <Settings className="h-6 w-6 text-navy-600" />
-          <h1 className="text-xl font-semibold text-gray-900">Operations</h1>
-        </div>
-
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-4">
@@ -331,7 +325,7 @@ export function MobileOperationsPage() {
               </div>
               <Button 
                 onClick={() => setShowAddMemberModal(true)}
-                className="w-full bg-navy-600 hover:bg-navy-700"
+                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 w-full md:w-auto transition-all duration-300"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Member
