@@ -265,43 +265,45 @@ export function MobileEventsVendorsPage() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-3">
-              <Card>
+              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-gray-600">Total Events</p>
-                      <p className="text-xl font-semibold">{budgetStats.totalEvents}</p>
+                      <p className="text-xs text-navy-700 font-medium mb-1">Total Events</p>
+                      <p className="text-xl font-semibold text-navy-900">{budgetStats.totalEvents}</p>
                     </div>
-                    <Calendar className="h-5 w-5 text-blue-500" />
+                    <Calendar className="h-5 w-5 text-navy-500" />
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-gray-600">With Budget</p>
-                      <p className="text-xl font-semibold">{budgetStats.eventsWithBudget}</p>
+                      <p className="text-xs text-navy-700 font-medium mb-1">With Budget</p>
+                      <p className="text-xl font-semibold text-navy-900">{budgetStats.eventsWithBudget}</p>
                     </div>
-                    <DollarSign className="h-5 w-5 text-green-500" />
+                    <DollarSign className="h-5 w-5 text-navy-500" />
                   </div>
                 </CardContent>
               </Card>
             </div>
 
             {/* Budget Overview */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Budget Overview</CardTitle>
+            <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+              <CardHeader className="pb-3 flex-shrink-0 border-b border-navy-100/30">
+                <CardTitle className="text-sm text-navy-900 font-semibold">Budget Overview</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600">Allocated</span>
-                  <span className="font-semibold text-sm">${budgetStats.totalBudgetAllocated.toLocaleString()}</span>
+                  <span className="text-xs text-navy-700">Allocated</span>
+                  <span className="font-semibold text-sm text-navy-900">${budgetStats.totalBudgetAllocated.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600">Remaining</span>
-                  <span className="font-semibold text-sm text-green-600">${budgetStats.remaining.toLocaleString()}</span>
+                  <span className="text-xs text-navy-700">Remaining</span>
+                  <span className={`font-semibold text-sm ${budgetStats.remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    ${budgetStats.remaining.toLocaleString()}
+                  </span>
                 </div>
                 <Progress 
                   value={(budgetStats.totalBudgetAllocated / budgetStats.startingBudget) * 100} 
@@ -316,14 +318,14 @@ export function MobileEventsVendorsPage() {
                 <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
               </div>
             ) : eventsError ? (
-              <Card>
+              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
                 <CardContent className="p-4 text-center">
                   <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
                   <p className="text-sm text-red-500">Error loading events</p>
                 </CardContent>
               </Card>
             ) : sortedEvents.length === 0 ? (
-              <Card>
+              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
                 <CardContent className="p-4 text-center">
                   <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-500 mb-2">No events found</p>
@@ -334,6 +336,7 @@ export function MobileEventsVendorsPage() {
                       setShowEventForm(true);
                     }}
                     size="sm"
+                    className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
                   >
                     Create First Event
                   </Button>
@@ -343,17 +346,17 @@ export function MobileEventsVendorsPage() {
               <>
                 <div className="space-y-2">
                   {paginatedEvents.map((event) => (
-                    <Card key={event.id} className="p-3">
+                    <Card key={event.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                       <div className="space-y-2">
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-sm truncate">{event.title}</h3>
-                            <div className="flex items-center space-x-2 mt-1 text-xs text-gray-600">
+                            <h3 className="font-medium text-sm truncate text-navy-900">{event.title}</h3>
+                            <div className="flex items-center space-x-2 mt-1 text-xs text-navy-700">
                               <Clock className="h-3 w-3" />
                               <span>{formatEventDate(event.start_time)}</span>
                             </div>
                             {event.location && (
-                              <div className="flex items-center space-x-2 mt-1 text-xs text-gray-600">
+                              <div className="flex items-center space-x-2 mt-1 text-xs text-navy-700">
                                 <MapPin className="h-3 w-3" />
                                 <span className="truncate">{event.location}</span>
                               </div>
@@ -364,7 +367,7 @@ export function MobileEventsVendorsPage() {
                               size="sm"
                               variant="ghost"
                               onClick={() => handleEditEvent(event)}
-                              className="h-8 w-8 p-0"
+                              className="h-8 w-8 p-0 text-navy-700 hover:text-navy-900 hover:bg-navy-50"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -372,7 +375,7 @@ export function MobileEventsVendorsPage() {
                               size="sm"
                               variant="ghost"
                               onClick={() => handleDeleteEvent(event.id)}
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -380,7 +383,7 @@ export function MobileEventsVendorsPage() {
                         </div>
                         <div className="flex items-center space-x-2">
                           {event.budget_amount && (
-                            <Badge variant="outline" className="text-xs">
+                            <Badge variant="outline" className="text-xs border-navy-200 text-navy-700">
                               <DollarSign className="h-3 w-3 mr-1" />
                               ${parseFloat(String(event.budget_amount)).toLocaleString()}
                             </Badge>
@@ -393,7 +396,7 @@ export function MobileEventsVendorsPage() {
                             {event.status}
                           </Badge>
                           {event.attendee_count !== undefined && (
-                            <div className="flex items-center text-xs text-gray-600">
+                            <div className="flex items-center text-xs text-navy-700">
                               <Users className="h-3 w-3 mr-1" />
                               {event.attendee_count}
                             </div>
@@ -480,12 +483,12 @@ export function MobileEventsVendorsPage() {
             </Button>
 
             {/* Stats */}
-            <Card>
+            <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-gray-600">Total Vendors</p>
-                    <p className="text-xl font-semibold">{vendors.length}</p>
+                    <p className="text-xs text-navy-700 font-medium mb-1">Total Vendors</p>
+                    <p className="text-xl font-semibold text-navy-900">{vendors.length}</p>
                   </div>
                   <Building2 className="h-5 w-5 text-navy-500" />
                 </div>
@@ -498,14 +501,14 @@ export function MobileEventsVendorsPage() {
                 <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
               </div>
             ) : vendorsError ? (
-              <Card>
+              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
                 <CardContent className="p-4 text-center">
                   <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
                   <p className="text-sm text-red-500">Error loading vendors</p>
                 </CardContent>
               </Card>
             ) : vendors.length === 0 ? (
-              <Card>
+              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
                 <CardContent className="p-4 text-center">
                   <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-500 mb-2">No vendors found</p>
@@ -513,6 +516,7 @@ export function MobileEventsVendorsPage() {
                     variant="outline" 
                     onClick={() => setShowVendorForm(true)}
                     size="sm"
+                    className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
                   >
                     Add First Vendor
                   </Button>
@@ -522,18 +526,18 @@ export function MobileEventsVendorsPage() {
               <>
                 <div className="space-y-2">
                   {paginatedVendors.map((vendor) => (
-                    <Card key={vendor.id} className="p-3">
+                    <Card key={vendor.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                       <div className="space-y-2">
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-sm truncate">{vendor.name}</h3>
-                            <Badge variant="secondary" className="text-xs mt-1">
+                            <h3 className="font-medium text-sm truncate text-navy-900">{vendor.name}</h3>
+                            <Badge variant="secondary" className="text-xs mt-1 border-navy-200 text-navy-700">
                               {vendor.type}
                             </Badge>
                             {vendor.rating && (
                               <div className="flex items-center mt-1">
                                 <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                                <span className="text-xs text-gray-600 ml-1">{vendor.rating}</span>
+                                <span className="text-xs text-navy-700 ml-1">{vendor.rating}</span>
                               </div>
                             )}
                           </div>
@@ -542,7 +546,7 @@ export function MobileEventsVendorsPage() {
                               size="sm"
                               variant="ghost"
                               onClick={() => handleEditVendor(vendor)}
-                              className="h-8 w-8 p-0"
+                              className="h-8 w-8 p-0 text-navy-700 hover:text-navy-900 hover:bg-navy-50"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -550,13 +554,13 @@ export function MobileEventsVendorsPage() {
                               size="sm"
                               variant="ghost"
                               onClick={() => handleDeleteVendor(vendor.id)}
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
-                        <div className="space-y-1 text-xs text-gray-600">
+                        <div className="space-y-1 text-xs text-navy-700">
                           {vendor.contact_person && (
                             <div className="flex items-center">
                               <Users className="h-3 w-3 mr-2" />

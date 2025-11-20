@@ -51,7 +51,7 @@ export function MobileAdminTasksPage() {
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [chapterMembers, setChapterMembers] = useState<Array<{ id: string; full_name: string; role: string; chapter_role: string | null }>>([]);
-
+  
   const [tasksPage, setTasksPage] = useState(1);
   const tasksPerPage = 6;
 
@@ -139,7 +139,7 @@ export function MobileAdminTasksPage() {
 
   const loadAllData = async () => {
     try {
-
+      
       setTasksLoading(true);
       
       const [allTasksData, membersData] = await Promise.all([
@@ -155,7 +155,7 @@ export function MobileAdminTasksPage() {
       setTasks(allTasksData.data || []);
       setChapterMembers(membersData);
     } catch (error) {
-
+      
       console.error('Error loading data:', error);
       setTasks([]);
       setChapterMembers([]);
@@ -245,7 +245,7 @@ export function MobileAdminTasksPage() {
       
       if (Array.isArray(taskData.assignee_id)) {
         const tasks = await Promise.all(
-
+        
           taskData.assignee_id.map((assigneeId) => {
             return supabase
               .from('tasks')
@@ -266,7 +266,7 @@ export function MobileAdminTasksPage() {
           throw new Error(`Failed to create some tasks: ${errors.map(e => e.error?.message).join(', ')}`);
         }
       } else {
-
+        
         const { error } = await supabase
           .from('tasks')
           .insert({
@@ -287,7 +287,7 @@ export function MobileAdminTasksPage() {
 
       setIsTaskModalOpen(false);
       await loadAllData();
-
+      
       toast.success('Task created successfully!');
     } catch (error) {
 
@@ -315,7 +315,7 @@ export function MobileAdminTasksPage() {
 
       if (error) throw error;
       setTasks(prev => prev.filter(task => task.id !== taskId));
-
+      
       toast.success('Task deleted successfully!');
     } catch (error) {
       console.error('Error deleting task:', error);
@@ -579,27 +579,29 @@ export function MobileAdminTasksPage() {
 
             {tasksLoading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+                <Loader2 className="h-6 w-6 animate-spin text-slate-600" />
               </div>
             ) : filteredTasks.length === 0 ? (
-          <div className="text-center py-12">
+          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+            <CardContent className="p-8 text-center">
             <CheckSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg mb-2">
+              <p className="text-slate-700 text-lg mb-2">
               {activeFilter === 'all' ? 'No tasks found' : `No ${activeFilter} tasks`}
             </p>
-            <p className="text-gray-400 text-sm">
+              <p className="text-slate-600 text-sm">
               {activeFilter === 'all' ? 'Create your first task to get started!' : 'Try a different filter'}
             </p>
-          </div>
+            </CardContent>
+          </Card>
         ) : (
 
               <>
                 <div className="space-y-2">
                   {paginatedTasks.map((task) => (
-                    <Card key={task.id} className="p-3">
+                    <Card key={task.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                       <div className="space-y-2">
                         <div className="flex justify-between items-start">
-                          <h3 className="font-medium text-gray-900 text-sm flex-1">{task.title}</h3>
+                          <h3 className="font-medium text-slate-900 text-sm flex-1">{task.title}</h3>
                           <div className="flex space-x-2 ml-2">
                     <Badge className={getStatusColor(task.status)}>
                       {task.status}
@@ -612,11 +614,11 @@ export function MobileAdminTasksPage() {
                 
                 {task.description && (
 
-                          <p className="text-xs text-gray-600">{task.description}</p>
+                          <p className="text-xs text-slate-700">{task.description}</p>
                 )}
                 
 
-                        <div className="space-y-1 text-xs text-gray-600">
+                        <div className="space-y-1 text-xs text-slate-700">
                   <div className="flex items-center space-x-2">
                     <Users className="h-3 w-3" />
                     <span>{task.assignee_name || 'Unassigned'}</span>
@@ -655,9 +657,9 @@ export function MobileAdminTasksPage() {
                                 <UserMinus className="h-3 w-3 mr-1" />
                                 Unassign
                               </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => handleDeleteTask(task.id)}
+                    <Button
+                      size="sm"
+                      onClick={() => handleDeleteTask(task.id)}
                                 className="h-7 px-3 text-xs flex-1 rounded-full bg-white/80 backdrop-blur-md border border-red-300 shadow-lg shadow-red-100/20 hover:shadow-xl hover:shadow-red-100/30 hover:bg-red-50/90 text-red-600 hover:text-red-700 hover:border-red-400 transition-all duration-300"
                                 variant="outline"
                               >
@@ -744,12 +746,12 @@ export function MobileAdminTasksPage() {
             </Button>
 
             {/* Stats */}
-            <Card>
+            <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-gray-600">Total Documents</p>
-                    <p className="text-xl font-semibold">{documents.length}</p>
+                    <p className="text-xs text-slate-700 font-medium mb-1">Total Documents</p>
+                    <p className="text-xl font-semibold text-slate-900">{documents.length}</p>
                   </div>
                   <FileText className="h-5 w-5 text-navy-500" />
                 </div>
@@ -762,14 +764,15 @@ export function MobileAdminTasksPage() {
                 <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
               </div>
             ) : documents.length === 0 ? (
-              <Card>
+              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
                 <CardContent className="p-4 text-center">
                   <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-500 mb-2">No documents found</p>
+                  <p className="text-slate-700 mb-2">No documents found</p>
                   <Button 
                     variant="outline" 
                     onClick={() => setShowUploadModal(true)}
                     size="sm"
+                    className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
                   >
                     Upload First Document
                     </Button>
@@ -780,22 +783,22 @@ export function MobileAdminTasksPage() {
               <>
                 <div className="space-y-2">
                   {paginatedDocs.map((doc) => (
-                    <Card key={doc.id} className="p-3">
+                    <Card key={doc.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                       <div className="space-y-2">
                         <div className="flex items-start justify-between">
                           <div className="flex items-start space-x-2 flex-1 min-w-0">
                             {getFileIcon(doc.file_type)}
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-medium text-sm truncate">{doc.title}</h3>
+                              <h3 className="font-medium text-sm truncate text-slate-900">{doc.title}</h3>
                               {doc.description && (
-                                <p className="text-xs text-gray-600 mt-1 line-clamp-2">{doc.description}</p>
+                                <p className="text-xs text-slate-700 mt-1 line-clamp-2">{doc.description}</p>
                   )}
                 </div>
               </div>
 
                         </div>
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2 text-xs text-gray-600">
+                          <div className="flex items-center space-x-2 text-xs text-slate-700">
                             {doc.file_size && (
                               <span>{getFileSize(doc.file_size)}</span>
                             )}
@@ -810,7 +813,7 @@ export function MobileAdminTasksPage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => handleDownload(doc)}
-                            className="h-7 px-2"
+                            className="h-7 px-2 text-navy-700 hover:text-navy-900 hover:bg-navy-50"
                           >
                             <Download className="h-3 w-3" />
                           </Button>

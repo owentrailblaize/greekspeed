@@ -334,27 +334,27 @@ export function MobileOperationsPage() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-3">
-              <Card>
+              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-gray-600">Total Members</p>
-                      <p className="text-xl font-semibold">{filteredUsers.length}</p>
+                      <p className="text-xs text-slate-700 font-medium mb-1">Total Members</p>
+                      <p className="text-xl font-semibold text-slate-900">{filteredUsers.length}</p>
                     </div>
                     <Users className="h-5 w-5 text-navy-500" />
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-gray-600">Active</p>
-                      <p className="text-xl font-semibold">
+                      <p className="text-xs text-slate-700 font-medium mb-1">Active</p>
+                      <p className="text-xl font-semibold text-slate-900">
                         {filteredUsers.filter(u => u.member_status === 'active').length}
                       </p>
                     </div>
-                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <CheckCircle className="h-5 w-5 text-navy-500" />
                   </div>
                 </CardContent>
               </Card>
@@ -366,27 +366,29 @@ export function MobileOperationsPage() {
                 <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
               </div>
             ) : filteredUsers.length === 0 ? (
-              <div className="text-center py-12">
-                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No members found</p>
-              </div>
+              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+                <CardContent className="p-8 text-center">
+                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-slate-700">No members found</p>
+                </CardContent>
+              </Card>
             ) : (
               <>
                 <div className="space-y-2">
                   {paginatedUsers.map((user) => (
-                    <Card key={user.id} className="p-3">
+                    <Card key={user.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-sm truncate">{user.full_name}</h3>
-                          <p className="text-xs text-gray-600 truncate">{user.email}</p>
+                          <h3 className="font-medium text-sm truncate text-slate-900">{user.full_name}</h3>
+                          <p className="text-xs text-slate-700 truncate">{user.email}</p>
                           <div className="flex items-center space-x-2 mt-1">
                             {user.role && (
-                              <Badge variant="secondary" className="text-xs">
+                              <Badge variant="secondary" className="text-xs border-navy-200 text-navy-700">
                                 {user.role}
                               </Badge>
                             )}
                             {user.chapter_role && (
-                              <Badge variant="outline" className="text-xs">
+                              <Badge variant="outline" className="text-xs border-navy-200 text-navy-700">
                                 {user.chapter_role}
                               </Badge>
                             )}
@@ -397,7 +399,7 @@ export function MobileOperationsPage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => openViewModal(user)}
-                            className="h-8 w-8 p-0"
+                            className="h-8 w-8 p-0 text-navy-700 hover:text-navy-900 hover:bg-navy-50"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -405,7 +407,7 @@ export function MobileOperationsPage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => openEditModal(user)}
-                            className="h-8 w-8 p-0"
+                            className="h-8 w-8 p-0 text-navy-700 hover:text-navy-900 hover:bg-navy-50"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -413,7 +415,7 @@ export function MobileOperationsPage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => openDeleteModal(user)}
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -488,37 +490,37 @@ export function MobileOperationsPage() {
           <TabsContent value="dues" className="space-y-4">
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-3">
-              <Card>
+              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-gray-600">Total Due</p>
-                      <p className="text-lg font-semibold">${duesStats.totalDue.toLocaleString()}</p>
+                      <p className="text-xs text-slate-700 font-medium mb-1">Total Due</p>
+                      <p className="text-lg font-semibold text-slate-900">${duesStats.totalDue.toLocaleString()}</p>
                     </div>
-                    <DollarSign className="h-5 w-5 text-orange-500" />
+                    <DollarSign className="h-5 w-5 text-navy-500" />
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-gray-600">Paid</p>
-                      <p className="text-lg font-semibold">${duesStats.totalPaid.toLocaleString()}</p>
+                      <p className="text-xs text-slate-700 font-medium mb-1">Paid</p>
+                      <p className="text-lg font-semibold text-slate-900">${duesStats.totalPaid.toLocaleString()}</p>
                     </div>
-                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <CheckCircle className="h-5 w-5 text-navy-500" />
                   </div>
                 </CardContent>
               </Card>
             </div>
 
             {/* Collection Rate */}
-            <Card>
+            <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
               <CardContent className="p-4">
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Collection Rate</span>
-                    <span className="font-semibold">{duesStats.collectionRate}%</span>
+                    <span className="text-sm text-slate-700">Collection Rate</span>
+                    <span className="font-semibold text-slate-900">{duesStats.collectionRate}%</span>
                   </div>
                   <Progress value={duesStats.collectionRate} className="h-2" />
                 </div>
@@ -533,19 +535,19 @@ export function MobileOperationsPage() {
                   <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
                 </div>
               ) : cycles.length === 0 ? (
-                <Card>
+                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
                   <CardContent className="p-4 text-center">
-                    <p className="text-sm text-gray-500">No dues cycles found</p>
+                    <p className="text-sm text-slate-700">No dues cycles found</p>
                   </CardContent>
                 </Card>
               ) : (
                 <div className="space-y-2">
                   {cycles.map((cycle) => (
-                    <Card key={cycle.id} className="p-3">
+                    <Card key={cycle.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h4 className="font-medium text-sm">{cycle.name}</h4>
-                          <p className="text-xs text-gray-600">
+                          <h4 className="font-medium text-sm text-slate-900">{cycle.name}</h4>
+                          <p className="text-xs text-slate-700">
                             ${cycle.base_amount.toLocaleString()} • Due {new Date(cycle.due_date).toLocaleDateString()}
                           </p>
                         </div>
@@ -561,21 +563,21 @@ export function MobileOperationsPage() {
 
             {/* Recent Assignments */}
             <div>
-              <h3 className="text-sm font-semibold mb-2">Recent Assignments</h3>
+              <h3 className="text-sm font-semibold mb-2 text-slate-900">Recent Assignments</h3>
               {assignments.length === 0 ? (
-                <Card>
+                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
                   <CardContent className="p-4 text-center">
-                    <p className="text-sm text-gray-500">No assignments found</p>
+                    <p className="text-sm text-slate-700">No assignments found</p>
                   </CardContent>
                 </Card>
               ) : (
                 <div className="space-y-2">
                   {assignments.slice(0, 5).map((assignment) => (
-                    <Card key={assignment.id} className="p-3">
+                    <Card key={assignment.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm truncate">{assignment.user.full_name}</h4>
-                          <p className="text-xs text-gray-600">
+                          <h4 className="font-medium text-sm truncate text-slate-900">{assignment.user.full_name}</h4>
+                          <p className="text-xs text-slate-700">
                             ${assignment.amount_due.toLocaleString()} • {assignment.cycle.name}
                           </p>
                         </div>
@@ -598,53 +600,57 @@ export function MobileOperationsPage() {
           <TabsContent value="budget" className="space-y-4">
             {/* Budget Overview Cards */}
             <div className="grid grid-cols-2 gap-3">
-              <Card>
+              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-gray-600">Allocated</p>
-                      <p className="text-lg font-semibold">${budgetData.totalAllocated.toLocaleString()}</p>
+                      <p className="text-xs text-slate-700 font-medium mb-1">Allocated</p>
+                      <p className="text-lg font-semibold text-slate-900">${budgetData.totalAllocated.toLocaleString()}</p>
                     </div>
-                    <TrendingUp className="h-5 w-5 text-blue-500" />
+                    <TrendingUp className="h-5 w-5 text-navy-500" />
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-gray-600">Remaining</p>
-                      <p className="text-lg font-semibold text-green-600">${budgetData.remaining.toLocaleString()}</p>
+                      <p className="text-xs text-slate-700 font-medium mb-1">Remaining</p>
+                      <p className={`text-lg font-semibold ${budgetData.remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        ${budgetData.remaining.toLocaleString()}
+                      </p>
                     </div>
-                    <DollarSign className="h-5 w-5 text-green-500" />
+                    <DollarSign className="h-5 w-5 text-navy-500" />
                   </div>
                 </CardContent>
               </Card>
             </div>
 
             {/* Budget Progress */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Budget Overview</CardTitle>
+            <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+              <CardHeader className="pb-3 flex-shrink-0 border-b border-navy-100/30">
+                <CardTitle className="text-sm text-slate-900 font-semibold">Budget Overview</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600">Starting Budget</span>
-                  <span className="font-semibold text-sm">${budgetData.startingBudget.toLocaleString()}</span>
+                  <span className="text-xs text-slate-700">Starting Budget</span>
+                  <span className="font-semibold text-sm text-slate-900">${budgetData.startingBudget.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600">Total Allocated</span>
+                  <span className="text-xs text-slate-700">Total Allocated</span>
                   <span className="font-semibold text-sm text-orange-600">${budgetData.totalAllocated.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600">Remaining</span>
-                  <span className="font-semibold text-sm text-green-600">${budgetData.remaining.toLocaleString()}</span>
+                  <span className="text-xs text-slate-700">Remaining</span>
+                  <span className={`font-semibold text-sm ${budgetData.remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    ${budgetData.remaining.toLocaleString()}
+                  </span>
                 </div>
                 <Progress 
                   value={(budgetData.totalAllocated / budgetData.startingBudget) * 100} 
                   className="h-2"
                 />
-                <p className="text-xs text-gray-500 text-center">
+                <p className="text-xs text-slate-600 text-center">
                   {((budgetData.totalAllocated / budgetData.startingBudget) * 100).toFixed(1)}% allocated
                 </p>
               </CardContent>
@@ -668,20 +674,20 @@ export function MobileOperationsPage() {
                 const budgetEventsEnd = Math.min(budgetEventsPage * budgetEventsPerPage, budgetEventsTotal);
 
                 return eventsWithBudget.length === 0 ? (
-                  <Card>
+                  <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
                     <CardContent className="p-4 text-center">
-                      <p className="text-sm text-gray-500">No events with budgets</p>
+                      <p className="text-sm text-slate-700">No events with budgets</p>
                     </CardContent>
                   </Card>
                 ) : (
                   <>
                     <div className="space-y-2">
                       {paginatedBudgetEvents.map((event) => (
-                        <Card key={event.id} className="p-3">
+                        <Card key={event.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                           <div className="flex items-center justify-between">
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-sm truncate">{event.title}</h4>
-                              <p className="text-xs text-gray-600">
+                              <h4 className="font-medium text-sm truncate text-slate-900">{event.title}</h4>
+                              <p className="text-xs text-slate-700">
                                 {new Date(event.start_time).toLocaleDateString()}
                               </p>
                             </div>
