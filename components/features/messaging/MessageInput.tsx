@@ -20,8 +20,13 @@ export function MessageInput({
 }: MessageInputProps) {
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Max height for mobile (larger) and desktop
+  const MAX_HEIGHT_MOBILE = 180; // Increased for mobile
+  const MAX_HEIGHT_DESKTOP = 150;
 
   const handleSend = async () => {
     if (!message.trim() || isSending || disabled) return;
@@ -30,6 +35,7 @@ export function MessageInput({
     try {
       await onSendMessage(message.trim());
       setMessage('');
+      setIsExpanded(false);
       // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
@@ -53,8 +59,28 @@ export function MessageInput({
     
     // Auto-resize textarea
     const textarea = e.target;
+    const isMobile = window.innerWidth < 768;
+    const maxHeight = isMobile ? MAX_HEIGHT_MOBILE : MAX_HEIGHT_DESKTOP;
+    
+    // Reset height to calculate scrollHeight
     textarea.style.height = 'auto';
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+    const scrollHeight = textarea.scrollHeight;
+    const newHeight = Math.min(scrollHeight, maxHeight);
+    
+    // Set new height
+    textarea.style.height = `${newHeight}px`;
+    
+    // Determine if we should be in expanded mode (more than 2 lines)
+    // Roughly 2 lines = ~80px (40px per line with padding)
+    const shouldExpand = scrollHeight > 80;
+    setIsExpanded(shouldExpand);
+    
+    // Enable scrolling if at max height
+    if (scrollHeight > maxHeight) {
+      textarea.style.overflowY = 'auto';
+    } else {
+      textarea.style.overflowY = 'hidden';
+    }
     
     // Send typing indicator
     onTyping();
@@ -76,6 +102,11 @@ export function MessageInput({
     
     setMessage(newMessage);
     
+    // Trigger input event to recalculate height
+    const event = new Event('input', { bubbles: true });
+    Object.defineProperty(event, 'target', { value: textarea, enumerable: true });
+    textarea.dispatchEvent(event);
+    
     // Focus back to textarea and set cursor position
     setTimeout(() => {
       textarea.focus();
@@ -89,6 +120,17 @@ export function MessageInput({
     console.log('File upload is currently disabled');
   };
 
+  // Reset expanded state when message is cleared
+  useEffect(() => {
+    if (!message.trim()) {
+      setIsExpanded(false);
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+        textareaRef.current.style.overflowY = 'hidden';
+      }
+    }
+  }, [message]);
+
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) {
@@ -97,10 +139,20 @@ export function MessageInput({
     };
   }, []);
 
+  // Determine border radius based on expansion state
+  const borderRadiusClass = isExpanded 
+    ? 'rounded-2xl' // Rounded rectangle for longer messages
+    : 'rounded-full'; // Pill shape for short messages
+
+  // Determine alignment based on expansion
+  const containerAlignClass = isExpanded 
+    ? 'items-start' // Align to top when expanded
+    : 'items-center'; // Center align when compact
+
   return (
     <div className="border-t border-gray-200 bg-white p-3 md:p-4">
       {/* Main input row - all elements perfectly aligned */}
-      <div className="flex items-center gap-2 md:gap-3">
+      <div className={`flex ${containerAlignClass} gap-2 md:gap-3`}>
         {/* File attachment button - HIDDEN ON MOBILE */}
         <Button
           variant="ghost"
@@ -114,16 +166,16 @@ export function MessageInput({
         </Button>
 
         {/* Emoji picker - perfectly aligned */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 pt-0.5">
           <EmojiPicker
             onEmojiSelect={handleEmojiSelect}
             disabled={disabled}
           />
         </div>
 
-        {/* Message input container - rounded-full with modern styling */}
+        {/* Message input container - dynamically styled based on expansion */}
         <div className="flex-1 relative min-w-0">
-          <div className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 transition-all duration-300 flex items-center px-3 md:px-4">
+          <div className={`${borderRadiusClass} bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 transition-all duration-300 flex items-start px-3 md:px-4 py-2`}>
             <textarea
               ref={textareaRef}
               value={message}
@@ -131,12 +183,13 @@ export function MessageInput({
               onKeyPress={handleKeyPress}
               placeholder={placeholder}
               disabled={disabled}
-              className="w-full resize-none bg-transparent border-0 focus:outline-none text-sm md:text-base text-navy-700 placeholder:text-gray-400 disabled:text-gray-400 disabled:cursor-not-allowed py-2.5 md:py-2 pr-2"
+              className="w-full resize-none bg-transparent border-0 focus:outline-none text-sm md:text-base text-navy-700 placeholder:text-gray-400 disabled:text-gray-400 disabled:cursor-not-allowed pr-2 overflow-y-auto scrollbar-thin scrollbar-thumb-navy-300 scrollbar-track-transparent"
               style={{ 
                 minHeight: '40px',
-                maxHeight: '120px',
+                maxHeight: `${window.innerWidth < 768 ? MAX_HEIGHT_MOBILE : MAX_HEIGHT_DESKTOP}px`,
                 fontSize: '16px', // Prevent zoom on iOS
-                lineHeight: '1.5'
+                lineHeight: '1.5',
+                overflowY: 'hidden' // Will be set to 'auto' when needed
               }}
               rows={1}
             />
@@ -144,7 +197,7 @@ export function MessageInput({
         </div>
 
         {/* Send button - perfectly aligned */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 pt-0.5">
           <Button
             onClick={handleSend}
             disabled={!message.trim() || isSending || disabled}
