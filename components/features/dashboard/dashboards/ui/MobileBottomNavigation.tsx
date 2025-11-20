@@ -153,7 +153,7 @@ export function MobileBottomNavigation({
         },
         {
           id: 'operations',
-          label: 'Operations',
+          label: 'Ops',
           icon: Settings,
           onClick: () => handleToolsOptionClick('operations'),
         },
