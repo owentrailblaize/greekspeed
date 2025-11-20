@@ -98,60 +98,68 @@ export function MessageInput({
   }, []);
 
   return (
-    <div className="border-t border-gray-200 bg-white p-4">
-      <div className="flex items-end space-x-3">
+    <div className="border-t border-gray-200 bg-white p-3 md:p-4">
+      {/* Main input row - all elements perfectly aligned */}
+      <div className="flex items-center gap-2 md:gap-3">
         {/* File attachment button - HIDDEN ON MOBILE */}
         <Button
           variant="ghost"
           size="sm"
           onClick={handleFileUpload}
           disabled={true}
-          className="hidden md:flex text-gray-300 cursor-not-allowed p-2 h-10 w-10"
+          className="hidden md:flex text-gray-300 cursor-not-allowed p-2 h-10 w-10 flex-shrink-0"
           title="File upload is currently disabled"
         >
           <Paperclip className="h-5 w-5" />
         </Button>
 
-        {/* Emoji picker */}
-        <EmojiPicker
-          onEmojiSelect={handleEmojiSelect}
-          disabled={disabled}
-        />
-
-        {/* Message input - MOBILE OPTIMIZED */}
-        <div className="flex-1 relative">
-          <textarea
-            ref={textareaRef}
-            value={message}
-            onChange={handleInput}
-            onKeyPress={handleKeyPress}
-            placeholder={placeholder}
+        {/* Emoji picker - perfectly aligned */}
+        <div className="flex-shrink-0">
+          <EmojiPicker
+            onEmojiSelect={handleEmojiSelect}
             disabled={disabled}
-            className="w-full resize-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 placeholder:text-gray-400 placeholder:truncate"
-            style={{ 
-              minHeight: '44px', 
-              maxHeight: '120px',
-              fontSize: '16px' // Prevent zoom on iOS
-            }}
-            rows={1}
           />
         </div>
 
-        {/* Send button */}
-        <Button
-          onClick={handleSend}
-          disabled={!message.trim() || isSending || disabled}
-          className="bg-navy-600 hover:bg-navy-700 text-white px-4 py-2 rounded-lg font-medium h-10 min-w-[80px] disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSending ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto" />
-          ) : (
-            <>
-              <Send className="h-4 w-4 mr-2" />
-              Send
-            </>
-          )}
-        </Button>
+        {/* Message input container - rounded-full with modern styling */}
+        <div className="flex-1 relative min-w-0">
+          <div className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 transition-all duration-300 flex items-center px-3 md:px-4">
+            <textarea
+              ref={textareaRef}
+              value={message}
+              onChange={handleInput}
+              onKeyPress={handleKeyPress}
+              placeholder={placeholder}
+              disabled={disabled}
+              className="w-full resize-none bg-transparent border-0 focus:outline-none text-sm md:text-base text-navy-700 placeholder:text-gray-400 disabled:text-gray-400 disabled:cursor-not-allowed py-2.5 md:py-2 pr-2"
+              style={{ 
+                minHeight: '40px',
+                maxHeight: '120px',
+                fontSize: '16px', // Prevent zoom on iOS
+                lineHeight: '1.5'
+              }}
+              rows={1}
+            />
+          </div>
+        </div>
+
+        {/* Send button - perfectly aligned */}
+        <div className="flex-shrink-0">
+          <Button
+            onClick={handleSend}
+            disabled={!message.trim() || isSending || disabled}
+            className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 px-3 md:px-4 py-2 font-medium h-10 min-w-[60px] md:min-w-[80px] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/80 flex items-center justify-center gap-1.5"
+          >
+            {isSending ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-navy-600" />
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                <span className="hidden sm:inline">Send</span>
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Character count - HIDDEN ON MOBILE */}

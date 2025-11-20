@@ -84,7 +84,7 @@ function MessagesPageContent() {
 
   return (
     // Adjust height to account for mobile footer (pb-20 = 80px for footer)
-    <div className="h-[calc(100vh-4rem)] sm:h-[calc(100vh-4rem)] flex flex-col pb-20 sm:pb-0">
+    <div className="h-[calc(100vh-4rem)] sm:h-[calc(100vh-4rem)] flex flex-col pb-14 sm:pb-0">
       {/* Mobile Header - Only show when in list view */}
       {showListViewOnMobile && (
         <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
