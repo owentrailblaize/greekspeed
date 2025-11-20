@@ -269,8 +269,8 @@ export function MobileEventsVendorsPage() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-navy-700 font-medium mb-1">Total Events</p>
-                      <p className="text-xl font-semibold text-navy-900">{budgetStats.totalEvents}</p>
+                      <p className="text-xs text-slate-700 font-medium mb-1">Total Events</p>
+                      <p className="text-xl font-semibold text-slate-900">{budgetStats.totalEvents}</p>
                     </div>
                     <Calendar className="h-5 w-5 text-navy-500" />
                   </div>
@@ -280,8 +280,8 @@ export function MobileEventsVendorsPage() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-navy-700 font-medium mb-1">With Budget</p>
-                      <p className="text-xl font-semibold text-navy-900">{budgetStats.eventsWithBudget}</p>
+                      <p className="text-xs text-slate-700 font-medium mb-1">With Budget</p>
+                      <p className="text-xl font-semibold text-slate-900">{budgetStats.eventsWithBudget}</p>
                     </div>
                     <DollarSign className="h-5 w-5 text-navy-500" />
                   </div>
@@ -292,15 +292,15 @@ export function MobileEventsVendorsPage() {
             {/* Budget Overview */}
             <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
               <CardHeader className="pb-3 flex-shrink-0 border-b border-navy-100/30">
-                <CardTitle className="text-sm text-navy-900 font-semibold">Budget Overview</CardTitle>
+                <CardTitle className="text-sm text-slate-900 font-semibold">Budget Overview</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-navy-700">Allocated</span>
-                  <span className="font-semibold text-sm text-navy-900">${budgetStats.totalBudgetAllocated.toLocaleString()}</span>
+                  <span className="text-xs text-slate-700">Allocated</span>
+                  <span className="font-semibold text-sm text-slate-900">${budgetStats.totalBudgetAllocated.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-navy-700">Remaining</span>
+                  <span className="text-xs text-slate-700">Remaining</span>
                   <span className={`font-semibold text-sm ${budgetStats.remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     ${budgetStats.remaining.toLocaleString()}
                   </span>
@@ -350,13 +350,13 @@ export function MobileEventsVendorsPage() {
                       <div className="space-y-2">
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-sm truncate text-navy-900">{event.title}</h3>
-                            <div className="flex items-center space-x-2 mt-1 text-xs text-navy-700">
+                            <h3 className="font-medium text-sm truncate text-slate-900">{event.title}</h3>
+                            <div className="flex items-center space-x-2 mt-1 text-xs text-slate-700">
                               <Clock className="h-3 w-3" />
                               <span>{formatEventDate(event.start_time)}</span>
                             </div>
                             {event.location && (
-                              <div className="flex items-center space-x-2 mt-1 text-xs text-navy-700">
+                              <div className="flex items-center space-x-2 mt-1 text-xs text-slate-700">
                                 <MapPin className="h-3 w-3" />
                                 <span className="truncate">{event.location}</span>
                               </div>
@@ -383,7 +383,7 @@ export function MobileEventsVendorsPage() {
                         </div>
                         <div className="flex items-center space-x-2">
                           {event.budget_amount && (
-                            <Badge variant="outline" className="text-xs border-navy-200 text-navy-700">
+                            <Badge variant="outline" className="text-xs border-navy-200 text-slate-700">
                               <DollarSign className="h-3 w-3 mr-1" />
                               ${parseFloat(String(event.budget_amount)).toLocaleString()}
                             </Badge>
@@ -396,7 +396,7 @@ export function MobileEventsVendorsPage() {
                             {event.status}
                           </Badge>
                           {event.attendee_count !== undefined && (
-                            <div className="flex items-center text-xs text-navy-700">
+                            <div className="flex items-center text-xs text-slate-700">
                               <Users className="h-3 w-3 mr-1" />
                               {event.attendee_count}
                             </div>
@@ -487,8 +487,8 @@ export function MobileEventsVendorsPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-navy-700 font-medium mb-1">Total Vendors</p>
-                    <p className="text-xl font-semibold text-navy-900">{vendors.length}</p>
+                    <p className="text-xs text-slate-700 font-medium mb-1">Total Vendors</p>
+                    <p className="text-xl font-semibold text-slate-900">{vendors.length}</p>
                   </div>
                   <Building2 className="h-5 w-5 text-navy-500" />
                 </div>
@@ -530,14 +530,14 @@ export function MobileEventsVendorsPage() {
                       <div className="space-y-2">
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-sm truncate text-navy-900">{vendor.name}</h3>
-                            <Badge variant="secondary" className="text-xs mt-1 border-navy-200 text-navy-700">
+                            <h3 className="font-medium text-sm truncate text-slate-900">{vendor.name}</h3>
+                            <Badge variant="secondary" className="text-xs mt-1 border-navy-200 text-slate-700">
                               {vendor.type}
                             </Badge>
                             {vendor.rating && (
                               <div className="flex items-center mt-1">
                                 <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                                <span className="text-xs text-navy-700 ml-1">{vendor.rating}</span>
+                                <span className="text-xs text-slate-700 ml-1">{vendor.rating}</span>
                               </div>
                             )}
                           </div>
@@ -560,7 +560,7 @@ export function MobileEventsVendorsPage() {
                             </Button>
                           </div>
                         </div>
-                        <div className="space-y-1 text-xs text-navy-700">
+                        <div className="space-y-1 text-xs text-slate-700">
                           {vendor.contact_person && (
                             <div className="flex items-center">
                               <Users className="h-3 w-3 mr-2" />
