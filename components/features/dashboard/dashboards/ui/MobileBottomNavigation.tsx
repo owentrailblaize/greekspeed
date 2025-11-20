@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Users, Wrench, CreditCard, User, CheckSquare, FileText, Activity, X, Search, Building2, LucideIcon, MessageSquare, Calendar, Megaphone } from 'lucide-react';
+import { Home, Users, Wrench, CreditCard, User, CheckSquare, FileText, Activity, X, Search, Building2, LucideIcon, MessageSquare, Calendar, Megaphone, Settings } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 
 export type MobileTab = 'home' | 'tasks' | 'announcements' | 'calendar' | 'events';
@@ -152,16 +152,16 @@ export function MobileBottomNavigation({
           onClick: () => handleToolsOptionClick('tasks'),
         },
         {
-          id: 'docs',
-          label: 'Docs',
-          icon: FileText,
-          onClick: () => handleToolsOptionClick('docs'),
+          id: 'operations',
+          label: 'Ops',
+          icon: Settings,
+          onClick: () => handleToolsOptionClick('operations'),
         },
         {
-          id: 'ops',
-          label: 'Ops',
-          icon: Activity,
-          onClick: () => handleToolsOptionClick('ops'),
+          id: 'events',
+          label: 'Events',
+          icon: Calendar,
+          onClick: () => handleToolsOptionClick('events'),
         },
       ];
     } else {
@@ -315,10 +315,12 @@ export function MobileBottomNavigation({
     if (userRole === 'admin' || userRole === 'active_member') {
       router.push(`/dashboard?tool=${option}`);
       if (onTabChange) {
-        const tabMap: Record<string, MobileTab> = {
+        const tabMap: Record<string, MobileTab | string> = {
           tasks: 'tasks',
+          operations: 'operations',
+          events: 'events',
           docs: 'tasks',
-          ops: 'tasks',
+          ops: 'operations',
           dues: 'tasks',
           announcements: 'announcements',
           calendar: 'calendar',
@@ -334,10 +336,12 @@ export function MobileBottomNavigation({
       // Fallback: navigate with query param
       router.push(`/dashboard?tool=${option}`);
       if (onTabChange) {
-        const tabMap: Record<string, MobileTab> = {
+        const tabMap: Record<string, MobileTab | string> = {
           tasks: 'tasks',
+          operations: 'operations',
+          events: 'events',
           docs: 'tasks',
-          ops: 'tasks',
+          ops: 'operations',
           dues: 'tasks',
           announcements: 'announcements',
           calendar: 'calendar',
