@@ -47,7 +47,7 @@ export function MobileAdminTasksPage() {
 
   const [tasksLoading, setTasksLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed' | 'overdue'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'completed' | 'my_tasks'>('all');
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [chapterMembers, setChapterMembers] = useState<Array<{ id: string; full_name: string; role: string; chapter_role: string | null }>>([]);
@@ -552,8 +552,11 @@ export function MobileAdminTasksPage() {
   // Filter and paginate tasks
   const filteredTasks = useMemo(() => {
     if (activeFilter === 'all') return tasks;
+    if (activeFilter === 'my_tasks') {
+      return tasks.filter(t => t.assignee_id === profile?.id);
+    }
     return tasks.filter(t => t.status === activeFilter);
-  }, [tasks, activeFilter]);
+  }, [tasks, activeFilter, profile?.id]);
 
   const paginatedTasks = useMemo(() => {
     const startIndex = (tasksPage - 1) * tasksPerPage;
@@ -583,9 +586,8 @@ export function MobileAdminTasksPage() {
   const filterButtons = [
     { id: 'all' as const, label: 'All', count: tasks.length },
     { id: 'pending' as const, label: 'Pending', count: tasks.filter(t => t.status === 'pending').length },
-    { id: 'in_progress' as const, label: 'In Progress', count: tasks.filter(t => t.status === 'in_progress').length },
     { id: 'completed' as const, label: 'Completed', count: tasks.filter(t => t.status === 'completed').length },
-    { id: 'overdue' as const, label: 'Overdue', count: tasks.filter(t => t.status === 'overdue').length }
+    { id: 'my_tasks' as const, label: 'My Tasks', count: tasks.filter(t => t.assignee_id === profile?.id).length }
   ];
 
   if (!chapterId) {
@@ -627,14 +629,15 @@ export function MobileAdminTasksPage() {
           </Button>
 
         {/* Filter Buttons */}
-          <div className="flex space-x-2 overflow-x-auto pb-2">
+        <div className="-mx-4 px-4">
+          <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
             {filterButtons.map((filter) => {
               const isActive = activeFilter === filter.id;
               return (
                 <button
                   key={filter.id}
                   onClick={() => setActiveFilter(filter.id)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
                     isActive 
                       ? 'bg-blue-600 text-white' 
                       : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
@@ -649,6 +652,7 @@ export function MobileAdminTasksPage() {
                 </button>
               );
             })}
+          </div>
         </div>
 
         {/* Tasks List */}
@@ -662,7 +666,7 @@ export function MobileAdminTasksPage() {
             <CardContent className="p-8 text-center">
             <CheckSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-slate-700 text-lg mb-2">
-              {activeFilter === 'all' ? 'No tasks found' : `No ${activeFilter} tasks`}
+              {activeFilter === 'all' ? 'No tasks found' : activeFilter === 'my_tasks' ? 'No tasks assigned to you' : `No ${activeFilter} tasks`}
             </p>
               <p className="text-slate-600 text-sm">
               {activeFilter === 'all' ? 'Create your first task to get started!' : 'Try a different filter'}
