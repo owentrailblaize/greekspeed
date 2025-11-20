@@ -416,7 +416,7 @@ export function MobileEventsVendorsPage() {
                         size="sm"
                         onClick={() => setEventsPage(prev => Math.max(1, prev - 1))}
                         disabled={eventsPage === 1 || eventsLoading}
-                        className="h-8 px-3 text-xs"
+                        className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ChevronLeft className="h-3.5 w-3.5 mr-1" />
                         Previous
@@ -432,7 +432,7 @@ export function MobileEventsVendorsPage() {
                         size="sm"
                         onClick={() => setEventsPage(prev => Math.min(eventsTotalPages, prev + 1))}
                         disabled={eventsPage === eventsTotalPages || eventsLoading}
-                        className="h-8 px-3 text-xs"
+                        className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Next
                         <ChevronRight className="h-3.5 w-3.5 ml-1" />
@@ -447,10 +447,10 @@ export function MobileEventsVendorsPage() {
                             variant={eventsPage === page ? "default" : "outline"}
                             size="sm"
                             onClick={() => setEventsPage(page)}
-                            className={`h-8 w-8 p-0 text-xs ${
+                            className={`h-8 w-8 p-0 text-xs rounded-full transition-all duration-300 ${
                               eventsPage === page
-                                ? 'bg-navy-600 text-white hover:bg-navy-700'
-                                : 'hover:bg-gray-50'
+                                ? 'bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20'
+                                : 'bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900'
                             }`}
                             disabled={eventsLoading}
                           >
@@ -593,7 +593,7 @@ export function MobileEventsVendorsPage() {
                         size="sm"
                         onClick={() => setVendorsPage(prev => Math.max(1, prev - 1))}
                         disabled={vendorsPage === 1 || vendorsLoading}
-                        className="h-8 px-3 text-xs"
+                        className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ChevronLeft className="h-3.5 w-3.5 mr-1" />
                         Previous
@@ -609,7 +609,7 @@ export function MobileEventsVendorsPage() {
                         size="sm"
                         onClick={() => setVendorsPage(prev => Math.min(vendorsTotalPages, prev + 1))}
                         disabled={vendorsPage === vendorsTotalPages || vendorsLoading}
-                        className="h-8 px-3 text-xs"
+                        className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Next
                         <ChevronRight className="h-3.5 w-3.5 ml-1" />
@@ -624,10 +624,10 @@ export function MobileEventsVendorsPage() {
                             variant={vendorsPage === page ? "default" : "outline"}
                             size="sm"
                             onClick={() => setVendorsPage(page)}
-                            className={`h-8 w-8 p-0 text-xs ${
+                            className={`h-8 w-8 p-0 text-xs rounded-full transition-all duration-300 ${
                               vendorsPage === page
-                                ? 'bg-navy-600 text-white hover:bg-navy-700'
-                                : 'hover:bg-gray-50'
+                                ? 'bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20'
+                                : 'bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900'
                             }`}
                             disabled={vendorsLoading}
                           >
