@@ -1,10 +1,12 @@
 'use client';
 
+
 import { useState, useEffect, useMemo } from 'react';
 import { CheckSquare, Clock, AlertCircle, Users, Calendar, FileText, Plus, Loader2, Trash2, Upload, Download, ChevronLeft, ChevronRight, Check, UserMinus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { useProfile } from '@/lib/contexts/ProfileContext';
@@ -12,6 +14,7 @@ import { Task, TaskStatus, TaskPriority, CreateTaskRequest } from '@/types/opera
 import { getTasksByChapter, updateTask, getChapterMembersForTasks } from '@/lib/services/taskService';
 import { TaskModal } from '@/components/ui/TaskModal';
 import { supabase } from '@/lib/supabase/client';
+
 import { toast } from 'react-toastify';
 import { documentUploadService } from '@/lib/services/documentUploadService';
 
@@ -34,17 +37,21 @@ interface ChapterDocument {
 }
 
 export function MobileAdminTasksPage() {
+
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
   const [activeTab, setActiveTab] = useState<'tasks' | 'docs'>('tasks');
   
   // Tasks state
   const [tasks, setTasks] = useState<Task[]>([]);
+
   const [tasksLoading, setTasksLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed' | 'overdue'>('all');
+
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [chapterMembers, setChapterMembers] = useState<Array<{ id: string; full_name: string; role: string; chapter_role: string | null }>>([]);
+
   const [tasksPage, setTasksPage] = useState(1);
   const tasksPerPage = 6;
 
@@ -65,11 +72,14 @@ export function MobileAdminTasksPage() {
 
   // Load tasks and chapter members
   useEffect(() => {
+
     if (!chapterId || activeTab !== 'tasks') return;
     if (!profile?.id) {
+
       setTasksLoading(false);
       return;
     }
+
     loadAllData();
   }, [chapterId, profile?.id, activeTab]);
 
@@ -81,6 +91,7 @@ export function MobileAdminTasksPage() {
 
   // Real-time subscription for task updates
   useEffect(() => {
+
     if (chapterId && activeTab === 'tasks') {
       const subscription = supabase
         .channel(`tasks-${chapterId}`)
@@ -113,6 +124,7 @@ export function MobileAdminTasksPage() {
         subscription.unsubscribe();
       };
     }
+
   }, [chapterId, activeTab]);
 
   // Reset pages when switching tabs
@@ -127,6 +139,7 @@ export function MobileAdminTasksPage() {
 
   const loadAllData = async () => {
     try {
+
       setTasksLoading(true);
       
       const [allTasksData, membersData] = await Promise.all([
@@ -135,16 +148,19 @@ export function MobileAdminTasksPage() {
           .select('*')
           .eq('chapter_id', chapterId!)
           .order('due_date', { ascending: true }),
+
         getChapterMembersForTasks(chapterId!)
       ]);
       
       setTasks(allTasksData.data || []);
       setChapterMembers(membersData);
     } catch (error) {
+
       console.error('Error loading data:', error);
       setTasks([]);
       setChapterMembers([]);
     } finally {
+
       setTasksLoading(false);
     }
   };
@@ -167,8 +183,9 @@ export function MobileAdminTasksPage() {
 
       if (!profile?.chapter_id) {
         setDocuments([]);
-        return;
-      }
+      return;
+    }
+
 
       let visibilityFilter = ['chapter_all', 'active_members', 'alumni', 'admins'];
       if (profile.role === 'active_member') {
@@ -228,6 +245,7 @@ export function MobileAdminTasksPage() {
       
       if (Array.isArray(taskData.assignee_id)) {
         const tasks = await Promise.all(
+
           taskData.assignee_id.map((assigneeId) => {
             return supabase
               .from('tasks')
@@ -248,6 +266,7 @@ export function MobileAdminTasksPage() {
           throw new Error(`Failed to create some tasks: ${errors.map(e => e.error?.message).join(', ')}`);
         }
       } else {
+
         const { error } = await supabase
           .from('tasks')
           .insert({
@@ -263,12 +282,15 @@ export function MobileAdminTasksPage() {
         if (error) {
           throw new Error(`Failed to create task: ${error.message}`);
         }
+
       }
 
       setIsTaskModalOpen(false);
       await loadAllData();
+
       toast.success('Task created successfully!');
     } catch (error) {
+
       console.error('Error creating task:', error);
       toast.error('Failed to create task');
     } finally {
@@ -293,9 +315,11 @@ export function MobileAdminTasksPage() {
 
       if (error) throw error;
       setTasks(prev => prev.filter(task => task.id !== taskId));
+
       toast.success('Task deleted successfully!');
     } catch (error) {
       console.error('Error deleting task:', error);
+
       toast.error('Failed to delete task');
     }
   };
@@ -405,6 +429,7 @@ export function MobileAdminTasksPage() {
   const getStatusColor = (status: TaskStatus) => {
     switch (status) {
       case 'completed': return 'bg-green-100 text-green-800';
+
       case 'overdue': return 'bg-red-100 text-red-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'in_progress': return 'bg-blue-100 text-blue-800';
@@ -414,6 +439,7 @@ export function MobileAdminTasksPage() {
 
   const getPriorityColor = (priority: TaskPriority) => {
     switch (priority) {
+
       case 'urgent': return 'bg-red-100 text-red-800';
       case 'high': return 'bg-orange-100 text-orange-800';
       case 'medium': return 'bg-yellow-100 text-yellow-800';
@@ -430,6 +456,7 @@ export function MobileAdminTasksPage() {
       day: 'numeric' 
     });
   };
+
 
   const getFileIcon = (fileType: string | null) => {
     if (!fileType) return <FileText className="h-4 w-4" />;
@@ -500,8 +527,10 @@ export function MobileAdminTasksPage() {
   }
 
   return (
+
     <div className="min-h-screen bg-gray-50 pt-0 pb-20 px-4">
       <div className="max-w-md mx-auto">
+
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
@@ -511,56 +540,59 @@ export function MobileAdminTasksPage() {
 
           {/* Tasks Tab */}
           <TabsContent value="tasks" className="space-y-4">
-            {/* Create Task Button */}
-            <Button 
+        {/* Create Task Button */}
+          <Button 
+
               onClick={() => setIsTaskModalOpen(true)}
               className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 w-full md:w-auto transition-all duration-300"
-              >
-              <Plus className="h-4 w-4 mr-2" />
-              Create New Task
-            </Button>
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create New Task
+          </Button>
 
-            {/* Filter Buttons */}
-            <div className="flex space-x-2 overflow-x-auto pb-2">
-              {filterButtons.map((filter) => {
-                const isActive = activeFilter === filter.id;
-                return (
-                  <button
-                    key={filter.id}
-                    onClick={() => setActiveFilter(filter.id)}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                      isActive 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                    }`}
-                  >
-                    <span>{filter.label}</span>
-                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                      isActive ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {filter.count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+        {/* Filter Buttons */}
+          <div className="flex space-x-2 overflow-x-auto pb-2">
+            {filterButtons.map((filter) => {
+              const isActive = activeFilter === filter.id;
+              return (
+                <button
+                  key={filter.id}
+                  onClick={() => setActiveFilter(filter.id)}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                    isActive 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <span>{filter.label}</span>
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                    isActive ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {filter.count}
+                  </span>
+                </button>
+              );
+            })}
+        </div>
 
-            {/* Tasks List */}
+        {/* Tasks List */}
+
             {tasksLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
               </div>
             ) : filteredTasks.length === 0 ? (
-              <div className="text-center py-12">
-                <CheckSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg mb-2">
-                  {activeFilter === 'all' ? 'No tasks found' : `No ${activeFilter} tasks`}
-                </p>
-                <p className="text-gray-400 text-sm">
-                  {activeFilter === 'all' ? 'Create your first task to get started!' : 'Try a different filter'}
-                </p>
-              </div>
-            ) : (
+          <div className="text-center py-12">
+            <CheckSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500 text-lg mb-2">
+              {activeFilter === 'all' ? 'No tasks found' : `No ${activeFilter} tasks`}
+            </p>
+            <p className="text-gray-400 text-sm">
+              {activeFilter === 'all' ? 'Create your first task to get started!' : 'Try a different filter'}
+            </p>
+          </div>
+        ) : (
+
               <>
                 <div className="space-y-2">
                   {paginatedTasks.map((task) => (
@@ -569,42 +601,45 @@ export function MobileAdminTasksPage() {
                         <div className="flex justify-between items-start">
                           <h3 className="font-medium text-gray-900 text-sm flex-1">{task.title}</h3>
                           <div className="flex space-x-2 ml-2">
-                            <Badge className={getStatusColor(task.status)}>
-                              {task.status}
-                            </Badge>
-                            <Badge className={getPriorityColor(task.priority)}>
-                              {task.priority}
-                            </Badge>
-                          </div>
-                        </div>
-                        
-                        {task.description && (
+                    <Badge className={getStatusColor(task.status)}>
+                      {task.status}
+                    </Badge>
+                    <Badge className={getPriorityColor(task.priority)}>
+                      {task.priority}
+                    </Badge>
+                  </div>
+                </div>
+                
+                {task.description && (
+
                           <p className="text-xs text-gray-600">{task.description}</p>
-                        )}
-                        
+                )}
+                
+
                         <div className="space-y-1 text-xs text-gray-600">
-                          <div className="flex items-center space-x-2">
-                            <Users className="h-3 w-3" />
-                            <span>{task.assignee_name || 'Unassigned'}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Calendar className="h-3 w-3" />
-                            <span className={task.is_overdue ? 'text-red-600 font-medium' : ''}>
-                              {formatDate(task.due_date)}
-                            </span>
-                            {task.is_overdue && (
-                              <AlertCircle className="h-3 w-3 text-red-600" />
-                            )}
-                          </div>
-                        </div>
-                        
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-3 w-3" />
+                    <span>{task.assignee_name || 'Unassigned'}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-3 w-3" />
+                    <span className={task.is_overdue ? 'text-red-600 font-medium' : ''}>
+                      {formatDate(task.due_date)}
+                    </span>
+                    {task.is_overdue && (
+                      <AlertCircle className="h-3 w-3 text-red-600" />
+                    )}
+                  </div>
+                </div>
+                
+
                         <div className="flex space-x-2 pt-2 border-t border-gray-100">
                           {task.status !== 'completed' ? (
                             <Button
                               size="sm"
                               onClick={() => handleMarkComplete(task.id)}
-                              className="h-7 px-3 text-xs flex-1"
-                              variant="default"
+                              className="h-7 px-3 text-xs flex-1 rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                              variant="outline"
                             >
                               <Check className="h-3 w-3 mr-1" />
                               Mark Complete
@@ -614,7 +649,7 @@ export function MobileAdminTasksPage() {
                               <Button
                                 size="sm"
                                 onClick={() => handleUnassign(task.id)}
-                                className="h-7 px-3 text-xs flex-1"
+                                className="h-7 px-3 text-xs flex-1 rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
                                 variant="outline"
                               >
                                 <UserMinus className="h-3 w-3 mr-1" />
@@ -623,7 +658,7 @@ export function MobileAdminTasksPage() {
                               <Button
                                 size="sm"
                                 onClick={() => handleDeleteTask(task.id)}
-                                className="h-7 px-3 text-xs flex-1"
+                                className="h-7 px-3 text-xs flex-1 rounded-full bg-white/80 backdrop-blur-md border border-red-300 shadow-lg shadow-red-100/20 hover:shadow-xl hover:shadow-red-100/30 hover:bg-red-50/90 text-red-600 hover:text-red-700 hover:border-red-400 transition-all duration-300"
                                 variant="outline"
                               >
                                 <Trash2 className="h-3 w-3 mr-1" />
@@ -737,7 +772,8 @@ export function MobileAdminTasksPage() {
                     size="sm"
                   >
                     Upload First Document
-                  </Button>
+                    </Button>
+
                 </CardContent>
               </Card>
             ) : (
@@ -753,9 +789,10 @@ export function MobileAdminTasksPage() {
                               <h3 className="font-medium text-sm truncate">{doc.title}</h3>
                               {doc.description && (
                                 <p className="text-xs text-gray-600 mt-1 line-clamp-2">{doc.description}</p>
-                              )}
-                            </div>
-                          </div>
+                  )}
+                </div>
+              </div>
+
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2 text-xs text-gray-600">
@@ -834,9 +871,10 @@ export function MobileAdminTasksPage() {
                           >
                             {page}
                           </Button>
-                        ))}
-                      </div>
-                    )}
+            ))}
+          </div>
+        )}
+
                   </div>
                 )}
               </>
@@ -846,12 +884,14 @@ export function MobileAdminTasksPage() {
 
         {/* Task Modal */}
         <TaskModal
+
           isOpen={isTaskModalOpen}
           onClose={() => setIsTaskModalOpen(false)}
           onSubmit={handleCreateTask}
           chapterMembers={chapterMembers}
           creating={creating}
         />
+
 
         {/* Upload Document Modal */}
         {showUploadModal && (
@@ -934,3 +974,4 @@ export function MobileAdminTasksPage() {
     </div>
   );
 }
+
