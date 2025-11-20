@@ -47,7 +47,7 @@ export function MobileAdminTasksPage() {
 
   const [tasksLoading, setTasksLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed' | 'overdue'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'completed' | 'my_tasks'>('all');
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [chapterMembers, setChapterMembers] = useState<Array<{ id: string; full_name: string; role: string; chapter_role: string | null }>>([]);
@@ -106,12 +106,60 @@ export function MobileAdminTasksPage() {
           (payload) => {
             if (payload.eventType === 'INSERT') {
               const newTask = payload.new as Task;
-              setTasks(prev => [newTask, ...prev]);
+              // Only fetch assignee name if assignee_id exists
+              if (newTask.assignee_id) {
+                supabase
+                  .from('profiles')
+                  .select('full_name')
+                  .eq('id', newTask.assignee_id)
+                  .single()
+                  .then(({ data }) => {
+                    setTasks(prev => [{
+                      ...newTask,
+                      assignee_name: data?.full_name || 'Unassigned',
+                      is_overdue: !!(newTask.due_date && newTask.status !== 'completed' && new Date(newTask.due_date) < new Date())
+                    }, ...prev]);
+                  });
+              } else {
+                // Task has no assignee
+                setTasks(prev => [{
+                  ...newTask,
+                  assignee_name: 'Unassigned',
+                  is_overdue: !!(newTask.due_date && newTask.status !== 'completed' && new Date(newTask.due_date) < new Date())
+                }, ...prev]);
+              }
             } else if (payload.eventType === 'UPDATE') {
               const updatedTask = payload.new as Task;
-              setTasks(prev => prev.map(task => 
-                task.id === updatedTask.id ? updatedTask : task
-              ));
+              // Only fetch assignee name if assignee_id exists
+              if (updatedTask.assignee_id) {
+                supabase
+                  .from('profiles')
+                  .select('full_name')
+                  .eq('id', updatedTask.assignee_id)
+                  .single()
+                  .then(({ data }) => {
+                    setTasks(prev => prev.map(task => 
+                      task.id === updatedTask.id 
+                        ? {
+                            ...updatedTask,
+                            assignee_name: data?.full_name || 'Unassigned',
+                            is_overdue: !!(updatedTask.due_date && updatedTask.status !== 'completed' && new Date(updatedTask.due_date) < new Date())
+                          }
+                        : task
+                    ));
+                  });
+              } else {
+                // Task has no assignee
+                setTasks(prev => prev.map(task => 
+                  task.id === updatedTask.id 
+                    ? {
+                        ...updatedTask,
+                        assignee_name: 'Unassigned',
+                        is_overdue: !!(updatedTask.due_date && updatedTask.status !== 'completed' && new Date(updatedTask.due_date) < new Date())
+                      }
+                    : task
+                ));
+              }
             } else if (payload.eventType === 'DELETE') {
               const deletedTaskId = payload.old.id;
               setTasks(prev => prev.filter(task => task.id !== deletedTaskId));
@@ -145,14 +193,29 @@ export function MobileAdminTasksPage() {
       const [allTasksData, membersData] = await Promise.all([
         supabase
           .from('tasks')
-          .select('*')
+          .select(`
+          *,
+          assignee:profiles!tasks_assignee_id_fkey(full_name)
+        `)
           .eq('chapter_id', chapterId!)
-          .order('due_date', { ascending: true }),
+          .order('created_at', { ascending: false }), // Changed from due_date ascending
 
         getChapterMembersForTasks(chapterId!)
       ]);
       
-      setTasks(allTasksData.data || []);
+      // Transform the data to include assignee_name and computed fields
+      const transformedTasks = (allTasksData.data || []).map(task => {
+        // Handle both array and object formats from Supabase join
+        const assignee = Array.isArray(task.assignee) ? task.assignee[0] : task.assignee;
+        
+        return {
+          ...task,
+          assignee_name: assignee?.full_name || 'Unassigned',
+          is_overdue: !!(task.due_date && task.status !== 'completed' && new Date(task.due_date) < new Date())
+        };
+      });
+      
+      setTasks(transformedTasks);
       setChapterMembers(membersData);
     } catch (error) {
       
@@ -327,10 +390,23 @@ export function MobileAdminTasksPage() {
   const handleMarkComplete = async (taskId: string) => {
     try {
       await updateTask(taskId, { status: 'completed' as TaskStatus });
+      
+      // Update local state optimistically
+      setTasks(prev => prev.map(task => 
+        task.id === taskId 
+          ? { ...task, status: 'completed' as TaskStatus, is_overdue: false }
+          : task
+      ));
+      
       toast.success('Task marked as complete!');
+      
+      // Optionally reload to ensure consistency
+      // await loadAllData();
     } catch (error) {
       console.error('Error marking task as complete:', error);
       toast.error('Failed to mark task as complete');
+      // Reload on error to sync state
+      await loadAllData();
     }
   };
 
@@ -476,8 +552,11 @@ export function MobileAdminTasksPage() {
   // Filter and paginate tasks
   const filteredTasks = useMemo(() => {
     if (activeFilter === 'all') return tasks;
+    if (activeFilter === 'my_tasks') {
+      return tasks.filter(t => t.assignee_id === profile?.id);
+    }
     return tasks.filter(t => t.status === activeFilter);
-  }, [tasks, activeFilter]);
+  }, [tasks, activeFilter, profile?.id]);
 
   const paginatedTasks = useMemo(() => {
     const startIndex = (tasksPage - 1) * tasksPerPage;
@@ -507,9 +586,8 @@ export function MobileAdminTasksPage() {
   const filterButtons = [
     { id: 'all' as const, label: 'All', count: tasks.length },
     { id: 'pending' as const, label: 'Pending', count: tasks.filter(t => t.status === 'pending').length },
-    { id: 'in_progress' as const, label: 'In Progress', count: tasks.filter(t => t.status === 'in_progress').length },
     { id: 'completed' as const, label: 'Completed', count: tasks.filter(t => t.status === 'completed').length },
-    { id: 'overdue' as const, label: 'Overdue', count: tasks.filter(t => t.status === 'overdue').length }
+    { id: 'my_tasks' as const, label: 'My Tasks', count: tasks.filter(t => t.assignee_id === profile?.id).length }
   ];
 
   if (!chapterId) {
@@ -551,14 +629,15 @@ export function MobileAdminTasksPage() {
           </Button>
 
         {/* Filter Buttons */}
-          <div className="flex space-x-2 overflow-x-auto pb-2">
+        <div className="-mx-4 px-4">
+          <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
             {filterButtons.map((filter) => {
               const isActive = activeFilter === filter.id;
               return (
                 <button
                   key={filter.id}
                   onClick={() => setActiveFilter(filter.id)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
                     isActive 
                       ? 'bg-blue-600 text-white' 
                       : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
@@ -573,6 +652,7 @@ export function MobileAdminTasksPage() {
                 </button>
               );
             })}
+          </div>
         </div>
 
         {/* Tasks List */}
@@ -586,7 +666,7 @@ export function MobileAdminTasksPage() {
             <CardContent className="p-8 text-center">
             <CheckSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-slate-700 text-lg mb-2">
-              {activeFilter === 'all' ? 'No tasks found' : `No ${activeFilter} tasks`}
+              {activeFilter === 'all' ? 'No tasks found' : activeFilter === 'my_tasks' ? 'No tasks assigned to you' : `No ${activeFilter} tasks`}
             </p>
               <p className="text-slate-600 text-sm">
               {activeFilter === 'all' ? 'Create your first task to get started!' : 'Try a different filter'}
@@ -618,7 +698,7 @@ export function MobileAdminTasksPage() {
                 )}
                 
 
-                        <div className="space-y-1 text-xs text-slate-700">
+                <div className="space-y-1 text-xs text-slate-700">
                   <div className="flex items-center space-x-2">
                     <Users className="h-3 w-3" />
                     <span>{task.assignee_name || 'Unassigned'}</span>
@@ -626,7 +706,7 @@ export function MobileAdminTasksPage() {
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-3 w-3" />
                     <span className={task.is_overdue ? 'text-red-600 font-medium' : ''}>
-                      {formatDate(task.due_date)}
+                      Due: {formatDate(task.due_date)}
                     </span>
                     {task.is_overdue && (
                       <AlertCircle className="h-3 w-3 text-red-600" />
