@@ -147,7 +147,7 @@ export function MobileAdminTasksPage() {
           .from('tasks')
           .select('*')
           .eq('chapter_id', chapterId!)
-          .order('due_date', { ascending: true }),
+          .order('created_at', { ascending: false }), // Changed from due_date ascending
 
         getChapterMembersForTasks(chapterId!)
       ]);
