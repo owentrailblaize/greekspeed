@@ -27,11 +27,14 @@ import { Save, AlertTriangle } from 'lucide-react';
 import ImageWithFallback from '@/components/figma/ImageWithFallback';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { MobileBottomNavigation } from '@/components/features/dashboard/dashboards/ui/MobileBottomNavigation';
+import { ProfileHeaderSection } from '@/components/features/profile/mobile/ProfileHeaderSection';
+import { ContentNavigationTabs } from '@/components/features/profile/mobile/ContentNavigationTabs';
+import { ContentFeedSection } from '@/components/features/profile/mobile/ContentFeedSection';
 
 export default function ProfilePage() {
   const { profile, loading, refreshProfile } = useProfile();
   const { connections, loading: connectionsLoading, sendConnectionRequest } = useConnections();
-  const [activeTab, setActiveTab] = useState('connections');
+  const [activeTab, setActiveTab] = useState('posts');
   const [connectionLoading, setConnectionLoading] = useState<string | null>(null);
   const router = useRouter();
   const { openEditProfileModal } = useModal();
@@ -244,8 +247,73 @@ export default function ProfilePage() {
     { label: 'Location', value: profile.location, icon: MapPin, required: false },
   ];
 
+  // Mobile Layout - Threads-style
+  const mobileTabs = [
+    { id: 'posts', label: 'Posts' },
+    { id: 'connections', label: 'Connections' },
+  ];
+
+  // Get recent connections for avatar display (up to 3)
+  const recentConnectionsForAvatars = useMemo(() => {
+    if (!profile) return [];
+    return sortedConnections.slice(0, 3).map((connection) => {
+      const partner = connection.requester_id === profile.id 
+        ? connection.recipient 
+        : connection.requester;
+      return partner ? {
+        id: partner.id || connection.id,
+        avatar_url: partner.avatar_url,
+        full_name: partner.full_name,
+        first_name: partner.first_name,
+        last_name: partner.last_name,
+      } : null;
+    }).filter(Boolean) as Array<{
+      id: string;
+      avatar_url?: string | null;
+      full_name?: string;
+      first_name?: string;
+      last_name?: string;
+    }>;
+  }, [sortedConnections, profile]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 pb-20 sm:pb-0">
+    <>
+      {/* Mobile Layout - Threads Style */}
+      <div className="min-h-screen bg-white sm:hidden pb-20">
+        {/* Profile Header Section */}
+        <ProfileHeaderSection
+          profile={profile}
+          connectionsCount={acceptedConnections.length}
+          onEditClick={openEditProfileModal}
+          completion={completion}
+          recentConnections={recentConnectionsForAvatars}
+        />
+
+        {/* Content Navigation Tabs */}
+        <ContentNavigationTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          tabs={mobileTabs}
+        />
+
+        {/* Content Feed Section */}
+        <ContentFeedSection
+          activeTab={activeTab}
+          posts={userPosts}
+          connections={sortedConnections}
+          postsLoading={postsLoading}
+          connectionsLoading={connectionsLoading}
+          onMessageClick={handleMessageClick}
+          onDeletePost={handleDeleteClick}
+          getConnectionPartner={getConnectionPartner}
+        />
+
+        {/* Mobile Bottom Navigation */}
+        <MobileBottomNavigation />
+      </div>
+
+      {/* Desktop Layout - Keep Existing */}
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 hidden sm:block pb-20 sm:pb-0">
       <div className="max-w-full mx-auto px-6 py-10">
         {/* Profile Completion Banner - Moved above banner for maximum visibility */}
         {completion && completion.percentage < 100 && (
@@ -702,8 +770,9 @@ export default function ProfilePage() {
         </Dialog>
       </div>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Mobile Bottom Navigation - Desktop */}
       <MobileBottomNavigation />
-    </div>
+      </div>
+    </>
   );
 } 
