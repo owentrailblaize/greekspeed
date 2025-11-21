@@ -278,7 +278,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      {/* Mobile Layout - Threads Style */}
+      {/* Mobile Layout */}
       <div className="min-h-screen bg-white sm:hidden pb-20">
         {/* Profile Header Section */}
         <ProfileHeaderSection
