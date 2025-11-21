@@ -1,12 +1,22 @@
 'use client';
 
 import { useState, useMemo, useEffect } from "react";
-import { DollarSign, Calendar, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { DollarSign, Calendar, Users, ChevronLeft, ChevronRight, Edit2, Save, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useProfile } from "@/lib/contexts/ProfileContext";
 import { useEvents } from "@/lib/hooks/useEvents";
+import { useChapterBudget } from "@/lib/hooks/useChapterBudget";
 
 export function BudgetView() {
   // Get user profile and chapter ID
@@ -14,6 +24,18 @@ export function BudgetView() {
   const chapterId = profile?.chapter_id;
   const [currentPage, setCurrentPage] = useState(1);
   const eventsPerPage = 8;
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editBudgetValue, setEditBudgetValue] = useState<string>('');
+
+  // Use budget hook
+  const { 
+    startingBudget, 
+    loading: budgetLoading, 
+    canEdit, 
+    saving, 
+    updateBudget,
+    refetch: refetchBudget 
+  } = useChapterBudget();
 
   // Use events hook
   const { 
@@ -34,7 +56,7 @@ export function BudgetView() {
         remaining: 0,
         categories: [],
         eventsWithBudget: [],
-        startingBudget: 12000 // Default starting budget
+        startingBudget: startingBudget
       };
     }
 
@@ -51,11 +73,8 @@ export function BudgetView() {
     // For MVP, we'll assume spent = allocated (since we don't have expense tracking yet)
     const totalSpent = totalAllocated;
     
-    // STARTING BUDGET - This is your hardcoded starting point
-    const STARTING_BUDGET = 12000; // You can adjust this value
-    
     // Calculate remaining budget by subtracting allocated from starting budget
-    const remaining = STARTING_BUDGET - totalAllocated;
+    const remaining = startingBudget - totalAllocated;
 
     // Create categories based on budget_label or event title patterns
     const categoryMap = new Map<string, { allocated: number; events: any[] }>();
@@ -108,9 +127,9 @@ export function BudgetView() {
       remaining,
       categories,
       eventsWithBudget,
-      startingBudget: STARTING_BUDGET
+      startingBudget: startingBudget
     };
-  }, [events]);
+  }, [events, startingBudget]);
 
   // Calculate pagination
   const totalPages = Math.ceil((events?.length || 0) / eventsPerPage);
@@ -135,7 +154,28 @@ export function BudgetView() {
     setCurrentPage(1);
   }, [events?.length]);
 
-  if (eventsLoading) {
+  // Handle edit dialog open
+  const handleEditClick = () => {
+    setEditBudgetValue(startingBudget.toString());
+    setShowEditDialog(true);
+  };
+
+  // Handle save budget
+  const handleSaveBudget = async () => {
+    const newBudget = parseFloat(editBudgetValue);
+    if (isNaN(newBudget) || newBudget < 0) {
+      return; // Validation handled by hook
+    }
+
+    const success = await updateBudget(newBudget);
+    if (success) {
+      setShowEditDialog(false);
+      // Refetch budget to ensure UI is updated
+      refetchBudget();
+    }
+  };
+
+  if (eventsLoading || budgetLoading) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">Loading budget data...</p>
@@ -201,10 +241,23 @@ export function BudgetView() {
       {/* Budget Overview Card */}
       <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
         <CardHeader className="pb-2 md:pb-2 border-b border-navy-100/30">
-          <CardTitle className="flex items-center text-lg md:text-xl text-navy-900">
-            <DollarSign className="h-5 w-5 mr-2 text-navy-600" />
-            Budget Overview
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center text-lg md:text-xl text-navy-900">
+              <DollarSign className="h-5 w-5 mr-2 text-navy-600" />
+              Budget Overview
+            </CardTitle>
+            {canEdit && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleEditClick}
+                className="rounded-full h-8 px-2 text-gray-600 hover:text-navy-900 hover:bg-gray-100"
+              >
+                <Edit2 className="h-4 w-4 mr-1" />
+                Edit Budget
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="pt-2 md:pt-2">
           <div className="space-y-3 md:space-y-4">
@@ -233,6 +286,57 @@ export function BudgetView() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Budget Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Starting Budget</DialogTitle>
+            <DialogDescription>
+              Update the starting budget for your chapter. This will affect all budget calculations.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="budget" className="text-sm font-medium">
+                Starting Budget ($)
+              </label>
+              <Input
+                id="budget"
+                type="number"
+                min="0"
+                step="0.01"
+                value={editBudgetValue}
+                onChange={(e) => setEditBudgetValue(e.target.value)}
+                placeholder="12000.00"
+                className="text-base"
+              />
+              <p className="text-xs text-gray-500">
+                Enter the total starting budget amount for the chapter.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowEditDialog(false)}
+              disabled={saving}
+              className="rounded-full bg-white/80 backdrop-blur-md border border-grey-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveBudget}
+              disabled={saving || !editBudgetValue || parseFloat(editBudgetValue) < 0}
+              className="text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-navy-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* All Events Budget Summary */}
       <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">

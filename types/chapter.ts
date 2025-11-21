@@ -19,6 +19,7 @@ export interface Chapter {
   achievements?: string[];
   llm_enriched?: boolean;
   llm_data?: Record<string, any>;
+  starting_budget?: number;
   created_at: string;
   updated_at: string;
 }

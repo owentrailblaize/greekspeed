@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Calendar, Edit, Trash2, MapPin, Clock, Users, DollarSign, TrendingUp, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useEvents } from '@/lib/hooks/useEvents';
+import { useChapterBudget } from '@/lib/hooks/useChapterBudget';
 import { EventForm } from '@/components/ui/EventForm';
 import { Event, CreateEventRequest, UpdateEventRequest } from '@/types/events';
 import { Badge } from '@/components/ui/badge';
@@ -36,11 +37,13 @@ export function EventsView() {
     scope: 'all' 
   });
 
+  // Get starting budget from database
+  const { startingBudget } = useChapterBudget();
+
   // Calculate budget statistics
   const budgetStats = useMemo(() => {
     const eventsWithBudget = events.filter(e => e.budget_amount && parseFloat(String(e.budget_amount)) > 0);
     const totalBudgetAllocated = eventsWithBudget.reduce((sum, e) => sum + parseFloat(String(e.budget_amount || 0)), 0);
-    const startingBudget = 12000; // Default starting budget
     const remaining = startingBudget - totalBudgetAllocated;
     
     return {
@@ -50,7 +53,7 @@ export function EventsView() {
       startingBudget,
       remaining
     };
-  }, [events]);
+  }, [events, startingBudget]);
 
   const handleCreateEvent = async (eventData: CreateEventRequest) => {
     if (!chapterId) return;

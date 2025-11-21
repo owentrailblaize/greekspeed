@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useChapterBudget } from '@/lib/hooks/useChapterBudget';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ViewUserModal } from '@/components/user-management/ViewUserModal';
@@ -89,6 +90,7 @@ export function MobileOperationsPage() {
     chapterId: chapterId || '', 
     scope: 'all' 
   });
+  const { startingBudget } = useChapterBudget();
   const [budgetEventsPage, setBudgetEventsPage] = useState(1);
   const budgetEventsPerPage = 6;
 
@@ -200,7 +202,7 @@ export function MobileOperationsPage() {
         totalSpent: 0,
         remaining: 0,
         eventsWithBudget: 0,
-        startingBudget: 12000
+        startingBudget: startingBudget
       };
     }
 
@@ -212,17 +214,16 @@ export function MobileOperationsPage() {
       sum + parseFloat(String(event.budget_amount || '0')), 0
     );
 
-    const STARTING_BUDGET = 12000;
-    const remaining = STARTING_BUDGET - totalAllocated;
+    const remaining = startingBudget - totalAllocated;
 
     return {
       totalAllocated,
       totalSpent: totalAllocated, // MVP: spent = allocated
       remaining,
       eventsWithBudget: eventsWithBudget.length,
-      startingBudget: STARTING_BUDGET
+      startingBudget: startingBudget
     };
-  }, [events]);
+  }, [events, startingBudget]);
 
   // Dues statistics
   const duesStats = useMemo(() => {

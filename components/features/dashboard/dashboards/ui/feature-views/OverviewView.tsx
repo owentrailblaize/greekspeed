@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, CheckCircle, Crown, TrendingUp, Settings, Clock, UserCheck, DollarSign, Calendar, BookOpen } from 'lucide-react';
+import { Users, CheckCircle, Crown, Settings, Clock, UserCheck, DollarSign, Calendar, BookOpen } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useChapterBudget } from '@/lib/hooks/useChapterBudget';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, UserPlus, Users as UsersIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -33,11 +34,11 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
   const { session } = useAuth();
   const chapterId = profile?.chapter_id;
   const router = useRouter();
+  const { startingBudget } = useChapterBudget();
   
   const [memberCount, setMemberCount] = useState<number | null>(null);
   const [activeMemberCount, setActiveMemberCount] = useState<number | null>(null);
   const [alumniCount, setAlumniCount] = useState<number | null>(null);
-  const [membershipGrowth, setMembershipGrowth] = useState<number>(0);
   const [totalTasks, setTotalTasks] = useState<number>(0);
   const [completedTasks, setCompletedTasks] = useState<number>(0);
   const [pendingTasks, setPendingTasks] = useState<number>(0);
@@ -197,16 +198,6 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
       console.error('Error fetching alumni count:', error);
     }
 
-    try {
-      const growthResponse = await fetch(`/api/chapter/membership-growth?chapter_id=${chapterId}`);
-      if (growthResponse.ok) {
-        const data = await growthResponse.json();
-        setMembershipGrowth(data.growth);
-      }
-    } catch (error) {
-      console.error('Error fetching membership growth:', error);
-    }
-
     // Fetch task stats for VP
     if (selectedRole === 'vice-president') {
       try {
@@ -237,7 +228,7 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
           
           const eventsWithBudget = events.filter((e: any) => e.budget_amount && parseFloat(String(e.budget_amount)) > 0);
           const totalAllocated = eventsWithBudget.reduce((sum: number, e: any) => sum + parseFloat(String(e.budget_amount || '0')), 0);
-          const remaining = 12000 - totalAllocated; // Starting budget
+          const remaining = startingBudget - totalAllocated; // Starting budget
           setEventBudget(remaining);
           
           const attendees = upcoming.reduce((sum: number, e: any) => sum + (e.attendee_count || 0), 0);
@@ -283,14 +274,6 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
             label: 'Alumni', 
             value: alumniCount ?? 0, 
             icon: Crown, 
-            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
-            textColor: 'text-navy-700',
-            iconColor: 'text-navy-500'
-          },
-          { 
-            label: 'Membership Growth', 
-            value: `${membershipGrowth >= 0 ? '+' : ''}${membershipGrowth}%`, 
-            icon: TrendingUp, 
             color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
             textColor: 'text-navy-700',
             iconColor: 'text-navy-500'
@@ -437,7 +420,7 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {statsCards.map((stat, index) => {
           const Icon = stat.icon;
           return (

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useChapterBudget } from '@/lib/hooks/useChapterBudget';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEvents } from '@/lib/hooks/useEvents';
@@ -41,6 +42,9 @@ export function MobileEventsVendorsPage() {
     chapterId: chapterId || '', 
     scope: 'all' 
   });
+
+  // Budget hook
+  const { startingBudget } = useChapterBudget();
 
   // Vendors state
   const [showVendorForm, setShowVendorForm] = useState(false);
@@ -171,7 +175,6 @@ export function MobileEventsVendorsPage() {
   const budgetStats = useMemo(() => {
     const eventsWithBudget = events.filter(e => e.budget_amount && parseFloat(String(e.budget_amount)) > 0);
     const totalBudgetAllocated = eventsWithBudget.reduce((sum, e) => sum + parseFloat(String(e.budget_amount || 0)), 0);
-    const startingBudget = 12000;
     const remaining = startingBudget - totalBudgetAllocated;
     
     return {
@@ -181,7 +184,7 @@ export function MobileEventsVendorsPage() {
       startingBudget,
       remaining
     };
-  }, [events]);
+  }, [events, startingBudget]);
 
   const formatEventDate = (isoString: string): string => {
     const date = new Date(isoString);
