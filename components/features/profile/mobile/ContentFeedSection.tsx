@@ -2,7 +2,6 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { MessageCircle, Heart, Calendar, Trash2, UserCheck } from 'lucide-react';
 import { UserAvatar } from '@/components/features/profile/UserAvatar';
 import ImageWithFallback from '@/components/figma/ImageWithFallback';
@@ -80,14 +79,9 @@ export function ContentFeedSection({
               </div>
 
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-medium text-gray-900 text-sm">
-                    {post.author?.full_name || 'Unknown User'}
-                  </h4>
-                  <Badge className="bg-blue-100 text-blue-800 text-xs">
-                    {post.post_type.replace('_', ' ')}
-                  </Badge>
-                </div>
+                <h4 className="font-medium text-gray-900 text-sm mb-1">
+                  {post.author?.full_name || 'Unknown User'}
+                </h4>
                 <p className="text-xs text-gray-500">
                   {formatTimestamp(post.created_at)}
                 </p>
