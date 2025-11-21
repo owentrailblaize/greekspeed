@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { Connection } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { UserAvatar } from '@/components/features/profile/UserAvatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, MessageSquare, Menu } from 'lucide-react';
+import { Search, MessageSquare, Menu, X, ChevronRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface MessagesSidebarProps {
@@ -17,6 +18,9 @@ interface MessagesSidebarProps {
   onMobileMenuToggle?: () => void;
   isMobile?: boolean;
   isMainView?: boolean;
+  sidebarCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+  onClose?: () => void;
 }
 
 interface LastMessage {
@@ -24,6 +28,7 @@ interface LastMessage {
   content: string;
   createdAt: string;
   senderId: string;
+  unreadCount?: number;
 }
 
 export function MessagesSidebar({
@@ -33,32 +38,59 @@ export function MessagesSidebar({
   onConnectionSelect,
   onMobileMenuToggle,
   isMobile = false,
-  isMainView = false
+  isMainView = false,
+  sidebarCollapsed = false,
+  onToggleCollapse,
+  onClose
 }: MessagesSidebarProps) {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [lastMessages, setLastMessages] = useState<Map<string, LastMessage>>(new Map());
 
-  // Fetch last message for each connection
+  // Fetch last message and unread count for each connection
   useEffect(() => {
-    if (!user || connections.length === 0) return;
+    if (!user || !session || connections.length === 0) return;
 
     const fetchLastMessages = async () => {
       const messagesMap = new Map<string, LastMessage>();
       
-      // Fetch last message for each connection in parallel
+      // Fetch last message and unread count for each connection in parallel
       const promises = connections.map(async (connection) => {
         try {
-          const response = await fetch(`/api/messages?connectionId=${connection.id}&page=1&limit=1`);
+          // Fetch last message
+          const response = await fetch(`/api/messages?connectionId=${connection.id}&page=1&limit=1`, {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          });
           if (response.ok) {
             const data = await response.json();
             if (data.messages && data.messages.length > 0) {
               const lastMessage = data.messages[0]; // Most recent message (first in descending order)
+              
+              // Fetch unread count using the dedicated endpoint
+              let unreadCount = 0;
+              try {
+                const unreadResponse = await fetch(`/api/messages/unread-count?connectionId=${connection.id}&userId=${user.id}`, {
+                  headers: {
+                    'Authorization': `Bearer ${session.access_token}`
+                  }
+                });
+                
+                if (unreadResponse.ok) {
+                  const unreadData = await unreadResponse.json();
+                  unreadCount = unreadData.unreadCount || 0;
+                }
+              } catch (unreadError) {
+                console.error(`Failed to fetch unread count for connection ${connection.id}:`, unreadError);
+              }
+              
               messagesMap.set(connection.id, {
                 connectionId: connection.id,
                 content: lastMessage.content,
                 createdAt: lastMessage.created_at,
-                senderId: lastMessage.sender_id
+                senderId: lastMessage.sender_id,
+                unreadCount
               });
             }
           }
@@ -72,7 +104,48 @@ export function MessagesSidebar({
     };
 
     fetchLastMessages();
-  }, [connections, user]);
+  }, [connections, user, session]);
+
+  // Refresh unread count for selected connection when it changes
+  useEffect(() => {
+    if (!user || !session || !selectedConnectionId) return;
+
+    const refreshUnreadCount = async () => {
+      try {
+        const unreadResponse = await fetch(`/api/messages/unread-count?connectionId=${selectedConnectionId}&userId=${user.id}`, {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        });
+        
+        if (unreadResponse.ok) {
+          const unreadData = await unreadResponse.json();
+          const unreadCount = unreadData.unreadCount || 0;
+          
+          // Update the unread count for this connection
+          setLastMessages(prev => {
+            const updated = new Map(prev);
+            const existing = updated.get(selectedConnectionId);
+            if (existing) {
+              updated.set(selectedConnectionId, {
+                ...existing,
+                unreadCount
+              });
+            }
+            return updated;
+          });
+        }
+      } catch (error) {
+        console.error(`Failed to refresh unread count for connection ${selectedConnectionId}:`, error);
+      }
+    };
+
+    // Refresh immediately and then periodically while connection is selected
+    refreshUnreadCount();
+    const interval = setInterval(refreshUnreadCount, 2000); // Refresh every 2 seconds while viewing
+
+    return () => clearInterval(interval);
+  }, [selectedConnectionId, user, session]);
 
   // Filter connections based on search query and status
   const filteredConnections = useMemo(() => {
@@ -156,35 +229,71 @@ export function MessagesSidebar({
   }
 
   return (
-    <div className={`${isMainView ? 'w-full' : 'w-80'} bg-gray-50 ${isMainView ? '' : 'border-r border-gray-200'} flex flex-col h-full`}>
-      {/* Header - Only show if not main view on mobile */}
+    <div className="h-full flex flex-col bg-gray-50">
+      {/* Header */}
       {!isMainView && (
-        <div className="flex-shrink-0 bg-white border-b border-gray-200 px-4 py-3">
+        <div className="flex-shrink-0 bg-white border-b border-gray-200 p-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Messages</h2>
-            {/* Only show menu toggle on desktop when sidebar can be collapsed */}
-            {!isMobile && onMobileMenuToggle && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onMobileMenuToggle}
-                className="p-2 hover:bg-gray-100"
-              >
-                <Menu className="h-4 w-4" />
-              </Button>
+            <div className="flex items-center space-x-2">
+              <MessageSquare className="h-5 w-5 text-navy-600 flex-shrink-0" />
+              {!sidebarCollapsed && (
+                <motion.h2 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="text-lg font-semibold text-gray-900"
+                >
+                  Messages
+                </motion.h2>
+              )}
+            </div>
+            {!isMobile && (
+              <div className="flex items-center space-x-1">
+                {onToggleCollapse && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onToggleCollapse}
+                    className="h-8 w-8 p-0"
+                  >
+                    {sidebarCollapsed ? (
+                      <ChevronRight className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 rotate-180" />
+                    )}
+                  </Button>
+                )}
+                {onClose && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onClose}
+                    className="h-8 w-8 p-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             )}
           </div>
           
-          {/* Search */}
-          <div className="mt-3 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search connections..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-navy-300"
-            />
-          </div>
+          {/* Search - Hide when collapsed */}
+          {!sidebarCollapsed && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="mt-3 relative"
+            >
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search connections..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-navy-300"
+              />
+            </motion.div>
+          )}
         </div>
       )}
 
@@ -207,46 +316,58 @@ export function MessagesSidebar({
       <div className="flex-1 overflow-y-auto">
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-navy-600"></div>
-            <span className="ml-2 text-gray-500">Loading...</span>
-          </div>
-        ) : sortedConnections.length === 0 ? (
-          <div className="text-center py-8 px-4">
-            {searchQuery ? (
-              <>
-                <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-500">No connections found</p>
-                <p className="text-sm text-gray-400">Try adjusting your search</p>
-              </>
+            {sidebarCollapsed ? (
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-navy-600"></div>
             ) : (
               <>
-                <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-500">No connections yet</p>
-                <p className="text-sm text-gray-400">Connect with alumni to start messaging</p>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-navy-600"></div>
+                <span className="ml-2 text-gray-500">Loading...</span>
+              </>
+            )}
+          </div>
+        ) : sortedConnections.length === 0 ? (
+          <div className={`text-center py-8 ${sidebarCollapsed ? 'px-2' : 'px-4'}`}>
+            {!sidebarCollapsed && (
+              <>
+                {searchQuery ? (
+                  <>
+                    <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-500">No connections found</p>
+                    <p className="text-sm text-gray-400">Try adjusting your search</p>
+                  </>
+                ) : (
+                  <>
+                    <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-500">No connections yet</p>
+                    <p className="text-sm text-gray-400">Connect with alumni to start messaging</p>
+                  </>
+                )}
               </>
             )}
           </div>
         ) : (
-          <div className="py-2">
+          <div className={sidebarCollapsed ? 'py-2 space-y-2' : 'py-2'}>
             {sortedConnections.map((connection) => {
               const otherUser = getOtherUser(connection);
               const isSelected = selectedConnectionId === connection.id;
               const lastActivity = getLastActivity(connection);
               const lastMessagePreview = getLastMessagePreview(connection);
+              const lastMessage = lastMessages.get(connection.id);
+              const unreadCount = lastMessage?.unreadCount || 0;
+              const hasUnread = unreadCount > 0;
               
-              return (
-                <div
-                  key={connection.id}
-                  className={`px-4 py-3 cursor-pointer transition-colors ${
-                    isSelected 
-                      ? 'bg-navy-50 border-r-2 border-navy-600' 
-                      : 'hover:bg-gray-100'
-                  }`}
-                  onClick={() => onConnectionSelect(connection.id)}
-                >
-                  <div className="flex items-center space-x-3">
-                    {/* Avatar */}
-                    <div className="flex-shrink-0">
+              if (sidebarCollapsed) {
+                // Collapsed view - show only avatar with unread indicator
+                return (
+                  <div
+                    key={connection.id}
+                    className={`flex justify-center py-2 cursor-pointer transition-colors ${
+                      isSelected ? 'bg-navy-50' : 'hover:bg-gray-100'
+                    }`}
+                    onClick={() => onConnectionSelect(connection.id)}
+                    title={otherUser.full_name}
+                  >
+                    <div className="relative">
                       <UserAvatar
                         user={{ 
                           email: null, 
@@ -256,21 +377,70 @@ export function MessagesSidebar({
                           } 
                         }}
                         completionPercent={100}
-                        hasUnread={false}
+                        hasUnread={hasUnread}
                         size="md"
                       />
+                      {/* Unread dot indicator */}
+                      {hasUnread && (
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-navy-600 rounded-full border-2 border-white"></div>
+                      )}
+                    </div>
+                  </div>
+                );
+              }
+              
+              // Expanded view - show full connection info
+              return (
+                <div
+                  key={connection.id}
+                  className={`px-4 py-3 cursor-pointer transition-colors ${
+                    isSelected 
+                      ? 'bg-navy-50 border-r-2 border-navy-600' 
+                      : 'hover:bg-gray-100'
+                  } ${hasUnread && !isSelected ? 'bg-blue-50/50' : ''}`}
+                  onClick={() => onConnectionSelect(connection.id)}
+                >
+                  <div className="flex items-center space-x-3">
+                    {/* Avatar with unread indicator */}
+                    <div className="flex-shrink-0 relative">
+                      <UserAvatar
+                        user={{ 
+                          email: null, 
+                          user_metadata: { 
+                            avatar_url: otherUser.avatar_url, 
+                            full_name: otherUser.full_name 
+                          } 
+                        }}
+                        completionPercent={100}
+                        hasUnread={hasUnread}
+                        size="md"
+                      />
+                      {/* Unread dot indicator */}
+                      {hasUnread && (
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-navy-600 rounded-full border-2 border-white"></div>
+                      )}
                     </div>
                     
                     {/* User Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <h3 className={`font-medium truncate ${
-                          isSelected ? 'text-navy-900' : 'text-gray-900'
-                        }`}>
-                          {otherUser.full_name}
-                        </h3>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <h3 className={`font-medium truncate ${
+                            isSelected ? 'text-navy-900' : 'text-gray-900'
+                          } ${hasUnread ? 'font-semibold' : ''}`}>
+                            {otherUser.full_name}
+                          </h3>
+                          {/* Unread count badge */}
+                          {hasUnread && unreadCount > 0 && (
+                            <span className="flex-shrink-0 bg-navy-600 text-white text-xs font-semibold rounded-full px-2 py-0.5 min-w-[20px] text-center">
+                              {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                          )}
+                        </div>
                         {lastActivity && (
-                          <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
+                          <span className={`text-xs flex-shrink-0 ml-2 ${
+                            hasUnread ? 'text-navy-600 font-medium' : 'text-gray-400'
+                          }`}>
                             {formatDistanceToNow(new Date(lastActivity), { addSuffix: true })}
                           </span>
                         )}
@@ -281,7 +451,9 @@ export function MessagesSidebar({
                       </p>
                       
                       {/* Last message preview */}
-                      <p className="text-xs text-gray-400 truncate mt-1">
+                      <p className={`text-xs truncate mt-1 ${
+                        hasUnread ? 'text-gray-900 font-medium' : 'text-gray-400'
+                      }`}>
                         {lastMessagePreview}
                       </p>
                     </div>

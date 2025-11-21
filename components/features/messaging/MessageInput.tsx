@@ -55,7 +55,14 @@ export function MessageInput({
   };
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value);
+    const inputValue = e.target.value;
+    
+    // Enforce character limit (1000 characters)
+    if (inputValue.length > 1000) {
+      return; // Don't update if over limit
+    }
+    
+    setMessage(inputValue);
     
     // Auto-resize textarea
     const textarea = e.target;
@@ -175,7 +182,7 @@ export function MessageInput({
 
         {/* Message input container - dynamically styled based on expansion */}
         <div className="flex-1 relative min-w-0">
-          <div className={`${borderRadiusClass} bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 transition-all duration-300 flex items-start px-3 md:px-4 py-2`}>
+          <div className={`${borderRadiusClass} bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 transition-all duration-300 flex ${isExpanded ? 'items-start' : 'items-center'} px-3 md:px-4 ${isExpanded ? 'py-2' : 'py-1'}`}>
             <textarea
               ref={textareaRef}
               value={message}
@@ -183,13 +190,18 @@ export function MessageInput({
               onKeyPress={handleKeyPress}
               placeholder={placeholder}
               disabled={disabled}
-              className="w-full resize-none bg-transparent border-0 focus:outline-none text-sm md:text-base text-navy-700 placeholder:text-gray-400 disabled:text-gray-400 disabled:cursor-not-allowed pr-2 overflow-y-auto scrollbar-thin scrollbar-thumb-navy-300 scrollbar-track-transparent"
+              className="w-full resize-none bg-transparent border-0 focus:outline-none text-sm md:text-base text-slate-700 placeholder:text-gray-400 disabled:text-gray-400 disabled:cursor-not-allowed pr-2 overflow-y-auto scrollbar-thin scrollbar-thumb-navy-300 scrollbar-track-transparent"
               style={{ 
-                minHeight: '40px',
+                minHeight: isExpanded ? '40px' : '36px',
+                height: isExpanded ? 'auto' : '36px',
                 maxHeight: `${window.innerWidth < 768 ? MAX_HEIGHT_MOBILE : MAX_HEIGHT_DESKTOP}px`,
                 fontSize: '16px', // Prevent zoom on iOS
                 lineHeight: '1.5',
-                overflowY: 'hidden' // Will be set to 'auto' when needed
+                overflowY: 'hidden', // Will be set to 'auto' when needed
+                padding: '0',
+                margin: '0',
+                verticalAlign: 'bottom',
+                display: 'block'
               }}
               rows={1}
             />
@@ -213,16 +225,6 @@ export function MessageInput({
             )}
           </Button>
         </div>
-      </div>
-
-      {/* Character count - HIDDEN ON MOBILE */}
-      <div className="hidden md:flex justify-end items-center mt-2 text-xs text-gray-400">
-        <span>
-          {message.length}/1000 characters
-        </span>
-        <span className="ml-4">
-          Press Enter to send, Shift+Enter for new line
-        </span>
       </div>
     </div>
   );

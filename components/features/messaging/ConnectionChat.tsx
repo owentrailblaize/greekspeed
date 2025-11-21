@@ -28,8 +28,16 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
     editMessage,
     deleteMessage,
     loadMore,
+    markAllAsRead, // Add this
     refreshMessages
   } = useMessages(connectionId);
+
+  // Mark all messages as read when chat opens
+  useEffect(() => {
+    if (connectionId && user && messages.length > 0) {
+      markAllAsRead();
+    }
+  }, [connectionId, user, messages.length, markAllAsRead]);
 
   const [connection, setConnection] = useState<Connection | null>(null);
   const [otherUser, setOtherUser] = useState<{

@@ -2,7 +2,7 @@
 
 import { Connection } from '@/lib/contexts/ConnectionsContext';
 import { ConnectionChat } from './ConnectionChat';
-import { MessageSquare, Users, ArrowLeft } from 'lucide-react';
+import { MessageSquare, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface MessagesMainChatProps {
