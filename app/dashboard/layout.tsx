@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import SubscriptionPaywall from '@/components/shared/SubscriptionPaywall';
 import { DashboardHeader } from '@/components/features/dashboard/DashboardHeader';
 import { useActivityTracking } from '@/lib/hooks/useActivityTracking';
@@ -41,6 +42,18 @@ export default function DashboardLayout({
 function EditProfileModalWrapper() {
   const { isEditProfileModalOpen, closeEditProfileModal } = useModal();
   const { profile, refreshProfile } = useProfile();
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640); // sm breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleProfileUpdate = async (updatedProfile: any) => {
     try {
@@ -68,6 +81,7 @@ function EditProfileModalWrapper() {
         onClose={closeEditProfileModal}
         profile={profile}
         onUpdate={handleProfileUpdate}
+        variant={isMobile ? 'mobile' : 'desktop'}
       />
     );
   }
@@ -79,6 +93,7 @@ function EditProfileModalWrapper() {
       onClose={closeEditProfileModal}
       profile={profile}
       onUpdate={handleProfileUpdate}
+      variant={isMobile ? 'mobile' : 'desktop'}
     />
   );
 } 
