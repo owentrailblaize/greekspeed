@@ -98,17 +98,72 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
     }
 
+    console.log('Verifying connection:', {
+      connectionId,
+      userId: user.id,
+      hasToken: !!token
+    });
+
     // Verify connection exists and user is part of it
+    // First, fetch the connection by ID
     const { data: connection, error: connectionError } = await supabase
       .from('connections')
       .select('*')
       .eq('id', connectionId)
-      .eq('status', 'accepted')
-      .or(`requester_id.eq.${user.id},recipient_id.eq.${user.id}`)
       .single();
 
-    if (connectionError || !connection) {
-      return NextResponse.json({ error: 'Invalid or inactive connection' }, { status: 400 });
+    if (connectionError) {
+      console.error('Connection fetch error details:', {
+        error: connectionError,
+        connectionId,
+        userId: user.id,
+        errorCode: connectionError.code,
+        errorMessage: connectionError.message
+      });
+      return NextResponse.json({ 
+        error: 'Connection not found',
+        details: connectionError.message 
+      }, { status: 400 });
+    }
+
+    if (!connection) {
+      console.error('Connection not found:', {
+        connectionId,
+        userId: user.id
+      });
+      return NextResponse.json({ error: 'Connection not found' }, { status: 400 });
+    }
+
+    console.log('Connection found:', {
+      connectionId: connection.id,
+      status: connection.status,
+      requesterId: connection.requester_id,
+      recipientId: connection.recipient_id,
+      userId: user.id
+    });
+
+    // Then verify the connection is accepted and user is part of it
+    if (connection.status !== 'accepted') {
+      console.error('Connection not accepted:', {
+        connectionId: connection.id,
+        status: connection.status
+      });
+      return NextResponse.json({ 
+        error: 'Connection is not accepted',
+        status: connection.status 
+      }, { status: 400 });
+    }
+
+    if (connection.requester_id !== user.id && connection.recipient_id !== user.id) {
+      console.error('User not part of connection:', {
+        connectionId: connection.id,
+        requesterId: connection.requester_id,
+        recipientId: connection.recipient_id,
+        userId: user.id
+      });
+      return NextResponse.json({ 
+        error: 'User is not part of this connection' 
+      }, { status: 403 });
     }
 
     // ✅ FIXED: Use the actual authenticated user's ID as sender_id

@@ -129,7 +129,21 @@ export function useMessages(connectionId: string | null) {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        // Try to get the error message from the response
+        let errorMessage = 'Failed to send message';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+          console.error('API error response:', errorData);
+        } catch (e) {
+          console.error('Failed to parse error response:', e);
+        }
+        console.error('Message send failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorMessage
+        });
+        throw new Error(errorMessage);
       }
       
       const { message } = await response.json();

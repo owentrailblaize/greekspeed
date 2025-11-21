@@ -74,11 +74,16 @@ export function MessagesSidebar({
     fetchLastMessages();
   }, [connections, user]);
 
-  // Filter connections based on search query
+  // Filter connections based on search query and status
   const filteredConnections = useMemo(() => {
     if (!user) return [];
     
     return connections.filter(connection => {
+      // Only show accepted connections in messages
+      if (connection.status !== 'accepted') {
+        return false;
+      }
+      
       const otherUser = connection.requester_id === user.id 
         ? connection.recipient 
         : connection.requester;

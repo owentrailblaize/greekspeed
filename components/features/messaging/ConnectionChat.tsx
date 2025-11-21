@@ -58,10 +58,19 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
 
   const handleSendMessage = async (content: string) => {
     try {
+      // Check connection status before sending
+      if (connection && connection.status !== 'accepted') {
+        throw new Error('This connection request has not been accepted yet. Please wait for the other person to accept your connection request.');
+      }
+      
       await sendMessage(content);
     } catch (error) {
       console.error('Failed to send message:', error);
-      // You could show a toast notification here
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
+      // You could show a toast notification here with errorMessage
+      // For now, we'll let the error propagate to show in the UI
+      throw error;
     }
   };
 
