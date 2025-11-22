@@ -269,8 +269,8 @@ export function AlumniPipelineLayout({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Toolbar */}
-        <div className="relative z-20">
+        {/* Toolbar - Hidden on mobile */}
+        <div className="hidden md:block relative z-20">
           <AlumniToolbar
             selectedCount={selectedAlumni.length}
             totalCount={totalAlumni}

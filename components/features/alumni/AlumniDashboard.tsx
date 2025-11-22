@@ -21,7 +21,7 @@ const pageTransition = {
 export function AlumniDashboard() {
   const { profile } = useProfile();
   const [active, setActive] = useState("pipeline");
-  const [isMobileHeaderCollapsed, setIsMobileHeaderCollapsed] = useState(false);
+  const [isMobileHeaderCollapsed, setIsMobileHeaderCollapsed] = useState(true);
   const [showProfileCompletionGate, setShowProfileCompletionGate] = useState(false);
   const [profileCompletionChecked, setProfileCompletionChecked] = useState(false);
   const [profileCompletionPercentage, setProfileCompletionPercentage] = useState(0);
