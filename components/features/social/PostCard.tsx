@@ -11,6 +11,7 @@ import { Post } from '@/types/posts';
 import { formatDistanceToNow } from 'date-fns';
 import { CommentModal } from './CommentModal';
 import { DeletePostModal } from './DeletePostModal';
+import { LinkPreviewCard } from './LinkPreviewCard';
 
 const MAX_COLLAPSED_CHARS = 220;
 
@@ -103,9 +104,32 @@ export function PostCard({
   const renderPostContent = (textClassName: string, buttonClassName: string) => {
     if (!post.content) return null;
 
+    // Convert URLs to clickable links
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const contentWithLinks = displayContent.split(urlRegex).map((part, i) => {
+      if (part.match(urlRegex)) {
+        const cleanUrl = part.replace(/[.,;:!?]+$/, '');
+        return (
+          <a
+            key={i}
+            href={cleanUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-700 hover:underline break-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      }
+      return <span key={i}>{part}</span>;
+    });
+
     return (
       <div className="space-y-2">
-        <p className={`${textClassName} break-words whitespace-pre-wrap`}>{displayContent}</p>
+        <p className={`${textClassName} break-words whitespace-pre-wrap`}>
+          {contentWithLinks}
+        </p>
         {shouldTruncate && (
           <button
             type="button"
@@ -368,6 +392,19 @@ export function PostCard({
                 </div>
               );
             })()}
+            {/* Link Previews */}
+            {post.metadata?.link_previews && post.metadata.link_previews.length > 0 && (
+              <div className="space-y-3">
+                {post.metadata.link_previews.map((preview, index) => (
+                  <LinkPreviewCard
+                    key={preview.url || index}
+                    preview={preview}
+                    className="max-w-full"
+                    hideImage={imageUrls.length > 0}
+                  />
+                ))}
+              </div>
+            )}
             {renderCommentsPreview()}
           </div>
 
@@ -507,6 +544,19 @@ export function PostCard({
                 </div>
               );
             })()}
+            {/* Link Previews */}
+            {post.metadata?.link_previews && post.metadata.link_previews.length > 0 && (
+              <div className="space-y-3">
+                {post.metadata.link_previews.map((preview, index) => (
+                  <LinkPreviewCard
+                    key={preview.url || index}
+                    preview={preview}
+                    className="max-w-full"
+                    hideImage={imageUrls.length > 0}
+                  />
+                ))}
+              </div>
+            )}
             {renderCommentsPreview()}
           </div>
 

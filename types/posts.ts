@@ -1,3 +1,12 @@
+export interface LinkPreview {
+  url: string;
+  title?: string;
+  description?: string;
+  image?: string;
+  siteName?: string;
+  favicon?: string;
+}
+
 export interface Post {
   id: string;
   chapter_id: string;
@@ -5,7 +14,9 @@ export interface Post {
   content: string;
   post_type: 'text' | 'image' | 'text_image';
   image_url?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, any> & {
+    link_previews?: LinkPreview[];
+  };
   likes_count: number;
   comments_count: number;
   shares_count: number;
@@ -67,7 +78,11 @@ export interface CreatePostRequest {
   content: string;
   post_type: 'text' | 'image' | 'text_image';
   image_url?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, any> & {
+    image_urls?: string[];
+    image_count?: number;
+    link_previews?: LinkPreview[];
+  };
 }
 
 export interface UpdatePostRequest {
