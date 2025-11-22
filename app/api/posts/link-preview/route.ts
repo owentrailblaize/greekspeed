@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     // Extract and format the preview data
     const preview: LinkPreviewResponse['data'] = {
       url,
-      title: result.ogTitle || result.twitterTitle || result.dcTitle || result.title || '',
+      title: result.ogTitle || result.twitterTitle || result.dcTitle || '',
       description: result.ogDescription || result.twitterDescription || result.dcDescription || '',
       image: result.ogImage?.[0]?.url || result.twitterImage?.[0]?.url || '',
       siteName: result.ogSiteName || result.twitterSite || '',

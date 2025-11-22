@@ -46,7 +46,7 @@ export async function fetchLinkPreviewsServer(content: string): Promise<LinkPrev
 
       const preview: LinkPreview = {
         url,
-        title: result.ogTitle || result.twitterTitle || result.dcTitle || result.title || '',
+        title: result.ogTitle || result.twitterTitle || result.dcTitle || '',
         description: result.ogDescription || result.twitterDescription || result.dcDescription || '',
         image: result.ogImage?.[0]?.url || result.twitterImage?.[0]?.url || '',
         siteName: result.ogSiteName || result.twitterSite || '',
