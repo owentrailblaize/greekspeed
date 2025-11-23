@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { LinkedInStyleChapterCard } from "./LinkedInStyleChapterCard";
 import { ChapterCardSkeletonGrid } from "./ChapterCardSkeleton";
 import { ChapterMember } from "@/types/chapter";
@@ -12,11 +11,11 @@ import { Loader2 } from "lucide-react";
 
 interface MyChapterContentProps {
   onNavigate: (section: string) => void;
-  activeSection: string; // Add this prop
+  activeSection: string;
+  searchTerm: string; // Add this prop
 }
 
-export function MyChapterContent({ onNavigate, activeSection }: MyChapterContentProps) {
-  const [searchTerm, setSearchTerm] = useState("");
+export function MyChapterContent({ onNavigate, activeSection, searchTerm }: MyChapterContentProps) {
   
   // Get current user's profile and chapter
   const { profile, loading: profileLoading } = useProfile();
@@ -118,29 +117,7 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
   // Show loading state
   if (isLoading) {
     return (
-      <div className="flex-1 bg-gray-50">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
-                <h1 className="text-lg sm:text-xl font-semibold text-gray-900">My Chapter</h1>
-                {profile?.chapter && (
-                  <span className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-0">({profile.chapter})</span>
-                )}
-              </div>
-            </div>
-            
-            {/* Search Bar Skeleton */}
-            <div className="flex items-center space-x-4">
-              <div className="flex-1 relative">
-                <div className="w-full h-8 sm:h-10 bg-gray-200 rounded-md animate-pulse" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Content - Skeleton Loaders */}
+      <div className="flex-1 bg-gray-50 overflow-y-auto">
         <div className="max-w-7xl mx-auto px-2 sm:px-6 py-6">
           <ChapterCardSkeletonGrid count={8} />
         </div>
@@ -151,38 +128,7 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
   // Show original view for "all" section
   if (activeSection === "all") {
     return (
-      <div className="flex-1 bg-gray-50">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
-                <h1 className="text-lg sm:text-xl font-semibold text-gray-900">My Chapter</h1>
-                {profile?.chapter && (
-                  <span className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-0">({profile.chapter})</span>
-                )}
-              </div>
-            </div>
-            
-            {/* Search Bar */}
-            <div className="flex items-center space-x-4">
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  placeholder="Search members by name, major, or interests..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 rounded-md focus:ring-navy-500 focus:border-navy-500 text-xs sm:text-sm placeholder:text-xs sm:placeholder:text-sm"
-                />
-                <svg className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Content - Original Layout */}
+      <div className="flex-1 bg-gray-50 overflow-y-auto">
         <div className="max-w-7xl mx-auto px-2 sm:px-6 py-6">
           {/* Officers Section */}
           {sortedOfficers.length > 0 && (
@@ -234,25 +180,7 @@ export function MyChapterContent({ onNavigate, activeSection }: MyChapterContent
 
   // Show filtered view for other sections
   return (
-    <div className="flex-1 bg-gray-50">
-      {/* Dynamic Header */}
-      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
-              <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
-                {activeSection === "members" && "General Members"}
-                {activeSection === "officers" && "Officers & Leadership"}
-              </h1>
-              {profile?.chapter && (
-                <span className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-0">({profile.chapter})</span>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
+    <div className="flex-1 bg-gray-50 overflow-y-auto">
       <div className="max-w-7xl mx-auto px-2 sm:px-6 py-6">
         {displayMembers.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 items-start">

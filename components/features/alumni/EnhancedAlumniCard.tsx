@@ -192,11 +192,11 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
   };
 
   return (
-    <Card className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 overflow-hidden group h-[280px] sm:h-[400px] flex flex-col cursor-pointer" onClick={handleCardClick}>
+    <Card className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 overflow-hidden group h-[260px] sm:h-[400px] flex flex-col cursor-pointer" onClick={handleCardClick}>
       <CardContent className="!p-0 flex flex-col h-full">
-        <div className="px-4 pt-6 pb-4 relative flex-1 flex flex-col">
+        <div className="px-4 pt-3 sm:pt-6 pb-4 relative flex-1 flex flex-col">
           {/* Avatar */}
-          <div className="flex justify-center mb-3">
+          <div className="flex justify-center mb-2 sm:mb-3">
             <div className="w-16 h-16 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden relative">
               {alumni.avatar ? (
                 <ImageWithFallback 

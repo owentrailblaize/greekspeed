@@ -10,12 +10,15 @@ import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { AddMemberForm } from '@/components/chapter/AddMemberForm';
 import { EventForm } from '@/components/ui/EventForm'; // Add this import
 
+
 interface MyChapterSidebarProps {
   onNavigate: (section: string) => void;
   activeSection: string;
+  searchTerm: string;
+  onSearchChange: (term: string) => void;
 }
 
-export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebarProps) {
+export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSearchChange }: MyChapterSidebarProps) {
   // Add state for both modals
   const [showAddMemberForm, setShowAddMemberForm] = useState(false);
   const [showCreateEventForm, setShowCreateEventForm] = useState(false);
@@ -182,6 +185,23 @@ export function MyChapterSidebar({ onNavigate, activeSection }: MyChapterSidebar
                   ) : (
                     // Expanded view - show full sidebar content
                     <div className="space-y-6">
+                      {/* Search Bar */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Search Members</label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="Search by name, major, or interests..."
+                            value={searchTerm}
+                            onChange={(e) => onSearchChange(e.target.value)}
+                            className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:ring-navy-500 focus:border-navy-500 text-sm"
+                          />
+                          <svg className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
+                        </div>
+                      </div>
+
                       {/* Navigation Items */}
                       <div className="space-y-2">
                         {visibleItems.map((item) => (

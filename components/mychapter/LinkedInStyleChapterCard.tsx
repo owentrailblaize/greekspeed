@@ -1,12 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChapterMember } from "@/types/chapter"; // Use the main types file
-import { MessageCircle, UserPlus, Clock, Shield } from "lucide-react";
+import { ChapterMember } from "@/types/chapter";
+import { MessageCircle, UserPlus, Clock, Users } from "lucide-react";
 import { useConnections } from "@/lib/contexts/ConnectionsContext";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import ImageWithFallback from "@/components/figma/ImageWithFallback";
 
 interface LinkedInStyleChapterCardProps {
   member: ChapterMember;
@@ -31,17 +32,13 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
     major,
     position,
     avatar,
-    verified = false,
-    description
+    interests = []
   } = member;
-
-  // Generate description if not provided
-  const memberDescription = description || '';
   
   // Use mutual connections from member prop (already calculated by API)
   const mutualConnections = member.mutualConnections || [];
   const connectionsCount = member.mutualConnectionsCount || 0;
-  const mutualLoading = false; // No longer loading since it comes from API
+  const mutualLoading = false;
 
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel', e: React.MouseEvent) => {
     e.stopPropagation();
@@ -88,6 +85,22 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
     }
   };
 
+  const isValidField = (value: any): boolean => {
+    if (!value) return false;
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      return trimmed !== "" && 
+             trimmed !== "Not specified" && 
+             trimmed !== "N/A" && 
+             trimmed !== "Unknown" &&
+             trimmed !== "null";
+    }
+    if (Array.isArray(value)) {
+      return value.length > 0;
+    }
+    return true;
+  };
+
   const renderConnectionButton = () => {
     if (!user || user.id === id) return null;
     
@@ -100,7 +113,7 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
           <Button
             onClick={(e) => handleConnectionAction('connect', e)}
             disabled={isLoading}
-            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-7 sm:h-10 text-xs sm:text-sm"
+            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
             variant="outline"
           >
             {isLoading ? (
@@ -117,7 +130,7 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
           <Button
             onClick={(e) => handleConnectionAction('cancel', e)}
             disabled={isLoading}
-            className="w-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 transition-colors duration-200 rounded-full font-medium h-7 sm:h-10 flex items-center justify-center text-xs sm:text-sm"
+            className="w-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 transition-colors duration-200 rounded-full font-medium h-8 sm:h-10 flex items-center justify-center text-xs sm:text-sm"
             variant="outline"
           >
             {isLoading ? (
@@ -135,14 +148,14 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
             <Button
               onClick={(e) => handleConnectionAction('accept', e)}
               disabled={isLoading}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-full font-medium h-7 sm:h-10 text-xs sm:text-sm"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
             >
               Accept
             </Button>
             <Button
               onClick={(e) => handleConnectionAction('decline', e)}
               disabled={isLoading}
-              className="flex-1 border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 rounded-full font-medium h-7 sm:h-10 text-xs sm:text-sm"
+              className="flex-1 border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
               variant="outline"
             >
               Decline
@@ -153,8 +166,8 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
       case 'accepted':
         return (
           <Button
-            onClick={handleMessageClick}
-            className="w-full text-white rounded-full font-medium h-7 sm:h-10 text-xs sm:text-sm flex items-center justify-center shadow-sm border border-blue-300/20"
+            onClick={(e) => handleMessageClick(e)}
+            className="w-full text-white rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm flex items-center justify-center"
             style={{
               background: 'linear-gradient(340deg, rgba(228, 236, 255, 1) 0%, rgba(130, 130, 255, 0.95) 34%, rgba(35, 70, 224, 0.93) 85%)'
             }}
@@ -168,7 +181,7 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
         return (
           <Button
             onClick={(e) => handleConnectionAction('connect', e)}
-            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-7 sm:h-10 text-xs sm:text-sm"
+            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
             variant="outline"
           >
             <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
@@ -178,25 +191,34 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
     }
   };
 
-  return (
-    <Card className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 overflow-hidden group h-full flex flex-col">
-      <CardContent className="!p-0 flex flex-col h-full">
-        {/* Header Banner */}
-        <div className="h-8 sm:h-16 bg-gradient-to-r from-navy-100 to-blue-100" />
+  const handleCardClick = () => {
+    // Optional: Add onClick handler if needed
+  };
 
-        <div className="px-1 sm:px-4 pb-1 sm:pb-4 -mt-4 sm:-mt-8 relative flex-1 flex flex-col">
+  // Check if we have data to display
+  const hasPosition = isValidField(position) && position !== 'Member';
+  const hasYear = isValidField(year);
+  const hasMajor = isValidField(major);
+  const hasInterests = isValidField(interests);
+
+  return (
+    <Card className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 overflow-hidden group h-[260px] sm:h-[320px] flex flex-col" onClick={handleCardClick}>
+      <CardContent className="!p-0 flex flex-col h-full">
+        <div className="px-4 pt-2 sm:pt-4 pb-3 sm:pb-4 relative flex-1 flex flex-col">
           {/* Avatar */}
-          <div className="flex justify-center mb-1 sm:mb-4">
-            <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full border-2 sm:border-4 border-white bg-white shadow-sm overflow-hidden relative">
+          <div className="flex justify-center mb-2">
+            <div className="w-16 h-16 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden relative">
               {avatar ? (
-                <img 
+                <ImageWithFallback 
                   src={avatar} 
                   alt={name} 
-                  className="w-full h-full object-cover"
+                  width={64} 
+                  height={64} 
+                  className="w-full h-full object-cover" 
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
-                  <span className="text-white font-medium text-xs sm:text-lg">
+                  <span className="text-white font-medium text-lg">
                     {name
                       ?.split(" ")
                       ?.map((n) => n[0])
@@ -208,48 +230,108 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
           </div>
 
           {/* Name */}
-          <div className="text-center mb-1 sm:mb-3">
-            <h3 className="font-semibold text-gray-900 text-xs sm:text-lg leading-tight">
-              <span className="break-words">{name}</span>
+          <div className="text-center sm:mb-2 h-6 flex flex-col justify-center">
+            <h3 className="font-semibold text-gray-900 text-xs sm:text-base leading-tight truncate">
+              {name}
             </h3>
           </div>
 
-          {/* Year Badge - Only show on desktop */}
-          <div className="text-center mb-1 hidden sm:block">
-            {year && (
+          {/* Position and Year - Desktop: same row, Mobile: stacked or badges */}
+          <div className="text-center mb-2 sm:mb-3 min-h-[20px] sm:min-h-[24px] flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2">
+            {/* Mobile: Show year badge if available */}
+            {hasYear && (
               <Badge 
                 variant="secondary" 
-                className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-1 py-0.5 flex-shrink-0"
+                className="sm:hidden text-[10px] bg-gray-100 text-gray-700 hover:bg-gray-200 px-1.5 py-0.5"
               >
                 {year}
               </Badge>
             )}
-          </div>
+            
+            {/* Desktop: Position and Year on same row */}
+            <div className="hidden sm:flex items-center justify-center gap-2">
+              {hasPosition && (
+                <p className="text-xs font-medium text-navy-600 leading-tight truncate">{position}</p>
+              )}
+              {hasPosition && hasYear && (
+                <span className="text-gray-300">•</span>
+              )}
+              {hasYear && (
+                <Badge 
+                  variant="secondary" 
+                  className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-0.5"
+                >
+                  {year}
+                </Badge>
+              )}
+            </div>
 
-          {/* Position and Description */}
-          <div className="text-center mb-1 sm:mb-4">
-            {/* Position - Show on both mobile and desktop */}
-            {position && position !== 'Member' && (
-              <p className="text-xs sm:text-sm font-medium text-navy-600 mb-0.5 sm:mb-2 leading-tight truncate">{position}</p>
+            {/* Mobile: Show position if available, or "Chapter Member" placeholder */}
+            <div className="sm:hidden">
+              {hasPosition ? (
+                <p className="text-xs font-medium text-navy-600 leading-tight truncate">{position}</p>
+              ) : (
+                <Badge 
+                  variant="secondary" 
+                  className="text-[10px] bg-gray-50 text-gray-500 px-1.5 py-0.5"
+                >
+                  Chapter Member
+                </Badge>
+              )}
+            </div>
+
+            {/* Desktop: Show "Chapter Member" if no position */}
+            {!hasPosition && (
+              <div className="hidden sm:block">
+                <Badge 
+                  variant="secondary" 
+                  className="text-xs bg-gray-50 text-gray-500 px-2 py-0.5"
+                >
+                  Chapter Member
+                </Badge>
+              </div>
             )}
-            {/* Bio - Show on desktop only */}
-            <p className="hidden sm:block text-xs sm:text-sm text-gray-600 leading-relaxed">{memberDescription}</p>
           </div>
 
-          {/* Mutual Connections */}
-          <div className="flex flex-col items-center justify-center space-y-1 sm:space-y-2 mb-2 sm:mb-6">
+          {/* Tags Section - Major and Interests (Desktop only, or mobile if no mutual connections) */}
+          {(hasMajor || hasInterests) && (
+            <div className="hidden sm:flex flex-wrap justify-center gap-1.5 mb-2 min-h-[20px]">
+              {hasMajor && (
+                <Badge 
+                  variant="secondary" 
+                  className="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 px-2 py-0.5"
+                >
+                  {major}
+                </Badge>
+              )}
+              {hasInterests && interests.slice(0, 2).map((interest, idx) => (
+                <Badge 
+                  key={idx}
+                  variant="secondary" 
+                  className="text-xs bg-purple-50 text-purple-700 hover:bg-purple-100 px-2 py-0.5"
+                >
+                  {interest}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          {/* Mutual Connections - With placeholder when empty */}
+          <div className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 mb-3 sm:mb-4 flex-1 min-h-[32px]">
             {mutualLoading ? (
               <div className="text-xs text-gray-400">Loading...</div>
-            ) : (
+            ) : mutualConnections.length > 0 ? (
               <>
-                <div className="flex -space-x-1 justify-center">
+                <div className="flex -space-x-1">
                   {mutualConnections.slice(0, 3).map((c, i) => (
-                    <div key={c.id || `mutual-${i}`} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative">
+                    <div key={c.id || `mutual-${i}`} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative z-10" style={{ zIndex: 10 - i }}>
                       {c.avatar ? (
-                        <img 
+                        <ImageWithFallback 
                           src={c.avatar} 
                           alt={c.name || 'Unknown'} 
-                          className="w-full h-full object-cover"
+                          width={24} 
+                          height={24} 
+                          className="w-full h-full object-cover" 
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
@@ -264,22 +346,40 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
                     </div>
                   ))}
                 </div>
-                <span className="text-xs sm:text-sm text-gray-600 leading-tight text-center">
-                  {connectionsCount > 0 
-                    ? `${connectionsCount} mutual connection${connectionsCount !== 1 ? 's' : ''}`
+                {/* Mobile: Show "+X other" below avatars */}
+                <span className="text-xs text-gray-600 leading-tight sm:hidden">
+                  {connectionsCount > 1 
+                    ? `+${connectionsCount - 1} other`
+                    : connectionsCount === 1
+                    ? '1 connection'
+                    : ''
+                  }
+                </span>
+                {/* Desktop: Show full text next to avatars */}
+                <span className="text-xs sm:text-sm text-gray-600 leading-tight hidden sm:block">
+                  {connectionsCount > 1 
+                    ? `+${connectionsCount - 1} other connections`
+                    : connectionsCount === 1
+                    ? '1 connection'
                     : ''
                   }
                 </span>
               </>
+            ) : (
+              // Placeholder when no mutual connections
+              <div className="flex flex-col items-center justify-center text-gray-400">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 mb-1 opacity-50" />
+                <span className="text-[10px] sm:text-xs">No mutual connections</span>
+              </div>
             )}
           </div>
 
-          {/* Action Button */}
-          <div className="mt-auto pt-2">
+          {/* Action Button - Fixed height at bottom */}
+          <div className="mt-auto h-8 sm:h-10 flex items-center">
             {renderConnectionButton()}
           </div>
         </div>
       </CardContent>
     </Card>
   );
-} 
+}

@@ -179,7 +179,7 @@ export function AlumniDashboard() {
                 {/* Mobile: Show full text for pipeline, shortened for others */}
                 <span className="sm:hidden">
                   {active === "pipeline" && "Alumni Pipeline"}
-                  {active === "chapter" && (profile?.role === 'alumni' ? "Members" : "Chapter")}
+                  {active === "chapter" && (profile?.role === 'alumni' ? "Members" : "My Chapter")}
                   {active === "hiring" && "Hiring"}
                 </span>
                 <span className="hidden sm:inline">
@@ -213,7 +213,7 @@ export function AlumniDashboard() {
                 className="overflow-hidden"
               >
                 <div className="flex space-x-2 pt-3 pb-2 pl-2">
-                  {tabs.map((t) => (
+                  {tabs.filter(t => t.id !== "hiring").map((t) => (
                     <button
                       key={t.id}
                       onClick={() => handleTabClick(t.id, t.disabled)}
@@ -230,7 +230,7 @@ export function AlumniDashboard() {
                       {/* Mobile: Short text, Desktop: Full text */}
                       <span className="sm:hidden">
                         {t.id === "pipeline" && "Pipeline"}
-                        {t.id === "chapter" && (profile?.role === 'alumni' ? "Members" : "Chapter")}
+                        {t.id === "chapter" && (profile?.role === 'alumni' ? "Members" : "My Chapter")}
                         {t.id === "hiring" && "Hiring"}
                       </span>
                       <span className="hidden sm:inline">{t.label}</span>
@@ -249,7 +249,7 @@ export function AlumniDashboard() {
       {/* Desktop Tabs - Updated with pill styling */}
       <div className="hidden sm:block bg-white/95 backdrop-blur-lg border-b border-gray-200 shadow-sm">
         <div className="px-6 py-4 flex space-x-2">
-          {tabs.map((t) => (
+          {tabs.filter(t => t.id !== "hiring").map((t) => (
             <button
               key={t.id}
               onClick={() => handleTabClick(t.id, t.disabled)}
