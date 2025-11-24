@@ -133,7 +133,7 @@ export function PostCard({
         {shouldTruncate && (
           <button
             type="button"
-            onClick={handleExpandToggle}
+            onClick={(e) => { e.stopPropagation(); handleExpandToggle(); }}
             className={buttonClassName}
           >
             {isExpanded ? 'View less' : 'View more'}
@@ -212,6 +212,15 @@ export function PostCard({
 
   const handleLikeClick = () => {
     onLike(post.id);
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't open if clicking on interactive elements
+    const target = e.target as HTMLElement;
+    if (target.closest('button, a, [role="button"], img')) {
+      return;
+    }
+    setIsCommentModalOpen(true);
   };
 
   // Image Viewer Modal Component
@@ -294,7 +303,10 @@ export function PostCard({
     <>
       {/* Mobile Layout - Card-less Feed */}
       <div className="sm:hidden">
-        <div className="mx-1 mb-4 px-4 py-5 rounded-2xl border border-gray-100 bg-white/80 shadow-sm last:mb-0">
+        <div 
+          className="mx-1 mb-4 px-4 py-5 rounded-2xl border border-gray-100 bg-white/80 shadow-sm last:mb-0 cursor-pointer hover:bg-gray-50/50 transition-colors"
+          onClick={handleCardClick}
+        >
           {/* Post Header */}
           <div className="flex items-start justify-between gap-3 mb-4">
             <div className="flex items-center gap-3">
@@ -327,7 +339,7 @@ export function PostCard({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={handleDeleteClick}
+                  onClick={(e) => { e.stopPropagation(); handleDeleteClick(); }}
                   className="text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full p-2"
                   title="Delete post"
                 >
@@ -353,7 +365,7 @@ export function PostCard({
                   <div 
                     className="relative w-full overflow-hidden rounded-3xl aspect-[4/3] shadow-inner cursor-pointer hover:opacity-90 transition-opacity"
                     style={{ maxHeight: '24rem' }}
-                    onClick={() => handleImageClick(0)}
+                    onClick={(e) => { e.stopPropagation(); handleImageClick(0); }}
                   >
                     <Image
                       src={imageUrls[0]}
@@ -375,7 +387,7 @@ export function PostCard({
                       <div
                         key={index}
                         className="relative shrink-0 w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 cursor-pointer hover:opacity-90 transition-opacity"
-                        onClick={() => handleImageClick(index)}
+                        onClick={(e) => { e.stopPropagation(); handleImageClick(index); }}
                       >
                         <Image
                           src={url}
@@ -414,7 +426,7 @@ export function PostCard({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={handleLikeClick}
+                onClick={(e) => { e.stopPropagation(); handleLikeClick(); }}
                 className={`gap-2 rounded-full px-3 text-sm transition ${
                   post.is_liked 
                     ? 'bg-rose-50 text-rose-500 hover:bg-rose-100' 
@@ -427,7 +439,7 @@ export function PostCard({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => setIsCommentModalOpen(true)}
+                onClick={(e) => { e.stopPropagation(); setIsCommentModalOpen(true); }}
                 className="gap-2 rounded-full px-3 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
               >
                 <MessageCircle className="h-4 w-4 text-blue-500" />
@@ -439,7 +451,10 @@ export function PostCard({
       </div>
 
       {/* Desktop Layout - Preserved Card Design */}
-      <Card className="hidden sm:block rounded-3xl border border-gray-100 bg-white/80 shadow-sm transition hover:shadow-lg">
+      <Card 
+        className="hidden sm:block rounded-3xl border border-gray-100 bg-white/80 shadow-sm transition hover:shadow-lg cursor-pointer"
+        onClick={handleCardClick}
+      >
         <CardContent className="space-y-4 p-6 sm:p-7">
           {/* Post Header */}
           <div className="flex items-start justify-between gap-4">
@@ -479,7 +494,7 @@ export function PostCard({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={handleDeleteClick}
+                  onClick={(e) => { e.stopPropagation(); handleDeleteClick(); }}
                   className="rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50"
                   title="Delete post"
                 >
@@ -505,7 +520,7 @@ export function PostCard({
                   <div 
                     className="relative w-full overflow-hidden rounded-3xl aspect-[4/3] shadow-inner cursor-pointer hover:opacity-90 transition-opacity"
                     style={{ maxHeight: '24rem' }}
-                    onClick={() => handleImageClick(0)}
+                    onClick={(e) => { e.stopPropagation(); handleImageClick(0); }}
                   >
                     <Image
                       src={imageUrls[0]}
@@ -527,7 +542,7 @@ export function PostCard({
                       <div
                         key={index}
                         className="relative shrink-0 w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 cursor-pointer hover:opacity-90 transition-opacity"
-                        onClick={() => handleImageClick(index)}
+                        onClick={(e) => { e.stopPropagation(); handleImageClick(index); }}
                       >
                         <Image
                           src={url}
@@ -566,7 +581,7 @@ export function PostCard({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={handleLikeClick}
+                onClick={(e) => { e.stopPropagation(); handleLikeClick(); }}
                 className={`gap-2 rounded-full px-3 py-2 text-sm transition ${
                   post.is_liked 
                     ? 'bg-rose-50 text-rose-500 hover:bg-rose-100' 
@@ -579,7 +594,7 @@ export function PostCard({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => setIsCommentModalOpen(true)}
+                onClick={(e) => { e.stopPropagation(); setIsCommentModalOpen(true); }}
                 className="gap-2 rounded-full px-3 py-2 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
               >
                 <MessageCircle className="h-4 w-4 text-blue-500" />

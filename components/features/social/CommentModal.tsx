@@ -12,6 +12,7 @@ import { formatDistanceToNow } from 'date-fns';
 import Image from 'next/image';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { createPortal } from 'react-dom';
+import { cn } from '@/lib/utils';
 
 interface CommentModalProps {
   isOpen: boolean;
@@ -25,6 +26,20 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Add mobile detection
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640); // sm breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
   const {
     comments,
     loading,
@@ -237,20 +252,39 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[720px] max-w-[95vw] h-[100dvh] sm:h-[85vh] flex flex-col overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-md shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] sm:rounded-3xl rounded-2xl p-0">
+      <DialogContent className={cn(
+        // Mobile: Bottom sheet style
+        isMobile 
+          ? "fixed left-0 right-0 bottom-0 top-auto z-50 w-full max-h-[85vh] mt-[15vh] rounded-t-2xl rounded-b-none flex flex-col overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-md shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] p-0 translate-x-0 translate-y-0"
+          // Desktop: Centered modal (existing style)
+          : "sm:max-w-[720px] max-w-[95vw] h-[100dvh] sm:h-[85vh] flex flex-col overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-md shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] sm:rounded-3xl rounded-2xl p-0 fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]",
+        "duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+      )}>
         {/* Header */}
-        <DialogHeader className="flex-shrink-0 border-b border-slate-200/70 px-6 py-4">
+        <DialogHeader className={cn(
+          "flex-shrink-0 border-b border-slate-200/70",
+          isMobile ? "px-4 py-3" : "px-6 py-4"
+        )}>
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-semibold tracking-tight text-slate-900">
+            <DialogTitle className={cn(
+              "font-semibold tracking-tight text-slate-900",
+              isMobile ? "text-lg" : "text-xl"
+            )}>
               Comments
             </DialogTitle>
           </div>
         </DialogHeader>
 
         {/* Combined Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto min-h-0 bg-white/70">
+        <div className={cn(
+          "flex-1 overflow-y-auto min-h-0 bg-white/70",
+          isMobile ? "px-4" : "px-6"
+        )}>
           {/* Original Post */}
-          <div className="px-6 py-5 border-b border-slate-200/60 bg-white/80">
+          <div className={cn(
+            "py-5 border-b border-slate-200/60 bg-white/80",
+            isMobile ? "px-0" : "px-0"
+          )}>
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 sm:w-12 sm:h-12 bg-navy-100/70 rounded-full flex items-center justify-center text-navy-700 text-base font-semibold shrink-0 overflow-hidden ring-2 ring-white">
                 {post.author?.avatar_url ? (
@@ -486,7 +520,10 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
         </div>
 
         {/* Comment Input */}
-        <div className="flex-shrink-0 border-t border-slate-200/70 bg-slate-50/70 px-6 py-4 shadow-inner">
+        <div className={cn(
+          "flex-shrink-0 border-t border-slate-200/70 bg-slate-50/70 shadow-inner",
+          isMobile ? "px-4 py-3" : "px-6 py-4"
+        )}>
           <div className="flex items-end gap-4">
             <div className="w-10 h-10 sm:w-10 sm:h-10 bg-navy-100/70 rounded-full flex items-center justify-center text-navy-700 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
               {profile?.avatar_url ? (
