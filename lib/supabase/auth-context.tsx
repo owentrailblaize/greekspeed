@@ -225,7 +225,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 first_name: profileData?.firstName || null,
                 last_name: profileData?.lastName || null,
                 chapter: profileData?.chapter || null,
-                role: profileData?.role || null,
+                role: profileData?.role 
+                  ? profileData.role === 'Alumni' ? 'alumni'
+                   : profileData.role === 'Active Member' ? 'active_member'
+                   : profileData.role === 'Admin / Executive' ? 'admin'
+                   : null
+                : null,
                 phone: profileData?.phone || null,
                 sms_consent: profileData?.smsConsent || false,
                 created_at: new Date().toISOString(),

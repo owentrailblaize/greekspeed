@@ -18,10 +18,11 @@ export function DashboardOverview({
   initialFeed,
   fallbackChapterId,
 }: DashboardOverviewProps) {
-  const { isDeveloper } = useProfile();
+  const { isDeveloper, profile } = useProfile();
 
-  // Check if user is a developer first
-  if (isDeveloper) {
+  // Only show dev portal if user has role="developer" AND is_developer flag
+  // Double-check to prevent any edge cases
+  if (userRole === 'developer' && isDeveloper && profile?.is_developer === true) {
     return <DeveloperOverview />;
   }
 

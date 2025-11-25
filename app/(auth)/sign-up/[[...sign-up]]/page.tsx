@@ -15,18 +15,14 @@ import { useChapters } from '@/lib/hooks/useChapters';
 import { Chapter } from '@/types/chapter';
 import { Checkbox } from '@/components/ui/checkbox';
 
-// User roles for the dropdown - Only Alumni allowed for public signup
-const userRoles = [
-  { value: 'alumni', label: 'Alumni' }
-];
-
 export default function SignUpPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [chapter, setChapter] = useState('');
-  const [role, setRole] = useState<'Alumni' | ''>('');
+  // Role is always 'Alumni' for public signup - no dropdown needed
+  const role = 'Alumni' as const;
   // Phone number opt-in / opt-out
   const [phoneNumber, setPhoneNumber] = useState('');
   const [smsConsent, setSmsConsent] = useState(false);
@@ -56,7 +52,8 @@ export default function SignUpPage() {
     setError('');
     setSuccess('');
 
-    if (!email || !password || !firstName || !lastName || !chapter || !role) {
+    // Removed role from validation since it's always 'Alumni'
+    if (!email || !password || !firstName || !lastName || !chapter) {
       setError('All fields are required');
       setLoading(false);
       return;
@@ -68,9 +65,9 @@ export default function SignUpPage() {
         firstName,
         lastName,
         chapter,
-        role,
-        phone: phoneNumber, // Add phone number to the signUp payload
-        smsConsent: smsConsent // Add SMS consent to the signUp payload
+        role, // Always 'Alumni'
+        phone: phoneNumber,
+        smsConsent: smsConsent
       });
       setSuccess('Account created successfully! Redirecting...');
       
@@ -159,9 +156,7 @@ export default function SignUpPage() {
   if (user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <p className="text-gray-600">Redirecting to dashboard...</p>
-        </div>
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-navy-600 border-t-transparent"></div>
       </div>
     );
   }
@@ -399,44 +394,27 @@ export default function SignUpPage() {
                       {/* Chapter Selection - Compact */}
                       <div className="space-y-1">
                         <Label htmlFor="chapter" className="text-xs font-medium text-gray-700">Chapter</Label>
-                        <Select 
-                          value={chapter} 
-                          onValueChange={setChapter}
-                        >
-                          <SelectItem value="">
-                            {chaptersLoading ? 'Loading chapters...' : 'Select your chapter'}
-                          </SelectItem>
-                          {chapters.map((chapterData) => (
-                            <SelectItem key={chapterData.id} value={chapterData.name}>
-                              {chapterData.name}
+                        <div className="[&>div>button]:h-7 [&>div>button]:text-sm [&>div>button]:py-1">
+                          <Select 
+                            value={chapter} 
+                            onValueChange={setChapter}
+                          >
+                            <SelectItem value="">
+                              {chaptersLoading ? 'Loading chapters...' : 'Select your chapter'}
                             </SelectItem>
-                          ))}
-                        </Select>
+                            {chapters.map((chapterData) => (
+                              <SelectItem key={chapterData.id} value={chapterData.name}>
+                                {chapterData.name}
+                              </SelectItem>
+                            ))}
+                          </Select>
+                        </div>
                         {chaptersError && (
                           <p className="text-red-500 text-xs">Failed to load chapters. Please refresh the page.</p>
                         )}
                         {chapters.length === 0 && !chaptersLoading && (
                           <p className="text-yellow-500 text-xs">No chapters available. Please contact support.</p>
                         )}
-                      </div>
-
-                      {/* Role Selection - Compact */}
-                      <div className="space-y-1">
-                        <Label htmlFor="role" className="text-xs font-medium text-gray-700">Role</Label>
-                        <Select 
-                          value={role} 
-                          onValueChange={(value: string) => setRole(value as 'Alumni')}
-                        >
-                          <SelectItem value="">Select your role</SelectItem>
-                          {userRoles.map((userRole) => (
-                            <SelectItem key={userRole.value} value={userRole.value}>
-                              {userRole.label}
-                            </SelectItem>
-                          ))}
-                        </Select>
-                        <p className="text-xs text-gray-500">
-                          Alumni accounts can access the alumni network and connect with other graduates.
-                        </p>
                       </div>
 
                       {/* Error and Success Messages - Compact */}
@@ -483,4 +461,4 @@ export default function SignUpPage() {
       </Card>
     </div>
   );
-} 
+}

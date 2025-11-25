@@ -34,29 +34,18 @@ export default function DashboardPageClient({
       if (!profile.welcome_seen && !isDeveloper) {
         setShowWelcomeModal(true);
       }
-
-      if (!isDeveloper && (!profile.chapter || !profile.role)) {
-        router.push('/profile/complete');
-      }
     }
   }, [authLoading, profileLoading, user, profile, isDeveloper, router]);
 
   if (authLoading || profileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-navy-600 border-t-transparent"></div>
       </div>
     );
   }
 
   if (!user) {
-    return null;
-  }
-
-  if (!isDeveloper && (!profile?.chapter || !profile?.role)) {
     return null;
   }
 

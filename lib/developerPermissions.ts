@@ -37,7 +37,8 @@ export function hasDeveloperPermissionByAccessLevel(
 
 // Check if user can access developer portal
 export function canAccessDeveloperPortal(profile: any): boolean {
-  return profile?.is_developer === true;
+  // Only users with role="developer" AND is_developer=true should have access
+  return profile?.role === 'developer' && profile?.is_developer === true;
 }
 
 // Get developer access level
