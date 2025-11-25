@@ -10,31 +10,42 @@ interface Logo {
 }
 
 export const TrustedBySection: React.FC = () => {
-  // Update these paths to match your actual image filenames
   const logos: Logo[] = [
     {
-      name: 'Sigma Chi Eta',
-      imagePath: '/chapter-logos/Beta_Theta_Pi_Coat_Arms.png', // Update with your actual filename
+      name: 'Beta Theta Pi',
+      imagePath: '/chapter-logos/Beta_Theta_Pi_Coat_Arms.png',
     },
     {
-      name: 'Alpha Beta Gamma',
-      imagePath: '/chapter-logos/Beta_Theta_Pi_Coat_Arms.png', // Update with your actual filename
+      name: 'Delta Kappa Epsilon',
+      imagePath: '/chapter-logos/Delta_Kappa_Epsilon_Coat_Arms.png',
     },
     {
-      name: 'Delta Epsilon',
-      imagePath: '/chapter-logos/Beta_Theta_Pi_Coat_Arms.png', // Update with your actual filename
+      name: 'Kappa Alpha',
+      imagePath: '/chapter-logos/Kappa_Alpha_Coat_Arms.png',
     },
     {
-      name: 'Theta Iota',
-      imagePath: '/chapter-logos/Beta_Theta_Pi_Coat_Arms.png', // Update with your actual filename
+      name: 'Kappa Sigma',
+      imagePath: '/chapter-logos/Kappa_Sigma_Coat_Arms.png',
     },
     {
-      name: 'Kappa Lambda',
-      imagePath: '/chapter-logos/Beta_Theta_Pi_Coat_Arms.png', // Update with your actual filename
+      name: 'Phi Delta Theta',
+      imagePath: '/chapter-logos/Phi_Delta_Theta_Coat_of_Arms.png',
     },
     {
-      name: 'Mu Nu',
-      imagePath: '/chapter-logos/Beta_Theta_Pi_Coat_Arms.png', // Update with your actual filename
+      name: 'Phi Gamma Delta',
+      imagePath: '/chapter-logos/Phi_Gamma_Delta_Coat_Arms.png',
+    },
+    {
+      name: 'Pi Kappa Alpha',
+      imagePath: '/chapter-logos/Pi_Kappa_Alpha_Coat_Arms.png',
+    },
+    {
+      name: 'Sigma Alpha Epsilon',
+      imagePath: '/chapter-logos/Sigma_Alpha_Epsilon_Coat_Arms.png',
+    },
+    {
+      name: 'Sigma Chi',
+      imagePath: '/chapter-logos/Sigma_Chi_Coat_Arms.png',
     },
   ];
 
@@ -93,9 +104,9 @@ export const TrustedBySection: React.FC = () => {
                   {duplicatedLogos.map((logo, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-center min-w-[120px] md:min-w-[160px] group"
+                      className="flex flex-col items-center justify-center min-w-[120px] md:min-w-[160px] group"
                     >
-                      <div className="opacity-60 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center h-12 w-12 md:h-16 md:w-16">
+                      <div className="opacity-60 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center h-12 w-12 md:h-16 md:w-16 mb-2">
                         <Image
                           src={logo.imagePath}
                           alt={logo.name}
@@ -105,6 +116,9 @@ export const TrustedBySection: React.FC = () => {
                           unoptimized={false}
                         />
                       </div>
+                      <p className="text-[10px] md:text-xs font-medium text-gray-600 text-center opacity-70 group-hover:opacity-100 transition-opacity duration-300 leading-tight">
+                        {logo.name}
+                      </p>
                     </div>
                   ))}
                 </motion.div>
@@ -112,7 +126,7 @@ export const TrustedBySection: React.FC = () => {
             </div>
 
             <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
-            <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
+            <div className="absolute bottom-0 left-0 w-full h-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
           </div>
 
           <div className="absolute -inset-1 bg-gradient-to-r from-navy-500/10 via-blue-500/10 to-navy-500/10 rounded-xl md:rounded-2xl blur-xl opacity-30 -z-10" />
