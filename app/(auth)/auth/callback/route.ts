@@ -60,8 +60,16 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // Redirect to dashboard instead of profile completion
-        return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
+        // Check if profile is incomplete (missing chapter or role) - new OAuth users need to complete profile
+        const profile = existingProfile || null;
+        const isIncomplete = !profile?.chapter || !profile?.role;
+
+        // Redirect new OAuth users to profile completion, existing users with complete profiles to dashboard
+        if (isIncomplete) {
+          return NextResponse.redirect(`${requestUrl.origin}/profile/complete`);
+        } else {
+          return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
+        }
       }
     } catch (error) {
       console.error('Callback processing error:', error);

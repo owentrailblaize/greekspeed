@@ -22,6 +22,9 @@ export default function DashboardPageClient({
   const router = useRouter();
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
+  const isOAuthUser = user?.app_metadata?.provider &&
+    user?.app_metadata?.provider !== 'email';
+
   useEffect(() => {
     if (authLoading || profileLoading) return;
 
@@ -35,18 +38,32 @@ export default function DashboardPageClient({
         setShowWelcomeModal(true);
       }
 
-      if (!isDeveloper && (!profile.chapter || !profile.role)) {
+      if (!isDeveloper && isOAuthUser && (!profile.chapter || !profile.role)) {
         router.push('/profile/complete');
+        return;
+      }
+
+      if (!isDeveloper && !isOAuthUser && (!profile.chapter || !profile.role)) {
+        // Give it a bit more time for the profile to fully load
+        const timeoutId = setTimeout(() => {
+          // Only redirect if still incomplete after waiting
+          if (!profile.chapter || !profile.role) {
+            console.warn('Email signup profile appears incomplete after loading delay');
+            // Don't redirect - email signups should have complete profiles
+          }
+        }, 3000);
+        
+        return () => clearTimeout(timeoutId);
       }
     }
-  }, [authLoading, profileLoading, user, profile, isDeveloper, router]);
+  }, [authLoading, profileLoading, user, profile, isDeveloper, isOAuthUser, router]);
 
   if (authLoading || profileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-navy-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -56,8 +73,20 @@ export default function DashboardPageClient({
     return null;
   }
 
-  if (!isDeveloper && (!profile?.chapter || !profile?.role)) {
+  if (!isDeveloper && isOAuthUser && (!profile?.chapter || !profile?.role)) {
     return null;
+  }
+
+  // Don't render DashboardOverview until we have a role (prevents placeholder flash)
+  if (!profile?.role && !isDeveloper) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-navy-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

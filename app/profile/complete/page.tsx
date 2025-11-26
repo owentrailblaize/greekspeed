@@ -62,23 +62,61 @@ export default function ProfileCompletePage() {
     setError('');
 
     try {
+      const normalizedRole = formData.role?.toLowerCase() || null;
+      const fullName = `${formData.firstName} ${formData.lastName}`;
+
       // Update the existing profile with complete information
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
           first_name: formData.firstName,
           last_name: formData.lastName,
+          full_name: fullName,
           email: formData.email,
           chapter: formData.chapter,
-          role: formData.role,
+          role: normalizedRole,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
 
       if (profileError) throw profileError;
 
+      if (normalizedRole === 'alumni') {
+        const { error: alumniError } = await supabase
+          .from('alumni')
+          .upsert({
+            user_id: user.id,
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            full_name: fullName,
+            chapter: formData.chapter,
+            industry: 'Not specified',
+            graduation_year: new Date().getFullYear(),
+            company: 'Not specified',
+            job_title: 'Not specified',
+            email: formData.email || user.email,
+            phone: null,
+            location: 'Not specified',
+            description: `Alumni from ${formData.chapter}`,
+            avatar_url: null,
+            verified: false,
+            is_actively_hiring: false,
+            last_contact: null,
+            tags: null,
+            mutual_connections: [],
+          },
+          {
+            onConflict: 'user_id',
+            ignoreDuplicates: false,
+          }
+        );
+
+        if (alumniError) {
+          console.error('Alumni record creation error:', alumniError);
+        }
+      }
       // Redirect to dashboard after successful profile completion
-      router.push('/dashboard');
+      window.location.href = '/dashboard';
     } catch (error) {
       console.error('Profile update error:', error);
       setError('Failed to update profile. Please try again.');
