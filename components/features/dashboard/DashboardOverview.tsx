@@ -38,25 +38,18 @@ export function DashboardOverview({
     return <AdminOverview initialFeed={initialFeed} fallbackChapterId={fallbackChapterId} />;
   }
   
-  // Default dashboard for fallback
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-navy-900">Dashboard Overview</h1>
-          <p className="text-gray-600">Welcome to your dashboard</p>
+  // Default dashboard for fallback - Show loading instead of placeholder
+  if (!userRole) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-navy-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading dashboard...</p>
         </div>
       </div>
-      
-      {/* Placeholder content for fallback */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Quick Actions</h3>
-            <p className="text-gray-600">Dashboard coming soon...</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    );
+  }
+
+  // This should never be reached if we wait for role above, but kept as safety
+  return null;
 }
