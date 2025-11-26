@@ -214,6 +214,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const fullName = profileData
             ? `${profileData.firstName} ${profileData.lastName}`
             : data.user.email?.split('@')[0] || 'User';
+          
+          const normalizedRole = profileData?.role
+          ? (profileData.role.toLowerCase() === 'alumni' ? 'alumni' : profileData.role.toLowerCase())
+          : null;
 
           const { error: profileError } = await supabase
             .from('profiles')
@@ -225,7 +229,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 first_name: profileData?.firstName || null,
                 last_name: profileData?.lastName || null,
                 chapter: profileData?.chapter || null,
-                role: profileData?.role || null,
+                role: normalizedRole,
                 phone: profileData?.phone || null,
                 sms_consent: profileData?.smsConsent || false,
                 created_at: new Date().toISOString(),
@@ -240,6 +244,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.error('❌ AuthContext: Profile creation failed:', profileError);
           } else if (profileData?.role?.toLowerCase() === 'alumni') {
             try {
+              const cleanPhone = profileData?.phone 
+              ? profileData.phone.replace(/\D/g, '') 
+              : null;
+
               const { error: alumniError } = await supabase
                 .from('alumni')
                 .upsert(
@@ -254,7 +262,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     company: 'Not specified',
                     job_title: 'Not specified',
                     email: data.user.email,
-                    phone: null,
+                    phone: cleanPhone || null,
                     location: 'Not specified',
                     description: `Alumni from ${profileData.chapter}`,
                     avatar_url: null,

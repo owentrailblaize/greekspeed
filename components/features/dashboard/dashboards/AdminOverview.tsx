@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { QuickActions, QuickAction } from './ui/QuickActions'; // Add QuickAction import
+import { useMemo, useState, useEffect } from 'react';
+import { QuickActions, QuickAction } from './ui/QuickActions';
 import { DuesSnapshot } from './ui/DuesSnapshot';
 import { ComplianceSnapshot } from './ui/ComplianceSnapshot';
 import { OperationsFeed } from './ui/OperationsFeed';
@@ -13,17 +13,22 @@ import { CompactCalendarCard } from './ui/CompactCalendarCard';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { SocialFeed, type SocialFeedInitialData } from './ui/SocialFeed';
 import { DuesStatusCard } from './ui/DuesStatusCard';
-import { AdminMobileBottomNavigation } from './ui/AdminMobileBottomNavigation';
+import { MobileBottomNavigation } from './ui/MobileBottomNavigation'; // Changed import
 import { MobileAdminTasksPage } from './ui/MobileAdminTasksPage';
 import { MobileDocsCompliancePage } from './ui/MobileDocsCompliancePage';
 import { MobileOperationsFeedPage } from './ui/MobileOperationsFeedPage';
 import { MobileCalendarPage } from './ui/MobileCalendarPage';
-import { Calendar, Users, MessageSquare, UserPlus, Lock } from 'lucide-react';
+import { MobileOperationsPage } from './ui/MobileOperationsPage';
+import { MobileEventsVendorsPage } from './ui/MobileEventsVendorsPage';
+import { Calendar, Users, MessageSquare, UserPlus, Home, Wrench, CheckSquare, FileText, Activity, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EventForm } from '@/components/ui/EventForm';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { createPortal } from 'react-dom';
+import { SendAnnouncementButton } from './ui/SendAnnouncementButton';
+import { EXECUTIVE_ROLES } from '@/lib/permissions';
+import { UpcomingEventsCard } from './ui/UpcomingEventsCard';
 
 interface AdminOverviewProps {
   initialFeed?: SocialFeedInitialData;
@@ -37,12 +42,33 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
   const [showQuickActionsModal, setShowQuickActionsModal] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const feedData = useMemo(() => {
     if (!initialFeed) return undefined;
     if (!chapterId) return initialFeed;
     return initialFeed.chapterId === chapterId ? initialFeed : undefined;
   }, [chapterId, initialFeed]);
+
+  // Handle tool query param from FAB menu
+  useEffect(() => {
+    const tool = searchParams.get('tool');
+    if (tool === 'tasks') {
+      setActiveMobileTab('tasks');
+    } else if (tool === 'operations') {
+      setActiveMobileTab('operations');
+    } else if (tool === 'events') {
+      setActiveMobileTab('events');
+    } else if (tool === 'docs') {
+      setActiveMobileTab('docs');
+    } else if (tool === 'ops') {
+      setActiveMobileTab('ops');
+    } else if (tool === 'calendar') {
+      setActiveMobileTab('calendar');
+    } else if (!tool) {
+      setActiveMobileTab('home');
+    }
+  }, [searchParams]);
 
   // Quick Actions handlers
   const handleScheduleMeeting = () => {
@@ -121,16 +147,25 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
     },
   ];
 
+  // Remove the manual tab configuration - MobileBottomNavigation will auto-detect role
+
+  // Check if user is an executive member
+  const isExecutiveMember = profile?.role === 'admin' || 
+    (profile?.chapter_role && EXECUTIVE_ROLES.includes(profile.chapter_role as any));
+
   const renderMobileContent = () => {
     switch (activeMobileTab) {
       case 'home':
         return (
           <div className="space-y-4">
-            {/* Dues Status - At the top for quick access */}
             <div className="w-full">
-              <DuesStatusCard />
+              {/* Show Send Announcement for executive members, DuesStatusCard for others */}
+              {isExecutiveMember ? (
+                <SendAnnouncementButton />
+              ) : (
+                <DuesStatusCard />
+              )}
             </div>
-            {/* Primary Feature: Social Feed */}
             <div className="w-full">
               <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
             </div>
@@ -138,9 +173,13 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
         );
       case 'tasks':
         return <MobileAdminTasksPage />;
+      case 'operations':
+        return <MobileOperationsPage />;
+      case 'events':
+        return <MobileEventsVendorsPage />;
       case 'docs':
         return <MobileDocsCompliancePage />;
-      case 'operations':
+      case 'ops':
         return <MobileOperationsFeedPage />;
       case 'calendar':
         return <MobileCalendarPage />;
@@ -173,14 +212,6 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
         <div className="hidden sm:grid sm:grid-cols-12 sm:gap-6">
           {/* Left Column - 3 columns wide */}
           <div className="col-span-3 space-y-6">
-            <QuickActions 
-              actions={quickActions}
-              showEventModal={true}
-              eventModalConfig={{
-                onSubmit: handleCreateEvent,
-                onCancel: () => setShowEventModal(false),
-              }}
-            />
             <DuesStatusCard />
             <OperationsFeed />
           </div>
@@ -192,6 +223,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
           
           {/* Right Column - 3 columns wide */}
           <div className="col-span-3 space-y-6">
+            <UpcomingEventsCard />
             {chapterId && <TasksPanel chapterId={chapterId} />}
             <DocsCompliancePanel />
             <CompactCalendarCard />
@@ -199,10 +231,10 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <AdminMobileBottomNavigation 
+      {/* Mobile Bottom Navigation - Auto-configures based on admin role */}
+      <MobileBottomNavigation 
         activeTab={activeMobileTab} 
-        onTabChange={setActiveMobileTab} 
+        onTabChange={setActiveMobileTab}
       />
 
       {/* Quick Actions Floating Action Button - Only on Home Page */}

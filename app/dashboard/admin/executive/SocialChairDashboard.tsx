@@ -14,6 +14,7 @@ import { useEvents } from "@/lib/hooks/useEvents";
 import { useProfile } from "@/lib/contexts/ProfileContext";
 import { Event as EventType, CreateEventRequest, UpdateEventRequest } from "@/types/events";
 import { useVendors } from "@/lib/hooks/useVendors";
+import { useChapterBudget } from "@/lib/hooks/useChapterBudget";
 import { VendorForm } from "@/components/ui/VendorForm";
 import { VendorContact, CreateVendorRequest, UpdateVendorRequest } from "@/types/vendors";
 import { SocialFeed } from "@/components/features/dashboard/dashboards/ui/SocialFeed";
@@ -110,6 +111,9 @@ export function SocialChairDashboard() {
   } = useVendors({ 
     chapterId: chapterId || '' 
   });
+
+  // Add budget hook
+  const { startingBudget } = useChapterBudget();
 
   // Debug logging
   useEffect(() => {
@@ -371,7 +375,7 @@ export function SocialChairDashboard() {
         remaining: 0,
         categories: [],
         eventsWithBudget: [],
-        startingBudget: 12000 // Default starting budget
+        startingBudget: startingBudget
       };
     }
 
@@ -388,11 +392,8 @@ export function SocialChairDashboard() {
     // For MVP, we'll assume spent = allocated (since we don't have expense tracking yet)
     const totalSpent = totalAllocated;
     
-    // STARTING BUDGET - This is your hardcoded starting point
-    const STARTING_BUDGET = 12000; // You can adjust this value
-    
     // Calculate remaining budget by subtracting allocated from starting budget
-    const remaining = STARTING_BUDGET - totalAllocated;
+    const remaining = startingBudget - totalAllocated;
 
     // Create categories based on budget_label or event title patterns
     const categoryMap = new Map<string, { allocated: number; events: any[] }>();
@@ -445,9 +446,9 @@ export function SocialChairDashboard() {
       remaining,
       categories,
       eventsWithBudget,
-      startingBudget: STARTING_BUDGET
+      startingBudget: startingBudget
     };
-  }, [events]);
+  }, [events, startingBudget]);
 
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(calendarDate);
@@ -810,7 +811,7 @@ export function SocialChairDashboard() {
                   <span className="font-semibold text-green-600">${budgetData.remaining.toLocaleString()}</span>
                 </div>
                 <Progress 
-                  value={(budgetData.totalAllocated / Math.max(budgetData.startingBudget || 12000, 1)) * 100} 
+                  value={(budgetData.totalAllocated / Math.max(budgetData.startingBudget || startingBudget, 1)) * 100} 
                   className="h-2"
                 />
                 <p className="text-xs text-gray-500 text-center">

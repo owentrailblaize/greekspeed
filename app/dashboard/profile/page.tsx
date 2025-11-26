@@ -26,11 +26,15 @@ import { useModal } from '@/lib/contexts/ModalContext';
 import { Save, AlertTriangle } from 'lucide-react';
 import ImageWithFallback from '@/components/figma/ImageWithFallback';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { MobileBottomNavigation } from '@/components/features/dashboard/dashboards/ui/MobileBottomNavigation';
+import { ProfileHeaderSection } from '@/components/features/profile/mobile/ProfileHeaderSection';
+import { ContentNavigationTabs } from '@/components/features/profile/mobile/ContentNavigationTabs';
+import { ContentFeedSection } from '@/components/features/profile/mobile/ContentFeedSection';
 
 export default function ProfilePage() {
   const { profile, loading, refreshProfile } = useProfile();
   const { connections, loading: connectionsLoading, sendConnectionRequest } = useConnections();
-  const [activeTab, setActiveTab] = useState('connections');
+  const [activeTab, setActiveTab] = useState('posts');
   const [connectionLoading, setConnectionLoading] = useState<string | null>(null);
   const router = useRouter();
   const { openEditProfileModal } = useModal();
@@ -122,7 +126,78 @@ export default function ProfilePage() {
     }
   }, [profile]);
 
+  // Move useUserPosts BEFORE the early returns
   const { posts: userPosts, loading: postsLoading, deletePost } = useUserPosts(profile?.id || '');
+
+  // Get recent connections for avatar display (up to 3) - Move this BEFORE early returns too
+  const recentConnectionsForAvatars = useMemo(() => {
+    if (!profile) return [];
+    return sortedConnections.slice(0, 3).map((connection) => {
+      const partner = connection.requester_id === profile.id 
+        ? connection.recipient 
+        : connection.requester;
+      return partner ? {
+        id: partner.id || connection.id,
+        avatar_url: partner.avatar_url,
+        full_name: partner.full_name,
+        first_name: partner.first_name,
+        last_name: partner.last_name,
+      } : null;
+    }).filter(Boolean) as Array<{
+      id: string;
+      avatar_url?: string | null;
+      full_name?: string;
+      first_name?: string;
+      last_name?: string;
+    }>;
+  }, [sortedConnections, profile]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+        <div className="max-w-7xl mx-auto px-6 py-10">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="h-64 bg-gray-200 rounded"></div>
+              <div className="h-64 bg-gray-200 rounded"></div>
+              <div className="h-64 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+        <div className="max-w-7xl mx-auto px-6 py-10">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Profile</h1>
+            <p className="text-gray-600">Profile not found.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const profileFields = [
+    { label: 'Full Name', value: profile.full_name, icon: User, required: true },
+    { label: 'Email', value: profile.email, icon: Mail, required: true },
+    { label: 'Chapter', value: profile.chapter, icon: Building, required: true },
+    { label: 'Role', value: profile.role, icon: Shield, required: true },
+    { label: 'Bio', value: profile.bio, icon: FileText, required: false },
+    { label: 'Phone', value: profile.phone, icon: Phone, required: false },
+    { label: 'Location', value: profile.location, icon: MapPin, required: false },
+  ];
+
+  // Mobile Layout - Threads-style
+  const mobileTabs = [
+    { id: 'posts', label: 'Posts' },
+    { id: 'connections', label: 'Connections' },
+  ];
 
   const formatTimestamp = (timestamp: string) => {
     try {
@@ -202,49 +277,44 @@ export default function ProfilePage() {
     );
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
-        <div className="max-w-7xl mx-auto px-6 py-10">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="h-64 bg-gray-200 rounded"></div>
-              <div className="h-64 bg-gray-200 rounded"></div>
-              <div className="h-64 bg-gray-200 rounded"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
-        <div className="max-w-7xl mx-auto px-6 py-10">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Profile</h1>
-            <p className="text-gray-600">Profile not found.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const profileFields = [
-    { label: 'Full Name', value: profile.full_name, icon: User, required: true },
-    { label: 'Email', value: profile.email, icon: Mail, required: true },
-    { label: 'Chapter', value: profile.chapter, icon: Building, required: true },
-    { label: 'Role', value: profile.role, icon: Shield, required: true },
-    { label: 'Bio', value: profile.bio, icon: FileText, required: false },
-    { label: 'Phone', value: profile.phone, icon: Phone, required: false },
-    { label: 'Location', value: profile.location, icon: MapPin, required: false },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+    <>
+      {/* Mobile Layout */}
+      <div className="min-h-screen bg-white sm:hidden pb-20">
+        {/* Profile Header Section */}
+        <ProfileHeaderSection
+          profile={profile}
+          connectionsCount={acceptedConnections.length}
+          onEditClick={openEditProfileModal}
+          completion={completion}
+          recentConnections={recentConnectionsForAvatars}
+        />
+
+        {/* Content Navigation Tabs */}
+        <ContentNavigationTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          tabs={mobileTabs}
+        />
+
+        {/* Content Feed Section */}
+        <ContentFeedSection
+          activeTab={activeTab}
+          posts={userPosts}
+          connections={sortedConnections}
+          postsLoading={postsLoading}
+          connectionsLoading={connectionsLoading}
+          onMessageClick={handleMessageClick}
+          onDeletePost={handleDeleteClick}
+          getConnectionPartner={getConnectionPartner}
+        />
+
+        {/* Mobile Bottom Navigation */}
+        <MobileBottomNavigation />
+      </div>
+
+      {/* Desktop Layout - Keep Existing */}
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 hidden sm:block pb-20 sm:pb-0">
       <div className="max-w-full mx-auto px-6 py-10">
         {/* Profile Completion Banner - Moved above banner for maximum visibility */}
         {completion && completion.percentage < 100 && (
@@ -700,6 +770,10 @@ export default function ProfilePage() {
           </DialogContent>
         </Dialog>
       </div>
-    </div>
+
+      {/* Mobile Bottom Navigation - Desktop */}
+      <MobileBottomNavigation />
+      </div>
+    </>
   );
 } 

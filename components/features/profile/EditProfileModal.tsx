@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AvatarService } from '@/lib/services/avatarService';
 import { useProfile } from '@/lib/contexts/ProfileContext';
@@ -328,29 +327,33 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
       const newBannerUrl = await BannerService.uploadBanner(file, profile.id);
       
       if (newBannerUrl) {
-        // Delete old banner if it exists
+        // Delete old banner if it exists (don't await - do it in background)
         if (profile.banner_url) {
-          await BannerService.deleteOldBanner(profile.banner_url);
+          BannerService.deleteOldBanner(profile.banner_url).catch(err => 
+            console.error('Error deleting old banner:', err)
+          );
         }
 
-        // Update profile with new banner URL
+        // Update profile with new banner URL in database
         await BannerService.updateProfileBanner(profile.id, newBannerUrl);
         
-        // Update global profile state
+        // Update global profile state (this already updates the context)
         await updateProfile({ banner_url: newBannerUrl });
         
-        // Update local state
+        // Update local state immediately for preview
         setBannerFile(file);
         setBannerPreview(newBannerUrl);
         
-        // Refresh profile data everywhere
-        await refreshProfile();
+        // Remove refreshProfile() call - it's unnecessary and causes reload
+        // The updateProfile() call above already updates the context state
       }
     } catch (error) {
       console.error('Error uploading banner:', error);
       alert('Failed to upload banner. Please try again.');
     } finally {
       setBannerUploading(false);
+      // Reset the input so the same file can be selected again if needed
+      e.target.value = '';
     }
   };
 
@@ -502,15 +505,15 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
   // Only render modal when ready
   if (!isOpen || !isModalReady) return null;
 
+  const isMobile = variant === 'mobile';
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className={`bg-white rounded-xl shadow-2xl w-full max-w-2xl flex flex-col ${
-        variant === 'mobile' ? 'max-h-[85vh] my-8' : 'max-h-[90vh]'
-      }`}>
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className={`bg-white ${isMobile ? 'rounded-t-2xl rounded-b-none w-full flex flex-col' : 'rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]'} ${isMobile ? 'max-h-[85vh] mt-[15vh]' : ''}`}>
         {/* Enhanced Header with Unsaved Changes Indicator */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
+        <div className={`flex items-center justify-between border-b border-gray-200 flex-shrink-0 ${isMobile ? 'p-4' : 'p-6'}`}>
           <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold text-navy-900">Edit Profile</h2>
+            <h2 className={`font-bold text-navy-900 ${isMobile ? 'text-xl' : 'text-2xl'}`}>Edit Profile</h2>
           </div>
           <button
             onClick={handleClose}
@@ -521,16 +524,15 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
         </div>
 
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Combined Profile Photo & Banner Card */}
-            <Card className="p-0">
-              <CardContent className="relative h-64 p-0 overflow-hidden">
-                {/* Banner Section - Make it clickable */}
-                <div 
-                  className="absolute inset-0 bg-gradient-to-r from-navy-600 via-blue-600 to-navy-700 flex items-center justify-center text-white cursor-pointer group rounded-lg"
-                  onClick={() => document.getElementById('banner-upload')?.click()}
-                >
+        <div className={`flex-1 overflow-y-auto ${isMobile ? 'p-4' : 'p-6'}`}>
+          <form onSubmit={handleSubmit} className={isMobile ? 'space-y-4' : 'space-y-6'}>
+            {/* Combined Profile Photo & Banner */}
+            <div className={`relative ${isMobile ? 'h-32' : 'h-64'} overflow-hidden rounded-lg`}>
+              {/* Banner Section - Make it clickable */}
+              <div 
+                className="absolute inset-0 bg-gradient-to-r from-navy-600 via-blue-600 to-navy-700 flex items-center justify-center text-white cursor-pointer group rounded-lg"
+                onClick={() => document.getElementById('banner-upload')?.click()}
+              >
                   {/* Show actual banner if it exists */}
                   {bannerPreview || profile?.banner_url ? (
                     <img 
@@ -541,36 +543,38 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                   ) : null}
                   
                   {/* Banner Upload Overlay */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-start opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-lg pt-8">
+                  <div className={`absolute inset-0 flex flex-col items-center justify-start opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-lg ${isMobile ? 'pt-4' : 'pt-8'}`}>
                     <div className="text-center">
                       {bannerUploading ? (
-                        <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                        <div className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'} border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2`} />
                       ) : (
-                        <Upload className="w-8 h-8 mx-auto mb-2" />
+                        <Upload className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'} mx-auto mb-2`} />
                       )}
-                      <p className="text-lg font-medium">
+                      <p className={isMobile ? 'text-sm font-medium' : 'text-lg font-medium'}>
                         {bannerUploading ? 'Uploading...' : 'Upload Banner'}
                       </p>
-                      <p className="text-sm">
-                        {bannerUploading ? 'Please wait...' : 'Click to upload banner image'}
-                      </p>
+                      {!isMobile && (
+                        <p className="text-sm">
+                          {bannerUploading ? 'Please wait...' : 'Click to upload banner image'}
+                        </p>
+                      )}
                     </div>
                   </div>
                   
                   {/* Default banner text (only show if no banner exists) */}
                   {!bannerPreview && !profile?.banner_url && (
                     <div className="text-center opacity-80 group-hover:opacity-0 transition-opacity">
-                      <p className="text-lg font-medium">Banner Image</p>
-                      <p className="text-sm">Click to upload your banner</p>
+                      <p className={isMobile ? 'text-sm font-medium' : 'text-lg font-medium'}>Banner Image</p>
+                      {!isMobile && <p className="text-sm">Click to upload your banner</p>}
                     </div>
                   )}
                 </div>
 
                 {/* Profile Photo Section - Positioned at bottom-left */}
-                <div className="absolute bottom-4 left-4 z-10">
+                <div className={`absolute ${isMobile ? 'bottom-2 left-2' : 'bottom-4 left-4'} z-10`}>
                   {/* Avatar Container */}
                   <div className="relative">
-                    <div className="w-20 h-20 rounded-full border-4 border-white shadow-lg bg-gray-50 flex items-center justify-center overflow-hidden">
+                    <div className={`${isMobile ? 'w-16 h-16 border-2' : 'w-20 h-20 border-4'} rounded-full border-white shadow-lg bg-gray-50 flex items-center justify-center overflow-hidden`}>
                       {avatarPreview || profile?.avatar_url ? (
                         <img 
                           src={avatarPreview || profile.avatar_url} 
@@ -585,11 +589,11 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                     </div>
                     
                     {/* Upload Icon Overlay */}
-                    <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-navy-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-navy-700 transition-colors shadow-md">
+                    <div className={`absolute -bottom-1 -right-1 ${isMobile ? 'w-6 h-6' : 'w-7 h-7'} bg-navy-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-navy-700 transition-colors shadow-md`}>
                       {avatarUploading ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <div className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} border-2 border-white border-t-transparent rounded-full animate-spin`} />
                       ) : (
-                        <Image className="w-4 h-4 text-white" />
+                        <Image className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} text-white`} />
                       )}
                       <input
                         type="file"
@@ -619,18 +623,17 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                   className="hidden"
                   id="avatar-upload"
                 />
-              </CardContent>
-            </Card>
+            </div>
 
             {/* Personal Information */}
-            <Card>
-              <CardHeader className="pb-0">
-                <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
-                  <User className="w-5 h-5" />
-                  Personal Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200 mt-4' : 'space-y-4'}`}>
+              {!isMobile && (
+                <div className="flex items-center gap-2 mb-3">
+                  <User className="w-5 h-5 text-navy-600" />
+                  <h3 className="text-lg font-semibold text-navy-600">Personal Information</h3>
+                </div>
+              )}
+              <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="first_name" className="flex items-center gap-2">
@@ -695,22 +698,22 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                     </div>
                   )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Alumni-Specific Fields - Only show for alumni users, moved right after Personal Information */}
             {profile?.role === 'alumni' && (
               <>
                 {/* Professional Information - Moved up for alumni */}
-                <Card>
-                  <CardHeader className="pb-0">
-                    <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
-                      <Briefcase className="w-5 h-5" />
-                      Professional Information
-                      <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Alumni</Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
+                <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
+                  {!isMobile && (
+                    <div className="flex items-center gap-2 mb-3">
+                      <Briefcase className="w-5 h-5 text-navy-600" />
+                      <h3 className="text-lg font-semibold text-navy-600">Professional Information</h3>
+                      <Badge variant="secondary" className="text-xs">Alumni</Badge>
+                    </div>
+                  )}
+                  <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="industry">Industry</Label>
@@ -757,19 +760,19 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                         </Label>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
 
                 {/* Social & Additional Info */}
-                <Card>
-                  <CardHeader className="pb-0">
-                    <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
-                      <HelpCircle className="w-5 h-5" />
-                      Additional Information
-                      <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Optional</Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
+                <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
+                  {!isMobile && (
+                    <div className="flex items-center gap-2 mb-3">
+                      <HelpCircle className="w-5 h-5 text-navy-600" />
+                      <h3 className="text-lg font-semibold text-navy-600">Additional Information</h3>
+                      <Badge variant="secondary" className="text-xs">Optional</Badge>
+                    </div>
+                  )}
+                  <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
                     <div>
                       <Label htmlFor="tags">Tags</Label>
                       <Input
@@ -781,20 +784,20 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                       />
                       <p className="text-xs text-gray-500 mt-1">Separate tags with commas</p>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </>
             )}
 
             {/* Chapter & Role */}
-            <Card>
-              <CardHeader className="pb-0">
-                <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
-                  <Building className="w-5 h-5" />
-                  Chapter & Role
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
+              {!isMobile && (
+                <div className="flex items-center gap-2 mb-3">
+                  <Building className="w-5 h-5 text-navy-600" />
+                  <h3 className="text-lg font-semibold text-navy-600">Chapter & Role</h3>
+                </div>
+              )}
+              <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="chapter" className="flex items-center gap-2">
@@ -823,19 +826,19 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                     <p className="text-xs text-gray-500 mt-1">Role cannot be changed</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Academic Information - Only show for non-alumni users */}
             {profile?.role !== 'alumni' && (
-              <Card>
-                <CardHeader className="pb-0">
-                  <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
-                    <GraduationCap className="w-5 h-5" />
-                    Academic Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+              <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
+                {!isMobile && (
+                  <div className="flex items-center gap-2 mb-3">
+                    <GraduationCap className="w-5 h-5 text-navy-600" />
+                    <h3 className="text-lg font-semibold text-navy-600">Academic Information</h3>
+                  </div>
+                )}
+                <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="grad_year">Graduation Year</Label>
@@ -887,23 +890,23 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                       />
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )}
 
             {/* Contact & Location */}
-            <Card>
-              <CardHeader className="pb-0">
-                <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
-                  <Phone className="w-5 h-5" />
-                  Contact & Location
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
+              {!isMobile && (
+                <div className="flex items-center gap-2 mb-3">
+                  <Phone className="w-5 h-5 text-navy-600" />
+                  <h3 className="text-lg font-semibold text-navy-600">Contact & Location</h3>
+                </div>
+              )}
+              <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
                 <div>
                   <Label htmlFor="phone" className="flex items-center gap-2">
                     Phone
-                    <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Optional</Badge>
+                    {!isMobile && <Badge variant="secondary" className="text-xs">Optional</Badge>}
                   </Label>
                   <Input
                     id="phone"
@@ -920,7 +923,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                   <Label htmlFor="linkedin_url" className="flex items-center gap-2">
                     <Linkedin className="w-4 h-4" />
                     LinkedIn URL
-                    <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Optional</Badge>
+                    {!isMobile && <Badge variant="secondary" className="text-xs">Optional</Badge>}
                   </Label>
                   <Input
                     id="linkedin_url"
@@ -963,35 +966,35 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                     />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Bio */}
-            <Card>
-              <CardHeader className="pb-0">
-                <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
-                  Bio
-                  <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Optional</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
+              {!isMobile && (
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText className="w-5 h-5 text-navy-600" />
+                  <h3 className="text-lg font-semibold text-navy-600">Bio</h3>
+                  <Badge variant="secondary" className="text-xs">Optional</Badge>
+                </div>
+              )}
+              <div>
                 <Textarea
                   value={formData.bio}
                   onChange={(e) => handleInputChange('bio', e.target.value)}
                   placeholder="Tell us about yourself..."
-                  rows={4}
+                  rows={isMobile ? 3 : 4}
                   className="mt-1"
                 />
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Remove the old alumni-specific sections that were at the bottom */}
           </form>
         </div>
 
         {/* Enhanced Footer with Save Options */}
-        <div className="flex justify-between items-center p-6 border-t border-gray-200 flex-shrink-0">
+        <div className={`flex justify-between items-center border-t border-gray-200 flex-shrink-0 ${isMobile ? 'p-4' : 'p-6'}`}>
           <div className="flex items-center gap-2 text-sm text-gray-500">
             {hasUnsavedChanges && (
               <>
@@ -1000,7 +1003,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
               </>
             )}
           </div>
-          <div className="flex space-x-3">
+          <div className={`flex ${isMobile ? 'space-x-2' : 'space-x-3'}`}>
             <Button
               type="button"
               variant="outline"
@@ -1014,13 +1017,14 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                   handleClose();
                 }
               }}
+              className={`flex-1 rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300`}
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={loading}
-              className="bg-navy-600 hover:bg-navy-700"
+              className={`flex-1 rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
               onClick={handleSubmit}
             >
               {loading ? 'Saving...' : 'Save Changes'}

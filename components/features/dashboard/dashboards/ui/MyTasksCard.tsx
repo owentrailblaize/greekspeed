@@ -4,16 +4,19 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ListTodo, Loader2 } from 'lucide-react';
+import { ListTodo, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
-import { supabase } from '@/lib/supabase/client'; // Add this import
+import { supabase } from '@/lib/supabase/client';
 import { Task, TaskStatus } from '@/types/operations';
+import { toast } from 'react-toastify';
 
 export function MyTasksCard() {
   const { profile } = useProfile();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(3);
 
   // Load tasks for the current user
   const loadMyTasks = async () => {
@@ -75,7 +78,7 @@ export function MyTasksCard() {
         .from('tasks')
         .update({ 
           status: newStatus,
-          updated_at: new Date().toISOString() // Track when it was updated
+          updated_at: new Date().toISOString()
         })
         .eq('id', taskId);
 
@@ -86,10 +89,37 @@ export function MyTasksCard() {
         task.id === taskId ? { ...task, status: newStatus } : task
       ));
 
-      // Task marked as newStatus
+      // Show toast notification on desktop only
+      if (window.innerWidth >= 640) { // sm breakpoint
+        if (newStatus === 'completed') {
+          toast.success('Task marked as complete and will be removed upon admin approval', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        } else {
+          toast.info('Task marked as incomplete', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
+      }
     } catch (error) {
       console.error('Error updating task:', error);
-      // Could add toast notification here
+      // Show error toast on desktop
+      if (window.innerWidth >= 640) {
+        toast.error('Failed to update task. Please try again.', {
+          position: "top-right",
+          autoClose: 3000,
+        });
+      }
     }
   };
 
@@ -98,12 +128,67 @@ export function MyTasksCard() {
   const totalTasks = tasks.length;
   const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = tasks.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(tasks.length / itemsPerPage);
+
+  const handlePreviousPage = () => {
+    setCurrentPage(prevPage => Math.max(prevPage - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage(prevPage => Math.min(prevPage + 1, totalPages));
+  };
+
+  // Smart pagination - always show max 3 page numbers with ellipsis
+  const getVisiblePages = () => {
+    // If 3 or fewer pages, show all
+    if (totalPages <= 3) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    
+    const pages: (number | 'ellipsis')[] = [];
+    
+    if (currentPage === 1) {
+      // First page: show 1, 2, 3, ..., last (3 numbers)
+      pages.push(1, 2, 3);
+      pages.push('ellipsis');
+      pages.push(totalPages);
+    } else if (currentPage === totalPages) {
+      // Last page: show 1, ..., last-2, last-1, last (3 numbers)
+      pages.push(1);
+      pages.push('ellipsis');
+      pages.push(totalPages - 2, totalPages - 1, totalPages);
+    } else if (currentPage === 2) {
+      // Second page: show 1, 2, 3, ..., last (3 numbers)
+      pages.push(1, 2, 3);
+      pages.push('ellipsis');
+      pages.push(totalPages);
+    } else if (currentPage === totalPages - 1) {
+      // Second to last: show 1, ..., last-2, last-1, last (3 numbers)
+      pages.push(1);
+      pages.push('ellipsis');
+      pages.push(totalPages - 2, totalPages - 1, totalPages);
+    } else {
+      // Middle pages: show 1, ..., current, ..., last (only 1 number in middle)
+      pages.push(1);
+      pages.push('ellipsis');
+      pages.push(currentPage);
+      pages.push('ellipsis');
+      pages.push(totalPages);
+    }
+    
+    return pages;
+  };
+
   // Show loading state
   if (loading) {
     return (
-      <Card className="bg-white">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center space-x-2">
+      <Card className="bg-white shadow-sm border border-gray-200">
+        <CardHeader className="pb-3 border-b border-gray-100">
+          <CardTitle className="text-lg flex items-center space-x-2 font-semibold text-gray-900">
             <ListTodo className="h-5 w-5 text-navy-600" />
             <span>My Tasks</span>
           </CardTitle>
@@ -121,9 +206,9 @@ export function MyTasksCard() {
   // Show error state
   if (error) {
     return (
-      <Card className="bg-white">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center space-x-2">
+      <Card className="bg-white shadow-sm border border-gray-200">
+        <CardHeader className="pb-3 border-b border-gray-100">
+          <CardTitle className="text-lg flex items-center space-x-2 font-semibold text-gray-900">
             <ListTodo className="h-5 w-5 text-navy-600" />
             <span>My Tasks</span>
           </CardTitle>
@@ -147,9 +232,9 @@ export function MyTasksCard() {
   // Show empty state (no tasks)
   if (tasks.length === 0) {
     return (
-      <Card className="bg-white">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center space-x-2">
+      <Card className="bg-white shadow-sm border border-gray-200">
+        <CardHeader className="pb-3 border-b border-gray-100">
+          <CardTitle className="text-lg flex items-center space-x-2 font-semibold text-gray-900">
             <ListTodo className="h-5 w-5 text-navy-600" />
             <span>My Tasks</span>
           </CardTitle>
@@ -164,18 +249,19 @@ export function MyTasksCard() {
     );
   }
 
-  // Show tasks (exact same UI as before)
+  // Show tasks
   return (
-    <Card className="bg-white">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center space-x-2">
+    <Card className="bg-white shadow-sm border border-gray-200">
+      <CardHeader className="pb-3 border-b border-gray-100">
+        <CardTitle className="text-lg flex items-center space-x-2 font-semibold text-gray-900">
           <ListTodo className="h-5 w-5 text-navy-600" />
           <span>My Tasks</span>
+          <span className="ml-2 px-2 py-1 text-xs rounded-full text-gray-500 bg-gray-100">{totalTasks}</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-4 sm:space-y-3">
-          {/* Progress Bar - Exact same as before */}
+          {/* Progress Bar */}
           <div className="space-y-2">
             <div className="flex justify-between text-base sm:text-sm">
               <span className="text-gray-600">Progress</span>
@@ -189,10 +275,10 @@ export function MyTasksCard() {
             </div>
           </div>
 
-          {/* Task List - Exact same as before, but with real data */}
-          <div className="space-y-3 sm:space-y-2 max-h-48 overflow-y-auto">
-            {tasks.slice(0, 5).map((task) => (
-              <div key={task.id} className="flex items-start space-x-3 sm:space-x-3 p-3 sm:p-2 rounded-lg hover:bg-gray-50">
+          {/* Task List */}
+          <div className="space-y-2.5 max-h-48 overflow-y-auto">
+            {currentItems.map((task) => (
+              <div key={task.id} className="flex items-start space-x-3 sm:space-x-3 p-3 sm:p-2 rounded-lg hover:border-navy-300 hover:shadow-sm transition-all duration-200 bg-white border border-gray-200">
                 <Checkbox
                   checked={task.status === 'completed'}
                   onCheckedChange={() => handleTaskToggle(task.id, task.status)}
@@ -232,12 +318,59 @@ export function MyTasksCard() {
             ))}
           </div>
 
-          {/* View All Tasks button - Exact same as before */}
-          {totalTasks > 5 && (
-            <div className="pt-3 sm:pt-2 border-t border-gray-100">
-              <Button variant="outline" size="sm" className="w-full text-navy-600 border-navy-600 hover:bg-navy-50 h-10 sm:h-8">
-                View All Tasks
-              </Button>
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="mt-3 pt-3 border-t border-gray-200">
+              <div className="w-full overflow-hidden">
+                <div className="flex items-center justify-between w-full gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className="h-7 px-1.5 text-xs flex-shrink-0"
+                  >
+                    <ChevronLeft className="h-3 w-3" />
+                    <span className="hidden sm:inline ml-0.5">Back</span>
+                  </Button>
+                  <div className="flex items-center gap-0.5 justify-center flex-1 min-w-0 overflow-hidden">
+                    {getVisiblePages().map((page, index) => {
+                      if (page === 'ellipsis') {
+                        return (
+                          <span key={`ellipsis-${index}`} className="px-0.5 text-gray-500 text-xs flex-shrink-0">
+                            ...
+                          </span>
+                        );
+                      }
+                      return (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(page)}
+                          className={`h-7 w-7 p-0 text-xs flex-shrink-0 ${
+                            currentPage === page
+                              ? 'bg-navy-600 text-white hover:bg-navy-700'
+                              : 'hover:bg-gray-50'
+                          }`}
+                        >
+                          {page}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="h-7 px-1.5 text-xs flex-shrink-0"
+                  >
+                    <span className="hidden sm:inline mr-0.5">Next</span>
+                    <ChevronRight className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </div>

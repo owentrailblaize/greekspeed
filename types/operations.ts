@@ -33,7 +33,7 @@ export interface CreateTaskRequest {
 export interface UpdateTaskRequest {
   title?: string;
   description?: string;
-  assignee_id?: string;
+  assignee_id?: string | null;
   due_date?: string;
   status?: TaskStatus;
   priority?: TaskPriority;

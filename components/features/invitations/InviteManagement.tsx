@@ -5,7 +5,6 @@ import { Plus, Copy, Eye, Edit, Trash2, Users, Calendar, Shield, Link, AlertCirc
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreateInviteModal } from './CreateInviteModal';
 import { InviteSettings } from './InviteSettings';
 import { InvitationWithUsage } from '@/types/invitations';
@@ -24,7 +23,6 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
   const [editingInvitation, setEditingInvitation] = useState<InvitationWithUsage | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showUsageModal, setShowUsageModal] = useState<InvitationWithUsage | null>(null);
-  const [selectedInvitationType, setSelectedInvitationType] = useState<'all' | 'active_member' | 'alumni'>('all');
 
   const fetchInvitations = async () => {
     try {
@@ -208,14 +206,11 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
     return <Badge variant="outline" className="text-blue-600 border-blue-600">Active Member</Badge>;
   };
 
-  const filteredInvitations = invitations.filter(invitation => {
-    if (selectedInvitationType === 'all') return true;
-    return invitation.invitation_type === selectedInvitationType;
-  });
+  const filteredInvitations = invitations;
 
   if (loading) {
     return (
-      <Card className={className}>
+      <Card className={`${className} bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20`}>
         <CardContent className="p-6">
           <div className="flex flex-col items-center space-y-4">
             <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
@@ -231,25 +226,15 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
 
   return (
     <div className={className}>
-      <Card>
-        <CardHeader className="pb-4">
+      <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+        <CardHeader className="pb-4 border-b border-navy-100/30">
           {/* Desktop Layout */}
           <div className="hidden md:flex items-center justify-between">
-            <CardTitle className="flex items-center space-x-2">
+            <CardTitle className="flex items-center space-x-2 text-navy-900">
               <Users className="h-5 w-5 text-purple-600" />
-              <span>Invitation Management</span>
+              <span>Manage Invites</span>
             </CardTitle>
             <div className="flex space-x-2">
-            <Select value={selectedInvitationType} onValueChange={(value) => setSelectedInvitationType(value as 'all' | 'active_member' | 'alumni')}>                
-              <SelectTrigger className="w-40 h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="active_member">Active Members</SelectItem>
-                  <SelectItem value="alumni">Alumni</SelectItem>
-                </SelectContent>
-              </Select>
               <Button
                 variant="outline"
                 size="sm"
@@ -261,7 +246,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
               </Button>
               <Button
                 onClick={() => setShowCreateModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 h-9"
+                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-9"
                 size="sm"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -274,21 +259,9 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
           <div className="md:hidden">
             <div className="flex items-center space-x-3 mb-3">
               <Users className="h-6 w-6 text-purple-600 flex-shrink-0" />
-              <CardTitle className="text-lg whitespace-nowrap overflow-hidden text-ellipsis">
+              <CardTitle className="text-lg whitespace-nowrap overflow-hidden text-ellipsis text-navy-900">
                 Invitation Management
               </CardTitle>
-            </div>
-            <div className="mb-3">
-            <Select value={selectedInvitationType} onValueChange={(value) => setSelectedInvitationType(value as 'all' | 'active_member' | 'alumni')}>
-                <SelectTrigger className="w-full h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="active_member">Active Members</SelectItem>
-                  <SelectItem value="alumni">Alumni</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
             <div className="flex space-x-2">
               <Button
@@ -302,7 +275,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
               </Button>
               <Button
                 onClick={() => setShowCreateModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 h-9 flex-1"
+                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-9 flex-1"
                 size="sm"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -317,17 +290,17 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
             <div className="text-center py-8">
               <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {invitations.length === 0 ? 'No invitations yet' : `No ${selectedInvitationType === 'all' ? '' : selectedInvitationType.replace('_', ' ')} invitations`}
+                No invitations yet
               </h3>
               <p className="text-gray-500 mb-4">
                 {invitations.length === 0 
                   ? 'Create your first invitation to start inviting new members to your chapter.'
-                  : `No ${selectedInvitationType === 'all' ? '' : selectedInvitationType.replace('_', ' ')} invitations found. Try selecting a different type or create a new invitation.`
+                  : 'No invitations found. Create a new invitation to get started.'
                 }
               </p>
               <Button
                 onClick={() => setShowCreateModal(true)}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Create Invitation

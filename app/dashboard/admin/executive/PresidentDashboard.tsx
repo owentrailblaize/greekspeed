@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, TrendingUp, Calendar, MessageSquare, AlertCircle, CheckCircle, Clock, Crown, Send, Image, Clock as ClockIcon, Lock, X, UserPlus, Smartphone, Mail } from "lucide-react";
+import { Users, Calendar, MessageSquare, AlertCircle, CheckCircle, Clock, Crown, Send, Image, Clock as ClockIcon, Lock, X, UserPlus, Smartphone, Mail } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,10 +41,6 @@ export function PresidentDashboard() {
   // Add state for active member count
   const [activeMemberCount, setActiveMemberCount] = useState<number | null>(null);
   const [loadingActiveMemberCount, setLoadingActiveMemberCount] = useState(false);
-  
-  // Add state for membership growth
-  const [membershipGrowth, setMembershipGrowth] = useState<number>(0);
-  const [loadingGrowth, setLoadingGrowth] = useState(false);
   
   // Add state for alumni count
   const [alumniCount, setAlumniCount] = useState<number | null>(null);
@@ -99,28 +95,6 @@ export function PresidentDashboard() {
       setLoadingActiveMemberCount(false);
     }
   };
-
-  // Add useEffect for membership growth
-  useEffect(() => {
-    const fetchMembershipGrowth = async () => {
-      if (!chapterId) return;
-      
-      setLoadingGrowth(true);
-      try {
-        const response = await fetch(`/api/chapter/membership-growth?chapter_id=${chapterId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setMembershipGrowth(data.growth);
-        }
-      } catch (error) {
-        console.error('Error fetching membership growth:', error);
-      } finally {
-        setLoadingGrowth(false);
-      }
-    };
-
-    fetchMembershipGrowth();
-  }, [chapterId]);
 
   // Add useEffect for alumni count
   useEffect(() => {
@@ -193,8 +167,7 @@ export function PresidentDashboard() {
     totalMembers: memberCount || 0,
     activeMembers: activeMemberCount || 0,
     newPledges: 23, // Keep existing for now
-    graduatingMembers: 18, // Keep existing for now
-    membershipGrowth: 12.5 // Keep existing for now
+    graduatingMembers: 18 // Keep existing for now
   };
 
   const pendingApprovals = [
@@ -309,7 +282,7 @@ export function PresidentDashboard() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-0 sm:py-8">
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {/* Desktop Layout - Preserved */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -379,31 +352,6 @@ export function PresidentDashboard() {
             </CardContent>
           </Card>
         </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="hidden md:block"
-        >
-          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-orange-600 text-sm font-medium">Membership Growth</p>
-                  {loadingGrowth ? (
-                    <p className="text-2xl font-semibold text-orange-900">...</p>
-                  ) : (
-                    <p className="text-2xl font-semibold text-orange-900">
-                      {membershipGrowth >= 0 ? '+' : ''}{membershipGrowth}%
-                    </p>
-                  )}
-                </div>
-                <TrendingUp className="h-8 w-8 text-orange-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
       </div>
 
       {/* Mobile Layout - Single Row */}
@@ -412,7 +360,7 @@ export function PresidentDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-4 gap-2"
+          className="grid grid-cols-3 gap-2"
         >
           {/* Total Members */}
           <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
@@ -455,23 +403,6 @@ export function PresidentDashboard() {
                   <p className="text-base font-semibold text-blue-900">{alumniCount || 0}</p>
                 )}
                 <p className="text-blue-600 text-xs font-medium">Alumni</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Membership Growth */}
-          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-            <CardContent className="p-2">
-              <div className="flex flex-col items-center text-center space-y-1">
-                <TrendingUp className="h-5 w-5 text-orange-600" />
-                {loadingGrowth ? (
-                  <p className="text-base font-semibold text-orange-900">...</p>
-                ) : (
-                  <p className="text-base font-semibold text-orange-900">
-                    {membershipGrowth >= 0 ? '+' : ''}{membershipGrowth}%
-                  </p>
-                )}
-                <p className="text-orange-600 text-xs font-medium">Growth</p>
               </div>
             </CardContent>
           </Card>

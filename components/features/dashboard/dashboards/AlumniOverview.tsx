@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, UserPlus, X, CheckCircle } from 'lucide-react';
+import { Users, UserPlus, X, CheckCircle, Home, Users as UsersIcon, Wrench, CreditCard, User, CheckSquare, FileText, Activity, X as XIcon, Search, Building2 } from 'lucide-react';
 import { PersonalAlumniProfile } from './ui/PersonalAlumniProfile';
 import { SocialFeed, type SocialFeedInitialData } from './ui/SocialFeed';
 import { AlumniMobileBottomNavigation } from './ui/AlumniMobileBottomNavigation';
@@ -18,6 +18,7 @@ import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 import { ChapterMemberData } from '@/types/chapter';
+import { MobileBottomNavigation } from './ui/MobileBottomNavigation';
 
 interface Profile {
   id: string;
@@ -166,6 +167,43 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
     }
   };
 
+  // Define alumni navigation tabs
+  const alumniTabs = [
+    {
+      id: 'home',
+      label: 'Home',
+      icon: Home,
+      onClick: () => setActiveMobileTab('home'),
+    },
+    {
+      id: 'network',
+      label: 'Network',
+      icon: Users,
+      onClick: () => setActiveMobileTab('network'),
+    },
+    {
+      id: 'pipeline',
+      label: 'Pipeline',
+      icon: Search,
+      onClick: () => setActiveMobileTab('pipeline'),
+    },
+    {
+      id: 'chapter',
+      label: 'Members',
+      icon: Building2,
+      onClick: () => setActiveMobileTab('chapter'),
+    },
+    {
+      id: 'profile',
+      label: 'Profile',
+      icon: User,
+      onClick: () => {
+        setActiveMobileTab('profile');
+        router.push('/dashboard/profile');
+      },
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Desktop Layout - Hidden on mobile */}
@@ -293,21 +331,24 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
 
       {/* Mobile Layout - Visible only on mobile */}
       <div className="sm:hidden">
-        {/* Special handling for Pipeline and Chapter tabs - render full screen */}
         {activeMobileTab === 'pipeline' ? (
           <>
             <AlumniPipeline />
-            <AlumniMobileBottomNavigation 
-              activeTab={activeMobileTab} 
-              onTabChange={setActiveMobileTab} 
+            <MobileBottomNavigation 
+              tabs={alumniTabs}
+              activeTab={activeMobileTab}
+              onTabChange={setActiveMobileTab}
+              showToolsMenu={false}
             />
           </>
         ) : activeMobileTab === 'chapter' ? (
           <>
             <MyChapterPage />
-            <AlumniMobileBottomNavigation 
-              activeTab={activeMobileTab} 
-              onTabChange={setActiveMobileTab} 
+            <MobileBottomNavigation 
+              tabs={alumniTabs}
+              activeTab={activeMobileTab}
+              onTabChange={setActiveMobileTab}
+              showToolsMenu={false}
             />
           </>
         ) : (
@@ -317,9 +358,11 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
                 {renderMobileContent()}
               </div>
             </div>
-            <AlumniMobileBottomNavigation 
-              activeTab={activeMobileTab} 
-              onTabChange={setActiveMobileTab} 
+            <MobileBottomNavigation 
+              tabs={alumniTabs}
+              activeTab={activeMobileTab}
+              onTabChange={setActiveMobileTab}
+              showToolsMenu={false}
             />
           </>
         )}

@@ -55,6 +55,23 @@ export function AlumniPipeline() {
   const [selectedAlumniForModal, setSelectedAlumniForModal] = useState<Alumni | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Force card view on mobile devices
+  useEffect(() => {
+    const checkMobile = () => {
+      const isMobile = window.innerWidth < 768; // md breakpoint
+      if (isMobile && viewMode === 'table') {
+        setViewMode('card');
+      }
+    };
+
+    // Check on mount
+    checkMobile();
+
+    // Check on window resize
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, [viewMode]);
+
   // Note: Sorting is now done server-side for better performance
   // No client-side sorting needed - data comes pre-sorted from API
 
@@ -252,15 +269,17 @@ export function AlumniPipeline() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Sticky Header */}
-      <AlumniSubHeader
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        selectedCount={selectedAlumni.length}
-        totalCount={pagination.total}
-        onClearSelection={handleClearSelection}
-        userChapter={profile?.chapter}
-      />
+      {/* Sticky Header - Hidden on mobile */}
+      <div className="hidden md:block">
+        <AlumniSubHeader
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          selectedCount={selectedAlumni.length}
+          totalCount={pagination.total}
+          onClearSelection={handleClearSelection}
+          userChapter={profile?.chapter}
+        />
+      </div>
 
       {/* Main Layout */}
       <AlumniPipelineLayout

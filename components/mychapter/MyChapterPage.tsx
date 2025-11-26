@@ -7,6 +7,7 @@ import { MyChapterContent } from "./MyChapterContent";
 export function MyChapterPage() {
   // Default to "all" to show the original view
   const [activeSection, setActiveSection] = useState("all");
+  const [searchTerm, setSearchTerm] = useState(""); // Add search state
 
   const handleNavigate = (section: string) => {
     // Navigating to section
@@ -31,6 +32,8 @@ export function MyChapterPage() {
       <MyChapterSidebar 
         onNavigate={handleNavigate}
         activeSection={activeSection}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
       />
       
       {/* MyChapterContent will be rendered inside the sidebar's main content area */}
@@ -38,6 +41,7 @@ export function MyChapterPage() {
         <MyChapterContent 
           onNavigate={handleNavigate}
           activeSection={activeSection}
+          searchTerm={searchTerm}
         />
       </div>
     </div>

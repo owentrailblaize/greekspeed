@@ -102,11 +102,12 @@ export default function SignInPage() {
   // Don't render form if user is already authenticated
   if (user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <p className="text-gray-600">Redirecting to dashboard...</p>
-        </div>
+<div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-navy-600 mx-auto mb-4"></div>
+        <p className="text-gray-600 font-medium">Redirecting to dashboard...</p>
       </div>
+    </div>
     );
   }
 

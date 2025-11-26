@@ -112,13 +112,19 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
   if (success) {
     // Rendering success modal
     return typeof window !== 'undefined' && createPortal(
-      <div className="fixed inset-0 z-50">
+      <div className="fixed inset-0 z-[9999]">
         {/* Full screen overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-50" />
+        <div 
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+          onClick={onClose}
+        />
         
         {/* Modal content centered */}
         <div className="relative flex items-center justify-center min-h-screen p-4">
-          <Card className="w-full max-w-2xl">
+          <Card 
+            className="w-full max-w-2xl relative z-10 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
           <CardHeader>
             <CardTitle className="text-green-600">User Created Successfully!</CardTitle>
           </CardHeader>
@@ -178,13 +184,19 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
   }
 
   return typeof window !== 'undefined' && createPortal(
-    <div className="fixed inset-0 z-50">
+    <div className="fixed inset-0 z-[9999]">
       {/* Full screen overlay */}
-      <div className="absolute inset-0 bg-black bg-opacity-50" />
+      <div 
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+        onClick={onClose}
+      />
       
       {/* Modal content centered */}
       <div className="relative flex items-center justify-center min-h-screen p-4">
-        <Card className="w-full max-w-md mx-4">
+        <Card 
+          className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto relative z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle>Create New User</CardTitle>

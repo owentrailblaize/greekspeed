@@ -129,7 +129,21 @@ export function useMessages(connectionId: string | null) {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        // Try to get the error message from the response
+        let errorMessage = 'Failed to send message';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+          console.error('API error response:', errorData);
+        } catch (e) {
+          console.error('Failed to parse error response:', e);
+        }
+        console.error('Message send failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorMessage
+        });
+        throw new Error(errorMessage);
       }
       
       const { message } = await response.json();
@@ -206,12 +220,37 @@ export function useMessages(connectionId: string | null) {
     
     try {
       await fetch(`/api/messages/${messageId}/read`, {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId: user.id })
       });
     } catch (err) {
       console.error('Failed to mark message as read:', err);
     }
   }, [user]);
+
+  // Add function to mark all unread messages in a connection as read
+  const markAllAsRead = useCallback(async () => {
+    if (!user || !connectionId) return;
+    
+    try {
+      await fetch('/api/messages/mark-all-read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({
+          connectionId,
+          userId: user.id
+        })
+      });
+    } catch (err) {
+      console.error('Failed to mark all messages as read:', err);
+    }
+  }, [user, connectionId, session]);
 
   const sendTypingIndicator = useCallback(() => {
     if (!connectionId || !user) return;
@@ -317,6 +356,18 @@ export function useMessages(connectionId: string | null) {
     }
   }, [connectionId, user, fetchMessages]);
 
+  // Mark all unread messages as read when messages are loaded
+  useEffect(() => {
+    if (connectionId && user && messages.length > 0) {
+      // Small delay to ensure messages are fully loaded
+      const timer = setTimeout(() => {
+        markAllAsRead();
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [connectionId, user, messages.length, markAllAsRead]);
+
   return {
     messages,
     loading,
@@ -329,6 +380,7 @@ export function useMessages(connectionId: string | null) {
     deleteMessage,
     loadMore,
     markAsRead,
+    markAllAsRead, // Add this
     sendTypingIndicator,
     refreshMessages: () => fetchMessages(1)
   };

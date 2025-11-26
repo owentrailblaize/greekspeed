@@ -27,6 +27,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Progress } from "../../../components/ui/progress";
 import { useProfile } from "@/lib/contexts/ProfileContext";
 import { createClient } from '@supabase/supabase-js';
+import { MobileBottomNavigation } from '@/components/features/dashboard/dashboards/ui/MobileBottomNavigation';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -246,7 +247,7 @@ export default function DuesClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20 sm:pb-0"> {/* Add pb-20 sm:pb-0 for mobile bottom padding */}
       {/* Header Section */}
       <div className="bg-white border-b border-gray-200 px-6 py-8">
         <div className="max-w-7xl mx-auto">
@@ -751,6 +752,9 @@ export default function DuesClient() {
           </Button>
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNavigation />
     </div>
   );
 } 

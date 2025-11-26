@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { fetchLinkPreviewsServer } from '@/lib/services/linkPreviewService';
 
 export async function GET(request: NextRequest) {
   try {
@@ -186,6 +187,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Content required for text posts' }, { status: 400 });
     }
 
+    // Extract URLs and fetch link previews (don't block post creation if this fails)
+    let linkPreviews: any[] = [];
+    if (content) {
+      try {
+        const previewResults = await fetchLinkPreviewsServer(content);
+        linkPreviews = previewResults
+          .filter(result => result.preview)
+          .map(result => result.preview);
+      } catch (error) {
+        console.error('Error fetching link previews:', error);
+        // Continue without previews - don't block post creation
+      }
+    }
+
+    // Update metadata to include link previews
+    const finalMetadata = {
+      ...(metadata || {}),
+      ...(linkPreviews.length > 0 ? { link_previews: linkPreviews } : {}),
+    };
+
     // Create post
     const { data: post, error: createError } = await supabase
       .from('posts')
@@ -195,7 +216,7 @@ export async function POST(request: NextRequest) {
         content: content?.trim() || '',
         post_type,
         image_url: image_url || null,
-        metadata: metadata || {},
+        metadata: finalMetadata,
         likes_count: 0,
         comments_count: 0,
         shares_count: 0

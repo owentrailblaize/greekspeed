@@ -425,11 +425,6 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
               <span className="sm:hidden">Message</span>
               {!canSendMessage() && <Lock className="h-3 w-3 ml-2 text-gray-400" />}
             </Button>
-            
-            <Button variant="ghost" size="sm" className="w-10 h-10 p-0" disabled>
-              <Share2 className="h-3 w-3" />
-              <Lock className="h-3 w-3 text-gray-400" />
-            </Button>
           </div>
         </div>
       </div>

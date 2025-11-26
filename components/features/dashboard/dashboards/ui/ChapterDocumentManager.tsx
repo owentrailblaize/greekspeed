@@ -26,8 +26,12 @@ import {
   Clock,
   Loader2,
   X,
-  Lock
+  Lock,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { documentUploadService, DocumentUploadData } from '@/lib/services/documentUploadService';
 import { toast } from 'react-toastify';
 import { supabase } from '@/lib/supabase/client'; // Fixed import path
@@ -76,6 +80,10 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const documentsPerPage = 4;
 
   // Add new state for upload form
   const [uploadFormData, setUploadFormData] = useState<DocumentUploadFormData>({
@@ -98,6 +106,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
   // Filter documents when search or tab changes
   useEffect(() => {
     filterDocuments();
+    setCurrentPage(1); // Reset to page 1 when filters change
   }, [documents, searchQuery, activeTab]);
 
   const loadDocuments = async () => {
@@ -176,25 +185,26 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
     setFilteredDocuments(filtered);
   };
 
-  const handleUpload = () => {
-    setShowUploadModal(true);
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredDocuments.length / documentsPerPage);
+  const startIndex = (currentPage - 1) * documentsPerPage;
+  const endIndex = startIndex + documentsPerPage;
+  const paginatedDocuments = filteredDocuments.slice(startIndex, endIndex);
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
   };
 
-  const handleViewDocument = async (doc: ChapterDocument) => {
-    // Functionality is locked - show toast message
-    toast.info('Document viewing is currently locked. This feature will be available soon!');
-    
-    // TODO: Implement when signed URLs are working
-    // try {
-    //   if (doc.file_url) {
-    //     window.open(doc.file_url, '_blank');
-    //   } else {
-    //     toast.error('Document not accessible');
-    //   }
-    // } catch (error) {
-    //   console.error('Error viewing document:', error);
-    //   toast.error('Unable to open document. Please try again.');
-    // }
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handleUpload = () => {
+    setShowUploadModal(true);
   };
 
   const handleEditDocument = (doc: ChapterDocument) => {
@@ -459,6 +469,9 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
       // Add to documents list
       setDocuments(prev => [newDocument, ...prev]);
       
+      // Reset pagination to page 1
+      setCurrentPage(1);
+      
       // Reset form and close modal
       setUploadFormData({
         title: '',
@@ -509,9 +522,9 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
 
   if (loading) {
     return (
-      <Card className={`bg-white ${className || ''}`}>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center space-x-2">
+      <Card className={`bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 ${className || ''}`}>
+        <CardHeader className="pb-3 border-b border-navy-100/30">
+          <CardTitle className="text-lg flex items-center space-x-2 text-navy-900">
             <FileText className="h-5 w-5 text-navy-600" />
             <span>Chapter Documents</span>
           </CardTitle>
@@ -530,9 +543,9 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
     <div className={className}>
       {/* Desktop Layout - Preserved */}
       <div className="hidden md:block">
-        <Card className="bg-white">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center space-x-2">
+        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+          <CardHeader className="pb-3 border-b border-navy-100/30">
+            <CardTitle className="text-lg flex items-center space-x-2 text-navy-900">
               <FileText className="h-5 w-5 text-navy-600" />
               <span>Chapter Documents</span>
             </CardTitle>
@@ -563,20 +576,63 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
               </TabsList>
             </Tabs>
 
-            {/* Upload Button */}
-            <div className="mb-4">
+            {/* Upload Button and Pagination */}
+            <div className="mb-4 flex items-center justify-between gap-4">
               <Button 
                 onClick={handleUpload}
-                className="w-full bg-navy-600 hover:bg-navy-700"
+                className="flex-1 rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Upload New Document
               </Button>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className="h-8 px-3 text-xs"
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                    Previous
+                  </Button>
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(page)}
+                        className={`h-8 w-8 p-0 text-xs flex-shrink-0 ${
+                          currentPage === page
+                            ? 'bg-navy-600 text-white hover:bg-navy-700'
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="h-8 px-3 text-xs"
+                  >
+                    Next
+                    <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Documents List */}
             <div className="space-y-3">
-              {filteredDocuments.length === 0 ? (
+              {paginatedDocuments.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <FileText className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                   <p className="text-lg font-medium mb-2">No documents found</p>
@@ -588,7 +644,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                   </p>
                 </div>
               ) : (
-                filteredDocuments.map((doc) => (
+                paginatedDocuments.map((doc) => (
                   <div
                     key={doc.id}
                     className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
@@ -648,17 +704,6 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleViewDocument(doc)}
-                          title="Document viewing is locked - coming soon!"
-                          className="opacity-60 cursor-not-allowed"
-                          disabled
-                        >
-                          <Eye className="h-4 w-4" />
-                          <Lock className="h-3 w-3 ml-1 text-gray-400" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
                           onClick={() => handleDownload(doc)}
                           title="Download Document"
                         >
@@ -694,7 +739,8 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
             {/* Document Count */}
             <div className="mt-4 pt-4 border-t border-gray-200">
               <p className="text-sm text-gray-600 text-center">
-                Showing {filteredDocuments.length} of {documents.length} documents
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredDocuments.length)} of {filteredDocuments.length} documents
+                {filteredDocuments.length !== documents.length && ` (${documents.length} total)`}
               </p>
             </div>
           </CardContent>
@@ -703,9 +749,9 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
 
       {/* Mobile Layout */}
       <div className="md:hidden">
-        <Card className="bg-white">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center space-x-2">
+        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+          <CardHeader className="pb-3 border-b border-navy-100/30">
+            <CardTitle className="text-lg flex items-center space-x-2 text-navy-900">
               <FileText className="h-5 w-5 text-navy-600" />
               <span>Chapter Documents</span>
             </CardTitle>
@@ -748,26 +794,55 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
               </div>
             </div>
 
-            {/* Mobile Upload Button */}
-            <div className="mb-4">
+            {/* Mobile Upload Button and Pagination */}
+            <div className="mb-4 space-y-3">
               <Button 
                 onClick={handleUpload}
-                className="w-full bg-navy-600 hover:bg-navy-700"
+                className="w-full rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Upload New Document
               </Button>
+              
+              {/* Mobile Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className="h-8 px-3 text-xs"
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                    Previous
+                  </Button>
+                  <span className="text-sm text-gray-600">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="h-8 px-3 text-xs"
+                  >
+                    Next
+                    <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Mobile Documents List */}
             <div className="space-y-3">
-              {filteredDocuments.length === 0 ? (
+              {paginatedDocuments.length === 0 ? (
                 <div className="text-center py-6 text-gray-500">
                   <FileText className="h-8 w-8 mx-auto mb-2 text-gray-300" />
                   <p className="text-sm">No documents found</p>
                 </div>
               ) : (
-                filteredDocuments.map((doc) => (
+                paginatedDocuments.map((doc) => (
                   <div
                     key={doc.id}
                     className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
@@ -827,7 +902,8 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
             {/* Mobile Document Count */}
             <div className="mt-4 pt-3 border-t border-gray-200">
               <p className="text-xs text-gray-600 text-center">
-                Showing {filteredDocuments.length} of {documents.length} documents
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredDocuments.length)} of {filteredDocuments.length} documents
+                {filteredDocuments.length !== documents.length && ` (${documents.length} total)`}
               </p>
             </div>
           </CardContent>
@@ -984,12 +1060,12 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                       { value: 'alumni', label: 'Alumni' },
                       { value: 'chapter_all', label: 'Everyone in Chapter' }
                     ].map(option => (
-                      <label key={option.value} className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
+                      <div key={option.value} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`visibility-${option.value}`}
                           checked={uploadFormData.visibility.includes(option.value)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
+                          onCheckedChange={(checked) => {
+                            if (checked) {
                               setUploadFormData(prev => ({
                                 ...prev,
                                 visibility: [...prev.visibility, option.value]
@@ -1001,10 +1077,14 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                               }));
                             }
                           }}
-                          className="rounded border-gray-300 text-navy-600 focus:ring-navy-500"
                         />
-                        <span className="text-sm">{option.label}</span>
-                      </label>
+                        <Label 
+                          htmlFor={`visibility-${option.value}`} 
+                          className="text-sm cursor-pointer"
+                        >
+                          {option.label}
+                        </Label>
+                      </div>
                     ))}
                   </div>
                 </div>

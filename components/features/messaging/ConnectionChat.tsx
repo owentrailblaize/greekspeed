@@ -28,8 +28,16 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
     editMessage,
     deleteMessage,
     loadMore,
+    markAllAsRead, // Add this
     refreshMessages
   } = useMessages(connectionId);
+
+  // Mark all messages as read when chat opens
+  useEffect(() => {
+    if (connectionId && user && messages.length > 0) {
+      markAllAsRead();
+    }
+  }, [connectionId, user, messages.length, markAllAsRead]);
 
   const [connection, setConnection] = useState<Connection | null>(null);
   const [otherUser, setOtherUser] = useState<{
@@ -58,10 +66,19 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
 
   const handleSendMessage = async (content: string) => {
     try {
+      // Check connection status before sending
+      if (connection && connection.status !== 'accepted') {
+        throw new Error('This connection request has not been accepted yet. Please wait for the other person to accept your connection request.');
+      }
+      
       await sendMessage(content);
     } catch (error) {
       console.error('Failed to send message:', error);
-      // You could show a toast notification here
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
+      // You could show a toast notification here with errorMessage
+      // For now, we'll let the error propagate to show in the UI
+      throw error;
     }
   };
 
@@ -87,6 +104,13 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
     loadMore();
   };
 
+  // Add debug logging (remove after fixing)
+  useEffect(() => {
+    if (messages.length > 0) {
+      console.log('Message sender data:', messages[0].sender);
+      console.log('Avatar URL:', messages[0].sender?.avatar_url);
+    }
+  }, [messages]);
 
 
   if (error) {
@@ -155,9 +179,10 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
         onLoadMore={handleLoadMore}
         typingUsers={[]}
         disabled={loading}
-        // 🔴 NEW: Pass navigation props
         onBack={onBack}
         contactName={otherUser?.full_name || 'Contact'}
+        contactAvatarUrl={otherUser?.avatar_url || null}
+        contactFullName={otherUser?.full_name || 'Contact'}
       />
     </div>
   );

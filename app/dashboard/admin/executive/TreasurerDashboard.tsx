@@ -1,13 +1,14 @@
 'use client';
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { DollarSign, TrendingUp, Users, AlertTriangle, CheckCircle, Download, Mail, Plus, Calendar, Edit, Eye, UserPlus, X, Lock } from "lucide-react";
+import { DollarSign, TrendingUp, Users, AlertTriangle, CheckCircle, Download, Mail, Plus, Calendar, Edit, Eye, UserPlus, X, Lock, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { createPortal } from 'react-dom';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -128,6 +129,8 @@ export function TreasurerDashboard() {
   const [assignments, setAssignments] = useState<DuesAssignment[]>([]);
   const [chapterMembers, setChapterMembers] = useState<ChapterMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const membersPerPage = 10;
   const [showCreateCycle, setShowCreateCycle] = useState(false);
   const [showAssignDues, setShowAssignDues] = useState(false);
   const [showBulkAssignDues, setShowBulkAssignDues] = useState(false);
@@ -159,6 +162,11 @@ export function TreasurerDashboard() {
       loadChapterMembers();
     }
   }, [profile?.chapter_id]);
+
+  // Reset to page 1 when chapterMembers changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [chapterMembers.length]);
 
   const loadDuesData = async () => {
     try {
@@ -480,42 +488,32 @@ export function TreasurerDashboard() {
       label: 'Bulk Assign Dues',
       icon: Users,
       onClick: () => setShowBulkAssignDues(true),
-      className: 'w-full justify-start bg-purple-600 hover:bg-purple-700',
-      variant: 'default',
+      className: 'w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-navy-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300',
+      variant: 'outline',
     },
     {
       id: 'assign-dues',
       label: 'Assign Dues',
       icon: UserPlus,
       onClick: () => setShowAssignDues(true),
-      className: 'w-full justify-start bg-blue-600 hover:bg-blue-700',
-      variant: 'default',
+      className: 'w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-navy-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300',
+      variant: 'outline',
     },
     {
       id: 'create-cycle',
       label: 'Create Dues Cycle',
       icon: Plus,
       onClick: () => setShowCreateCycle(true),
-      className: 'w-full justify-start bg-green-600 hover:bg-green-700',
-      variant: 'default',
+      className: 'w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-navy-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300',
+      variant: 'outline',
     },
     {
       id: 'export-report',
       label: 'Export Financial Report',
       icon: Download,
       onClick: () => exportDuesToCSV(assignments, `financial-report-${new Date().toISOString().split('T')[0]}.csv`),
-      className: 'w-full justify-start bg-green-600 hover:bg-green-700',
-      variant: 'default',
-    },
-    {
-      id: 'payment-plans',
-      label: 'Create Payment Plans',
-      icon: DollarSign,
-      onClick: () => {},
+      className: 'w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-navy-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300',
       variant: 'outline',
-      disabled: true,
-      showLock: true,
-      className: 'w-full justify-start opacity-60 cursor-not-allowed',
     },
   ];
 
@@ -536,14 +534,14 @@ export function TreasurerDashboard() {
           transition={{ delay: 0.1 }}
           className="hidden md:block"
         >
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-600 text-sm font-medium">Total Collected</p>
-                  <p className="text-2xl font-semibold text-green-900">${financialOverview.totalCollected.toLocaleString()}</p>
+                  <p className="text-navy-700 text-sm font-medium">Total Collected</p>
+                  <p className="text-2xl font-semibold text-navy-900">${financialOverview.totalCollected.toLocaleString()}</p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-green-600" />
+                <CheckCircle className="h-8 w-8 text-navy-500" />
               </div>
             </CardContent>
           </Card>
@@ -555,14 +553,14 @@ export function TreasurerDashboard() {
           transition={{ delay: 0.2 }}
           className="hidden md:block"
         >
-          <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-red-600 text-sm font-medium">Outstanding</p>
-                  <p className="text-2xl font-semibold text-red-900">${financialOverview.totalOutstanding.toLocaleString()}</p>
+                  <p className="text-navy-700 text-sm font-medium">Outstanding</p>
+                  <p className="text-2xl font-semibold text-navy-900">${financialOverview.totalOutstanding.toLocaleString()}</p>
                 </div>
-                <AlertTriangle className="h-8 w-8 text-red-600" />
+                <AlertTriangle className="h-8 w-8 text-navy-500" />
               </div>
             </CardContent>
           </Card>
@@ -574,14 +572,14 @@ export function TreasurerDashboard() {
           transition={{ delay: 0.3 }}
           className="hidden md:block"
         >
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-600 text-sm font-medium">Collection Rate</p>
-                  <p className="text-2xl font-semibold text-blue-900">{financialOverview.collectionRate.toFixed(1)}%</p>
+                  <p className="text-navy-700 text-sm font-medium">Collection Rate</p>
+                  <p className="text-2xl font-semibold text-navy-900">{financialOverview.collectionRate.toFixed(1)}%</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-blue-600" />
+                <TrendingUp className="h-8 w-8 text-navy-500" />
               </div>
             </CardContent>
           </Card>
@@ -597,34 +595,34 @@ export function TreasurerDashboard() {
           className="grid grid-cols-3 gap-2"
         >
           {/* Total Collected */}
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
             <CardContent className="p-2">
               <div className="flex flex-col items-center text-center space-y-1">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                <p className="text-base font-semibold text-green-900">${financialOverview.totalCollected.toLocaleString()}</p>
-                <p className="text-green-600 text-xs font-medium">Collected</p>
+                <CheckCircle className="h-5 w-5 text-navy-500" />
+                <p className="text-base font-semibold text-navy-900">${financialOverview.totalCollected.toLocaleString()}</p>
+                <p className="text-navy-700 text-xs font-medium">Collected</p>
               </div>
             </CardContent>
           </Card>
 
           {/* Outstanding */}
-          <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
             <CardContent className="p-2">
               <div className="flex flex-col items-center text-center space-y-1">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-                <p className="text-base font-semibold text-red-900">${financialOverview.totalOutstanding.toLocaleString()}</p>
-                <p className="text-red-600 text-xs font-medium">Outstanding</p>
+                <AlertTriangle className="h-5 w-5 text-navy-500" />
+                <p className="text-base font-semibold text-navy-900">${financialOverview.totalOutstanding.toLocaleString()}</p>
+                <p className="text-navy-700 text-xs font-medium">Outstanding</p>
               </div>
             </CardContent>
           </Card>
 
           {/* Collection Rate */}
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
             <CardContent className="p-2">
               <div className="flex flex-col items-center text-center space-y-1">
-                <TrendingUp className="h-5 w-5 text-blue-600" />
-                <p className="text-base font-semibold text-blue-900">{financialOverview.collectionRate.toFixed(1)}%</p>
-                <p className="text-blue-600 text-xs font-medium">Rate</p>
+                <TrendingUp className="h-5 w-5 text-navy-500" />
+                <p className="text-base font-semibold text-navy-900">{financialOverview.collectionRate.toFixed(1)}%</p>
+                <p className="text-navy-700 text-xs font-medium">Rate</p>
               </div>
             </CardContent>
           </Card>
@@ -636,7 +634,6 @@ export function TreasurerDashboard() {
       <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
           {[
             { value: "overview", label: "Overview" },
-            { value: "dues", label: "Dues" },
             { value: "members", label: "Members" }
           ].map((tab) => (
             <button
@@ -658,9 +655,9 @@ export function TreasurerDashboard() {
       {selectedTab === "overview" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Desktop Layout - Dues Collection Progress (2/3 width) */}
-          <Card className="hidden lg:block lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Dues Collection Progress</CardTitle>
+          <Card className="hidden lg:block lg:col-span-2 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+            <CardHeader className="border-b border-navy-100/30">
+              <CardTitle className="text-navy-900">Dues Collection Progress</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -702,9 +699,9 @@ export function TreasurerDashboard() {
           </div>
 
           {/* Mobile Layout - Dues Collection Progress */}
-          <Card className="lg:hidden">
-            <CardHeader className="pb-2">
-              <CardTitle>Dues Collection Progress</CardTitle>
+          <Card className="lg:hidden bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+            <CardHeader className="pb-2 border-b border-navy-100/30">
+              <CardTitle className="text-navy-900">Dues Collection Progress</CardTitle>
             </CardHeader>
             <CardContent className="pt-2">
               <div className="space-y-3">
@@ -749,257 +746,86 @@ export function TreasurerDashboard() {
         </div>
       )}
 
-      {selectedTab === "dues" && (
-        <Card>
-          <CardHeader className="pb-2 sm:pb-6">
-            {/* Desktop Layout - Preserved */}
-            <div className="hidden sm:flex justify-between items-center">
-              <CardTitle>Member Dues Status</CardTitle>
-              <div className="flex space-x-2">
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => exportDuesToCSV(assignments, `dues-export-${new Date().toISOString().split('T')[0]}.csv`)}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
-                <Button 
-                  size="sm" 
-                  className="bg-green-600 hover:bg-green-700 opacity-60 cursor-not-allowed" 
-                  disabled
-                >
-                  <Mail className="h-4 w-4 mr-2" />
-                  Send Reminders
-                  <Lock className="h-3 w-3 ml-2 text-gray-400" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Mobile Layout */}
-            <div className="sm:hidden">
-              <CardTitle className="text-lg mb-3">Member Dues Status</CardTitle>
-              <div className="flex space-x-2">
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => exportDuesToCSV(assignments, `dues-export-${new Date().toISOString().split('T')[0]}.csv`)}
-                  className="flex-1 justify-center text-sm py-2"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
-                <Button 
-                  size="sm" 
-                  className="bg-green-600 hover:bg-green-700 opacity-60 cursor-not-allowed flex-1 justify-center text-sm py-2" 
-                  disabled
-                >
-                  <Mail className="h-4 w-4 mr-2" />
-                  Remind
-                  <Lock className="h-3 w-3 ml-2 text-gray-400" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-2 sm:pt-6">
-            {assignments.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <DollarSign className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-lg font-medium mb-2">No dues assignments</p>
-                <p className="text-sm">No dues have been assigned to chapter members yet.</p>
-              </div>
-            ) : (
-              <>
-                {/* Desktop Table */}
-                <div className="hidden md:block">
-                  <div className="overflow-x-auto">
-                    <div className="max-h-[70vh] overflow-y-auto border border-gray-200 rounded-lg">
-                      <table className="w-full border-collapse">
-                        <thead className="sticky top-0 bg-gray-50 z-10">
-                          <tr className="border-b">
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Member Name</th>
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Class</th>
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Amount</th>
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Status</th>
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Due Date</th>
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {assignments.map((assignment) => (
-                            <tr key={assignment.id} className="border-b hover:bg-gray-50">
-                              <td className="p-3">
-                                <div>
-                                  <p className="font-medium">{assignment.user.full_name}</p>
-                                  <p className="text-sm text-gray-600">{assignment.user.email}</p>
-                                </div>
-                              </td>
-                              <td className="p-3">
-                                <Badge variant="outline">{assignment.user.member_status}</Badge>
-                              </td>
-                              <td className="p-3">
-                                <p className="font-medium">${assignment.amount_due.toFixed(2)}</p>
-                                {assignment.amount_paid > 0 && (
-                                  <p className="text-sm text-gray-600">Paid: ${assignment.amount_paid.toFixed(2)}</p>
-                                )}
-                              </td>
-                              <td className="p-3">
-                                <Badge className={getStatusColor(assignment.status)}>
-                                  {assignment.status}
-                                </Badge>
-                              </td>
-                              <td className="p-3">
-                                <div>
-                                  <p className="text-sm">{new Date(assignment.cycle.due_date).toLocaleDateString()}</p>
-                                  {assignment.status === 'required' && new Date(assignment.cycle.due_date) < new Date() && (
-                                    <p className="text-xs text-red-600 font-medium">Overdue</p>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="p-3">
-                                <div className="flex items-center space-x-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedAssignment(assignment);
-                                      setShowEditAssignment(true);
-                                    }}
-                                    className="hover:bg-blue-50 hover:text-blue-600"
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleDeleteAssignment(assignment.id)}
-                                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                  
-                  {/* Summary Footer */}
-                  <div className="mt-4 text-sm text-gray-600">
-                    <p>Showing {assignments.length} dues assignments</p>
-                  </div>
-                </div>
-
-                {/* Mobile Card Layout */}
-                <div className="md:hidden space-y-3">
-                  {assignments.map((assignment) => (
-                    <div key={assignment.id} className="border border-gray-200 rounded-lg p-3 space-y-2">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm text-gray-900 truncate">
-                            {assignment.user.full_name}
-                          </h4>
-                          <p className="text-xs text-gray-600 mt-1">
-                            {assignment.user.email}
-                          </p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant="outline" className="text-xs px-2 py-1">
-                              {assignment.user.member_status}
-                            </Badge>
-                            <Badge className={`text-xs px-2 py-1 ${getStatusColor(assignment.status)}`}>
-                              {assignment.status}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-end space-y-1 ml-2">
-                          <p className="text-sm font-medium text-gray-900">
-                            ${assignment.amount_due.toFixed(2)}
-                          </p>
-                          {assignment.amount_paid > 0 && (
-                            <p className="text-xs text-gray-600">
-                              Paid: ${assignment.amount_paid.toFixed(2)}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                        <div className="text-xs text-gray-600">
-                          <span>Due: {new Date(assignment.cycle.due_date).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric'
-                          })}</span>
-                          {assignment.status === 'required' && new Date(assignment.cycle.due_date) < new Date() && (
-                            <span className="text-red-600 font-medium ml-2">(Overdue)</span>
-                          )}
-                        </div>
-                        
-                        <div className="flex space-x-1">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedAssignment(assignment);
-                              setShowEditAssignment(true);
-                            }}
-                            className="h-7 px-2 text-xs"
-                          >
-                            <Edit className="h-3 w-3 mr-1" />
-                            Edit
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleDeleteAssignment(assignment.id)}
-                            className="h-7 px-2 text-xs text-red-600 hover:bg-red-50 hover:text-red-700"
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
       {selectedTab === "members" && (
-        <Card>
-          <CardHeader className="pb-2 sm:pb-6">
-            {/* Desktop Layout - Preserved */}
+        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+          <CardHeader className="pb-2 sm:pb-6 border-b border-navy-100/30">
+            {/* Desktop Layout */}
             <div className="hidden sm:flex justify-between items-center">
-              <CardTitle>All Chapter Members ({chapterMembers.length})</CardTitle>
-              <div className="flex space-x-2">
-                <Button onClick={() => setShowBulkAssignDues(true)} className="bg-purple-600 hover:bg-purple-700">
-                  <Users className="h-4 w-4 mr-2" />
-                  Bulk Assign Dues
-                </Button>
-                <Button onClick={() => setShowAssignDues(true)} className="bg-blue-600 hover:bg-blue-700">
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Assign Dues
-                </Button>
+              <CardTitle className="text-navy-900">All Chapter Members ({chapterMembers.length})</CardTitle>
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-600">
+                  {chapterMembers.length} {chapterMembers.length === 1 ? 'member' : 'members'}
+                </span>
+                {Math.ceil(chapterMembers.length / membersPerPage) > 1 && (
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1 || loading}
+                      className="h-8 px-3 text-xs"
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                      Previous
+                    </Button>
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.ceil(chapterMembers.length / membersPerPage) }, (_, i) => i + 1).map((page) => (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(page)}
+                          className={`h-8 w-8 p-0 text-xs flex-shrink-0 ${
+                            currentPage === page
+                              ? 'bg-navy-600 text-white hover:bg-navy-700'
+                              : 'hover:bg-gray-50'
+                          }`}
+                        >
+                          {page}
+                        </Button>
+                      ))}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(Math.ceil(chapterMembers.length / membersPerPage), prev + 1))}
+                      disabled={currentPage === Math.ceil(chapterMembers.length / membersPerPage) || loading}
+                      className="h-8 px-3 text-xs"
+                    >
+                      Next
+                      <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                    </Button>
+                  </div>
+                )}
+                <div className="flex space-x-2">
+                  <Button onClick={() => setShowBulkAssignDues(true)} variant="outline">
+                    <Users className="h-4 w-4 mr-2" />
+                    Bulk Assign Dues
+                  </Button>
+                  <Button onClick={() => setShowAssignDues(true)} variant="outline">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Assign Dues
+                  </Button>
+                </div>
               </div>
             </div>
 
             {/* Mobile Layout */}
             <div className="sm:hidden">
-              <CardTitle className="text-lg mb-3">All Chapter Members ({chapterMembers.length})</CardTitle>
+              <CardTitle className="text-lg mb-3 text-navy-900">All Chapter Members ({chapterMembers.length})</CardTitle>
               <div className="flex space-x-2">
                 <Button 
                   onClick={() => setShowBulkAssignDues(true)} 
-                  className="bg-purple-600 hover:bg-purple-700 flex-1 justify-center text-sm py-2"
+                  variant="outline"
+                  className="flex-1 justify-center text-sm py-2"
                 >
                   <Users className="h-4 w-4 mr-2" />
                   Bulk Assign
                 </Button>
                 <Button 
                   onClick={() => setShowAssignDues(true)} 
-                  className="bg-blue-600 hover:bg-blue-700 flex-1 justify-center text-sm py-2"
+                  variant="outline"
+                  className="flex-1 justify-center text-sm py-2"
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
                   Assign Dues
@@ -1016,111 +842,140 @@ export function TreasurerDashboard() {
               </div>
             ) : (
               <>
-                {/* Desktop Table */}
-                <div className="hidden md:block">
-                  <div className="overflow-x-auto">
-                    <div className="max-h-[70vh] overflow-y-auto border border-gray-200 rounded-lg">
-                      <table className="w-full border-collapse">
-                        <thead className="sticky top-0 bg-gray-50 z-10">
-                          <tr className="border-b">
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Member Info</th>
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Role & Status</th>
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Dues Information</th>
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Last Assignment</th>
-                            <th className="text-left p-3 font-medium text-sm bg-gray-50">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {chapterMembers.map((member) => (
-                            <tr key={member.id} className="border-b hover:bg-gray-50">
-                              <td className="p-3">
-                                <div>
-                                  <p className="font-medium">{member.full_name}</p>
-                                  <p className="text-sm text-gray-600">{member.email}</p>
-                                </div>
-                              </td>
-                              <td className="p-3">
-                                <div className="space-y-1">
-                                  <Badge variant="secondary">{member.chapter_role || member.role}</Badge>
-                                  <Badge variant="outline">{member.member_status}</Badge>
-                                </div>
-                              </td>
-                              <td className="p-3">
-                                <div className="space-y-1">
-                                  <p className="font-medium">${member.current_dues_amount.toFixed(2)}</p>
-                                  <Badge className={getStatusColor(member.dues_status)}>
-                                    {member.dues_status}
-                                  </Badge>
-                                </div>
-                              </td>
-                              <td className="p-3">
-                                <p className="text-sm text-gray-600">
-                                  {member.last_dues_assignment_date 
-                                    ? new Date(member.last_dues_assignment_date).toLocaleDateString()
-                                    : 'Never'
-                                  }
-                                </p>
-                              </td>
-                              <td className="p-3">
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => {
-                                    setNewAssignment({
-                                      memberId: member.id,
-                                      amount: member.current_dues_amount,
-                                      status: 'required',
-                                      notes: ''
-                                    });
-                                    setShowAssignDues(true);
-                                  }}
-                                  className="hover:bg-green-50 hover:text-green-600"
-                                >
-                                  <DollarSign className="h-4 w-4 mr-1" />
-                                  Assign Dues
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+                {/* Calculate pagination */}
+                {(() => {
+                  const totalPages = Math.ceil(chapterMembers.length / membersPerPage);
+                  const startIndex = (currentPage - 1) * membersPerPage;
+                  const endIndex = startIndex + membersPerPage;
+                  const paginatedMembers = chapterMembers.slice(startIndex, endIndex);
                   
-                  {/* Summary Footer */}
-                  <div className="mt-4 text-sm text-gray-600">
-                    <p>Showing {chapterMembers.length} chapter members</p>
-                  </div>
-                </div>
+                  return (
+                    <>
+                      {/* Desktop Table */}
+                      <div className="hidden md:block">
+                        <div className="overflow-x-auto">
+                          <div className="border border-gray-200 rounded-lg">
+                            <table className="w-full border-collapse">
+                              <thead className="sticky top-0 bg-gray-50 z-10">
+                                <tr className="border-b">
+                                  <th className="text-left p-3 font-medium text-sm bg-gray-50">Member</th>
+                                  <th className="text-left p-3 font-medium text-sm bg-gray-50">Amount</th>
+                                  <th className="text-left p-3 font-medium text-sm bg-gray-50">Last Assigned</th>
+                                  <th className="text-left p-3 font-medium text-sm bg-gray-50">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {paginatedMembers.map((member) => (
+                                  <tr key={member.id} className="border-b hover:bg-gray-50 whitespace-nowrap">
+                                    <td className="p-3 max-w-[250px]">
+                                      <div>
+                                        <p className="font-medium truncate" title={member.full_name}>{member.full_name}</p>
+                                        <p className="text-sm text-gray-600 truncate" title={member.email}>{member.email}</p>
+                                      </div>
+                                    </td>
+                                    <td className="p-3">
+                                      <p className="font-medium">${member.current_dues_amount.toFixed(2)}</p>
+                                    </td>
+                                    <td className="p-3">
+                                      <p className="text-sm text-gray-600">
+                                        {member.last_dues_assignment_date 
+                                          ? new Date(member.last_dues_assignment_date).toLocaleDateString()
+                                          : 'Never'
+                                        }
+                                      </p>
+                                    </td>
+                                    <td className="p-3">
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        onClick={() => {
+                                          setNewAssignment({
+                                            memberId: member.id,
+                                            amount: member.current_dues_amount,
+                                            status: 'required',
+                                            notes: ''
+                                          });
+                                          setShowAssignDues(true);
+                                        }}
+                                        className="hover:bg-green-50 hover:text-green-600"
+                                      >
+                                        <DollarSign className="h-4 w-4 mr-1 flex-shrink-0" />
+                                        Assign
+                                      </Button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                        
+                        {/* Pagination Footer */}
+                        {totalPages > 1 && (
+                          <div className="mt-4 flex items-center justify-between">
+                            <div className="text-sm text-gray-600">
+                              <p>Showing {startIndex + 1} to {Math.min(endIndex, chapterMembers.length)} of {chapterMembers.length} members</p>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1 || loading}
+                                className="h-8 px-3 text-xs"
+                              >
+                                <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                                Previous
+                              </Button>
+                              <div className="flex items-center space-x-1">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                  <Button
+                                    key={page}
+                                    variant={currentPage === page ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`h-8 w-8 p-0 text-xs flex-shrink-0 ${
+                                      currentPage === page
+                                        ? 'bg-navy-600 text-white hover:bg-navy-700'
+                                        : 'hover:bg-gray-50'
+                                    }`}
+                                  >
+                                    {page}
+                                  </Button>
+                                ))}
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages || loading}
+                                className="h-8 px-3 text-xs"
+                              >
+                                Next
+                                <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
 
-                {/* Mobile Card Layout */}
-                <div className="md:hidden space-y-3">
-                  {chapterMembers.map((member) => (
+                      {/* Mobile Card Layout */}
+                      <div className="md:hidden space-y-3">
+                        {paginatedMembers.map((member) => (
                     <div key={member.id} className="border border-gray-200 rounded-lg p-3 space-y-2">
                       <div className="flex justify-between items-start">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm text-gray-900 truncate">
+                          <h4 className="font-medium text-sm text-gray-900 truncate" title={member.full_name}>
                             {member.full_name}
                           </h4>
-                          <p className="text-xs text-gray-600 mt-1">
+                          <p className="text-xs text-gray-600 mt-1 truncate" title={member.email}>
                             {member.email}
                           </p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant="secondary" className="text-xs px-2 py-1">
-                              {member.chapter_role || member.role}
-                            </Badge>
-                            <Badge variant="outline" className="text-xs px-2 py-1">
-                              {member.member_status}
-                            </Badge>
-                          </div>
                         </div>
                         <div className="flex flex-col items-end space-y-1 ml-2">
                           <p className="text-sm font-medium text-gray-900">
                             ${member.current_dues_amount.toFixed(2)}
                           </p>
-                          <Badge className={`text-xs px-2 py-1 ${getStatusColor(member.dues_status)}`}>
-                            {member.dues_status}
-                          </Badge>
                         </div>
                       </div>
                       
@@ -1151,13 +1006,62 @@ export function TreasurerDashboard() {
                           }}
                           className="h-7 px-2 text-xs hover:bg-green-50 hover:text-green-600"
                         >
-                          <DollarSign className="h-3 w-3 mr-1" />
+                          <DollarSign className="h-3 w-3 mr-1 flex-shrink-0" />
                           Assign
                         </Button>
                       </div>
                     </div>
                   ))}
-                </div>
+                  
+                        {/* Mobile Pagination */}
+                        {totalPages > 1 && (
+                          <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                            <div className="text-xs text-gray-600">
+                              <p>Showing {startIndex + 1} to {Math.min(endIndex, chapterMembers.length)} of {chapterMembers.length}</p>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1 || loading}
+                                className="h-8 px-2 text-xs"
+                              >
+                                <ChevronLeft className="h-3 w-3" />
+                              </Button>
+                              <div className="flex items-center space-x-1">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).slice(0, 5).map((page) => (
+                                  <Button
+                                    key={page}
+                                    variant={currentPage === page ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`h-8 w-8 p-0 text-xs flex-shrink-0 ${
+                                      currentPage === page
+                                        ? 'bg-navy-600 text-white hover:bg-navy-700'
+                                        : 'hover:bg-gray-50'
+                                    }`}
+                                  >
+                                    {page}
+                                  </Button>
+                                ))}
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages || loading}
+                                className="h-8 px-2 text-xs"
+                              >
+                                <ChevronRight className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
               </>
             )}
           </CardContent>
@@ -1208,11 +1112,20 @@ export function TreasurerDashboard() {
               />
               <Label htmlFor="paymentPlans">Allow Payment Plans</Label>
             </div>
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowCreateCycle(false)}>
+            <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowCreateCycle(false)}
+                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+              >
                 Cancel
               </Button>
-              <Button onClick={handleCreateCycle} className="bg-green-600 hover:bg-green-700">
+              <Button
+                type="button"
+                onClick={handleCreateCycle}
+                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+              >
                 Create Cycle
               </Button>
             </div>
@@ -1221,248 +1134,347 @@ export function TreasurerDashboard() {
       </Dialog>
 
       {/* Assign Dues Dialog */}
-      <Dialog open={showAssignDues} onOpenChange={setShowAssignDues}>
-        <DialogContent className="bg-white border border-gray-200 shadow-lg">
-          <DialogHeader>
-            <DialogTitle>Assign Dues to Member</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="member">Select Member</Label>
-              <Select
-                value={newAssignment.memberId}
-                onValueChange={(value) => setNewAssignment({ ...newAssignment, memberId: value })}
-              >
-                <SelectItem value="">Choose a member</SelectItem>
-                {chapterMembers.map((member) => (
-                  <SelectItem key={member.id} value={member.id}>
-                    {member.full_name} ({member.email})
-                  </SelectItem>
-                ))}
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="amount">Dues Amount ($)</Label>
-              <Input
-                id="amount"
-                type="number"
-                value={newAssignment.amount}
-                onChange={(e) => setNewAssignment({ ...newAssignment, amount: parseFloat(e.target.value) || 0 })}
-                placeholder="150.00"
-              />
-            </div>
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={newAssignment.status}
-                onValueChange={(value: any) => setNewAssignment({ ...newAssignment, status: value })}
-              >
-                <SelectItem value="required">Required</SelectItem>
-                <SelectItem value="exempt">Exempt</SelectItem>
-                <SelectItem value="reduced">Reduced</SelectItem>
-                <SelectItem value="waived">Waived</SelectItem>
-                <SelectItem value="paid">Paid</SelectItem>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                value={newAssignment.notes}
-                onChange={(e) => setNewAssignment({ ...newAssignment, notes: e.target.value })}
-                placeholder="Optional notes about this assignment"
-              />
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowAssignDues(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleAssignDues} className="bg-blue-600 hover:bg-blue-700">
-                Assign Dues
-              </Button>
+      {showAssignDues && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999]">
+          {/* Backdrop - click to close */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+            onClick={() => setShowAssignDues(false)}
+          />
+          
+          {/* Modal container - centers content */}
+          <div className="relative flex items-center justify-center min-h-screen p-4">
+            {/* Modal - styled like TaskModal */}
+            <div 
+              className="relative transform rounded-lg bg-white text-left shadow-xl transition-all w-full max-w-[95vw] sm:max-w-lg flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header - Fixed, styled like TaskModal */}
+              <div className="rounded-t-lg bg-white px-4 pt-4 pb-3 sm:px-6 sm:pt-4 sm:pb-3 flex-shrink-0 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium leading-6 text-gray-900">
+                    Assign Dues to Member
+                  </h3>
+                  <button
+                    onClick={() => setShowAssignDues(false)}
+                    className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 p-1"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Body - Scrollable */}
+              <div className="bg-white px-4 pt-3 pb-4 sm:px-6 sm:pt-4 sm:pb-4 flex-1 overflow-y-auto">
+                <div className="space-y-4 sm:space-y-3">
+                  <div>
+                    <Label htmlFor="member" className="block text-sm font-medium text-gray-700 mb-1">
+                      Select Member
+                    </Label>
+                    <Select
+                      value={newAssignment.memberId}
+                      onValueChange={(value) => setNewAssignment({ ...newAssignment, memberId: value })}
+                    >
+                      <SelectItem value="">Choose a member</SelectItem>
+                      {chapterMembers.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.full_name} ({member.email})
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
+                      Dues Amount ($)
+                    </Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      value={newAssignment.amount}
+                      onChange={(e) => setNewAssignment({ ...newAssignment, amount: parseFloat(e.target.value) || 0 })}
+                      placeholder="150.00"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 text-sm h-9"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </Label>
+                    <Select
+                      value={newAssignment.status}
+                      onValueChange={(value: any) => setNewAssignment({ ...newAssignment, status: value })}
+                    >
+                      <SelectItem value="required">Required</SelectItem>
+                      <SelectItem value="exempt">Exempt</SelectItem>
+                      <SelectItem value="reduced">Reduced</SelectItem>
+                      <SelectItem value="waived">Waived</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+                      Notes
+                    </Label>
+                    <Textarea
+                      id="notes"
+                      value={newAssignment.notes}
+                      onChange={(e) => setNewAssignment({ ...newAssignment, notes: e.target.value })}
+                      placeholder="Optional notes about this assignment"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer - Fixed, styled like TaskModal */}
+              <div className="rounded-b-lg bg-gray-50 px-4 py-2 sm:px-6 sm:py-3 flex-shrink-0 border-t border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowAssignDues(false)}
+                    className="rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleAssignDues}
+                    className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+                  >
+                    Assign Dues
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>,
+        document.body
+      )}
 
       {/* Bulk Assign Dues Dialog */}
-      <Dialog open={showBulkAssignDues} onOpenChange={setShowBulkAssignDues}>
-        <DialogContent className="w-auto max-w-7xl h-[90vh] bg-white border border-gray-200 shadow-lg p-0 flex flex-col">
-          {/* DialogHeader with DialogTitle for accessibility */}
-          <DialogHeader className="flex items-left justify-between p-4 border-b border-gray-200 flex-shrink-0">
-            <DialogTitle className="text-2xl font-bold text-navy-900">Assign Dues to Members</DialogTitle>
-          </DialogHeader>
-
-          {/* Scrollable Content Area */}
-          <div className="flex-1 overflow-y-auto p-4" style={{ minHeight: 0 }}>
-            <div className="space-y-2">
-              {/* Select All Header */}
-              <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <Checkbox
-                  id="selectAll"
-                  checked={bulkAssignment.selectedMembers.length === chapterMembers.length}
-                  onCheckedChange={handleSelectAllMembers}
-                />
-                <Label htmlFor="selectAll" className="font-medium">
-                  Select All Members ({chapterMembers.length})
-                </Label>
+      {showBulkAssignDues && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999]">
+          {/* Backdrop - click to close */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+            onClick={() => setShowBulkAssignDues(false)}
+          />
+          
+          {/* Modal container - centers content */}
+          <div className="relative flex items-center justify-center min-h-screen p-4">
+            {/* Modal - styled like TaskModal */}
+            <div 
+              className="relative transform rounded-lg bg-white text-left shadow-xl transition-all w-full max-w-[95vw] sm:max-w-4xl max-h-[90vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header - Fixed, styled like TaskModal */}
+              <div className="rounded-t-lg bg-white px-4 pt-4 pb-3 sm:px-6 sm:pt-4 sm:pb-3 flex-shrink-0 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium leading-6 text-gray-900">
+                    Assign Dues to Members
+                  </h3>
+                  <button
+                    onClick={() => setShowBulkAssignDues(false)}
+                    className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 p-1"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
-              
-              {/* Members Table */}
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50 border-b border-gray-200 hover:bg-gray-50">
-                      <TableHead className="bg-gray-50 border-r border-gray-200 w-12">
-                        <div className="flex justify-center items-center h-full p-2">
-                          <Checkbox
-                            checked={bulkAssignment.selectedMembers.length === chapterMembers.length}
-                            onCheckedChange={handleSelectAllMembers}
-                            indeterminate={bulkAssignment.selectedMembers.length > 0 && bulkAssignment.selectedMembers.length < chapterMembers.length}
-                            className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
-                          />
-                        </div>
-                      </TableHead>
-                      <TableHead className="bg-gray-50 border-r border-gray-200">
-                        <span className="font-medium text-gray-900">NAME</span>
-                      </TableHead>
-                      <TableHead className="bg-gray-50">
-                        <span className="font-medium text-gray-900">EMAIL</span>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {chapterMembers.map((member) => (
-                      <TableRow 
-                        key={member.id} 
-                        className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
-                          bulkAssignment.selectedMembers.includes(member.id) ? 'bg-navy-50 border-navy-200' : ''
-                        }`}
+
+              {/* Scrollable Content Area - flex-1 for remaining space */}
+              <div className="bg-white px-4 pt-3 pb-4 sm:px-6 sm:pt-4 sm:pb-4 flex-1 overflow-y-auto">
+                <div className="space-y-4 sm:space-y-3">
+                  {/* Select All Header */}
+                  <div className="flex items-center space-x-2 p-3 bg-white rounded-lg border border-gray-200">
+                    <Checkbox
+                      id="selectAll"
+                      checked={bulkAssignment.selectedMembers.length === chapterMembers.length}
+                      onCheckedChange={handleSelectAllMembers}
+                    />
+                    <Label htmlFor="selectAll" className="font-medium">
+                      Select All Members ({chapterMembers.length})
+                    </Label>
+                  </div>
+                  
+                  {/* Members Table - with internal scrolling */}
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="max-h-[400px] overflow-y-auto">
+                      <Table>
+                        <TableHeader className="sticky top-0 z-10 bg-white">
+                          <TableRow className="bg-white border-b border-gray-200 hover:bg-white">
+                            <TableHead className="bg-white border-r border-gray-200 w-12 sticky top-0">
+                              <div className="flex justify-center items-center h-full p-2">
+                                <Checkbox
+                                  checked={bulkAssignment.selectedMembers.length === chapterMembers.length}
+                                  onCheckedChange={handleSelectAllMembers}
+                                  indeterminate={bulkAssignment.selectedMembers.length > 0 && bulkAssignment.selectedMembers.length < chapterMembers.length}
+                                  className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
+                                />
+                              </div>
+                            </TableHead>
+                            <TableHead className="bg-white border-r border-gray-200 sticky top-0">
+                              <span className="font-medium text-gray-900">NAME</span>
+                            </TableHead>
+                            <TableHead className="bg-white sticky top-0">
+                              <span className="font-medium text-gray-900">EMAIL</span>
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {chapterMembers.map((member) => (
+                            <TableRow 
+                              key={member.id} 
+                              className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
+                                bulkAssignment.selectedMembers.includes(member.id) ? 'bg-navy-50 border-navy-200' : ''
+                              }`}
+                            >
+                              {/* Checkbox Column */}
+                              <TableCell className="bg-white border-r border-gray-200 w-12">
+                                <div className="flex justify-center items-center h-full p-2">
+                                  <Checkbox
+                                    checked={bulkAssignment.selectedMembers.includes(member.id)}
+                                    onCheckedChange={(checked) => handleMemberSelection(member.id, checked as boolean)}
+                                    className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
+                                  />
+                                </div>
+                              </TableCell>
+                              
+                              {/* Name Column */}
+                              <TableCell className="bg-white border-r border-gray-200">
+                                <div className="flex items-start space-x-3">
+                                  {/* Avatar */}
+                                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center flex-shrink-0">
+                                    <span className="text-white text-sm font-medium">
+                                      {member.full_name?.[0] || ''}{member.full_name?.split(' ')[1]?.[0] || ''}
+                                    </span>
+                                  </div>
+                                  
+                                  {/* Name */}
+                                  <div className="flex-1 min-w-0">
+                                    <span className="font-medium text-gray-900 break-words">
+                                      {member.full_name}
+                                    </span>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              
+                              {/* Email Column */}
+                              <TableCell className="bg-white">
+                                <span className="text-gray-900 text-sm">{member.email}</span>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+
+                  {/* Assignment Details */}
+                  <div className="border-t pt-4 space-y-4">
+                    {/* Add Cycle Selection */}
+                    <div>
+                      <Label htmlFor="bulkCycle" className="block text-sm font-medium text-gray-700 mb-1">
+                        Dues Cycle
+                      </Label>
+                      <Select 
+                        value={bulkAssignment.cycleId || ''} 
+                        onValueChange={(value: string) => setBulkAssignment({ ...bulkAssignment, cycleId: value })}
+                        placeholder="Select a dues cycle"
                       >
-                        {/* Checkbox Column */}
-                        <TableCell className="bg-white border-r border-gray-200 w-12">
-                          <div className="flex justify-center items-center h-full p-2">
-                            <Checkbox
-                              checked={bulkAssignment.selectedMembers.includes(member.id)}
-                              onCheckedChange={(checked) => handleMemberSelection(member.id, checked as boolean)}
-                              className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
-                            />
-                          </div>
-                        </TableCell>
-                        
-                        {/* Name Column */}
-                        <TableCell className="bg-white border-r border-gray-200">
-                          <div className="flex items-start space-x-3">
-                            {/* Avatar */}
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center flex-shrink-0">
-                              <span className="text-white text-sm font-medium">
-                                {member.full_name?.[0] || ''}{member.full_name?.split(' ')[1]?.[0] || ''}
-                              </span>
-                            </div>
-                            
-                            {/* Name */}
-                            <div className="flex-1 min-w-0">
-                              <span className="font-medium text-gray-900 break-words">
-                                {member.full_name}
-                              </span>
-                            </div>
-                          </div>
-                        </TableCell>
-                        
-                        {/* Email Column */}
-                        <TableCell className="bg-white">
-                          <span className="text-gray-900 text-sm">{member.email}</span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                        <SelectItem value="">Select a dues cycle</SelectItem>
+                        {cycles.map((cycle) => (
+                          <SelectItem key={cycle.id} value={cycle.id}>
+                            {cycle.name} - ${cycle.base_amount} (Due: {new Date(cycle.due_date).toLocaleDateString()})
+                          </SelectItem>
+                        ))}
+                      </Select>
+                      {cycles.length === 0 && (
+                        <p className="text-sm text-red-600 mt-1">
+                          No dues cycles available. Please create a cycle first.
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="bulkAmount" className="block text-sm font-medium text-gray-700 mb-1">
+                        Dues Amount ($)
+                      </Label>
+                      <Input
+                        id="bulkAmount"
+                        type="number"
+                        step="5"
+                        min="0"
+                        value={bulkAssignment.amount}
+                        onChange={(e) => setBulkAssignment({ ...bulkAssignment, amount: parseFloat(e.target.value) || 0 })}
+                        placeholder="150.00"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 text-sm h-9"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="bulkStatus" className="block text-sm font-medium text-gray-700 mb-1">
+                        Status
+                      </Label>
+                      <Select 
+                        value={bulkAssignment.status} 
+                        onValueChange={(value: string) => setBulkAssignment({ ...bulkAssignment, status: value as 'required' | 'exempt' | 'reduced' | 'waived' })}
+                        placeholder="Select status"
+                      >
+                        <SelectItem value="">Select status</SelectItem>
+                        <SelectItem value="required">Required</SelectItem>
+                        <SelectItem value="exempt">Exempt</SelectItem>
+                        <SelectItem value="reduced">Reduced</SelectItem>
+                        <SelectItem value="waived">Waived</SelectItem>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="bulkNotes" className="block text-sm font-medium text-gray-700 mb-1">
+                        Notes
+                      </Label>
+                      <Textarea
+                        id="bulkNotes"
+                        value={bulkAssignment.notes}
+                        onChange={(e) => setBulkAssignment({ ...bulkAssignment, notes: e.target.value })}
+                        placeholder="Optional notes about this assignment"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Assignment Details */}
-              <div className="border-t pt-4 space-y-4">
-                {/* Add Cycle Selection */}
-                <div>
-                  <Label htmlFor="bulkCycle">Dues Cycle</Label>
-                  <Select 
-                    value={bulkAssignment.cycleId || ''} 
-                    onValueChange={(value: string) => setBulkAssignment({ ...bulkAssignment, cycleId: value })}
-                    placeholder="Select a dues cycle"
-                  >
-                    <SelectItem value="">Select a dues cycle</SelectItem>
-                    {cycles.map((cycle) => (
-                      <SelectItem key={cycle.id} value={cycle.id}>
-                        {cycle.name} - ${cycle.base_amount} (Due: {new Date(cycle.due_date).toLocaleDateString()})
-                      </SelectItem>
-                    ))}
-                  </Select>
-                  {cycles.length === 0 && (
-                    <p className="text-sm text-red-600 mt-1">
-                      No dues cycles available. Please create a cycle first.
-                    </p>
-                  )}
-                </div>
-                
-                <div>
-                  <Label htmlFor="bulkAmount">Dues Amount ($)</Label>
-                  <Input
-                    id="bulkAmount"
-                    type="number"
-                    step="5"
-                    min="0"
-                    value={bulkAssignment.amount}
-                    onChange={(e) => setBulkAssignment({ ...bulkAssignment, amount: parseFloat(e.target.value) || 0 })}
-                    placeholder="150.00"
-                    className="w-full"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="bulkStatus">Status</Label>
-                  <Select 
-                    value={bulkAssignment.status} 
-                    onValueChange={(value: string) => setBulkAssignment({ ...bulkAssignment, status: value as 'required' | 'exempt' | 'reduced' | 'waived' })}
-                    placeholder="Select status"
-                  >
-                    <SelectItem value="">Select status</SelectItem>
-                    <SelectItem value="required">Required</SelectItem>
-                    <SelectItem value="exempt">Exempt</SelectItem>
-                    <SelectItem value="reduced">Reduced</SelectItem>
-                    <SelectItem value="waived">Waived</SelectItem>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="bulkNotes">Notes</Label>
-                  <Textarea
-                    id="bulkNotes"
-                    value={bulkAssignment.notes}
-                    onChange={(e) => setBulkAssignment({ ...bulkAssignment, notes: e.target.value })}
-                    placeholder="Optional notes about this assignment"
-                  />
+              {/* Persistent Footer - styled like TaskModal */}
+              <div className="rounded-b-lg bg-gray-50 px-4 py-2 sm:px-6 sm:py-3 flex-shrink-0 border-t border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+                  <p className="text-sm text-gray-600">
+                    Selected: {bulkAssignment.selectedMembers.length} members
+                  </p>
+                  <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowBulkAssignDues(false)}
+                      className="rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleBulkAssignDues}
+                      disabled={bulkAssignment.selectedMembers.length === 0 || !bulkAssignment.cycleId}
+                      className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Assign Dues to {bulkAssignment.selectedMembers.length} Members
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Persistent Footer */}
-          <div className="flex justify-between items-center p-6 border-t border-gray-200 flex-shrink-0">
-            <p className="text-sm text-gray-600">
-              Selected: {bulkAssignment.selectedMembers.length} members
-            </p>
-            <div className="flex space-x-2">
-              <Button variant="outline" onClick={() => setShowBulkAssignDues(false)}>
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleBulkAssignDues} 
-                className="bg-purple-600 hover:bg-purple-700"
-                disabled={bulkAssignment.selectedMembers.length === 0 || !bulkAssignment.cycleId}
-              >
-                Assign Dues to {bulkAssignment.selectedMembers.length} Members
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>,
+      document.body
+      )}
 
       {/* Edit Assignment Dialog */}
       <Dialog open={showEditAssignment} onOpenChange={setShowEditAssignment}>
@@ -1515,11 +1527,20 @@ export function TreasurerDashboard() {
                   })}
                 />
               </div>
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setShowEditAssignment(false)}>
+              <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowEditAssignment(false)}
+                  className="rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+                >
                   Cancel
                 </Button>
-                <Button onClick={handleEditAssignment} className="bg-green-600 hover:bg-green-700">
+                <Button
+                  type="button"
+                  onClick={handleEditAssignment}
+                  className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+                >
                   Update Assignment
                 </Button>
               </div>
