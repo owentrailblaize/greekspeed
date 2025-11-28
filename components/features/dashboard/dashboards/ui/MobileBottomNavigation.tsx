@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Users, Wrench, CreditCard, User, CheckSquare, FileText, Activity, X, Search, Building2, LucideIcon, MessageSquare, Calendar, Megaphone, Settings } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
@@ -44,6 +44,7 @@ export function MobileBottomNavigation({
 }: MobileBottomNavigationProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { profile } = useProfile();
   const userRole = propUserRole || profile?.role;
   const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
@@ -60,26 +61,31 @@ export function MobileBottomNavigation({
           id: 'home',
           label: 'Home',
           icon: Home,
+          route: '/dashboard',
         },
         {
           id: 'network',
           label: 'Network',
           icon: Users,
+          route: '/dashboard?tab=network',
         },
         {
           id: 'pipeline',
           label: 'Pipeline',
           icon: Search,
+          route: '/dashboard?tab=pipeline',
         },
         {
           id: 'chapter',
           label: 'Members',
           icon: Building2,
+          route: '/dashboard?tab=chapter',
         },
         {
           id: 'profile',
           label: 'Profile',
           icon: User,
+          route: '/dashboard/profile',
         },
       ];
     } else if (userRole === 'admin') {
@@ -200,8 +206,28 @@ export function MobileBottomNavigation({
   const getActiveTab = (): string => {
     if (activeTab) return activeTab;
     
-    // Try to match by route
-    const currentTab = tabs.find(tab => tab.route && pathname === tab.route);
+    // For alumni, check if we're on profile page
+    if (userRole === 'alumni' && pathname === '/dashboard/profile') {
+      return 'profile';
+    }
+    
+    // For alumni on dashboard, check query params for tab first
+    if (userRole === 'alumni' && pathname === '/dashboard') {
+      const tabParam = searchParams.get('tab');
+      if (tabParam && ['network', 'pipeline', 'chapter'].includes(tabParam)) {
+        return tabParam;
+      }
+      // Default to home for dashboard
+      return 'home';
+    }
+    
+    // Try to match by route (exact pathname match, ignoring query params)
+    const currentTab = tabs.find(tab => {
+      if (!tab.route) return false;
+      // Extract pathname from route (remove query params)
+      const routePathname = tab.route.split('?')[0];
+      return pathname === routePathname;
+    });
     if (currentTab) return currentTab.id;
     
     // Fallback to first tab
