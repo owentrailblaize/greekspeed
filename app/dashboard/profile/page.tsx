@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, Mail, MapPin, Building, Shield, FileText, Phone, MessageCircle, Users, Calendar, Settings, Edit, UserCheck, UserPlus, Lock, Upload, Heart, Trash2 } from 'lucide-react';
+import { User, Mail, MapPin, Building, Shield, FileText, Phone, MessageCircle, Users, Calendar, Settings, Edit, UserCheck, UserPlus, Lock, Upload, Heart, Trash2, X } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
@@ -31,6 +31,20 @@ import { ProfileHeaderSection } from '@/components/features/profile/mobile/Profi
 import { ContentNavigationTabs } from '@/components/features/profile/mobile/ContentNavigationTabs';
 import { ContentFeedSection } from '@/components/features/profile/mobile/ContentFeedSection';
 
+// Add a helper function to format system roles for display (add this near the top of the component, after other helper functions)
+const formatSystemRole = (role: string | null | undefined): string => {
+  if (!role) return 'Not provided';
+  
+  const roleMap: Record<string, string> = {
+    'admin': 'Admin',
+    'active_member': 'Member',
+    'alumni': 'Alumni',
+  };
+  
+  // Return mapped value if exists, otherwise capitalize first letter and replace underscores
+  return roleMap[role.toLowerCase()] || role.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
 export default function ProfilePage() {
   const { profile, loading, refreshProfile } = useProfile();
   const { connections, loading: connectionsLoading, sendConnectionRequest } = useConnections();
@@ -45,6 +59,14 @@ export default function ProfilePage() {
   
   // Calculate completion percentage
   const completion = profile ? ProfileService.calculateCompletion(profile) : null;
+
+  // Add state for dismissing the completion toast
+  const [isCompletionDismissed, setIsCompletionDismissed] = useState(false);
+
+  // Handle dismissing the toast
+  const handleDismissCompletion = () => {
+    setIsCompletionDismissed(true);
+  };
 
   // Fetch chapter members for suggestions
   const { members: chapterMembers, loading: membersLoading } = useChapterMembers(profile?.chapter_id || undefined);
@@ -187,7 +209,7 @@ export default function ProfilePage() {
     { label: 'Full Name', value: profile.full_name, icon: User, required: true },
     { label: 'Email', value: profile.email, icon: Mail, required: true },
     { label: 'Chapter', value: profile.chapter, icon: Building, required: true },
-    { label: 'Role', value: profile.role, icon: Shield, required: true },
+    { label: 'Role', value: formatSystemRole(profile.role), icon: Shield, required: true }, // Apply formatting here
     { label: 'Bio', value: profile.bio, icon: FileText, required: false },
     { label: 'Phone', value: profile.phone, icon: Phone, required: false },
     { label: 'Location', value: profile.location, icon: MapPin, required: false },
@@ -315,36 +337,35 @@ export default function ProfilePage() {
 
       {/* Desktop Layout - Keep Existing */}
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 hidden sm:block pb-20 sm:pb-0">
-      <div className="max-w-full mx-auto px-6 py-10">
-        {/* Profile Completion Banner - Moved above banner for maximum visibility */}
-        {completion && completion.percentage < 100 && (
-          <div className="mb-8 p-4 bg-navy-50 rounded-lg border border-navy-200">
-            {/* Mobile Layout - Badge + Description in Column */}
-            <div className="sm:hidden text-center space-y-2">
-              <div className="flex items-center justify-center gap-2">
-                <span className="text-sm font-medium text-navy-900">Profile Completion:</span>
-                <Badge className="bg-navy-600 text-white">
-                  {completion.percentage}% Complete
-                </Badge>
+      <div className="max-w-full mx-auto px-6 py-6">
+        {/* Profile Completion Toast - Dismissible */}
+        {completion && completion.percentage < 100 && !isCompletionDismissed && (
+          <div className="mb-6 relative">
+            <div className="p-4 bg-white rounded-lg border border-navy-200 shadow-md flex items-center justify-between gap-4 animate-in slide-in-from-top-2 duration-300">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0">
+                    <Badge className="bg-navy-600 text-white">
+                      {completion.percentage}% Complete
+                    </Badge>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-navy-900">
+                      Profile Completion: {completion.percentage}%
+                    </p>
+                    <p className="text-xs text-navy-600 mt-0.5 truncate">
+                      Complete your profile to unlock full features and improve your visibility in the network
+                    </p>
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-navy-600">
-                Complete your profile to unlock full features and improve your visibility in the network
-              </p>
-            </div>
-            
-            {/* Desktop Layout - Original Structure */}
-            <div className="hidden sm:flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-navy-900">
-                  Profile Completion: {completion.percentage}%
-                </p>
-                <p className="text-xs text-navy-600 mt-1">
-                  Complete your profile to unlock full features and improve your visibility in the network
-                </p>
-              </div>
-              <Badge className="bg-navy-600 text-white">
-                {completion.percentage}% Complete
-              </Badge>
+              <button
+                onClick={handleDismissCompletion}
+                className="flex-shrink-0 p-1.5 rounded-md hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
+                aria-label="Dismiss profile completion notice"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           </div>
         )}
@@ -429,34 +450,38 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Main Content Area - Three Columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column - About Section */}
-          <div className="lg:col-span-4">
+        {/* Main Content Area - Dynamic 1/3 and 2/3 Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - About Section (1/3 width) */}
+          <div className="lg:col-span-1">
             <Card className="bg-white">
-              <CardHeader>
-                <CardTitle className="text-lg text-navy-600">About</CardTitle>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg text-slate-600">About</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {profileFields.map((field) => (
-                  <div key={field.label} className="flex items-start space-x-3">
-                                         <div className="w-5 h-5 mt-1 text-navy-500">
-                      <field.icon className="w-5 h-5" />
+              <CardContent className="space-y-5">
+                {profileFields
+                  .filter(field => field.required || field.value) // Only show required fields or fields with values
+                  .map((field) => (
+                    <div key={field.label} className="flex items-start space-x-3 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+                      <div className="w-5 h-5 mt-0.5 text-navy-500 flex-shrink-0">
+                        <field.icon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                          {field.label}
+                        </p>
+                        <p className="text-sm font-medium text-gray-900 break-words">
+                          {field.value || 'Not provided'}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-600">{field.label}</p>
-                      <p className="text-sm font-medium text-gray-900">
-                        {field.value || 'Not provided'}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  ))}
               </CardContent>
             </Card>
           </div>
 
-          {/* Middle Column - Content Tabs */}
-          <div className="lg:col-span-6">
+          {/* Middle Column - Content Tabs (2/3 width) */}
+          <div className="lg:col-span-2">
             <Card className="bg-white">
               <CardHeader>
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -638,107 +663,6 @@ export default function ProfilePage() {
                 </Tabs>
               </CardHeader>
             </Card>
-        </div>
-
-          {/* Right Column - Tools and Suggestions */}
-          <div className="lg:col-span-2">
-            <div className="space-y-6">
-              {/* Profile Tools */}
-              <Card className="bg-white">
-                <CardHeader className="pb-0">
-                  <CardTitle className="text-lg text-navy-600">Profile Tools</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="flex flex-col gap-2">
-                    <Link href="/dashboard/notifications">
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start"
-                      >
-                        <Calendar className="w-4 h-4 mr-2" />
-                        Notifications
-                      </Button>
-                    </Link>
-                    <Link href="/dashboard/settings">
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start"
-                      >
-                        <Settings className="w-4 h-4 mr-2" />
-                        Settings
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Suggestions */}
-              <Card className="bg-white">
-                <CardHeader className="pb-1">
-                  <CardTitle className="text-lg text-navy-600 text-center">You might know</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 px-3">
-                  {membersLoading ? (
-                    <div className="text-center py-3">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-navy-600 mx-auto mb-2"></div>
-                      <p className="text-xs text-gray-500">Loading suggestions...</p>
-                    </div>
-                  ) : suggestedUsers.length > 0 ? (
-                    suggestedUsers.map((member) => (
-                      <div key={member.id} className="p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-100">
-                        {/* Top Row - Avatar and Name */}
-                        <div className="flex items-center space-x-3 mb-3">
-                          <UserAvatar
-                            user={{
-                              user_metadata: {
-                                avatar_url: member.avatar_url, // Use member's avatar_url
-                                full_name: member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim()
-                              }
-                            }}
-                            completionPercent={0}
-                            hasUnread={false}
-                            size="sm"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member'}
-                            </p>
-                            <p className="text-xs text-gray-500 truncate">
-                              {member.chapter_role && member.chapter_role !== 'member' ? 
-                                member.chapter_role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 
-                                'Member'
-                              }
-                            </p>
-                          </div>
-                        </div>
-                        
-                        {/* Bottom Row - Connect Button */}
-                        <div className="flex justify-center">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="text-navy-600 border-navy-300 hover:bg-navy-50 text-xs px-4 py-1 w-full"
-                            onClick={() => {
-                              // TODO: Implement connection request
-                              // Send connection request
-                            }}
-                          >
-                            <UserPlus className="w-3 h-3 mr-2" />
-                            Connect
-                          </Button>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-3 text-gray-500">
-                      <Users className="w-6 h-6 mx-auto mb-2 text-gray-300" />
-                      <p className="text-xs">No suggestions available</p>
-                      <p className="text-xs mt-1">You may already be connected with everyone!</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-        </div>
           </div>
         </div>
 
