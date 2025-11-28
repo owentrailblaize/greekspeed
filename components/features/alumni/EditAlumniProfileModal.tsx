@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AvatarService } from '@/lib/services/avatarService';
 import { useProfile } from '@/lib/contexts/ProfileContext';
@@ -472,15 +472,15 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
   // Only render modal when open and ready
   if (!isOpen || !isModalReady) return null;
 
+  const isMobile = variant === 'mobile';
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className={`bg-white rounded-xl shadow-2xl w-full max-w-2xl flex flex-col ${
-        variant === 'mobile' ? 'max-h-[85vh] my-8' : 'max-h-[90vh]'
-      }`}>
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className={`bg-white ${isMobile ? 'rounded-t-2xl rounded-b-none w-full flex flex-col' : 'rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]'} ${isMobile ? 'max-h-[85vh] mt-[15vh]' : ''}`}>
         {/* Header - same as original */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
+        <div className={`flex items-center justify-between border-b border-gray-200 flex-shrink-0 ${isMobile ? 'p-4' : 'p-6'}`}>
           <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold text-navy-900">Edit Profile</h2>
+            <h2 className={`font-bold text-navy-900 ${isMobile ? 'text-xl' : 'text-2xl'}`}>Edit Profile</h2>
           </div>
           <button
             onClick={handleClose}
@@ -491,11 +491,11 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         </div>
 
         {/* Scrollable Content Area - exact same structure as original */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className={`flex-1 overflow-y-auto ${isMobile ? 'p-4' : 'p-6'}`}>
+          <form onSubmit={handleSubmit} className={isMobile ? 'space-y-4' : 'space-y-6'}>
             {/* Combined Profile Photo & Banner Card - exact same as original */}
             <Card className="p-0">
-              <CardContent className="relative h-64 p-0 overflow-hidden">
+              <CardContent className={`relative ${isMobile ? 'h-32' : 'h-64'} p-0 overflow-hidden`}>
                 {/* Banner Section */}
                 <div 
                   className="absolute inset-0 bg-gradient-to-r from-navy-600 via-blue-600 to-navy-700 flex items-center justify-center text-white cursor-pointer group rounded-lg"
@@ -509,34 +509,38 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
                     />
                   ) : null}
                   
-                  <div className="absolute inset-0 flex flex-col items-center justify-start opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-lg pt-8">
+                  <div className={`absolute inset-0 flex flex-col items-center justify-start opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-lg ${isMobile ? 'pt-4' : 'pt-8'}`}>
                     <div className="text-center">
                       {bannerUploading ? (
-                        <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                        <div className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'} border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2`} />
                       ) : (
-                        <Upload className="w-8 h-8 mx-auto mb-2" />
+                        <Upload className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'} mx-auto mb-2`} />
                       )}
-                      <p className="text-lg font-medium">
+                      <p className={isMobile ? 'text-sm font-medium' : 'text-lg font-medium'}>
                         {bannerUploading ? 'Uploading...' : 'Upload Banner'}
                       </p>
-                      <p className="text-sm">
-                        {bannerUploading ? 'Please wait...' : 'Click to upload banner image'}
-                      </p>
+                      {!isMobile && (
+                        <p className="text-sm">
+                          {bannerUploading ? 'Please wait...' : 'Click to upload banner image'}
+                        </p>
+                      )}
                     </div>
                   </div>
                   
                   {!bannerPreview && !profile?.banner_url && (
                     <div className="text-center opacity-80 group-hover:opacity-0 transition-opacity">
-                      <p className="text-lg font-medium">Banner Image</p>
-                      <p className="text-sm">Click to upload your banner</p>
+                      <p className={isMobile ? 'text-sm font-medium' : 'text-lg font-medium'}>Banner Image</p>
+                      {!isMobile && (
+                        <p className="text-sm">Click to upload your banner</p>
+                      )}
                     </div>
                   )}
                 </div>
 
                 {/* Profile Photo Section */}
-                <div className="absolute bottom-4 left-4 z-10">
+                <div className={`absolute ${isMobile ? 'bottom-2 left-2' : 'bottom-4 left-4'} z-10`}>
                   <div className="relative">
-                    <div className="w-20 h-20 rounded-full border-4 border-white shadow-lg bg-gray-50 flex items-center justify-center overflow-hidden">
+                    <div className={`${isMobile ? 'w-16 h-16 border-2' : 'w-20 h-20 border-4'} rounded-full border-white shadow-lg bg-gray-50 flex items-center justify-center overflow-hidden`}>
                       {avatarPreview || profile?.avatar_url ? (
                         <img 
                           src={avatarPreview || profile.avatar_url} 
@@ -550,11 +554,11 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
                       )}
                     </div>
                     
-                    <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-navy-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-navy-700 transition-colors shadow-md">
+                    <div className={`absolute -bottom-1 -right-1 ${isMobile ? 'w-6 h-6' : 'w-7 h-7'} bg-navy-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-navy-700 transition-colors shadow-md`}>
                       {avatarUploading ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <div className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} border-2 border-white border-t-transparent rounded-full animate-spin`} />
                       ) : (
-                        <Image className="w-4 h-4 text-white" />
+                        <Image className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} text-white`} />
                       )}
                       <input
                         type="file"
@@ -579,14 +583,14 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
             </Card>
 
             {/* Personal Information */}
-            <Card>
-              <CardHeader className="pb-0">
-                <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
-                  <User className="w-5 h-5" />
-                  Personal Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200 mt-4' : 'space-y-4'}`}>
+              {!isMobile && (
+                <div className="flex items-center gap-2 mb-3">
+                  <User className="w-5 h-5 text-navy-600" />
+                  <h3 className="text-lg font-semibold text-navy-600">Personal Information</h3>
+                </div>
+              )}
+              <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="first_name" className="flex items-center gap-2">
@@ -647,19 +651,19 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
                     />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Professional Information - Alumni-specific */}
-            <Card>
-              <CardHeader className="pb-0">
-                <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
-                  <Briefcase className="w-5 h-5" />
-                  Professional Information
-                  <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Alumni</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
+              {!isMobile && (
+                <div className="flex items-center gap-2 mb-3">
+                  <Briefcase className="w-5 h-5 text-navy-600" />
+                  <h3 className="text-lg font-semibold text-navy-600">Professional Information</h3>
+                  <Badge variant="secondary" className="text-xs">Alumni</Badge>
+                </div>
+              )}
+              <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="industry">Industry</Label>
@@ -706,18 +710,18 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
                     </Label>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Contact & Location */}
-            <Card>
-              <CardHeader className="pb-0">
-                <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
-                  <Phone className="w-5 h-5" />
-                  Contact & Location
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
+              {!isMobile && (
+                <div className="flex items-center gap-2 mb-3">
+                  <Phone className="w-5 h-5 text-navy-600" />
+                  <h3 className="text-lg font-semibold text-navy-600">Contact & Location</h3>
+                </div>
+              )}
+              <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
                 <div>
                   <Label htmlFor="phone" className="flex items-center gap-2">
                     Phone
@@ -823,19 +827,19 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Additional Information */}
-            <Card>
-              <CardHeader className="pb-0">
-                <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
-                  <HelpCircle className="w-5 h-5" />
-                  Additional Information
-                  <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Optional</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
+              {!isMobile && (
+                <div className="flex items-center gap-2 mb-3">
+                  <HelpCircle className="w-5 h-5 text-navy-600" />
+                  <h3 className="text-lg font-semibold text-navy-600">Additional Information</h3>
+                  <Badge variant="secondary" className="text-xs">Optional</Badge>
+                </div>
+              )}
+              <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
                 <div>
                   <Label htmlFor="tags">Tags</Label>
                   <Input
@@ -854,22 +858,22 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     placeholder="Tell us about yourself..."
-                    rows={4}
+                    rows={isMobile ? 3 : 4}
                     className="mt-1"
                   />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Chapter & Role - Read Only */}
-            <Card>
-              <CardHeader className="pb-0">
-                <CardTitle className="text-lg text-navy-600 flex items-center gap-2">
-                  <Building className="w-5 h-5" />
-                  Chapter & Role
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
+              {!isMobile && (
+                <div className="flex items-center gap-2 mb-3">
+                  <Building className="w-5 h-5 text-navy-600" />
+                  <h3 className="text-lg font-semibold text-navy-600">Chapter & Role</h3>
+                </div>
+              )}
+              <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="chapter" className="flex items-center gap-2">
@@ -898,13 +902,13 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
                     <p className="text-xs text-gray-500 mt-1">Role cannot be changed</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </form>
         </div>
 
         {/* Footer - same as original */}
-        <div className="flex justify-between items-center p-6 border-t border-gray-200 flex-shrink-0">
+        <div className={`flex justify-between items-center border-t border-gray-200 flex-shrink-0 ${isMobile ? 'p-4' : 'p-6'}`}>
           
           <div className="flex space-x-3">
             <Button
