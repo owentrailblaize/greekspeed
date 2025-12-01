@@ -40,11 +40,11 @@ export async function GET(request: NextRequest) {
         )
       `)
       .eq('connection_id', connectionId)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: true }) // Changed from false to true
       .range((page - 1) * limit, page * limit - 1);
 
     if (before) {
-      query = query.lt('created_at', before);
+      query = query.gt('created_at', before); // Changed from lt to gt (greater than, not less than)
     }
 
     const { data: messages, error } = await query;
