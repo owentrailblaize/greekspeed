@@ -157,7 +157,7 @@ export function MessageInput({
     : 'items-center'; // Center align when compact
 
   return (
-    <div className="border-t border-gray-200 bg-white p-3 md:p-4">
+    <div className="border-t border-gray-200 bg-white p-2 md:p-4">
       {/* Main input row - all elements perfectly aligned */}
       <div className={`flex ${containerAlignClass} gap-2 md:gap-3`}>
         {/* File attachment button - HIDDEN ON MOBILE */}
@@ -182,7 +182,7 @@ export function MessageInput({
 
         {/* Message input container - dynamically styled based on expansion */}
         <div className="flex-1 relative min-w-0">
-          <div className={`${borderRadiusClass} bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 transition-all duration-300 flex ${isExpanded ? 'items-start' : 'items-center'} px-3 md:px-4 ${isExpanded ? 'py-2' : 'py-1'}`}>
+          <div className={`${borderRadiusClass} bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 transition-all duration-300 flex ${isExpanded ? 'items-start' : 'items-center'} px-3 md:px-4 ${isExpanded ? 'py-1.5 md:py-2' : 'py-1'}`}>
             <textarea
               ref={textareaRef}
               value={message}
@@ -192,8 +192,8 @@ export function MessageInput({
               disabled={disabled}
               className="w-full resize-none bg-transparent border-0 focus:outline-none text-sm md:text-base text-slate-700 placeholder:text-gray-400 disabled:text-gray-400 disabled:cursor-not-allowed pr-2 overflow-y-auto scrollbar-thin scrollbar-thumb-navy-300 scrollbar-track-transparent"
               style={{ 
-                minHeight: isExpanded ? '40px' : '36px',
-                height: isExpanded ? 'auto' : '36px',
+                minHeight: isExpanded ? '36px' : '32px',
+                height: isExpanded ? 'auto' : '32px',
                 maxHeight: `${window.innerWidth < 768 ? MAX_HEIGHT_MOBILE : MAX_HEIGHT_DESKTOP}px`,
                 fontSize: '16px', // Prevent zoom on iOS
                 lineHeight: '1.5',
@@ -213,7 +213,7 @@ export function MessageInput({
           <Button
             onClick={handleSend}
             disabled={!message.trim() || isSending || disabled}
-            className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 px-3 md:px-4 py-2 font-medium h-10 min-w-[60px] md:min-w-[80px] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/80 flex items-center justify-center gap-1.5"
+            className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 px-3 md:px-4 py-1.5 md:py-2 font-medium h-9 md:h-10 min-w-[60px] md:min-w-[80px] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/80 flex items-center justify-center gap-1.5"
           >
             {isSending ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-navy-600" />
