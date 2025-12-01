@@ -196,27 +196,47 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
                 </Link>
               )}
               {!user ? (
-                <div className="pt-4 border-t border-gray-200 mt-4 space-y-2">
-                  <Link href="/sign-in">
-                    <Button 
-                      variant="ghost" 
-                      className="w-full justify-start text-gray-700 hover:bg-gray-50"
-                      size="lg"
-                    >
-                      Log In
-                    </Button>
-                  </Link>
-                  <Link href="/sign-up">
+                <div className="pt-4 border-t border-gray-200 mt-4 space-y-4">
+                  <div className="flex justify-center">
+                    <Link href="/sign-in">
+                      <Button 
+                        variant="outline"
+                        className="
+                          border border-gray-200 bg-white text-navy-600 hover:bg-white-50 hover:bg-white-900
+                          rounded-full
+                          font-medium
+                          shadow-sm hover:shadow-md
+                          transition-all duration-200
+                          focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300
+                          px-10 min-w-[140px] md:px-4 md:min-w-0
+                          md:rounded-md
+                          md:justify-start
+                          md:w-full
+                        "
+                        size="lg"
+                      >
+                        Log In
+                      </Button>
+                    </Link>
+                  </div>
+                  <Link href="/sign-up" className="block mt-3 md:mt-0">
                     <Button 
                       className="
                         w-full
-                        bg-gradient-to-b from-navy-500 via-navy-600 to-navy-700 
-                        hover:from-navy-600 hover:via-navy-700 hover:to-navy-800 
+                        bg-navy-600 hover:bg-navy-700
                         text-white 
-                        border border-white/30 
-                        shadow-[0_4px_14px_0_rgba(30,50,100,0.39)] 
-                        hover:shadow-[0_6px_20px_0_rgba(30,50,100,0.5)]
-                        backdrop-blur-sm
+                        rounded-full
+                        font-medium
+                        shadow-sm hover:shadow-md
+                        transition-all duration-200
+                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300
+                        md:bg-gradient-to-b md:from-navy-500 md:via-navy-600 md:to-navy-700 
+                        md:hover:from-navy-600 md:hover:via-navy-700 md:hover:to-navy-800 
+                        md:border md:border-white/30 
+                        md:shadow-[0_4px_14px_0_rgba(30,50,100,0.39)] 
+                        md:hover:shadow-[0_6px_20px_0_rgba(30,50,100,0.5)]
+                        md:backdrop-blur-sm
+                        md:rounded-md
                       "
                       size="lg"
                     >

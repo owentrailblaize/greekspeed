@@ -166,18 +166,21 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8 md:mb-12 px-4"
+              className="flex flex-row items-center justify-center gap-4 mb-8 md:mb-12 px-4"
             >
               <Link href="/sign-up">
-                <Button size="lg" className="bg-navy-600 hover:bg-navy-700 text-white px-6 py-4 text-lg rounded-lg shadow-lg hover:shadow-xl transition-all group">
+                <Button 
+                  size="lg" 
+                  className="bg-navy-600 hover:bg-navy-700 text-white px-4 py-2 md:px-6 md:py-4 text-sm md:text-lg rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 group whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300"
+                >
                   Get Started
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="ml-1.5 md:ml-2 h-4 w-4 md:h-5 md:w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-navy-400 px-6 py-4 text-lg rounded-lg"
+                className="border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 px-4 py-2 md:px-6 md:py-4 text-sm md:text-lg rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300"
                 onClick={() => window.open('mailto:support@trailblaize.com?subject=Learn More About Trailblaize')}
               >
                 Learn More
@@ -452,13 +455,22 @@ export function LandingPage() {
                       </div>
 
                       {/* CTA Button - pushed to bottom with mt-auto */}
-                      <Button className={`w-full ${
-                        plan.popular
+                      <Button className={`
+                        w-full
+                        ${plan.popular
                           ? "bg-blue-600 hover:bg-blue-700 text-white"
                           : "bg-gray-900 hover:bg-gray-800 text-white"
-                      }`}>
+                        }
+                        rounded-full md:rounded-md
+                        font-medium
+                        shadow-sm hover:shadow-md
+                        transition-all duration-200
+                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300
+                        px-4 py-2 md:px-6 md:py-4
+                        text-sm md:text-lg
+                      `}>
                         {plan.name === "Executive" ? "Contact Sales" : "Subscribe"}
-                        <ArrowRight className="ml-2 h-4 w-4" />
+                        <ArrowRight className="ml-1.5 md:ml-2 h-4 w-4 md:h-5 md:w-5" />
                       </Button>
                     </CardContent>
                   </Card>
@@ -598,12 +610,44 @@ export function LandingPage() {
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }}>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Ready to Transform Your Chapter?</h2>
             <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">Join hundreds of chapters already using Trailblaize to strengthen their communities and streamline operations.</p>
-            <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-              <Button size="lg" className="bg-navy-600 hover:bg-navy-700 text-white px-8 py-4 text-lg group">
-                Start Free Trial
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button size="lg" variant="outline" className="border-navy-300 text-navy-600 hover:bg-navy-50 px-8 py-4 text-lg">
+            <div className="flex flex-row items-center justify-center gap-4">
+              <Link href="/sign-up">
+                <Button 
+                  size="lg" 
+                  className="
+                    bg-navy-600 hover:bg-navy-700 
+                    text-white 
+                    px-4 py-2 md:px-8 md:py-4 
+                    text-sm md:text-lg 
+                    rounded-full md:rounded-md
+                    font-medium
+                    shadow-sm hover:shadow-md
+                    transition-all duration-200
+                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300
+                    group
+                    whitespace-nowrap
+                  "
+                >
+                  Start Today
+                  <ArrowRight className="ml-1.5 md:ml-2 h-4 w-4 md:h-5 md:w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="
+                  border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900
+                  px-4 py-2 md:px-8 md:py-4 
+                  text-sm md:text-lg
+                  rounded-full md:rounded-md
+                  font-medium
+                  shadow-sm hover:shadow-md
+                  transition-all duration-200
+                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300
+                  whitespace-nowrap
+                "
+                onClick={() => window.open('mailto:support@trailblaize.com?subject=Schedule a Demo')}
+              >
                 Schedule Demo
               </Button>
             </div>
