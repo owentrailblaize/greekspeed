@@ -9,27 +9,65 @@ import { MessagesMainChat } from '@/components/features/messaging/MessagesMainCh
 import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { MobileBottomNavigation } from '@/components/features/dashboard/dashboards/ui/MobileBottomNavigation'; // Add this import
+import { MobileBottomNavigation } from '@/components/features/dashboard/dashboards/ui/MobileBottomNavigation';
 
 // ✅ Create a separate component that uses useSearchParams
 function MessagesPageContent() {
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [isMobile, setIsMobile] = useState(false); // ✅ Add state for mobile detection
+  const [isMobile, setIsMobile] = useState(false);
   const { connections, loading } = useConnections();
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // ✅ Prevent body scrolling on mobile when chat is open
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      
+      if (mobile) {
+        setSidebarCollapsed(true);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // ✅ Prevent body scrolling on mobile when chat view is active
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const isMobile = window.innerWidth < 768;
+    const showChatViewOnMobile = isMobile && selectedConnectionId;
+    
+    if (showChatViewOnMobile) {
+      // Prevent body scrolling
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      // Restore body scrolling
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+
+    return () => {
+      // Cleanup: restore scrolling when component unmounts
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [selectedConnectionId, isMobile]);
 
   // ✅ Add effect to handle URL parameters
   useEffect(() => {
     const connectionParam = searchParams.get('connection');
     if (connectionParam) {
-      // Check if this connection exists and is valid
       const connectionExists = connections.some(conn => conn.id === connectionParam);
       if (connectionExists) {
         setSelectedConnectionId(connectionParam);
-        // Clear the URL parameter after setting the connection
         router.replace('/dashboard/messages');
       }
     }
@@ -37,7 +75,6 @@ function MessagesPageContent() {
 
   const handleConnectionSelect = (connectionId: string) => {
     setSelectedConnectionId(connectionId);
-    // On mobile, we don't need to manage sidebar state since we're showing list/chat views
   };
 
   const handleBack = () => {
@@ -60,33 +97,13 @@ function MessagesPageContent() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [selectedConnectionId]);
 
-  // ✅ Handle responsive behavior and mobile detection
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      
-      // On mobile, sidebar state is managed by selectedConnectionId
-      // On desktop, don't force sidebar open - let user control it
-      if (mobile) {
-        setSidebarCollapsed(true); // Start collapsed on mobile
-      }
-    };
-
-    // Set initial state
-    handleResize();
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   // Determine what to show on mobile
   const showListViewOnMobile = isMobile && !selectedConnectionId;
   const showChatViewOnMobile = isMobile && selectedConnectionId;
 
   return (
-    // Adjust height to account for mobile footer (pb-20 = 80px for footer)
-    <div className="h-[calc(100vh-4rem)] sm:h-[calc(100vh-4rem)] flex flex-col pb-14 sm:pb-0">
+    // Use full screen height, prevent all scrolling on container
+    <div className="h-screen sm:h-[calc(100vh-4rem)] flex flex-col overflow-hidden fixed inset-0 sm:relative sm:inset-auto">
       {/* Mobile Header - Only show when in list view */}
       {showListViewOnMobile && (
         <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
@@ -94,10 +111,10 @@ function MessagesPageContent() {
         </div>
       )}
 
-      {/* Main Layout - FIXED: Use flex-1 to fill remaining space */}
-      <div className="flex-1 flex overflow-hidden">
+      {/* Main Layout - Prevent scrolling */}
+      <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Collapsible Sidebar */}
-        <div className="flex">
+        <div className="flex min-h-0">
           {/* Main Sidebar */}
           <AnimatePresence>
             {(showListViewOnMobile || (!isMobile && sidebarOpen)) && (
@@ -109,7 +126,7 @@ function MessagesPageContent() {
                 }}
                 exit={{ width: 0, opacity: 0 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="bg-gray-50 border-r border-gray-200 shadow-sm overflow-hidden flex-shrink-0"
+                className="bg-gray-50 border-r border-gray-200 shadow-sm overflow-hidden flex-shrink-0 h-full"
               >
                 <MessagesSidebar
                   connections={connections}
@@ -149,7 +166,7 @@ function MessagesPageContent() {
         {/* Desktop: Always show main chat area */}
         {/* Mobile: Only show chat area when connection is selected */}
         {(!isMobile || showChatViewOnMobile) && (
-          <div className="flex-1 flex flex-col h-full">
+          <div className="flex-1 flex flex-col h-full min-h-0 overflow-hidden">
             <MessagesMainChat
               selectedConnectionId={selectedConnectionId}
               connections={connections}

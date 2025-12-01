@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { Message } from '@/lib/hooks/useMessages';
 import { Button } from '@/components/ui/button';
-import { UserAvatar } from '@/components/features/profile/UserAvatar'; // Add this import
+import { UserAvatar } from '@/components/features/profile/UserAvatar';
 import { ArrowLeft } from 'lucide-react';
 
 interface ChatWindowProps {
@@ -20,8 +20,8 @@ interface ChatWindowProps {
   disabled?: boolean;
   onBack?: () => void;
   contactName?: string;
-  contactAvatarUrl?: string | null; // Add this prop
-  contactFullName?: string; // Add this prop
+  contactAvatarUrl?: string | null;
+  contactFullName?: string;
 }
 
 export function ChatWindow({
@@ -36,12 +36,121 @@ export function ChatWindow({
   disabled = false,
   onBack,
   contactName = "Contact",
-  contactAvatarUrl = null, // Add default
-  contactFullName = "Contact" // Add default
+  contactAvatarUrl = null,
+  contactFullName = "Contact"
 }: ChatWindowProps) {
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLDivElement>(null);
+  const [maxHeight, setMaxHeight] = useState<string | undefined>(undefined);
+  const [isMobile, setIsMobile] = useState(false);
+  const [appHeaderHeight, setAppHeaderHeight] = useState(0);
+  const [bottomNavHeight, setBottomNavHeight] = useState(80); // Default 80px
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(typeof window !== 'undefined' && window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Get app header height (the Trailblaize header at the top)
+  useEffect(() => {
+    const getAppHeaderHeight = () => {
+      if (typeof window === 'undefined' || !isMobile) {
+        setAppHeaderHeight(0);
+        return;
+      }
+
+      // Look for the app header - could be in various places
+      const appHeader = document.querySelector('header') || 
+                       document.querySelector('[data-app-header]') ||
+                       document.querySelector('.sticky.top-0');
+      
+      const height = appHeader?.getBoundingClientRect().height || 56; // Default ~56px
+      setAppHeaderHeight(height);
+    };
+
+    getAppHeaderHeight();
+    window.addEventListener('resize', getAppHeaderHeight);
+    
+    // Also check after a delay to ensure DOM is ready
+    const timeout = setTimeout(getAppHeaderHeight, 100);
+    
+    return () => {
+      window.removeEventListener('resize', getAppHeaderHeight);
+      clearTimeout(timeout);
+    };
+  }, [isMobile]);
+
+  // Get MobileBottomNavigation height
+  useEffect(() => {
+    const getBottomNavHeight = () => {
+      if (typeof window === 'undefined' || !isMobile) {
+        setBottomNavHeight(0);
+        return;
+      }
+
+      // Find the MobileBottomNavigation - it's fixed at bottom
+      const bottomNav = document.querySelector('[class*="fixed bottom-0"]');
+      if (bottomNav) {
+        const rect = bottomNav.getBoundingClientRect();
+        // Height includes the mb-2 margin (8px) + actual nav height
+        setBottomNavHeight(rect.height);
+      } else {
+        // Fallback: h-16 (64px) + mb-2 (8px) = 72px, but we use 80px for safety
+        setBottomNavHeight(80);
+      }
+    };
+
+    getBottomNavHeight();
+    window.addEventListener('resize', getBottomNavHeight);
+    
+    // Check after a delay to ensure DOM is ready
+    const timeout = setTimeout(getBottomNavHeight, 100);
+    
+    return () => {
+      window.removeEventListener('resize', getBottomNavHeight);
+      clearTimeout(timeout);
+    };
+  }, [isMobile]);
+
+  // Calculate max-height for mobile to account for header, input, and bottom nav
+  useEffect(() => {
+    const calculateMaxHeight = () => {
+      if (typeof window === 'undefined' || !isMobile) {
+        setMaxHeight(undefined);
+        return;
+      }
+
+      // Get actual heights of elements
+      const headerHeight = headerRef.current?.getBoundingClientRect().height || 60;
+      const inputHeight = inputRef.current?.getBoundingClientRect().height || 60;
+      
+      // Calculate: viewport height - app header - chat header - input - bottom nav
+      const calculatedHeight = window.innerHeight - appHeaderHeight - headerHeight - inputHeight - bottomNavHeight;
+      
+      setMaxHeight(`${calculatedHeight}px`);
+    };
+
+    // Calculate on mount and resize
+    calculateMaxHeight();
+    window.addEventListener('resize', calculateMaxHeight);
+    
+    // Also recalculate after a short delay to ensure DOM is ready
+    const timeout = setTimeout(calculateMaxHeight, 100);
+    
+    return () => {
+      window.removeEventListener('resize', calculateMaxHeight);
+      clearTimeout(timeout);
+    };
+  }, [messages, isMobile, appHeaderHeight, bottomNavHeight]); // Include bottomNavHeight
+
   const handleTyping = () => {
     // This function is called when user types
-    // Could be used for additional typing logic in the future
   };
 
   const getTypingText = () => {
@@ -59,10 +168,19 @@ export function ChatWindow({
   };
 
   return (
-    // 🔴 FIXED: Use h-full instead of h-full
-    <div className="h-full flex flex-col bg-white">
-      {/* Chat header - fixed height */}
-      <div className="flex-shrink-0 bg-white border-b border-gray-200 px-4 py-3">
+    // Use full height with proper flex layout, prevent all scrolling
+    <div className="h-full flex flex-col bg-white overflow-hidden relative">
+      {/* Chat header - fixed below app header on mobile, sticky on desktop */}
+      <div 
+        ref={headerRef}
+        data-chat-header
+        className={`flex-shrink-0 bg-white border-b border-gray-200 px-4 py-2.5 z-20 ${
+          isMobile 
+            ? 'fixed left-0 right-0' 
+            : 'sticky top-0'
+        }`}
+        style={isMobile ? { top: `${appHeaderHeight}px` } : undefined}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {/* Back Button */}
@@ -77,7 +195,7 @@ export function ChatWindow({
               </Button>
             )}
             
-            {/* Contact Info - Updated to use UserAvatar */}
+            {/* Contact Info */}
             <div className="flex items-center space-x-3">
               <UserAvatar
                 user={{
@@ -111,8 +229,20 @@ export function ChatWindow({
         </div>
       </div>
 
-      {/* Messages area - flex-1 to fill remaining space */}
-      <div className="flex-1 overflow-hidden">
+      {/* Messages area - scrollable, constrained on mobile */}
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto overflow-x-hidden min-h-0"
+        style={{
+          maxHeight: maxHeight,
+          // Add padding-top on mobile to account for fixed header
+          paddingTop: isMobile && appHeaderHeight > 0 
+            ? `${appHeaderHeight + (headerRef.current?.getBoundingClientRect().height || 60)}px` 
+            : undefined,
+          // Add padding-bottom on mobile to account for fixed input
+          paddingBottom: isMobile ? `${bottomNavHeight}px` : undefined
+        }}
+      >
         <MessageList
           messages={messages}
           loading={loading}
@@ -123,8 +253,15 @@ export function ChatWindow({
         />
       </div>
 
-      {/* Message input - fixed at bottom */}
-      <div className="flex-shrink-0 border-t border-gray-200">
+      {/* Message input - fixed at bottom, positioned right above bottom nav on mobile */}
+      <div 
+        ref={inputRef}
+        data-message-input
+        className={`flex-shrink-0 border-t border-gray-200 bg-white ${
+          isMobile ? 'fixed left-0 right-0' : ''
+        }`}
+        style={isMobile ? { bottom: `${bottomNavHeight}px` } : undefined}
+      >
         <MessageInput
           onSendMessage={onSendMessage}
           onTyping={handleTyping}
