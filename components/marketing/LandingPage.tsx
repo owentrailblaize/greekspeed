@@ -461,7 +461,7 @@ export function LandingPage() {
                           ? "bg-blue-600 hover:bg-blue-700 text-white"
                           : "bg-gray-900 hover:bg-gray-800 text-white"
                         }
-                        rounded-full md:rounded-md
+                        rounded-full
                         font-medium
                         shadow-sm hover:shadow-md
                         transition-all duration-200
@@ -619,7 +619,7 @@ export function LandingPage() {
                     text-white 
                     px-4 py-2 md:px-8 md:py-4 
                     text-sm md:text-lg 
-                    rounded-full md:rounded-md
+                    rounded-full
                     font-medium
                     shadow-sm hover:shadow-md
                     transition-all duration-200
@@ -639,7 +639,7 @@ export function LandingPage() {
                   border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900
                   px-4 py-2 md:px-8 md:py-4 
                   text-sm md:text-lg
-                  rounded-full md:rounded-md
+                  rounded-full
                   font-medium
                   shadow-sm hover:shadow-md
                   transition-all duration-200

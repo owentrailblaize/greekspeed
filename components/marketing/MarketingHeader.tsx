@@ -104,8 +104,16 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
               <>
                 <Link href="/sign-in">
                   <Button 
-                    variant="ghost" 
-                    className="text-gray-700 hover:text-navy-600 hover:bg-gray-100/50 px-5"
+                    variant="outline" 
+                    className="
+                      border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900
+                      rounded-full
+                      font-medium
+                      shadow-sm hover:shadow-md
+                      transition-all duration-200
+                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300
+                      px-5
+                    "
                     size="sm"
                   >
                     Log In
@@ -117,12 +125,13 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
                       bg-gradient-to-b from-navy-500 via-navy-600 to-navy-700 
                       hover:from-navy-600 hover:via-navy-700 hover:to-navy-800 
                       text-white 
+                      rounded-full font-medium
                       border border-white/30 
                       shadow-[0_4px_14px_0_rgba(30,50,100,0.39)] 
                       hover:shadow-[0_6px_20px_0_rgba(30,50,100,0.5)]
-                      transition-all 
+                      transition-all duration-200
+                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300
                       px-6
-                      backdrop-blur-sm
                     "
                     size="sm"
                   >
@@ -209,7 +218,6 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
                           transition-all duration-200
                           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300
                           px-10 min-w-[140px] md:px-4 md:min-w-0
-                          md:rounded-md
                           md:justify-start
                           md:w-full
                         "
@@ -236,7 +244,6 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
                         md:shadow-[0_4px_14px_0_rgba(30,50,100,0.39)] 
                         md:hover:shadow-[0_6px_20px_0_rgba(30,50,100,0.5)]
                         md:backdrop-blur-sm
-                        md:rounded-md
                       "
                       size="lg"
                     >
