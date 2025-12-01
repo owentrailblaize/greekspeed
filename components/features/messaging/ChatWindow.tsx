@@ -42,10 +42,11 @@ export function ChatWindow({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLDivElement>(null);
-  const [maxHeight, setMaxHeight] = useState<string | undefined>(undefined);
   const [isMobile, setIsMobile] = useState(false);
   const [appHeaderHeight, setAppHeaderHeight] = useState(0);
-  const [bottomNavHeight, setBottomNavHeight] = useState(80); // Default 80px
+  const [bottomNavHeight, setBottomNavHeight] = useState(80);
+  const [headerHeight, setHeaderHeight] = useState(60);
+  const [inputHeight, setInputHeight] = useState(60);
 
   // Detect mobile
   useEffect(() => {
@@ -65,19 +66,16 @@ export function ChatWindow({
         return;
       }
 
-      // Look for the app header - could be in various places
       const appHeader = document.querySelector('header') || 
                        document.querySelector('[data-app-header]') ||
                        document.querySelector('.sticky.top-0');
       
-      const height = appHeader?.getBoundingClientRect().height || 56; // Default ~56px
+      const height = appHeader?.getBoundingClientRect().height || 56;
       setAppHeaderHeight(height);
     };
 
     getAppHeaderHeight();
     window.addEventListener('resize', getAppHeaderHeight);
-    
-    // Also check after a delay to ensure DOM is ready
     const timeout = setTimeout(getAppHeaderHeight, 100);
     
     return () => {
@@ -94,22 +92,17 @@ export function ChatWindow({
         return;
       }
 
-      // Find the MobileBottomNavigation - it's fixed at bottom
       const bottomNav = document.querySelector('[class*="fixed bottom-0"]');
       if (bottomNav) {
         const rect = bottomNav.getBoundingClientRect();
-        // Height includes the mb-2 margin (8px) + actual nav height
         setBottomNavHeight(rect.height);
       } else {
-        // Fallback: h-16 (64px) + mb-2 (8px) = 72px, but we use 80px for safety
         setBottomNavHeight(80);
       }
     };
 
     getBottomNavHeight();
     window.addEventListener('resize', getBottomNavHeight);
-    
-    // Check after a delay to ensure DOM is ready
     const timeout = setTimeout(getBottomNavHeight, 100);
     
     return () => {
@@ -118,36 +111,28 @@ export function ChatWindow({
     };
   }, [isMobile]);
 
-  // Calculate max-height for mobile to account for header, input, and bottom nav
+  // Track header and input heights for positioning
   useEffect(() => {
-    const calculateMaxHeight = () => {
-      if (typeof window === 'undefined' || !isMobile) {
-        setMaxHeight(undefined);
-        return;
+    const updateHeights = () => {
+      if (!isMobile) return;
+      
+      if (headerRef.current) {
+        setHeaderHeight(headerRef.current.getBoundingClientRect().height);
       }
-
-      // Get actual heights of elements
-      const headerHeight = headerRef.current?.getBoundingClientRect().height || 60;
-      const inputHeight = inputRef.current?.getBoundingClientRect().height || 60;
-      
-      // Calculate: viewport height - app header - chat header - input - bottom nav
-      const calculatedHeight = window.innerHeight - appHeaderHeight - headerHeight - inputHeight - bottomNavHeight;
-      
-      setMaxHeight(`${calculatedHeight}px`);
+      if (inputRef.current) {
+        setInputHeight(inputRef.current.getBoundingClientRect().height);
+      }
     };
 
-    // Calculate on mount and resize
-    calculateMaxHeight();
-    window.addEventListener('resize', calculateMaxHeight);
-    
-    // Also recalculate after a short delay to ensure DOM is ready
-    const timeout = setTimeout(calculateMaxHeight, 100);
+    updateHeights();
+    window.addEventListener('resize', updateHeights);
+    const timeout = setTimeout(updateHeights, 100);
     
     return () => {
-      window.removeEventListener('resize', calculateMaxHeight);
+      window.removeEventListener('resize', updateHeights);
       clearTimeout(timeout);
     };
-  }, [messages, isMobile, appHeaderHeight, bottomNavHeight]); // Include bottomNavHeight
+  }, [isMobile, messages]); // Recalculate when messages change (input might resize)
 
   const handleTyping = () => {
     // This function is called when user types
@@ -166,6 +151,10 @@ export function ChatWindow({
     
     return 'Several people are typing...';
   };
+
+  // Calculate top and bottom positions for messages area on mobile
+  const messagesTop = isMobile ? appHeaderHeight + headerHeight : undefined;
+  const messagesBottom = isMobile ? bottomNavHeight + inputHeight : undefined;
 
   return (
     // Use full height with proper flex layout, prevent all scrolling
@@ -229,19 +218,16 @@ export function ChatWindow({
         </div>
       </div>
 
-      {/* Messages area - scrollable, constrained on mobile */}
+      {/* Messages area - scrollable, fills space between header and input on mobile */}
       <div 
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto overflow-x-hidden min-h-0"
-        style={{
-          maxHeight: maxHeight,
-          // Add padding-top on mobile to account for fixed header
-          paddingTop: isMobile && appHeaderHeight > 0 
-            ? `${appHeaderHeight + (headerRef.current?.getBoundingClientRect().height || 60)}px` 
-            : undefined,
-          // Add padding-bottom on mobile to account for fixed input
-          paddingBottom: isMobile ? `${bottomNavHeight}px` : undefined
-        }}
+        className={`overflow-y-auto overflow-x-hidden ${
+          isMobile ? 'fixed left-0 right-0' : 'flex-1 min-h-0'
+        }`}
+        style={isMobile ? {
+          top: `${messagesTop}px`,
+          bottom: `${messagesBottom}px`,
+        } : undefined}
       >
         <MessageList
           messages={messages}
