@@ -74,9 +74,12 @@ export function useMessages(connectionId: string | null) {
       const data: MessageResponse = await response.json();
       
       if (pageNum === 1) {
+        // First page: set messages directly (they're already in ascending order)
         setMessages(data.messages || []);
       } else {
-        setMessages(prev => [...(data.messages || []), ...prev]);
+        // Load more: append older messages to the end (since API now returns ascending)
+        // The 'before' parameter gets messages after the oldest message we have
+        setMessages(prev => [...prev, ...(data.messages || [])]);
       }
       
       setPage(data.page);
@@ -210,6 +213,7 @@ export function useMessages(connectionId: string | null) {
 
   const loadMore = useCallback(() => {
     if (hasMore && !loading && messages.length > 0) {
+      // Get the oldest message (first in array since ascending order)
       const oldestMessage = messages[0];
       fetchMessages(page + 1, oldestMessage.created_at);
     }
