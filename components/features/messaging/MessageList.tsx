@@ -80,6 +80,7 @@ export function MessageList({
   };
 
   const groupMessagesByDate = (messages: Message[]) => {
+    // Messages are already in ascending order from API, so we can group directly
     const groups: { [key: string]: Message[] } = {};
     
     messages.forEach(message => {
@@ -90,10 +91,16 @@ export function MessageList({
       groups[date].push(message);
     });
     
-    return Object.entries(groups).map(([date, msgs]) => ({
-      date,
-      messages: msgs.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-    }));
+    // Sort date groups chronologically (oldest date first, newest date last)
+    // Messages within each group are already in order
+    return Object.entries(groups)
+      .sort(([dateA], [dateB]) => 
+        new Date(dateA).getTime() - new Date(dateB).getTime()
+      )
+      .map(([date, msgs]) => ({
+        date,
+        messages: msgs // Already sorted from API
+      }));
   };
 
   const messageGroups = groupMessagesByDate(messages);
