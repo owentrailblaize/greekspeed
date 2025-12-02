@@ -170,6 +170,8 @@ export class SMSService {
                   from: fromNumber,
                   to: message.to,
                   text: message.body,
+                  type: 'SMS',
+                  encoding: 'GSM7',
                 }),
                 // Add timeout for SDK call too
                 new Promise((_, reject) => 
@@ -191,6 +193,8 @@ export class SMSService {
                   from: fromNumber,
                   to: message.to,
                   text: message.body,
+                  type: 'SMS',
+                  encoding: 'GSM7',
                 }),
                 new Promise((_, reject) => 
                   setTimeout(() => reject(new Error('SDK call timeout')), this.FETCH_TIMEOUT_MS)
@@ -211,6 +215,8 @@ export class SMSService {
                   from: fromNumber,
                   to: message.to,
                   text: message.body,
+                  type: 'SMS',
+                  encoding: 'GSM7',
                 }),
                 new Promise((_, reject) => 
                   setTimeout(() => reject(new Error('SDK call timeout')), this.FETCH_TIMEOUT_MS)
@@ -284,6 +290,8 @@ export class SMSService {
               from: fromNumber,
               to: message.to,
               text: message.body,
+              type: 'sms',
+              encoding: 'GSM7',
             };
 
             console.log(`📤 Sending to Telnyx REST API (Attempt ${attempt}/${this.MAX_RETRIES}):`, {

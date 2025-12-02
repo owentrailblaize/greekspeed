@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { SMSService } from '@/lib/services/sms/smsServiceTelnyx';
+import { toGsmSafe } from '@/lib/utils/smsUtils';
 
 // Configure function timeout for Vercel (60 seconds for Pro plan)
 export const maxDuration = 60;
@@ -124,21 +125,22 @@ export async function POST(request: NextRequest) {
     // Format message with compliance text (if not already included)
     const senderPrefix = '[Trailblaize]';
     const optOutText = ' Reply STOP to opt out.';
-    const complianceText = ' Msg & data rates may apply';
+    const complianceText = ' Msg/data rates apply';
     
     // Check if message already has compliance text
     const hasCompliance = message.includes('Reply STOP') || message.includes('[Trailblaize]');
     
     let compliantMessage: string;
     if (hasCompliance) {
-      // Message already has compliance text, use as-is (but ensure it's under 160)
-      compliantMessage = message.substring(0, 160);
+      // Message already has compliance text, use as-is (but ensure GSM-safe and under 160)
+      compliantMessage = toGsmSafe(message).substring(0, 160);
     } else {
       // Add compliance text
+      const safeMessage = toGsmSafe(message);
       const fixedLength = senderPrefix.length + 1 + optOutText.length + complianceText.length;
       const availableForContent = 160 - fixedLength - 3;
-      const truncatedContent = message.substring(0, Math.max(0, availableForContent));
-      const needsEllipsis = message.length > truncatedContent.length;
+      const truncatedContent = safeMessage.substring(0, Math.max(0, availableForContent));
+      const needsEllipsis = safeMessage.length > truncatedContent.length;
       
       compliantMessage = `${senderPrefix} ${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}`.substring(0, 160);
     }

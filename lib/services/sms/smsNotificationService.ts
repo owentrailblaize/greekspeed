@@ -1,5 +1,6 @@
 import { SMSService } from './smsServiceTelnyx';
 import { createClient } from '@supabase/supabase-js';
+import { toGsmSafe } from '@/lib/utils/smsUtils';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -62,7 +63,30 @@ export class SMSNotificationService {
     // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
     
-    const message = `New announcement: ${announcementTitle}. View at: trailblaize.net/dashboard`;
+    // GSM-safe, concise message with link
+    const senderPrefix = '[Trailblaize]';
+    const link = 'https://trailblaize.net/dashboard';
+    const compliance = ' Reply STOP to opt out. HELP for help. Msg/data rates apply.';
+    
+    const safeTitle = toGsmSafe(announcementTitle);
+    const baseText = 'New: ';
+    
+    // Calculate available space
+    const fixedLength = senderPrefix.length + 1 + baseText.length + 1 + link.length + compliance.length;
+    const maxTitleLength = 160 - fixedLength;
+    
+    // Truncate title if needed
+    let finalTitle = safeTitle;
+    if (safeTitle.length > maxTitleLength) {
+      finalTitle = safeTitle.substring(0, Math.max(0, maxTitleLength - 3)) + '...';
+    }
+    
+    let message = `${senderPrefix} ${baseText}${finalTitle} ${link}${compliance}`;
+    message = toGsmSafe(message);
+    if (message.length > 160) {
+      message = message.substring(0, 157) + '...';
+    }
+    
     const result = await SMSService.sendSMS({ to: formattedPhone, body: message });
     
     await this.logSMS({
@@ -97,31 +121,34 @@ export class SMSNotificationService {
     // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
 
-    // Format message to match Telnyx campaign sample EXACTLY
-    // Sample: [Trailblaize] Event reminder: Chapter formal is this Saturday at 8 PM. Check your email for details. Reply STOP to unsubscribe or HELP for help. Msg & data rates may apply. Message frequency varies. Contact support@trailblaize.net
+    // GSM-safe, concise message with link
     const senderPrefix = '[Trailblaize]';
-    const reminderPrefix = 'Event reminder: ';
-    const optOutText = ' Reply STOP to unsubscribe or HELP for help.';
-    const complianceText = ' Msg & data rates may apply';
+    const link = 'https://trailblaize.net/events';
+    const compliance = ' Reply STOP to opt out. HELP for help. Msg/data rates apply.';
+    
+    const safeTitle = toGsmSafe(eventTitle);
+    const safeDate = toGsmSafe(eventDate);
+    const baseText = 'Event: ';
+    
+    // Build event info: "Event: {title} on {date}"
+    const eventInfo = `${safeTitle} on ${safeDate}`;
+    
+    // Calculate available space
+    const fixedLength = senderPrefix.length + 1 + baseText.length + 1 + link.length + compliance.length;
+    const maxEventInfoLength = 160 - fixedLength;
+    
+    // Truncate if needed
+    let finalEventInfo = eventInfo;
+    if (eventInfo.length > maxEventInfoLength) {
+      finalEventInfo = eventInfo.substring(0, Math.max(0, maxEventInfoLength - 3)) + '...';
+    }
+    
+    let message = `${senderPrefix} ${baseText}${finalEventInfo} ${link}${compliance}`;
+    message = toGsmSafe(message);
+    if (message.length > 160) {
+      message = message.substring(0, 157) + '...';
+    }
 
-    // Build message prefix
-    const messagePrefix = `${senderPrefix} ${reminderPrefix}`;
-    const fixedComplianceLength = optOutText.length + complianceText.length;
-    
-    // Calculate available space for content (account for ellipsis if needed: 3 chars)
-    // Note: SMS has 160 char limit, but we'll truncate if needed
-    const availableForContent = 160 - messagePrefix.length - fixedComplianceLength - 3;
-    
-    // Build event content - match sample format: "Event reminder: {details}"
-    // Sample uses: "Chapter formal is this Saturday at 8 PM. Check your email for details."
-    // We'll use: "{eventTitle} on {eventDate}. Check your email for details."
-    const eventContent = `${eventTitle} on ${eventDate}.`;
-    const truncatedContent = eventContent.substring(0, Math.max(0, availableForContent));
-    const needsEllipsis = eventContent.length > truncatedContent.length;
-
-    // Build compliant message matching Telnyx sample exactly
-    const message = `${messagePrefix}${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}`.substring(0, 160);
-    
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
       messageLength: message.length,
@@ -168,27 +195,30 @@ export class SMSNotificationService {
     // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
 
-    // Format message to match Telnyx campaign sample pattern
-    // Pattern: [Trailblaize] Message notification: New message from {name}. Reply STOP to opt-out. Msg & data rates may apply
+    // GSM-safe, concise message with link
     const senderPrefix = '[Trailblaize]';
-    const messagePrefix = 'Message notification: ';
-    const optOutText = ' Reply STOP to opt-out.';
-    const complianceText = ' Msg & data rates may apply';
-
-    // Build message prefix
-    const fullPrefix = `${senderPrefix} ${messagePrefix}`;
-    const fixedComplianceLength = optOutText.length + complianceText.length;
+    const link = 'https://trailblaize.net/messages';
+    const compliance = ' Reply STOP to opt out. HELP for help. Msg/data rates apply.';
     
-    // Calculate available space for sender name (account for ellipsis if needed: 3 chars)
-    const availableForSender = 160 - fullPrefix.length - fixedComplianceLength - 3 - 21; // -21 for "New message from " and "."
+    const safeSenderName = toGsmSafe(senderName);
+    const baseText = 'New message from ';
+    
+    // Calculate available space
+    const fixedLength = senderPrefix.length + 1 + baseText.length + 1 + link.length + compliance.length;
+    const maxNameLength = 160 - fixedLength;
     
     // Truncate sender name if needed
-    const truncatedSenderName = senderName.substring(0, Math.max(0, availableForSender));
-    const needsEllipsis = senderName.length > truncatedSenderName.length;
-
-    // Build compliant message matching Telnyx sample pattern
-    const message = `${fullPrefix}New message from ${truncatedSenderName}${needsEllipsis ? '...' : ''}.${optOutText}${complianceText}`.substring(0, 160);
+    let finalSenderName = safeSenderName;
+    if (safeSenderName.length > maxNameLength) {
+      finalSenderName = safeSenderName.substring(0, Math.max(0, maxNameLength - 3)) + '...';
+    }
     
+    let message = `${senderPrefix} ${baseText}${finalSenderName} ${link}${compliance}`;
+    message = toGsmSafe(message);
+    if (message.length > 160) {
+      message = message.substring(0, 157) + '...';
+    }
+
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
       messageLength: message.length,
@@ -304,31 +334,30 @@ export class SMSNotificationService {
     // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
 
-    // Format message to match Telnyx campaign sample pattern
-    // Pattern: [Trailblaize] Connection update: {content}. Check your email for details. Reply STOP to unsubscribe or HELP for help. Msg & data rates may apply
+    // GSM-safe, concise message with link
     const senderPrefix = '[Trailblaize]';
-    const connectionPrefix = 'Connection update: ';
-    const optOutText = ' Reply STOP to unsubscribe or HELP for help.';
-    const complianceText = ' Msg & data rates may apply';
+    const link = 'https://trailblaize.net/connect';
+    const compliance = ' Reply STOP to opt out. HELP for help. Msg/data rates apply.';
+    
+    const safeAccepterName = toGsmSafe(accepterName);
+    const baseText = ' accepted your connection request.';
+    
+    // Calculate available space
+    const fixedLength = senderPrefix.length + 1 + baseText.length + 1 + link.length + compliance.length;
+    const maxNameLength = 160 - fixedLength;
+    
+    // Truncate name if needed
+    let finalName = safeAccepterName;
+    if (safeAccepterName.length > maxNameLength) {
+      finalName = safeAccepterName.substring(0, Math.max(0, maxNameLength - 3)) + '...';
+    }
+    
+    let message = `${senderPrefix} ${finalName}${baseText} ${link}${compliance}`;
+    message = toGsmSafe(message);
+    if (message.length > 160) {
+      message = message.substring(0, 157) + '...';
+    }
 
-    // Build message prefix
-    const fullPrefix = `${senderPrefix} ${connectionPrefix}`;
-    const fixedComplianceLength = optOutText.length + complianceText.length;
-    
-    // Calculate available space for content (account for ellipsis if needed: 3 chars)
-    const availableForContent = 160 - fullPrefix.length - fixedComplianceLength - 3 - 32; // -32 for "Check your email for details. "
-    
-    // Build connection content - match sample format
-    // Sample: "{accepterName} accepted your connection request on Trailblaize! Check your email for details."
-    const connectionContent = `${accepterName} accepted your connection request on Trailblaize! Check your email for details.`;
-    
-    // Truncate if needed to fit available space
-    const truncatedContent = connectionContent.substring(0, Math.max(0, availableForContent));
-    const needsEllipsis = connectionContent.length > truncatedContent.length;
-
-    // Build compliant message matching Telnyx sample pattern
-    const message = `${fullPrefix}${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}`.substring(0, 160);
-    
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
       messageLength: message.length,
