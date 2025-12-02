@@ -7,20 +7,20 @@
  * Characters that need to be replaced for GSM7 compatibility
  */
 const GSM7_REPLACEMENTS: Record<string, string> = {
-  // Curly quotes
-  '"': '"',
-  '"': '"',
-  ''': "'",
-  ''': "'",
+  // Curly quotes - using Unicode escape sequences
+  '\u201C': '"',  // Left double quotation mark
+  '\u201D': '"',  // Right double quotation mark
+  '\u2018': "'",  // Left single quotation mark
+  '\u2019': "'",  // Right single quotation mark
   // Em dashes
-  '—': '-',
-  '–': '-',
+  '\u2014': '-',  // Em dash
+  '\u2013': '-',  // En dash
   // Ellipsis
-  '…': '...',
+  '\u2026': '...',  // Horizontal ellipsis
   // Other common non-GSM chars
-  '®': '(R)',
-  '©': '(C)',
-  '™': '(TM)',
+  '\u00AE': '(R)',  // Registered sign
+  '\u00A9': '(C)',  // Copyright sign
+  '\u2122': '(TM)', // Trade mark sign
 };
 
 /**
@@ -59,7 +59,8 @@ export function toGsmSafe(text: string): string {
  */
 export function isGsmSafe(text: string): boolean {
   // Simple check: no curly quotes, em dashes, or common problematic chars
-  const problematicChars = /[""''—–…®©™]/;
+  // Using Unicode escape sequences for the regex pattern
+  const problematicChars = /[\u201C\u201D\u2018\u2019\u2014\u2013\u2026\u00AE\u00A9\u2122]/;
   return !problematicChars.test(text);
 }
 
