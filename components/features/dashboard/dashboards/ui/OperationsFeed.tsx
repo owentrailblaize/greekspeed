@@ -338,7 +338,7 @@ export function OperationsFeed() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  className="flex-1 text-navy-600 border-navy-600 hover:bg-navy-50"
+                  className="flex-1 h-10 rounded-full text-navy-600 border-navy-600 bg-white hover:bg-navy-50 font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-300"
                   onClick={() => {
                     setModalOpen(true);
                     fetchAllActivities();

@@ -325,9 +325,9 @@ export function DocsCompliancePanel() {
           <Button 
             onClick={() => setShowAllDocumentsModal(true)}
             variant="outline"
-            className="w-full mt-4 text-navy-600 border-navy-600 hover:bg-navy-50"
+            className="w-full h-10 rounded-full text-navy-600 border-navy-600 bg-white hover:bg-navy-50 font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-300 mt-4"
           >
-            View All Documents
+             All Documents
           </Button>
         </CardContent>
       </Card>

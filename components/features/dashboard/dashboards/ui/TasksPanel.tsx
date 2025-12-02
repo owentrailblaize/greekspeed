@@ -475,7 +475,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
         <div className="mb-4">
           <Button 
             onClick={() => setIsModalOpen(true)}
-            className="w-full bg-navy-600 hover:bg-navy-700"
+            className="w-full h-10 rounded-full bg-navy-600 hover:bg-navy-700 text-white font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-300"
           >
             <Plus className="h-4 w-4 mr-2" />
             Create New Task
@@ -487,7 +487,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
           <Button 
             onClick={() => setIsViewAllModalOpen(true)}
             variant="outline"
-            className="w-full border-navy-600 text-navy-600 hover:bg-navy-50"
+            className="w-full h-10 rounded-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-300"
           >
             <Eye className="h-4 w-4 mr-2" />
             View All Assigned Tasks
