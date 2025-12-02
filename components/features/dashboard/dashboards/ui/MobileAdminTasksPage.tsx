@@ -2,7 +2,7 @@
 
 
 import { useState, useEffect, useMemo } from 'react';
-import { CheckSquare, Clock, AlertCircle, Users, Calendar, FileText, Plus, Loader2, Trash2, Upload, Download, ChevronLeft, ChevronRight, Check, UserMinus } from 'lucide-react';
+import { CheckSquare, Clock, AlertCircle, Users, Calendar, FileText, Plus, Loader2, Trash2, Upload, Download, ChevronLeft, ChevronRight, Check, UserMinus, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -51,6 +51,7 @@ export function MobileAdminTasksPage() {
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [chapterMembers, setChapterMembers] = useState<Array<{ id: string; full_name: string; role: string; chapter_role: string | null }>>([]);
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   
   const [tasksPage, setTasksPage] = useState(1);
   const tasksPerPage = 6;
@@ -533,6 +534,12 @@ export function MobileAdminTasksPage() {
     });
   };
 
+  const MAX_DESCRIPTION_LENGTH = 100; // Character limit before truncation
+
+  const handleToggleDescription = (taskId: string) => {
+    setExpandedTaskId(expandedTaskId === taskId ? null : taskId);
+  };
+
 
   const getFileIcon = (fileType: string | null) => {
     if (!fileType) return <FileText className="h-4 w-4" />;
@@ -693,8 +700,31 @@ export function MobileAdminTasksPage() {
                 </div>
                 
                 {task.description && (
-
-                          <p className="text-xs text-slate-700">{task.description}</p>
+                  <div className="mt-1">
+                    <div className="text-xs text-slate-700">
+                      {expandedTaskId === task.id || task.description.length <= MAX_DESCRIPTION_LENGTH ? (
+                        <span>{task.description}</span>
+                      ) : (
+                        <span>
+                          {task.description.substring(0, MAX_DESCRIPTION_LENGTH)}
+                          <span className="text-gray-400">...</span>
+                        </span>
+                      )}
+                    </div>
+                    {task.description.length > MAX_DESCRIPTION_LENGTH && (
+                      <button
+                        onClick={() => handleToggleDescription(task.id)}
+                        className="mt-1 text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1 transition-colors"
+                      >
+                        <span>{expandedTaskId === task.id ? 'Show less' : 'Show more'}</span>
+                        {expandedTaskId === task.id ? (
+                          <ChevronUp className="h-3 w-3" />
+                        ) : (
+                          <ChevronDown className="h-3 w-3" />
+                        )}
+                      </button>
+                    )}
+                  </div>
                 )}
                 
 
