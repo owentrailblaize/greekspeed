@@ -119,109 +119,112 @@ export function SendAnnouncementButton() {
         </div>
       </button>
 
-      {/* Modal - Enhanced Design */}
+      {/* Modal - Mobile Bottom Drawer */}
       {showModal && (
-        <div className="fixed inset-0 z-50 sm:hidden">
+        <div className="fixed inset-0 z-[9999] sm:hidden flex items-end justify-center p-0">
+          {/* Backdrop */}
           <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
             onClick={() => setShowModal(false)} 
           />
-          <div className="relative flex items-center justify-center min-h-screen p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-              {/* Header with gradient */}
-              <div className="relative bg-gradient-to-r from-navy-600 to-blue-600 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                      <Megaphone className="h-4 w-4 text-white" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-white">Send Announcement</h3>
+          
+          {/* Bottom Drawer */}
+          <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none pb-[env(safe-area-inset-bottom)]">
+            {/* Header with gradient */}
+            <div className="relative bg-gradient-to-r from-navy-600 to-blue-600 p-4 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Megaphone className="h-4 w-4 text-white" />
                   </div>
-                  <button
-                    onClick={() => setShowModal(false)}
-                    className="text-white/80 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
+                  <h3 className="text-lg font-semibold text-white">Send Announcement</h3>
                 </div>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="text-white/80 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Scrollable Content Area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="space-y-2">
+                <Input
+                  placeholder="Announcement title..."
+                  value={announcementTitle}
+                  onChange={(e) => setAnnouncementTitle(e.target.value)}
+                  className="w-full border-gray-200 focus:border-navy-500 focus:ring-navy-500"
+                />
+                <Select 
+                  value={announcementType} 
+                  onValueChange={(value: string) => setAnnouncementType(value as 'general' | 'urgent' | 'event' | 'academic')}
+                >
+                  <SelectItem value="general">General</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                  <SelectItem value="event">Event</SelectItem>
+                  <SelectItem value="academic">Academic</SelectItem>
+                </Select>
               </div>
               
-              <div className="p-4 overflow-y-auto max-h-[calc(90vh-140px)] space-y-4">
-                <div className="space-y-2">
-                  <Input
-                    placeholder="Announcement title..."
-                    value={announcementTitle}
-                    onChange={(e) => setAnnouncementTitle(e.target.value)}
-                    className="w-full border-gray-200 focus:border-navy-500 focus:ring-navy-500"
+              <Textarea
+                placeholder="Write a chapter announcement..."
+                value={announcement}
+                onChange={(e) => setAnnouncement(e.target.value)}
+                className="min-h-[120px] w-full border-gray-200 focus:border-navy-500 focus:ring-navy-500 resize-none"
+              />
+              
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                  <Checkbox
+                    id="send-sms-notification"
+                    checked={sendSMS}
+                    onCheckedChange={(checked) => setSendSMS(checked as boolean)}
                   />
-                  <Select 
-                    value={announcementType} 
-                    onValueChange={(value: string) => setAnnouncementType(value as 'general' | 'urgent' | 'event' | 'academic')}
-                  >
-                    <SelectItem value="general">General</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
-                    <SelectItem value="event">Event</SelectItem>
-                    <SelectItem value="academic">Academic</SelectItem>
-                  </Select>
+                  <Label htmlFor="send-sms-notification" className="text-sm cursor-pointer font-medium">
+                    Send SMS notification
+                  </Label>
                 </div>
                 
-                <Textarea
-                  placeholder="Write a chapter announcement..."
-                  value={announcement}
-                  onChange={(e) => setAnnouncement(e.target.value)}
-                  className="min-h-[120px] w-full border-gray-200 focus:border-navy-500 focus:ring-navy-500 resize-none"
-                />
-                
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-                    <Checkbox
-                      id="send-sms-notification"
-                      checked={sendSMS}
-                      onCheckedChange={(checked) => setSendSMS(checked as boolean)}
-                    />
-                    <Label htmlFor="send-sms-notification" className="text-sm cursor-pointer font-medium">
-                      Send SMS notification
-                    </Label>
-                  </div>
-                  
-                  {/* Notification disclaimers - More compact */}
-                  <div className="text-xs text-gray-500 space-y-1 pl-1 pt-2 border-t border-gray-100">
-                    {emailRecipientCount !== null && (
-                      <p className="flex items-center gap-1.5">
-                        <Mail className="h-3 w-3 text-gray-400" />
-                        <span>Email: <span className="font-medium text-gray-700">{emailRecipientCount}</span> {emailRecipientCount === 1 ? 'recipient' : 'recipients'}</span>
-                      </p>
-                    )}
-                    {sendSMS && smsRecipientCount !== null && (
-                      <p className="flex items-center gap-1.5">
-                        <Smartphone className="h-3 w-3 text-gray-400" />
-                        <span>SMS: <span className="font-medium text-gray-700">{smsRecipientCount}</span> {smsRecipientCount === 1 ? 'recipient' : 'recipients'}</span>
-                      </p>
-                    )}
-                    {loadingRecipients && (
-                      <p className="text-gray-400">Loading recipient counts...</p>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="flex flex-col space-y-2 pt-2">
-                  <Button 
-                    className="bg-gradient-to-r from-navy-600 to-blue-600 hover:from-navy-700 hover:to-blue-700 w-full shadow-md"
-                    onClick={handleSendAnnouncement}
-                    disabled={isSubmitting || announcementsLoading}
-                  >
-                    <Send className="h-4 w-4 mr-2" />
-                    {isSubmitting ? 'Sending...' : 'Send Announcement'}
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    className="w-full border-gray-200 hover:bg-gray-50"
-                    onClick={() => setShowModal(false)}
-                  >
-                    Cancel
-                  </Button>
+                {/* Notification disclaimers - More compact */}
+                <div className="text-xs text-gray-500 space-y-1 pl-1 pt-2 border-t border-gray-100">
+                  {emailRecipientCount !== null && (
+                    <p className="flex items-center gap-1.5">
+                      <Mail className="h-3 w-3 text-gray-400" />
+                      <span>Email: <span className="font-medium text-gray-700">{emailRecipientCount}</span> {emailRecipientCount === 1 ? 'recipient' : 'recipients'}</span>
+                    </p>
+                  )}
+                  {sendSMS && smsRecipientCount !== null && (
+                    <p className="flex items-center gap-1.5">
+                      <Smartphone className="h-3 w-3 text-gray-400" />
+                      <span>SMS: <span className="font-medium text-gray-700">{smsRecipientCount}</span> {smsRecipientCount === 1 ? 'recipient' : 'recipients'}</span>
+                    </p>
+                  )}
+                  {loadingRecipients && (
+                    <p className="text-gray-400">Loading recipient counts...</p>
+                  )}
                 </div>
               </div>
+            </div>
+            
+            {/* Footer - with iOS safe-area padding and rounded-full buttons */}
+            <div className="flex flex-col space-y-2 flex-shrink-0 border-t border-gray-200 p-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
+              <Button 
+                className="w-full rounded-full bg-gradient-to-r from-navy-600 to-blue-600 hover:from-navy-700 hover:to-blue-700 shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleSendAnnouncement}
+                disabled={isSubmitting || announcementsLoading}
+              >
+                <Send className="h-4 w-4 mr-2" />
+                {isSubmitting ? 'Sending...' : 'Send Announcement'}
+              </Button>
+              <Button 
+                variant="outline"
+                className="w-full rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                onClick={() => setShowModal(false)}
+              >
+                Cancel
+              </Button>
             </div>
           </div>
         </div>
