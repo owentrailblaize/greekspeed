@@ -499,14 +499,15 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
         {/* View All Tasks Modal */}
         {isViewAllModalOpen && (
           <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4">
+            <div className="flex min-h-full items-center justify-center p-2 sm:p-4">
               <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={() => setIsViewAllModalOpen(false)} />
               
-              <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full max-w-6xl">
+              {/* Modal Container - Full width with better constraints */}
+              <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full max-w-6xl max-h-[95vh] flex flex-col">
                 {/* Header */}
-                <div className="bg-white px-6 py-4 border-b border-gray-200">
+                <div className="bg-white px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex-shrink-0">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
                       All Chapter Tasks
                     </h3>
                     <button
@@ -518,32 +519,32 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
                   </div>
                 </div>
 
-                {/* Content */}
-                <div className="bg-white px-6 py-6 max-h-96 overflow-y-auto">
-                  <div className="space-y-4">
-                    {allChapterTasks.length === 0 ? ( // Use allChapterTasks here
+                {/* Content - Flex to fill remaining space */}
+                <div className="bg-white flex-1 overflow-y-auto px-2 sm:px-4 py-4">
+                  <div className="w-full">
+                    {allChapterTasks.length === 0 ? (
                       <div className="text-center py-8 text-gray-500">
                         <ClipboardList className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                         <p className="text-lg font-medium mb-2">No tasks yet</p>
                         <p className="text-sm">Create your first task to get started!</p>
                       </div>
                     ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
+                      <div className="w-full overflow-x-auto">
+                        <table className="w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
+                              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
+                              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
-                            {allChapterTasks.map((task) => ( // Use allChapterTasks here
+                            {allChapterTasks.map((task) => (
                               <tr key={task.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                                   <div className="flex items-center space-x-2">
                                     {getStatusIcon(task.status)}
                                     <Badge className={getStatusColor(task.status)}>
@@ -551,7 +552,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
                                     </Badge>
                                   </div>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-3 sm:px-6 py-4">
                                   <div>
                                     <div className="text-sm font-medium text-gray-900">{task.title}</div>
                                     {task.description && (
@@ -559,34 +560,27 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
                                     )}
                                   </div>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                   {task.assignee_name || 'Unassigned'}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                                   <Badge className={getPriorityColor(task.priority)}>
                                     {task.priority}
                                   </Badge>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                   {formatDate(task.due_date)}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div className="relative group">
+                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                  <div className="relative group">
                                     <Button
                                       size="sm"
                                       onClick={() => handleDeleteTask(task.id)}
-                                      disabled={task.status !== 'completed'}
-                                      className="flex items-center space-x-1"
+                                      className="h-8 rounded-full px-3 sm:px-4 text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-300"
                                     >
-                                      <Trash2 className="h-4 w-4" />
-                                      <span>Delete</span>
+                                      <Trash2 className="h-4 w-4 mr-1.5" />
+                                      <span>Remove</span>
                                     </Button>
-                                    {task.status !== 'completed' && (
-                                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                                        Delete when completed
-                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
-                                      </div>
-                                    )}
                                   </div>
                                 </td>
                               </tr>
