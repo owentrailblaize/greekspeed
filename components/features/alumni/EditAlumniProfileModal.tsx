@@ -476,7 +476,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-      <div className={`bg-white ${isMobile ? 'rounded-t-2xl rounded-b-none w-full flex flex-col' : 'rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]'} ${isMobile ? 'max-h-[85vh] mt-[15vh]' : ''}`}>
+      <div className={`bg-white ${isMobile ? 'rounded-t-2xl rounded-b-none w-full flex flex-col' : 'rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]'} ${isMobile ? 'max-h-[85dvh] mt-[15dvh] pb-[env(safe-area-inset-bottom)]' : ''}`}>
         {/* Header - same as original */}
         <div className={`flex items-center justify-between border-b border-gray-200 flex-shrink-0 ${isMobile ? 'p-4' : 'p-6'}`}>
           <div className="flex items-center gap-3">
@@ -908,7 +908,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         </div>
 
         {/* Footer - same as original */}
-        <div className={`flex justify-between items-center border-t border-gray-200 flex-shrink-0 ${isMobile ? 'p-4' : 'p-6'}`}>
+        <div className={`flex justify-between items-center border-t border-gray-200 flex-shrink-0 ${isMobile ? 'p-4 pb-[calc(16px+env(safe-area-inset-bottom))]' : 'p-6'}`}>
           
           <div className="flex space-x-3">
             <Button

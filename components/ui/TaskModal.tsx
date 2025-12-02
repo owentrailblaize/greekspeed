@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, X, Users, UserCheck } from 'lucide-react';
 import { TaskPriority, CreateTaskRequest } from '@/types/operations';
 import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -20,6 +21,19 @@ interface TaskModalProps {
 
 export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating }: TaskModalProps) {
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
+  
+  // Add mobile detection
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640); // sm breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const executiveMembers = chapterMembers.filter(member => 
     member.role === 'admin' || 
@@ -31,37 +45,28 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
     (!member.chapter_role || !['president', 'vice_president', 'treasurer', 'secretary', 'rush_chair', 'social_chair', 'philanthropy_chair', 'risk_management_chair', 'alumni_relations_chair'].includes(member.chapter_role))
   );
 
-  // Add these missing variables
   const executiveIds = executiveMembers.map(member => member.id);
   const activeIds = activeMembers.map(member => member.id);
 
   const handleAssigneeToggle = (memberId: string) => {
-    // TaskModal: handleAssigneeToggle called
-    
     setSelectedAssignees(prev => {
       const newSelection = prev.includes(memberId) 
         ? prev.filter(id => id !== memberId)
         : [...prev, memberId];
-      
-      // newSelection
       
       setNewTask(prevTask => ({
         ...prevTask,
         assignee_id: newSelection
       }));
       
-      // TaskModal: Updated assignee_id
       return newSelection;
     });
   };
 
   const handleSelectAllExecutive = () => {
-    // TaskModal: handleSelectAllExecutive called
-
     const allExecutiveSelected = executiveIds.every(id => selectedAssignees.includes(id));
     
     if (allExecutiveSelected) {
-      // Deselecting all executive members
       setSelectedAssignees(prev => prev.filter(id => !executiveIds.includes(id)));
       setNewTask(prevTask => ({
         ...prevTask,
@@ -70,7 +75,6 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
           : []
       }));
     } else {
-      // Selecting all executive members
       setSelectedAssignees(prev => [...new Set([...prev, ...executiveIds])]);
       setNewTask(prevTask => ({
         ...prevTask,
@@ -80,12 +84,9 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
   };
 
   const handleSelectAllActive = () => {
-    // TaskModal: handleSelectAllActive called
     const allActiveSelected = activeIds.every(id => selectedAssignees.includes(id));
-    // allActiveSelected
     
     if (allActiveSelected) {
-      // Deselecting all active members
       setSelectedAssignees(prev => prev.filter(id => !activeIds.includes(id)));
       setNewTask(prevTask => ({
         ...prevTask,
@@ -94,7 +95,6 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
           : []
       }));
     } else {
-      // Selecting all active members
       setSelectedAssignees(prev => [...new Set([...prev, ...activeIds])]);
       setNewTask(prevTask => ({
         ...prevTask,
@@ -113,19 +113,11 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
   });
 
   const handleSubmit = async () => {
-    // TaskModal: handleSubmit called
-    // newTask.assignee_id length
-    
     if (!newTask.title || (Array.isArray(newTask.assignee_id) && newTask.assignee_id.length === 0)) {
-      // TaskModal: Validation failed - missing title or assignees
       return;
     }
     
-    // TaskModal: Validation passed, calling onSubmit
-    
     await onSubmit(newTask);
-    
-    // TaskModal: onSubmit completed, resetting form
     
     // Reset form
     setNewTask({
@@ -142,20 +134,38 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className={cn(
+      "fixed inset-0 z-50",
+      isMobile 
+        ? "flex items-end justify-center p-0" 
+        : "flex items-center justify-center p-4"
+    )}>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity backdrop-blur-sm"
         onClick={onClose}
       />
       
-      {/* Modal */}
-      <div className="relative transform rounded-lg bg-white text-left shadow-xl transition-all w-full max-w-[95vw] sm:max-w-lg h-[70vh] sm:h-auto flex flex-col">
+      {/* Modal - Mobile: Bottom drawer, Desktop: Centered */}
+      <div className={cn(
+        "relative transform bg-white text-left shadow-xl transition-all w-full flex flex-col",
+        // Mobile: Bottom drawer with iOS 16+ fixes
+        isMobile
+          ? "max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none pb-[env(safe-area-inset-bottom)]"
+          // Desktop: Centered modal (existing style)
+          : "max-w-[95vw] sm:max-w-lg h-[70vh] sm:h-auto rounded-lg"
+      )}>
 
         {/* Header - Fixed */}
-        <div className="rounded-t-lg bg-white px-4 pt-4 pb-3 sm:px-6 sm:pt-4 sm:pb-3 flex-shrink-0 border-b border-gray-200">
+        <div className={cn(
+          "bg-white flex-shrink-0 border-b border-gray-200",
+          isMobile ? "rounded-t-2xl px-4 pt-4 pb-3" : "rounded-t-lg px-4 pt-4 pb-3 sm:px-6 sm:pt-4 sm:pb-3"
+        )}>
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium leading-6 text-gray-900">
+            <h3 className={cn(
+              "font-medium leading-6 text-gray-900",
+              isMobile ? "text-lg" : "text-lg"
+            )}>
               Create New Task
             </h3>
             <button
@@ -168,9 +178,14 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
         </div>
 
         {/* Body - Scrollable */}
-        <div className="bg-white px-4 pt-3 pb-4 sm:px-6 sm:pt-4 sm:pb-4 flex-1 overflow-y-auto">
-          <div className="space-y-4 sm:space-y-3">
-            {/* Task Title - Reduced spacing */}
+        <div className={cn(
+          "bg-white flex-1 overflow-y-auto",
+          isMobile ? "px-4 pt-3 pb-4" : "px-4 pt-3 pb-4 sm:px-6 sm:pt-4 sm:pb-4"
+        )}>
+          <div className={cn(
+            isMobile ? "space-y-4" : "space-y-4 sm:space-y-3"
+          )}>
+            {/* Task Title */}
             <div>
               <Label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
                 Task Title *
@@ -184,7 +199,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
               />
             </div>
             
-            {/* Description - Resizable with smaller initial height */}
+            {/* Description */}
             <div>
               <Label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
                 Description
@@ -199,7 +214,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
               />
             </div>
             
-            {/* Assign To Section - Reduced spacing */}
+            {/* Assign To Section */}
             <div>
               <Label htmlFor="assignee" className="text-sm font-medium text-gray-700 mb-2">
                 Assign To * ({selectedAssignees.length} selected)
@@ -334,8 +349,13 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
           </div>
         </div>
 
-        {/* Footer - Fixed */}
-        <div className="rounded-b-lg bg-gray-50 px-4 py-2 sm:px-6 sm:py-3 flex-shrink-0 border-t border-gray-200">
+        {/* Footer - Fixed with iOS safe-area padding */}
+        <div className={cn(
+          "bg-gray-50 flex-shrink-0 border-t border-gray-200",
+          isMobile 
+            ? "rounded-b-none px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))]"
+            : "rounded-b-lg px-4 py-2 sm:px-6 sm:py-3"
+        )}>
           <div className="flex justify-end space-x-2">
             <Button
               type="button"

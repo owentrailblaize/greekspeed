@@ -17,6 +17,7 @@ import { supabase } from '@/lib/supabase/client';
 
 import { toast } from 'react-toastify';
 import { documentUploadService } from '@/lib/services/documentUploadService';
+import { cn } from '@/lib/utils';
 
 interface ChapterDocument {
   id: string;
@@ -70,6 +71,18 @@ export function MobileAdminTasksPage() {
   });
   const [docsPage, setDocsPage] = useState(1);
   const docsPerPage = 6;
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640); // sm breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Load tasks and chapter members
   useEffect(() => {
@@ -1006,79 +1019,132 @@ export function MobileAdminTasksPage() {
         />
 
 
-        {/* Upload Document Modal */}
+        {/* Upload Document Modal - Mobile: Bottom drawer, Desktop: Centered */}
         {showUploadModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-              <h3 className="text-lg font-semibold mb-4">Upload Document</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">File</label>
-                  <input
-                    type="file"
-                    onChange={handleFileSelect}
-                    className="w-full text-sm"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
-                  />
-                  {selectedFile && (
-                    <p className="text-xs text-gray-600 mt-1">{selectedFile.name}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Title</label>
-                  <input
-                    type="text"
-                    value={uploadFormData.title}
-                    onChange={(e) => setUploadFormData(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                    placeholder="Document title"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Description</label>
-                  <textarea
-                    value={uploadFormData.description}
-                    onChange={(e) => setUploadFormData(prev => ({ ...prev, description: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                    placeholder="Optional description"
-                    rows={3}
-                  />
-                </div>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setShowUploadModal(false);
-                      setSelectedFile(null);
-                      setUploadFormData({
-                        title: '',
-                        description: '',
-                        documentType: 'general',
-                        visibility: ['chapter_all'],
-                      });
-                    }}
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleUploadDocument}
-                    disabled={!selectedFile || !uploadFormData.title || uploading}
-                    className="flex-1 bg-navy-600 hover:bg-navy-700"
-                  >
-                    {uploading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Uploading...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload
-                      </>
+          <div className={cn(
+            "fixed inset-0 z-[9999]",
+            isMobile
+              ? "flex items-end justify-center p-0"
+              : "flex items-center justify-center p-4"
+          )}>
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => {
+                setShowUploadModal(false);
+                setSelectedFile(null);
+                setUploadFormData({
+                  title: '',
+                  description: '',
+                  documentType: 'general',
+                  visibility: ['chapter_all'],
+                });
+              }}
+            />
+            
+            {/* Modal - Mobile: Bottom drawer, Desktop: Centered */}
+            <div className={cn(
+              "relative bg-white shadow-xl w-full flex flex-col",
+              // Mobile: Bottom drawer with iOS 16+ fixes
+              isMobile
+                ? "max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none pb-[env(safe-area-inset-bottom)]"
+                // Desktop: Centered modal (existing style)
+                : "max-w-md rounded-lg"
+            )}>
+              {/* Header */}
+              <div className={cn(
+                "flex-shrink-0 border-b border-gray-200",
+                isMobile ? "p-4" : "p-6"
+              )}>
+                <h3 className={cn(
+                  "font-semibold",
+                  isMobile ? "text-lg" : "text-lg"
+                )}>
+                  Upload Document
+                </h3>
+              </div>
+
+              {/* Scrollable Content Area */}
+              <div className={cn(
+                "flex-1 overflow-y-auto",
+                isMobile ? "p-4" : "p-6"
+              )}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">File</label>
+                    <input
+                      type="file"
+                      onChange={handleFileSelect}
+                      className="w-full text-sm"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
+                    />
+                    {selectedFile && (
+                      <p className="text-xs text-gray-600 mt-1">{selectedFile.name}</p>
                     )}
-                  </Button>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Title</label>
+                    <input
+                      type="text"
+                      value={uploadFormData.title}
+                      onChange={(e) => setUploadFormData(prev => ({ ...prev, title: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      placeholder="Document title"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Description</label>
+                    <textarea
+                      value={uploadFormData.description}
+                      onChange={(e) => setUploadFormData(prev => ({ ...prev, description: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      placeholder="Optional description"
+                      rows={3}
+                    />
+                  </div>
                 </div>
+              </div>
+
+              {/* Footer - with iOS safe-area padding */}
+              <div className={cn(
+                "flex space-x-2 flex-shrink-0 border-t border-gray-200",
+                isMobile 
+                  ? "p-4 pb-[calc(12px+env(safe-area-inset-bottom))]"
+                  : "p-6"
+              )}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowUploadModal(false);
+                    setSelectedFile(null);
+                    setUploadFormData({
+                      title: '',
+                      description: '',
+                      documentType: 'general',
+                      visibility: ['chapter_all'],
+                    });
+                  }}
+                  className="flex-1 rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleUploadDocument}
+                  disabled={!selectedFile || !uploadFormData.title || uploading}
+                  className="flex-1 rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           </div>

@@ -253,9 +253,9 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={cn(
-        // Mobile: Bottom sheet style
+        // Mobile: Bottom sheet style - iOS 16+ fixed
         isMobile 
-          ? "fixed left-0 right-0 bottom-0 top-auto z-50 w-full max-h-[85vh] mt-[15vh] rounded-t-2xl rounded-b-none flex flex-col overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-md shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] p-0 translate-x-0 translate-y-0"
+          ? "fixed left-0 right-0 bottom-0 top-auto z-50 w-full max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none flex flex-col overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-md shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] p-0 translate-x-0 translate-y-0 pb-[env(safe-area-inset-bottom)]"
           // Desktop: Centered modal (existing style)
           : "sm:max-w-[720px] max-w-[95vw] h-[100dvh] sm:h-[85vh] flex flex-col overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-md shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] sm:rounded-3xl rounded-2xl p-0 fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]",
         "duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
@@ -423,7 +423,10 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
           ) : (
             <div
               ref={commentsScrollRef}
-              className="relative max-h-[55vh] overflow-y-auto px-6 py-5 bg-white/60"
+              className={cn(
+                "relative overflow-y-auto px-6 py-5 bg-white/60",
+                isMobile ? "max-h-[calc(85dvh-200px)]" : "max-h-[55vh]"
+              )}
             >
               <div
                 className="relative w-full"
@@ -522,7 +525,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
         {/* Comment Input */}
         <div className={cn(
           "flex-shrink-0 border-t border-slate-200/70 bg-slate-50/70 shadow-inner",
-          isMobile ? "px-4 py-3" : "px-6 py-4"
+          isMobile ? "px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))]" : "px-6 py-4"
         )}>
           <div className="flex items-end gap-4">
             <div className="w-10 h-10 sm:w-10 sm:h-10 bg-navy-100/70 rounded-full flex items-center justify-center text-navy-700 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
