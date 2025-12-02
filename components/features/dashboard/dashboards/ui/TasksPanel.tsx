@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ClipboardList, User, Calendar, AlertTriangle, Plus, Loader2, X, Eye, Trash2, CheckCircle, Clock } from 'lucide-react';
+import { ClipboardList, User, Calendar, AlertTriangle, Plus, Loader2, X, Eye, Trash2, CheckCircle, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { Task, TaskStatus, TaskPriority, CreateTaskRequest } from '@/types/operations';
 import { getTasksByChapter, updateTask, getChapterMembersForTasks, subscribeToTasks } from '@/lib/services/taskService';
 import { useProfile } from '@/lib/contexts/ProfileContext';
@@ -39,6 +39,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewAllModalOpen, setIsViewAllModalOpen] = useState(false);
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
   // Load tasks and chapter members
   useEffect(() => {
@@ -414,6 +415,12 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
     });
   };
 
+  const MAX_DESCRIPTION_LENGTH = 100; // Character limit before truncation
+
+  const handleToggleDescription = (taskId: string) => {
+    setExpandedTaskId(expandedTaskId === taskId ? null : taskId);
+  };
+
   // Show loading state
   if (loading) {
     return (
@@ -556,7 +563,31 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
                                   <div>
                                     <div className="text-sm font-medium text-gray-900">{task.title}</div>
                                     {task.description && (
-                                      <div className="text-sm text-gray-500">{task.description}</div>
+                                      <div className="mt-1">
+                                        <div className="text-sm text-gray-500">
+                                          {expandedTaskId === task.id || task.description.length <= MAX_DESCRIPTION_LENGTH ? (
+                                            <span>{task.description}</span>
+                                          ) : (
+                                            <span>
+                                              {task.description.substring(0, MAX_DESCRIPTION_LENGTH)}
+                                              <span className="text-gray-400">...</span>
+                                            </span>
+                                          )}
+                                        </div>
+                                        {task.description.length > MAX_DESCRIPTION_LENGTH && (
+                                          <button
+                                            onClick={() => handleToggleDescription(task.id)}
+                                            className="mt-1 text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1 transition-colors"
+                                          >
+                                            <span>{expandedTaskId === task.id ? 'Show less' : 'Show more'}</span>
+                                            {expandedTaskId === task.id ? (
+                                              <ChevronUp className="h-3 w-3" />
+                                            ) : (
+                                              <ChevronDown className="h-3 w-3" />
+                                            )}
+                                          </button>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
                                 </td>
