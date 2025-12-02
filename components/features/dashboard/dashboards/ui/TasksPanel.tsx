@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ClipboardList, User, Calendar, AlertTriangle, Plus, Loader2, X, Eye, Trash2, CheckCircle, Clock } from 'lucide-react';
+import { ClipboardList, User, Calendar, AlertTriangle, Plus, Loader2, X, Eye, Trash2, CheckCircle, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { Task, TaskStatus, TaskPriority, CreateTaskRequest } from '@/types/operations';
 import { getTasksByChapter, updateTask, getChapterMembersForTasks, subscribeToTasks } from '@/lib/services/taskService';
 import { useProfile } from '@/lib/contexts/ProfileContext';
@@ -39,6 +39,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewAllModalOpen, setIsViewAllModalOpen] = useState(false);
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
   // Load tasks and chapter members
   useEffect(() => {
@@ -414,6 +415,12 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
     });
   };
 
+  const MAX_DESCRIPTION_LENGTH = 100; // Character limit before truncation
+
+  const handleToggleDescription = (taskId: string) => {
+    setExpandedTaskId(expandedTaskId === taskId ? null : taskId);
+  };
+
   // Show loading state
   if (loading) {
     return (
@@ -468,7 +475,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
         <div className="mb-4">
           <Button 
             onClick={() => setIsModalOpen(true)}
-            className="w-full bg-navy-600 hover:bg-navy-700"
+            className="w-full h-10 rounded-full bg-navy-600 hover:bg-navy-700 text-white font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-300"
           >
             <Plus className="h-4 w-4 mr-2" />
             Create New Task
@@ -480,7 +487,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
           <Button 
             onClick={() => setIsViewAllModalOpen(true)}
             variant="outline"
-            className="w-full border-navy-600 text-navy-600 hover:bg-navy-50"
+            className="w-full h-10 rounded-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-300"
           >
             <Eye className="h-4 w-4 mr-2" />
             View All Assigned Tasks
@@ -499,14 +506,15 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
         {/* View All Tasks Modal */}
         {isViewAllModalOpen && (
           <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4">
+            <div className="flex min-h-full items-center justify-center p-2 sm:p-4">
               <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={() => setIsViewAllModalOpen(false)} />
               
-              <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full max-w-6xl">
+              {/* Modal Container - Full width with better constraints */}
+              <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full max-w-6xl max-h-[95vh] flex flex-col">
                 {/* Header */}
-                <div className="bg-white px-6 py-4 border-b border-gray-200">
+                <div className="bg-white px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex-shrink-0">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
                       All Chapter Tasks
                     </h3>
                     <button
@@ -518,32 +526,34 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
                   </div>
                 </div>
 
-                {/* Content */}
-                <div className="bg-white px-6 py-6 max-h-96 overflow-y-auto">
-                  <div className="space-y-4">
-                    {allChapterTasks.length === 0 ? ( // Use allChapterTasks here
-                      <div className="text-center py-8 text-gray-500">
-                        <ClipboardList className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                        <p className="text-lg font-medium mb-2">No tasks yet</p>
-                        <p className="text-sm">Create your first task to get started!</p>
+                {/* Content - Flex to fill remaining space */}
+                <div className="bg-white flex-1 overflow-y-auto flex flex-col min-h-0">
+                  <div className="w-full h-full flex flex-col">
+                    {allChapterTasks.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500 flex-1 flex items-center justify-center">
+                        <div>
+                          <ClipboardList className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                          <p className="text-lg font-medium mb-2">No tasks yet</p>
+                          <p className="text-sm">Create your first task to get started!</p>
+                        </div>
                       </div>
                     ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
+                      <div className="w-full h-full overflow-auto flex flex-col">
+                        <table className="w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50 sticky top-0 z-10">
                             <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
+                              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
+                              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
-                            {allChapterTasks.map((task) => ( // Use allChapterTasks here
+                            {allChapterTasks.map((task) => (
                               <tr key={task.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                                   <div className="flex items-center space-x-2">
                                     {getStatusIcon(task.status)}
                                     <Badge className={getStatusColor(task.status)}>
@@ -551,42 +561,59 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
                                     </Badge>
                                   </div>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-3 sm:px-6 py-4">
                                   <div>
                                     <div className="text-sm font-medium text-gray-900">{task.title}</div>
                                     {task.description && (
-                                      <div className="text-sm text-gray-500">{task.description}</div>
+                                      <div className="mt-1">
+                                        <div className="text-sm text-gray-500">
+                                          {expandedTaskId === task.id || task.description.length <= MAX_DESCRIPTION_LENGTH ? (
+                                            <span>{task.description}</span>
+                                          ) : (
+                                            <span>
+                                              {task.description.substring(0, MAX_DESCRIPTION_LENGTH)}
+                                              <span className="text-gray-400">...</span>
+                                            </span>
+                                          )}
+                                        </div>
+                                        {task.description.length > MAX_DESCRIPTION_LENGTH && (
+                                          <button
+                                            onClick={() => handleToggleDescription(task.id)}
+                                            className="mt-1 text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1 transition-colors"
+                                          >
+                                            <span>{expandedTaskId === task.id ? 'Show less' : 'Show more'}</span>
+                                            {expandedTaskId === task.id ? (
+                                              <ChevronUp className="h-3 w-3" />
+                                            ) : (
+                                              <ChevronDown className="h-3 w-3" />
+                                            )}
+                                          </button>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                   {task.assignee_name || 'Unassigned'}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                                   <Badge className={getPriorityColor(task.priority)}>
                                     {task.priority}
                                   </Badge>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                   {formatDate(task.due_date)}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div className="relative group">
+                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                  <div className="relative group">
                                     <Button
                                       size="sm"
                                       onClick={() => handleDeleteTask(task.id)}
-                                      disabled={task.status !== 'completed'}
-                                      className="flex items-center space-x-1"
+                                      className="h-8 rounded-full px-3 sm:px-4 text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md border border-red-200 bg-white text-red-600 hover:bg-red-50 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-300"
                                     >
-                                      <Trash2 className="h-4 w-4" />
-                                      <span>Delete</span>
+                                      <Trash2 className="h-4 w-4 mr-1.5" />
+                                      <span>Remove</span>
                                     </Button>
-                                    {task.status !== 'completed' && (
-                                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                                        Delete when completed
-                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
-                                      </div>
-                                    )}
                                   </div>
                                 </td>
                               </tr>
