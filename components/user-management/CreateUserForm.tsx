@@ -7,11 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectItem } from '@/components/ui/select';
 import { X } from 'lucide-react';
 import { useChapters } from '@/lib/hooks/useChapters';
 import { DEVELOPER_PERMISSIONS } from '@/lib/developerPermissions';
 import { DeveloperPermission } from '@/types/profile';
+import { cn } from '@/lib/utils';
 
 interface CreateUserFormProps {
   onClose: () => void;
@@ -32,15 +33,26 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
     role: 'active_member' as 'admin' | 'active_member',
     chapter_role: 'member' as string,
     is_developer: false
-    // Remove developer_permissions from state since it's auto-assigned
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [createdUser, setCreatedUser] = useState<any>(null);
   const [tempPassword, setTempPassword] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
   
   // Use the chapters hook to fetch available chapters
   const { chapters, loading: chaptersLoading, error: chaptersError } = useChapters();
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640); // sm breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Auto-populate chapter if provided
   useEffect(() => {
@@ -49,13 +61,9 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
     }
   }, [chapterContext]);
 
-  // Add this debug log at the top of the component
-  // CreateUserForm render - success state
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Starting user creation...
 
     try {
       // Validate required fields
@@ -74,11 +82,8 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
           role: formData.role,
           chapter_role: formData.chapter_role,
           is_developer: formData.is_developer,
-          // Remove developer_permissions from the body
         })
       });
-
-      // API Response status
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -86,16 +91,10 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
       }
 
       const data = await response.json();
-      // API Response data
       
       setCreatedUser(data.user);
       setTempPassword(data.tempPassword);
       setSuccess(true);
-      
-      // Success state set to true
-      
-      // DON'T call onSuccess() here - let the success modal handle it
-      // onSuccess(); // Remove this line
       
     } catch (error) {
       console.error('Error creating user:', error);
@@ -110,19 +109,27 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
   };
 
   if (success) {
-    // Rendering success modal
+    // Success modal - Mobile: Bottom drawer, Desktop: Centered
     return typeof window !== 'undefined' && createPortal(
       <div className="fixed inset-0 z-[9999]">
-        {/* Full screen overlay */}
         <div 
           className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
           onClick={onClose}
         />
         
-        {/* Modal content centered */}
-        <div className="relative flex items-center justify-center min-h-screen p-4">
+        <div className={cn(
+          "relative min-h-screen",
+          isMobile 
+            ? "flex items-end justify-center p-0"
+            : "flex items-center justify-center p-4"
+        )}>
           <Card 
-            className="w-full max-w-2xl relative z-10 max-h-[90vh] overflow-y-auto"
+            className={cn(
+              "w-full relative z-10 overflow-y-auto",
+              isMobile
+                ? "max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none pb-[env(safe-area-inset-bottom)]"
+                : "max-w-2xl max-h-[90vh] rounded-xl"
+            )}
             onClick={(e) => e.stopPropagation()}
           >
           <CardHeader>
@@ -136,7 +143,6 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
               <p><strong>Chapter:</strong> {createdUser.chapter}</p>
               <p><strong>Role:</strong> {createdUser.role}</p>
               <p><strong>Developer Access:</strong> {createdUser.is_developer ? 'Yes' : 'No'}</p>
-              {/* Remove developer permissions display */}
             </div>
 
             <div className="bg-yellow-50 p-4 rounded-lg">
@@ -168,9 +174,9 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
 
             <div className="flex justify-end space-x-2">
               <Button onClick={() => {
-                setSuccess(false); // Reset success state
-                onSuccess(); // Call onSuccess when closing the modal
-                onClose(); // Close the modal
+                setSuccess(false);
+                onSuccess();
+                onClose();
               }}>
                 Close
               </Button>
@@ -183,21 +189,30 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
     );
   }
 
+  // Main form - Mobile: Bottom drawer, Desktop: Centered
   return typeof window !== 'undefined' && createPortal(
     <div className="fixed inset-0 z-[9999]">
-      {/* Full screen overlay */}
       <div 
         className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
         onClick={onClose}
       />
       
-      {/* Modal content centered */}
-      <div className="relative flex items-center justify-center min-h-screen p-4">
+      <div className={cn(
+        "relative min-h-screen",
+        isMobile 
+          ? "flex items-end justify-center p-0"
+          : "flex items-center justify-center p-4"
+      )}>
         <Card 
-          className="w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto relative z-10"
+          className={cn(
+            "w-full relative z-10 overflow-y-auto",
+            isMobile
+              ? "max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none pb-[env(safe-area-inset-bottom)] bg-white shadow-xl"
+              : "max-w-2xl mx-4 max-h-[90vh] rounded-xl"
+          )}
           onClick={(e) => e.stopPropagation()}
         >
-        <CardHeader className="pb-2">
+        <CardHeader className={cn("pb-2", isMobile ? "flex-shrink-0" : "")}>
           <div className="flex items-center justify-between">
             <CardTitle>Create New User</CardTitle>
             <Button variant="ghost" size="sm" onClick={onClose}>
@@ -205,7 +220,10 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 pt-0">
+        <CardContent className={cn(
+          "space-y-4 pt-0",
+          isMobile ? "flex-1 overflow-y-auto" : ""
+        )}>
           {/* Email Field - Full Width */}
           <div>
             <Label htmlFor="email">Email *</Label>
@@ -219,8 +237,11 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
             />
           </div>
 
-          {/* First Name and Last Name - Same Row */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* First Name and Last Name - Stack on mobile, side-by-side on desktop */}
+          <div className={cn(
+            "gap-4",
+            isMobile ? "space-y-4" : "grid grid-cols-2"
+          )}>
             <div>
               <Label htmlFor="firstName">First Name *</Label>
               <Input
@@ -260,6 +281,7 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
               <Select 
                 value={formData.chapter} 
                 onValueChange={(value: string) => setFormData({ ...formData, chapter: value })}
+                placeholder="Select a chapter"
               >
                 {chapters.map((chapterData) => (
                   <SelectItem key={chapterData.id} value={chapterData.id}>
@@ -270,8 +292,11 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
             </div>
           )}
 
-          {/* Role and Chapter Role - Same Row */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Role and Chapter Role - Stack on mobile, side-by-side on desktop */}
+          <div className={cn(
+            "gap-4",
+            isMobile ? "space-y-4" : "grid grid-cols-2"
+          )}>
             <div>
               <Label htmlFor="role">Role *</Label>
               <Select 
@@ -281,7 +306,6 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
                   setFormData({ 
                     ...formData, 
                     role: newRole,
-                    // Auto-set chapter role to president when admin/executive is selected
                     chapter_role: newRole === 'admin' ? 'president' : 'member'
                   });
                 }}
@@ -338,7 +362,6 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
                     setFormData({ 
                       ...formData, 
                       is_developer: isDev,
-                      // Auto-set role to admin when developer access is enabled
                       role: isDev ? 'admin' : 'active_member'
                     });
                   }}
@@ -365,12 +388,30 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex space-x-2 pt-4">
-            <Button variant="outline" onClick={onClose} className="flex-1" disabled={loading}>
+          {/* Action Buttons - Mobile: Rounded-full pills, Desktop: Standard */}
+          <div className={cn(
+            "flex space-x-2 pt-4 flex-shrink-0 border-t border-gray-200",
+            isMobile ? "p-4 pb-[calc(16px+env(safe-area-inset-bottom))] mt-4" : ""
+          )}>
+            <Button 
+              variant="outline" 
+              onClick={onClose} 
+              className={cn(
+                "flex-1",
+                isMobile && "rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+              )}
+              disabled={loading}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSubmit} className="flex-1" disabled={loading}>
+            <Button 
+              onClick={handleSubmit} 
+              className={cn(
+                "flex-1",
+                isMobile && "rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              )}
+              disabled={loading}
+            >
               {loading ? (
                 <div className="flex items-center space-x-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
