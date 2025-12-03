@@ -1,11 +1,13 @@
 'use client';
 
 import { createPortal } from 'react-dom';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, User, Mail, Phone, MapPin, GraduationCap, Building2, Shield, Calendar, BookOpen } from 'lucide-react';
 import { getRoleDisplayName } from '@/lib/permissions';
+import { cn } from '@/lib/utils';
 
 interface User {
   id: string;
@@ -42,6 +44,19 @@ interface ViewUserModalProps {
 }
 
 export function ViewUserModal({ isOpen, onClose, user }: ViewUserModalProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640); // sm breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   if (!isOpen || !user) return null;
 
   const formatDate = (dateString: string) => {
@@ -75,13 +90,23 @@ export function ViewUserModal({ isOpen, onClose, user }: ViewUserModalProps) {
   };
 
   const modal = (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <CardHeader className="pb-4">
+    <div className={cn(
+      "fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm",
+      isMobile 
+        ? "flex items-end justify-center p-0"
+        : "flex items-center justify-center p-4"
+    )}>
+      <Card className={cn(
+        "w-full overflow-y-auto bg-white shadow-xl",
+        isMobile
+          ? "max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none pb-[env(safe-area-inset-bottom)]"
+          : "max-w-4xl max-h-[90vh] rounded-xl"
+      )}>
+        <CardHeader className={cn("pb-4", isMobile ? "flex-shrink-0" : "")}>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center space-x-2">
               <User className="h-5 w-5 text-blue-600" />
-              <span>User Profile: {user.full_name || user.email}</span>
+              <span className={isMobile ? "text-base" : ""}>User Profile: {user.full_name || user.email}</span>
             </CardTitle>
             <Button
               variant="ghost"
@@ -93,9 +118,15 @@ export function ViewUserModal({ isOpen, onClose, user }: ViewUserModalProps) {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className={cn(
+          "space-y-6",
+          isMobile ? "flex-1 overflow-y-auto px-4 pb-4" : ""
+        )}>
           {/* Basic Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className={cn(
+            "gap-6",
+            isMobile ? "space-y-6" : "grid grid-cols-1 md:grid-cols-2"
+          )}>
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center space-x-2">
@@ -320,9 +351,20 @@ export function ViewUserModal({ isOpen, onClose, user }: ViewUserModalProps) {
             </CardContent>
           </Card>
 
-          {/* Close Button */}
-          <div className="flex justify-end pt-4">
-            <Button onClick={onClose} variant="outline">
+          {/* Close Button - Mobile: Rounded-full pill, Desktop: Standard */}
+          <div className={cn(
+            "flex justify-end pt-4",
+            isMobile ? "flex-shrink-0 border-t border-gray-200 mt-4 pb-[calc(16px+env(safe-area-inset-bottom))]" : ""
+          )}>
+            <Button 
+              onClick={onClose} 
+              variant="outline"
+              className={cn(
+                isMobile 
+                  ? "w-full rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                  : ""
+              )}
+            >
               Close
             </Button>
           </div>
