@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     siteName: 'Trailblaize',
     images: [
       {
-        url: '/og/trailblaize-home.png',
+        url: '/og/Trailblaize.png',
         width: 1200,
         height: 630,
         alt: 'Trailblaize – Where Alumni Networks Thrive',
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     title: 'Trailblaize – Where Alumni Networks Thrive',
     description:
       'Trailblaize is the modern operating system for Greek organizations, powering alumni engagement, events, and chapter growth.',
-    images: ['/og/trailblaize-home.png'],
+    images: ['/og/Trailblaize.png'],
   },
 };
 
