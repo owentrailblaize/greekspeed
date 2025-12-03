@@ -29,6 +29,7 @@ import { createPortal } from 'react-dom';
 import { SendAnnouncementButton } from './ui/SendAnnouncementButton';
 import { EXECUTIVE_ROLES } from '@/lib/permissions';
 import { UpcomingEventsCard } from './ui/UpcomingEventsCard';
+import { cn } from '@/lib/utils';
 
 interface AdminOverviewProps {
   initialFeed?: SocialFeedInitialData;
@@ -41,8 +42,21 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
   const [activeMobileTab, setActiveMobileTab] = useState('home');
   const [showQuickActionsModal, setShowQuickActionsModal] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(false); // Add this line
+  
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Add mobile detection useEffect (add this after line 46, before feedData)
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640); // sm breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const feedData = useMemo(() => {
     if (!initialFeed) return undefined;
@@ -318,19 +332,14 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
       )}
 
       {/* Event Creation Modal */}
-      {showEventModal && typeof window !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black bg-opacity-50" />
-          <div className="relative flex items-center justify-center min-h-screen p-4">
-            <EventForm
-              event={null}
-              onSubmit={handleCreateEvent}
-              onCancel={() => setShowEventModal(false)}
-              loading={false}
-            />
-          </div>
-        </div>,
-        document.body
+      {showEventModal && (
+        <EventForm
+          isOpen={showEventModal}
+          event={null}
+          onSubmit={handleCreateEvent}
+          onCancel={() => setShowEventModal(false)}
+          loading={false}
+        />
       )}
     </div>
   );

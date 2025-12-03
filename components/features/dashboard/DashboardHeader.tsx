@@ -102,7 +102,7 @@ export function DashboardHeader() {
             className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
           >
             <Image
-              src="/logo.jpeg"
+              src="/logo.png"
               alt="Trailblaize"
               width={32}
               height={32}

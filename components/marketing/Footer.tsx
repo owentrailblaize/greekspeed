@@ -12,7 +12,7 @@ export function Footer() {
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-3 mb-4">
               <div className="w-10 h-10 relative">
-                <img src="/logo.jpeg" alt="Trailblaize logo" className="w-full h-full object-contain" />
+                <img src="/logo.png" alt="Trailblaize logo" className="w-full h-full object-contain" />
               </div>
               <span className="font-semibold text-xl text-white">Trailblaize</span>
             </div>

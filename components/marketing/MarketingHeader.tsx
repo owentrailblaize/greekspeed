@@ -45,18 +45,13 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-16 md:h-18">
           {/* Logo */}
-          <div className="flex items-center space-x-3">
-            <Link href="/" className="flex items-center space-x-3">
-              <div className="w-12 h-12 relative">
-                <img 
-                  src="/logo.jpeg" 
-                  alt="Trailblaize logo" 
-                  className="w-full h-full object-contain" 
-                />
-              </div>
-              <span className="font-bold text-xl text-gray-900">
-                Trailblaize
-              </span>
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center">
+              <img 
+                src="/logo.png" 
+                alt="Trailblaize logo" 
+                className="h-28 w-auto max-h-full object-contain transition-all duration-300 hover:opacity-90" 
+              />
             </Link>
           </div>
 

@@ -20,7 +20,7 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center space-x-2 mb-4">
                 <img 
-                  src="/logo.jpeg" 
+                  src="/logo.png" 
                   alt="Trailblaize" 
                   className="h-6 w-6 rounded"
                 />

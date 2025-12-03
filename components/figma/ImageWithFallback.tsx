@@ -2,7 +2,7 @@ import Image, { ImageProps } from "next/image";
 import { cn } from "@/lib/utils";
 
 export default function ImageWithFallback({ src, alt, className, loading, ...rest }: ImageProps) {
-  const fallback = "/logo.jpeg";
+  const fallback = "/logo.png";
   return (
     <Image
       src={src || fallback}

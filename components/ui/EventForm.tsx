@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,18 +13,32 @@ import { X, Calendar, MapPin, DollarSign, FileText, Mail, Smartphone } from 'luc
 import { Event, CreateEventRequest, UpdateEventRequest } from '@/types/events';
 import { useAuth} from '@/lib/supabase/auth-context';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { cn } from '@/lib/utils';
 
 interface EventFormProps {
   event?: Event | null;
   onSubmit: (data: CreateEventRequest | UpdateEventRequest) => Promise<void>;
   onCancel: () => void;
   loading?: boolean;
+  isOpen?: boolean; // Optional: if provided, renders as modal. If not, renders as card only
 }
 
-export function EventForm({ event, onSubmit, onCancel, loading = false }: EventFormProps) {
+export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen = undefined }: EventFormProps) {
   const { session } = useAuth();
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640); // sm breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const [formData, setFormData] = useState<CreateEventRequest>({
     title: '',
@@ -181,19 +196,45 @@ export function EventForm({ event, onSubmit, onCancel, loading = false }: EventF
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
-  return (
-    <Card className="rounded-lg w-full max-w-2xl mx-auto flex flex-col max-h-[90vh]">
+  // Form content (shared between modal and card-only mode)
+  const formContent = (
+    <Card className={cn(
+      "rounded-lg w-full flex flex-col",
+      isOpen === undefined 
+        ? "max-w-2xl mx-auto max-h-[90vh]" // Card-only mode
+        : isMobile
+          ? "max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none pb-[env(safe-area-inset-bottom)] bg-white shadow-xl"
+          : "max-w-2xl max-h-[90vh] rounded-xl"
+    )}>
       {/* Fixed Header */}
-      <CardHeader className="rounded-lg pb-4 sm:pb-6 flex-shrink-0 bg-white border-b border-gray-100">
-        <CardTitle className="flex items-center space-x-3 sm:space-x-2 text-xl sm:text-lg">
-          <Calendar className="h-6 w-6 sm:h-5 sm:w-5 text-navy-600" />
-          <span>{event ? 'Edit Event' : 'Create New Event'}</span>
-        </CardTitle>
+      <CardHeader className={cn(
+        "rounded-lg pb-4 sm:pb-6 flex-shrink-0 bg-white border-b border-gray-100",
+        isOpen !== undefined && isMobile ? "p-4" : ""
+      )}>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center space-x-3 sm:space-x-2 text-xl sm:text-lg">
+            <Calendar className="h-6 w-6 sm:h-5 sm:w-5 text-navy-600" />
+            <span>{event ? 'Edit Event' : 'Create New Event'}</span>
+          </CardTitle>
+          {isOpen !== undefined && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onCancel}
+              className="h-8 w-8 p-0 hover:bg-gray-100"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </CardHeader>
 
       {/* Scrollable Content Area */}
       <div className="rounded-lg flex-1 overflow-y-auto min-h-0">
-        <CardContent className="p-4 sm:p-6">
+        <CardContent className={cn(
+          "p-4 sm:p-6",
+          isOpen !== undefined && isMobile ? "p-4" : ""
+        )}>
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Title */}
             <div className="space-y-3 sm:space-y-2">
@@ -241,8 +282,11 @@ export function EventForm({ event, onSubmit, onCancel, loading = false }: EventF
               />
             </div>
 
-            {/* Date and Time */}
-            <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-1 sm:md:grid-cols-2 sm:gap-4">
+            {/* Date and Time - Stack on mobile, side-by-side on desktop */}
+            <div className={cn(
+              "gap-4",
+              isMobile ? "space-y-4" : "space-y-4 sm:space-y-0 sm:grid sm:grid-cols-1 sm:md:grid-cols-2"
+            )}>
               <div className="space-y-3 sm:space-y-2">
                 <Label htmlFor="start_time" className="text-base sm:text-sm">Start Date & Time *</Label>
                 <Input
@@ -272,8 +316,11 @@ export function EventForm({ event, onSubmit, onCancel, loading = false }: EventF
               </div>
             </div>
 
-            {/* Budget */}
-            <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-1 sm:md:grid-cols-2 sm:gap-4">
+            {/* Budget - Stack on mobile, side-by-side on desktop */}
+            <div className={cn(
+              "gap-4",
+              isMobile ? "space-y-4" : "space-y-4 sm:space-y-0 sm:grid sm:grid-cols-1 sm:md:grid-cols-2"
+            )}>
               <div className="space-y-3 sm:space-y-2">
                 <Label htmlFor="budget_label" className="flex items-center space-x-2 text-base sm:text-sm">
                   <DollarSign className="h-5 w-5 sm:h-4 sm:w-4" />
@@ -354,21 +401,39 @@ export function EventForm({ event, onSubmit, onCancel, loading = false }: EventF
       </div>
 
       {/* Fixed Action Buttons */}
-      <div className="rounded-lg flex-shrink-0 bg-white border-t border-gray-100 p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+      <div className={cn(
+        "rounded-lg flex-shrink-0 bg-white border-t border-gray-100",
+        isOpen !== undefined && isMobile 
+          ? "p-4 pb-[calc(16px+env(safe-area-inset-bottom))]"
+          : "p-4 sm:p-6"
+      )}>
+        <div className={cn(
+          "flex space-x-3",
+          isMobile ? "flex-col space-y-2 space-x-0" : "flex-row justify-end"
+        )}>
           <Button
             type="button"
             variant="outline"
             onClick={onCancel}
             disabled={loading}
-            className="rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+            className={cn(
+              "transition-all duration-300",
+              isOpen !== undefined && isMobile
+                ? "w-full rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 h-12"
+                : "rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+            )}
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={loading}
-            className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+            className={cn(
+              "transition-all duration-300",
+              isOpen !== undefined && isMobile
+                ? "w-full rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 disabled:opacity-50 disabled:cursor-not-allowed h-12"
+                : "rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 disabled:opacity-50 disabled:cursor-not-allowed h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+            )}
             onClick={handleSubmit}
           >
             {loading ? 'Saving...' : (event ? 'Update Event' : 'Create Event')}
@@ -377,4 +442,42 @@ export function EventForm({ event, onSubmit, onCancel, loading = false }: EventF
       </div>
     </Card>
   );
+
+  // If isOpen prop is provided, render as modal (mobile drawer on mobile, centered on desktop)
+  if (isOpen !== undefined) {
+    if (!isOpen) return null;
+    
+    if (typeof window === 'undefined') return null;
+    
+    return createPortal(
+      <div className={cn(
+        "fixed inset-0 z-[9999]",
+        isMobile ? "" : "sm:flex sm:items-center sm:justify-center"
+      )}>
+        {/* Backdrop - only show on mobile */}
+        {isMobile && (
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+            onClick={onCancel} 
+          />
+        )}
+        
+        {/* Modal Container - Mobile: Bottom drawer, Desktop: Centered */}
+        <div className={cn(
+          "relative min-h-screen",
+          isMobile 
+            ? "flex items-end justify-center p-0"
+            : "hidden sm:flex sm:items-center sm:justify-center p-4"
+        )}>
+          <div onClick={(e) => e.stopPropagation()}>
+            {formContent}
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+  }
+
+  // If isOpen is not provided, render as card only (backward compatible)
+  return formContent;
 }
