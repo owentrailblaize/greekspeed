@@ -714,26 +714,65 @@ export function MobileEventsVendorsPage() {
           document.body
         )}
 
-        {/* Vendor Form Modal */}
+        {/* Vendor Form Modal - Mobile: Bottom drawer, Desktop: Centered */}
         {showVendorForm && typeof window !== 'undefined' && createPortal(
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-            <div className="relative max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <VendorForm
-                vendor={editingVendor}
-                onSubmit={async (data) => {
-                  if (editingVendor) {
-                    await handleUpdateVendor(data as UpdateVendorRequest);
-                  } else {
-                    await handleCreateVendor(data as CreateVendorRequest);
-                  }
-                }}
-                onCancel={() => {
-                  setShowVendorForm(false);
-                  setEditingVendor(null);
-                }}
-                loading={isSubmittingVendor}
-              />
-            </div>
+          <div className={cn(
+            "fixed inset-0 z-[9999]",
+            isMobile 
+              ? "flex items-end justify-center p-0"
+              : "flex items-center justify-center p-4"
+          )}>
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+              onClick={() => {
+                setShowVendorForm(false);
+                setEditingVendor(null);
+              }}
+            />
+            
+            {/* Mobile: Bottom Drawer */}
+            {isMobile && (
+              <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[50vh] mt-[50vh] rounded-t-2xl rounded-b-none overflow-hidden">
+                <VendorForm
+                  vendor={editingVendor}
+                  onSubmit={async (data) => {
+                    if (editingVendor) {
+                      await handleUpdateVendor(data as UpdateVendorRequest);
+                    } else {
+                      await handleCreateVendor(data as CreateVendorRequest);
+                    }
+                  }}
+                  onCancel={() => {
+                    setShowVendorForm(false);
+                    setEditingVendor(null);
+                  }}
+                  loading={isSubmittingVendor}
+                  isMobile={true}
+                />
+              </div>
+            )}
+
+            {/* Desktop: Centered Modal */}
+            {!isMobile && (
+              <div className="relative max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <VendorForm
+                  vendor={editingVendor}
+                  onSubmit={async (data) => {
+                    if (editingVendor) {
+                      await handleUpdateVendor(data as UpdateVendorRequest);
+                    } else {
+                      await handleCreateVendor(data as CreateVendorRequest);
+                    }
+                  }}
+                  onCancel={() => {
+                    setShowVendorForm(false);
+                    setEditingVendor(null);
+                  }}
+                  loading={isSubmittingVendor}
+                />
+              </div>
+            )}
           </div>,
           document.body
         )}
