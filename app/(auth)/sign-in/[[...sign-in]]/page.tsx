@@ -190,7 +190,7 @@ export default function SignInPage() {
                 </button>
                 <div className="text-sm text-gray-600">
                   Don't have an account?{' '}
-                  <Link href="/sign-up" className="text-purple-600 hover:text-purple-700 font-medium">
+                  <Link href="/sign-up" className="text-navy-600 hover:text-navy-700 font-medium">
                     Sign Up
                   </Link>
                 </div>
@@ -226,7 +226,7 @@ export default function SignInPage() {
                   <button
                     type="button"
                     onClick={handleForgotPassword}
-                    className="text-sm text-purple-600 hover:text-purple-700"
+                    className="text-sm text-navy-600 hover:text-navy-700"
                   >
                     Forgot Password?
                   </button>
@@ -242,7 +242,7 @@ export default function SignInPage() {
                 {/* Continue Button */}
                 <Button 
                   type="submit" 
-                  className="w-full h-11 bg-navy-600 hover:bg-navy-700 text-white font-medium" 
+                  className="w-full h-11 rounded-full bg-navy-600 hover:bg-navy-700 text-white font-medium shadow-sm hover:shadow-md transition-all duration-200" 
                   disabled={loading || googleLoading}
                 >
                   <span>Continue</span>
@@ -255,7 +255,7 @@ export default function SignInPage() {
                 <Button 
                   type="button"
                   variant="outline" 
-                  className="w-full h-11 border-gray-300 hover:bg-gray-50 text-gray-700 font-medium"
+                  className="w-full h-11 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium shadow-sm hover:shadow-md transition-all duration-200"
                   onClick={handleGoogleSignIn}
                   disabled={loading || googleLoading}
                 >
@@ -271,11 +271,11 @@ export default function SignInPage() {
               {/* Terms */}
               <p className="text-sm text-gray-600 mt-4 text-center">
                 By clicking continue, you agree to our{' '}
-                <Link href="/terms" className="text-purple-600 hover:text-purple-700 underline">
+                <Link href="/terms" className="text-navy-600 hover:text-navy-700 underline">
                   Terms of Service
                 </Link>{' '}
                 and{' '}
-                <Link href="/privacy" className="text-purple-600 hover:text-purple-700 underline">
+                <Link href="/privacy" className="text-navy-600 hover:text-navy-700 underline">
                   Privacy Policy
                 </Link>
               </p>

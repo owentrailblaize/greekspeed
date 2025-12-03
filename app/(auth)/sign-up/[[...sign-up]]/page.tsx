@@ -226,7 +226,7 @@ export default function SignUpPage() {
                     <Button 
                       type="button"
                       variant="outline" 
-                      className="w-full h-9 border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-3 text-sm"
+                      className="w-full h-9 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-3 text-sm shadow-sm hover:shadow-md transition-all duration-200"
                       onClick={handleGoogleSignUp}
                       disabled={loading}
                     >
@@ -241,7 +241,7 @@ export default function SignUpPage() {
                     <Button 
                       type="button"
                       variant="outline" 
-                      className="w-full h-9 border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-3 text-sm"
+                      className="w-full h-9 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-3 text-sm shadow-sm hover:shadow-md transition-all duration-200"
                       onClick={handleEmailSignUp}
                       disabled={loading}
                     >
@@ -452,7 +452,7 @@ export default function SignUpPage() {
                       <div className="mt-2 lg:mt-1">
                         <Button 
                           type="submit" 
-                          className="w-full h-7 bg-navy-600 hover:bg-navy-700 text-white font-medium text-sm" 
+                          className="w-full h-7 rounded-full bg-navy-600 hover:bg-navy-700 text-white font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200" 
                           disabled={loading}
                         >
                           {loading ? 'Creating account...' : 'Create Alumni Account'}
