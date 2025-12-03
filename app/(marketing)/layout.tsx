@@ -18,14 +18,14 @@ export const metadata: Metadata = {
         url: '/og/Trailblaize.png',
         width: 1200,
         height: 630,
-        alt: 'Trailblaize – Where Alumni Networks Thrive',
+        alt: 'Trailblaize – Alumni Relationship Management',
       },
     ],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Trailblaize – Where Alumni Networks Thrive',
+    title: 'Trailblaize – Alumni Relationship Management',
     description:
       'Trailblaize is the modern operating system for Greek organizations, powering alumni engagement, events, and chapter growth.',
     images: ['/og/Trailblaize.png'],

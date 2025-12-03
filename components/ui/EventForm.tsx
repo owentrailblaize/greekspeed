@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,24 +20,13 @@ interface EventFormProps {
   onCancel: () => void;
   loading?: boolean;
   isOpen?: boolean; // Optional: if provided, renders as modal. If not, renders as card only
+  isMobile?: boolean; // Add this prop - explicitly passed from parent instead of detecting internally
 }
 
-export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen = undefined }: EventFormProps) {
+export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen = undefined, isMobile = false }: EventFormProps) {
   const { session } = useAuth();
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 640); // sm breakpoint
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   const [formData, setFormData] = useState<CreateEventRequest>({
     title: '',
@@ -199,24 +187,32 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
   // Form content (shared between modal and card-only mode)
   const formContent = (
     <Card className={cn(
-      "rounded-lg w-full flex flex-col",
+      "w-full mx-auto flex flex-col",
       isOpen === undefined 
-        ? "max-w-2xl mx-auto max-h-[90vh]" // Card-only mode
+        ? "max-w-2xl max-h-[90vh]" // Card-only mode
         : isMobile
-          ? "max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none pb-[env(safe-area-inset-bottom)] bg-white shadow-xl"
+          ? "rounded-none shadow-none border-0 h-full min-h-0 bg-transparent" // Transparent background, let drawer handle it (like VendorForm)
           : "max-w-2xl max-h-[90vh] rounded-xl"
     )}>
       {/* Fixed Header */}
       <CardHeader className={cn(
-        "rounded-lg pb-4 sm:pb-6 flex-shrink-0 bg-white border-b border-gray-100",
-        isOpen !== undefined && isMobile ? "p-4" : ""
+        "pb-4 sm:pb-6 flex-shrink-0 bg-white",
+        isMobile ? "p-4 border-b border-gray-200" : "rounded-lg border-b border-gray-100"
       )}>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-3 sm:space-x-2 text-xl sm:text-lg">
             <Calendar className="h-6 w-6 sm:h-5 sm:w-5 text-navy-600" />
             <span>{event ? 'Edit Event' : 'Create New Event'}</span>
           </CardTitle>
-          {isOpen !== undefined && (
+          {isMobile && (
+            <button
+              onClick={onCancel}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+          {isOpen !== undefined && !isMobile && (
             <Button
               variant="ghost"
               size="sm"
@@ -230,12 +226,12 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
       </CardHeader>
 
       {/* Scrollable Content Area */}
-      <div className="rounded-lg flex-1 overflow-y-auto min-h-0">
+      <div className={cn("flex-1 overflow-y-auto min-h-0", !isMobile && "rounded-lg")}>
         <CardContent className={cn(
           "p-4 sm:p-6",
-          isOpen !== undefined && isMobile ? "p-4" : ""
+          isMobile ? "p-4" : "pt-0"
         )}>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} id="event-form" className="space-y-4">
             {/* Title */}
             <div className="space-y-3 sm:space-y-2">
               <Label htmlFor="title" className="flex items-center space-x-2 text-base sm:text-sm">
@@ -401,83 +397,58 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
       </div>
 
       {/* Fixed Action Buttons */}
-      <div className={cn(
-        "rounded-lg flex-shrink-0 bg-white border-t border-gray-100",
-        isOpen !== undefined && isMobile 
-          ? "p-4 pb-[calc(16px+env(safe-area-inset-bottom))]"
-          : "p-4 sm:p-6"
-      )}>
-        <div className={cn(
-          "flex space-x-3",
-          isMobile ? "flex-col space-y-2 space-x-0" : "flex-row justify-end"
-        )}>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={loading}
-            className={cn(
-              "transition-all duration-300",
-              isOpen !== undefined && isMobile
-                ? "w-full rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 h-12"
-                : "rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
-            )}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            disabled={loading}
-            className={cn(
-              "transition-all duration-300",
-              isOpen !== undefined && isMobile
-                ? "w-full rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 disabled:opacity-50 disabled:cursor-not-allowed h-12"
-                : "rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 disabled:opacity-50 disabled:cursor-not-allowed h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
-            )}
-            onClick={handleSubmit}
-          >
-            {loading ? 'Saving...' : (event ? 'Update Event' : 'Create Event')}
-          </Button>
+      {isMobile ? (
+        <div className="flex-shrink-0 border-t border-gray-200 bg-white p-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
+          <div className="flex flex-col space-y-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={loading}
+              className="w-full rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="event-form"
+              disabled={loading}
+              className="w-full rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Saving...' : (event ? 'Update Event' : 'Create Event')}
+            </Button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className={cn(
+          "rounded-lg flex-shrink-0 bg-white border-t border-gray-100",
+          "p-4 sm:p-6"
+        )}>
+          <div className="flex space-x-3 justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={loading}
+              className="rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="event-form"
+              disabled={loading}
+              className="rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 disabled:opacity-50 disabled:cursor-not-allowed h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+            >
+              {loading ? 'Saving...' : (event ? 'Update Event' : 'Create Event')}
+            </Button>
+          </div>
+        </div>
+      )}
     </Card>
   );
 
-  // If isOpen prop is provided, render as modal (mobile drawer on mobile, centered on desktop)
-  if (isOpen !== undefined) {
-    if (!isOpen) return null;
-    
-    if (typeof window === 'undefined') return null;
-    
-    return createPortal(
-      <div className={cn(
-        "fixed inset-0 z-[9999]",
-        isMobile ? "" : "sm:flex sm:items-center sm:justify-center"
-      )}>
-        {/* Backdrop - only show on mobile */}
-        {isMobile && (
-          <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
-            onClick={onCancel} 
-          />
-        )}
-        
-        {/* Modal Container - Mobile: Bottom drawer, Desktop: Centered */}
-        <div className={cn(
-          "relative min-h-screen",
-          isMobile 
-            ? "flex items-end justify-center p-0"
-            : "hidden sm:flex sm:items-center sm:justify-center p-4"
-        )}>
-          <div onClick={(e) => e.stopPropagation()}>
-            {formContent}
-          </div>
-        </div>
-      </div>,
-      document.body
-    );
-  }
-
+  // Remove portal creation - parent will handle it
   // If isOpen is not provided, render as card only (backward compatible)
   return formContent;
 }
