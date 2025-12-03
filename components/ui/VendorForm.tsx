@@ -9,15 +9,17 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X, Building2, Phone, Mail, Globe, MapPin, Star } from 'lucide-react';
 import { VendorContact, CreateVendorRequest, UpdateVendorRequest, VENDOR_TYPES } from '@/types/vendors';
+import { cn } from '@/lib/utils';
 
 interface VendorFormProps {
   vendor?: VendorContact | null;
   onSubmit: (data: CreateVendorRequest | UpdateVendorRequest) => Promise<void>;
   onCancel: () => void;
   loading?: boolean;
+  isMobile?: boolean;
 }
 
-export function VendorForm({ vendor, onSubmit, onCancel, loading = false }: VendorFormProps) {
+export function VendorForm({ vendor, onSubmit, onCancel, loading = false, isMobile = false }: VendorFormProps) {
   const [formData, setFormData] = useState<CreateVendorRequest>({
     name: '',
     type: '',
@@ -95,15 +97,38 @@ export function VendorForm({ vendor, onSubmit, onCancel, loading = false }: Vend
   };
 
   return (
-    <Card className="w-full max-w-3xl mx-auto">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center space-x-2 text-lg">
-          <Building2 className="h-5 w-5 text-navy-600" />
-          <span>{vendor ? 'Edit Vendor' : 'Add New Vendor'}</span>
-        </CardTitle>
+    <Card className={cn(
+      "w-full mx-auto flex flex-col",
+      isMobile 
+        ? "rounded-none shadow-none border-0 h-full min-h-0 bg-transparent" // Transparent background, let drawer handle it
+        : "max-w-3xl" // Desktop max-width
+    )}>
+      <CardHeader className={cn(
+        "pb-4 flex-shrink-0 bg-white",
+        isMobile ? "p-4 border-b border-gray-200" : ""
+      )}>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center space-x-2 text-lg">
+            <Building2 className="h-5 w-5 text-navy-600" />
+            <span>{vendor ? 'Edit Vendor' : 'Add New Vendor'}</span>
+          </CardTitle>
+          {isMobile && (
+            <button
+              onClick={onCancel}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
       </CardHeader>
-      <CardContent className="pt-0">
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <CardContent className={cn(
+        "pt-0 flex-1 overflow-y-auto min-h-0",
+        isMobile 
+          ? "p-4" 
+          : ""
+      )}>
+        <form onSubmit={handleSubmit} id="vendor-form" className="space-y-4">
           {/* Vendor Name */}
           <div className="space-y-2">
             <Label htmlFor="name" className="flex items-center space-x-2 text-sm font-medium">
@@ -153,7 +178,10 @@ export function VendorForm({ vendor, onSubmit, onCancel, loading = false }: Vend
           </div>
 
           {/* Phone and Email */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={cn(
+            "gap-4",
+            isMobile ? "space-y-4" : "grid grid-cols-1 md:grid-cols-2"
+          )}>
             <div className="space-y-2">
               <Label htmlFor="phone" className="flex items-center space-x-2 text-sm font-medium">
                 <Phone className="h-4 w-4" />
@@ -209,7 +237,10 @@ export function VendorForm({ vendor, onSubmit, onCancel, loading = false }: Vend
           </div>
 
           {/* Website and Address */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={cn(
+            "gap-4",
+            isMobile ? "space-y-4" : "grid grid-cols-1 md:grid-cols-2"
+          )}>
             <div className="space-y-2">
               <Label htmlFor="website" className="flex items-center space-x-2 text-sm font-medium">
                 <Globe className="h-4 w-4" />
@@ -248,9 +279,35 @@ export function VendorForm({ vendor, onSubmit, onCancel, loading = false }: Vend
               rows={2}
             />
           </div>
-
-          {/* Form Actions */}
-          <div className="flex justify-end space-x-3 pt-4">
+        </form>
+      </CardContent>
+      
+      {/* Form Actions - Mobile: Fixed at bottom, Desktop: Inside form */}
+      {isMobile ? (
+        <div className="flex-shrink-0 border-t border-gray-200 bg-white p-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
+          <div className="flex flex-col space-y-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={loading}
+              className="w-full rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="vendor-form"
+              disabled={loading}
+              className="w-full rounded-full bg-orange-600 hover:bg-orange-700 shadow-lg shadow-orange-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Saving...' : (vendor ? 'Update Vendor' : 'Add Vendor')}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <CardContent className="pt-0">
+          <div className="flex space-x-3 pt-4 justify-end">
             <Button
               type="button"
               variant="outline"
@@ -261,14 +318,15 @@ export function VendorForm({ vendor, onSubmit, onCancel, loading = false }: Vend
             </Button>
             <Button
               type="submit"
+              form="vendor-form"
               disabled={loading}
               className="bg-orange-600 hover:bg-orange-700"
             >
               {loading ? 'Saving...' : (vendor ? 'Update Vendor' : 'Add Vendor')}
             </Button>
           </div>
-        </form>
-      </CardContent>
+        </CardContent>
+      )}
     </Card>
   );
 }

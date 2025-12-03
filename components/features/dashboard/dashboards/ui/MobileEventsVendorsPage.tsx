@@ -18,6 +18,7 @@ import { VendorContact, CreateVendorRequest, UpdateVendorRequest } from '@/types
 import { InviteManagement } from '@/components/features/invitations/InviteManagement';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-toastify';
+import { cn } from '@/lib/utils';
 
 export function MobileEventsVendorsPage() {
   const { profile } = useProfile();
@@ -240,6 +241,18 @@ export function MobileEventsVendorsPage() {
       setVendorsPage(1);
     }
   }, [activeTab]);
+
+  // Add mobile detection (it's mobile-only page, but still detect for drawer)
+  const [isMobile, setIsMobile] = useState(true); // Default true since it's mobile page
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 pt-0 pb-20 px-4">
@@ -667,50 +680,99 @@ export function MobileEventsVendorsPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Event Form Modal */}
+        {/* Event Form Modal - Mobile Bottom Drawer */}
         {showEventForm && typeof window !== 'undefined' && createPortal(
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-            <div className="relative max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <EventForm
-                event={editingEvent}
-                onSubmit={async (data) => {
-                  if (editingEvent) {
-                    await handleUpdateEvent(data as UpdateEventRequest);
-                  } else {
-                    await handleCreateEvent(data as CreateEventRequest);
-                  }
-                }}
-                onCancel={() => {
-                  setShowEventForm(false);
-                  setEditingEvent(null);
-                }}
-                loading={false}
-              />
+          <div className="fixed inset-0 z-[9999] flex items-end justify-center p-0">
+            <div 
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+              onClick={() => {
+                setShowEventForm(false);
+                setEditingEvent(null);
+              }}
+            />
+            <div className="relative w-full">
+              <div onClick={(e) => e.stopPropagation()}>
+                <EventForm
+                  event={editingEvent}
+                  onSubmit={async (data) => {
+                    if (editingEvent) {
+                      await handleUpdateEvent(data as UpdateEventRequest);
+                    } else {
+                      await handleCreateEvent(data as CreateEventRequest);
+                    }
+                  }}
+                  onCancel={() => {
+                    setShowEventForm(false);
+                    setEditingEvent(null);
+                  }}
+                  loading={false}
+                  isOpen={true}
+                />
+              </div>
             </div>
           </div>,
           document.body
         )}
 
-        {/* Vendor Form Modal */}
+        {/* Vendor Form Modal - Mobile: Bottom drawer, Desktop: Centered */}
         {showVendorForm && typeof window !== 'undefined' && createPortal(
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-            <div className="relative max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <VendorForm
-                vendor={editingVendor}
-                onSubmit={async (data) => {
-                  if (editingVendor) {
-                    await handleUpdateVendor(data as UpdateVendorRequest);
-                  } else {
-                    await handleCreateVendor(data as CreateVendorRequest);
-                  }
-                }}
-                onCancel={() => {
-                  setShowVendorForm(false);
-                  setEditingVendor(null);
-                }}
-                loading={isSubmittingVendor}
-              />
-            </div>
+          <div className={cn(
+            "fixed inset-0 z-[9999]",
+            isMobile 
+              ? "flex items-end justify-center p-0"
+              : "flex items-center justify-center p-4"
+          )}>
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+              onClick={() => {
+                setShowVendorForm(false);
+                setEditingVendor(null);
+              }}
+            />
+            
+            {/* Mobile: Bottom Drawer */}
+            {isMobile && (
+              <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[80vh] mt-[50vh] rounded-t-2xl rounded-b-none overflow-hidden">
+                <VendorForm
+                  vendor={editingVendor}
+                  onSubmit={async (data) => {
+                    if (editingVendor) {
+                      await handleUpdateVendor(data as UpdateVendorRequest);
+                    } else {
+                      await handleCreateVendor(data as CreateVendorRequest);
+                    }
+                  }}
+                  onCancel={() => {
+                    setShowVendorForm(false);
+                    setEditingVendor(null);
+                  }}
+                  loading={isSubmittingVendor}
+                  isMobile={true}
+                />
+              </div>
+            )}
+
+            {/* Desktop: Centered Modal */}
+            {!isMobile && (
+              <div className="relative max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <VendorForm
+                  vendor={editingVendor}
+                  onSubmit={async (data) => {
+                    if (editingVendor) {
+                      await handleUpdateVendor(data as UpdateVendorRequest);
+                    } else {
+                      await handleCreateVendor(data as CreateVendorRequest);
+                    }
+                  }}
+                  onCancel={() => {
+                    setShowVendorForm(false);
+                    setEditingVendor(null);
+                  }}
+                  loading={isSubmittingVendor}
+                />
+              </div>
+            )}
           </div>,
           document.body
         )}

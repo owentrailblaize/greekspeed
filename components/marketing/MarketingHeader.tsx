@@ -42,21 +42,16 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
         ? "bg-white/95 backdrop-blur-xl border-b border-gray-200/80 shadow-lg shadow-gray-900/5" 
         : "bg-white/90 backdrop-blur-lg border-b border-gray-200/60"
     }`}>
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6 md:px-6 pl-2 md:pl-6">
         <div className="flex items-center justify-between h-16 md:h-18">
           {/* Logo */}
-          <div className="flex items-center space-x-3">
-            <Link href="/" className="flex items-center space-x-3">
-              <div className="w-12 h-12 relative">
-                <img 
-                  src="/logo.jpeg" 
-                  alt="Trailblaize logo" 
-                  className="w-full h-full object-contain" 
-                />
-              </div>
-              <span className="font-bold text-xl text-gray-900">
-                Trailblaize
-              </span>
+          <div className="flex items-center -ml-2 md:ml-0">
+            <Link href="/" className="flex items-center">
+              <img 
+                src="/logo.png" 
+                alt="Trailblaize logo" 
+                className="h-28 w-auto max-h-full object-contain transition-all duration-300 hover:opacity-90" 
+              />
             </Link>
           </div>
 

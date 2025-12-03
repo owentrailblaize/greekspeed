@@ -93,23 +93,19 @@ export function DashboardHeader() {
 
   return (
     <header className="border-b border-gray-200/60 bg-white/95 backdrop-blur-sm z-50 sticky top-0">
-      <div className="w-full px-4 sm:px-6 h-14 flex items-center justify-between">
+      <div className="w-full px-4 sm:px-6 pl-2 sm:pl-6 h-14 flex items-center justify-between">
         {/* Left side - Logo/Branding + Divider + Navigation tabs */}
         <div className="flex items-center space-x-4 sm:space-x-6 flex-shrink-0">
           {/* Logo/Branding - Now visible on both mobile and desktop */}
           <Link 
             href="/dashboard" 
-            className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+            className="flex items-center hover:opacity-80 transition-opacity"
           >
-            <Image
-              src="/logo.jpeg"
+            <img
+              src="/logo.png"
               alt="Trailblaize"
-              width={32}
-              height={32}
-              className="rounded"
-              priority
+              className="h-28 w-auto max-h-full object-contain transition-all duration-300"
             />
-            <span className="text-lg font-semibold text-slate-900">Trailblaize</span>
           </Link>
 
           {/* Vertical Divider */}

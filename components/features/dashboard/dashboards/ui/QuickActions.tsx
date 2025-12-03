@@ -9,6 +9,9 @@ import { useProfile } from '@/lib/contexts/ProfileContext';
 import { toast } from 'react-toastify';
 import { createPortal } from 'react-dom';
 import { Lock } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useState as useStateMobile } from 'react';
+import { useEffect } from 'react';
 
 // Action configuration interface
 export interface QuickAction {
@@ -48,6 +51,17 @@ export function QuickActions({
   const [showEventModalState, setShowEventModalState] = useState(false);
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Handle event creation if event modal is enabled
   const handleCreateEvent = async (eventData: any) => {
@@ -108,20 +122,37 @@ export function QuickActions({
         </CardContent>
       </Card>
 
-      {/* Event Creation Modal - Only shown if showEventModal is true */}
+      {/* Event Creation Modal - Mobile: Bottom drawer, Desktop: Centered */}
       {showEventModal && showEventModalState && typeof window !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black bg-opacity-50" />
-          <div className="relative flex items-center justify-center min-h-screen p-4">
-            <EventForm
-              event={null}
-              onSubmit={handleCreateEvent}
-              onCancel={() => {
-                setShowEventModalState(false);
-                eventModalConfig?.onCancel?.();
-              }}
-              loading={false}
-            />
+        <div className={cn(
+          "fixed inset-0 z-[9999]",
+          isMobile 
+            ? "flex items-end justify-center p-0"
+            : "flex items-center justify-center p-4"
+        )}>
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+            onClick={() => {
+              setShowEventModalState(false);
+              eventModalConfig?.onCancel?.();
+            }}
+          />
+          <div className={cn(
+            "relative min-h-screen w-full",
+            isMobile ? "" : "flex items-center justify-center"
+          )}>
+            <div onClick={(e) => e.stopPropagation()}>
+              <EventForm
+                event={null}
+                onSubmit={handleCreateEvent}
+                onCancel={() => {
+                  setShowEventModalState(false);
+                  eventModalConfig?.onCancel?.();
+                }}
+                loading={false}
+                isOpen={true}
+              />
+            </div>
           </div>
         </div>,
         document.body
