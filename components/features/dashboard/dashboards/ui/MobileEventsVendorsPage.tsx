@@ -733,7 +733,7 @@ export function MobileEventsVendorsPage() {
             
             {/* Mobile: Bottom Drawer */}
             {isMobile && (
-              <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[50vh] mt-[50vh] rounded-t-2xl rounded-b-none overflow-hidden">
+              <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[80vh] mt-[50vh] rounded-t-2xl rounded-b-none overflow-hidden">
                 <VendorForm
                   vendor={editingVendor}
                   onSubmit={async (data) => {
