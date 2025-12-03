@@ -42,10 +42,10 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
         ? "bg-white/95 backdrop-blur-xl border-b border-gray-200/80 shadow-lg shadow-gray-900/5" 
         : "bg-white/90 backdrop-blur-lg border-b border-gray-200/60"
     }`}>
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6 md:px-6 pl-2 md:pl-6">
         <div className="flex items-center justify-between h-16 md:h-18">
           {/* Logo */}
-          <div className="flex items-center">
+          <div className="flex items-center -ml-2 md:ml-0">
             <Link href="/" className="flex items-center">
               <img 
                 src="/logo.png" 
