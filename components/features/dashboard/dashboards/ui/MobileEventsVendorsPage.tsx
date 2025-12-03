@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Calendar, Plus, Edit, Trash2, MapPin, Clock, Users, DollarSign, TrendingUp, Star, Mail, Phone, Building2, UserPlus, Loader2, CheckCircle, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Plus, Edit, Trash2, MapPin, Clock, Users, DollarSign, TrendingUp, Star, Mail, Phone, Building2, UserPlus, Loader2, CheckCircle, AlertCircle, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -680,18 +680,49 @@ export function MobileEventsVendorsPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Event Form Modal - Mobile Bottom Drawer */}
+        {/* Event Form Modal - Mobile: Bottom drawer, Desktop: Centered */}
         {showEventForm && typeof window !== 'undefined' && createPortal(
-          <div className="fixed inset-0 z-[9999] flex items-end justify-center p-0">
+          <div className={cn(
+            "fixed inset-0 z-[9999]",
+            isMobile 
+              ? "flex items-end justify-center p-0"
+              : "flex items-center justify-center p-4"
+          )}>
+            {/* Backdrop */}
             <div 
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
               onClick={() => {
                 setShowEventForm(false);
                 setEditingEvent(null);
               }}
             />
-            <div className="relative w-full">
-              <div onClick={(e) => e.stopPropagation()}>
+            
+            {/* Mobile: Bottom Drawer */}
+            {isMobile && (
+              <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[80vh] mt-[50vh] rounded-t-2xl rounded-b-none overflow-hidden">
+                <EventForm
+                  event={editingEvent}
+                  onSubmit={async (data) => {
+                    if (editingEvent) {
+                      await handleUpdateEvent(data as UpdateEventRequest);
+                    } else {
+                      await handleCreateEvent(data as CreateEventRequest);
+                    }
+                  }}
+                  onCancel={() => {
+                    setShowEventForm(false);
+                    setEditingEvent(null);
+                  }}
+                  loading={false}
+                  isOpen={true}
+                  isMobile={true}
+                />
+              </div>
+            )}
+
+            {/* Desktop: Centered Modal */}
+            {!isMobile && (
+              <div className="relative max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 <EventForm
                   event={editingEvent}
                   onSubmit={async (data) => {
@@ -709,7 +740,7 @@ export function MobileEventsVendorsPage() {
                   isOpen={true}
                 />
               </div>
-            </div>
+            )}
           </div>,
           document.body
         )}
