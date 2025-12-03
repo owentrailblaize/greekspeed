@@ -280,7 +280,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
           
           {/* Mobile: Bottom Drawer */}
           {isMobile && (
-            <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none pb-[env(safe-area-inset-bottom)]">
+            <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none pb-[calc(48px+env(safe-area-inset-bottom))]">
               {/* Header */}
               <div className="flex items-center justify-between p-4 flex-shrink-0 border-b border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
@@ -295,7 +295,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
               </div>
               
               {/* Content - Scrollable */}
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-4 pb-[calc(40px+env(safe-area-inset-bottom))]">
                 <div className="space-y-3">
                   <Button 
                     variant="outline" 
