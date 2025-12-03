@@ -15,26 +15,32 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
 
       {/* Footer */}
       <footer className="bg-gray-50 border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
             <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center space-x-2 mb-4">
-                <img 
-                  src="/logo.png" 
-                  alt="Trailblaize" 
-                  className="h-6 w-6 rounded"
-                />
-                <span className="text-lg font-semibold text-navy-900">Trailblaize, Inc.</span>
-              </div>
-              <p className="text-gray-600 text-sm mb-4">
-                Empowering Greek organizations with modern technology solutions for alumni engagement, 
-                dues management, and chapter administration.
-              </p>
-              <div className="text-xs text-gray-500">
-                © 2025 Trailblaize, Inc. All rights reserved.
+              <div className="flex flex-col items-center text-center md:items-start md:text-left md:flex-row md:gap-6">
+                {/* Logo */}
+                <div className="-mt-5 mb-1 md:mb-0 flex-shrink-0">
+                  <img 
+                    src="/logo.png" 
+                    alt="Trailblaize" 
+                    className="h-32 w-auto object-contain transition-all duration-300 hover:opacity-90" 
+                  />
+                </div>
+                
+                {/* Text Content - Right side on desktop */}
+                <div className="flex flex-col items-center md:items-start">
+                  <p className="text-gray-600 text-sm mb-3 -mt-5 md:mt-0">
+                    Empowering Greek organizations with modern technology solutions for alumni engagement, 
+                    dues management, and chapter administration.
+                  </p>
+                  <div className="text-xs text-gray-500">
+                    © 2025 Trailblaize, Inc. All rights reserved.
+                  </div>
+                </div>
               </div>
             </div>
-            <div>
+            <div className="text-center md:text-left">
               <h3 className="text-sm font-semibold text-gray-900 mb-4">Legal</h3>
               <ul className="space-y-2">
                 <li>
@@ -54,7 +60,7 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
                 </li>
               </ul>
             </div>
-            <div>
+            <div className="text-center md:text-left">
               <h3 className="text-sm font-semibold text-gray-900 mb-4">Support</h3>
               <ul className="space-y-2">
                 <li>
