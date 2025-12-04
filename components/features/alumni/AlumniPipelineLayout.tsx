@@ -317,7 +317,7 @@ export function AlumniPipelineLayout({
             <div className="h-full flex flex-col relative">
               {/* Scrollable cards container */}
               {/* Updated: Add bottom padding to account for bottom nav + safe area on mobile */}
-              <div className="flex-1 overflow-y-auto p-2 sm:p-6 pb-[calc(44px+env(safe-area-inset-bottom))] sm:pb-20">
+              <div className="flex-1 overflow-y-auto p-2 sm:p-6 pb-[calc(52px+env(safe-area-inset-bottom))] sm:pb-20">
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                   {displayAlumni.map((alumniItem: Alumni, index: number) => (
                     <motion.div
