@@ -10,22 +10,16 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Favicon metadata - prioritize larger sizes first
+// Favicon metadata - use PNG files for better quality
 export const metadata: Metadata = {
   icons: {
     icon: [
-      // List larger sizes FIRST - browsers will prefer these
-      { url: '/icon-32x32.png', type: 'image/png', sizes: '32x32' },
+      // Prioritize PNG files - browsers will use these for better quality
       { url: '/android-chrome-192x192.png', type: 'image/png', sizes: '192x192' },
       { url: '/android-chrome-512x512.png', type: 'image/png', sizes: '512x512' },
-      { url: '/favicon-16x16.png', type: 'image/png', sizes: '16x16' },
-      { url: '/favicon.ico', sizes: 'any' }, // Fallback last
     ],
     apple: [
       { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-    ],
-    shortcut: [
-      { url: '/favicon.ico' },
     ],
   },
 };
@@ -35,11 +29,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <html lang="en">
         <head>
           <meta name="viewport" content="width=device-width, initial-scale=1" />
-          {/* Explicit favicon links for better browser support */}
+          {/* Force browser to use PNG favicon - better quality than ICO */}
           <link rel="icon" type="image/png" sizes="32x32" href="/icon-32x32.png" />
           <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
           <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
           <link rel="manifest" href="/site.webmanifest" />
+          {/* Remove default favicon.ico reference */}
         </head>
         <body 
           className="antialiased bg-white text-gray-900"
