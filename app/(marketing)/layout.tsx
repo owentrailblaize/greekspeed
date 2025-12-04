@@ -4,11 +4,11 @@ import type { Metadata } from 'next';
 
 // Centralized metadata configuration
 export const metadata: Metadata = {
-  title: 'Trailblaize – Where Alumni Networks Thrive',
+  title: 'Trailblaize –  Alumni Relationship Management',
   description:
     'Trailblaize is the modern operating system for Greek organizations, powering alumni engagement, events, and chapter growth.',
   openGraph: {
-    title: 'Trailblaize – Where Alumni Networks Thrive',
+    title: 'Trailblaize – Alumni Relationship Management',
     description:
       'Trailblaize is the modern operating system for Greek organizations, powering alumni engagement, events, and chapter growth.',
     url: 'https://trailblaize.net',
