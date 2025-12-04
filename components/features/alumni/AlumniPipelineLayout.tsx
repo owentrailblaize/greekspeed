@@ -314,9 +314,10 @@ export function AlumniPipelineLayout({
               />
             </div>
           ) : (
-            <div className="h-full flex flex-col">
+            <div className="h-full flex flex-col relative">
               {/* Scrollable cards container */}
-              <div className="flex-1 overflow-y-auto p-2 sm:p-6 pb-20">
+              {/* Updated: Add bottom padding to account for bottom nav + safe area on mobile */}
+              <div className="flex-1 overflow-y-auto p-2 sm:p-6 pb-[calc(44px+env(safe-area-inset-bottom))] sm:pb-20">
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                   {displayAlumni.map((alumniItem: Alumni, index: number) => (
                     <motion.div
@@ -325,7 +326,7 @@ export function AlumniPipelineLayout({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ 
                         duration: 0.2, 
-                        delay: Math.min(index * 0.01, 0.2) // Optimized: Faster animation, limited delay to max 0.2s
+                        delay: Math.min(index * 0.01, 0.2)
                       }}
                     >
                       <EnhancedAlumniCard
@@ -335,17 +336,18 @@ export function AlumniPipelineLayout({
                     </motion.div>
                   ))}
                 </div>
-              </div>
-              
-              {/* Fixed Pagination Controls for Cards View */}
-              <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
-                <AlumniPagination
-                  currentPage={pagination.page}
-                  totalPages={pagination.totalPages}
-                  totalItems={pagination.total}
-                  itemsPerPage={pagination.limit}
-                  onPageChange={onPageChange}
-                />
+                
+                {/* Pagination Controls for Cards View */}
+                {/* Updated: Remove fixed/sticky positioning - let it flow naturally in document */}
+                {pagination.totalPages > 1 && (
+                  <AlumniPagination
+                    currentPage={pagination.page}
+                    totalPages={pagination.totalPages}
+                    totalItems={pagination.total}
+                    itemsPerPage={pagination.limit}
+                    onPageChange={onPageChange}
+                  />
+                )}
               </div>
             </div>
           )}
