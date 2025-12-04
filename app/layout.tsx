@@ -1,5 +1,7 @@
 import "../styles/globals.css";
 import type { ReactNode } from "react";
+import { Providers } from '@/components/providers/Providers';
+import { Metadata } from 'next';
 import { AuthProvider } from '@/lib/supabase/auth-context';
 import { ProfileProvider } from '@/lib/contexts/ProfileContext';
 import { ConnectionsProvider } from '@/lib/contexts/ConnectionsContext';
@@ -8,6 +10,11 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+export const metadata: Metadata = {
+  title: 'Trailblaize – Alumni Relationship Management',
+  description: 'Trailblaize is the modern operating system for Greek organizations, powering alumni engagement, events, and chapter growth.',
+};
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -22,9 +29,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <AppQueryProvider>
             <AuthProvider>
               <ProfileProvider>
-                <ConnectionsProvider>
+                <Providers>
                   {children}
-                </ConnectionsProvider>
+                </Providers>
               </ProfileProvider>
             </AuthProvider>
           </AppQueryProvider>
