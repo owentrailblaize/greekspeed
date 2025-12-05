@@ -345,7 +345,7 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-white rounded-lg max-w-2xl w-full h-[90vh] max-h-[90vh] overflow-hidden flex flex-col"
       >
         {content}
       </motion.div>
