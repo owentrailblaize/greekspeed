@@ -61,52 +61,56 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
   };
 
   const parseExcelFile = async (file: File): Promise<any[]> => {
-    // You'll need to install a library like 'xlsx' for Excel parsing
-    // npm install xlsx
-    const XLSX = await import('xlsx');
+    const ExcelJS = (await import('exceljs')).default;
     
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         try {
-          const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[sheetName];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+          const buffer = e.target?.result as ArrayBuffer;
+          const workbook = new ExcelJS.Workbook();
+          await workbook.xlsx.load(buffer);
           
-          // Transform the data to match your expected format
-          const transformedData = jsonData.map((row: any, index: number) => {
-            const transformed = {
-              email: row.email || row.Email || row.EMAIL,
-              first_name: row.first_name || row.firstName || row['First Name'],
-              last_name: row.last_name || row.lastName || row['Last Name'],
-              chapter: row.chapter || row.Chapter || row.CHAPTER,
-              industry: row.industry || row.Industry || row.INDUSTRY,
-              graduation_year: row.graduation_year || row.graduationYear || row['Graduation Year'],
-              company: row.company || row.Company || row.COMPANY,
-              job_title: row.job_title || row.jobTitle || row['Job Title'],
-              phone: row.phone || row.Phone || row.PHONE,
-              location: row.location || row.Location || row.LOCATION,
-              description: row.description || row.Description || row.DESCRIPTION,
-              pledge_class: row.pledge_class || row.pledgeClass || row['Pledge Class'],
-              major: row.major || row.Major || row.MAJOR,
-              hometown: row.hometown || row.Hometown || row.HOMETOWN
-            };
+          const worksheet = workbook.worksheets[0];
+          const jsonData: any[] = [];
+          
+          worksheet.eachRow((row, rowNumber) => {
+            if (rowNumber === 1) return; // Skip header row
             
-            // Debug logging for first few rows
-            if (index < 3) {
-              // Row original and transformed
+            const rowData: any = {};
+            row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+              const headerCell = worksheet.getRow(1).getCell(colNumber);
+              const header = headerCell.value?.toString().toLowerCase().replace(/\s+/g, '_') || '';
+              rowData[header] = cell.value;
+            });
+            
+            if (rowData.email && rowData.first_name && rowData.last_name) {
+              jsonData.push({
+                email: rowData.email || rowData.email_address,
+                first_name: rowData.first_name || rowData.firstname,
+                last_name: rowData.last_name || rowData.lastname,
+                chapter: rowData.chapter,
+                industry: rowData.industry,
+                graduation_year: rowData.graduation_year,
+                company: rowData.company,
+                job_title: rowData.job_title,
+                phone: rowData.phone,
+                location: rowData.location,
+                description: rowData.description,
+                pledge_class: rowData.pledge_class,
+                major: rowData.major,
+                hometown: rowData.hometown
+              });
             }
-            
-            return transformed;
-          }).filter(row => row.email && row.first_name && row.last_name);
-
-          resolve(transformedData);
+          });
+          
+          resolve(jsonData);
         } catch (error) {
           reject(error);
         }
       };
+      
+      reader.onerror = reject;
       reader.readAsArrayBuffer(file);
     });
   };

@@ -12,6 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 // Favicon metadata - use PNG files for better quality
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://www.trailblaize.net'),
   icons: {
     icon: [
       // Prioritize PNG files - browsers will use these for better quality
