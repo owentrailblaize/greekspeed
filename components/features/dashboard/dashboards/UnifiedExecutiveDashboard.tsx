@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useChapterFeatures } from '@/lib/hooks/useChapterFeatures';
 import { DashboardSidebar } from './ui/DashboardSidebar';
 import { OverviewView } from './ui/feature-views/OverviewView';
 import { EventsView } from './ui/feature-views/EventsView';
@@ -33,7 +34,18 @@ export function UnifiedExecutiveDashboard({
   onRoleChange 
 }: UnifiedExecutiveDashboardProps) {
   const { profile } = useProfile();
+  const { features, loading: featuresLoading } = useChapterFeatures();
   const [activeFeature, setActiveFeature] = useState<FeatureView>('overview');
+
+  // Redirect if trying to access disabled feature
+  useEffect(() => {
+    if (!featuresLoading && activeFeature === 'dues' && !features.financial_tools_enabled) {
+      setActiveFeature('overview');
+    }
+    if (!featuresLoading && activeFeature === 'budget' && !features.financial_tools_enabled) {
+      setActiveFeature('overview');
+    }
+  }, [features, featuresLoading, activeFeature]);
 
   // All features are now available to all admins - no role-based filtering
   const renderFeatureView = () => {
@@ -47,8 +59,14 @@ export function UnifiedExecutiveDashboard({
       case 'members':
         return <MembersView />;
       case 'dues':
+        if (!features.financial_tools_enabled) {
+          return <OverviewView selectedRole={selectedRole} />;
+        }
         return <DuesView />;
       case 'budget':
+        if (!features.financial_tools_enabled) {
+          return <OverviewView selectedRole={selectedRole} />;
+        }
         return <BudgetView />;
       case 'vendors':
         return <VendorsView />;
@@ -58,6 +76,10 @@ export function UnifiedExecutiveDashboard({
         return <OverviewView selectedRole={selectedRole} />;
     }
   };
+
+  if (featuresLoading) {
+    return <div className="flex items-center justify-center h-full">Loading...</div>;
+  }
 
   return (
     <div className="flex h-full bg-gray-50 overflow-hidden">

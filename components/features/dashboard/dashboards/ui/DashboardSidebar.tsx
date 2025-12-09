@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LayoutDashboard, Megaphone, Calendar, CheckSquare, Users, DollarSign, TrendingUp, BookOpen, UserPlus, Settings, ChevronRight, X } from 'lucide-react';
 import { FeatureView } from '../UnifiedExecutiveDashboard';
 import { cn } from '@/lib/utils';
 import { CollapsibleNavGroup } from './CollapsibleNavGroup';
 import { Button } from '@/components/ui/button';
+import { useChapterFeatures } from '@/lib/hooks/useChapterFeatures';
 
 interface DashboardSidebarProps {
   selectedRole: string;
@@ -51,6 +52,7 @@ export function DashboardSidebar({
   activeFeature,
   onFeatureChange
 }: DashboardSidebarProps) {
+  const { features } = useChapterFeatures();
   // Collapsible sidebar state (following AlumniPipelineLayout pattern)
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -70,10 +72,36 @@ export function DashboardSidebar({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Filter navigation groups based on feature flags
+  const filteredNavigationGroups = useMemo(() => {
+    return navigationGroups.map(group => {
+      if (group.id === 'manage') {
+        return {
+          ...group,
+          items: group.items.filter(item => {
+            // Hide 'dues' if financial tools are disabled
+            if (item.id === 'dues' && !features.financial_tools_enabled) {
+              return false;
+            }
+            return true;
+          })
+        };
+      }
+      if (group.id === 'financial') {
+        // Hide entire financial group if financial tools are disabled
+        if (!features.financial_tools_enabled) {
+          return null;
+        }
+        return group;
+      }
+      return group;
+    }).filter(Boolean) as typeof navigationGroups;
+  }, [features]);
+
   // Track which group is open (only one at a time)
   const [openGroup, setOpenGroup] = useState<string | null>(() => {
     // Auto-open the group that contains the active feature
-    const activeGroup = navigationGroups.find(group => 
+    const activeGroup = filteredNavigationGroups.find(group => 
       group.items.some(item => item.id === activeFeature)
     );
     return activeGroup?.id || null;
@@ -81,13 +109,13 @@ export function DashboardSidebar({
 
   // Update open group when active feature changes
   useEffect(() => {
-    const activeGroup = navigationGroups.find(group => 
+    const activeGroup = filteredNavigationGroups.find(group => 
       group.items.some(item => item.id === activeFeature)
     );
     if (activeGroup) {
       setOpenGroup(activeGroup.id);
     }
-  }, [activeFeature]);
+  }, [activeFeature, filteredNavigationGroups]);
 
   const handleGroupToggle = (groupId: string) => {
     setOpenGroup(openGroup === groupId ? null : groupId);
@@ -180,7 +208,7 @@ export function DashboardSidebar({
                       })}
                       
                       {/* Group icons when collapsed */}
-                      {navigationGroups.map((group) => {
+                      {filteredNavigationGroups.map((group) => {
                         const GroupIcon = group.icon;
                         const hasActiveItem = group.items.some(item => item.id === activeFeature);
                         
@@ -241,7 +269,7 @@ export function DashboardSidebar({
 
                     {/* Navigation Groups with dropdowns */}
                     <div className="pt-4 space-y-1 border-t border-gray-100 mt-4">
-                      {navigationGroups.map((group) => (
+                      {filteredNavigationGroups.map((group) => (
                         <CollapsibleNavGroup
                           key={group.id}
                           label={group.label}

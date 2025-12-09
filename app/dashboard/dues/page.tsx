@@ -1,14 +1,25 @@
 'use client';
 
 import { useRoleAccess } from '@/lib/hooks/useRoleAccess';
-import  DuesClient  from './DuesClient';
+import { useChapterFeatures } from '@/lib/hooks/useChapterFeatures';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import DuesClient from './DuesClient';
 
 export default function DuesPage() {
-  // Allow active_member, alumni, and admin to access dues
-  const { hasAccess, loading } = useRoleAccess(['active_member', 'alumni', 'admin']);
+  const { hasAccess, loading: roleLoading } = useRoleAccess(['active_member', 'alumni', 'admin']);
+  const { features, loading: featuresLoading } = useChapterFeatures();
+  const router = useRouter();
 
-  if (loading) return <div>Loading...</div>;
+  useEffect(() => {
+    if (!featuresLoading && !features.financial_tools_enabled) {
+      router.push('/dashboard');
+    }
+  }, [features, featuresLoading, router]);
+
+  if (roleLoading || featuresLoading) return <div>Loading...</div>;
   if (!hasAccess) return <div>Access denied. This page is not available for your role.</div>;
+  if (!features.financial_tools_enabled) return null; // Will redirect
 
   return <DuesClient />;
 }

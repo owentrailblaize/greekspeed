@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, CheckCircle, Crown, Settings, Clock, UserCheck, DollarSign, Calendar, BookOpen } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useChapterBudget } from '@/lib/hooks/useChapterBudget';
+import { useChapterFeatures } from '@/lib/hooks/useChapterFeatures';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, UserPlus, Users as UsersIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -31,6 +32,7 @@ interface OverviewViewProps {
 
 export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProps) {
   const { profile } = useProfile();
+  const { features } = useChapterFeatures();
   const { session } = useAuth();
   const chapterId = profile?.chapter_id;
   const router = useRouter();
@@ -385,13 +387,17 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
         icon: CalendarIcon,
         onClick: () => setShowEventForm(true),
       },
-      {
+    ];
+
+    // Only add dues action if financial tools are enabled
+    if (features.financial_tools_enabled) {
+      baseActions.push({
         id: 'dues',
         label: 'Dues',
         icon: DollarSign,
         onClick: () => onFeatureChange?.('dues'),
-      },
-    ];
+      });
+    }
 
     if (selectedRole === 'president' || selectedRole === 'vice-president') {
       baseActions.push({

@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { ProfileService } from '@/lib/services/profileService';
+import { useChapterFeatures } from '@/lib/hooks/useChapterFeatures';
 import { MessageCircle, Lock } from 'lucide-react';
 
 // Small helper for consistent tab styling
@@ -50,6 +51,7 @@ function NavLink({ href, label, locked = false }: { href: string; label: string;
 export function DashboardHeader() {
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
+  const { features } = useChapterFeatures();
   const { connections } = useConnections();
   const userRole = profile?.role;
   const pathname = usePathname();
@@ -67,14 +69,22 @@ export function DashboardHeader() {
   const navigationTabs = [
     { href: '/dashboard', label: 'Overview', roles: ['admin', 'active_member', 'alumni'], locked: false },
     { href: '/dashboard/alumni', label: 'Alumni', roles: ['admin', 'active_member', 'alumni'], locked: false },
-    { href: '/dashboard/dues', label: 'Dues', roles: ['active_member', 'admin'], locked: false },
+    { href: '/dashboard/dues', label: 'Dues', roles: ['active_member', 'admin'], locked: false, requiresFeature: 'financial_tools_enabled' as const },
     { href: '/dashboard/admin', label: 'Exec Admin', roles: ['admin'], locked: false },
   ];
 
-  // Filter tabs based on user role
-  const visibleTabs = navigationTabs.filter(tab => 
-    tab.roles.includes(userRole || '')
-  );
+  // Filter tabs based on user role AND feature flags
+  const visibleTabs = navigationTabs.filter(tab => {
+    const hasRole = tab.roles.includes(userRole || '');
+    if (!hasRole) return false;
+    
+    // Check feature flag requirement
+    if (tab.requiresFeature) {
+      return features[tab.requiresFeature] === true;
+    }
+    
+    return true;
+  });
 
   const handleSignOut = async () => {
     try {

@@ -1,10 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/client';
+import { createServerClient } from '@supabase/ssr';
 import { stripe } from '@/lib/services/stripe/stripe-server';
+import { checkFeatureAccess } from '@/lib/middleware/featureFlags';
+
+function createApiSupabaseClient(request: NextRequest) {
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value;
+        },
+        set() {},
+        remove() {},
+      },
+    }
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerSupabaseClient();
+    // Check feature access first
+    const featureCheck = await checkFeatureAccess(request, 'financial_tools_enabled');
+    if (featureCheck) return featureCheck;
+
+    const supabase = createApiSupabaseClient(request);
     
     const body = await request.json();
     const { assignmentId, paymentPlan = false } = body;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { canManageChapter } from '@/lib/permissions';
+import { checkFeatureAccess } from '@/lib/middleware/featureFlags';
 
 // Create a session-aware Supabase client for API routes
 function createApiSupabaseClient(request: NextRequest) {
@@ -25,6 +26,10 @@ function createApiSupabaseClient(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    // Check feature access first
+    const featureCheck = await checkFeatureAccess(request, 'financial_tools_enabled');
+    if (featureCheck) return featureCheck;
+
     const supabase = createApiSupabaseClient(request);
     
     // Get user session
@@ -99,6 +104,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check feature access first
+    const featureCheck = await checkFeatureAccess(request, 'financial_tools_enabled');
+    if (featureCheck) return featureCheck;
+
     const supabase = createApiSupabaseClient(request);
     
     const body = await request.json();
@@ -177,6 +186,10 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    // Check feature access first
+    const featureCheck = await checkFeatureAccess(request, 'financial_tools_enabled');
+    if (featureCheck) return featureCheck;
+
     const supabase = createApiSupabaseClient(request);
     
     // Get user session
@@ -346,6 +359,10 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    // Check feature access first
+    const featureCheck = await checkFeatureAccess(request, 'financial_tools_enabled');
+    if (featureCheck) return featureCheck;
+
     const supabase = createApiSupabaseClient(request);
     
     // Get user session

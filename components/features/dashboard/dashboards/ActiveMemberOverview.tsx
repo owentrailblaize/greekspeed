@@ -17,6 +17,7 @@ import { MobileEventsPage } from './ui/MobileEventsPage';
 import { MobileDocsCompliancePage } from './ui/MobileDocsCompliancePage';
 import { MobileOperationsFeedPage } from './ui/MobileOperationsFeedPage';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useChapterFeatures } from '@/lib/hooks/useChapterFeatures';
 
 interface ActiveMemberOverviewProps {
   initialFeed?: SocialFeedInitialData;
@@ -26,6 +27,7 @@ interface ActiveMemberOverviewProps {
 // Inner component that uses useSearchParams
 function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveMemberOverviewProps) {
   const { profile } = useProfile();
+  const { features } = useChapterFeatures();
   const chapterId = profile?.chapter_id ?? fallbackChapterId ?? null;
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>('home');
   const searchParams = useSearchParams();
@@ -41,7 +43,12 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
   useEffect(() => {
     const tool = searchParams.get('tool');
     if (tool === 'dues') {
-      router.push('/dashboard/dues');
+      if (features.financial_tools_enabled) {
+        router.push('/dashboard/dues');
+      } else {
+        // Redirect away if feature is disabled
+        router.push('/dashboard');
+      }
     } else if (tool === 'announcements') {
       setActiveMobileTab('announcements');
     } else if (tool === 'calendar') {
@@ -49,7 +56,7 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
     } else if (!tool) {
       setActiveMobileTab('home');
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, features.financial_tools_enabled]);
   
   const renderMobileContent = () => {
     // Handle regular tabs
@@ -121,7 +128,7 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
           <div className="col-span-3">
             <div className="space-y-6">
               <UpcomingEventsCard />
-              <DuesStatusCard />
+              {features.financial_tools_enabled && <DuesStatusCard />}
             </div>
           </div>
         </div>

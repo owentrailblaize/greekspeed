@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Users, Wrench, CreditCard, User, CheckSquare, FileText, Activity, X, Search, Building2, LucideIcon, MessageSquare, Calendar, Megaphone, Settings } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useChapterFeatures } from '@/lib/hooks/useChapterFeatures';
 
 export type MobileTab = 'home' | 'tasks' | 'announcements' | 'calendar' | 'events';
 
@@ -46,6 +47,7 @@ export function MobileBottomNavigation({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { profile } = useProfile();
+  const { features } = useChapterFeatures();
   const userRole = propUserRole || profile?.role;
   const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
   const [buttonPosition, setButtonPosition] = useState<{ left: number; bottom: number } | null>(null);
@@ -172,13 +174,7 @@ export function MobileBottomNavigation({
       ];
     } else {
       // Active Member: dues, announcements, calendar
-      return [
-        {
-          id: 'dues',
-          label: 'Dues',
-          icon: CreditCard,
-          onClick: () => handleToolsOptionClick('dues'),
-        },
+      const options = [
         {
           id: 'announcements',
           label: 'News', // Changed from 'Announcements'
@@ -192,6 +188,18 @@ export function MobileBottomNavigation({
           onClick: () => handleToolsOptionClick('calendar'),
         },
       ];
+      
+      // Only include dues if financial tools are enabled
+      if (features.financial_tools_enabled) {
+        options.unshift({
+          id: 'dues',
+          label: 'Dues',
+          icon: CreditCard,
+          onClick: () => handleToolsOptionClick('dues'),
+        });
+      }
+      
+      return options;
     }
   };
 
