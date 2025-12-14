@@ -7,6 +7,7 @@ import { FeatureView } from '../UnifiedExecutiveDashboard';
 import { cn } from '@/lib/utils';
 import { CollapsibleNavGroup } from './CollapsibleNavGroup';
 import { Button } from '@/components/ui/button';
+import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 
 interface DashboardSidebarProps {
   selectedRole: string;
@@ -22,39 +23,45 @@ const topLevelItems = [
   { id: 'tasks' as FeatureView, label: 'Tasks', icon: CheckSquare },
 ];
 
-// Navigation groups with dropdowns
-const navigationGroups = [
-  {
-    id: 'manage',
-    label: 'Manage',
-    icon: Settings,
-    items: [
-      { id: 'members' as FeatureView, label: 'Members', icon: Users },
-      { id: 'dues' as FeatureView, label: 'Dues', icon: DollarSign },
-      { id: 'invitations' as FeatureView, label: 'Invitations', icon: UserPlus },
-    ]
-  },
-  {
-    id: 'financial',
-    label: 'Financial',
-    icon: TrendingUp,
-    items: [
-      { id: 'budget' as FeatureView, label: 'Budget', icon: TrendingUp },
-      { id: 'vendors' as FeatureView, label: 'Vendors', icon: BookOpen },
-    ]
-  }
-];
-
 export function DashboardSidebar({
   selectedRole,
   onRoleChange,
   activeFeature,
   onFeatureChange
 }: DashboardSidebarProps) {
+  const { enabled: financialToolsEnabled } = useFeatureFlag('financial_tools_enabled');
+  
   // Collapsible sidebar state (following AlumniPipelineLayout pattern)
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Navigation groups with dropdowns - conditionally include Dues and Financial group
+  const navigationGroups = [
+    {
+      id: 'manage',
+      label: 'Manage',
+      icon: Settings,
+      items: [
+        { id: 'members' as FeatureView, label: 'Members', icon: Users },
+        // Only include Dues if financial tools are enabled
+        ...(financialToolsEnabled ? [{ id: 'dues' as FeatureView, label: 'Dues', icon: DollarSign }] : []),
+        { id: 'invitations' as FeatureView, label: 'Invitations', icon: UserPlus },
+        // Move Vendors to Manage dropdown when financial tools are disabled
+        ...(!financialToolsEnabled ? [{ id: 'vendors' as FeatureView, label: 'Vendors', icon: BookOpen }] : []),
+      ]
+    },
+    // Only include Financial group if financial tools are enabled
+    ...(financialToolsEnabled ? [{
+      id: 'financial',
+      label: 'Financial',
+      icon: TrendingUp,
+      items: [
+        { id: 'budget' as FeatureView, label: 'Budget', icon: TrendingUp },
+        { id: 'vendors' as FeatureView, label: 'Vendors', icon: BookOpen },
+      ]
+    }] : [])
+  ];
 
   // Set mobile-specific initial state
   useEffect(() => {
