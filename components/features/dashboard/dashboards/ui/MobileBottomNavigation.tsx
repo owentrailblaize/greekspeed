@@ -49,6 +49,7 @@ export function MobileBottomNavigation({
   const { profile } = useProfile();
   const userRole = propUserRole || profile?.role;
   const { enabled: financialToolsEnabled } = useFeatureFlag('financial_tools_enabled');
+  const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled'); // Add this line
   const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
   const [buttonPosition, setButtonPosition] = useState<{ left: number; bottom: number } | null>(null);
   const toolsMenuRef = useRef<HTMLDivElement>(null);
@@ -196,9 +197,12 @@ export function MobileBottomNavigation({
       ];
       
       // Filter out dues if financial tools are disabled
-      return financialToolsEnabled 
-        ? options 
-        : options.filter(opt => opt.id !== 'dues');
+      // Filter out calendar if events management is disabled
+      return options.filter(opt => {
+        if (opt.id === 'dues' && !financialToolsEnabled) return false;
+        if (opt.id === 'calendar' && !eventsManagementEnabled) return false;
+        return true;
+      });
     }
   };
 
