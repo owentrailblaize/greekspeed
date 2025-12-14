@@ -242,10 +242,14 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
           
           {/* Right Column - 3 columns wide */}
           <div className="col-span-3 space-y-6">
-            <UpcomingEventsCard />
+            <FeatureGuard flagName="events_management_enabled">
+              <UpcomingEventsCard />
+            </FeatureGuard>
             {chapterId && <TasksPanel chapterId={chapterId} />}
             <DocsCompliancePanel />
-            <CompactCalendarCard />
+            <FeatureGuard flagName="events_management_enabled">
+              <CompactCalendarCard />
+            </FeatureGuard>
           </div>
         </div>
       </div>

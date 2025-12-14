@@ -35,6 +35,7 @@ export function UnifiedExecutiveDashboard({
 }: UnifiedExecutiveDashboardProps) {
   const { profile } = useProfile();
   const { enabled: financialToolsEnabled } = useFeatureFlag('financial_tools_enabled');
+  const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled'); // Add this line
   const [activeFeature, setActiveFeature] = useState<FeatureView>('overview');
 
   // Redirect to overview if financial features are selected but disabled
@@ -43,7 +44,11 @@ export function UnifiedExecutiveDashboard({
     if (!financialToolsEnabled && (activeFeature === 'dues' || activeFeature === 'budget')) {
       setActiveFeature('overview');
     }
-  }, [activeFeature, financialToolsEnabled]);
+    // Redirect to overview if events is selected but disabled
+    if (!eventsManagementEnabled && activeFeature === 'events') {
+      setActiveFeature('overview');
+    }
+  }, [activeFeature, financialToolsEnabled, eventsManagementEnabled]); // Add eventsManagementEnabled to dependencies
 
   // All features are now available to all admins - no role-based filtering
   const renderFeatureView = () => {
@@ -51,7 +56,12 @@ export function UnifiedExecutiveDashboard({
       case 'overview':
         return <OverviewView selectedRole={selectedRole} onFeatureChange={setActiveFeature} />;
       case 'events':
-        return <EventsView />;
+        // Only render if events management is enabled
+        if (eventsManagementEnabled) {
+          return <EventsView />;
+        }
+        // If disabled, redirect to overview
+        return <OverviewView selectedRole={selectedRole} onFeatureChange={setActiveFeature} />;
       case 'tasks':
         return <TasksView />;
       case 'members':

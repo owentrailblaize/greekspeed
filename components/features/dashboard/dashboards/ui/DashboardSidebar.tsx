@@ -30,6 +30,7 @@ export function DashboardSidebar({
   onFeatureChange
 }: DashboardSidebarProps) {
   const { enabled: financialToolsEnabled } = useFeatureFlag('financial_tools_enabled');
+  const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled'); // Add this line
   
   // Collapsible sidebar state (following AlumniPipelineLayout pattern)
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -62,6 +63,15 @@ export function DashboardSidebar({
       ]
     }] : [])
   ];
+
+  // Filter top-level items based on feature flags
+  const visibleTopLevelItems = topLevelItems.filter(item => {
+    // Hide Events tab if events management is disabled
+    if (item.id === 'events' && !eventsManagementEnabled) {
+      return false;
+    }
+    return true;
+  });
 
   // Set mobile-specific initial state
   useEffect(() => {
@@ -163,7 +173,7 @@ export function DashboardSidebar({
                   // Collapsed view - show only icons
                   <div className="space-y-4">
                     <div className="flex flex-col items-center space-y-2">
-                      {topLevelItems.map((item) => {
+                      {visibleTopLevelItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = activeFeature === item.id;
                         
@@ -222,7 +232,7 @@ export function DashboardSidebar({
                   // Expanded view - show full navigation
                   <div className="space-y-1">
                     {/* Top-level items */}
-                    {topLevelItems.map((item) => {
+                    {visibleTopLevelItems.map((item) => {
                       const Icon = item.icon;
                       const isActive = activeFeature === item.id;
 
