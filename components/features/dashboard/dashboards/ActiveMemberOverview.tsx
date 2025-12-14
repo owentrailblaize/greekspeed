@@ -17,6 +17,8 @@ import { MobileEventsPage } from './ui/MobileEventsPage';
 import { MobileDocsCompliancePage } from './ui/MobileDocsCompliancePage';
 import { MobileOperationsFeedPage } from './ui/MobileOperationsFeedPage';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { FeatureGuard } from '@/components/shared/FeatureGuard';
+import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 
 interface ActiveMemberOverviewProps {
   initialFeed?: SocialFeedInitialData;
@@ -30,6 +32,7 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>('home');
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { enabled: financialToolsEnabled } = useFeatureFlag('financial_tools_enabled');
 
   const feedData = useMemo(() => {
     if (!initialFeed) return undefined;
@@ -41,7 +44,13 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
   useEffect(() => {
     const tool = searchParams.get('tool');
     if (tool === 'dues') {
-      router.push('/dashboard/dues');
+      // Only redirect if financial tools are enabled
+      if (financialToolsEnabled) {
+        router.push('/dashboard/dues');
+      } else {
+        // If disabled, just clear the tool param
+        router.push('/dashboard');
+      }
     } else if (tool === 'announcements') {
       setActiveMobileTab('announcements');
     } else if (tool === 'calendar') {
@@ -49,7 +58,7 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
     } else if (!tool) {
       setActiveMobileTab('home');
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, financialToolsEnabled]);
   
   const renderMobileContent = () => {
     // Handle regular tabs
@@ -121,7 +130,9 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
           <div className="col-span-3">
             <div className="space-y-6">
               <UpcomingEventsCard />
-              <DuesStatusCard />
+              <FeatureGuard flagName="financial_tools_enabled">
+                <DuesStatusCard />
+              </FeatureGuard>
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Users, Wrench, CreditCard, User, CheckSquare, FileText, Activity, X, Search, Building2, LucideIcon, MessageSquare, Calendar, Megaphone, Settings } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 
 export type MobileTab = 'home' | 'tasks' | 'announcements' | 'calendar' | 'events';
 
@@ -47,6 +48,7 @@ export function MobileBottomNavigation({
   const searchParams = useSearchParams();
   const { profile } = useProfile();
   const userRole = propUserRole || profile?.role;
+  const { enabled: financialToolsEnabled } = useFeatureFlag('financial_tools_enabled');
   const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
   const [buttonPosition, setButtonPosition] = useState<{ left: number; bottom: number } | null>(null);
   const toolsMenuRef = useRef<HTMLDivElement>(null);
@@ -172,7 +174,7 @@ export function MobileBottomNavigation({
       ];
     } else {
       // Active Member: dues, announcements, calendar
-      return [
+      const options = [
         {
           id: 'dues',
           label: 'Dues',
@@ -192,6 +194,11 @@ export function MobileBottomNavigation({
           onClick: () => handleToolsOptionClick('calendar'),
         },
       ];
+      
+      // Filter out dues if financial tools are disabled
+      return financialToolsEnabled 
+        ? options 
+        : options.filter(opt => opt.id !== 'dues');
     }
   };
 

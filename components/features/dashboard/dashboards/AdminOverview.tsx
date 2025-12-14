@@ -13,6 +13,7 @@ import { CompactCalendarCard } from './ui/CompactCalendarCard';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { SocialFeed, type SocialFeedInitialData } from './ui/SocialFeed';
 import { DuesStatusCard } from './ui/DuesStatusCard';
+import { FeatureGuard } from '@/components/shared/FeatureGuard';
 import { MobileBottomNavigation } from './ui/MobileBottomNavigation'; // Changed import
 import { MobileAdminTasksPage } from './ui/MobileAdminTasksPage';
 import { MobileDocsCompliancePage } from './ui/MobileDocsCompliancePage';
@@ -177,7 +178,9 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
               {isExecutiveMember ? (
                 <SendAnnouncementButton />
               ) : (
-                <DuesStatusCard />
+                <FeatureGuard flagName="financial_tools_enabled">
+                  <DuesStatusCard />
+                </FeatureGuard>
               )}
             </div>
             <div className="w-full">
@@ -226,7 +229,9 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
         <div className="hidden sm:grid sm:grid-cols-12 sm:gap-6">
           {/* Left Column - 3 columns wide */}
           <div className="col-span-3 space-y-6">
-            <DuesStatusCard />
+            <FeatureGuard flagName="financial_tools_enabled">
+              <DuesStatusCard />
+            </FeatureGuard>
             <OperationsFeed />
           </div>
           
