@@ -31,6 +31,7 @@ import { SendAnnouncementButton } from './ui/SendAnnouncementButton';
 import { EXECUTIVE_ROLES } from '@/lib/permissions';
 import { UpcomingEventsCard } from './ui/UpcomingEventsCard';
 import { cn } from '@/lib/utils';
+import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 
 interface AdminOverviewProps {
   initialFeed?: SocialFeedInitialData;
@@ -74,6 +75,9 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
       setActiveMobileTab('operations');
     } else if (tool === 'events') {
       setActiveMobileTab('events');
+    } else if (tool === 'invites') {
+      // Handle invites when events flag is disabled
+      setActiveMobileTab('events'); // Still use 'events' tab but it will show invitations
     } else if (tool === 'docs') {
       setActiveMobileTab('docs');
     } else if (tool === 'ops') {

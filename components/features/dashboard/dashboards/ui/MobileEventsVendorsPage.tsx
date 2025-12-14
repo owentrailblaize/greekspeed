@@ -19,11 +19,17 @@ import { InviteManagement } from '@/components/features/invitations/InviteManage
 import { createPortal } from 'react-dom';
 import { toast } from 'react-toastify';
 import { cn } from '@/lib/utils';
+import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 
 export function MobileEventsVendorsPage() {
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
-  const [activeTab, setActiveTab] = useState<'events' | 'vendors' | 'invitations'>('events');
+  const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
+  
+  // Set initial tab based on flag - if events disabled, default to 'invitations'
+  const [activeTab, setActiveTab] = useState<'events' | 'vendors' | 'invitations'>(
+    eventsManagementEnabled ? 'events' : 'invitations'
+  );
   const [eventsPage, setEventsPage] = useState(1);
   const [vendorsPage, setVendorsPage] = useState(1);
   const eventsPerPage = 6;
@@ -242,6 +248,13 @@ export function MobileEventsVendorsPage() {
     }
   }, [activeTab]);
 
+  // Redirect to invitations if events tab is selected but flag is disabled
+  useEffect(() => {
+    if (activeTab === 'events' && !eventsManagementEnabled) {
+      setActiveTab('invitations');
+    }
+  }, [activeTab, eventsManagementEnabled]);
+
   // Add mobile detection (it's mobile-only page, but still detect for drawer)
   const [isMobile, setIsMobile] = useState(true); // Default true since it's mobile page
 
@@ -259,230 +272,234 @@ export function MobileEventsVendorsPage() {
       <div className="max-w-md mx-auto">
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="events" className="text-xs">Events</TabsTrigger>
+          <TabsList className={`grid w-full mb-4 ${eventsManagementEnabled ? 'grid-cols-3' : 'grid-cols-2'}`}>
+            {eventsManagementEnabled && (
+              <TabsTrigger value="events" className="text-xs">Events</TabsTrigger>
+            )}
             <TabsTrigger value="vendors" className="text-xs">Vendors</TabsTrigger>
             <TabsTrigger value="invitations" className="text-xs">Invites</TabsTrigger>
           </TabsList>
 
-          {/* Events Tab */}
-          <TabsContent value="events" className="space-y-4">
-            {/* Create Event Button */}
-            <Button 
-              onClick={() => {
-                setEditingEvent(null);
-                setShowEventForm(true);
-              }}
-              className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 w-full md:w-auto transition-all duration-300"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create Event
-            </Button>
+          {/* Events Tab - Only render if flag is enabled */}
+          {eventsManagementEnabled && (
+            <TabsContent value="events" className="space-y-4">
+              {/* Create Event Button */}
+              <Button 
+                onClick={() => {
+                  setEditingEvent(null);
+                  setShowEventForm(true);
+                }}
+                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 w-full md:w-auto transition-all duration-300"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Event
+              </Button>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 gap-3">
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-slate-700 font-medium mb-1">Total Events</p>
-                      <p className="text-xl font-semibold text-slate-900">{budgetStats.totalEvents}</p>
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-slate-700 font-medium mb-1">Total Events</p>
+                        <p className="text-xl font-semibold text-slate-900">{budgetStats.totalEvents}</p>
+                      </div>
+                      <Calendar className="h-5 w-5 text-navy-500" />
                     </div>
-                    <Calendar className="h-5 w-5 text-navy-500" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-slate-700 font-medium mb-1">With Budget</p>
-                      <p className="text-xl font-semibold text-slate-900">{budgetStats.eventsWithBudget}</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-slate-700 font-medium mb-1">With Budget</p>
+                        <p className="text-xl font-semibold text-slate-900">{budgetStats.eventsWithBudget}</p>
+                      </div>
+                      <DollarSign className="h-5 w-5 text-navy-500" />
                     </div>
-                    <DollarSign className="h-5 w-5 text-navy-500" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Budget Overview */}
-            <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
-              <CardHeader className="pb-3 flex-shrink-0 border-b border-navy-100/30">
-                <CardTitle className="text-sm text-slate-900 font-semibold">Budget Overview</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-slate-700">Allocated</span>
-                  <span className="font-semibold text-sm text-slate-900">${budgetStats.totalBudgetAllocated.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-slate-700">Remaining</span>
-                  <span className={`font-semibold text-sm ${budgetStats.remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    ${budgetStats.remaining.toLocaleString()}
-                  </span>
-                </div>
-                <Progress 
-                  value={(budgetStats.totalBudgetAllocated / budgetStats.startingBudget) * 100} 
-                  className="h-2"
-                />
-              </CardContent>
-            </Card>
-
-            {/* Events List */}
-            {eventsLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+                  </CardContent>
+                </Card>
               </div>
-            ) : eventsError ? (
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-                <CardContent className="p-4 text-center">
-                  <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-                  <p className="text-sm text-red-500">Error loading events</p>
+
+              {/* Budget Overview */}
+              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                <CardHeader className="pb-3 flex-shrink-0 border-b border-navy-100/30">
+                  <CardTitle className="text-sm text-slate-900 font-semibold">Budget Overview</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-700">Allocated</span>
+                    <span className="font-semibold text-sm text-slate-900">${budgetStats.totalBudgetAllocated.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-700">Remaining</span>
+                    <span className={`font-semibold text-sm ${budgetStats.remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      ${budgetStats.remaining.toLocaleString()}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={(budgetStats.totalBudgetAllocated / budgetStats.startingBudget) * 100} 
+                    className="h-2"
+                  />
                 </CardContent>
               </Card>
-            ) : sortedEvents.length === 0 ? (
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-                <CardContent className="p-4 text-center">
-                  <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-500 mb-2">No events found</p>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setEditingEvent(null);
-                      setShowEventForm(true);
-                    }}
-                    size="sm"
-                    className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
-                  >
-                    Create First Event
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  {paginatedEvents.map((event) => (
-                    <Card key={event.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
-                      <div className="space-y-2">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-sm truncate text-slate-900">{event.title}</h3>
-                            <div className="flex items-center space-x-2 mt-1 text-xs text-slate-700">
-                              <Clock className="h-3 w-3" />
-                              <span>{formatEventDate(event.start_time)}</span>
-                            </div>
-                            {event.location && (
+
+              {/* Events List */}
+              {eventsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+                </div>
+              ) : eventsError ? (
+                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+                  <CardContent className="p-4 text-center">
+                    <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
+                    <p className="text-sm text-red-500">Error loading events</p>
+                  </CardContent>
+                </Card>
+              ) : sortedEvents.length === 0 ? (
+                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+                  <CardContent className="p-4 text-center">
+                    <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-500 mb-2">No events found</p>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setEditingEvent(null);
+                        setShowEventForm(true);
+                      }}
+                      size="sm"
+                      className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                    >
+                      Create First Event
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    {paginatedEvents.map((event) => (
+                      <Card key={event.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-sm truncate text-slate-900">{event.title}</h3>
                               <div className="flex items-center space-x-2 mt-1 text-xs text-slate-700">
-                                <MapPin className="h-3 w-3" />
-                                <span className="truncate">{event.location}</span>
+                                <Clock className="h-3 w-3" />
+                                <span>{formatEventDate(event.start_time)}</span>
+                              </div>
+                              {event.location && (
+                                <div className="flex items-center space-x-2 mt-1 text-xs text-slate-700">
+                                  <MapPin className="h-3 w-3" />
+                                  <span className="truncate">{event.location}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center space-x-1 ml-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleEditEvent(event)}
+                                className="h-8 w-8 p-0 text-navy-700 hover:text-navy-900 hover:bg-navy-50"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDeleteEvent(event.id)}
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {event.budget_amount && (
+                              <Badge variant="outline" className="text-xs border-navy-200 text-slate-700">
+                                <DollarSign className="h-3 w-3 mr-1" />
+                                ${parseFloat(String(event.budget_amount)).toLocaleString()}
+                              </Badge>
+                            )}
+                            <Badge className={
+                              event.status === 'published' ? 'bg-green-100 text-green-800' :
+                              event.status === 'draft' ? 'bg-gray-100 text-gray-800' :
+                              'bg-red-100 text-red-800'
+                            }>
+                              {event.status}
+                            </Badge>
+                            {event.attendee_count !== undefined && (
+                              <div className="flex items-center text-xs text-slate-700">
+                                <Users className="h-3 w-3 mr-1" />
+                                {event.attendee_count}
                               </div>
                             )}
                           </div>
-                          <div className="flex items-center space-x-1 ml-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditEvent(event)}
-                              className="h-8 w-8 p-0 text-navy-700 hover:text-navy-900 hover:bg-navy-50"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDeleteEvent(event.id)}
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          {event.budget_amount && (
-                            <Badge variant="outline" className="text-xs border-navy-200 text-slate-700">
-                              <DollarSign className="h-3 w-3 mr-1" />
-                              ${parseFloat(String(event.budget_amount)).toLocaleString()}
-                            </Badge>
-                          )}
-                          <Badge className={
-                            event.status === 'published' ? 'bg-green-100 text-green-800' :
-                            event.status === 'draft' ? 'bg-gray-100 text-gray-800' :
-                            'bg-red-100 text-red-800'
-                          }>
-                            {event.status}
-                          </Badge>
-                          {event.attendee_count !== undefined && (
-                            <div className="flex items-center text-xs text-slate-700">
-                              <Users className="h-3 w-3 mr-1" />
-                              {event.attendee_count}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-
-                {/* Pagination Controls */}
-                {eventsTotalPages > 1 && (
-                  <div className="flex flex-col items-center space-y-3 pt-4 border-t border-gray-200 mt-4">
-                    <div className="text-xs text-gray-600">
-                      Showing {eventsStart} to {eventsEndIndex} of {eventsTotal} events
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEventsPage(prev => Math.max(1, prev - 1))}
-                        disabled={eventsPage === 1 || eventsLoading}
-                        className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <ChevronLeft className="h-3.5 w-3.5 mr-1" />
-                        Previous
-                      </Button>
-                      <div className="flex items-center space-x-1 px-2">
-                        <span className="text-xs text-gray-600">Page</span>
-                        <span className="text-xs font-medium">{eventsPage}</span>
-                        <span className="text-xs text-gray-600">of</span>
-                        <span className="text-xs font-medium">{eventsTotalPages}</span>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEventsPage(prev => Math.min(eventsTotalPages, prev + 1))}
-                        disabled={eventsPage === eventsTotalPages || eventsLoading}
-                        className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Next
-                        <ChevronRight className="h-3.5 w-3.5 ml-1" />
-                      </Button>
-                    </div>
-                    {/* Page Number Buttons - Show up to 5 pages */}
-                    {eventsTotalPages <= 5 && (
-                      <div className="flex items-center space-x-1">
-                        {Array.from({ length: eventsTotalPages }, (_, i) => i + 1).map((page) => (
-                          <Button
-                            key={page}
-                            variant={eventsPage === page ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setEventsPage(page)}
-                            className={`h-8 w-8 p-0 text-xs rounded-full transition-all duration-300 ${
-                              eventsPage === page
-                                ? 'bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20'
-                                : 'bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900'
-                            }`}
-                            disabled={eventsLoading}
-                          >
-                            {page}
-                          </Button>
-                        ))}
-                      </div>
-                    )}
+                      </Card>
+                    ))}
                   </div>
-                )}
-              </>
-            )}
-          </TabsContent>
+
+                  {/* Pagination Controls */}
+                  {eventsTotalPages > 1 && (
+                    <div className="flex flex-col items-center space-y-3 pt-4 border-t border-gray-200 mt-4">
+                      <div className="text-xs text-gray-600">
+                        Showing {eventsStart} to {eventsEndIndex} of {eventsTotal} events
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEventsPage(prev => Math.max(1, prev - 1))}
+                          disabled={eventsPage === 1 || eventsLoading}
+                          className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                          Previous
+                        </Button>
+                        <div className="flex items-center space-x-1 px-2">
+                          <span className="text-xs text-gray-600">Page</span>
+                          <span className="text-xs font-medium">{eventsPage}</span>
+                          <span className="text-xs text-gray-600">of</span>
+                          <span className="text-xs font-medium">{eventsTotalPages}</span>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEventsPage(prev => Math.min(eventsTotalPages, prev + 1))}
+                          disabled={eventsPage === eventsTotalPages || eventsLoading}
+                          className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Next
+                          <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                        </Button>
+                      </div>
+                      {/* Page Number Buttons - Show up to 5 pages */}
+                      {eventsTotalPages <= 5 && (
+                        <div className="flex items-center space-x-1">
+                          {Array.from({ length: eventsTotalPages }, (_, i) => i + 1).map((page) => (
+                            <Button
+                              key={page}
+                              variant={eventsPage === page ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setEventsPage(page)}
+                              className={`h-8 w-8 p-0 text-xs rounded-full transition-all duration-300 ${
+                                eventsPage === page
+                                  ? 'bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20'
+                                  : 'bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900'
+                              }`}
+                              disabled={eventsLoading}
+                            >
+                              {page}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </TabsContent>
+          )}
 
           {/* Vendors Tab */}
           <TabsContent value="vendors" className="space-y-4">

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Users, Wrench, CreditCard, User, CheckSquare, FileText, Activity, X, Search, Building2, LucideIcon, MessageSquare, Calendar, Megaphone, Settings } from 'lucide-react';
+import { Home, Users, Wrench, CreditCard, User, CheckSquare, FileText, Activity, X, Search, Building2, LucideIcon, MessageSquare, Calendar, Megaphone, Settings, UserPlus } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 
@@ -153,7 +153,7 @@ export function MobileBottomNavigation({
   // Role-based tools options
   const getRoleBasedToolsOptions = () => {
     if (userRole === 'admin') {
-      return [
+      const options = [
         {
           id: 'tasks',
           label: 'Tasks',
@@ -166,13 +166,20 @@ export function MobileBottomNavigation({
           icon: Settings,
           onClick: () => handleToolsOptionClick('operations'),
         },
-        {
+        // Conditionally show Events or Invites based on flag
+        ...(eventsManagementEnabled ? [{
           id: 'events',
           label: 'Events',
           icon: Calendar,
           onClick: () => handleToolsOptionClick('events'),
-        },
+        }] : [{
+          id: 'invites',
+          label: 'Invites',
+          icon: UserPlus, // You may need to import UserPlus if not already imported
+          onClick: () => handleToolsOptionClick('invites'), // You'll need to handle this in AdminOverview
+        }]),
       ];
+      return options;
     } else {
       // Active Member: dues, announcements, calendar
       const options = [
@@ -356,6 +363,7 @@ export function MobileBottomNavigation({
           tasks: 'tasks',
           operations: 'operations',
           events: 'events',
+          invites: 'invites', // Changed from 'events' to 'invites'
           docs: 'tasks',
           ops: 'operations',
           dues: 'tasks',
@@ -377,6 +385,7 @@ export function MobileBottomNavigation({
           tasks: 'tasks',
           operations: 'operations',
           events: 'events',
+          invites: 'invites', // Changed from 'events' to 'invites'
           docs: 'tasks',
           ops: 'operations',
           dues: 'tasks',
