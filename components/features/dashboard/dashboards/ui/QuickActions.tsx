@@ -12,6 +12,7 @@ import { Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState as useStateMobile } from 'react';
 import { useEffect } from 'react';
+import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 
 // Action configuration interface
 export interface QuickAction {
@@ -51,6 +52,7 @@ export function QuickActions({
   const [showEventModalState, setShowEventModalState] = useState(false);
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
+  const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
 
   const [isMobile, setIsMobile] = useState(false);
 
@@ -122,8 +124,8 @@ export function QuickActions({
         </CardContent>
       </Card>
 
-      {/* Event Creation Modal - Mobile: Bottom drawer, Desktop: Centered */}
-      {showEventModal && showEventModalState && typeof window !== 'undefined' && createPortal(
+      {/* Event Creation Modal - Mobile: Bottom drawer, Desktop: Centered - Only show if events management is enabled */}
+      {showEventModal && showEventModalState && eventsManagementEnabled && typeof window !== 'undefined' && createPortal(
         <div className={cn(
           "fixed inset-0 z-[9999]",
           isMobile 

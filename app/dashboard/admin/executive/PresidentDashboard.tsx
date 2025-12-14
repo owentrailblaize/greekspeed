@@ -20,6 +20,7 @@ import { EventForm } from '@/components/ui/EventForm';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { QuickActions, QuickAction } from '@/components/features/dashboard/dashboards/ui/QuickActions';
+import { FeatureGuard } from '@/components/shared/FeatureGuard';
 import { Plus, Calendar as CalendarIcon, MessageSquare as MessageSquareIcon, UserPlus as UserPlusIcon, Users as UsersIcon } from 'lucide-react';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { Checkbox } from "@/components/ui/checkbox";
@@ -589,7 +590,9 @@ export function PresidentDashboard() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Upcoming Events - Now using the existing component */}
-          <UpcomingEventsCard />
+          <FeatureGuard flagName="events_management_enabled">
+            <UpcomingEventsCard />
+          </FeatureGuard>
 
           {/* Quick Actions */}
           <QuickActions 

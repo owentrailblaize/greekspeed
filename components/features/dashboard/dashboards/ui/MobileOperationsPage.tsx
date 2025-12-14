@@ -65,6 +65,7 @@ export function MobileOperationsPage() {
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
   const { enabled: financialToolsEnabled } = useFeatureFlag('financial_tools_enabled');
+  const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
   const [activeTab, setActiveTab] = useState<'members' | 'dues' | 'budget'>('members');
   
   // Members state

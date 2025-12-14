@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Clock, Users, DollarSign, FileText, Megaphone, CheckCircle, Calendar, RefreshCw } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { createClient } from '@supabase/supabase-js';
+import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -35,6 +36,7 @@ export function OperationsFeed() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
   const { profile } = useProfile();
+  const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
 
   useEffect(() => {
     if (profile?.chapter_id) {
@@ -78,14 +80,17 @@ export function OperationsFeed() {
   const fetchActivitiesFromDatabase = async (limit: number): Promise<ActivityItem[]> => {
     if (!profile?.chapter_id) return [];
 
-    const [eventsResult, announcementsResult, tasksResult, documentsResult, duesResult] = await Promise.all([
-      // Recent Events
-      supabase
-        .from('events')
-        .select('id, title, created_at, created_by')
-        .eq('chapter_id', profile.chapter_id)
-        .order('created_at', { ascending: false })
-        .limit(limit),
+    // Build fetch promises - conditionally include events
+    const fetchPromises = [
+      // Recent Events - only if events management is enabled
+      ...(eventsManagementEnabled ? [
+        supabase
+          .from('events')
+          .select('id, title, created_at, created_by')
+          .eq('chapter_id', profile.chapter_id)
+          .order('created_at', { ascending: false })
+          .limit(limit)
+      ] : [Promise.resolve({ data: null, error: null })]),
 
       // Recent Announcements  
       supabase
@@ -132,13 +137,15 @@ export function OperationsFeed() {
         .eq('status', 'paid')
         .order('updated_at', { ascending: false })
         .limit(limit)
-    ]);
+    ];
+
+    const [eventsResult, announcementsResult, tasksResult, documentsResult, duesResult] = await Promise.all(fetchPromises);
 
     // Transform data into unified activity format
     const allActivities: ActivityItem[] = [];
 
-    // Process Events
-    if (eventsResult.data) {
+    // Process Events - Only if events management is enabled
+    if (eventsManagementEnabled && eventsResult.data) {
       eventsResult.data.forEach(event => {
         allActivities.push({
           id: `event-${event.id}`,
