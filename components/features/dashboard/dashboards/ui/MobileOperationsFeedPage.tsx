@@ -115,7 +115,7 @@ export function MobileOperationsFeedPage() {
 
       // Process Events - Only if events management is enabled
       if (eventsManagementEnabled && eventsResult.data) {
-        eventsResult.data.forEach(event => {
+        (eventsResult.data as Array<{ id: any; title: any; created_at: any; created_by: any }>).forEach(event => {
           allActivities.push({
             id: `event-${event.id}`,
             type: 'event',
@@ -129,7 +129,13 @@ export function MobileOperationsFeedPage() {
 
       // Process Announcements
       if (announcementsResult.data) {
-        announcementsResult.data.forEach(announcement => {
+        (announcementsResult.data as Array<{
+          id: any;
+          title: any;
+          created_at: any;
+          sender_id: any;
+          sender: { full_name: any; first_name: any; last_name: any; } | { full_name: any; first_name: any; last_name: any; }[];
+        }>).forEach(announcement => {
           allActivities.push({
             id: `announcement-${announcement.id}`,
             type: 'announcement',
@@ -144,7 +150,14 @@ export function MobileOperationsFeedPage() {
 
       // Process Tasks
       if (tasksResult.data) {
-        tasksResult.data.forEach(task => {
+        (tasksResult.data as Array<{
+          id: any;
+          title: any;
+          status: any;
+          created_at: any;
+          assigned_by: any;
+          assigner: { full_name: any; first_name: any; last_name: any; } | { full_name: any; first_name: any; last_name: any; }[];
+        }>).forEach(task => {
           allActivities.push({
             id: `task-${task.id}`,
             type: 'task',
@@ -159,7 +172,13 @@ export function MobileOperationsFeedPage() {
 
       // Process Documents
       if (documentsResult.data) {
-        documentsResult.data.forEach(doc => {
+        (documentsResult.data as Array<{
+          id: any;
+          title: any;
+          created_at: any;
+          owner_id: any;
+          owner: { full_name: any; first_name: any; last_name: any; } | { full_name: any; first_name: any; last_name: any; }[];
+        }>).forEach(doc => {
           allActivities.push({
             id: `document-${doc.id}`,
             type: 'document',
@@ -174,7 +193,15 @@ export function MobileOperationsFeedPage() {
 
       // Process Dues Payments
       if (duesResult.data) {
-        duesResult.data.forEach(dues => {
+        (duesResult.data as Array<{
+          id: any;
+          status: any;
+          amount_paid: any;
+          updated_at: any;
+          user_id: any;
+          user: { full_name: any; first_name: any; last_name: any; } | { full_name: any; first_name: any; last_name: any; }[];
+          cycle: { name: any; } | { name: any; }[];
+        }>).forEach(dues => {
           const user = Array.isArray(dues.user) ? dues.user[0] : dues.user;
           allActivities.push({
             id: `dues-${dues.id}`,
