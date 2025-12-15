@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle, AlertCircle, Loader2, X, UserPlus } from 'lucide-react';
 import type { CreateRecruitRequest, Recruit } from '@/types/recruitment';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/supabase/auth-context';
 
 interface AddRecruitFormProps {
   onSuccess?: (recruit: Recruit) => void;
@@ -17,6 +18,7 @@ interface AddRecruitFormProps {
 }
 
 export function AddRecruitForm({ onSuccess, onCancel, variant = 'inline' }: AddRecruitFormProps) {
+  const { session } = useAuth(); // Get session for Bearer token
   const [formData, setFormData] = useState<CreateRecruitRequest>({
     name: '',
     hometown: '',
@@ -135,12 +137,21 @@ export function AddRecruitForm({ onSuccess, onCancel, variant = 'inline' }: AddR
         instagram_handle: formData.instagram_handle?.trim() || undefined,
       };
 
+      // Prepare headers with Bearer token
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add Authorization header with Bearer token if session exists
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       // POST to API endpoint
       const response = await fetch('/api/recruitment/recruits', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
+        credentials: 'include', // Also include cookies as fallback
         body: JSON.stringify(requestBody),
       });
 
