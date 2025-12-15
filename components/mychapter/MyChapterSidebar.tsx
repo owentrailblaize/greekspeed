@@ -9,6 +9,9 @@ import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { AddMemberForm } from '@/components/chapter/AddMemberForm';
 import { EventForm } from '@/components/ui/EventForm'; // Add this import
+import { FeatureGuard } from '@/components/shared/FeatureGuard'; // Add this import
+import { AddRecruitForm } from '@/components/features/recruitment/AddRecruitForm';
+import type { Recruit } from '@/types/recruitment';
 
 
 interface MyChapterSidebarProps {
@@ -22,6 +25,7 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
   // Add state for both modals
   const [showAddMemberForm, setShowAddMemberForm] = useState(false);
   const [showCreateEventForm, setShowCreateEventForm] = useState(false);
+  const [showAddRecruitModal, setShowAddRecruitModal] = useState(false); // New state for recruit modal
   
   // Get current user's profile to check role and chapter
   const { profile } = useProfile();
@@ -31,6 +35,8 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
   
   // Check if user is admin (same pattern as other components)
   const isAdmin = profile?.role === 'admin';
+  // Check if user can submit recruits (active_member or admin)
+  const canSubmitRecruit = profile?.role === 'active_member' || profile?.role === 'admin';
 
   // Calculate stats dynamically from the fetched members
   const stats = {
@@ -208,7 +214,7 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
                           <Button
                             key={item.id}
                             variant={activeSection === item.id ? "default" : "ghost"}
-                            className={`w-full justify-start h-auto p-3 ${
+                            className={`w-full rounded-full justify-start h-auto p-3 ${
                               item.locked 
                                 ? 'opacity-60 cursor-not-allowed' 
                                 : activeSection === item.id 
@@ -259,7 +265,7 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="w-full"
+                              className="w-full rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 border-navy-300 hover:bg-gray-50"
                               onClick={() => setShowAddMemberForm(true)}
                             >
                               <UserPlus className="h-4 w-4 mr-2" />
@@ -268,14 +274,34 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="w-full"
-                              onClick={() => setShowCreateEventForm(true)} // Direct modal open
+                              className="w-full rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 border-navy-300 hover:bg-gray-50"
+                              onClick={() => setShowCreateEventForm(true)}
                             >
                               <Calendar className="h-4 w-4 mr-2" />
                               Create Event
                             </Button>
                           </div>
                         </div>
+                      )}
+
+                      {/* Submit Recruit - Available to active members and admins */}
+                      {canSubmitRecruit && (
+                        <FeatureGuard flagName="recruitment_crm_enabled">
+                          <div className={`border-t border-gray-200 pt-4 ${!isAdmin ? 'mt-4' : ''}`}>
+                            {!isAdmin && (
+                              <h3 className="text-sm font-medium text-gray-900 mb-3">Quick Actions</h3>
+                            )}
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="w-full rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 border-navy-300 hover:bg-gray-50"
+                              onClick={() => setShowAddRecruitModal(true)}
+                            >
+                              <UserPlus className="h-4 w-4 mr-2" />
+                              Submit Recruit
+                            </Button>
+                          </div>
+                        </FeatureGuard>
                       )}
                     </div>
                   )}
@@ -333,6 +359,20 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
           <EventForm
             onSubmit={handleCreateEvent}
             onCancel={() => setShowCreateEventForm(false)}
+          />
+        </div>
+      )}
+
+      {/* Add Recruit Modal */}
+      {showAddRecruitModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <AddRecruitForm
+            onSuccess={(recruit: Recruit) => {
+              setShowAddRecruitModal(false);
+              // Optionally refresh data or show notification
+            }}
+            onCancel={() => setShowAddRecruitModal(false)}
+            variant="modal"
           />
         </div>
       )}
