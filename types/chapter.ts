@@ -1,4 +1,5 @@
 import { ChapterRole, MemberStatus } from '@/types/profile';
+import { ChapterFeatureFlags } from '@/types/featureFlags';
 
 export interface Chapter {
   id: string;
@@ -20,6 +21,7 @@ export interface Chapter {
   llm_enriched?: boolean;
   llm_data?: Record<string, any>;
   starting_budget?: number;
+  feature_flags?: ChapterFeatureFlags;
   created_at: string;
   updated_at: string;
 }

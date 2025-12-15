@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 import { DashboardSidebar } from './ui/DashboardSidebar';
 import { OverviewView } from './ui/feature-views/OverviewView';
 import { EventsView } from './ui/feature-views/EventsView';
@@ -33,7 +34,21 @@ export function UnifiedExecutiveDashboard({
   onRoleChange 
 }: UnifiedExecutiveDashboardProps) {
   const { profile } = useProfile();
+  const { enabled: financialToolsEnabled } = useFeatureFlag('financial_tools_enabled');
+  const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled'); // Add this line
   const [activeFeature, setActiveFeature] = useState<FeatureView>('overview');
+
+  // Redirect to overview if financial features are selected but disabled
+  useEffect(() => {
+    // Remove 'vendors' from this check - it should always be accessible
+    if (!financialToolsEnabled && (activeFeature === 'dues' || activeFeature === 'budget')) {
+      setActiveFeature('overview');
+    }
+    // Redirect to overview if events is selected but disabled
+    if (!eventsManagementEnabled && activeFeature === 'events') {
+      setActiveFeature('overview');
+    }
+  }, [activeFeature, financialToolsEnabled, eventsManagementEnabled]); // Add eventsManagementEnabled to dependencies
 
   // All features are now available to all admins - no role-based filtering
   const renderFeatureView = () => {
@@ -41,16 +56,32 @@ export function UnifiedExecutiveDashboard({
       case 'overview':
         return <OverviewView selectedRole={selectedRole} onFeatureChange={setActiveFeature} />;
       case 'events':
-        return <EventsView />;
+        // Only render if events management is enabled
+        if (eventsManagementEnabled) {
+          return <EventsView />;
+        }
+        // If disabled, redirect to overview
+        return <OverviewView selectedRole={selectedRole} onFeatureChange={setActiveFeature} />;
       case 'tasks':
         return <TasksView />;
       case 'members':
         return <MembersView />;
       case 'dues':
-        return <DuesView />;
+        // Only render if financial tools are enabled
+        if (financialToolsEnabled) {
+          return <DuesView />;
+        }
+        // If disabled, redirect to overview
+        return <OverviewView selectedRole={selectedRole} onFeatureChange={setActiveFeature} />;
       case 'budget':
-        return <BudgetView />;
+        // Only render if financial tools are enabled
+        if (financialToolsEnabled) {
+          return <BudgetView />;
+        }
+        // If disabled, redirect to overview
+        return <OverviewView selectedRole={selectedRole} onFeatureChange={setActiveFeature} />;
       case 'vendors':
+        // Vendors is always accessible (not protected by financial flag)
         return <VendorsView />;
       case 'invitations':
         return <InvitationsView />;

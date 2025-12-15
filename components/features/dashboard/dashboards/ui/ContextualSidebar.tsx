@@ -8,6 +8,7 @@ import { Calendar, MessageSquare, UserPlus, Users, Plus, Filter, Download } from
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
+import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 
 interface ContextualSidebarProps {
   activeFeature: FeatureView;
@@ -18,11 +19,16 @@ export function ContextualSidebar({ activeFeature, selectedRole }: ContextualSid
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
   const router = useRouter();
+  const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
 
   // Feature-specific contextual content
   const renderContextualContent = () => {
     switch (activeFeature) {
       case 'events':
+        // Only show events sidebar if events management is enabled
+        if (!eventsManagementEnabled) {
+          return null;
+        }
         return (
           <Card>
             <CardHeader>

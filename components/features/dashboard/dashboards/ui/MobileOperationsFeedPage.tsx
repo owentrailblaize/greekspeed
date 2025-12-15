@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Activity, AlertCircle, CheckCircle, Clock, Users, DollarSign, Calendar, FileText, Megaphone } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { createClient } from '@supabase/supabase-js';
+import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,6 +33,7 @@ export function MobileOperationsFeedPage() {
   
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
+  const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
 
   // Load activities on component mount
   useEffect(() => {
@@ -47,14 +49,17 @@ export function MobileOperationsFeedPage() {
     try {
       setLoading(true);
       
-      const [eventsResult, announcementsResult, tasksResult, documentsResult, duesResult] = await Promise.all([
-        // Recent Events
-        supabase
-          .from('events')
-          .select('id, title, created_at, created_by')
-          .eq('chapter_id', profile.chapter_id)
-          .order('created_at', { ascending: false })
-          .limit(20),
+      // Build fetch promises - conditionally include events
+      const fetchPromises = [
+        // Recent Events - only if events management is enabled
+        ...(eventsManagementEnabled ? [
+          supabase
+            .from('events')
+            .select('id, title, created_at, created_by')
+            .eq('chapter_id', profile.chapter_id)
+            .order('created_at', { ascending: false })
+            .limit(20)
+        ] : [Promise.resolve({ data: null, error: null })]),
 
         // Recent Announcements  
         supabase
@@ -99,16 +104,18 @@ export function MobileOperationsFeedPage() {
           `)
           .eq('cycle.chapter_id', profile.chapter_id)
           .eq('status', 'paid')
-          .order('updated_at', { ascending: false })
-          .limit(20)
-      ]);
+        .order('updated_at', { ascending: false })
+        .limit(20)
+      ];
+
+      const [eventsResult, announcementsResult, tasksResult, documentsResult, duesResult] = await Promise.all(fetchPromises);
 
       // Transform data into unified activity format
       const allActivities: ActivityItem[] = [];
 
-      // Process Events
-      if (eventsResult.data) {
-        eventsResult.data.forEach(event => {
+      // Process Events - Only if events management is enabled
+      if (eventsManagementEnabled && eventsResult.data) {
+        (eventsResult.data as Array<{ id: any; title: any; created_at: any; created_by: any }>).forEach(event => {
           allActivities.push({
             id: `event-${event.id}`,
             type: 'event',
@@ -122,7 +129,13 @@ export function MobileOperationsFeedPage() {
 
       // Process Announcements
       if (announcementsResult.data) {
-        announcementsResult.data.forEach(announcement => {
+        (announcementsResult.data as Array<{
+          id: any;
+          title: any;
+          created_at: any;
+          sender_id: any;
+          sender: { full_name: any; first_name: any; last_name: any; } | { full_name: any; first_name: any; last_name: any; }[];
+        }>).forEach(announcement => {
           allActivities.push({
             id: `announcement-${announcement.id}`,
             type: 'announcement',
@@ -137,7 +150,14 @@ export function MobileOperationsFeedPage() {
 
       // Process Tasks
       if (tasksResult.data) {
-        tasksResult.data.forEach(task => {
+        (tasksResult.data as Array<{
+          id: any;
+          title: any;
+          status: any;
+          created_at: any;
+          assigned_by: any;
+          assigner: { full_name: any; first_name: any; last_name: any; } | { full_name: any; first_name: any; last_name: any; }[];
+        }>).forEach(task => {
           allActivities.push({
             id: `task-${task.id}`,
             type: 'task',
@@ -152,7 +172,13 @@ export function MobileOperationsFeedPage() {
 
       // Process Documents
       if (documentsResult.data) {
-        documentsResult.data.forEach(doc => {
+        (documentsResult.data as Array<{
+          id: any;
+          title: any;
+          created_at: any;
+          owner_id: any;
+          owner: { full_name: any; first_name: any; last_name: any; } | { full_name: any; first_name: any; last_name: any; }[];
+        }>).forEach(doc => {
           allActivities.push({
             id: `document-${doc.id}`,
             type: 'document',
@@ -167,7 +193,15 @@ export function MobileOperationsFeedPage() {
 
       // Process Dues Payments
       if (duesResult.data) {
-        duesResult.data.forEach(dues => {
+        (duesResult.data as Array<{
+          id: any;
+          status: any;
+          amount_paid: any;
+          updated_at: any;
+          user_id: any;
+          user: { full_name: any; first_name: any; last_name: any; } | { full_name: any; first_name: any; last_name: any; }[];
+          cycle: { name: any; } | { name: any; }[];
+        }>).forEach(dues => {
           const user = Array.isArray(dues.user) ? dues.user[0] : dues.user;
           allActivities.push({
             id: `dues-${dues.id}`,
@@ -241,12 +275,24 @@ export function MobileOperationsFeedPage() {
 
   const filteredActivities = activities.filter(activity => {
     if (activeFilter === 'all') return true;
+    // If events are disabled and filter is 'event', reset to 'all'
+    if (activeFilter === 'event' && !eventsManagementEnabled) {
+      return true;
+    }
     return activity.type === activeFilter;
   });
+  
+  // Reset filter if events are disabled and current filter is 'event'
+  useEffect(() => {
+    if (activeFilter === 'event' && !eventsManagementEnabled) {
+      setActiveFilter('all');
+    }
+  }, [activeFilter, eventsManagementEnabled]);
 
   const filterButtons = [
     { id: 'all' as const, label: 'All', count: activities.length },
-    { id: 'event' as const, label: 'Events', count: activities.filter(a => a.type === 'event').length },
+    // Only include Events filter if events management is enabled
+    ...(eventsManagementEnabled ? [{ id: 'event' as const, label: 'Events', count: activities.filter(a => a.type === 'event').length }] : []),
     { id: 'announcement' as const, label: 'Announcements', count: activities.filter(a => a.type === 'announcement').length },
     { id: 'task' as const, label: 'Tasks', count: activities.filter(a => a.type === 'task').length },
     { id: 'document' as const, label: 'Documents', count: activities.filter(a => a.type === 'document').length },

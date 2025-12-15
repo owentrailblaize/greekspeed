@@ -12,7 +12,8 @@ import {
   Network,
   ArrowRight,
   UserCheck,
-  Shield
+  Shield,
+  Flag
 } from 'lucide-react';
 
 export function DeveloperOverview() {
@@ -162,15 +163,16 @@ export function DeveloperOverview() {
           </Card>
         </div>
 
-        {/* User Management Section - Enhanced and Centered */}
-        <div className="mb-8">
+                {/* Developer Tools Section - Enhanced and Centered */}
+                <div className="mb-8">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Developer Tools</h2>
             <p className="text-gray-600">Development and management tools for Trailblaize Internal. Request new features as needed Deft Point.</p>
           </div>
           
-          {/* Single User Management Card - Enhanced */}
-          <div className="max-w-2xl mx-auto">
+          {/* Developer Tools Grid - Two Cards Side by Side */}
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* User Management Card */}
             <Card className="hover:shadow-lg transition-all duration-200 border-2 border-blue-100 hover:border-blue-200">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center space-x-3 text-xl">
@@ -179,7 +181,6 @@ export function DeveloperOverview() {
                   </div>
                   <div>
                     <span className="text-gray-900">User Management</span>
-
                   </div>
                 </CardTitle>
                 <p className="text-gray-600 mt-2">
@@ -189,7 +190,7 @@ export function DeveloperOverview() {
               <CardContent className="pt-0">
                 <div className="space-y-4">
                   {/* Feature List */}
-                  <div className="flex items-center justify-center gap-4">
+                  <div className="flex flex-wrap items-center justify-center gap-3">
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
                       <UserCheck className="h-4 w-4 text-green-500" />
                       <span>Create & Delete Users</span>
@@ -211,6 +212,53 @@ export function DeveloperOverview() {
                       onClick={() => window.location.href = '/dashboard/user-management'}
                     >
                       <span>Access User Management</span>
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Feature Flags Management Card */}
+            <Card className="hover:shadow-lg transition-all duration-200 border-2 border-blue-100 hover:border-blue-200">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center space-x-3 text-xl">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Settings className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <span className="text-gray-900">Feature Flags</span>
+                  </div>
+                </CardTitle>
+                <p className="text-gray-600 mt-2">
+                  Manage chapter-specific feature flags. Enable or disable features like financial tools, recruitment CRM, and events management on a per-chapter basis.
+                </p>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-4">
+                  {/* Feature List */}
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Settings className="h-4 w-4 text-green-500" />
+                      <span>Financial Tools</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Settings className="h-4 w-4 text-green-500" />
+                      <span>Recruitment CRM</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Settings className="h-4 w-4 text-green-500" />
+                      <span>Events Management</span>
+                    </div>
+                  </div>
+                  
+                  {/* Action Button */}
+                  <div className="pt-2">
+                    <Button 
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
+                      onClick={() => window.location.href = '/dashboard/feature-flags'}
+                    >
+                      <span>Manage Feature Flags</span>
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                   </div>

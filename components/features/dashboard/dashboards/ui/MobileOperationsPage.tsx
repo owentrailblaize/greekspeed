@@ -19,6 +19,7 @@ import { createPortal } from 'react-dom';
 import { toast } from 'react-toastify';
 import { supabase } from '@/lib/supabase/client';
 import { useEvents } from '@/lib/hooks/useEvents';
+import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 
 interface User {
   id: string;
@@ -63,6 +64,8 @@ interface DuesAssignment {
 export function MobileOperationsPage() {
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
+  const { enabled: financialToolsEnabled } = useFeatureFlag('financial_tools_enabled');
+  const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
   const [activeTab, setActiveTab] = useState<'members' | 'dues' | 'budget'>('members');
   
   // Members state
@@ -125,6 +128,13 @@ export function MobileOperationsPage() {
       setBudgetEventsPage(1);
     }
   }, [activeTab]);
+
+  // Redirect to members tab if financial tabs are selected but disabled
+  useEffect(() => {
+    if (!financialToolsEnabled && (activeTab === 'dues' || activeTab === 'budget')) {
+      setActiveTab('members');
+    }
+  }, [activeTab, financialToolsEnabled]);
 
   const fetchUsers = async () => {
     if (!chapterId) return;
@@ -305,10 +315,14 @@ export function MobileOperationsPage() {
       <div className="max-w-md mx-auto">
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsList className={`grid w-full mb-4 ${financialToolsEnabled ? 'grid-cols-3' : 'grid-cols-1'}`}>
             <TabsTrigger value="members" className="text-xs">Members</TabsTrigger>
-            <TabsTrigger value="dues" className="text-xs">Dues</TabsTrigger>
-            <TabsTrigger value="budget" className="text-xs">Budget</TabsTrigger>
+            {financialToolsEnabled && (
+              <>
+                <TabsTrigger value="dues" className="text-xs">Dues</TabsTrigger>
+                <TabsTrigger value="budget" className="text-xs">Budget</TabsTrigger>
+              </>
+            )}
           </TabsList>
 
           {/* Members Tab */}
@@ -488,282 +502,286 @@ export function MobileOperationsPage() {
           </TabsContent>
 
           {/* Dues Tab */}
-          <TabsContent value="dues" className="space-y-4">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 gap-3">
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-slate-700 font-medium mb-1">Total Due</p>
-                      <p className="text-lg font-semibold text-slate-900">${duesStats.totalDue.toLocaleString()}</p>
+          {financialToolsEnabled && (
+            <TabsContent value="dues" className="space-y-4">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-slate-700 font-medium mb-1">Total Due</p>
+                        <p className="text-lg font-semibold text-slate-900">${duesStats.totalDue.toLocaleString()}</p>
+                      </div>
+                      <DollarSign className="h-5 w-5 text-navy-500" />
                     </div>
-                    <DollarSign className="h-5 w-5 text-navy-500" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-slate-700 font-medium mb-1">Paid</p>
-                      <p className="text-lg font-semibold text-slate-900">${duesStats.totalPaid.toLocaleString()}</p>
-                    </div>
-                    <CheckCircle className="h-5 w-5 text-navy-500" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Collection Rate */}
-            <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
-              <CardContent className="p-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-slate-700">Collection Rate</span>
-                    <span className="font-semibold text-slate-900">{duesStats.collectionRate}%</span>
-                  </div>
-                  <Progress value={duesStats.collectionRate} className="h-2" />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Cycles */}
-            <div>
-              <h3 className="text-sm font-semibold mb-2">Dues Cycles</h3>
-              {duesLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
-                </div>
-              ) : cycles.length === 0 ? (
-                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-sm text-slate-700">No dues cycles found</p>
                   </CardContent>
                 </Card>
-              ) : (
-                <div className="space-y-2">
-                  {cycles.map((cycle) => (
-                    <Card key={cycle.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium text-sm text-slate-900">{cycle.name}</h4>
-                          <p className="text-xs text-slate-700">
-                            ${cycle.base_amount.toLocaleString()} • Due {new Date(cycle.due_date).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <Badge className={cycle.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                          {cycle.status}
-                        </Badge>
+                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-slate-700 font-medium mb-1">Paid</p>
+                        <p className="text-lg font-semibold text-slate-900">${duesStats.totalPaid.toLocaleString()}</p>
                       </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Recent Assignments */}
-            <div>
-              <h3 className="text-sm font-semibold mb-2 text-slate-900">Recent Assignments</h3>
-              {assignments.length === 0 ? (
-                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-sm text-slate-700">No assignments found</p>
+                      <CheckCircle className="h-5 w-5 text-navy-500" />
+                    </div>
                   </CardContent>
                 </Card>
-              ) : (
-                <div className="space-y-2">
-                  {assignments.slice(0, 5).map((assignment) => (
-                    <Card key={assignment.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm truncate text-slate-900">{assignment.user.full_name}</h4>
-                          <p className="text-xs text-slate-700">
-                            ${assignment.amount_due.toLocaleString()} • {assignment.cycle.name}
-                          </p>
-                        </div>
-                        <Badge className={
-                          assignment.status === 'paid' ? 'bg-green-100 text-green-800' :
-                          assignment.status === 'required' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
-                        }>
-                          {assignment.status}
-                        </Badge>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
-          </TabsContent>
+              </div>
 
-          {/* Budget Tab */}
-          <TabsContent value="budget" className="space-y-4">
-            {/* Budget Overview Cards */}
-            <div className="grid grid-cols-2 gap-3">
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+              {/* Collection Rate */}
+              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-slate-700 font-medium mb-1">Allocated</p>
-                      <p className="text-lg font-semibold text-slate-900">${budgetData.totalAllocated.toLocaleString()}</p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-slate-700">Collection Rate</span>
+                      <span className="font-semibold text-slate-900">{duesStats.collectionRate}%</span>
                     </div>
-                    <TrendingUp className="h-5 w-5 text-navy-500" />
+                    <Progress value={duesStats.collectionRate} className="h-2" />
                   </div>
                 </CardContent>
               </Card>
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-slate-700 font-medium mb-1">Remaining</p>
-                      <p className={`text-lg font-semibold ${budgetData.remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        ${budgetData.remaining.toLocaleString()}
-                      </p>
-                    </div>
-                    <DollarSign className="h-5 w-5 text-navy-500" />
+
+              {/* Cycles */}
+              <div>
+                <h3 className="text-sm font-semibold mb-2">Dues Cycles</h3>
+                {duesLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Budget Progress */}
-            <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
-              <CardHeader className="pb-3 flex-shrink-0 border-b border-navy-100/30">
-                <CardTitle className="text-sm text-slate-900 font-semibold">Budget Overview</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-slate-700">Starting Budget</span>
-                  <span className="font-semibold text-sm text-slate-900">${budgetData.startingBudget.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-slate-700">Total Allocated</span>
-                  <span className="font-semibold text-sm text-orange-600">${budgetData.totalAllocated.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-slate-700">Remaining</span>
-                  <span className={`font-semibold text-sm ${budgetData.remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    ${budgetData.remaining.toLocaleString()}
-                  </span>
-                </div>
-                <Progress 
-                  value={(budgetData.totalAllocated / budgetData.startingBudget) * 100} 
-                  className="h-2"
-                />
-                <p className="text-xs text-slate-600 text-center">
-                  {((budgetData.totalAllocated / budgetData.startingBudget) * 100).toFixed(1)}% allocated
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Events with Budget */}
-            <div>
-              <h3 className="text-sm font-semibold mb-2">Events with Budget ({budgetData.eventsWithBudget})</h3>
-              {eventsLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
-                </div>
-              ) : (() => {
-                const eventsWithBudget = events.filter(e => e.budget_amount && parseFloat(String(e.budget_amount)) > 0);
-                const budgetEventsTotalPages = Math.ceil(eventsWithBudget.length / budgetEventsPerPage);
-                const budgetEventsStartIndex = (budgetEventsPage - 1) * budgetEventsPerPage;
-                const budgetEventsEndIndex = budgetEventsStartIndex + budgetEventsPerPage;
-                const paginatedBudgetEvents = eventsWithBudget.slice(budgetEventsStartIndex, budgetEventsEndIndex);
-                const budgetEventsTotal = eventsWithBudget.length;
-                const budgetEventsStart = budgetEventsStartIndex + 1;
-                const budgetEventsEnd = Math.min(budgetEventsPage * budgetEventsPerPage, budgetEventsTotal);
-
-                return eventsWithBudget.length === 0 ? (
+                ) : cycles.length === 0 ? (
                   <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
                     <CardContent className="p-4 text-center">
-                      <p className="text-sm text-slate-700">No events with budgets</p>
+                      <p className="text-sm text-slate-700">No dues cycles found</p>
                     </CardContent>
                   </Card>
                 ) : (
-                  <>
-                    <div className="space-y-2">
-                      {paginatedBudgetEvents.map((event) => (
-                        <Card key={event.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-sm truncate text-slate-900">{event.title}</h4>
-                              <p className="text-xs text-slate-700">
-                                {new Date(event.start_time).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <div className="text-right ml-2">
-                              <p className="font-semibold text-sm text-green-600">
-                                ${parseFloat(String(event.budget_amount)).toLocaleString()}
-                              </p>
-                            </div>
+                  <div className="space-y-2">
+                    {cycles.map((cycle) => (
+                      <Card key={cycle.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-medium text-sm text-slate-900">{cycle.name}</h4>
+                            <p className="text-xs text-slate-700">
+                              ${cycle.base_amount.toLocaleString()} • Due {new Date(cycle.due_date).toLocaleDateString()}
+                            </p>
                           </div>
-                        </Card>
-                      ))}
-                    </div>
+                          <Badge className={cycle.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                            {cycle.status}
+                          </Badge>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-                    {/* Pagination Controls */}
-                    {budgetEventsTotalPages > 1 && (
-                      <div className="flex flex-col items-center space-y-3 pt-4 border-t border-gray-200 mt-4">
-                        <div className="text-xs text-gray-600">
-                          Showing {budgetEventsStart} to {budgetEventsEnd} of {budgetEventsTotal} events
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setBudgetEventsPage(prev => Math.max(1, prev - 1))}
-                            disabled={budgetEventsPage === 1 || eventsLoading}
-                            className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <ChevronLeft className="h-3.5 w-3.5 mr-1" />
-                            Previous
-                          </Button>
-                          <div className="flex items-center space-x-1 px-2">
-                            <span className="text-xs text-gray-600">Page</span>
-                            <span className="text-xs font-medium">{budgetEventsPage}</span>
-                            <span className="text-xs text-gray-600">of</span>
-                            <span className="text-xs font-medium">{budgetEventsTotalPages}</span>
+              {/* Recent Assignments */}
+              <div>
+                <h3 className="text-sm font-semibold mb-2 text-slate-900">Recent Assignments</h3>
+                {assignments.length === 0 ? (
+                  <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+                    <CardContent className="p-4 text-center">
+                      <p className="text-sm text-slate-700">No assignments found</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-2">
+                    {assignments.slice(0, 5).map((assignment) => (
+                      <Card key={assignment.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-sm truncate text-slate-900">{assignment.user.full_name}</h4>
+                            <p className="text-xs text-slate-700">
+                              ${assignment.amount_due.toLocaleString()} • {assignment.cycle.name}
+                            </p>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setBudgetEventsPage(prev => Math.min(budgetEventsTotalPages, prev + 1))}
-                            disabled={budgetEventsPage === budgetEventsTotalPages || eventsLoading}
-                            className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            Next
-                            <ChevronRight className="h-3.5 w-3.5 ml-1" />
-                          </Button>
+                          <Badge className={
+                            assignment.status === 'paid' ? 'bg-green-100 text-green-800' :
+                            assignment.status === 'required' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }>
+                            {assignment.status}
+                          </Badge>
                         </div>
-                        {/* Page Number Buttons - Show up to 5 pages */}
-                        {budgetEventsTotalPages <= 5 && (
-                          <div className="flex items-center space-x-1">
-                            {Array.from({ length: budgetEventsTotalPages }, (_, i) => i + 1).map((page) => (
-                              <Button
-                                key={page}
-                                variant={budgetEventsPage === page ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setBudgetEventsPage(page)}
-                                className={`h-8 w-8 p-0 text-xs rounded-full transition-all duration-300 ${
-                                  budgetEventsPage === page
-                                    ? 'bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20'
-                                    : 'bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900'
-                                }`}
-                                disabled={eventsLoading}
-                              >
-                                {page}
-                              </Button>
-                            ))}
-                          </div>
-                        )}
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          )}
+
+          {/* Budget Tab */}
+          {financialToolsEnabled && (
+            <TabsContent value="budget" className="space-y-4">
+              {/* Budget Overview Cards */}
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-slate-700 font-medium mb-1">Allocated</p>
+                        <p className="text-lg font-semibold text-slate-900">${budgetData.totalAllocated.toLocaleString()}</p>
                       </div>
-                    )}
-                  </>
-                );
-              })()}
-            </div>
-          </TabsContent>
+                      <TrendingUp className="h-5 w-5 text-navy-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-slate-700 font-medium mb-1">Remaining</p>
+                        <p className={`text-lg font-semibold ${budgetData.remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          ${budgetData.remaining.toLocaleString()}
+                        </p>
+                      </div>
+                      <DollarSign className="h-5 w-5 text-navy-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Budget Progress */}
+              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                <CardHeader className="pb-3 flex-shrink-0 border-b border-navy-100/30">
+                  <CardTitle className="text-sm text-slate-900 font-semibold">Budget Overview</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-700">Starting Budget</span>
+                    <span className="font-semibold text-sm text-slate-900">${budgetData.startingBudget.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-700">Total Allocated</span>
+                    <span className="font-semibold text-sm text-orange-600">${budgetData.totalAllocated.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-700">Remaining</span>
+                    <span className={`font-semibold text-sm ${budgetData.remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      ${budgetData.remaining.toLocaleString()}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={(budgetData.totalAllocated / budgetData.startingBudget) * 100} 
+                    className="h-2"
+                  />
+                  <p className="text-xs text-slate-600 text-center">
+                    {((budgetData.totalAllocated / budgetData.startingBudget) * 100).toFixed(1)}% allocated
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Events with Budget */}
+              <div>
+                <h3 className="text-sm font-semibold mb-2">Events with Budget ({budgetData.eventsWithBudget})</h3>
+                {eventsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+                  </div>
+                ) : (() => {
+                  const eventsWithBudget = events.filter(e => e.budget_amount && parseFloat(String(e.budget_amount)) > 0);
+                  const budgetEventsTotalPages = Math.ceil(eventsWithBudget.length / budgetEventsPerPage);
+                  const budgetEventsStartIndex = (budgetEventsPage - 1) * budgetEventsPerPage;
+                  const budgetEventsEndIndex = budgetEventsStartIndex + budgetEventsPerPage;
+                  const paginatedBudgetEvents = eventsWithBudget.slice(budgetEventsStartIndex, budgetEventsEndIndex);
+                  const budgetEventsTotal = eventsWithBudget.length;
+                  const budgetEventsStart = budgetEventsStartIndex + 1;
+                  const budgetEventsEnd = Math.min(budgetEventsPage * budgetEventsPerPage, budgetEventsTotal);
+
+                  return eventsWithBudget.length === 0 ? (
+                    <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+                      <CardContent className="p-4 text-center">
+                        <p className="text-sm text-slate-700">No events with budgets</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        {paginatedBudgetEvents.map((event) => (
+                          <Card key={event.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-sm truncate text-slate-900">{event.title}</h4>
+                                <p className="text-xs text-slate-700">
+                                  {new Date(event.start_time).toLocaleDateString()}
+                                </p>
+                              </div>
+                              <div className="text-right ml-2">
+                                <p className="font-semibold text-sm text-green-600">
+                                  ${parseFloat(String(event.budget_amount)).toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+
+                      {/* Pagination Controls */}
+                      {budgetEventsTotalPages > 1 && (
+                        <div className="flex flex-col items-center space-y-3 pt-4 border-t border-gray-200 mt-4">
+                          <div className="text-xs text-gray-600">
+                            Showing {budgetEventsStart} to {budgetEventsEnd} of {budgetEventsTotal} events
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setBudgetEventsPage(prev => Math.max(1, prev - 1))}
+                              disabled={budgetEventsPage === 1 || eventsLoading}
+                              className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                              Previous
+                            </Button>
+                            <div className="flex items-center space-x-1 px-2">
+                              <span className="text-xs text-gray-600">Page</span>
+                              <span className="text-xs font-medium">{budgetEventsPage}</span>
+                              <span className="text-xs text-gray-600">of</span>
+                              <span className="text-xs font-medium">{budgetEventsTotalPages}</span>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setBudgetEventsPage(prev => Math.min(budgetEventsTotalPages, prev + 1))}
+                              disabled={budgetEventsPage === budgetEventsTotalPages || eventsLoading}
+                              className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Next
+                              <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                            </Button>
+                          </div>
+                          {/* Page Number Buttons - Show up to 5 pages */}
+                          {budgetEventsTotalPages <= 5 && (
+                            <div className="flex items-center space-x-1">
+                              {Array.from({ length: budgetEventsTotalPages }, (_, i) => i + 1).map((page) => (
+                                <Button
+                                  key={page}
+                                  variant={budgetEventsPage === page ? "default" : "outline"}
+                                  size="sm"
+                                  onClick={() => setBudgetEventsPage(page)}
+                                  className={`h-8 w-8 p-0 text-xs rounded-full transition-all duration-300 ${
+                                    budgetEventsPage === page
+                                      ? 'bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20'
+                                      : 'bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900'
+                                  }`}
+                                  disabled={eventsLoading}
+                                >
+                                  {page}
+                                </Button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
 
         {/* Modals */}

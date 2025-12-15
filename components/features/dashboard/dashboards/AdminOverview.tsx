@@ -13,6 +13,7 @@ import { CompactCalendarCard } from './ui/CompactCalendarCard';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { SocialFeed, type SocialFeedInitialData } from './ui/SocialFeed';
 import { DuesStatusCard } from './ui/DuesStatusCard';
+import { FeatureGuard } from '@/components/shared/FeatureGuard';
 import { MobileBottomNavigation } from './ui/MobileBottomNavigation'; // Changed import
 import { MobileAdminTasksPage } from './ui/MobileAdminTasksPage';
 import { MobileDocsCompliancePage } from './ui/MobileDocsCompliancePage';
@@ -30,6 +31,7 @@ import { SendAnnouncementButton } from './ui/SendAnnouncementButton';
 import { EXECUTIVE_ROLES } from '@/lib/permissions';
 import { UpcomingEventsCard } from './ui/UpcomingEventsCard';
 import { cn } from '@/lib/utils';
+import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 
 interface AdminOverviewProps {
   initialFeed?: SocialFeedInitialData;
@@ -46,6 +48,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
   
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
 
   // Add mobile detection useEffect (add this after line 46, before feedData)
   useEffect(() => {
@@ -73,6 +76,9 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
       setActiveMobileTab('operations');
     } else if (tool === 'events') {
       setActiveMobileTab('events');
+    } else if (tool === 'invites') {
+      // Handle invites when events flag is disabled
+      setActiveMobileTab('events'); // Still use 'events' tab but it will show invitations
     } else if (tool === 'docs') {
       setActiveMobileTab('docs');
     } else if (tool === 'ops') {
@@ -122,26 +128,27 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
 
   // Define quickActions array for the admin dashboard
   const quickActions: QuickAction[] = [
-    {
+    // Only include Create Event if events management is enabled
+    ...(eventsManagementEnabled ? [{
       id: 'create-event',
       label: 'Create Event',
       icon: Calendar,
       onClick: handleScheduleMeeting,
-      variant: 'outline',
-    },
+      variant: 'outline' as const,
+    }] : []),
     {
       id: 'send-message',
       label: 'Send Message',
       icon: MessageSquare,
       onClick: handleSendMessage,
-      variant: 'outline',
+      variant: 'outline' as const,
     },
     {
       id: 'manage-members',
       label: 'Manage Members',
       icon: Users,
       onClick: () => router.push('/dashboard/admin/members'),
-      variant: 'outline',
+      variant: 'outline' as const,
     },
     {
       id: 'view-invitations',
@@ -157,7 +164,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
           }
         }, 100);
       },
-      variant: 'outline',
+      variant: 'outline' as const,
     },
   ];
 
@@ -177,7 +184,9 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
               {isExecutiveMember ? (
                 <SendAnnouncementButton />
               ) : (
-                <DuesStatusCard />
+                <FeatureGuard flagName="financial_tools_enabled">
+                  <DuesStatusCard />
+                </FeatureGuard>
               )}
             </div>
             <div className="w-full">
@@ -226,7 +235,9 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
         <div className="hidden sm:grid sm:grid-cols-12 sm:gap-6">
           {/* Left Column - 3 columns wide */}
           <div className="col-span-3 space-y-6">
-            <DuesStatusCard />
+            <FeatureGuard flagName="financial_tools_enabled">
+              <DuesStatusCard />
+            </FeatureGuard>
             <OperationsFeed />
           </div>
           
@@ -237,10 +248,14 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
           
           {/* Right Column - 3 columns wide */}
           <div className="col-span-3 space-y-6">
-            <UpcomingEventsCard />
+            <FeatureGuard flagName="events_management_enabled">
+              <UpcomingEventsCard />
+            </FeatureGuard>
             {chapterId && <TasksPanel chapterId={chapterId} />}
             <DocsCompliancePanel />
-            <CompactCalendarCard />
+            <FeatureGuard flagName="events_management_enabled">
+              <CompactCalendarCard />
+            </FeatureGuard>
           </div>
         </div>
       </div>
@@ -297,17 +312,19 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
               {/* Content - Scrollable */}
               <div className="flex-1 overflow-y-auto p-4 pb-[calc(40px+env(safe-area-inset-bottom))]">
                 <div className="space-y-3">
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
-                    onClick={() => {
-                      handleScheduleMeeting();
-                      setShowQuickActionsModal(false);
-                    }}
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Create Event
-                  </Button>
+                  {eventsManagementEnabled && (
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                      onClick={() => {
+                        handleScheduleMeeting();
+                        setShowQuickActionsModal(false);
+                      }}
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Create Event
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
@@ -369,17 +386,19 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                 </div>
                 {/* Quick Actions Content */}
                 <div className="space-y-3">
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => {
-                      handleScheduleMeeting();
-                      setShowQuickActionsModal(false);
-                    }}
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Create Event
-                  </Button>
+                  {eventsManagementEnabled && (
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        handleScheduleMeeting();
+                        setShowQuickActionsModal(false);
+                      }}
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Create Event
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     className="w-full justify-start"
@@ -427,7 +446,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
       )}
 
       {/* Event Creation Modal */}
-      {showEventModal && (
+      {showEventModal && eventsManagementEnabled && (
         <EventForm
           isOpen={showEventModal}
           event={null}
