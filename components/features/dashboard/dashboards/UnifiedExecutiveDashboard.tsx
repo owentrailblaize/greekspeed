@@ -13,6 +13,7 @@ import { DuesView } from './ui/feature-views/DuesView';
 import { BudgetView } from './ui/feature-views/BudgetView';
 import { VendorsView } from './ui/feature-views/VendorsView';
 import { InvitationsView } from './ui/feature-views/InvitationsView';
+import { RecruitmentView } from './ui/feature-views/RecruitmentView';
 
 export type FeatureView = 
   | 'overview'
@@ -22,7 +23,8 @@ export type FeatureView =
   | 'dues'
   | 'budget'
   | 'vendors'
-  | 'invitations';
+  | 'invitations'
+  | 'recruitment';
 
 interface UnifiedExecutiveDashboardProps {
   selectedRole: string;
@@ -36,6 +38,7 @@ export function UnifiedExecutiveDashboard({
   const { profile } = useProfile();
   const { enabled: financialToolsEnabled } = useFeatureFlag('financial_tools_enabled');
   const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled'); // Add this line
+  const { enabled: recruitmentCrmEnabled } = useFeatureFlag('recruitment_crm_enabled');
   const [activeFeature, setActiveFeature] = useState<FeatureView>('overview');
 
   // Redirect to overview if financial features are selected but disabled
@@ -48,7 +51,11 @@ export function UnifiedExecutiveDashboard({
     if (!eventsManagementEnabled && activeFeature === 'events') {
       setActiveFeature('overview');
     }
-  }, [activeFeature, financialToolsEnabled, eventsManagementEnabled]); // Add eventsManagementEnabled to dependencies
+    // Redirect to overview if recruitment is selected but disabled
+    if (!recruitmentCrmEnabled && activeFeature === 'recruitment') {
+      setActiveFeature('overview');
+    }
+  }, [activeFeature, financialToolsEnabled, eventsManagementEnabled, recruitmentCrmEnabled]); // Add recruitmentCrmEnabled to dependencies
 
   // All features are now available to all admins - no role-based filtering
   const renderFeatureView = () => {
@@ -85,6 +92,13 @@ export function UnifiedExecutiveDashboard({
         return <VendorsView />;
       case 'invitations':
         return <InvitationsView />;
+      case 'recruitment':
+        // Only render if recruitment CRM is enabled
+        if (recruitmentCrmEnabled) {
+          return <RecruitmentView />;
+        }
+        // If disabled, redirect to overview
+        return <OverviewView selectedRole={selectedRole} onFeatureChange={setActiveFeature} />;
       default:
         return <OverviewView selectedRole={selectedRole} />;
     }

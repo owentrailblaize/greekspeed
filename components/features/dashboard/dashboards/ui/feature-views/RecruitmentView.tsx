@@ -18,13 +18,14 @@ import {
   Instagram,
   Phone,
   Calendar,
-  ArrowLeft
+  ArrowLeft,
+  ArrowUpRight
 } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import type { Recruit, RecruitStage } from '@/types/recruitment';
 import { FeatureGuard } from '@/components/shared/FeatureGuard';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface RecruitsResponse {
   data: Recruit[];
@@ -79,6 +80,7 @@ function RecruitmentTableSkeleton() {
 
 export function RecruitmentView() {
   const router = useRouter();
+  const pathname = usePathname();
   const { profile } = useProfile();
   const { getAuthHeaders } = useAuth();
   const [recruits, setRecruits] = useState<Recruit[]>([]);
@@ -93,6 +95,9 @@ export function RecruitmentView() {
     total: 0,
     totalPages: 0,
   });
+
+  // Check if we're on the standalone recruitment page
+  const isStandalonePage = pathname === '/mychapter/recruitment';
 
   // Fetch recruits from API
   const fetchRecruits = useCallback(async () => {
@@ -192,223 +197,280 @@ export function RecruitmentView() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.back()}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 mb-2 rounded-full"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back</span>
-            </Button>
+          <div className="flex-1">
+            {/* Only show Back button on standalone page */}
+            {isStandalonePage && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.back()}
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 mb-2 rounded-full"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>Back</span>
+              </Button>
+            )}
             <h2 className="text-2xl font-bold text-gray-900">Recruitment CRM</h2>
             <p className="text-gray-600 mt-1">Manage and track potential recruits</p>
           </div>
+          {/* Only show View Full Page button when NOT on standalone page (i.e., in exec dashboard) */}
+          {!isStandalonePage && (
+            <div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push('/mychapter/recruitment')}
+                className="flex items-center space-x-2 rounded-full"
+              >
+                <span>View Full Page</span>
+                <ArrowUpRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              {/* Search Input */}
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Search by name or hometown..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                    disabled={loading}
-                  />
+        {/* Show loading skeleton immediately when loading or when profile is not yet available */}
+        {(loading || !profile?.chapter_id) && (
+          <div className="space-y-6">
+            {/* Filters Skeleton */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1 h-10 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="w-full sm:w-48 h-10 bg-gray-200 rounded animate-pulse"></div>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
 
-              {/* Stage Filter */}
-              <div className="w-full sm:w-48">
-                <Select
-                  value={selectedStage}
-                  onValueChange={(value) => setSelectedStage(value as RecruitStage | 'all')}
-                  placeholder="Filter by stage"
-                >
-                  {STAGE_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Table Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>
-                {loading ? (
-                  <span className="inline-flex items-center">
-                    Recruits
-                    <Loader2 className="h-4 w-4 animate-spin text-gray-400 ml-2" />
-                  </span>
-                ) : (
-                  `Recruits (${pagination.total})`
-                )}
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {/* Loading State with Skeleton */}
-            {loading && (
-              <div className="space-y-4">
+            {/* Table Skeleton */}
+            <Card>
+              <CardHeader>
+                <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+              </CardHeader>
+              <CardContent>
                 <RecruitmentTableSkeleton />
-              </div>
-            )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
-            {/* Error State */}
-            {error && !loading && (
-              <div className="text-center py-12">
-                <p className="text-red-600 mb-4">{error}</p>
-                <Button onClick={fetchRecruits} variant="outline">
-                  Try Again
-                </Button>
-              </div>
-            )}
-
-            {/* Empty State */}
-            {!loading && !error && recruits.length === 0 && (
-              <div className="text-center py-12">
-                <UserPlus className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 text-lg font-medium mb-2">No recruits found</p>
-                <p className="text-gray-500">
-                  {searchQuery || selectedStage !== 'all'
-                    ? 'Try adjusting your filters'
-                    : 'Get started by submitting your first recruit'}
-                </p>
-              </div>
-            )}
-
-            {/* Table */}
-            {!loading && !error && recruits.length > 0 && (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Hometown</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Instagram</TableHead>
-                      <TableHead>Stage</TableHead>
-                      <TableHead>Submitted By</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recruits.map((recruit) => (
-                      <TableRow
-                        key={recruit.id}
-                        className="cursor-pointer hover:bg-gray-50"
-                        onClick={() => handleRowClick(recruit)}
-                      >
-                        <TableCell className="font-medium">{recruit.name}</TableCell>
-                        <TableCell>{recruit.hometown}</TableCell>
-                        <TableCell>
-                          {recruit.phone_number ? (
-                            <div className="flex items-center space-x-1">
-                              <Phone className="h-3 w-3 text-gray-400" />
-                              <span>{formatPhoneNumber(recruit.phone_number)}</span>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {recruit.instagram_handle ? (
-                            <a
-                              href={`https://instagram.com/${recruit.instagram_handle}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="flex items-center space-x-1 text-blue-600 hover:text-blue-800"
-                            >
-                              <Instagram className="h-3 w-3" />
-                              <span>@{recruit.instagram_handle}</span>
-                            </a>
-                          ) : (
-                            <span className="text-gray-400">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            className={`${STAGE_COLORS[recruit.stage]} border`}
-                          >
-                            {recruit.stage}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {recruit.submitted_by_name || 'Unknown'}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-1 text-gray-600">
-                            <Calendar className="h-3 w-3" />
-                            <span>{formatDate(recruit.created_at)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => handleEditClick(e, recruit)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-
-            {/* Pagination */}
-            {!loading && !error && pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                <div className="text-sm text-gray-600">
-                  Showing {((currentPage - 1) * pagination.limit) + 1} to{' '}
-                  {Math.min(currentPage * pagination.limit, pagination.total)} of{' '}
-                  {pagination.total} recruits
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Previous
-                  </Button>
-                  <div className="text-sm text-gray-600">
-                    Page {currentPage} of {pagination.totalPages}
+        {/* Only render content when not loading and profile is available */}
+        {!loading && profile?.chapter_id && (
+          <>
+            {/* Filters */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  {/* Search Input */}
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Search by name or hometown..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10"
+                        disabled={loading}
+                      />
+                    </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))}
-                    disabled={currentPage === pagination.totalPages}
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+
+                  {/* Stage Filter */}
+                  <div className="w-full sm:w-48">
+                    <Select
+                      value={selectedStage}
+                      onValueChange={(value) => setSelectedStage(value as RecruitStage | 'all')}
+                      placeholder="Filter by stage"
+                    >
+                      {STAGE_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+
+            {/* Table Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>
+                    {loading ? (
+                      <span className="inline-flex items-center">
+                        Recruits
+                        <Loader2 className="h-4 w-4 animate-spin text-gray-400 ml-2" />
+                      </span>
+                    ) : (
+                      `Recruits (${pagination.total})`
+                    )}
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {/* Loading State with Skeleton */}
+                {loading && (
+                  <div className="space-y-4">
+                    <RecruitmentTableSkeleton />
+                  </div>
+                )}
+
+                {/* Error State */}
+                {error && !loading && (
+                  <div className="text-center py-12">
+                    <p className="text-red-600 mb-4">{error}</p>
+                    <Button onClick={fetchRecruits} variant="outline">
+                      Try Again
+                    </Button>
+                  </div>
+                )}
+
+                {/* Empty State */}
+                {!loading && !error && recruits.length === 0 && (
+                  <div className="text-center py-12">
+                    <UserPlus className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 text-lg font-medium mb-2">No recruits found</p>
+                    <p className="text-gray-500">
+                      {searchQuery || selectedStage !== 'all'
+                        ? 'Try adjusting your filters'
+                        : 'Get started by submitting your first recruit'}
+                    </p>
+                  </div>
+                )}
+
+                {/* Table */}
+                {!loading && !error && recruits.length > 0 && (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Hometown</TableHead>
+                          <TableHead>Phone</TableHead>
+                          <TableHead>Instagram</TableHead>
+                          <TableHead>Stage</TableHead>
+                          <TableHead>Submitted By</TableHead>
+                          <TableHead>Created</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {recruits.map((recruit) => (
+                          <TableRow
+                            key={recruit.id}
+                            className="cursor-pointer hover:bg-gray-50"
+                            onClick={() => handleRowClick(recruit)}
+                          >
+                            <TableCell className="font-medium">{recruit.name}</TableCell>
+                            <TableCell>{recruit.hometown}</TableCell>
+                            <TableCell>
+                              {recruit.phone_number ? (
+                                <div className="flex items-center space-x-1">
+                                  <Phone className="h-3 w-3 text-gray-400" />
+                                  <span>{formatPhoneNumber(recruit.phone_number)}</span>
+                                </div>
+                              ) : (
+                                <span className="text-gray-400">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {recruit.instagram_handle ? (
+                                <a
+                                  href={`https://instagram.com/${recruit.instagram_handle}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex items-center space-x-1 text-blue-600 hover:text-blue-800"
+                                >
+                                  <Instagram className="h-3 w-3" />
+                                  <span>@{recruit.instagram_handle}</span>
+                                </a>
+                              ) : (
+                                <span className="text-gray-400">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                className={`${STAGE_COLORS[recruit.stage]} border`}
+                              >
+                                {recruit.stage}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {recruit.submitted_by_name || 'Unknown'}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-1 text-gray-600">
+                                <Calendar className="h-3 w-3" />
+                                <span>{formatDate(recruit.created_at)}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => handleEditClick(e, recruit)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+
+                {/* Pagination */}
+                {!loading && !error && pagination.totalPages > 1 && (
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                    <div className="text-sm text-gray-600">
+                      Showing {((currentPage - 1) * pagination.limit) + 1} to{' '}
+                      {Math.min(currentPage * pagination.limit, pagination.total)} of{' '}
+                      {pagination.total} recruits
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        Previous
+                      </Button>
+                      <div className="text-sm text-gray-600">
+                        Page {currentPage} of {pagination.totalPages}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))}
+                        disabled={currentPage === pagination.totalPages}
+                      >
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {/* Error state */}
+        {error && !loading && profile?.chapter_id && (
+          <div className="text-center py-12">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button onClick={fetchRecruits} variant="outline">
+              Try Again
+            </Button>
+          </div>
+        )}
       </div>
     </FeatureGuard>
   );
