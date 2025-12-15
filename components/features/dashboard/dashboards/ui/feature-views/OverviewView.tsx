@@ -246,15 +246,14 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
       setTotalAttendees(0);
     }
 
-      try {
-        const response = await fetch(`/api/vendors?chapter_id=${chapterId}`);
-        if (response.ok) {
-          const vendors = await response.json();
-          setVendorCount(vendors.length || 0);
-        }
-      } catch (error) {
-        console.error('Error fetching vendors:', error);
+    try {
+      const response = await fetch(`/api/vendors?chapter_id=${chapterId}`);
+      if (response.ok) {
+        const vendors = await response.json();
+        setVendorCount(vendors.length || 0);
       }
+    } catch (error) {
+      console.error('Error fetching vendors:', error);
     }
   };
 
