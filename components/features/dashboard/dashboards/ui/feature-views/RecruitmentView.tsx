@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,6 +52,53 @@ const STAGE_OPTIONS: RecruitStage[] = [
   'Accepted',
   'Declined',
 ];
+
+// Editable Textarea component with auto-resize
+function EditableTextarea({ 
+  value, 
+  onChange, 
+  placeholder, 
+  disabled 
+}: { 
+  value: string; 
+  onChange: (value: string) => void; 
+  placeholder?: string; 
+  disabled?: boolean;
+}) {
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  const adjustHeight = React.useCallback(() => {
+    if (textareaRef.current) {
+      // Reset height to auto to get the correct scrollHeight
+      textareaRef.current.style.height = 'auto';
+      // Set height to match content, but minimum of 36px (h-9 to match stage field)
+      const newHeight = Math.max(36, textareaRef.current.scrollHeight);
+      textareaRef.current.style.height = `${newHeight}px`;
+    }
+  }, []);
+
+  React.useEffect(() => {
+    adjustHeight();
+  }, [value, adjustHeight]);
+
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onChange(e.target.value);
+    // Adjust height on input
+    setTimeout(adjustHeight, 0);
+  };
+
+  return (
+    <Textarea
+      ref={textareaRef}
+      value={value}
+      onChange={handleInput}
+      placeholder={placeholder}
+      className="w-full text-sm resize-y overflow-y-auto min-h-[36px] max-h-[200px]"
+      disabled={disabled}
+      rows={1}
+    />
+  );
+}
 
 // Add skeleton loader component
 function RecruitmentTableSkeleton() {
@@ -391,16 +438,47 @@ export function RecruitmentView() {
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
               {/* Table Header */}
               <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {loading ? (
-                    <span className="inline-flex items-center">
-                      Recruits
-                      <Loader2 className="h-4 w-4 animate-spin text-gray-400 ml-2" />
-                    </span>
-                  ) : (
-                    `Recruits (${pagination.total})`
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {loading ? (
+                      <span className="inline-flex items-center">
+                        Recruits
+                        <Loader2 className="h-4 w-4 animate-spin text-gray-400 ml-2" />
+                      </span>
+                    ) : (
+                      `Recruits (${pagination.total})`
+                    )}
+                  </h3>
+                  {/* Save/Cancel buttons - only show when editing */}
+                  {editingRecruitId && (
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleCancel(editingRecruitId)}
+                        className="rounded-full"
+                        disabled={savingRecruitId === editingRecruitId}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="rounded-full"
+                        onClick={() => handleSave(editingRecruitId)}
+                        disabled={savingRecruitId === editingRecruitId}
+                      >
+                        {savingRecruitId === editingRecruitId ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          'Save'
+                        )}
+                      </Button>
+                    </div>
                   )}
-                </h3>
+                </div>
               </div>
 
               {/* Table Content */}
@@ -523,44 +601,15 @@ export function RecruitmentView() {
                               </TableCell>
                               <TableCell>
                                 {isEditing ? (
-                                  <div className="space-y-2">
-                                    <Textarea
-                                      value={currentNotes}
-                                      onChange={(e) => handleNotesChange(recruit.id, e.target.value)}
-                                      placeholder="Add notes..."
-                                      className="min-h-[60px] w-full text-sm"
-                                      disabled={isSaving}
-                                    />
-                                    <div className="flex items-center space-x-2">
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleCancel(recruit.id)}
-                                        disabled={isSaving}
-                                        className="h-7 text-xs"
-                                      >
-                                        Cancel
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        onClick={() => handleSave(recruit.id)}
-                                        disabled={isSaving}
-                                        className="h-7 text-xs"
-                                      >
-                                        {isSaving ? (
-                                          <>
-                                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                                            Saving...
-                                          </>
-                                        ) : (
-                                          'Save'
-                                        )}
-                                      </Button>
-                                    </div>
-                                  </div>
+                                  <EditableTextarea
+                                    value={currentNotes}
+                                    onChange={(value) => handleNotesChange(recruit.id, value)}
+                                    placeholder="Add notes..."
+                                    disabled={isSaving}
+                                  />
                                 ) : (
                                   <div
-                                    className="text-sm text-gray-600 cursor-pointer hover:bg-gray-50 p-2 rounded min-h-[40px]"
+                                    className="text-sm text-gray-600 cursor-pointer hover:bg-gray-50 p-2 rounded min-h-[36px] flex items-center"
                                     onClick={() => {
                                       setEditingRecruitId(recruit.id);
                                       setEditingData({
