@@ -10,22 +10,20 @@ import { Select, SelectItem } from '@/components/ui/select';
 import { 
   Search, 
   Loader2, 
-  Eye, 
-  Edit, 
   ChevronLeft, 
   ChevronRight,
   UserPlus,
   Instagram,
   Phone,
-  Calendar,
   ArrowLeft,
   ArrowUpRight
 } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useAuth } from '@/lib/supabase/auth-context';
-import type { Recruit, RecruitStage } from '@/types/recruitment';
+import type { Recruit, RecruitStage, UpdateRecruitRequest } from '@/types/recruitment';
 import { FeatureGuard } from '@/components/shared/FeatureGuard';
 import { useRouter, usePathname } from 'next/navigation';
+import { Textarea } from '@/components/ui/textarea';
 
 interface RecruitsResponse {
   data: Recruit[];
@@ -46,14 +44,13 @@ const STAGE_COLORS: Record<RecruitStage, string> = {
   'Declined': 'bg-red-100 text-red-800 border-red-200',
 };
 
-const STAGE_OPTIONS: Array<{ value: RecruitStage | 'all'; label: string }> = [
-  { value: 'all', label: 'All Stages' },
-  { value: 'New', label: 'New' },
-  { value: 'Contacted', label: 'Contacted' },
-  { value: 'Event Invite', label: 'Event Invite' },
-  { value: 'Bid Given', label: 'Bid Given' },
-  { value: 'Accepted', label: 'Accepted' },
-  { value: 'Declined', label: 'Declined' },
+const STAGE_OPTIONS: RecruitStage[] = [
+  'New',
+  'Contacted',
+  'Event Invite',
+  'Bid Given',
+  'Accepted',
+  'Declined',
 ];
 
 // Add skeleton loader component
@@ -95,6 +92,14 @@ export function RecruitmentView() {
     total: 0,
     totalPages: 0,
   });
+  
+  // Inline editing state
+  const [editingRecruitId, setEditingRecruitId] = useState<string | null>(null);
+  const [editingData, setEditingData] = useState<{
+    stage: RecruitStage;
+    notes: string;
+  } | null>(null);
+  const [savingRecruitId, setSavingRecruitId] = useState<string | null>(null);
 
   // Check if we're on the standalone recruitment page
   const isStandalonePage = pathname === '/mychapter/recruitment';
@@ -179,17 +184,106 @@ export function RecruitmentView() {
     });
   };
 
-  // Handle row click (placeholder for Milestone 3)
-  const handleRowClick = (recruit: Recruit) => {
-    // TODO: Navigate to detail view in Milestone 3
-    console.log('View recruit:', recruit.id);
+  // Handle stage change
+  const handleStageChange = (recruitId: string, newStage: RecruitStage) => {
+    if (!editingData) {
+      const recruit = recruits.find(r => r.id === recruitId);
+      if (recruit) {
+        setEditingRecruitId(recruitId);
+        setEditingData({
+          stage: recruit.stage,
+          notes: recruit.notes || '',
+        });
+      }
+    } else if (editingRecruitId === recruitId) {
+      setEditingData({ ...editingData, stage: newStage });
+    }
   };
 
-  // Handle edit click (placeholder for Milestone 3)
-  const handleEditClick = (e: React.MouseEvent, recruit: Recruit) => {
-    e.stopPropagation();
-    // TODO: Open edit modal in Milestone 3
-    console.log('Edit recruit:', recruit.id);
+  // Handle notes change
+  const handleNotesChange = (recruitId: string, newNotes: string) => {
+    if (!editingData) {
+      const recruit = recruits.find(r => r.id === recruitId);
+      if (recruit) {
+        setEditingRecruitId(recruitId);
+        setEditingData({
+          stage: recruit.stage,
+          notes: recruit.notes || '',
+        });
+      }
+    } else if (editingRecruitId === recruitId) {
+      setEditingData({ ...editingData, notes: newNotes });
+    }
+  };
+
+  // Handle save
+  const handleSave = async (recruitId: string) => {
+    if (!editingData || editingRecruitId !== recruitId) return;
+
+    setSavingRecruitId(recruitId);
+    setError(null);
+
+    try {
+      const recruit = recruits.find(r => r.id === recruitId);
+      if (!recruit) return;
+
+      // Build update payload with only changed fields
+      const updatePayload: UpdateRecruitRequest = {};
+      
+      if (editingData.stage !== recruit.stage) {
+        updatePayload.stage = editingData.stage;
+      }
+      if (editingData.notes !== (recruit.notes || '')) {
+        updatePayload.notes = editingData.notes || undefined;
+      }
+
+      // If no changes, just exit edit mode
+      if (Object.keys(updatePayload).length === 0) {
+        setEditingRecruitId(null);
+        setEditingData(null);
+        setSavingRecruitId(null);
+        return;
+      }
+
+      const headers = getAuthHeaders();
+      const response = await fetch(`/api/recruitment/recruits/${recruitId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        body: JSON.stringify(updatePayload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to update recruit' }));
+        throw new Error(errorData.error || 'Failed to update recruit');
+      }
+
+      const updatedRecruit: Recruit = await response.json();
+      
+      // Update local state
+      setRecruits(prevRecruits =>
+        prevRecruits.map(r => r.id === recruitId ? updatedRecruit : r)
+      );
+      
+      // Exit edit mode
+      setEditingRecruitId(null);
+      setEditingData(null);
+    } catch (err: any) {
+      console.error('Error updating recruit:', err);
+      setError(err.message || 'An unexpected error occurred.');
+    } finally {
+      setSavingRecruitId(null);
+    }
+  };
+
+  // Handle cancel
+  const handleCancel = (recruitId: string) => {
+    if (editingRecruitId === recruitId) {
+      setEditingRecruitId(null);
+      setEditingData(null);
+    }
   };
 
   return (
@@ -282,34 +376,35 @@ export function RecruitmentView() {
                       onValueChange={(value) => setSelectedStage(value as RecruitStage | 'all')}
                       placeholder="Filter by stage"
                     >
-                      {STAGE_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
+                        {STAGE_OPTIONS.map((stage) => (
+                        <SelectItem key={stage} value={stage}>
+                            {stage}
                         </SelectItem>
-                      ))}
+                        ))}
                     </Select>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Table Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>
-                    {loading ? (
-                      <span className="inline-flex items-center">
-                        Recruits
-                        <Loader2 className="h-4 w-4 animate-spin text-gray-400 ml-2" />
-                      </span>
-                    ) : (
-                      `Recruits (${pagination.total})`
-                    )}
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+            {/* Table Section - No Card Wrapper */}
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+              {/* Table Header */}
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {loading ? (
+                    <span className="inline-flex items-center">
+                      Recruits
+                      <Loader2 className="h-4 w-4 animate-spin text-gray-400 ml-2" />
+                    </span>
+                  ) : (
+                    `Recruits (${pagination.total})`
+                  )}
+                </h3>
+              </div>
+
+              {/* Table Content */}
+              <div className="p-6">
                 {/* Loading State with Skeleton */}
                 {loading && (
                   <div className="space-y-4">
@@ -342,7 +437,7 @@ export function RecruitmentView() {
 
                 {/* Table */}
                 {!loading && !error && recruits.length > 0 && (
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto -mx-6 px-6">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -351,74 +446,140 @@ export function RecruitmentView() {
                           <TableHead>Phone</TableHead>
                           <TableHead>Instagram</TableHead>
                           <TableHead>Stage</TableHead>
-                          <TableHead>Submitted By</TableHead>
-                          <TableHead>Created</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
+                          <TableHead>Notes</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {recruits.map((recruit) => (
-                          <TableRow
-                            key={recruit.id}
-                            className="cursor-pointer hover:bg-gray-50"
-                            onClick={() => handleRowClick(recruit)}
-                          >
-                            <TableCell className="font-medium">{recruit.name}</TableCell>
-                            <TableCell>{recruit.hometown}</TableCell>
-                            <TableCell>
-                              {recruit.phone_number ? (
-                                <div className="flex items-center space-x-1">
-                                  <Phone className="h-3 w-3 text-gray-400" />
-                                  <span>{formatPhoneNumber(recruit.phone_number)}</span>
-                                </div>
-                              ) : (
-                                <span className="text-gray-400">—</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {recruit.instagram_handle ? (
-                                <a
-                                  href={`https://instagram.com/${recruit.instagram_handle}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="flex items-center space-x-1 text-blue-600 hover:text-blue-800"
-                                >
-                                  <Instagram className="h-3 w-3" />
-                                  <span>@{recruit.instagram_handle}</span>
-                                </a>
-                              ) : (
-                                <span className="text-gray-400">—</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                className={`${STAGE_COLORS[recruit.stage]} border`}
-                              >
-                                {recruit.stage}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {recruit.submitted_by_name || 'Unknown'}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-1 text-gray-600">
-                                <Calendar className="h-3 w-3" />
-                                <span>{formatDate(recruit.created_at)}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => handleEditClick(e, recruit)}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {recruits.map((recruit) => {
+                          const isEditing = editingRecruitId === recruit.id;
+                          const isSaving = savingRecruitId === recruit.id;
+                          const currentStage = isEditing && editingData 
+                            ? editingData.stage 
+                            : recruit.stage;
+                          const currentNotes = isEditing && editingData 
+                            ? editingData.notes 
+                            : (recruit.notes || '');
+
+                          return (
+                            <TableRow
+                              key={recruit.id}
+                              className="hover:bg-gray-50"
+                            >
+                              <TableCell className="font-medium">{recruit.name}</TableCell>
+                              <TableCell>{recruit.hometown}</TableCell>
+                              <TableCell>
+                                {recruit.phone_number ? (
+                                  <div className="flex items-center space-x-1">
+                                    <Phone className="h-3 w-3 text-gray-400" />
+                                    <span>{formatPhoneNumber(recruit.phone_number)}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400">—</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {recruit.instagram_handle ? (
+                                  <a
+                                    href={`https://instagram.com/${recruit.instagram_handle}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center space-x-1 text-blue-600 hover:text-blue-800"
+                                  >
+                                    <Instagram className="h-3 w-3" />
+                                    <span>@{recruit.instagram_handle}</span>
+                                  </a>
+                                ) : (
+                                  <span className="text-gray-400">—</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {isEditing ? (
+                                  <div className="w-48">
+                                    <Select
+                                      value={currentStage}
+                                      onValueChange={(value) => handleStageChange(recruit.id, value as RecruitStage)}
+                                    >
+                                      {STAGE_OPTIONS.map((stage) => (
+                                        <SelectItem key={stage} value={stage}>
+                                          {stage}
+                                        </SelectItem>
+                                      ))}
+                                    </Select>
+                                  </div>
+                                ) : (
+                                  <Badge
+                                    className={`${STAGE_COLORS[recruit.stage]} border cursor-pointer`}
+                                    onClick={() => {
+                                      setEditingRecruitId(recruit.id);
+                                      setEditingData({
+                                        stage: recruit.stage,
+                                        notes: recruit.notes || '',
+                                      });
+                                    }}
+                                  >
+                                    {recruit.stage}
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {isEditing ? (
+                                  <div className="space-y-2">
+                                    <Textarea
+                                      value={currentNotes}
+                                      onChange={(e) => handleNotesChange(recruit.id, e.target.value)}
+                                      placeholder="Add notes..."
+                                      className="min-h-[60px] w-full text-sm"
+                                      disabled={isSaving}
+                                    />
+                                    <div className="flex items-center space-x-2">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleCancel(recruit.id)}
+                                        disabled={isSaving}
+                                        className="h-7 text-xs"
+                                      >
+                                        Cancel
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handleSave(recruit.id)}
+                                        disabled={isSaving}
+                                        className="h-7 text-xs"
+                                      >
+                                        {isSaving ? (
+                                          <>
+                                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                            Saving...
+                                          </>
+                                        ) : (
+                                          'Save'
+                                        )}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div
+                                    className="text-sm text-gray-600 cursor-pointer hover:bg-gray-50 p-2 rounded min-h-[40px]"
+                                    onClick={() => {
+                                      setEditingRecruitId(recruit.id);
+                                      setEditingData({
+                                        stage: recruit.stage,
+                                        notes: recruit.notes || '',
+                                      });
+                                    }}
+                                  >
+                                    {recruit.notes ? (
+                                      <p className="whitespace-pre-wrap">{recruit.notes}</p>
+                                    ) : (
+                                      <p className="text-gray-400 italic">Click to add notes...</p>
+                                    )}
+                                  </div>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
@@ -457,8 +618,8 @@ export function RecruitmentView() {
                     </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </>
         )}
 
