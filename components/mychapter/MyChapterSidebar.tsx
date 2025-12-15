@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, GraduationCap, UserPlus, Calendar, Lock, X, ChevronRight, Loader2 } from "lucide-react";
+import { Users, GraduationCap, UserPlus, Calendar, Lock, X, ChevronRight, Loader2, UserCheck, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useProfile } from '@/lib/contexts/ProfileContext';
@@ -12,6 +12,8 @@ import { EventForm } from '@/components/ui/EventForm'; // Add this import
 import { FeatureGuard } from '@/components/shared/FeatureGuard'; // Add this import
 import { AddRecruitForm } from '@/components/features/recruitment/AddRecruitForm';
 import type { Recruit } from '@/types/recruitment';
+import { useRouter } from 'next/navigation';
+import { EXECUTIVE_ROLES } from '@/lib/permissions';
 
 
 interface MyChapterSidebarProps {
@@ -22,6 +24,8 @@ interface MyChapterSidebarProps {
 }
 
 export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSearchChange }: MyChapterSidebarProps) {
+  const router = useRouter();
+  
   // Add state for both modals
   const [showAddMemberForm, setShowAddMemberForm] = useState(false);
   const [showCreateEventForm, setShowCreateEventForm] = useState(false);
@@ -37,6 +41,8 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
   const isAdmin = profile?.role === 'admin';
   // Check if user can submit recruits (active_member or admin)
   const canSubmitRecruit = profile?.role === 'active_member' || profile?.role === 'admin';
+  // Check if user is exec (admin or exec chapter_role) - can view recruitment page
+  const isExec = isAdmin || (profile?.chapter_role && EXECUTIVE_ROLES.includes(profile.chapter_role as any));
 
   // Calculate stats dynamically from the fetched members
   const stats = {
@@ -103,7 +109,7 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex bg-gray-50 overflow-hidden">
       {/* Collapsible Sidebar */}
       <div className="flex">
         {/* Main Sidebar */}
@@ -117,11 +123,11 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
               }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="bg-gradient-to-b from-[#FFFFFF] to-[#F9FAFB] shadow-sm overflow-hidden flex-shrink-0 border-r-4 border-transparent bg-clip-padding"
+              className="bg-gradient-to-b from-[#FFFFFF] to-[#F9FAFB] shadow-sm flex-shrink-0 border-r-4 border-transparent bg-clip-padding"
             >
-              <div className="h-full flex flex-col">
+              <div className="flex flex-col">
                 {/* Header */}
-                <div className="p-4 border-b border-gray-200 bg-gray-50">
+                <div className="p-4 border-b border-gray-200 bg-gray-50 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Users className="h-5 w-5 text-navy-600 flex-shrink-0" />
@@ -162,7 +168,7 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
                 </div>
 
                 {/* Sidebar Content */}
-                <div className="flex-1 overflow-y-auto p-4">
+                <div className="p-4">
                   {sidebarCollapsed ? (
                     // Collapsed view - show only icons
                     <div className="space-y-4">
@@ -284,11 +290,29 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
                         </div>
                       )}
 
+                      {/* Recruitment Management - Available to execs */}
+                      {isExec && (
+                        <FeatureGuard flagName="recruitment_crm_enabled">
+                          <div className={`border-t border-gray-200 pt-4 ${!isAdmin ? 'mt-4' : ''}`}>
+                            <h3 className="text-sm font-medium text-gray-900 mb-3">Organization</h3>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="w-full rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 border-navy-300 hover:bg-gray-50"
+                              onClick={() => router.push('/mychapter/recruitment')}
+                            >
+                              <Settings className="h-4 w-4 mr-2" />
+                              Manage Organization
+                            </Button>
+                          </div>
+                        </FeatureGuard>
+                      )}
+
                       {/* Submit Recruit - Available to active members and admins */}
                       {canSubmitRecruit && (
                         <FeatureGuard flagName="recruitment_crm_enabled">
-                          <div className={`border-t border-gray-200 pt-4 ${!isAdmin ? 'mt-4' : ''}`}>
-                            {!isAdmin && (
+                          <div className={`border-t border-gray-200 pt-4 ${!isAdmin && !isExec ? 'mt-4' : ''}`}>
+                            {!isAdmin && !isExec && (
                               <h3 className="text-sm font-medium text-gray-900 mb-3">Quick Actions</h3>
                             )}
                             <Button 

@@ -4,6 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { isFeatureEnabled } from '@/types/featureFlags';
 import type { CreateRecruitRequest } from '@/types/recruitment';
+import { EXECUTIVE_ROLES } from '@/lib/permissions';
+import type { RecruitStage } from '@/types/recruitment';
 
 // Helper function to validate phone number format
 function isValidPhoneNumber(phoneNumber: string): boolean {
@@ -68,6 +70,149 @@ async function authenticateRequest(request: NextRequest) {
   } catch (cookieError) {
     console.error('❌ Cookie auth exception:', cookieError);
     return null;
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    // Authenticate request (supports both Bearer token and cookies)
+    const auth = await authenticateRequest(request);
+    
+    if (!auth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const { user, supabase } = auth;
+
+    // Get user profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role, chapter_id, chapter_role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    }
+
+    // Ensure user has a chapter_id
+    if (!profile.chapter_id) {
+      return NextResponse.json({ error: 'User must belong to a chapter' }, { status: 400 });
+    }
+
+    // Feature flag check: Query chapters table for feature_flags
+    const { data: chapter, error: chapterError } = await supabase
+      .from('chapters')
+      .select('id, feature_flags')
+      .eq('id', profile.chapter_id)
+      .single();
+
+    if (chapterError || !chapter) {
+      return NextResponse.json({ error: 'Chapter not found' }, { status: 404 });
+    }
+
+    // Check if recruitment_crm_enabled feature flag is enabled
+    if (!isFeatureEnabled(chapter.feature_flags, 'recruitment_crm_enabled')) {
+      return NextResponse.json({ error: 'Recruitment CRM feature is not enabled for this chapter' }, { status: 403 });
+    }
+
+    // Permission check: Only allow exec roles (admin OR exec chapter_role)
+    const isAdmin = profile.role === 'admin';
+    const isExec = profile.chapter_role && EXECUTIVE_ROLES.includes(profile.chapter_role as any);
+    
+    if (!isAdmin && !isExec) {
+      return NextResponse.json({ 
+        error: 'Insufficient permissions. Only execs and admins can view recruits.' 
+      }, { status: 403 });
+    }
+
+    // Parse query parameters
+    const { searchParams } = new URL(request.url);
+    const stage = searchParams.get('stage') as RecruitStage | null;
+    const search = searchParams.get('search')?.trim() || null;
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50')), 100); // Max 100 per page
+    const sortBy = searchParams.get('sort_by') || 'created_at';
+    const sortOrder = searchParams.get('sort_order') === 'asc' ? 'asc' : 'desc';
+
+    // Calculate pagination offset
+    const offset = (page - 1) * limit;
+
+    // Build query with join to profiles table
+    let query = supabase
+      .from('recruits')
+      .select(`
+        *,
+        submitted_by_profile:profiles!recruits_submitted_by_fkey(
+          id,
+          full_name
+        )
+      `, { count: 'exact' })
+      .eq('chapter_id', profile.chapter_id);
+
+    // Apply stage filter if provided
+    if (stage) {
+      // Validate stage is a valid RecruitStage
+      const validStages: RecruitStage[] = ['New', 'Contacted', 'Event Invite', 'Bid Given', 'Accepted', 'Declined'];
+      if (validStages.includes(stage)) {
+        query = query.eq('stage', stage);
+      } else {
+        return NextResponse.json({ error: 'Invalid stage value' }, { status: 400 });
+      }
+    }
+
+    // Apply search filter if provided (search in name or hometown)
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,hometown.ilike.%${search}%`);
+    }
+
+    // Apply sorting
+    query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+
+    // Apply pagination
+    query = query.range(offset, offset + limit - 1);
+
+    // Execute query
+    const { data: recruits, error: queryError, count } = await query;
+
+    if (queryError) {
+      console.error('Error fetching recruits:', queryError);
+      return NextResponse.json({ 
+        error: 'Failed to fetch recruits',
+        details: queryError.message 
+      }, { status: 500 });
+    }
+
+    // Transform data to include submitted_by_name from joined profile
+    const transformedRecruits = (recruits || []).map((recruit: any) => ({
+      ...recruit,
+      submitted_by_name: recruit.submitted_by_profile?.full_name || null,
+      // Remove the nested profile object
+      submitted_by_profile: undefined,
+    }));
+
+    // Calculate pagination metadata
+    const total = count || 0;
+    const totalPages = Math.ceil(total / limit);
+
+    // Return response with pagination metadata
+    return NextResponse.json({
+      data: transformedRecruits,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    });
+
+  } catch (error) {
+    console.error('Error in GET /api/recruitment/recruits:', error);
+    
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
 
