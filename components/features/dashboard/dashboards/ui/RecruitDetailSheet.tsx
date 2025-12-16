@@ -265,8 +265,8 @@ export function RecruitDetailSheet({
 
           {/* Editable Fields */}
           <div className="space-y-4 pt-4 border-t border-gray-200">
-            <div>
-              <Label htmlFor="stage" className="text-sm font-medium">
+            <div className="space-y-1">
+              <Label htmlFor="stage" className="text-xs font-medium text-gray-700">
                 Stage
               </Label>
               <Select
@@ -275,20 +275,11 @@ export function RecruitDetailSheet({
                   setEditData((prev) => ({ ...prev, stage: value as RecruitStage }))
                 }
               >
-                <SelectTrigger id="stage" className="mt-2">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STAGE_OPTIONS.map((stage) => (
-                    <SelectItem key={stage} value={stage}>
-                      <div className="flex items-center space-x-2">
-                        <Badge className={cn("text-xs", STAGE_COLORS[stage])}>
-                          {stage}
-                        </Badge>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                {STAGE_OPTIONS.map((stage) => (
+                  <SelectItem key={stage} value={stage}>
+                    {stage}
+                  </SelectItem>
+                ))}
               </Select>
             </div>
 
