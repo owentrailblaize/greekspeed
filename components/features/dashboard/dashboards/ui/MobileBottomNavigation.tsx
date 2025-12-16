@@ -49,7 +49,7 @@ export function MobileBottomNavigation({
   const { profile } = useProfile();
   const userRole = propUserRole || profile?.role;
   const { enabled: financialToolsEnabled } = useFeatureFlag('financial_tools_enabled');
-  const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled'); // Add this line
+  const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
   const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
   const [buttonPosition, setButtonPosition] = useState<{ left: number; bottom: number } | null>(null);
   const toolsMenuRef = useRef<HTMLDivElement>(null);
