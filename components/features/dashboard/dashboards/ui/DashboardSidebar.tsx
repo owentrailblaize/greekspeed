@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Megaphone, Calendar, CheckSquare, Users, DollarSign, TrendingUp, BookOpen, UserPlus, Settings, ChevronRight, X } from 'lucide-react';
+import { LayoutDashboard, Megaphone, Calendar, CheckSquare, Users, DollarSign, TrendingUp, BookOpen, UserPlus, Settings, ChevronRight, X, UserCheck } from 'lucide-react';
 import { FeatureView } from '../UnifiedExecutiveDashboard';
 import { cn } from '@/lib/utils';
 import { CollapsibleNavGroup } from './CollapsibleNavGroup';
@@ -31,6 +31,7 @@ export function DashboardSidebar({
 }: DashboardSidebarProps) {
   const { enabled: financialToolsEnabled } = useFeatureFlag('financial_tools_enabled');
   const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled'); // Add this line
+  const { enabled: recruitmentCrmEnabled } = useFeatureFlag('recruitment_crm_enabled');
   
   // Collapsible sidebar state (following AlumniPipelineLayout pattern)
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -48,6 +49,8 @@ export function DashboardSidebar({
         // Only include Dues if financial tools are enabled
         ...(financialToolsEnabled ? [{ id: 'dues' as FeatureView, label: 'Dues', icon: DollarSign }] : []),
         { id: 'invitations' as FeatureView, label: 'Invitations', icon: UserPlus },
+        // Only include Recruitment if recruitment CRM is enabled
+        ...(recruitmentCrmEnabled ? [{ id: 'recruitment' as FeatureView, label: 'Recruitment', icon: UserCheck }] : []),
         // Move Vendors to Manage dropdown when financial tools are disabled
         ...(!financialToolsEnabled ? [{ id: 'vendors' as FeatureView, label: 'Vendors', icon: BookOpen }] : []),
       ]
