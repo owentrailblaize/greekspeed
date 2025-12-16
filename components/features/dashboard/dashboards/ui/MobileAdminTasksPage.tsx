@@ -1178,7 +1178,7 @@ export function MobileAdminTasksPage() {
               ) : (
                 <div className="space-y-4">
                   {/* Card Stack Container */}
-                  <div className="relative h-[500px] w-full">
+                  <div className="relative w-full min-h-[400px] max-h-[450px]">
                     {/* Render 3 cards: previous, current, next */}
                     {[
                       recruits[currentRecruitIndex - 1],
@@ -1195,6 +1195,10 @@ export function MobileAdminTasksPage() {
                           recruit={recruit}
                           isActive={isActive}
                           onTap={() => {
+                            setSelectedRecruit(recruit);
+                            setShowRecruitDetail(true);
+                          }}
+                          onEdit={() => {
                             setSelectedRecruit(recruit);
                             setShowRecruitDetail(true);
                           }}

@@ -1,10 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
+import { useState, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Phone, Instagram, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Star, MessageCircle, User, Edit } from 'lucide-react';
 import type { Recruit, RecruitStage } from '@/types/recruitment';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +19,7 @@ interface RecruitCardProps {
   recruit: Recruit;
   isActive: boolean;
   onTap: () => void;
+  onEdit: () => void;
   onSwipeLeft: () => void;
   onSwipeRight: () => void;
   index: number;
@@ -31,6 +30,7 @@ export function RecruitCard({
   recruit,
   isActive,
   onTap,
+  onEdit,
   onSwipeLeft,
   onSwipeRight,
   index,
@@ -76,18 +76,16 @@ export function RecruitCard({
     setSwipeOffset(0);
   };
 
-  const handlePhoneClick = (e: React.MouseEvent) => {
+  const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (recruit.phone_number) {
-      window.location.href = `tel:${recruit.phone_number.replace(/\D/g, '')}`;
-    }
+    onEdit();
   };
 
-  const handleInstagramClick = (e: React.MouseEvent) => {
+  const handleMessageClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (recruit.instagram_handle) {
-      const handle = recruit.instagram_handle.replace(/^@/, '');
-      window.open(`https://instagram.com/${handle}`, '_blank');
+    if (recruit.phone_number) {
+      const phoneNumber = recruit.phone_number.replace(/\D/g, '');
+      window.location.href = `sms:${phoneNumber}`;
     }
   };
 
@@ -111,6 +109,7 @@ export function RecruitCard({
   };
 
   const cardStyle = getCardStyle();
+  const isNew = recruit.stage === 'New';
 
   return (
     <div
@@ -121,64 +120,98 @@ export function RecruitCard({
       )}
       style={cardStyle}
     >
-      <Card
+      <div
         className={cn(
-          "w-full h-full cursor-pointer bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col",
-          isActive && "shadow-lg"
+          "group relative overflow-hidden rounded-3xl bg-white p-6 w-full h-full shadow-[12px_12px_24px_rgba(0,0,0,0.15),-12px_-12px_24px_rgba(255,255,255,0.9)] transition-all duration-500 hover:shadow-[20px_20px_40px_rgba(0,0,0,0.2),-20px_-20px_40px_rgba(255,255,255,1)] hover:scale-[1:02] hover:-translate-y-2 flex flex-col cursor-pointer",
+          !isActive && "opacity-50"
         )}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
         onClick={onTap}
       >
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
-          {/* Stage Badge - Top */}
-          <div className="flex justify-center mb-4">
-            <Badge className={cn(STAGE_COLORS[recruit.stage])}>
-              {recruit.stage}
-            </Badge>
-          </div>
-
-          {/* Name - Centered */}
-          <div className="text-center mb-6">
-            <h3 className="text-xl font-semibold text-gray-900 mb-1">
-              {recruit.name}
-            </h3>
-            <p className="text-sm text-gray-600">
-              {recruit.hometown}
-            </p>
-          </div>
-
-          {/* Contact Info - Icons above text, column layout */}
-          <div className="flex flex-col items-center space-y-4 w-full mb-6">
-            {recruit.phone_number && (
-              <button
-                onClick={handlePhoneClick}
-                className="flex flex-col items-center space-y-1.5 text-gray-700 hover:text-blue-600 transition-colors"
-              >
-                <Phone className="h-5 w-5" />
-                <span className="text-xs">{recruit.phone_number}</span>
-              </button>
-            )}
-            {recruit.instagram_handle && (
-              <button
-                onClick={handleInstagramClick}
-                className="flex flex-col items-center space-y-1.5 text-gray-700 hover:text-pink-600 transition-colors"
-              >
-                <Instagram className="h-5 w-5" />
-                <span className="text-xs">@{recruit.instagram_handle}</span>
-              </button>
-            )}
-          </div>
-
-          {/* Card indicator - Bottom */}
-          <div className="mt-auto pt-4">
-            <span className="text-xs text-gray-500">
-              {index + 1} of {total}
-            </span>
+        {/* Status indicator - Online (always show as active recruit) */}
+        <div className="absolute right-4 top-4 z-10">
+          <div className="relative">
+            <div className="h-3 w-3 rounded-full border-2 border-white transition-all duration-300 group-hover:scale-125 bg-green-500 group-hover:shadow-[0_0_20px_rgba(34,197,94,0.6)]"></div>
+            <div className="absolute inset-0 h-3 w-3 rounded-full bg-green-500 animate-ping opacity-30"></div>
           </div>
         </div>
-      </Card>
+
+        {/* Star badge for New stage */}
+        {isNew && (
+          <div className="absolute right-4 top-10 z-10">
+            <div className="rounded-full bg-blue-500 p-1 shadow-[2px_2px_4px_rgba(0,0,0,0.1)] transition-all duration-300 group-hover:scale-110 group-hover:rotate-12 group-hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+              <Star className="h-3 w-3 fill-white text-white" />
+            </div>
+          </div>
+        )}
+
+        {/* Profile Photo with placeholder */}
+        <div className="mb-4 flex justify-center relative z-10">
+          <div className="relative group-hover:animate-pulse">
+            <div className="h-28 w-28 overflow-hidden rounded-full bg-white p-1 shadow-[inset_6px_6px_12px_rgba(0,0,0,0.1),inset_-6px_-6px_12px_rgba(255,255,255,0.9)] transition-all duration-500 group-hover:shadow-[inset_8px_8px_16px_rgba(0,0,0,0.15),inset_-8px_-8px_16px_rgba(255,255,255,1)] group-hover:scale-110">
+              <div className="h-full w-full rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
+                <User className="h-12 w-12 text-white" />
+              </div>
+            </div>
+            {/* Glowing ring on hover */}
+            <div className="absolute inset-0 rounded-full border-2 border-blue-400 opacity-0 group-hover:opacity-100 transition-all duration-500 animate-pulse"></div>
+          </div>
+        </div>
+
+        {/* Profile Info */}
+        <div className="text-center relative z-10 transition-transform duration-300 group-hover:-translate-y-1 flex-1 flex flex-col justify-center">
+          <h3 className="text-lg font-semibold text-gray-900 transition-colors duration-300 group-hover:text-blue-600 mb-1">
+            {recruit.name}
+          </h3>
+          <p className="text-sm text-gray-500 transition-colors duration-300 group-hover:text-gray-700">
+            {recruit.hometown}
+          </p>
+
+          {/* Stage Badge/Tag */}
+          <div className="mt-4 flex justify-center">
+            <span
+              className={cn(
+                "inline-block rounded-full bg-white px-3 py-1 text-xs font-medium shadow-[2px_2px_4px_rgba(0,0,0,0.05),-2px_-2px_4px_rgba(255,255,255,0.8)] transition-all duration-300",
+                recruit.stage === 'New'
+                  ? "text-blue-600 group-hover:bg-blue-50 group-hover:scale-105 group-hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]"
+                  : "text-gray-600 group-hover:scale-105"
+              )}
+            >
+              {recruit.stage}
+            </span>
+          </div>
+
+          {/* Card indicator */}
+          <p className="mt-4 text-xs text-gray-400 transition-all duration-300 group-hover:text-blue-500 group-hover:font-medium">
+            {index + 1} of {total}
+          </p>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="mt-6 flex gap-2 relative z-10">
+          <button
+            onClick={handleEditClick}
+            className="flex-1 rounded-full bg-white py-4 text-sm font-medium text-blue-600 shadow-[6px_6px_12px_rgba(0,0,0,0.1),-6px_-6px_12px_rgba(255,255,255,0.9)] transition-all duration-300 hover:shadow-[2px_2px_4px_rgba(0,0,0,0.05),-2px_-2px_4px_rgba(255,255,255,0.8)] hover:scale-95 active:scale-90 group-hover:bg-blue-50"
+          >
+            <Edit className="mx-auto h-4 w-4 transition-transform duration-300 hover:scale-110" />
+          </button>
+          <button
+            onClick={handleMessageClick}
+            disabled={!recruit.phone_number}
+            className={cn(
+              "flex-1 rounded-full bg-white py-4 text-sm font-medium text-gray-700 shadow-[6px_6px_12px_rgba(0,0,0,0.1),-6px_-6px_12px_rgba(255,255,255,0.9)] transition-all duration-300 hover:shadow-[2px_2px_4px_rgba(0,0,0,0.05),-2px_-2px_4px_rgba(255,255,255,0.8)] hover:scale-95 active:scale-90 group-hover:bg-gray-50",
+              !recruit.phone_number && "opacity-50 cursor-not-allowed"
+            )}
+          >
+            <MessageCircle className="mx-auto h-4 w-4 transition-transform duration-300 hover:scale-110" />
+          </button>
+        </div>
+
+        {/* Animated border on hover */}
+        <div className="absolute inset-0 rounded-3xl border border-blue-200 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+      </div>
     </div>
   );
 }
