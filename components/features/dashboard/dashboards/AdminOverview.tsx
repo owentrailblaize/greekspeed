@@ -298,12 +298,47 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
       {activeMobileTab === 'home' && (
         <div
           onClick={() => setShowQuickActionsModal(true)}
-          className="fixed bottom-40 right-4 z-40 h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 sm:hidden flex items-center justify-center cursor-pointer"
+          className="fixed bottom-40 right-4 z-40 h-14 w-14 rounded-full sm:hidden flex items-center justify-center cursor-pointer group"
+          style={{
+            background: 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 30%, #93c5fd 60%, #e0e7ff 100%)',
+            boxShadow: `
+              0 8px 16px rgba(59, 130, 246, 0.4),
+              0 4px 8px rgba(59, 130, 246, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.5),
+              inset 0 -1px 0 rgba(0, 0, 0, 0.1)
+            `,
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+          }}
           title="Quick Actions"
         >
-          <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {/* Inner glow effect */}
+          <div 
+            className="absolute inset-0 rounded-full opacity-50"
+            style={{
+              background: 'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.6), transparent 70%)',
+            }}
+          />
+          {/* Icon */}
+          <svg 
+            className="h-6 w-6 text-white relative z-10 drop-shadow-lg transition-transform duration-200 group-hover:scale-110" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+            style={{
+              filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
+            }}
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
+          {/* Hover shine effect */}
+          <div 
+            className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={{
+              background: 'radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.4), transparent 60%)',
+            }}
+          />
         </div>
       )}
 
