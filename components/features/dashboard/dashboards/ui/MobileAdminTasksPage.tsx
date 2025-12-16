@@ -1224,7 +1224,7 @@ export function MobileAdminTasksPage() {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="h-12 w-12 rounded-full border-gray-300 shadow-sm hover:shadow-md"
+                      className="h-12 w-12 rounded-full border-gray-300 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                       onClick={() => {
                         if (currentRecruitIndex > 0) {
                           setCurrentRecruitIndex(prev => prev - 1);
@@ -1232,34 +1232,51 @@ export function MobileAdminTasksPage() {
                       }}
                       disabled={currentRecruitIndex === 0}
                     >
-                      <ChevronLeft className="h-6 w-6" />
+                      <span>
+                        <ChevronLeft className="h-6 w-6 text-slate-400" />
+                      </span>
                     </Button>
 
-                    {/* Dot Indicators */}
-                    <div className="flex items-center justify-center space-x-2">
-                      {recruits.slice(0, Math.min(10, recruits.length)).map((_, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setCurrentRecruitIndex(idx)}
-                          className={cn(
-                            "h-2 rounded-full transition-all",
-                            idx === currentRecruitIndex
-                              ? "w-8 bg-navy-600"
-                              : "w-2 bg-gray-300"
-                          )}
-                        />
-                      ))}
-                      {recruits.length > 10 && (
-                        <span className="text-xs text-gray-500 ml-2">
-                          +{recruits.length - 10}
-                        </span>
-                      )}
+                    {/* Dot Indicators - Windowed view to prevent overflow */}
+                    <div className="flex items-center justify-center space-x-2 min-w-0 flex-1 max-w-[200px] px-2">
+                      {(() => {
+                        const maxVisibleDots = 9;
+                        const halfWindow = Math.floor(maxVisibleDots / 2);
+                        const totalRecruits = recruits.length;
+                        
+                        // Calculate start and end indices for the window
+                        let startIdx = Math.max(0, currentRecruitIndex - halfWindow);
+                        let endIdx = Math.min(totalRecruits, startIdx + maxVisibleDots);
+                        
+                        // Adjust start if we're near the end
+                        if (endIdx - startIdx < maxVisibleDots) {
+                          startIdx = Math.max(0, endIdx - maxVisibleDots);
+                        }
+                        
+                        const visibleDots = [];
+                        for (let i = startIdx; i < endIdx; i++) {
+                          visibleDots.push(i);
+                        }
+                        
+                        return visibleDots.map((idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setCurrentRecruitIndex(idx)}
+                            className={cn(
+                              "h-2 rounded-full transition-all flex-shrink-0",
+                              idx === currentRecruitIndex
+                                ? "w-8 bg-navy-600"
+                                : "w-2 bg-gray-300"
+                            )}
+                          />
+                        ));
+                      })()}
                     </div>
 
                     <Button
                       variant="outline"
                       size="lg"
-                      className="h-12 w-12 rounded-full border-gray-300 shadow-sm hover:shadow-md"
+                      className="h-12 w-12 rounded-full border-gray-300 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                       onClick={() => {
                         if (currentRecruitIndex < recruits.length - 1) {
                           setCurrentRecruitIndex(prev => prev + 1);
@@ -1267,7 +1284,10 @@ export function MobileAdminTasksPage() {
                       }}
                       disabled={currentRecruitIndex === recruits.length - 1}
                     >
-                      <ChevronRight className="h-6 w-6" />
+                      
+                      <span>
+                        <ChevronRight className="h-6 w-6 text-slate-400" />
+                      </span>
                     </Button>
                   </div>
                 </div>

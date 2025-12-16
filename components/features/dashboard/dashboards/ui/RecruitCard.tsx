@@ -15,6 +15,26 @@ const STAGE_COLORS: Record<RecruitStage, string> = {
   'Declined': 'bg-red-100 text-red-800 border-red-200',
 };
 
+// Stage background colors for star badge
+const STAGE_BG_COLORS: Record<RecruitStage, string> = {
+  'New': 'bg-blue-500',
+  'Contacted': 'bg-slate-500',
+  'Event Invite': 'bg-navy-500',
+  'Bid Given': 'bg-gray-500',
+  'Accepted': 'bg-blue-600',
+  'Declined': 'bg-red-500',
+};
+
+// Rotation degrees based on stage (for star icon)
+const STAGE_ROTATIONS: Record<RecruitStage, number> = {
+  'New': 0,
+  'Contacted': 36,
+  'Event Invite': 72,
+  'Bid Given': 108,
+  'Accepted': 144,
+  'Declined': 180,
+};
+
 interface RecruitCardProps {
   recruit: Recruit;
   isActive: boolean;
@@ -109,7 +129,10 @@ export function RecruitCard({
   };
 
   const cardStyle = getCardStyle();
-  const isNew = recruit.stage === 'New';
+
+  // Get stage-specific styling
+  const stageBgColor = STAGE_BG_COLORS[recruit.stage];
+  const stageRotation = STAGE_ROTATIONS[recruit.stage];
 
   return (
     <div
@@ -138,14 +161,18 @@ export function RecruitCard({
           </div>
         </div>
 
-        {/* Star badge for New stage */}
-        {isNew && (
-          <div className="absolute right-4 top-10 z-10">
-            <div className="rounded-full bg-blue-500 p-1 shadow-[2px_2px_4px_rgba(0,0,0,0.1)] transition-all duration-300 group-hover:scale-110 group-hover:rotate-12 group-hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-              <Star className="h-3 w-3 fill-white text-white" />
-            </div>
+        {/* Star badge with stage-based rotation and color */}
+        <div className="absolute right-4 top-10 z-10">
+          <div className={cn(
+            "rounded-full p-1 shadow-[2px_2px_4px_rgba(0,0,0,0.1)] transition-all duration-300 group-hover:scale-110 group-hover:rotate-12 group-hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]",
+            stageBgColor
+          )}>
+            <Star 
+              className="h-3 w-3 fill-white text-white transition-transform duration-300" 
+              style={{ transform: `rotate(${stageRotation}deg)` }}
+            />
           </div>
-        )}
+        </div>
 
         {/* Profile Photo with placeholder */}
         <div className="mb-4 flex justify-center relative z-10">
@@ -169,24 +196,6 @@ export function RecruitCard({
             {recruit.hometown}
           </p>
 
-          {/* Stage Badge/Tag */}
-          <div className="mt-4 flex justify-center">
-            <span
-              className={cn(
-                "inline-block rounded-full bg-white px-3 py-1 text-xs font-medium shadow-[2px_2px_4px_rgba(0,0,0,0.05),-2px_-2px_4px_rgba(255,255,255,0.8)] transition-all duration-300",
-                recruit.stage === 'New'
-                  ? "text-blue-600 group-hover:bg-blue-50 group-hover:scale-105 group-hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]"
-                  : "text-gray-600 group-hover:scale-105"
-              )}
-            >
-              {recruit.stage}
-            </span>
-          </div>
-
-          {/* Card indicator */}
-          <p className="mt-4 text-xs text-gray-400 transition-all duration-300 group-hover:text-blue-500 group-hover:font-medium">
-            {index + 1} of {total}
-          </p>
         </div>
 
         {/* Action Buttons */}
