@@ -205,10 +205,14 @@ export function AddRecruitForm({ onSuccess, onCancel, variant = 'inline' }: AddR
 
   return (
     <Card className={cn(
-      "max-w-3xl mx-auto flex flex-col",
-      variant === 'modal' 
-        ? "border border-navy-200 shadow-lg shadow-navy-200 max-h-[90vh] rounded-lg bg-white" 
-        : "bg-white border shadow-sm"
+      variant === 'modal' && isMobile
+        ? "w-full flex flex-col shadow-none border-0 h-full min-h-0 bg-transparent" // Remove rounded-none, let parent handle it
+        : "max-w-3xl mx-auto flex flex-col", // Desktop/inline: keep max-width and centering
+      variant === 'modal' && !isMobile
+        ? "border border-navy-200 shadow-lg shadow-navy-200 max-h-[90vh] rounded-lg bg-white"
+        : variant !== 'modal'
+        ? "bg-white border shadow-sm"
+        : ""
     )}>
       <CardHeader className={cn(
         "pb-3",
@@ -360,39 +364,78 @@ export function AddRecruitForm({ onSuccess, onCancel, variant = 'inline' }: AddR
           </div>
 
           {/* Action Buttons */}
-          <div className={cn(
-            "flex space-x-2 pt-4",
-            variant === 'modal' && "border-t border-gray-200"
-          )}>
-            {onCancel && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                className="flex-1 h-10 rounded-full border-gray-300 shadow-md shadow-gray-300 hover:bg-gray-50"
-                disabled={loading}
-              >
-                Cancel
-              </Button>
-            )}
-            <Button
-              type="submit"
-              className={cn(
-                onCancel ? "flex-1" : "w-full",
-                "h-10 rounded-full bg-navy-600 hover:bg-navy-700 shadow-lg shadow-navy-200"
-              )}
-              disabled={loading}
-            >
-              {loading ? (
-                <div className="flex items-center space-x-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Submitting...</span>
-                </div>
-              ) : (
-                'Submit Recruit'
-              )}
-            </Button>
-          </div>
+          {variant === 'modal' && isMobile ? (
+            <div className="flex-shrink-0 border-t border-gray-200 bg-white p-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
+              <div className="flex flex-row space-x-2"> {/* Change from flex-col space-y-2 to flex-row space-x-2 */}
+                {onCancel && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onCancel}
+                    disabled={loading}
+                    className="flex-1 rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                  >
+                    Cancel
+                  </Button>
+                )}
+                <Button
+                  type="submit"
+                  form="recruit-form"
+                  disabled={loading}
+                  className="flex-1 rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <div className="flex items-center space-x-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Submitting...</span>
+                    </div>
+                  ) : (
+                    'Submit Recruit'
+                  )}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            /* Desktop/Inline Footer */
+            <div className={cn(
+              "flex-shrink-0",
+              variant === 'modal' && "border-t border-gray-200 p-6"
+            )}>
+              <div className={cn(
+                "flex space-x-2",
+                variant === 'modal' ? "justify-end" : "pt-4"
+              )}>
+                {onCancel && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onCancel}
+                    className="flex-1 h-10 rounded-full border-gray-300 shadow-md shadow-gray-300 hover:bg-gray-50"
+                    disabled={loading}
+                  >
+                    Cancel
+                  </Button>
+                )}
+                <Button
+                  type="submit"
+                  className={cn(
+                    onCancel ? "flex-1" : "w-full",
+                    "h-10 rounded-full bg-navy-600 hover:bg-navy-700 shadow-lg shadow-navy-200"
+                  )}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <div className="flex items-center space-x-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Submitting...</span>
+                    </div>
+                  ) : (
+                    'Submit Recruit'
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
         </form>
       </CardContent>
     </Card>

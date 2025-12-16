@@ -2,14 +2,16 @@
 
 
 import { useState, useEffect, useMemo } from 'react';
-import { CheckSquare, Clock, AlertCircle, Users, Calendar, FileText, Plus, Loader2, Trash2, Upload, Download, ChevronLeft, ChevronRight, Check, UserMinus, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckSquare, Clock, AlertCircle, Users, Calendar, FileText, Plus, Loader2, Trash2, Upload, Download, ChevronLeft, ChevronRight, Check, UserMinus, ChevronDown, ChevronUp, UserPlus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useSearchParams } from 'next/navigation';
 import { Task, TaskStatus, TaskPriority, CreateTaskRequest } from '@/types/operations';
 import { getTasksByChapter, updateTask, getChapterMembersForTasks } from '@/lib/services/taskService';
 import { TaskModal } from '@/components/ui/TaskModal';
@@ -18,6 +20,11 @@ import { supabase } from '@/lib/supabase/client';
 import { toast } from 'react-toastify';
 import { documentUploadService } from '@/lib/services/documentUploadService';
 import { cn } from '@/lib/utils';
+import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
+import { useAuth } from '@/lib/supabase/auth-context';
+import type { Recruit, RecruitStage } from '@/types/recruitment';
+import { RecruitCard } from './RecruitCard';
+import { RecruitDetailSheet } from './RecruitDetailSheet';
 
 interface ChapterDocument {
   id: string;
@@ -40,8 +47,19 @@ interface ChapterDocument {
 export function MobileAdminTasksPage() {
 
   const { profile } = useProfile();
+  const { session } = useAuth();
+  const searchParams = useSearchParams();
   const chapterId = profile?.chapter_id;
-  const [activeTab, setActiveTab] = useState<'tasks' | 'docs'>('tasks');
+  const [activeTab, setActiveTab] = useState<'tasks' | 'docs' | 'recruits'>('tasks');
+  const { enabled: recruitmentCrmEnabled } = useFeatureFlag('recruitment_crm_enabled');
+
+  // Handle tab query param
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'recruits' && recruitmentCrmEnabled) {
+      setActiveTab('recruits');
+    }
+  }, [searchParams, recruitmentCrmEnabled]);
   
   // Tasks state
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -72,6 +90,15 @@ export function MobileAdminTasksPage() {
   const [docsPage, setDocsPage] = useState(1);
   const docsPerPage = 6;
 
+  // Recruits state
+  const [recruits, setRecruits] = useState<Recruit[]>([]);
+  const [recruitsLoading, setRecruitsLoading] = useState(true);
+  const [selectedStage, setSelectedStage] = useState<RecruitStage | 'all'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentRecruitIndex, setCurrentRecruitIndex] = useState(0);
+  const [showRecruitDetail, setShowRecruitDetail] = useState(false);
+  const [selectedRecruit, setSelectedRecruit] = useState<Recruit | null>(null);
+
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -96,6 +123,12 @@ export function MobileAdminTasksPage() {
 
     loadAllData();
   }, [chapterId, profile?.id, activeTab]);
+
+  // Load recruits
+  useEffect(() => {
+    if (!chapterId || activeTab !== 'recruits' || !recruitmentCrmEnabled) return;
+    fetchRecruits();
+  }, [chapterId, activeTab, recruitmentCrmEnabled, selectedStage, searchQuery]);
 
   // Load documents
   useEffect(() => {
@@ -239,6 +272,59 @@ export function MobileAdminTasksPage() {
     } finally {
 
       setTasksLoading(false);
+    }
+  };
+
+  const fetchRecruits = async () => {
+    if (!chapterId) return;
+    
+    try {
+      setRecruitsLoading(true);
+      
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+      
+      // Build query params
+      const params = new URLSearchParams();
+      params.append('chapter_id', chapterId);
+      if (selectedStage !== 'all') {
+        params.append('stage', selectedStage);
+      }
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
+      
+      const response = await fetch(`/api/recruitment/recruits?${params.toString()}`, {
+        headers,
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch recruits');
+      }
+      
+      const data = await response.json();
+      const recruitsList = Array.isArray(data) ? data : (data.data || []);
+      
+      // Exclude Accepted recruits from count
+      const filteredRecruits = recruitsList.filter((r: Recruit) => r.stage !== 'Accepted');
+      setRecruits(filteredRecruits);
+      
+      // Reset index if needed
+      if (currentRecruitIndex >= filteredRecruits.length) {
+        setCurrentRecruitIndex(Math.max(0, filteredRecruits.length - 1));
+      }
+    } catch (error) {
+      console.error('Error fetching recruits:', error);
+      toast.error('Failed to load recruits');
+      setRecruits([]);
+    } finally {
+      setRecruitsLoading(false);
     }
   };
 
@@ -631,9 +717,15 @@ export function MobileAdminTasksPage() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsList className={cn(
+            "grid w-full mb-4",
+            recruitmentCrmEnabled ? "grid-cols-3" : "grid-cols-2"
+          )}>
             <TabsTrigger value="tasks" className="text-xs">Tasks</TabsTrigger>
             <TabsTrigger value="docs" className="text-xs">Docs</TabsTrigger>
+            {recruitmentCrmEnabled && (
+              <TabsTrigger value="recruits" className="text-xs">Recruits</TabsTrigger>
+            )}
           </TabsList>
 
           {/* Tasks Tab */}
@@ -1006,6 +1098,204 @@ export function MobileAdminTasksPage() {
               </>
             )}
           </TabsContent>
+
+          {/* Recruits Tab */}
+          {recruitmentCrmEnabled && (
+            <TabsContent value="recruits" className="space-y-4">
+              {/* Header Section */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <UserPlus className="h-5 w-5 text-navy-600" />
+                  <h2 className="text-lg font-semibold text-gray-900">Manage Recruits</h2>
+                </div>
+
+                {/* Search Bar */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search recruits..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 h-10"
+                  />
+                </div>
+
+                {/* Stage Filter Chips */}
+                <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {(['all', 'New', 'Contacted', 'Event Invite', 'Bid Given', 'Declined'] as const).map((stage) => {
+                    const count = stage === 'all' 
+                      ? recruits.length 
+                      : recruits.filter(r => r.stage === stage).length;
+                    const isActive = selectedStage === stage;
+                    
+                    return (
+                      <button
+                        key={stage}
+                        onClick={() => setSelectedStage(stage)}
+                        className={cn(
+                          "flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0",
+                          isActive
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                        )}
+                      >
+                        <span>{stage === 'all' ? 'All' : stage}</span>
+                        <span className={cn(
+                          "text-xs px-1.5 py-0.5 rounded-full",
+                          isActive ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
+                        )}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Count Badge */}
+                <div className="text-sm text-gray-600">
+                  {recruits.length} {recruits.length === 1 ? 'recruit' : 'recruits'}
+                </div>
+              </div>
+
+              {/* Swipeable Card Stack */}
+              {recruitsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+                </div>
+              ) : recruits.length === 0 ? (
+                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+                  <CardContent className="p-8 text-center">
+                    <UserPlus className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-slate-700 text-lg mb-2">No recruits found</p>
+                    <p className="text-slate-600 text-sm">
+                      {searchQuery || selectedStage !== 'all' 
+                        ? 'Try adjusting your filters' 
+                        : 'No recruits have been added yet'}
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {/* Card Stack Container */}
+                  <div className="relative h-[500px] w-full">
+                    {/* Render 3 cards: previous, current, next */}
+                    {[
+                      recruits[currentRecruitIndex - 1],
+                      recruits[currentRecruitIndex],
+                      recruits[currentRecruitIndex + 1],
+                    ].map((recruit, offset) => {
+                      if (!recruit) return null;
+                      const actualIndex = currentRecruitIndex + (offset - 1);
+                      const isActive = offset === 1;
+                      
+                      return (
+                        <RecruitCard
+                          key={recruit.id}
+                          recruit={recruit}
+                          isActive={isActive}
+                          onTap={() => {
+                            setSelectedRecruit(recruit);
+                            setShowRecruitDetail(true);
+                          }}
+                          onSwipeLeft={() => {
+                            if (currentRecruitIndex < recruits.length - 1) {
+                              setCurrentRecruitIndex(prev => prev + 1);
+                            }
+                          }}
+                          onSwipeRight={() => {
+                            if (currentRecruitIndex > 0) {
+                              setCurrentRecruitIndex(prev => prev - 1);
+                            }
+                          }}
+                          index={actualIndex}
+                          total={recruits.length}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  {/* Navigation Arrows - Fixed below card */}
+                  <div className="flex items-center justify-center space-x-4">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="h-12 w-12 rounded-full border-gray-300 shadow-sm hover:shadow-md"
+                      onClick={() => {
+                        if (currentRecruitIndex > 0) {
+                          setCurrentRecruitIndex(prev => prev - 1);
+                        }
+                      }}
+                      disabled={currentRecruitIndex === 0}
+                    >
+                      <ChevronLeft className="h-6 w-6" />
+                    </Button>
+
+                    {/* Dot Indicators */}
+                    <div className="flex items-center justify-center space-x-2">
+                      {recruits.slice(0, Math.min(10, recruits.length)).map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setCurrentRecruitIndex(idx)}
+                          className={cn(
+                            "h-2 rounded-full transition-all",
+                            idx === currentRecruitIndex
+                              ? "w-8 bg-navy-600"
+                              : "w-2 bg-gray-300"
+                          )}
+                        />
+                      ))}
+                      {recruits.length > 10 && (
+                        <span className="text-xs text-gray-500 ml-2">
+                          +{recruits.length - 10}
+                        </span>
+                      )}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="h-12 w-12 rounded-full border-gray-300 shadow-sm hover:shadow-md"
+                      onClick={() => {
+                        if (currentRecruitIndex < recruits.length - 1) {
+                          setCurrentRecruitIndex(prev => prev + 1);
+                        }
+                      }}
+                      disabled={currentRecruitIndex === recruits.length - 1}
+                    >
+                      <ChevronRight className="h-6 w-6" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Recruit Detail Sheet */}
+              {selectedRecruit && (
+                <RecruitDetailSheet
+                  recruit={selectedRecruit}
+                  isOpen={showRecruitDetail}
+                  onClose={() => {
+                    setShowRecruitDetail(false);
+                    setSelectedRecruit(null);
+                  }}
+                  onUpdate={(updatedRecruit) => {
+                    setRecruits(prev => 
+                      prev.map(r => r.id === updatedRecruit.id ? updatedRecruit : r)
+                    );
+                    setSelectedRecruit(updatedRecruit);
+                  }}
+                  onDelete={(deletedId) => {
+                    setRecruits(prev => prev.filter(r => r.id !== deletedId));
+                    setShowRecruitDetail(false);
+                    setSelectedRecruit(null);
+                    if (currentRecruitIndex >= recruits.length - 1) {
+                      setCurrentRecruitIndex(Math.max(0, recruits.length - 2));
+                    }
+                  }}
+                />
+              )}
+            </TabsContent>
+          )}
         </Tabs>
 
         {/* Task Modal */}

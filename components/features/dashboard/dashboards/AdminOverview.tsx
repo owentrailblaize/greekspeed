@@ -32,6 +32,8 @@ import { EXECUTIVE_ROLES } from '@/lib/permissions';
 import { UpcomingEventsCard } from './ui/UpcomingEventsCard';
 import { cn } from '@/lib/utils';
 import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
+import { AddRecruitForm } from '@/components/features/recruitment/AddRecruitForm';
+import type { Recruit } from '@/types/recruitment';
 
 interface AdminOverviewProps {
   initialFeed?: SocialFeedInitialData;
@@ -44,11 +46,13 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
   const [activeMobileTab, setActiveMobileTab] = useState('home');
   const [showQuickActionsModal, setShowQuickActionsModal] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
+  const [showAddRecruitModal, setShowAddRecruitModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false); // Add this line
   
   const router = useRouter();
   const searchParams = useSearchParams();
   const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
+  const { enabled: recruitmentCrmEnabled } = useFeatureFlag('recruitment_crm_enabled');
 
   // Add mobile detection useEffect (add this after line 46, before feedData)
   useEffect(() => {
@@ -70,8 +74,11 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
   // Handle tool query param from FAB menu
   useEffect(() => {
     const tool = searchParams.get('tool');
+    const tab = searchParams.get('tab');
+    
     if (tool === 'tasks') {
       setActiveMobileTab('tasks');
+      // If tab=recruits is in query, we'll handle it in MobileAdminTasksPage
     } else if (tool === 'operations') {
       setActiveMobileTab('operations');
     } else if (tool === 'events') {
@@ -126,6 +133,19 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
     }
   };
 
+  const handleAddRecruit = () => {
+    setShowAddRecruitModal(true);
+  };
+
+  const handleRecruitSuccess = (recruit: Recruit) => {
+    toast.success('Recruit added successfully!');
+    setShowAddRecruitModal(false);
+  };
+
+  const handleRecruitCancel = () => {
+    setShowAddRecruitModal(false);
+  };
+
   // Define quickActions array for the admin dashboard
   const quickActions: QuickAction[] = [
     // Only include Create Event if events management is enabled
@@ -166,6 +186,14 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
       },
       variant: 'outline' as const,
     },
+    // Add recruitment option conditionally based on flag
+    ...(recruitmentCrmEnabled ? [{
+      id: 'add-recruit',
+      label: 'Add Recruit',
+      icon: UserPlus,
+      onClick: handleAddRecruit,
+      variant: 'outline' as const,
+    }] : []),
   ];
 
   // Remove the manual tab configuration - MobileBottomNavigation will auto-detect role
@@ -364,6 +392,32 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                     <UserPlus className="h-4 w-4 mr-2" />
                     View Invitations
                   </Button>
+                  {recruitmentCrmEnabled && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                        onClick={() => {
+                          handleAddRecruit();
+                          setShowQuickActionsModal(false);
+                        }}
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add Recruit
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                        onClick={() => {
+                          router.push('/dashboard?tool=tasks&tab=recruits');
+                          setShowQuickActionsModal(false);
+                        }}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Manage Recruits
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -438,11 +492,80 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                     <UserPlus className="h-4 w-4 mr-2" />
                     View Invitations
                   </Button>
+                  {recruitmentCrmEnabled && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={() => {
+                          handleAddRecruit();
+                          setShowQuickActionsModal(false);
+                        }}
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add Recruit
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={() => {
+                          router.push('/dashboard?tool=tasks&tab=recruits');
+                          setShowQuickActionsModal(false);
+                        }}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Manage Recruits
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
           )}
         </div>
+      )}
+
+      {/* Add Recruit Modal - Mobile: Bottom drawer, Desktop: Centered */}
+      {showAddRecruitModal && recruitmentCrmEnabled && createPortal(
+        <div className={cn(
+          "fixed inset-0 z-[9999]",
+          isMobile 
+            ? "flex items-end justify-center p-0 sm:hidden"
+            : "hidden sm:flex items-center justify-center p-4"
+        )}>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+            onClick={handleRecruitCancel} 
+          />
+          
+          {/* Mobile: Bottom Drawer with Rounded Top */}
+          {isMobile && (
+            <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[90vh] rounded-t-2xl rounded-b-none overflow-hidden"> {/* Add overflow-hidden */}
+              <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                <AddRecruitForm 
+                  variant="modal"
+                  onSuccess={handleRecruitSuccess}
+                  onCancel={handleRecruitCancel}
+                />
+              </div>
+            </div>
+          )}
+          
+          {/* Desktop: Centered Modal */}
+          {!isMobile && (
+            <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+              <div className="overflow-y-auto max-h-[90vh] p-6">
+                <AddRecruitForm 
+                  variant="modal"
+                  onSuccess={handleRecruitSuccess}
+                  onCancel={handleRecruitCancel}
+                />
+              </div>
+            </div>
+          )}
+        </div>,
+        document.body
       )}
 
       {/* Event Creation Modal */}

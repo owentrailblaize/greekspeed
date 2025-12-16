@@ -16,7 +16,8 @@ import {
   Instagram,
   Phone,
   ArrowLeft,
-  ArrowUpRight
+  ArrowUpRight,
+  Trash2
 } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useAuth } from '@/lib/supabase/auth-context';
@@ -36,11 +37,11 @@ interface RecruitsResponse {
 }
 
 const STAGE_COLORS: Record<RecruitStage, string> = {
-  'New': 'bg-blue-100 text-blue-800 border-blue-200',
-  'Contacted': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  'Event Invite': 'bg-purple-100 text-purple-800 border-purple-200',
-  'Bid Given': 'bg-orange-100 text-orange-800 border-orange-200',
-  'Accepted': 'bg-green-100 text-green-800 border-green-200',
+  'New': 'bg-blue-50 text-blue-700 border-blue-200',
+  'Contacted': 'bg-slate-100 text-slate-700 border-slate-300',
+  'Event Invite': 'bg-navy-50 text-navy-700 border-navy-200',
+  'Bid Given': 'bg-gray-100 text-gray-700 border-gray-300',
+  'Accepted': 'bg-blue-100 text-blue-800 border-blue-300',
   'Declined': 'bg-red-100 text-red-800 border-red-200',
 };
 
@@ -147,6 +148,7 @@ export function RecruitmentView() {
     notes: string;
   } | null>(null);
   const [savingRecruitId, setSavingRecruitId] = useState<string | null>(null);
+  const [deletingRecruitId, setDeletingRecruitId] = useState<string | null>(null);
 
   // Check if we're on the standalone recruitment page
   const isStandalonePage = pathname === '/mychapter/recruitment';
@@ -333,6 +335,48 @@ export function RecruitmentView() {
     }
   };
 
+  // Handle delete
+  const handleDelete = async (recruitId: string) => {
+    if (!confirm('Are you sure you want to delete this recruit? This action cannot be undone.')) {
+      return;
+    }
+
+    setDeletingRecruitId(recruitId);
+    setError(null);
+
+    try {
+      const headers = getAuthHeaders();
+      const response = await fetch(`/api/recruitment/recruits/${recruitId}`, {
+        method: 'DELETE',
+        headers: {
+          ...headers,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to delete recruit' }));
+        throw new Error(errorData.error || 'Failed to delete recruit');
+      }
+
+      // Remove from local state
+      setRecruits(prevRecruits => prevRecruits.filter(r => r.id !== recruitId));
+      
+      // If we were editing this recruit, exit edit mode
+      if (editingRecruitId === recruitId) {
+        setEditingRecruitId(null);
+        setEditingData(null);
+      }
+    } catch (err: any) {
+      console.error('Error deleting recruit:', err);
+      setError(err.message || 'An unexpected error occurred.');
+    } finally {
+      setDeletingRecruitId(null);
+    }
+  };
+
+  // Filter out "Accepted" recruits from display
+  const visibleRecruits = recruits.filter(recruit => recruit.stage !== 'Accepted');
+
   return (
     <FeatureGuard flagName="recruitment_crm_enabled">
       <div className="space-y-6">
@@ -439,16 +483,16 @@ export function RecruitmentView() {
               {/* Table Header */}
               <div className="px-6 py-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {loading ? (
-                      <span className="inline-flex items-center">
-                        Recruits
-                        <Loader2 className="h-4 w-4 animate-spin text-gray-400 ml-2" />
-                      </span>
-                    ) : (
-                      `Recruits (${pagination.total})`
-                    )}
-                  </h3>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {loading ? (
+                        <span className="inline-flex items-center">
+                          Recruits
+                          <Loader2 className="h-4 w-4 animate-spin text-gray-400 ml-2" />
+                        </span>
+                      ) : (
+                        `Recruits (${visibleRecruits.length}${visibleRecruits.length !== pagination.total ? ` of ${pagination.total}` : ''})`
+                      )}
+                    </h3>
                   {/* Save/Cancel buttons - only show when editing */}
                   {editingRecruitId && (
                     <div className="flex items-center space-x-2">
@@ -501,7 +545,7 @@ export function RecruitmentView() {
                 )}
 
                 {/* Empty State */}
-                {!loading && !error && recruits.length === 0 && (
+                {!loading && !error && visibleRecruits.length === 0 && (
                   <div className="text-center py-12">
                     <UserPlus className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-600 text-lg font-medium mb-2">No recruits found</p>
@@ -514,8 +558,8 @@ export function RecruitmentView() {
                 )}
 
                 {/* Table */}
-                {!loading && !error && recruits.length > 0 && (
-                  <div className="overflow-x-auto -mx-6 px-6">
+                {!loading && !error && visibleRecruits.length > 0 && (
+                  <div className="overflow-x-auto -mx-6 px-6 rounded-lg">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -525,10 +569,11 @@ export function RecruitmentView() {
                           <TableHead>Instagram</TableHead>
                           <TableHead>Stage</TableHead>
                           <TableHead>Notes</TableHead>
+                          <TableHead className="w-12"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {recruits.map((recruit) => {
+                        {visibleRecruits.map((recruit) => {
                           const isEditing = editingRecruitId === recruit.id;
                           const isSaving = savingRecruitId === recruit.id;
                           const currentStage = isEditing && editingData 
@@ -625,6 +670,24 @@ export function RecruitmentView() {
                                     )}
                                   </div>
                                 )}
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(recruit.id);
+                                  }}
+                                  disabled={deletingRecruitId === recruit.id}
+                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-full"
+                                >
+                                  {deletingRecruitId === recruit.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="h-4 w-4" />
+                                  )}
+                                </Button>
                               </TableCell>
                             </TableRow>
                           );

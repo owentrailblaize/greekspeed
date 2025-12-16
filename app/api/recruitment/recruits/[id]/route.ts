@@ -271,3 +271,113 @@ export async function PATCH(
     }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    // Get recruit ID from route parameters
+    const { id: recruitId } = await params;
+
+    // Authenticate request (supports both Bearer token and cookies)
+    const auth = await authenticateRequest(request);
+    
+    if (!auth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const { user, supabase } = auth;
+
+    // Get user profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role, chapter_id, chapter_role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    }
+
+    // Ensure user has a chapter_id
+    if (!profile.chapter_id) {
+      return NextResponse.json({ error: 'User must belong to a chapter' }, { status: 400 });
+    }
+
+    // Feature flag check: Query chapters table for feature_flags
+    const { data: chapter, error: chapterError } = await supabase
+      .from('chapters')
+      .select('id, feature_flags')
+      .eq('id', profile.chapter_id)
+      .single();
+
+    if (chapterError || !chapter) {
+      return NextResponse.json({ error: 'Chapter not found' }, { status: 404 });
+    }
+
+    // Check if recruitment_crm_enabled feature flag is enabled
+    if (!isFeatureEnabled(chapter.feature_flags, 'recruitment_crm_enabled')) {
+      return NextResponse.json({ 
+        error: 'Recruitment CRM feature is not enabled for this chapter' 
+      }, { status: 403 });
+    }
+
+    // Permission check: Only allow exec roles (admin OR exec chapter_role)
+    const isAdmin = profile.role === 'admin';
+    const isExec = profile.chapter_role && EXECUTIVE_ROLES.includes(profile.chapter_role as any);
+    
+    if (!isAdmin && !isExec) {
+      return NextResponse.json({ 
+        error: 'Insufficient permissions. Only execs and admins can delete recruits.' 
+      }, { status: 403 });
+    }
+
+    // Verify recruit exists and belongs to user's chapter
+    const { data: existingRecruit, error: recruitError } = await supabase
+      .from('recruits')
+      .select('id, chapter_id')
+      .eq('id', recruitId)
+      .single();
+
+    if (recruitError || !existingRecruit) {
+      return NextResponse.json({ error: 'Recruit not found' }, { status: 404 });
+    }
+
+    // Verify chapter scoping - ensure recruit belongs to user's chapter
+    if (existingRecruit.chapter_id !== profile.chapter_id) {
+      return NextResponse.json({ 
+        error: 'Forbidden. This recruit belongs to a different chapter.' 
+      }, { status: 403 });
+    }
+
+    // Delete recruit from database with chapter scoping
+    const { error: deleteError } = await supabase
+      .from('recruits')
+      .delete()
+      .eq('id', recruitId)
+      .eq('chapter_id', profile.chapter_id); // Ensure chapter scoping
+
+    if (deleteError) {
+      console.error('Error deleting recruit:', deleteError);
+      return NextResponse.json({ 
+        error: 'Failed to delete recruit',
+        details: deleteError.message 
+      }, { status: 500 });
+    }
+
+    // Return success response
+    return NextResponse.json({ 
+      success: true,
+      message: 'Recruit deleted successfully' 
+    }, { status: 200 });
+
+  } catch (error) {
+    console.error('Error in DELETE /api/recruitment/recruits/[id]:', error);
+    
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
+  }
+}
