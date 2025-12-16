@@ -63,16 +63,60 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
         const updatePosition = () => {
           if (selectRef.current && dropdownRef.current) {
             const rect = selectRef.current.getBoundingClientRect();
+            const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
             
-            dropdownRef.current.style.top = `${rect.bottom + 4}px`;
-            dropdownRef.current.style.left = `${rect.left}px`;
+            // Calculate available space
+            const spaceBelow = viewportHeight - rect.bottom;
+            const spaceAbove = rect.top;
+            const maxDropdownHeight = 240; // max-h-60 = 240px
+            const minDropdownHeight = 100; // Minimum height to show at least a few items
+            const padding = 8; // Padding from viewport edges
+            
+            // Determine if we should open upward
+            // Open upward if there's more space above OR if space below is insufficient
+            const shouldOpenUpward = spaceBelow < maxDropdownHeight && spaceAbove > spaceBelow;
+            
+            let topPosition: number;
+            let maxHeight: number;
+            
+            if (shouldOpenUpward) {
+              // Position above the trigger
+              const availableHeight = spaceAbove - padding;
+              maxHeight = Math.min(maxDropdownHeight, Math.max(minDropdownHeight, availableHeight));
+              topPosition = rect.top - maxHeight - 4;
+              
+              // Ensure we don't go above the viewport
+              if (topPosition < padding) {
+                topPosition = padding;
+                maxHeight = Math.min(maxDropdownHeight, rect.top - padding - 4);
+              }
+            } else {
+              // Position below the trigger (default)
+              const availableHeight = spaceBelow - padding;
+              maxHeight = Math.min(maxDropdownHeight, Math.max(minDropdownHeight, availableHeight));
+              topPosition = rect.bottom + 4;
+              
+              // Ensure we don't go below the viewport
+              if (topPosition + maxHeight > viewportHeight - padding) {
+                maxHeight = viewportHeight - topPosition - padding;
+              }
+            }
+            
+            // Set position and size
+            dropdownRef.current.style.top = `${topPosition}px`;
+            dropdownRef.current.style.left = `${Math.max(padding, Math.min(rect.left, viewportWidth - rect.width - padding))}px`;
             dropdownRef.current.style.width = `${rect.width}px`;
             dropdownRef.current.style.minWidth = `${rect.width}px`;
+            dropdownRef.current.style.maxHeight = `${maxHeight}px`;
           }
         };
         
         // Initial position
-        updatePosition();
+        // Use requestAnimationFrame to ensure DOM is ready
+        requestAnimationFrame(() => {
+          updatePosition();
+        });
         
         // Update on scroll/resize
         window.addEventListener('scroll', updatePosition, true);
@@ -114,20 +158,22 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
         {mounted && isOpen && createPortal(
           <div
             ref={dropdownRef}
-            className="fixed z-[9999] max-h-60 overflow-auto rounded-md border border-gray-200 bg-white shadow-xl"
+            className="fixed z-[9999] overflow-y-auto rounded-md border border-gray-200 bg-white shadow-xl"
             style={{
               position: 'fixed',
             }}
           >
-            {React.Children.map(children, (child) => {
-              if (React.isValidElement(child) && child.type === SelectItem) {
-                return React.cloneElement(child as React.ReactElement<SelectItemProps>, {
-                  onSelect: handleSelect,
-                  isSelected: (child as React.ReactElement<SelectItemProps>).props.value === selectedValue,
-                });
-              }
-              return child;
-            })}
+            <div className="pt-1 pb-2">
+              {React.Children.map(children, (child) => {
+                if (React.isValidElement(child) && child.type === SelectItem) {
+                  return React.cloneElement(child as React.ReactElement<SelectItemProps>, {
+                    onSelect: handleSelect,
+                    isSelected: (child as React.ReactElement<SelectItemProps>).props.value === selectedValue,
+                  });
+                }
+                return child;
+              })}
+            </div>
           </div>,
           document.body
         )}

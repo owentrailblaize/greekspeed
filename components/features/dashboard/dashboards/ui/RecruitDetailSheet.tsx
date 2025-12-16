@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectItem } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { X, Phone, Instagram, Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/supabase/auth-context';
@@ -304,32 +304,21 @@ export function RecruitDetailSheet({
 
         {/* Footer Actions */}
         <div className="flex items-center justify-between p-4 border-t border-gray-200 space-x-2 flex-shrink-0">
-          {recruit.stage === 'Accepted' && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={loading}
-              className="flex-1"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </Button>
-          )}
           <Button
             variant="outline"
             size="sm"
-            onClick={onClose}
+            onClick={() => setShowDeleteConfirm(true)}
             disabled={loading}
-            className={recruit.stage === 'Accepted' ? 'flex-1' : 'flex-1'}
+            className="flex-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-400 rounded-full"
           >
-            Cancel
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete
           </Button>
           <Button
             size="sm"
             onClick={handleSave}
             disabled={loading || !hasChanges}
-            className="flex-1 bg-navy-600 hover:bg-navy-700"
+            className="flex-1 bg-navy-600 hover:bg-navy-700 rounded-full"
           >
             {loading ? (
               <>
@@ -356,16 +345,16 @@ export function RecruitDetailSheet({
                 variant="outline"
                 size="sm"
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1"
+                className="flex-1 rounded-full"
                 disabled={loading}
               >
                 Cancel
               </Button>
               <Button
-                variant="destructive"
+                variant="outline"
                 size="sm"
                 onClick={handleDelete}
-                className="flex-1"
+                className="flex-1 rounded-full border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-400"
                 disabled={loading}
               >
                 {loading ? (
