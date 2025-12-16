@@ -129,11 +129,6 @@ export function RecruitDetailSheet({
   };
 
   const handleDelete = async () => {
-    if (recruit.stage !== 'Accepted') {
-      toast.error('Only Accepted recruits can be deleted');
-      return;
-    }
-
     setLoading(true);
     try {
       const headers: HeadersInit = {};
