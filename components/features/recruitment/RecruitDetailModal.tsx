@@ -139,14 +139,14 @@ export function RecruitDetailModal({ recruit, isOpen, onClose, onUpdate }: Recru
       if (formData.name !== recruit.name) updatePayload.name = formData.name;
       if (formData.hometown !== recruit.hometown) updatePayload.hometown = formData.hometown;
       if (formData.phone_number !== (recruit.phone_number || '')) {
-        updatePayload.phone_number = formData.phone_number || null;
+        updatePayload.phone_number = formData.phone_number || undefined;
       }
       if (formData.instagram_handle !== (recruit.instagram_handle || '')) {
-        updatePayload.instagram_handle = formData.instagram_handle || null;
+        updatePayload.instagram_handle = formData.instagram_handle || undefined;
       }
       if (formData.stage !== recruit.stage) updatePayload.stage = formData.stage;
       if (formData.notes !== (recruit.notes || '')) {
-        updatePayload.notes = formData.notes || null;
+        updatePayload.notes = formData.notes || undefined;
       }
 
       // If no changes, just close edit mode
