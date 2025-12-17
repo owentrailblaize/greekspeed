@@ -20,16 +20,23 @@ import { createPortal } from 'react-dom';
 import { toast } from 'react-toastify';
 import { cn } from '@/lib/utils';
 import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
+import { useSearchParams } from 'next/navigation';
 
 export function MobileEventsVendorsPage() {
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
   const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
+  const searchParams = useSearchParams();
   
-  // Set initial tab based on flag - if events disabled, default to 'invitations'
-  const [activeTab, setActiveTab] = useState<'events' | 'vendors' | 'invitations'>(
-    eventsManagementEnabled ? 'events' : 'invitations'
-  );
+  // Read tab from URL parameter, default based on flag
+  const urlTab = searchParams.get('tab');
+  const defaultTab = eventsManagementEnabled ? 'events' : 'invitations';
+  const initialTab = (urlTab === 'events' || urlTab === 'vendors' || urlTab === 'invitations') 
+    ? urlTab 
+    : defaultTab;
+  
+  // Set initial tab based on flag and URL - if events disabled, default to 'invitations'
+  const [activeTab, setActiveTab] = useState<'events' | 'vendors' | 'invitations'>(initialTab);
   const [eventsPage, setEventsPage] = useState(1);
   const [vendorsPage, setVendorsPage] = useState(1);
   const eventsPerPage = 6;

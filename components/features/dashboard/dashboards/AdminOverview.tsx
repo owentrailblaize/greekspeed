@@ -84,8 +84,9 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
     } else if (tool === 'events') {
       setActiveMobileTab('events');
     } else if (tool === 'invites') {
-      // Handle invites when events flag is disabled
-      setActiveMobileTab('events'); // Still use 'events' tab but it will show invitations
+      // Navigate to events tab which renders MobileEventsVendorsPage
+      // The tab parameter will be handled by MobileEventsVendorsPage
+      setActiveMobileTab('events');
     } else if (tool === 'docs') {
       setActiveMobileTab('docs');
     } else if (tool === 'ops') {
@@ -175,14 +176,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
       label: 'View Invitations',
       icon: UserPlus,
       onClick: () => {
-        router.push('/dashboard/admin#invitations');
-        // Scroll to invitations section after navigation
-        setTimeout(() => {
-          const element = document.getElementById('invitations');
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }, 100);
+        router.push('/dashboard?tool=invites&tab=invitations');
       },
       variant: 'outline' as const,
     },
@@ -414,14 +408,8 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                     variant="outline" 
                     className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
                     onClick={() => {
-                      router.push('/dashboard/admin#invitations');
+                      router.push('/dashboard?tool=invites&tab=invitations');
                       setShowQuickActionsModal(false);
-                      setTimeout(() => {
-                        const element = document.getElementById('invitations');
-                        if (element) {
-                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                      }, 100);
                     }}
                   >
                     <UserPlus className="h-4 w-4 mr-2" />
@@ -514,14 +502,8 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                     variant="outline" 
                     className="w-full justify-start"
                     onClick={() => {
-                      router.push('/dashboard/admin#invitations');
+                      router.push('/dashboard?tool=invites&tab=invitations');
                       setShowQuickActionsModal(false);
-                      setTimeout(() => {
-                        const element = document.getElementById('invitations');
-                        if (element) {
-                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                      }, 100);
                     }}
                   >
                     <UserPlus className="h-4 w-4 mr-2" />
