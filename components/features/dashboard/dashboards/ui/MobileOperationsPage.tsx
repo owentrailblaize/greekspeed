@@ -20,6 +20,7 @@ import { toast } from 'react-toastify';
 import { supabase } from '@/lib/supabase/client';
 import { useEvents } from '@/lib/hooks/useEvents';
 import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
+import { useSearchParams } from 'next/navigation';
 
 interface User {
   id: string;
@@ -66,7 +67,23 @@ export function MobileOperationsPage() {
   const chapterId = profile?.chapter_id;
   const { enabled: financialToolsEnabled } = useFeatureFlag('financial_tools_enabled');
   const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
-  const [activeTab, setActiveTab] = useState<'members' | 'dues' | 'budget'>('members');
+  const searchParams = useSearchParams();
+  
+  // Read tab from URL parameter, default to 'members'
+  const urlTab = searchParams.get('tab');
+  const initialTab = (urlTab === 'members' || urlTab === 'dues' || urlTab === 'budget') 
+    ? urlTab 
+    : 'members';
+  
+  const [activeTab, setActiveTab] = useState<'members' | 'dues' | 'budget'>(initialTab);
+  
+  // Update tab when URL parameter changes
+  useEffect(() => {
+    const urlTab = searchParams.get('tab');
+    if (urlTab === 'members' || urlTab === 'dues' || urlTab === 'budget') {
+      setActiveTab(urlTab);
+    }
+  }, [searchParams]);
   
   // Members state
   const [allUsers, setAllUsers] = useState<User[]>([]);
