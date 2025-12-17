@@ -585,15 +585,54 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
         document.body
       )}
 
-      {/* Event Creation Modal */}
-      {showEventModal && eventsManagementEnabled && (
-        <EventForm
-          isOpen={showEventModal}
-          event={null}
-          onSubmit={handleCreateEvent}
-          onCancel={() => setShowEventModal(false)}
-          loading={false}
-        />
+      {/* Event Creation Modal - Mobile: Bottom drawer, Desktop: Centered */}
+      {showEventModal && eventsManagementEnabled && typeof window !== 'undefined' && createPortal(
+        <div className={cn(
+          "fixed inset-0 z-[10000]",
+          isMobile 
+            ? "flex items-end justify-center p-0"
+            : "flex items-center justify-center p-4"
+        )}>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+            onClick={() => {
+              setShowEventModal(false);
+            }}
+          />
+          
+          {/* Mobile: Bottom Drawer */}
+          {isMobile && (
+            <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[80vh] mt-[50vh] rounded-t-2xl rounded-b-none overflow-hidden">
+              <EventForm
+                event={null}
+                onSubmit={handleCreateEvent}
+                onCancel={() => {
+                  setShowEventModal(false);
+                }}
+                loading={false}
+                isOpen={true}
+                isMobile={true}
+              />
+            </div>
+          )}
+
+          {/* Desktop: Centered Modal */}
+          {!isMobile && (
+            <div className="relative max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <EventForm
+                event={null}
+                onSubmit={handleCreateEvent}
+                onCancel={() => {
+                  setShowEventModal(false);
+                }}
+                loading={false}
+                isOpen={true}
+              />
+            </div>
+          )}
+        </div>,
+        document.body
       )}
     </div>
   );
