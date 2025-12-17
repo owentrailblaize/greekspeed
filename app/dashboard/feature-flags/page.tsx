@@ -192,11 +192,6 @@ export default function FeatureFlagsPage() {
               <h1 className="text-3xl font-bold text-navy-900">Feature Flags Management</h1>
               <p className="text-gray-600">Enable or disable features for specific chapters</p>
             </div>
-            <div className="flex items-center space-x-3">
-              <Badge variant="secondary" className="bg-purple-100 text-purple-800">
-                Developer Access
-              </Badge>
-            </div>
           </div>
         </div>
       </div>
