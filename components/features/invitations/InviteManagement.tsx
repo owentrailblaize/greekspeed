@@ -208,6 +208,206 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
 
   const filteredInvitations = invitations;
 
+  const renderInvitationsContent = () => {
+    if (filteredInvitations.length === 0) {
+      return (
+        <div className="text-center py-8">
+          <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No invitations yet
+          </h3>
+          <p className="text-gray-500 mb-4">
+            {invitations.length === 0 
+              ? 'Create your first invitation to start inviting new members to your chapter.'
+              : 'No invitations found. Create a new invitation to get started.'
+            }
+          </p>
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create Invitation
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        {filteredInvitations.map((invitation) => (
+          <motion.div
+            key={invitation.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+          >
+            {/* Desktop Layout */}
+            <div className="hidden md:block">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <h4 className="font-medium text-gray-900">
+                      Invitation #{invitation.token.slice(0, 8)}...
+                    </h4>
+                    {getInvitationTypeBadge(invitation)}
+                    {getStatusBadge(invitation)}
+                  </div>
+                  
+                  <div className="flex items-center space-x-6 text-sm text-gray-600 mb-2">
+                    <div className="flex items-center space-x-1">
+                      <Users className="h-4 w-4" />
+                      <span>{invitation.usage.length} uses</span>
+                      {invitation.max_uses && (
+                        <span>of {invitation.max_uses} max</span>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center space-x-1">
+                      <Shield className="h-4 w-4" />
+                      <span>Auto-approve</span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>
+                        {invitation.expires_at 
+                          ? `Expires ${formatDate(invitation.expires_at)}`
+                          : 'No expiration'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between text-sm text-green-600 mb-2">
+                    <div>
+                      <span className="font-medium">Open invitation:</span> Accepts any email domain
+                    </div>
+                    {invitation.usage.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowUsageModal(invitation)}
+                        className="text-blue-600 hover:text-blue-700 p-0 h-auto text-sm"
+                      >
+                        <Table className="h-4 w-4 mr-1" />
+                        View all {invitation.usage.length} usage records
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-1 ml-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => invitation.invitation_url && handleCopyLink(invitation.invitation_url)}
+                    title="Copy invitation link"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditingInvitation(invitation)}
+                    title="Edit invitation"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteInvitation(invitation.id)}
+                    title="Delete invitation"
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Layout */}
+            <div className="md:hidden">
+              {/* Header with invitation ID and status */}
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-medium text-gray-900 text-sm">
+                  Invitation #{invitation.token.slice(0, 8)}...
+                </h4>
+                <div className="flex items-center space-x-1">
+                  {getStatusBadge(invitation)}
+                </div>
+              </div>
+              
+              {/* Stats row - aligned with invitation ID */}
+              <div className="flex items-center space-x-4 text-xs text-gray-600 mb-2">
+                <div className="flex items-center space-x-1">
+                  <Users className="h-3 w-3" />
+                  <span>{invitation.usage.length} uses</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Calendar className="h-3 w-3" />
+                  <span>
+                    {invitation.expires_at 
+                      ? formatDate(invitation.expires_at).split(',')[0] // Just the date part
+                      : 'No expiration'
+                    }
+                  </span>
+                </div>
+              </div>
+              
+              {/* Usage records button - aligned with invitation ID */}
+              {invitation.usage.length > 0 && (
+                <div className="mb-3 flex justify-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowUsageModal(invitation)}
+                    className="text-blue-600 hover:text-blue-700 p-0 h-auto text-xs"
+                  >
+                    <Table className="h-3 w-3 mr-1" />
+                    View all {invitation.usage.length} usage records
+                  </Button>
+                </div>
+              )}
+              
+              {/* Action buttons - icons only */}
+              <div className="flex justify-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => invitation.invitation_url && handleCopyLink(invitation.invitation_url)}
+                  title="Copy invitation link"
+                  className="p-2"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditingInvitation(invitation)}
+                  title="Edit invitation"
+                  className="p-2"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDeleteInvitation(invitation.id)}
+                  title="Delete invitation"
+                  className="text-red-600 hover:text-red-700 p-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <Card className={`${className} bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20`}>
@@ -226,10 +426,11 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
 
   return (
     <div className={className}>
-      <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+      {/* Desktop: Use Card wrapper */}
+      <Card className="hidden md:block bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
         <CardHeader className="pb-4 border-b border-navy-100/30">
           {/* Desktop Layout */}
-          <div className="hidden md:flex items-center justify-between">
+          <div className="flex items-center justify-between">
             <CardTitle className="flex items-center space-x-2 text-navy-900">
               <Users className="h-5 w-5 text-purple-600" />
               <span>Manage Invites</span>
@@ -239,7 +440,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
                 variant="outline"
                 size="sm"
                 onClick={() => setShowSettings(true)}
-                className="h-9"
+                className="h-9 rounded-full"
               >
                 <Shield className="h-4 w-4 mr-2" />
                 Settings
@@ -254,234 +455,48 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
               </Button>
             </div>
           </div>
-          
-          {/* Mobile Layout */}
-          <div className="md:hidden">
-            <div className="flex items-center space-x-3 mb-3">
-              <Users className="h-6 w-6 text-purple-600 flex-shrink-0" />
-              <CardTitle className="text-lg whitespace-nowrap overflow-hidden text-ellipsis text-navy-900">
-                Invitation Management
-              </CardTitle>
-            </div>
-            <div className="flex space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSettings(true)}
-                className="h-9 flex-1"
-              >
-                <Shield className="h-4 w-4 mr-2" />
-                Settings
-              </Button>
-              <Button
-                onClick={() => setShowCreateModal(true)}
-                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-9 flex-1"
-                size="sm"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                <span className="md:hidden">Invite</span>
-                <span className="hidden md:inline">Create Invitation</span>
-              </Button>
-            </div>
-          </div>
         </CardHeader>
         <CardContent className="pt-2">
-          {filteredInvitations.length === 0 ? (
-            <div className="text-center py-8">
-              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No invitations yet
-              </h3>
-              <p className="text-gray-500 mb-4">
-                {invitations.length === 0 
-                  ? 'Create your first invitation to start inviting new members to your chapter.'
-                  : 'No invitations found. Create a new invitation to get started.'
-                }
-              </p>
-              <Button
-                onClick={() => setShowCreateModal(true)}
-                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Invitation
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {filteredInvitations.map((invitation) => (
-                <motion.div
-                  key={invitation.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="border rounded-lg p-4 hover:shadow-md transition-shadow"
-                >
-                  {/* Desktop Layout */}
-                  <div className="hidden md:block">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-3">
-                          <h4 className="font-medium text-gray-900">
-                            Invitation #{invitation.token.slice(0, 8)}...
-                          </h4>
-                          {getInvitationTypeBadge(invitation)}
-                          {getStatusBadge(invitation)}
-                        </div>
-                        
-                        <div className="flex items-center space-x-6 text-sm text-gray-600 mb-2">
-                          <div className="flex items-center space-x-1">
-                            <Users className="h-4 w-4" />
-                            <span>{invitation.usage.length} uses</span>
-                            {invitation.max_uses && (
-                              <span>of {invitation.max_uses} max</span>
-                            )}
-                          </div>
-                          
-                          <div className="flex items-center space-x-1">
-                            <Shield className="h-4 w-4" />
-                            <span>Auto-approve</span>
-                          </div>
-                          
-                          <div className="flex items-center space-x-1">
-                            <Calendar className="h-4 w-4" />
-                            <span>
-                              {invitation.expires_at 
-                                ? `Expires ${formatDate(invitation.expires_at)}`
-                                : 'No expiration'
-                              }
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between text-sm text-green-600 mb-2">
-                          <div>
-                            <span className="font-medium">Open invitation:</span> Accepts any email domain
-                          </div>
-                          {invitation.usage.length > 0 && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setShowUsageModal(invitation)}
-                              className="text-blue-600 hover:text-blue-700 p-0 h-auto text-sm"
-                            >
-                              <Table className="h-4 w-4 mr-1" />
-                              View all {invitation.usage.length} usage records
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-1 ml-4">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => invitation.invitation_url && handleCopyLink(invitation.invitation_url)}
-                          title="Copy invitation link"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditingInvitation(invitation)}
-                          title="Edit invitation"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteInvitation(invitation.id)}
-                          title="Delete invitation"
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Mobile Layout */}
-                  <div className="md:hidden">
-                    {/* Header with invitation ID and status */}
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-gray-900 text-sm">
-                        Invitation #{invitation.token.slice(0, 8)}...
-                      </h4>
-                      <div className="flex items-center space-x-1">
-                        {getInvitationTypeBadge(invitation)}
-                        {getStatusBadge(invitation)}
-                      </div>
-                    </div>
-                    
-                    {/* Stats row - aligned with invitation ID */}
-                    <div className="flex items-center space-x-4 text-xs text-gray-600 mb-2">
-                      <div className="flex items-center space-x-1">
-                        <Users className="h-3 w-3" />
-                        <span>{invitation.usage.length} uses</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>
-                          {invitation.expires_at 
-                            ? formatDate(invitation.expires_at).split(',')[0] // Just the date part
-                            : 'No expiration'
-                          }
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {/* Usage records button - aligned with invitation ID */}
-                    {invitation.usage.length > 0 && (
-                      <div className="mb-3 flex justify-center">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowUsageModal(invitation)}
-                          className="text-blue-600 hover:text-blue-700 p-0 h-auto text-xs"
-                        >
-                          <Table className="h-3 w-3 mr-1" />
-                          View all {invitation.usage.length} usage records
-                        </Button>
-                      </div>
-                    )}
-                    
-                    {/* Action buttons - icons only */}
-                    <div className="flex justify-center space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => invitation.invitation_url && handleCopyLink(invitation.invitation_url)}
-                        title="Copy invitation link"
-                        className="p-2"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEditingInvitation(invitation)}
-                        title="Edit invitation"
-                        className="p-2"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteInvitation(invitation.id)}
-                        title="Delete invitation"
-                        className="text-red-600 hover:text-red-700 p-2"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
+          {renderInvitationsContent()}
         </CardContent>
       </Card>
+
+      {/* Mobile: No Card wrapper - full width */}
+      <div className="md:hidden">
+        {/* Mobile Header */}
+        <div className="px-4 pb-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3 mb-3">
+            <Users className="h-6 w-6 text-blue-600 flex-shrink-0" />
+            <h2 className="text-lg font-semibold text-navy-900 whitespace-nowrap overflow-hidden text-ellipsis">
+              Invitation Management
+            </h2>
+          </div>
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSettings(true)}
+              className="h-9 flex-1 rounded-full bg-gray-100/80 backdrop-blur-md border border-gray-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-gray-700 hover:text-gray-900 transition-all duration-300"
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              Settings
+            </Button>
+            <Button
+              onClick={() => setShowCreateModal(true)}
+              className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-9 flex-1"
+              size="sm"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Invite
+            </Button>
+          </div>
+        </div>
+
+        {/* Mobile Content */}
+        <div className="pt-4 px-4">
+          {renderInvitationsContent()}
+        </div>
+      </div>
 
       {/* Usage Details Modal */}
       {showUsageModal && (
