@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getStateNameByCode } from '@/lib/usStates'
+import { normalizeIndustry } from '@/lib/industryUtils';
 
 // Add this helper function at the top of the file
 const getChapterId = async (supabase: any, chapterIdentifier: string): Promise<string | null> => {
@@ -382,7 +383,13 @@ export async function GET(request: NextRequest) {
     }
     
     if (industry) {
-      query = query.eq('industry', industry)
+      const normalizedFilterIndustry = normalizeIndustry(industry);
+
+      if (normalizedFilterIndustry) {
+        query = query.ilike('industry', `%${normalizedFilterIndustry}%`);
+      } else {
+        query = query.ilike('industry', `%${industry}%`);
+      }
     }
     
     // Handle chapter filtering (same logic as main branch)
@@ -426,8 +433,14 @@ export async function GET(request: NextRequest) {
         }
         
         if (industry) {
-          chapterNameQuery = chapterNameQuery.eq('industry', industry);
-          chapterIdQuery = chapterIdQuery.eq('industry', industry);
+          const normalizedFilterIndustry = normalizeIndustry(industry);
+          if (normalizedFilterIndustry) {
+            chapterNameQuery = chapterNameQuery.ilike('industry', `%${normalizedFilterIndustry}%`);
+            chapterIdQuery = chapterIdQuery.ilike('industry', `%${normalizedFilterIndustry}%`);
+          } else {
+            chapterNameQuery = chapterNameQuery.ilike('industry', `%${industry}%`);
+            chapterIdQuery = chapterIdQuery.ilike('industry', `%${industry}%`);
+          }
         }
         
         if (location) {
@@ -697,8 +710,14 @@ export async function GET(request: NextRequest) {
         }
         
         if (industry) {
-          chapterNameQuery = chapterNameQuery.eq('industry', industry);
-          chapterIdQuery = chapterIdQuery.eq('industry', industry);
+          const normalizedFilterIndustry = normalizeIndustry(industry);
+          if (normalizedFilterIndustry) {
+            chapterNameQuery = chapterNameQuery.ilike('industry', `%${normalizedFilterIndustry}%`);
+            chapterIdQuery = chapterIdQuery.ilike('industry', `%${normalizedFilterIndustry}%`);
+          } else {
+            chapterNameQuery = chapterNameQuery.ilike('industry', `%${industry}%`);
+            chapterIdQuery = chapterIdQuery.ilike('industry', `%${industry}%`);
+          }
         }
         
         if (location) {

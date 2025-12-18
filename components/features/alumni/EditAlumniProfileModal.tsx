@@ -14,6 +14,8 @@ import { BannerService } from '@/lib/services/bannerService';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/lib/supabase/client';
 import { trackActivity, ActivityTypes } from '@/lib/utils/activityUtils';
+import { industries } from '@/lib/alumniConstants';
+import { Select, SelectItem } from '@/components/ui/select';
 
 interface EditAlumniProfileModalProps {
   isOpen: boolean;
@@ -667,13 +669,17 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="industry">Industry</Label>
-                    <Input
-                      id="industry"
-                      value={formData.industry}
-                      onChange={(e) => handleInputChange('industry', e.target.value)}
-                      className="mt-1"
-                      placeholder="Technology, Finance, Healthcare..."
-                    />
+                    <Select
+                      value={formData.industry || ''}
+                      onValueChange={(value) => handleInputChange('industry', value)}
+                    >
+                      <SelectItem value="">Select Industry</SelectItem>
+                      {industries.map((industry) => (
+                        <SelectItem key={industry} value={industry}>
+                          {industry}
+                        </SelectItem>
+                      ))}
+                    </Select>
                   </div>
                   <div>
                     <Label htmlFor="company">Company</Label>

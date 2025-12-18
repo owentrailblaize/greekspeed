@@ -17,6 +17,7 @@ import { trackActivity, ActivityTypes } from '@/lib/utils/activityUtils';
 import { useFormPersistence } from '@/lib/hooks/useFormPersistence';
 import { useModal } from '@/lib/contexts/ModalContext';
 import Link from 'next/link';
+import { industries } from '@/lib/alumniConstants';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -717,13 +718,22 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="industry">Industry</Label>
-                        <Input
-                          id="industry"
-                          value={formData.industry}
-                          onChange={(e) => handleInputChange('industry', e.target.value)}
-                          className="mt-1"
-                          placeholder="Technology, Finance, Healthcare..."
-                        />
+                        <Select
+                          value={formData.industry || ''}
+                          onValueChange={(value) => handleInputChange('industry', value)}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Select Industry</SelectItem>
+                            {industries.map((industry) => (
+                              <SelectItem key={industry} value={industry}>
+                                {industry}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label htmlFor="company">Company</Label>
