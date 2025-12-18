@@ -500,7 +500,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
               <CardContent className={`relative ${isMobile ? 'h-32' : 'h-64'} p-0 overflow-hidden`}>
                 {/* Banner Section */}
                 <div 
-                  className="absolute inset-0 bg-gradient-to-r from-navy-600 via-blue-600 to-navy-700 flex items-center justify-center text-white cursor-pointer group rounded-lg"
+                  className="absolute inset-0 bg-gradient-to-r from-navy-600 via-blue-400 to-blue-100 flex items-center justify-center text-white cursor-pointer group rounded-lg"
                   onClick={() => document.getElementById('banner-upload')?.click()}
                 >
                   {bannerPreview || profile?.banner_url ? (

@@ -371,9 +371,9 @@ export default function ProfilePage() {
         )}
 
         {/* Banner Header Section */}
-        <div className="relative mb-8 rounded-xl overflow-hidden">
+        <div className="relative mb-8 rounded-xl overflow-hidden shadow-xl sm:shadow-slate-300/60">
           {/* Banner Image - Placeholder for now */}
-          <div className="w-full h-48 bg-gradient-to-r from-navy-600 via-blue-600 to-navy-700 flex items-center justify-center overflow-hidden">
+          <div className="w-full h-48 bg-gradient-to-r from-navy-600 via-blue-400 to-blue-100 flex items-center justify-center overflow-hidden">
             {profile?.banner_url ? (
               <img 
                 src={profile.banner_url} 

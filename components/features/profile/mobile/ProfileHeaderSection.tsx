@@ -35,7 +35,7 @@ export function ProfileHeaderSection({
   return (
     <div className="bg-white border-b border-gray-200">
       {/* Banner Section */}
-      <div className="relative w-full h-32 bg-gradient-to-r from-navy-600 via-blue-600 to-navy-700 overflow-hidden">
+      <div className="relative w-full h-32 bg-gradient-to-r from-navy-600 via-blue-400 to-blue-100 overflow-hidden">
         {profile.banner_url ? (
           <img
             src={profile.banner_url}

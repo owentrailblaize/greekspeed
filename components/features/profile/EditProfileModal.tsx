@@ -531,7 +531,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
             <div className={`relative ${isMobile ? 'h-32' : 'h-64'} overflow-hidden rounded-lg`}>
               {/* Banner Section - Make it clickable */}
               <div 
-                className="absolute inset-0 bg-gradient-to-r from-navy-600 via-blue-600 to-navy-700 flex items-center justify-center text-white cursor-pointer group rounded-lg"
+                className="absolute inset-0 bg-gradient-to-r from-navy-600 via-blue-400 to-blue-100 flex items-center justify-center text-white cursor-pointer group rounded-lg"
                 onClick={() => document.getElementById('banner-upload')?.click()}
               >
                   {/* Show actual banner if it exists */}
