@@ -20,6 +20,38 @@ const getChapterId = async (supabase: any, chapterIdentifier: string): Promise<s
 };
 
 /**
+ * Helper function to validate field values (same as client-side)
+ * Returns false for empty strings and invalid placeholder values
+ */
+function isValidField(value: any): boolean {
+  if (!value) return false;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed !== "" && 
+           trimmed !== "Not specified" && 
+           trimmed !== "Not Specified" && 
+           trimmed !== "Not provided" && 
+           trimmed !== "Not Provided" && 
+           trimmed !== "N/A" && 
+           trimmed !== "n/a" && 
+           trimmed !== "Unknown" &&
+           trimmed !== "unknown" && 
+           trimmed !== "null" &&
+           trimmed !== "undefined" &&
+           trimmed !== "Not set" && 
+           trimmed !== "Not Set" &&
+           trimmed !== "TBD" && 
+           trimmed !== "tbd" &&
+           trimmed !== "TBA" && 
+           trimmed !== "tba";
+  }
+  if (typeof value === 'number') {
+    return !isNaN(value) && value > 0;
+  }
+  return true;
+}
+
+/**
  * Calculate a simple completeness score for sorting (server-side)
  * Higher score = more complete profile
  */
@@ -27,23 +59,23 @@ function calculateCompletenessScore(alumni: any): number {
   let score = 0;
   
   // Basic info (30 points)
-  if (alumni.fullName) score += 10;
-  if (alumni.chapter) score += 8;
-  if (alumni.graduationYear) score += 7;
-  if (alumni.avatar) score += 5;
+  if (isValidField(alumni.fullName)) score += 10;
+  if (isValidField(alumni.chapter)) score += 8;
+  if (isValidField(alumni.graduationYear)) score += 7;
+  if (isValidField(alumni.avatar)) score += 5;
   
   // Professional info (30 points)
-  if (alumni.jobTitle) score += 12;
-  if (alumni.company) score += 10;
-  if (alumni.industry) score += 8;
+  if (isValidField(alumni.jobTitle)) score += 12;
+  if (isValidField(alumni.company)) score += 10;
+  if (isValidField(alumni.industry)) score += 8;
   
   // Contact info (20 points)
-  if (alumni.email) score += 10;
-  if (alumni.phone) score += 6;
-  if (alumni.location) score += 4;
+  if (isValidField(alumni.email)) score += 10;
+  if (isValidField(alumni.phone)) score += 6;
+  if (isValidField(alumni.location)) score += 4;
   
   // Social info (15 points)
-  if (alumni.description && alumni.description !== `Experienced professional in ${alumni.industry}.`) score += 8;
+  if (isValidField(alumni.description) && alumni.description !== `Experienced professional in ${alumni.industry}.`) score += 8;
   if (alumni.mutualConnectionsCount > 0) score += 4;
   if (alumni.tags && alumni.tags.length > 0) score += 3;
   
@@ -419,14 +451,8 @@ export async function GET(request: NextRequest) {
           chapterIdQuery = chapterIdQuery.eq('is_actively_hiring', true);
         }
         
-        // Apply pagination to both queries
-        const from = (page - 1) * limit;
-        const to = from + limit - 1;
-        
-        chapterNameQuery = chapterNameQuery.range(from, to).order('created_at', { ascending: false });
-        chapterIdQuery = chapterIdQuery.range(from, to).order('created_at', { ascending: false });
-        
-        // Execute both queries and combine results
+        // REMOVED: Pagination from database queries - we'll fetch ALL records and paginate after sorting
+        // Execute both queries and combine results (fetch ALL matching records)
         const [chapterNameResult, chapterIdResult] = await Promise.all([
           chapterNameQuery,
           chapterIdQuery
@@ -539,49 +565,33 @@ export async function GET(request: NextRequest) {
           })
         }
 
-        // 🔥 OPTIMIZED: Server-side sorting with activity priority + completeness score
+        // Replace the sorting logic with completeness-first sorting (ignore activity)
         filteredAlumni.sort((a, b) => {
-          const aActive = a.lastActiveAt ? new Date(a.lastActiveAt) : null
-          const bActive = b.lastActiveAt ? new Date(b.lastActiveAt) : null
-          const now = new Date()
-          
-          // Define activity thresholds
-          const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
-          const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-          
-          // Helper function to get activity priority (lower number = higher priority)
-          const getActivityPriority = (lastActive: Date | null) => {
-            if (!lastActive) return 4 // No activity - lowest priority
-            if (lastActive >= oneHourAgo) return 1 // Active within 1 hour - highest priority
-            if (lastActive >= oneDayAgo) return 2 // Active within 24 hours - medium priority
-            return 3 // Active but older than 24 hours - low priority
-          }
-          
-          const aPriority = getActivityPriority(aActive)
-          const bPriority = getActivityPriority(bActive)
-          
-          // 1. Primary sort by activity priority
-          if (aPriority !== bPriority) {
-            return aPriority - bPriority
-          }
-          
-          // 2. Secondary sort by completeness score (within same activity level)
+          // 1. PRIMARY: Sort by completeness score (higher = better)
           const aCompleteness = calculateCompletenessScore(a)
           const bCompleteness = calculateCompletenessScore(b)
+          
           if (aCompleteness !== bCompleteness) {
             return bCompleteness - aCompleteness // Higher completeness first
           }
           
-          // 3. Tertiary sort by most recent activity time
-          if (aActive && bActive) {
-            return bActive.getTime() - aActive.getTime()
-          }
+          // 2. SECONDARY: Completeness tier (avatar > job/company > connections > other info > no info)
+          const aHasAvatar = !!(a.avatar)
+          const bHasAvatar = !!(b.avatar)
+          if (aHasAvatar && !bHasAvatar) return -1
+          if (!aHasAvatar && bHasAvatar) return 1
           
-          // 4. If only one has activity, prioritize it
-          if (aActive && !bActive) return -1
-          if (!aActive && bActive) return 1
+          const aHasProfessional = !!(isValidField(a.jobTitle) || isValidField(a.company))
+          const bHasProfessional = !!(isValidField(b.jobTitle) || isValidField(b.company))
+          if (aHasProfessional && !bHasProfessional) return -1
+          if (!aHasProfessional && bHasProfessional) return 1
           
-          // 5. Fallback to name
+          const aHasConnections = (a.mutualConnectionsCount || 0) > 0
+          const bHasConnections = (b.mutualConnectionsCount || 0) > 0
+          if (aHasConnections && !bHasConnections) return -1
+          if (!aHasConnections && bHasConnections) return 1
+          
+          // 3. TERTIARY: Sort by name (alphabetical)
           return a.fullName.localeCompare(b.fullName)
         })
 
@@ -600,19 +610,24 @@ export async function GET(request: NextRequest) {
           })
         }
 
-        const totalPages = Math.ceil(totalCount / limit);
+        // Apply pagination AFTER sorting
+        const from = (page - 1) * limit;
+        const to = from + limit;
+        const paginatedAlumni = filteredAlumni.slice(from, to);
+
+        const totalPages = Math.ceil(filteredAlumni.length / limit);
 
         return NextResponse.json({
-          alumni: filteredAlumni,
+          alumni: paginatedAlumni,
           pagination: {
             page,
             limit,
-            total: totalCount,
+            total: filteredAlumni.length,
             totalPages,
             hasNextPage: page < totalPages,
             hasPrevPage: page > 1
           },
-          message: `Retrieved ${filteredAlumni.length} alumni records (page ${page} of ${totalPages})`
+          message: `Retrieved ${paginatedAlumni.length} alumni records (page ${page} of ${totalPages})`
         });
       } else {
         query = query.eq('chapter', userChapter);
@@ -694,13 +709,7 @@ export async function GET(request: NextRequest) {
           chapterIdQuery = chapterIdQuery.eq('is_actively_hiring', true);
         }
         
-        // Apply pagination to both queries
-        const from = (page - 1) * limit;
-        const to = from + limit - 1;
-        
-        chapterNameQuery = chapterNameQuery.range(from, to).order('created_at', { ascending: false });
-        chapterIdQuery = chapterIdQuery.range(from, to).order('created_at', { ascending: false });
-        
+        // REMOVED: Pagination from database queries - we'll fetch ALL records and paginate after sorting
         const [chapterNameResult, chapterIdResult] = await Promise.all([
           chapterNameQuery,
           chapterIdQuery
@@ -784,45 +793,33 @@ export async function GET(request: NextRequest) {
           })
         }
 
-        // 🔥 OPTIMIZED: Server-side sorting with activity priority + completeness score
+        // Replace the sorting logic with completeness-first sorting (ignore activity)
         filteredAlumni.sort((a, b) => {
-          const aActive = a.lastActiveAt ? new Date(a.lastActiveAt) : null
-          const bActive = b.lastActiveAt ? new Date(b.lastActiveAt) : null
-          const now = new Date()
-          
-          const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
-          const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-          
-          const getActivityPriority = (lastActive: Date | null) => {
-            if (!lastActive) return 4
-            if (lastActive >= oneHourAgo) return 1
-            if (lastActive >= oneDayAgo) return 2
-            return 3
-          }
-          
-          const aPriority = getActivityPriority(aActive)
-          const bPriority = getActivityPriority(bActive)
-          
-          // 1. Primary sort by activity priority
-          if (aPriority !== bPriority) {
-            return aPriority - bPriority
-          }
-          
-          // 2. Secondary sort by completeness score
+          // 1. PRIMARY: Sort by completeness score (higher = better)
           const aCompleteness = calculateCompletenessScore(a)
           const bCompleteness = calculateCompletenessScore(b)
+          
           if (aCompleteness !== bCompleteness) {
-            return bCompleteness - aCompleteness
+            return bCompleteness - aCompleteness // Higher completeness first
           }
           
-          // 3. Tertiary sort by most recent activity
-          if (aActive && bActive) {
-            return bActive.getTime() - aActive.getTime()
-          }
+          // 2. SECONDARY: Completeness tier (avatar > job/company > connections > other info > no info)
+          const aHasAvatar = !!(a.avatar)
+          const bHasAvatar = !!(b.avatar)
+          if (aHasAvatar && !bHasAvatar) return -1
+          if (!aHasAvatar && bHasAvatar) return 1
           
-          if (aActive && !bActive) return -1
-          if (!aActive && bActive) return 1
+          const aHasProfessional = !!(a.jobTitle || a.company)
+          const bHasProfessional = !!(b.jobTitle || b.company)
+          if (aHasProfessional && !bHasProfessional) return -1
+          if (!aHasProfessional && bHasProfessional) return 1
           
+          const aHasConnections = (a.mutualConnectionsCount || 0) > 0
+          const bHasConnections = (b.mutualConnectionsCount || 0) > 0
+          if (aHasConnections && !bHasConnections) return -1
+          if (!aHasConnections && bHasConnections) return 1
+          
+          // 3. TERTIARY: Sort by name (alphabetical)
           return a.fullName.localeCompare(b.fullName)
         })
 
@@ -841,19 +838,24 @@ export async function GET(request: NextRequest) {
           })
         }
 
-        const totalPages = Math.ceil(totalCount / limit);
+        // Apply pagination AFTER sorting
+        const from = (page - 1) * limit;
+        const to = from + limit;
+        const paginatedAlumni = filteredAlumni.slice(from, to);
+
+        const totalPages = Math.ceil(filteredAlumni.length / limit);
 
         return NextResponse.json({
-          alumni: filteredAlumni,
+          alumni: paginatedAlumni,
           pagination: {
             page,
             limit,
-            total: totalCount,
+            total: filteredAlumni.length,
             totalPages,
             hasNextPage: page < totalPages,
             hasPrevPage: page > 1
           },
-          message: `Retrieved ${filteredAlumni.length} alumni records (page ${page} of ${totalPages})`
+          message: `Retrieved ${paginatedAlumni.length} alumni records (page ${page} of ${totalPages})`
         });
       } else {
         query = query.eq('chapter', chapter);
@@ -886,12 +888,8 @@ export async function GET(request: NextRequest) {
       query = query.eq('is_actively_hiring', true)
     }
 
-    // Apply pagination
-    const from = (page - 1) * limit
-    const to = from + limit - 1
-    
-    query = query.range(from, to).order('created_at', { ascending: false })
-
+    // REMOVED: Pagination from database query - we'll fetch ALL records and paginate after sorting
+    // Fetch ALL matching records without pagination or ordering
     const { data: alumni, error, count } = await query
 
     if (error) {
@@ -996,49 +994,33 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // 🔥 OPTIMIZED: Server-side sorting with activity priority + completeness score
+    // Replace the sorting logic with completeness-first sorting (ignore activity)
     filteredAlumni.sort((a, b) => {
-      const aActive = a.lastActiveAt ? new Date(a.lastActiveAt) : null
-      const bActive = b.lastActiveAt ? new Date(b.lastActiveAt) : null
-      const now = new Date()
-      
-      // Define activity thresholds
-      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
-      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-      
-      // Helper function to get activity priority (lower number = higher priority)
-      const getActivityPriority = (lastActive: Date | null) => {
-        if (!lastActive) return 4 // No activity - lowest priority
-        if (lastActive >= oneHourAgo) return 1 // Active within 1 hour - highest priority
-        if (lastActive >= oneDayAgo) return 2 // Active within 24 hours - medium priority
-        return 3 // Active but older than 24 hours - low priority
-      }
-      
-      const aPriority = getActivityPriority(aActive)
-      const bPriority = getActivityPriority(bActive)
-      
-      // 1. Primary sort by activity priority
-      if (aPriority !== bPriority) {
-        return aPriority - bPriority
-      }
-      
-      // 2. Secondary sort by completeness score
+      // 1. PRIMARY: Sort by completeness score (higher = better)
       const aCompleteness = calculateCompletenessScore(a)
       const bCompleteness = calculateCompletenessScore(b)
+      
       if (aCompleteness !== bCompleteness) {
-        return bCompleteness - aCompleteness
+        return bCompleteness - aCompleteness // Higher completeness first
       }
       
-      // 3. Tertiary sort by most recent activity
-      if (aActive && bActive) {
-        return bActive.getTime() - aActive.getTime()
-      }
+      // 2. SECONDARY: Completeness tier (avatar > job/company > connections > other info > no info)
+      const aHasAvatar = !!(a.avatar)
+      const bHasAvatar = !!(b.avatar)
+      if (aHasAvatar && !bHasAvatar) return -1
+      if (!aHasAvatar && bHasAvatar) return 1
       
-      // 4. If only one has activity, prioritize it
-      if (aActive && !bActive) return -1
-      if (!aActive && bActive) return 1
+      const aHasProfessional = !!(a.jobTitle || a.company)
+      const bHasProfessional = !!(b.jobTitle || b.company)
+      if (aHasProfessional && !bHasProfessional) return -1
+      if (!aHasProfessional && bHasProfessional) return 1
       
-      // 5. Fallback to name
+      const aHasConnections = (a.mutualConnectionsCount || 0) > 0
+      const bHasConnections = (b.mutualConnectionsCount || 0) > 0
+      if (aHasConnections && !bHasConnections) return -1
+      if (!aHasConnections && bHasConnections) return 1
+      
+      // 3. TERTIARY: Sort by name (alphabetical)
       return a.fullName.localeCompare(b.fullName)
     })
 
@@ -1057,19 +1039,24 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    const totalPages = Math.ceil((count || 0) / limit);
+    // Apply pagination AFTER sorting
+    const from = (page - 1) * limit;
+    const to = from + limit;
+    const paginatedAlumni = filteredAlumni.slice(from, to);
+
+    const totalPages = Math.ceil(filteredAlumni.length / limit);
 
     return NextResponse.json({
-      alumni: filteredAlumni,
+      alumni: paginatedAlumni,
       pagination: {
         page,
         limit,
-        total: count || 0,
+        total: filteredAlumni.length,
         totalPages,
         hasNextPage: page < totalPages,
         hasPrevPage: page > 1
       },
-      message: `Retrieved ${filteredAlumni.length} alumni records (page ${page} of ${totalPages})`
+      message: `Retrieved ${paginatedAlumni.length} alumni records (page ${page} of ${totalPages})`
     })
 
   } catch (error) {
