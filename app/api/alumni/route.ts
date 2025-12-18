@@ -253,6 +253,18 @@ const locationMatchesState = (location: string | null | undefined, stateCode: st
   );
 };
 
+// Add this helper function BEFORE the sorting logic (around line 568)
+/**
+ * Check if alumni is actively online (within 1 minute)
+ */
+function isActivelyOnline(lastActiveAt: string | null | undefined): boolean {
+  if (!lastActiveAt) return false;
+  const lastActive = new Date(lastActiveAt);
+  const now = new Date();
+  const oneMinuteAgo = new Date(now.getTime() - 60 * 1000); // 1 minute ago
+  return lastActive >= oneMinuteAgo;
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Check environment variables
@@ -565,35 +577,47 @@ export async function GET(request: NextRequest) {
           })
         }
 
-        // Replace the sorting logic with completeness-first sorting (ignore activity)
+        // Sorting logic: Active users stacked on top, then completeness-based sorting for all
         filteredAlumni.sort((a, b) => {
-          // 1. PRIMARY: Sort by completeness score (higher = better)
-          const aCompleteness = calculateCompletenessScore(a)
-          const bCompleteness = calculateCompletenessScore(b)
+          // 1. PRIMARY: Actively online alumni (within 1 minute) go to the very top
+          const aIsActive = isActivelyOnline(a.lastActiveAt);
+          const bIsActive = isActivelyOnline(b.lastActiveAt);
+          
+          // If one is active and the other isn't, active comes first
+          if (aIsActive && !bIsActive) return -1;
+          if (!aIsActive && bIsActive) return 1;
+          
+          // 2. SECONDARY: Apply the SAME completeness sorting logic to both active and inactive groups
+          // This ensures active users are sorted by completeness among themselves,
+          // and inactive users maintain their completeness-based order
+          
+          // Sort by completeness score (higher = better)
+          const aCompleteness = calculateCompletenessScore(a);
+          const bCompleteness = calculateCompletenessScore(b);
           
           if (aCompleteness !== bCompleteness) {
-            return bCompleteness - aCompleteness // Higher completeness first
+            return bCompleteness - aCompleteness; // Higher completeness first
           }
           
-          // 2. SECONDARY: Completeness tier (avatar > job/company > connections > other info > no info)
-          const aHasAvatar = !!(a.avatar)
-          const bHasAvatar = !!(b.avatar)
-          if (aHasAvatar && !bHasAvatar) return -1
-          if (!aHasAvatar && bHasAvatar) return 1
+          // Completeness tier (avatar > job/company > connections > other info > no info)
+          const aHasAvatar = !!(a.avatar);
+          const bHasAvatar = !!(b.avatar);
+          if (aHasAvatar && !bHasAvatar) return -1;
+          if (!aHasAvatar && bHasAvatar) return 1;
           
-          const aHasProfessional = !!(isValidField(a.jobTitle) || isValidField(a.company))
-          const bHasProfessional = !!(isValidField(b.jobTitle) || isValidField(b.company))
-          if (aHasProfessional && !bHasProfessional) return -1
-          if (!aHasProfessional && bHasProfessional) return 1
+          const aHasProfessional = !!(isValidField(a.jobTitle) || isValidField(a.company));
+          const bHasProfessional = !!(isValidField(b.jobTitle) || isValidField(b.company));
+          if (aHasProfessional && !bHasProfessional) return -1;
+          if (!aHasProfessional && bHasProfessional) return 1;
           
-          const aHasConnections = (a.mutualConnectionsCount || 0) > 0
-          const bHasConnections = (b.mutualConnectionsCount || 0) > 0
-          if (aHasConnections && !bHasConnections) return -1
-          if (!aHasConnections && bHasConnections) return 1
+          const aHasConnections = (a.mutualConnectionsCount || 0) > 0;
+          const bHasConnections = (b.mutualConnectionsCount || 0) > 0;
+          if (aHasConnections && !bHasConnections) return -1;
+          if (!aHasConnections && bHasConnections) return 1;
           
           // 3. TERTIARY: Sort by name (alphabetical)
-          return a.fullName.localeCompare(b.fullName)
-        })
+          return a.fullName.localeCompare(b.fullName);
+        });
 
         // 🔥 NEW: Apply showActiveOnly filter
         if (showActiveOnly) {
@@ -793,21 +817,33 @@ export async function GET(request: NextRequest) {
           })
         }
 
-        // Replace the sorting logic with completeness-first sorting (ignore activity)
+        // Sorting logic: Active users stacked on top, then completeness-based sorting for all
         filteredAlumni.sort((a, b) => {
-          // 1. PRIMARY: Sort by completeness score (higher = better)
-          const aCompleteness = calculateCompletenessScore(a)
-          const bCompleteness = calculateCompletenessScore(b)
+          // 1. PRIMARY: Actively online alumni (within 1 minute) go to the very top
+          const aIsActive = isActivelyOnline(a.lastActiveAt);
+          const bIsActive = isActivelyOnline(b.lastActiveAt);
+          
+          // If one is active and the other isn't, active comes first
+          if (aIsActive && !bIsActive) return -1;
+          if (!aIsActive && bIsActive) return 1;
+          
+          // 2. SECONDARY: Apply the SAME completeness sorting logic to both active and inactive groups
+          // This ensures active users are sorted by completeness among themselves,
+          // and inactive users maintain their completeness-based order
+          
+          // Sort by completeness score (higher = better)
+          const aCompleteness = calculateCompletenessScore(a);
+          const bCompleteness = calculateCompletenessScore(b);
           
           if (aCompleteness !== bCompleteness) {
-            return bCompleteness - aCompleteness // Higher completeness first
+            return bCompleteness - aCompleteness; // Higher completeness first
           }
           
-          // 2. SECONDARY: Completeness tier (avatar > job/company > connections > other info > no info)
-          const aHasAvatar = !!(a.avatar)
-          const bHasAvatar = !!(b.avatar)
-          if (aHasAvatar && !bHasAvatar) return -1
-          if (!aHasAvatar && bHasAvatar) return 1
+          // Completeness tier (avatar > job/company > connections > other info > no info)
+          const aHasAvatar = !!(a.avatar);
+          const bHasAvatar = !!(b.avatar);
+          if (aHasAvatar && !bHasAvatar) return -1;
+          if (!aHasAvatar && bHasAvatar) return 1;
           
           const aHasProfessional = !!(a.jobTitle || a.company)
           const bHasProfessional = !!(b.jobTitle || b.company)
@@ -994,35 +1030,47 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Replace the sorting logic with completeness-first sorting (ignore activity)
+    // Sorting logic: Active users stacked on top, then completeness-based sorting for all
     filteredAlumni.sort((a, b) => {
-      // 1. PRIMARY: Sort by completeness score (higher = better)
-      const aCompleteness = calculateCompletenessScore(a)
-      const bCompleteness = calculateCompletenessScore(b)
+      // 1. PRIMARY: Actively online alumni (within 1 minute) go to the very top
+      const aIsActive = isActivelyOnline(a.lastActiveAt);
+      const bIsActive = isActivelyOnline(b.lastActiveAt);
+      
+      // If one is active and the other isn't, active comes first
+      if (aIsActive && !bIsActive) return -1;
+      if (!aIsActive && bIsActive) return 1;
+      
+      // 2. SECONDARY: Apply the SAME completeness sorting logic to both active and inactive groups
+      // This ensures active users are sorted by completeness among themselves,
+      // and inactive users maintain their completeness-based order
+      
+      // Sort by completeness score (higher = better)
+      const aCompleteness = calculateCompletenessScore(a);
+      const bCompleteness = calculateCompletenessScore(b);
       
       if (aCompleteness !== bCompleteness) {
-        return bCompleteness - aCompleteness // Higher completeness first
+        return bCompleteness - aCompleteness; // Higher completeness first
       }
       
-      // 2. SECONDARY: Completeness tier (avatar > job/company > connections > other info > no info)
-      const aHasAvatar = !!(a.avatar)
-      const bHasAvatar = !!(b.avatar)
-      if (aHasAvatar && !bHasAvatar) return -1
-      if (!aHasAvatar && bHasAvatar) return 1
+      // Completeness tier (avatar > job/company > connections > other info > no info)
+      const aHasAvatar = !!(a.avatar);
+      const bHasAvatar = !!(b.avatar);
+      if (aHasAvatar && !bHasAvatar) return -1;
+      if (!aHasAvatar && bHasAvatar) return 1;
       
-      const aHasProfessional = !!(a.jobTitle || a.company)
-      const bHasProfessional = !!(b.jobTitle || b.company)
-      if (aHasProfessional && !bHasProfessional) return -1
-      if (!aHasProfessional && bHasProfessional) return 1
+      const aHasProfessional = !!(isValidField(a.jobTitle) || isValidField(a.company));
+      const bHasProfessional = !!(isValidField(b.jobTitle) || isValidField(b.company));
+      if (aHasProfessional && !bHasProfessional) return -1;
+      if (!aHasProfessional && bHasProfessional) return 1;
       
-      const aHasConnections = (a.mutualConnectionsCount || 0) > 0
-      const bHasConnections = (b.mutualConnectionsCount || 0) > 0
-      if (aHasConnections && !bHasConnections) return -1
-      if (!aHasConnections && bHasConnections) return 1
+      const aHasConnections = (a.mutualConnectionsCount || 0) > 0;
+      const bHasConnections = (b.mutualConnectionsCount || 0) > 0;
+      if (aHasConnections && !bHasConnections) return -1;
+      if (!aHasConnections && bHasConnections) return 1;
       
       // 3. TERTIARY: Sort by name (alphabetical)
-      return a.fullName.localeCompare(b.fullName)
-    })
+      return a.fullName.localeCompare(b.fullName);
+    });
 
     // 🔥 NEW: Apply showActiveOnly filter
     if (showActiveOnly) {
