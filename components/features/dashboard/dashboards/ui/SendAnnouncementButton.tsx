@@ -106,7 +106,56 @@ export function SendAnnouncementButton() {
       {/* Modern Minimalistic Widget */}
       <button
         onClick={() => setShowModal(true)}
-        className="w-full group relative overflow-hidden rounded-full bg-gradient-to-r from-navy-600 to-blue-600 hover:from-navy-700 hover:to-blue-700 transition-all duration-300 shadow-md hover:shadow-lg active:scale-[0.98]"
+        className="w-full group relative overflow-hidden rounded-full sm:hidden transition-all duration-300"
+        style={{
+          background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%)',
+          boxShadow: `
+            0 8px 16px rgba(30, 64, 175, 0.5),
+            0 4px 8px rgba(30, 64, 175, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.2)
+          `,
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+        }}
+      >
+        {/* Inner glow effect - darker */}
+        <div 
+          className="absolute inset-0 rounded-full opacity-40"
+          style={{
+            background: 'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent 70%)',
+          }}
+        />
+        
+        {/* Subtle shimmer effect on hover - darker */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/8 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+        
+        <div className="relative flex items-center justify-center gap-2 px-4 py-3 z-10">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/15 backdrop-blur-sm transition-transform duration-200 group-hover:scale-110">
+            <Megaphone 
+              className="h-4 w-4 text-white drop-shadow-lg transition-transform duration-200 group-hover:scale-110" 
+              style={{
+                filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4))',
+              }}
+            />
+          </div>
+          <span className="text-white font-medium text-sm drop-shadow-lg">Send Announcement</span>
+        </div>
+
+        {/* Hover shine effect - darker */}
+        <div 
+          className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          style={{
+            background: 'radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.3), transparent 60%)',
+          }}
+        />
+      </button>
+
+      {/* Desktop version - keep original styling */}
+      <button
+        onClick={() => setShowModal(true)}
+        className="hidden sm:block w-full group relative overflow-hidden rounded-full bg-gradient-to-r from-navy-600 to-blue-600 hover:from-navy-700 hover:to-blue-700 transition-all duration-300 shadow-md hover:shadow-lg active:scale-[0.98]"
       >
         {/* Subtle shimmer effect on hover */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />

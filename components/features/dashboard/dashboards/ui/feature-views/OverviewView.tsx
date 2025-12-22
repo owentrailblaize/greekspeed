@@ -23,6 +23,7 @@ import { createPortal } from 'react-dom';
 import { EventForm } from '@/components/ui/EventForm';
 import { useEvents } from '@/lib/hooks/useEvents';
 import { CreateEventRequest, UpdateEventRequest } from '@/types/events';
+import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 
 interface OverviewViewProps {
   selectedRole: string;
@@ -35,6 +36,7 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
   const chapterId = profile?.chapter_id;
   const router = useRouter();
   const { startingBudget } = useChapterBudget();
+  const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
   
   const [memberCount, setMemberCount] = useState<number | null>(null);
   const [activeMemberCount, setActiveMemberCount] = useState<number | null>(null);
@@ -217,8 +219,8 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
       }
     }
 
-    // Fetch event/budget stats for Social Chair
-    if (selectedRole === 'social-chair') {
+    // Fetch event/budget stats for Social Chair - only if events management is enabled
+    if (selectedRole === 'social-chair' && eventsManagementEnabled) {
       try {
         const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=all`);
         if (response.ok) {
@@ -237,16 +239,21 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
       } catch (error) {
         console.error('Error fetching events:', error);
       }
+    } else if (selectedRole === 'social-chair' && !eventsManagementEnabled) {
+      // Reset event stats when events are disabled
+      setUpcomingEvents(0);
+      setEventBudget(startingBudget);
+      setTotalAttendees(0);
+    }
 
-      try {
-        const response = await fetch(`/api/vendors?chapter_id=${chapterId}`);
-        if (response.ok) {
-          const vendors = await response.json();
-          setVendorCount(vendors.length || 0);
-        }
-      } catch (error) {
-        console.error('Error fetching vendors:', error);
+    try {
+      const response = await fetch(`/api/vendors?chapter_id=${chapterId}`);
+      if (response.ok) {
+        const vendors = await response.json();
+        setVendorCount(vendors.length || 0);
       }
+    } catch (error) {
+      console.error('Error fetching vendors:', error);
     }
   };
 
@@ -379,12 +386,13 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
 
   const getQuickActions = () => {
     const baseActions = [
-      {
+      // Only include Create Event if events management is enabled
+      ...(eventsManagementEnabled ? [{
         id: 'create-event',
         label: 'Create Event',
         icon: CalendarIcon,
         onClick: () => setShowEventForm(true),
-      },
+      }] : []),
       {
         id: 'dues',
         label: 'Dues',
@@ -558,8 +566,8 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
         />
       )}
 
-      {/* Event Form Modal */}
-      {showEventForm && typeof window !== 'undefined' && createPortal(
+      {/* Event Form Modal - Only show if events management is enabled */}
+      {showEventForm && eventsManagementEnabled && typeof window !== 'undefined' && createPortal(
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
           <div className="relative max-w-2xl w-full max-h-[90vh]">
             <EventForm

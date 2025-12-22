@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from "react";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -281,12 +281,23 @@ export function VendorsView() {
       {/* Vendor Form Modal */}
       {showVendorForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <VendorForm
-            vendor={editingVendor}
-            onSubmit={handleSubmitVendor}
-            onCancel={handleCancelVendorForm}
-            loading={isSubmittingVendor}
-          />
+          {/* Desktop: Constrained container with max-width/height and scrolling */}
+          <div className="w-full sm:bg-white sm:rounded-lg sm:shadow-xl sm:max-w-[95vw] md:max-w-3xl sm:max-h-[90vh] sm:overflow-y-auto sm:flex sm:flex-col sm:relative">
+            {/* Close button for desktop only */}
+            <button
+              onClick={handleCancelVendorForm}
+              className="absolute top-4 right-4 z-10 text-gray-500 hover:text-gray-700 p-1 rounded-lg hover:bg-gray-100 transition-colors hidden sm:block"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <VendorForm
+              vendor={editingVendor}
+              onSubmit={handleSubmitVendor}
+              onCancel={handleCancelVendorForm}
+              loading={isSubmittingVendor}
+            />
+          </div>
         </div>
       )}
     </>

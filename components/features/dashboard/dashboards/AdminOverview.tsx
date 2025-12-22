@@ -13,6 +13,7 @@ import { CompactCalendarCard } from './ui/CompactCalendarCard';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { SocialFeed, type SocialFeedInitialData } from './ui/SocialFeed';
 import { DuesStatusCard } from './ui/DuesStatusCard';
+import { FeatureGuard } from '@/components/shared/FeatureGuard';
 import { MobileBottomNavigation } from './ui/MobileBottomNavigation'; // Changed import
 import { MobileAdminTasksPage } from './ui/MobileAdminTasksPage';
 import { MobileDocsCompliancePage } from './ui/MobileDocsCompliancePage';
@@ -30,6 +31,9 @@ import { SendAnnouncementButton } from './ui/SendAnnouncementButton';
 import { EXECUTIVE_ROLES } from '@/lib/permissions';
 import { UpcomingEventsCard } from './ui/UpcomingEventsCard';
 import { cn } from '@/lib/utils';
+import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
+import { AddRecruitForm } from '@/components/features/recruitment/AddRecruitForm';
+import type { Recruit } from '@/types/recruitment';
 
 interface AdminOverviewProps {
   initialFeed?: SocialFeedInitialData;
@@ -42,10 +46,13 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
   const [activeMobileTab, setActiveMobileTab] = useState('home');
   const [showQuickActionsModal, setShowQuickActionsModal] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
+  const [showAddRecruitModal, setShowAddRecruitModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false); // Add this line
   
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
+  const { enabled: recruitmentCrmEnabled } = useFeatureFlag('recruitment_crm_enabled');
 
   // Add mobile detection useEffect (add this after line 46, before feedData)
   useEffect(() => {
@@ -67,11 +74,18 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
   // Handle tool query param from FAB menu
   useEffect(() => {
     const tool = searchParams.get('tool');
+    const tab = searchParams.get('tab');
+    
     if (tool === 'tasks') {
       setActiveMobileTab('tasks');
+      // If tab=recruits is in query, we'll handle it in MobileAdminTasksPage
     } else if (tool === 'operations') {
       setActiveMobileTab('operations');
     } else if (tool === 'events') {
+      setActiveMobileTab('events');
+    } else if (tool === 'invites') {
+      // Navigate to events tab which renders MobileEventsVendorsPage
+      // The tab parameter will be handled by MobileEventsVendorsPage
       setActiveMobileTab('events');
     } else if (tool === 'docs') {
       setActiveMobileTab('docs');
@@ -120,45 +134,60 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
     }
   };
 
+  const handleAddRecruit = () => {
+    setShowAddRecruitModal(true);
+  };
+
+  const handleRecruitSuccess = (recruit: Recruit) => {
+    toast.success('Recruit added successfully!');
+    setShowAddRecruitModal(false);
+  };
+
+  const handleRecruitCancel = () => {
+    setShowAddRecruitModal(false);
+  };
+
   // Define quickActions array for the admin dashboard
   const quickActions: QuickAction[] = [
-    {
+    // Only include Create Event if events management is enabled
+    ...(eventsManagementEnabled ? [{
       id: 'create-event',
       label: 'Create Event',
       icon: Calendar,
       onClick: handleScheduleMeeting,
-      variant: 'outline',
-    },
+      variant: 'outline' as const,
+    }] : []),
     {
       id: 'send-message',
       label: 'Send Message',
       icon: MessageSquare,
       onClick: handleSendMessage,
-      variant: 'outline',
+      variant: 'outline' as const,
     },
     {
       id: 'manage-members',
       label: 'Manage Members',
       icon: Users,
       onClick: () => router.push('/dashboard/admin/members'),
-      variant: 'outline',
+      variant: 'outline' as const,
     },
     {
       id: 'view-invitations',
       label: 'View Invitations',
       icon: UserPlus,
       onClick: () => {
-        router.push('/dashboard/admin#invitations');
-        // Scroll to invitations section after navigation
-        setTimeout(() => {
-          const element = document.getElementById('invitations');
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }, 100);
+        router.push('/dashboard?tool=invites&tab=invitations');
       },
-      variant: 'outline',
+      variant: 'outline' as const,
     },
+    // Add recruitment option conditionally based on flag
+    ...(recruitmentCrmEnabled ? [{
+      id: 'add-recruit',
+      label: 'Add Recruit',
+      icon: UserPlus,
+      onClick: handleAddRecruit,
+      variant: 'outline' as const,
+    }] : []),
   ];
 
   // Remove the manual tab configuration - MobileBottomNavigation will auto-detect role
@@ -177,7 +206,9 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
               {isExecutiveMember ? (
                 <SendAnnouncementButton />
               ) : (
-                <DuesStatusCard />
+                <FeatureGuard flagName="financial_tools_enabled">
+                  <DuesStatusCard />
+                </FeatureGuard>
               )}
             </div>
             <div className="w-full">
@@ -226,7 +257,9 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
         <div className="hidden sm:grid sm:grid-cols-12 sm:gap-6">
           {/* Left Column - 3 columns wide */}
           <div className="col-span-3 space-y-6">
-            <DuesStatusCard />
+            <FeatureGuard flagName="financial_tools_enabled">
+              <DuesStatusCard />
+            </FeatureGuard>
             <OperationsFeed />
           </div>
           
@@ -237,10 +270,14 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
           
           {/* Right Column - 3 columns wide */}
           <div className="col-span-3 space-y-6">
-            <UpcomingEventsCard />
+            <FeatureGuard flagName="events_management_enabled">
+              <UpcomingEventsCard />
+            </FeatureGuard>
             {chapterId && <TasksPanel chapterId={chapterId} />}
             <DocsCompliancePanel />
-            <CompactCalendarCard />
+            <FeatureGuard flagName="events_management_enabled">
+              <CompactCalendarCard />
+            </FeatureGuard>
           </div>
         </div>
       </div>
@@ -255,12 +292,47 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
       {activeMobileTab === 'home' && (
         <div
           onClick={() => setShowQuickActionsModal(true)}
-          className="fixed bottom-40 right-4 z-40 h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 sm:hidden flex items-center justify-center cursor-pointer"
+          className="fixed bottom-40 right-4 z-40 h-14 w-14 rounded-full sm:hidden flex items-center justify-center cursor-pointer group"
+          style={{
+            background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%)',
+            boxShadow: `
+              0 8px 16px rgba(30, 64, 175, 0.5),
+              0 4px 8px rgba(30, 64, 175, 0.4),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3),
+              inset 0 -1px 0 rgba(0, 0, 0, 0.2)
+            `,
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+          }}
           title="Quick Actions"
         >
-          <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {/* Inner glow effect */}
+          <div 
+            className="absolute inset-0 rounded-full opacity-40"
+            style={{
+              background: 'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent 70%)',
+            }}
+          />
+          {/* Icon */}
+          <svg 
+            className="h-6 w-6 text-white relative z-10 drop-shadow-lg transition-transform duration-200 group-hover:scale-110" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+            style={{
+              filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4))',
+            }}
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
+          {/* Hover shine effect */}
+          <div 
+            className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={{
+              background: 'radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.3), transparent 60%)',
+            }}
+          />
         </div>
       )}
 
@@ -278,9 +350,9 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
             onClick={() => setShowQuickActionsModal(false)} 
           />
           
-          {/* Mobile: Bottom Drawer */}
+          {/* Mobile: Bottom Drawer - EDIT HERE FOR UPDATE LATER */}
           {isMobile && (
-            <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none pb-[calc(48px+env(safe-area-inset-bottom))]">
+            <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none pb-[calc(36px+env(safe-area-inset-bottom))]">
               {/* Header */}
               <div className="flex items-center justify-between p-4 flex-shrink-0 border-b border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
@@ -297,17 +369,19 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
               {/* Content - Scrollable */}
               <div className="flex-1 overflow-y-auto p-4 pb-[calc(40px+env(safe-area-inset-bottom))]">
                 <div className="space-y-3">
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
-                    onClick={() => {
-                      handleScheduleMeeting();
-                      setShowQuickActionsModal(false);
-                    }}
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Create Event
-                  </Button>
+                  {eventsManagementEnabled && (
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                      onClick={() => {
+                        handleScheduleMeeting();
+                        setShowQuickActionsModal(false);
+                      }}
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Create Event
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
@@ -323,7 +397,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                     variant="outline" 
                     className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
                     onClick={() => {
-                      router.push('/dashboard/admin/members');
+                      router.push('/dashboard?tool=operations&tab=members');
                       setShowQuickActionsModal(false);
                     }}
                   >
@@ -334,19 +408,39 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                     variant="outline" 
                     className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
                     onClick={() => {
-                      router.push('/dashboard/admin#invitations');
+                      router.push('/dashboard?tool=invites&tab=invitations');
                       setShowQuickActionsModal(false);
-                      setTimeout(() => {
-                        const element = document.getElementById('invitations');
-                        if (element) {
-                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                      }, 100);
                     }}
                   >
                     <UserPlus className="h-4 w-4 mr-2" />
                     View Invitations
                   </Button>
+                  {recruitmentCrmEnabled && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                        onClick={() => {
+                          handleAddRecruit();
+                          setShowQuickActionsModal(false);
+                        }}
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add Recruit
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                        onClick={() => {
+                          router.push('/dashboard?tool=tasks&tab=recruits');
+                          setShowQuickActionsModal(false);
+                        }}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Manage Recruits
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -369,17 +463,19 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                 </div>
                 {/* Quick Actions Content */}
                 <div className="space-y-3">
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => {
-                      handleScheduleMeeting();
-                      setShowQuickActionsModal(false);
-                    }}
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Create Event
-                  </Button>
+                  {eventsManagementEnabled && (
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        handleScheduleMeeting();
+                        setShowQuickActionsModal(false);
+                      }}
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Create Event
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     className="w-full justify-start"
@@ -391,34 +487,54 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                     <MessageSquare className="h-4 w-4 mr-2" />
                     Send Message
                   </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        router.push('/dashboard?tool=operations&tab=members');
+                        setShowQuickActionsModal(false);
+                      }}
+                    >
+                      <Users className="h-4 w-4 mr-2" />
+                      Manage Members
+                    </Button>
                   <Button 
                     variant="outline" 
                     className="w-full justify-start"
                     onClick={() => {
-                      router.push('/dashboard/admin/members');
+                      router.push('/dashboard?tool=invites&tab=invitations');
                       setShowQuickActionsModal(false);
-                    }}
-                  >
-                    <Users className="h-4 w-4 mr-2" />
-                    Manage Members
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => {
-                      router.push('/dashboard/admin#invitations');
-                      setShowQuickActionsModal(false);
-                      setTimeout(() => {
-                        const element = document.getElementById('invitations');
-                        if (element) {
-                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                      }, 100);
                     }}
                   >
                     <UserPlus className="h-4 w-4 mr-2" />
                     View Invitations
                   </Button>
+                  {recruitmentCrmEnabled && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={() => {
+                          handleAddRecruit();
+                          setShowQuickActionsModal(false);
+                        }}
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add Recruit
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={() => {
+                          router.push('/dashboard?tool=tasks&tab=recruits');
+                          setShowQuickActionsModal(false);
+                        }}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Manage Recruits
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -426,15 +542,97 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
         </div>
       )}
 
-      {/* Event Creation Modal */}
-      {showEventModal && (
-        <EventForm
-          isOpen={showEventModal}
-          event={null}
-          onSubmit={handleCreateEvent}
-          onCancel={() => setShowEventModal(false)}
-          loading={false}
-        />
+      {/* Add Recruit Modal - Mobile: Bottom drawer, Desktop: Centered */}
+      {showAddRecruitModal && recruitmentCrmEnabled && createPortal(
+        <div className={cn(
+          "fixed inset-0 z-[9999]",
+          isMobile 
+            ? "flex items-end justify-center p-0 sm:hidden"
+            : "hidden sm:flex items-center justify-center p-4"
+        )}>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+            onClick={handleRecruitCancel} 
+          />
+          
+          {/* Mobile: Bottom Drawer with Rounded Top */}
+          {isMobile && (
+            <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[90vh] rounded-t-2xl rounded-b-none overflow-hidden"> {/* Add overflow-hidden */}
+              <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                <AddRecruitForm 
+                  variant="modal"
+                  onSuccess={handleRecruitSuccess}
+                  onCancel={handleRecruitCancel}
+                />
+              </div>
+            </div>
+          )}
+          
+          {/* Desktop: Centered Modal */}
+          {!isMobile && (
+            <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+              <div className="overflow-y-auto max-h-[90vh] p-6">
+                <AddRecruitForm 
+                  variant="modal"
+                  onSuccess={handleRecruitSuccess}
+                  onCancel={handleRecruitCancel}
+                />
+              </div>
+            </div>
+          )}
+        </div>,
+        document.body
+      )}
+
+      {/* Event Creation Modal - Mobile: Bottom drawer, Desktop: Centered */}
+      {showEventModal && eventsManagementEnabled && typeof window !== 'undefined' && createPortal(
+        <div className={cn(
+          "fixed inset-0 z-[10000]",
+          isMobile 
+            ? "flex items-end justify-center p-0"
+            : "flex items-center justify-center p-4"
+        )}>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+            onClick={() => {
+              setShowEventModal(false);
+            }}
+          />
+          
+          {/* Mobile: Bottom Drawer */}
+          {isMobile && (
+            <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[80vh] mt-[50vh] rounded-t-2xl rounded-b-none overflow-hidden">
+              <EventForm
+                event={null}
+                onSubmit={handleCreateEvent}
+                onCancel={() => {
+                  setShowEventModal(false);
+                }}
+                loading={false}
+                isOpen={true}
+                isMobile={true}
+              />
+            </div>
+          )}
+
+          {/* Desktop: Centered Modal */}
+          {!isMobile && (
+            <div className="relative max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <EventForm
+                event={null}
+                onSubmit={handleCreateEvent}
+                onCancel={() => {
+                  setShowEventModal(false);
+                }}
+                loading={false}
+                isOpen={true}
+              />
+            </div>
+          )}
+        </div>,
+        document.body
       )}
     </div>
   );

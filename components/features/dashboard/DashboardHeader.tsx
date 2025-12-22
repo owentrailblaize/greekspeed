@@ -11,6 +11,7 @@ import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { ProfileService } from '@/lib/services/profileService';
 import { MessageCircle, Lock } from 'lucide-react';
+import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 
 // Small helper for consistent tab styling
 function NavLink({ href, label, locked = false }: { href: string; label: string; locked?: boolean }) {
@@ -53,6 +54,9 @@ export function DashboardHeader() {
   const { connections } = useConnections();
   const userRole = profile?.role;
   const pathname = usePathname();
+
+  // Check if financial tools feature is enabled
+  const { enabled: financialToolsEnabled, loading: flagLoading } = useFeatureFlag('financial_tools_enabled');
   
   // Count pending connection requests that require action
   const pendingConnections = connections.filter(conn => 
@@ -72,9 +76,18 @@ export function DashboardHeader() {
   ];
 
   // Filter tabs based on user role
-  const visibleTabs = navigationTabs.filter(tab => 
-    tab.roles.includes(userRole || '')
-  );
+  const visibleTabs = navigationTabs.filter(tab => {
+    // Check role access first
+    const hasRoleAccess = tab.roles.includes(userRole || '');
+
+    // If it's the Dues tab, also check feature flag
+    if (tab.href === '/dashboard/dues') {
+      // Don't show Dues tab if flag is disabled or still loading
+      return hasRoleAccess && financialToolsEnabled && !flagLoading;
+    }
+
+    return hasRoleAccess;
+  });
 
   const handleSignOut = async () => {
     try {
@@ -161,4 +174,4 @@ export function DashboardHeader() {
       </div>
     </header>
   );
-} 
+}

@@ -104,11 +104,20 @@ export function PostCard({
   const renderPostContent = (textClassName: string, buttonClassName: string) => {
     if (!post.content) return null;
 
-    // Convert URLs to clickable links
+    // Get URLs that have previews - we'll hide these from the content
+    const previewUrls = new Set(
+      (post.metadata?.link_previews || []).map((preview: any) => preview.url)
+    );
+
+    // Convert URLs to clickable links, but skip URLs that have previews
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const contentWithLinks = displayContent.split(urlRegex).map((part, i) => {
       if (part.match(urlRegex)) {
         const cleanUrl = part.replace(/[.,;:!?]+$/, '');
+        // If this URL has a preview card, don't render it as a link
+        if (previewUrls.has(cleanUrl)) {
+          return null; // Hide URLs that have preview cards
+        }
         return (
           <a
             key={i}
@@ -123,7 +132,7 @@ export function PostCard({
         );
       }
       return <span key={i}>{part}</span>;
-    });
+    }).filter(Boolean); // Remove null entries
 
     return (
       <div className="space-y-2">

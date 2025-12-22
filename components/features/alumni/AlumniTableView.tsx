@@ -68,7 +68,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
     getConnectionId
   } = useConnections();
   
-  const [sortField, setSortField] = useState<SortField>('activity'); 
+  const [sortField, setSortField] = useState<SortField>('completeness'); 
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); 
   const [accessedEmails, setAccessedEmails] = useState<Set<string>>(new Set());
   const [accessedPhones, setAccessedPhones] = useState<Set<string>>(new Set());
@@ -296,110 +296,97 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
     return 3; // Active but older than 24 hours - low priority
   };
 
-  // Fix the sorting logic - the issue is in the activity priority comparison
-  const sortedAlumni = [...alumni].sort((a, b) => {
-    // For activity sorting, use the exact same hybrid logic as the card view
-    if (sortField === 'activity') {
-      // 1. Primary sort by activity priority
-      const aActivityPriority = getActivityPriority(a.lastActiveAt);
-      const bActivityPriority = getActivityPriority(b.lastActiveAt);
-      
-      if (aActivityPriority !== bActivityPriority) {
-        // FIXED: For activity, we want lower priority numbers (more active) to come first
-        // So we always do aActivityPriority - bActivityPriority regardless of sortDirection
-        return aActivityPriority - bActivityPriority;
-      }
-      
-      // 2. Secondary sort by completeness (within same activity level)
-      const aCompleteness = calculateAlumniCompleteness(a).totalScore;
-      const bCompleteness = calculateAlumniCompleteness(b).totalScore;
-      
-      if (aCompleteness !== bCompleteness) {
-        return bCompleteness - aCompleteness; // Higher completeness first
-      }
-      
-      // 3. Tertiary sort by most recent activity time
-      if (a.lastActiveAt && b.lastActiveAt) {
-        const aTime = new Date(a.lastActiveAt).getTime();
-        const bTime = new Date(b.lastActiveAt).getTime();
-        return bTime - aTime; // More recent first (always)
-      }
-      
-      // 4. Fallback to name
-      return a.fullName.localeCompare(b.fullName);
-    }
-    
-    // For completeness sorting, also use hybrid logic (completeness + activity)
-    if (sortField === 'completeness') {
-      const aCompleteness = calculateAlumniCompleteness(a).totalScore;
-      const bCompleteness = calculateAlumniCompleteness(b).totalScore;
-      
-      if (aCompleteness !== bCompleteness) {
-        return sortDirection === 'asc' ? aCompleteness - bCompleteness : bCompleteness - aCompleteness;
-      }
-      
-      // Secondary sort by activity
-      const aActivityPriority = getActivityPriority(a.lastActiveAt);
-      const bActivityPriority = getActivityPriority(b.lastActiveAt);
-      
-      if (aActivityPriority !== bActivityPriority) {
-        return aActivityPriority - bActivityPriority; // More active first
-      }
-      
-      return a.fullName.localeCompare(b.fullName);
-    }
-    
-    // For all other fields, use existing logic
-    let aValue: string | number, bValue: string | number;
-    
-    switch (sortField) {
-      case 'name':
-        aValue = a.fullName;
-        bValue = b.fullName;
-        break;
-      case 'company':
-        aValue = a.company;
-        bValue = b.company;
-        break;
-      case 'industry':
-        aValue = a.industry;
-        bValue = b.industry;
-        break;
-      case 'graduationYear':
-        aValue = a.graduationYear;
-        bValue = b.graduationYear;
-        break;
-      case 'location':
-        aValue = a.location;
-        bValue = b.location;
-        break;
-      case 'jobTitle':
-        aValue = a.jobTitle;
-        bValue = b.jobTitle;
-        break;
-      case 'chapter':
-        aValue = a.chapter;
-        bValue = b.chapter;
-        break;
-      case 'lastContact':
-        aValue = a.lastContact || '';
-        bValue = b.lastContact || '';
-        break;
-      case 'isActivelyHiring':
-        aValue = a.isActivelyHiring ? 1 : 0;
-        bValue = b.isActivelyHiring ? 1 : 0;
-        break;
-      default:
-        aValue = a.fullName;
-        bValue = b.fullName;
-    }
+  // Replace the sortedAlumni logic (around line 300) with this:
 
-    // For non-activity sorting, use the original logic
-    if (sortDirection === 'asc') {
-      return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-    } else {
-      return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+  const sortedAlumni = [...alumni].sort((a, b) => {
+    // Default sorting: Completeness-first (ignore activity)
+    // This ensures both table and card views show the same order
+    
+    // 1. PRIMARY: Sort by completeness score (higher = better)
+    const aCompleteness = calculateAlumniCompleteness(a).totalScore
+    const bCompleteness = calculateAlumniCompleteness(b).totalScore
+    
+    if (aCompleteness !== bCompleteness) {
+      // Respect sort direction for completeness
+      if (sortField === 'completeness') {
+        return sortDirection === 'asc' ? aCompleteness - bCompleteness : bCompleteness - aCompleteness
+      }
+      // Default: higher completeness first
+      return bCompleteness - aCompleteness
     }
+    
+    // 2. SECONDARY: Completeness tier (avatar > job/company > connections > other info > no info)
+    const aHasAvatar = !!(a.avatar)
+    const bHasAvatar = !!(b.avatar)
+    if (aHasAvatar && !bHasAvatar) return -1
+    if (!aHasAvatar && bHasAvatar) return 1
+    
+    const aHasProfessional = !!(a.jobTitle || a.company)
+    const bHasProfessional = !!(b.jobTitle || b.company)
+    if (aHasProfessional && !bHasProfessional) return -1
+    if (!aHasProfessional && bHasProfessional) return 1
+    
+    const aHasConnections = (a.mutualConnectionsCount || 0) > 0
+    const bHasConnections = (b.mutualConnectionsCount || 0) > 0
+    if (aHasConnections && !bHasConnections) return -1
+    if (!aHasConnections && bHasConnections) return 1
+    
+    // 3. For specific sort fields, apply field-based sorting
+    if (sortField !== 'completeness' && sortField !== 'activity') {
+      let aValue: string | number, bValue: string | number;
+      
+      switch (sortField) {
+        case 'name':
+          aValue = a.fullName;
+          bValue = b.fullName;
+          break;
+        case 'company':
+          aValue = a.company || '';
+          bValue = b.company || '';
+          break;
+        case 'industry':
+          aValue = a.industry || '';
+          bValue = b.industry || '';
+          break;
+        case 'graduationYear':
+          aValue = a.graduationYear || 0;
+          bValue = b.graduationYear || 0;
+          break;
+        case 'location':
+          aValue = a.location || '';
+          bValue = b.location || '';
+          break;
+        case 'jobTitle':
+          aValue = a.jobTitle || '';
+          bValue = b.jobTitle || '';
+          break;
+        case 'chapter':
+          aValue = a.chapter || '';
+          bValue = b.chapter || '';
+          break;
+        case 'lastContact':
+          aValue = a.lastContact || '';
+          bValue = b.lastContact || '';
+          break;
+        case 'isActivelyHiring':
+          aValue = a.isActivelyHiring ? 1 : 0;
+          bValue = b.isActivelyHiring ? 1 : 0;
+          break;
+        default:
+          // Fallback to name
+          return a.fullName.localeCompare(b.fullName);
+      }
+      
+      // Apply sort direction
+      if (sortDirection === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      }
+    }
+    
+    // 4. FALLBACK: Sort by name
+    return a.fullName.localeCompare(b.fullName);
   });
 
   const SortIcon = ({ field }: { field: SortField }) => {

@@ -268,7 +268,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
       <>
         <div className="h-screen w-screen bg-white -m-4">
           {/* Header with backdrop and avatar */}
-          <div className="relative h-32 bg-gradient-to-r from-blue-600 to-purple-600">
+          <div className="relative h-32 bg-gradient-to-r from-navy-600 via-blue-400 to-blue-100">
             {alumniData.banner_url ? (
               <img 
                 src={alumniData.banner_url} 
@@ -276,7 +276,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-r from-blue-600 to-purple-600" />
+              <div className="w-full h-full bg-gradient-to-r from-navy-600 via-blue-400 to-blue-100" />
             )}
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
               <div className="w-20 h-20 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center overflow-hidden">
@@ -423,7 +423,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
       <div className="sticky top-6">
         <Card className="bg-white overflow-hidden">
           {/* Header with backdrop and avatar */}
-          <div className="relative h-24 bg-gradient-to-r from-blue-600 to-purple-600">
+          <div className="relative h-24 bg-gradient-to-r from-navy-600 via-blue-400 to-blue-100">
             {alumniData.banner_url ? (
               <img 
                 src={alumniData.banner_url} 
@@ -431,7 +431,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-r from-blue-600 to-purple-600" />
+              <div className="w-full h-full bg-gradient-to-r from-navy-600 via-blue-400 to-blue-100" />
             )}
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
               <div className="w-16 h-16 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center overflow-hidden">

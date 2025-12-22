@@ -94,14 +94,27 @@ export async function GET(request: NextRequest) {
 
     // Transform the data to include like status and author info
     const transformedPosts = posts?.map(post => {
+      // Normalize author - Supabase may return it as an array even for one-to-one relationships
+      const author = Array.isArray(post.author) 
+        ? post.author[0] || null
+        : post.author || null;
+
+      // Normalize comment authors as well
       const preview = Array.isArray(post.comments_preview)
         ? [...post.comments_preview]
             .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
             .slice(0, 2)
+            .map(comment => ({
+              ...comment,
+              author: Array.isArray(comment.author) 
+                ? comment.author[0] || null
+                : comment.author || null
+            }))
         : [];
 
       return {
         ...post,
+        author, // Use normalized author
         is_liked: likedPostIds.has(post.id),
         is_author: post.author_id === user.id,
         likes_count: post.likes_count || 0,
