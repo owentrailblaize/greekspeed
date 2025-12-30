@@ -1,11 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useState, KeyboardEvent } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Eye, EyeOff, AlertCircle, CheckCircle, Users, Shield, Loader2, Link, BookOpen, GraduationCap } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, AlertCircle, CheckCircle, Users, Shield, Loader2, Link, BookOpen, GraduationCap, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Invitation, JoinFormData } from '@/types/invitations';
 import { toast } from 'react-toastify';
 import { supabase } from '@/lib/supabase/client';
@@ -30,6 +31,8 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
     major: ''
   });
 
+  const [majors, setMajors] = useState<string[]>([]);
+  const [majorInput, setMajorInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -72,9 +75,9 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
       }
     }
 
-    // Major validation - required
-    if (!formData.major || !formData.major.trim()) {
-      newErrors.major = 'Major is required';
+    // Major validation - required (check majors array)
+    if (majors.length === 0) {
+      newErrors.major = 'At least one major is required';
     }
 
     setErrors(newErrors);
@@ -91,12 +94,18 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
     setLoading(true);
 
     try {
+      // Convert majors array to comma-separated string for backend
+      const submitData = {
+        ...formData,
+        major: majors.join(', ')
+      };
+
       const response = await fetch(`/api/invitations/accept/${invitation.token}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(submitData)
       });
 
       if (!response.ok) {
@@ -156,6 +165,28 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
         last_name: nameParts.slice(1).join(' ') || ''
       }));
     }
+  };
+
+  const handleMajorKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && majorInput.trim()) {
+      e.preventDefault();
+      const trimmedMajor = majorInput.trim();
+      if (!majors.includes(trimmedMajor)) {
+        setMajors(prev => [...prev, trimmedMajor]);
+        setMajorInput('');
+        // Clear error when adding a major
+        if (errors.major) {
+          setErrors(prev => ({ ...prev, major: '' }));
+        }
+      }
+    } else if (e.key === 'Backspace' && majorInput === '' && majors.length > 0) {
+      // Remove last major when backspace is pressed on empty input
+      setMajors(prev => prev.slice(0, -1));
+    }
+  };
+
+  const removeMajor = (majorToRemove: string) => {
+    setMajors(prev => prev.filter(m => m !== majorToRemove));
   };
 
   const formatPhoneNumber = (value: string) => {
@@ -304,20 +335,42 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                 </p>
               )}
 
-              {/* Major(s) */}
+              {/* Major(s) - Tag Input */}
               <div className="space-y-0.5 md:space-y-1">
                 <Label htmlFor="major" className="text-sm flex items-center space-x-1">
                   <BookOpen className="h-3 w-3" />
                   <span>Major(s) *</span>
                 </Label>
-                <Input
-                  id="major"
-                  type="text"
-                  value={formData.major || ''}
-                  onChange={(e) => handleInputChange('major', e.target.value)}
-                  placeholder="e.g., Computer Science or Computer Science, Mathematics"
-                  className={`h-8 md:h-9 ${errors.major ? 'border-red-500' : ''}`}
-                />
+                <div className={`min-h-[2rem] border rounded-md p-1.5 md:p-2 flex flex-wrap gap-1.5 items-center ${errors.major ? 'border-red-500' : 'border-gray-300'} focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500`}>
+                  {/* Major Tags */}
+                  {majors.map((major, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="flex items-center space-x-1 px-2 py-0.5 text-xs bg-blue-100 text-blue-800 border-blue-200"
+                    >
+                      <span>{major}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeMajor(major)}
+                        className="ml-1 hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                        aria-label={`Remove ${major}`}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                  {/* Input Field */}
+                  <Input
+                    id="major"
+                    type="text"
+                    value={majorInput}
+                    onChange={(e) => setMajorInput(e.target.value)}
+                    onKeyDown={handleMajorKeyDown}
+                    placeholder={majors.length === 0 ? "Type a major and press Enter" : "Add another major..."}
+                    className="flex-1 min-w-[120px] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto text-sm"
+                  />
+                </div>
                 {errors.major && (
                   <p className="text-xs text-red-600 flex items-center space-x-1 mt-0.5">
                     <AlertCircle className="h-3 w-3" />
@@ -326,7 +379,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                 )}
                 {!errors.major && (
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Separate multiple majors with commas
+                    Press Enter to add each major
                   </p>
                 )}
               </div>

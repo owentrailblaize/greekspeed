@@ -9,8 +9,8 @@ export async function POST(
 ) {
   try {
     const supabase = createServerSupabaseClient();
-    const body: JoinFormData = await request.json();
-    const { email, password, full_name, first_name, last_name, phone, graduation_year, major } = body;
+    const body: any = await request.json();
+    const { email, password, full_name, first_name, last_name, phone, graduation_year } = body;
     const { token } = await params;
 
     if (!token) {
@@ -47,7 +47,17 @@ export async function POST(
       }, { status: 400 });
     }
 
-    if (!major || !major.trim()) {
+    // Handle major as string or array (for backward compatibility)
+    let majorString: string;
+    if (Array.isArray(body.major)) {
+      // If major is an array, join with commas
+      majorString = body.major.filter((m: string) => m && m.trim()).join(', ');
+    } else {
+      // If major is a string, use it directly
+      majorString = body.major || '';
+    }
+
+    if (!majorString || !majorString.trim()) {
       return NextResponse.json({ error: 'Major is required' }, { status: 400 });
     }
 
@@ -123,7 +133,7 @@ export async function POST(
           phone: phone.trim(),
           sms_consent: body.sms_consent || false,
           grad_year: graduation_year,
-          major: major.trim()
+          major: majorString.trim()
         })
         .eq('id', authData.user.id)
         .select()
@@ -174,7 +184,7 @@ export async function POST(
           role: 'active_member',
           member_status: 'active',
           grad_year: graduation_year,
-          major: major.trim(),
+          major: majorString.trim(),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         });
