@@ -62,8 +62,10 @@ export interface JoinFormData {
   full_name: string;
   first_name?: string;
   last_name?: string;
-  phone?: string;
+  phone: string;
   sms_consent?: boolean;
+  graduation_year: number;
+  major: string;
 }
 
 export interface InvitationValidationResult {
