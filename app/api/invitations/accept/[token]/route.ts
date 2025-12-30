@@ -9,31 +9,67 @@ export async function POST(
 ) {
   try {
     const supabase = createServerSupabaseClient();
-    const body: JoinFormData = await request.json();
-    const { email, password, full_name, first_name, last_name } = body;
-    const { token } = await params; // FIX: Await params
-
-    // Invitation Accept: Starting process for token
+    const body: any = await request.json();
+    const { email, password, full_name, first_name, last_name, phone, graduation_year, location } = body;
+    const { token } = await params;
 
     if (!token) {
       return NextResponse.json({ error: 'Token is required' }, { status: 400 });
     }
 
+    // Validate required fields
     if (!email || !password || !full_name) {
       return NextResponse.json({ error: 'Email, password, and full name are required' }, { status: 400 });
+    }
+
+    // Validate new required fields
+    if (!phone || !phone.trim()) {
+      return NextResponse.json({ error: 'Phone number is required' }, { status: 400 });
+    }
+
+    // Validate phone format (10 digits)
+    const phoneDigits = phone.replace(/\D/g, '');
+    if (phoneDigits.length !== 10) {
+      return NextResponse.json({ error: 'Phone number must be 10 digits' }, { status: 400 });
+    }
+
+    if (!graduation_year || typeof graduation_year !== 'number') {
+      return NextResponse.json({ error: 'Graduation year is required' }, { status: 400 });
+    }
+
+    // Validate graduation year range
+    const currentYear = new Date().getFullYear();
+    const minYear = currentYear - 10;
+    const maxYear = currentYear + 10;
+    if (graduation_year < minYear || graduation_year > maxYear) {
+      return NextResponse.json({ 
+        error: `Graduation year must be between ${minYear} and ${maxYear}` 
+      }, { status: 400 });
+    }
+
+    // Handle major as string or array (for backward compatibility)
+    let majorString: string;
+    if (Array.isArray(body.major)) {
+      // If major is an array, join with commas
+      majorString = body.major.filter((m: string) => m && m.trim()).join(', ');
+    } else {
+      // If major is a string, use it directly
+      majorString = body.major || '';
+    }
+
+    if (!majorString || !majorString.trim()) {
+      return NextResponse.json({ error: 'Major is required' }, { status: 400 });
     }
 
     // Validate the invitation token
     const validation = await validateInvitationToken(token);
     if (!validation.valid) {
-      // Invitation Accept: Invalid token
       return NextResponse.json({ 
         error: validation.error 
       }, { status: 400 });
     }
 
     const invitation = validation.invitation!;
-    // Invitation Accept: Token validated for chapter
 
     // Validate email domain if restricted
     if (!validateEmailDomain(email, invitation.email_domain_allowlist)) {
@@ -45,13 +81,10 @@ export async function POST(
     // Check if this email has already used this invitation
     const hasUsed = await hasEmailUsedInvitation(invitation.id, email);
     if (hasUsed) {
-      // Invitation Accept: Email already used
       return NextResponse.json({ 
         error: 'This email has already been used with this invitation' 
       }, { status: 400 });
     }
-
-    // Invitation Accept: Creating auth user...
 
     // Create the user account
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -73,8 +106,6 @@ export async function POST(
       }, { status: 500 });
     }
 
-    // Invitation Accept: Auth user created
-
     // Wait a moment to ensure auth user is fully created
     await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -90,9 +121,7 @@ export async function POST(
     }
 
     if (autoProfile) {
-      // Invitation Accept: Profile auto-created by trigger, updating...
-      
-      // Update the profile with invitation data
+      // Profile auto-created by trigger, updating with all required fields
       const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
         .update({
@@ -101,8 +130,11 @@ export async function POST(
           role: 'active_member',
           member_status: 'active',
           welcome_seen: false,
-          phone: body.phone || null,
-          sms_consent: body.sms_consent || false
+          phone: phone.trim(),
+          sms_consent: body.sms_consent || false,
+          grad_year: graduation_year,
+          major: majorString.trim(),
+          location: location?.trim() || null
         })
         .eq('id', authData.user.id)
         .select()
@@ -123,8 +155,6 @@ export async function POST(
         }, { status: 500 });
       }
 
-      // Invitation Accept: Profile updated successfully
-      
       // Wait a moment and verify the update worked
       await new Promise(resolve => setTimeout(resolve, 1000));
       
@@ -137,13 +167,9 @@ export async function POST(
         
       if (verifyError) {
         console.error('❌ Invitation Accept: Error verifying profile update:', verifyError);
-      } else {
-        // Invitation Accept: Profile verification completed
       }
     } else {
-      // Invitation Accept: No auto-profile found, creating manually...
-      
-      // Create the profile manually
+      // No auto-profile found, creating manually with all required fields
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -152,12 +178,15 @@ export async function POST(
           full_name,
           first_name: first_name || full_name.split(' ')[0],
           last_name: last_name || full_name.split(' ').slice(1).join(' '),
-          phone: body.phone || null,
+          phone: phone.trim(),
           sms_consent: body.sms_consent || false,
           chapter_id: invitation.chapter_id,
-          chapter: validation.chapter_name, // FIX: Set the chapter name
+          chapter: validation.chapter_name,
           role: 'active_member',
-          member_status: 'active', // Always set to active
+          member_status: 'active',
+          grad_year: graduation_year,
+          major: majorString.trim(),
+          location: location?.trim() || null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         });
@@ -176,23 +205,15 @@ export async function POST(
           error: 'Failed to create profile' 
         }, { status: 500 });
       }
-
-      // Invitation Accept: Profile created successfully
     }
 
     // Record invitation usage
     const usageResult = await recordInvitationUsage(invitation.id, email, authData.user.id);
     if (!usageResult.success) {
       console.error('❌ Invitation Accept: Failed to record invitation usage:', usageResult.error);
-      // Don't fail the signup, just log the error
-    } else {
-      // Invitation Accept: Invitation usage recorded
     }
 
-    // Invitation Accept: Process completed successfully
-
-    // CRITICAL FIX: Sign in the user after account creation
-    // Invitation Accept: Signing in user...
+    // Sign in the user after account creation
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: email.toLowerCase(),
       password
@@ -200,9 +221,6 @@ export async function POST(
 
     if (signInError) {
       console.error('❌ Invitation Accept: Auto sign-in failed:', signInError);
-      // Don't fail the entire process, just log the error
-    } else {
-      // Invitation Accept: User signed in successfully
     }
 
     return NextResponse.json({
@@ -214,8 +232,8 @@ export async function POST(
         chapter_id: invitation.chapter_id,
         chapter: validation.chapter_name,
         role: 'active_member',
-        member_status: 'active', // Always set to active
-        needs_approval: false // Always false for auto-approval
+        member_status: 'active',
+        needs_approval: false
       }
     });
   } catch (error) {
@@ -223,4 +241,3 @@ export async function POST(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-
