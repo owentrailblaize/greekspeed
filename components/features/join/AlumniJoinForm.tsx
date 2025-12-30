@@ -199,8 +199,7 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <CardTitle className="text-lg md:text-xl flex items-center space-x-2">
-                <GraduationCap className="h-5 w-5 text-purple-600" />
-                <span>Join as Alumni</span>
+                <span>Create Alumni Account</span>
               </CardTitle>
             </div>
           </CardHeader>
@@ -209,7 +208,6 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
               {/* Personal Information Section */}
               <div className="space-y-4">
                 <h3 className="text-md font-semibold text-gray-900 flex items-center space-x-2">
-                  <Users className="h-4 w-4 text-purple-600" />
                   <span>Personal Information</span>
                 </h3>
 
@@ -310,7 +308,6 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
               {/* Professional Information Section */}
               <div className="space-y-4">
                 <h3 className="text-md font-semibold text-gray-900 flex items-center space-x-2">
-                  <Briefcase className="h-4 w-4 text-purple-600" />
                   <span>Professional Information</span>
                 </h3>
 
@@ -402,10 +399,7 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
 
                 {/* Location */}
                 <div className="space-y-1 md:space-y-2">
-                  <Label htmlFor="location" className="text-sm flex items-center space-x-1">
-                    <MapPin className="h-3 w-3" />
-                    <span>Location *</span>
-                  </Label>
+                  <Label htmlFor="location" className="text-sm">Location *</Label>
                   <Input
                     id="location"
                     type="text"
@@ -424,10 +418,7 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
 
                 {/* LinkedIn URL */}
                 <div className="space-y-1 md:space-y-2">
-                  <Label htmlFor="linkedin_url" className="text-sm flex items-center space-x-1">
-                    <Link className="h-3 w-3" />
-                    <span>LinkedIn Profile (Optional)</span>
-                  </Label>
+                  <Label htmlFor="linkedin_url" className="text-sm">LinkedIn Profile (Optional)</Label>
                   <Input
                     id="linkedin_url"
                     type="url"
@@ -445,8 +436,8 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
                 </div>
               </div>
 
-              {/* SMS Consent Checkbox */}
-              <div className="space-y-1">
+              {/* SMS Consent Checkbox - More Compact */}
+              <div className="space-y-0.5">
                 <div className="flex items-start space-x-2">
                   <Checkbox
                     id="sms-consent"
@@ -455,32 +446,23 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
                     className="mt-0.5"
                     disabled={loading}
                   />
-                  <div className="grid gap-1 leading-none">
-                    <Label
-                      htmlFor="sms-consent"
-                      className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      By providing your phone number and clicking 'Submit,' you agree to receive SMS notifications about chapter updates and events from Trailblaize, Inc. Message frequency may vary. Standard Message and Data Rates may apply. Reply STOP to opt out. Reply HELP for help. Consent is not a condition of purchase. Your mobile information will not be sold or shared with third parties for promotional or marketing purposes.
-                    </Label>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Message frequency may vary. Standard Message and Data Rates may apply. Reply STOP to opt out. Reply HELP for help. Consent is not a condition of purchase. Your mobile information will not be sold or shared with third parties for promotional or marketing purposes.
-                    </p>
-                  </div>
+                  <Label
+                    htmlFor="sms-consent"
+                    className="text-xs leading-tight peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    I agree to receive SMS notifications from Trailblaize, Inc. Message and data rates may apply. Reply STOP to opt out.
+                  </Label>
                 </div>
               </div>
 
               {/* Chapter Info */}
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 md:p-3 space-y-1 md:space-y-2">
-                <h4 className="font-medium text-purple-900 text-sm">You're joining as alumni:</h4>
-                <div className="flex items-center space-x-2">
-                  <Users className="h-3 w-3 md:h-4 md:w-4 text-purple-600" />
-                  <span className="text-purple-800 text-sm">{invitation.chapter_name}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Shield className="h-3 w-3 md:h-4 md:w-4 text-purple-600" />
-                  <span className="text-purple-800 text-sm">
-                    Auto-approved alumni membership
-                  </span>
+              <div className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 rounded-lg p-1.5 md:p-2">
+                <div className="flex flex-col md:flex-row md:items-center md:space-x-2 space-y-1 md:space-y-0">
+                  <h4 className="font-medium text-navy-900 text-sm">You're joining as alumni:</h4>
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-3 w-3 md:h-4 md:w-4 text-navy-600" />
+                    <span className="text-navy-800 text-sm">{invitation.chapter_name}</span>
+                  </div>
                 </div>
               </div>
 
@@ -494,7 +476,7 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full bg-purple-600 hover:bg-purple-700 h-8 md:h-9"
+                className="rounded-full w-full bg-blue-600 hover:bg-blue-700 h-8 md:h-9"
                 disabled={loading}
               >
                 {loading ? (

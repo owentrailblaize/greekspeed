@@ -11,9 +11,10 @@ import ImageWithFallback from "@/components/figma/ImageWithFallback";
 
 interface LinkedInStyleChapterCardProps {
   member: ChapterMember;
+  onClick?: () => void;
 }
 
-export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardProps) {
+export function LinkedInStyleChapterCard({ member, onClick }: LinkedInStyleChapterCardProps) {
   const { user } = useAuth();
   const router = useRouter();
   const { 
@@ -191,8 +192,16 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
     }
   };
 
-  const handleCardClick = () => {
-    // Optional: Add onClick handler if needed
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't trigger if clicking on a button or interactive element
+    const target = e.target as HTMLElement;
+    if (target.closest('button')) {
+      return;
+    }
+    
+    if (onClick) {
+      onClick();
+    }
   };
 
   // Check if we have data to display
@@ -202,9 +211,14 @@ export function LinkedInStyleChapterCard({ member }: LinkedInStyleChapterCardPro
   const hasInterests = isValidField(interests);
 
   return (
-    <Card className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 overflow-hidden group h-[260px] sm:h-[320px] flex flex-col" onClick={handleCardClick}>
+    <Card 
+      className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-all duration-200 overflow-hidden group h-[260px] sm:h-[320px] flex flex-col"
+    >
       <CardContent className="!p-0 flex flex-col h-full">
-        <div className="px-4 pt-2 sm:pt-4 pb-3 sm:pb-4 relative flex-1 flex flex-col">
+        <div 
+          className={`px-4 pt-2 sm:pt-4 pb-3 sm:pb-4 relative flex-1 flex flex-col ${onClick ? 'cursor-pointer' : ''}`}
+          onClick={handleCardClick}
+        >
           {/* Avatar */}
           <div className="flex justify-center mb-2">
             <div className="w-16 h-16 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden relative">

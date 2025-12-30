@@ -1,11 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useState, KeyboardEvent } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Eye, EyeOff, AlertCircle, CheckCircle, Users, Shield, Loader2, Link } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, AlertCircle, CheckCircle, Users, Shield, Loader2, Link, BookOpen, GraduationCap, X, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Invitation, JoinFormData } from '@/types/invitations';
 import { toast } from 'react-toastify';
 import { supabase } from '@/lib/supabase/client';
@@ -25,9 +26,14 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
     first_name: '',
     last_name: '',
     phone: '',
-    sms_consent: false
+    sms_consent: false,
+    graduation_year: new Date().getFullYear() + 4, // Default to 4 years from now
+    major: '',
+    location: ''
   });
 
+  const [majors, setMajors] = useState<string[]>([]);
+  const [majorInput, setMajorInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -51,7 +57,29 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
       newErrors.full_name = 'Full name is required';
     }
 
-    // No email domain restrictions - all domains are allowed
+    // Phone validation - now required
+    if (!formData.phone || !formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!isValidPhoneNumber(formData.phone)) {
+      newErrors.phone = 'Please enter a valid 10-digit phone number';
+    }
+
+    // Graduation year validation - required
+    if (!formData.graduation_year) {
+      newErrors.graduation_year = 'Graduation year is required';
+    } else {
+      const currentYear = new Date().getFullYear();
+      const minYear = currentYear - 10; // Allow up to 10 years in the past
+      const maxYear = currentYear + 10; // Allow up to 10 years in the future
+      if (formData.graduation_year < minYear || formData.graduation_year > maxYear) {
+        newErrors.graduation_year = `Graduation year must be between ${minYear} and ${maxYear}`;
+      }
+    }
+
+    // Major validation - required (check majors array)
+    if (majors.length === 0) {
+      newErrors.major = 'At least one major is required';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -67,12 +95,18 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
     setLoading(true);
 
     try {
+      // Convert majors array to comma-separated string for backend
+      const submitData = {
+        ...formData,
+        major: majors.join(', ')
+      };
+
       const response = await fetch(`/api/invitations/accept/${invitation.token}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(submitData)
       });
 
       if (!response.ok) {
@@ -115,7 +149,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
     }
   };
 
-  const handleInputChange = (field: keyof JoinFormData, value: string | boolean) => {
+  const handleInputChange = (field: keyof JoinFormData, value: string | boolean | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear error when user starts typing
@@ -132,6 +166,28 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
         last_name: nameParts.slice(1).join(' ') || ''
       }));
     }
+  };
+
+  const handleMajorKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && majorInput.trim()) {
+      e.preventDefault();
+      const trimmedMajor = majorInput.trim();
+      if (!majors.includes(trimmedMajor)) {
+        setMajors(prev => [...prev, trimmedMajor]);
+        setMajorInput('');
+        // Clear error when adding a major
+        if (errors.major) {
+          setErrors(prev => ({ ...prev, major: '' }));
+        }
+      }
+    } else if (e.key === 'Backspace' && majorInput === '' && majors.length > 0) {
+      // Remove last major when backspace is pressed on empty input
+      setMajors(prev => prev.slice(0, -1));
+    }
+  };
+
+  const removeMajor = (majorToRemove: string) => {
+    setMajors(prev => prev.filter(m => m !== majorToRemove));
   };
 
   const formatPhoneNumber = (value: string) => {
@@ -159,7 +215,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
         className="max-w-md w-full"
       >
         <Card>
-          <CardHeader className="pb-2 md:pb-4">
+          <CardHeader className="pb-1 md:pb-2">
             <div className="flex items-center space-x-2 md:space-x-3">
               <Button
                 variant="ghost"
@@ -172,10 +228,10 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
               <CardTitle className="text-lg md:text-xl">Create Your Account</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="pt-1 md:pt-2">
-            <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
+          <CardContent className="pt-0 md:pt-1">
+            <form onSubmit={handleSubmit} className="space-y-2 md:space-y-3">
               {/* Full Name */}
-              <div className="space-y-1 md:space-y-2">
+              <div className="space-y-0.5 md:space-y-1">
                 <Label htmlFor="full_name" className="text-sm">Full Name *</Label>
                 <Input
                   id="full_name"
@@ -186,7 +242,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                   className={`h-8 md:h-9 ${errors.full_name ? 'border-red-500' : ''}`}
                 />
                 {errors.full_name && (
-                  <p className="text-xs text-red-600 flex items-center space-x-1">
+                  <p className="text-xs text-red-600 flex items-center space-x-1 mt-0.5">
                     <AlertCircle className="h-3 w-3" />
                     <span>{errors.full_name}</span>
                   </p>
@@ -194,7 +250,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
               </div>
 
               {/* Email */}
-              <div className="space-y-1 md:space-y-2">
+              <div className="space-y-0.5 md:space-y-1">
                 <Label htmlFor="email" className="text-sm">Email Address *</Label>
                 <Input
                   id="email"
@@ -205,63 +261,148 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                   className={`h-8 md:h-9 ${errors.email ? 'border-red-500' : ''}`}
                 />
                 {errors.email && (
-                  <p className="text-xs text-red-600 flex items-center space-x-1">
+                  <p className="text-xs text-red-600 flex items-center space-x-1 mt-0.5">
                     <AlertCircle className="h-3 w-3" />
                     <span>{errors.email}</span>
                   </p>
                 )}
               </div>
 
-              {/* Phone Number */}
-              <div className="space-y-1 md:space-y-2">
-                <Label htmlFor="phone" className="text-sm">Phone Number (Optional)</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={formData.phone || ''}
-                  onChange={(e) => {
-                    const formatted = formatPhoneNumber(e.target.value);
-                    handleInputChange('phone', formatted);
-                  }}
-                  placeholder="(555) 123-4567"
-                  className="h-8 md:h-9"
-                />
-                <p className="text-xs text-gray-500">
+              {/* Phone Number & Graduation Year - Same Row on Desktop */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
+                {/* Phone Number */}
+                <div className="space-y-0.5 md:space-y-1">
+                  <Label htmlFor="phone" className="text-sm">Phone Number *</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData.phone || ''}
+                    onChange={(e) => {
+                      const formatted = formatPhoneNumber(e.target.value);
+                      handleInputChange('phone', formatted);
+                    }}
+                    placeholder="(555) 123-4567"
+                    className={`h-8 md:h-9 ${errors.phone ? 'border-red-500' : ''}`}
+                  />
+                  {errors.phone && (
+                    <p className="text-xs text-red-600 flex items-center space-x-1 mt-0.5">
+                      <AlertCircle className="h-3 w-3" />
+                      <span>{errors.phone}</span>
+                    </p>
+                  )}
+                  {!errors.phone && (
+                    <p className="text-xs text-gray-500 mt-0.5 hidden md:block">
+                      SMS notifications
+                    </p>
+                  )}
+                </div>
+
+                {/* Graduation Year */}
+                <div className="space-y-0.5 md:space-y-1">
+                  <Label htmlFor="graduation_year" className="text-sm flex items-center space-x-1">
+                    <GraduationCap className="h-3 w-3" />
+                    <span>Graduation Year *</span>
+                  </Label>
+                  <Input
+                    id="graduation_year"
+                    type="number"
+                    value={formData.graduation_year || ''}
+                    onChange={(e) => {
+                      const year = parseInt(e.target.value);
+                      if (!isNaN(year)) {
+                        handleInputChange('graduation_year', year);
+                      } else if (e.target.value === '') {
+                        handleInputChange('graduation_year', new Date().getFullYear() + 4);
+                      }
+                    }}
+                    placeholder="2028"
+                    min={new Date().getFullYear() - 10}
+                    max={new Date().getFullYear() + 10}
+                    className={`h-8 md:h-9 ${errors.graduation_year ? 'border-red-500' : ''}`}
+                  />
+                  {errors.graduation_year && (
+                    <p className="text-xs text-red-600 flex items-center space-x-1 mt-0.5">
+                      <AlertCircle className="h-3 w-3" />
+                      <span>{errors.graduation_year}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Phone helper text for mobile only */}
+              {!errors.phone && (
+                <p className="text-xs text-gray-500 md:hidden -mt-1">
                   Used for SMS notifications about chapter updates and events
                 </p>
-                {formData.phone && !isValidPhoneNumber(formData.phone) && (
-                  <p className="text-xs text-red-500">
-                    Please enter a complete 10-digit phone number
+              )}
+
+              {/* Major(s) - Tag Input */}
+              <div className="space-y-0.5 md:space-y-1">
+                <Label htmlFor="major" className="text-sm flex items-center space-x-1">
+                  <BookOpen className="h-3 w-3" />
+                  <span>Major(s) *</span>
+                </Label>
+                <div className={`min-h-[2rem] border rounded-md p-1.5 md:p-2 flex flex-wrap gap-1.5 items-center ${errors.major ? 'border-red-500' : 'border-gray-300'} focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500`}>
+                  {/* Major Tags */}
+                  {majors.map((major, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="flex items-center space-x-1 px-2 py-0.5 text-xs bg-blue-100 text-blue-800 border-blue-200"
+                    >
+                      <span>{major}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeMajor(major)}
+                        className="ml-1 hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                        aria-label={`Remove ${major}`}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                  {/* Input Field */}
+                  <Input
+                    id="major"
+                    type="text"
+                    value={majorInput}
+                    onChange={(e) => setMajorInput(e.target.value)}
+                    onKeyDown={handleMajorKeyDown}
+                    placeholder={majors.length === 0 ? "Type a major and press Enter" : "Add another major..."}
+                    className="flex-1 min-w-[120px] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto text-sm"
+                  />
+                </div>
+                {errors.major && (
+                  <p className="text-xs text-red-600 flex items-center space-x-1 mt-0.5">
+                    <AlertCircle className="h-3 w-3" />
+                    <span>{errors.major}</span>
+                  </p>
+                )}
+                {!errors.major && (
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Press Enter to add each major
                   </p>
                 )}
               </div>
 
-              {/* SMS Consent Checkbox */}
-              <div className="space-y-1">
-                <div className="flex items-start space-x-2">
-                  <Checkbox
-                    id="sms-consent"
-                    checked={formData.sms_consent || false}
-                    onCheckedChange={(checked) => handleInputChange('sms_consent', checked === true)}
-                    className="mt-0.5"
-                    disabled={loading}
-                  />
-                  <div className="grid gap-1 leading-none">
-                    <Label
-                      htmlFor="sms-consent"
-                      className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      By providing your phone number and clicking 'Submit,' you agree to receive SMS notifications about chapter updates and events from Trailblaize, Inc. Message frequency may vary. Standard Message and Data Rates may apply. Reply STOP to opt out. Reply HELP for help. Consent is not a condition of purchase. Your mobile information will not be sold or shared with third parties for promotional or marketing purposes.
-                    </Label>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Message frequency may vary. Standard Message and Data Rates may apply. Reply STOP to opt out. Reply HELP for help. Consent is not a condition of purchase. Your mobile information will not be sold or shared with third parties for promotional or marketing purposes.
-                    </p>
-                  </div>
-                </div>
+              {/* Location - Optional */}
+              <div className="space-y-0.5 md:space-y-1">
+                <Label htmlFor="location" className="text-sm flex items-center space-x-1">
+                  <MapPin className="h-3 w-3" />
+                  <span>Location (Optional)</span>
+                </Label>
+                <Input
+                  id="location"
+                  type="text"
+                  value={formData.location || ''}
+                  onChange={(e) => handleInputChange('location', e.target.value)}
+                  placeholder="City or state"
+                  className="h-8 md:h-9"
+                />
               </div>
 
               {/* Password */}
-              <div className="space-y-1 md:space-y-2">
+              <div className="space-y-0.5 md:space-y-1">
                 <Label htmlFor="password" className="text-sm">Password *</Label>
                 <div className="relative">
                   <Input
@@ -281,34 +422,51 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-xs text-red-600 flex items-center space-x-1">
+                  <p className="text-xs text-red-600 flex items-center space-x-1 mt-0.5">
                     <AlertCircle className="h-3 w-3" />
                     <span>{errors.password}</span>
                   </p>
                 )}
-                <p className="text-xs text-gray-500">
-                  Password must be at least 6 characters long
-                </p>
+                {!errors.password && (
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Minimum 6 characters
+                  </p>
+                )}
+              </div>
+
+              {/* SMS Consent Checkbox - More Compact */}
+              <div className="space-y-0.5">
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="sms-consent"
+                    checked={formData.sms_consent || false}
+                    onCheckedChange={(checked) => handleInputChange('sms_consent', checked === true)}
+                    className="mt-0.5"
+                    disabled={loading}
+                  />
+                  <Label
+                    htmlFor="sms-consent"
+                    className="text-xs leading-tight peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    I agree to receive SMS notifications from Trailblaize, Inc. Message and data rates may apply. Reply STOP to opt out.
+                  </Label>
+                </div>
               </div>
 
               {/* Chapter Info */}
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 md:p-3 space-y-1 md:space-y-2">
-                <h4 className="font-medium text-purple-900 text-sm">You're joining:</h4>
-                <div className="flex items-center space-x-2">
-                  <Users className="h-3 w-3 md:h-4 md:w-4 text-purple-600" />
-                  <span className="text-purple-800 text-sm">{invitation.chapter_name}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Shield className="h-3 w-3 md:h-4 md:w-4 text-purple-600" />
-                  <span className="text-purple-800 text-sm">
-                    Auto-approved
-                  </span>
+              <div className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 rounded-lg p-1.5 md:p-2">
+                <div className="flex flex-col md:flex-row md:items-center md:space-x-2 space-y-1 md:space-y-0">
+                  <h4 className="font-medium text-navy-900 text-sm">You're joining:</h4>
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-3 w-3 md:h-4 md:w-4 text-navy-600" />
+                    <span className="text-navy-800 text-sm">{invitation.chapter_name}</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Terms and Privacy */}
-              <div className="bg-gray-50 rounded-lg p-2 md:p-3">
-                <p className="text-xs text-gray-600">
+              {/* Terms and Privacy - More Compact */}
+              <div className="bg-gray-50 rounded-lg p-1.5 md:p-2">
+                <p className="text-xs text-gray-600 leading-tight">
                   By creating an account, you agree to join {invitation.chapter_name} and abide by the chapter's rules and policies.
                 </p>
               </div>
@@ -316,7 +474,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 h-8 md:h-9"
+                className="rounded-full w-full bg-blue-600 hover:bg-blue-700 h-8 md:h-9"
                 disabled={loading}
               >
                 {loading ? (
@@ -325,11 +483,11 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                     <span>Creating Account...</span>
                   </div>
                 ) : (
-                  'Create Account & Join Chapter'
+                  'Create Account'
                 )}
               </Button>
 
-              <div className="text-center">
+              <div className="text-center pt-1">
                 <button
                   type="button"
                   onClick={onCancel}
