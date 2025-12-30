@@ -476,10 +476,11 @@ export async function GET(request: NextRequest) {
           chapterIdQuery = chapterIdQuery.eq('is_actively_hiring', true);
         }
         
-        // REMOVED: Pagination from database queries - we'll fetch ALL records and paginate after sorting
-        // Add explicit limit to avoid Supabase's 1000 row default limit
-        chapterNameQuery = chapterNameQuery.limit(10000);
-        chapterIdQuery = chapterIdQuery.limit(10000);
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+
+        chapterNameQuery = chapterNameQuery.range(from, to).order('created_at', { ascending: false });
+        chapterIdQuery = chapterIdQuery.range(from, to).order('created_at', { ascending: false });
         
         // Execute both queries and combine results (fetch ALL matching records)
         const [chapterNameResult, chapterIdResult] = await Promise.all([
@@ -498,8 +499,8 @@ export async function GET(request: NextRequest) {
           index === self.findIndex(a => a.id === alumni.id)
         );
         
-        // Calculate total count - use actual unique count after deduplication
-        const totalCount = uniqueResults.length;
+        // Calculate total count
+        const totalCount = Math.max(chapterNameResult.count || 0, chapterIdResult.count || 0);
         
         // Calculate mutual connections for all alumni if viewer is logged in
         let mutualConnectionsMap = new Map<string, Array<{ id: string; name: string; avatar: string | null }>>();
@@ -651,24 +652,19 @@ export async function GET(request: NextRequest) {
           })
         }
 
-        // Apply pagination AFTER sorting
-        const from = (page - 1) * limit;
-        const to = from + limit;
-        const paginatedAlumni = filteredAlumni.slice(from, to);
-
-        const totalPages = Math.ceil(filteredAlumni.length / limit);
+        const totalPages = Math.ceil(totalCount / limit);
 
         return NextResponse.json({
-          alumni: paginatedAlumni,
+          alumni: filteredAlumni,
           pagination: {
             page,
             limit,
-            total: filteredAlumni.length,
+            total: totalCount,
             totalPages,
             hasNextPage: page < totalPages,
             hasPrevPage: page > 1
           },
-          message: `Retrieved ${paginatedAlumni.length} alumni records (page ${page} of ${totalPages})`
+          message: `Retrieved ${filteredAlumni.length} alumni records (page ${page} of ${totalPages})`
         });
       } else {
         query = query.eq('chapter', userChapter);
@@ -756,10 +752,12 @@ export async function GET(request: NextRequest) {
           chapterIdQuery = chapterIdQuery.eq('is_actively_hiring', true);
         }
         
-        // REMOVED: Pagination from database queries - we'll fetch ALL records and paginate after sorting
-        // Add explicit limit to avoid Supabase's 1000 row default limit
-        chapterNameQuery = chapterNameQuery.limit(10000);
-        chapterIdQuery = chapterIdQuery.limit(10000);
+        // Apply pagination to both queries
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        
+        chapterNameQuery = chapterNameQuery.range(from, to).order('created_at', { ascending: false });
+        chapterIdQuery = chapterIdQuery.range(from, to).order('created_at', { ascending: false });
         
         const [chapterNameResult, chapterIdResult] = await Promise.all([
           chapterNameQuery,
@@ -775,8 +773,7 @@ export async function GET(request: NextRequest) {
           index === self.findIndex(a => a.id === alumni.id)
         );
         
-        // Calculate total count - use actual unique count after deduplication
-        const totalCount = uniqueResults.length;
+        const totalCount = Math.max(chapterNameResult.count || 0, chapterIdResult.count || 0);
         
         // Transform data to match your interface with privacy checks
         const transformedAlumni = uniqueResults?.map(alumni => {
@@ -902,24 +899,19 @@ export async function GET(request: NextRequest) {
           })
         }
 
-        // Apply pagination AFTER sorting
-        const from = (page - 1) * limit;
-        const to = from + limit;
-        const paginatedAlumni = filteredAlumni.slice(from, to);
-
-        const totalPages = Math.ceil(filteredAlumni.length / limit);
+        const totalPages = Math.ceil(totalCount / limit);
 
         return NextResponse.json({
-          alumni: paginatedAlumni,
+          alumni: filteredAlumni,
           pagination: {
             page,
             limit,
-            total: filteredAlumni.length,
+            total: totalCount,
             totalPages,
             hasNextPage: page < totalPages,
             hasPrevPage: page > 1
           },
-          message: `Retrieved ${paginatedAlumni.length} alumni records (page ${page} of ${totalPages})`
+          message: `Retrieved ${filteredAlumni.length} alumni records (page ${page} of ${totalPages})`
         });
       } else {
         query = query.eq('chapter', chapter);
@@ -952,11 +944,12 @@ export async function GET(request: NextRequest) {
       query = query.eq('is_actively_hiring', true)
     }
 
-    // REMOVED: Pagination from database query - we'll fetch ALL records and paginate after sorting
-    // Add explicit limit to avoid Supabase's 1000 row default limit
-    query = query.limit(10000);
+    // Apply pagination
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
     
-    // Fetch ALL matching records without pagination or ordering
+    query = query.range(from, to).order('created_at', { ascending: false });
+    
     const { data: alumni, error, count } = await query
 
     if (error) {
@@ -1118,24 +1111,19 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Apply pagination AFTER sorting
-    const from = (page - 1) * limit;
-    const to = from + limit;
-    const paginatedAlumni = filteredAlumni.slice(from, to);
-
-    const totalPages = Math.ceil(filteredAlumni.length / limit);
+    const totalPages = Math.ceil((count || 0) / limit);
 
     return NextResponse.json({
-      alumni: paginatedAlumni,
+      alumni: filteredAlumni,
       pagination: {
         page,
         limit,
-        total: filteredAlumni.length,
+        total: count || 0,
         totalPages,
         hasNextPage: page < totalPages,
         hasPrevPage: page > 1
       },
-      message: `Retrieved ${paginatedAlumni.length} alumni records (page ${page} of ${totalPages})`
+      message: `Retrieved ${filteredAlumni.length} alumni records (page ${page} of ${totalPages})`
     })
 
   } catch (error) {
