@@ -66,6 +66,7 @@ export interface JoinFormData {
   sms_consent?: boolean;
   graduation_year: number;
   major: string;
+  location?: string;
 }
 
 export interface InvitationValidationResult {

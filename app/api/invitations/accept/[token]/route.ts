@@ -10,7 +10,7 @@ export async function POST(
   try {
     const supabase = createServerSupabaseClient();
     const body: any = await request.json();
-    const { email, password, full_name, first_name, last_name, phone, graduation_year } = body;
+    const { email, password, full_name, first_name, last_name, phone, graduation_year, location } = body;
     const { token } = await params;
 
     if (!token) {
@@ -133,7 +133,8 @@ export async function POST(
           phone: phone.trim(),
           sms_consent: body.sms_consent || false,
           grad_year: graduation_year,
-          major: majorString.trim()
+          major: majorString.trim(),
+          location: location?.trim() || null
         })
         .eq('id', authData.user.id)
         .select()
@@ -185,6 +186,7 @@ export async function POST(
           member_status: 'active',
           grad_year: graduation_year,
           major: majorString.trim(),
+          location: location?.trim() || null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         });

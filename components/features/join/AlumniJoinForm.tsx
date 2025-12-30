@@ -457,10 +457,12 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
 
               {/* Chapter Info */}
               <div className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 rounded-lg p-1.5 md:p-2">
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-col md:flex-row md:items-center md:space-x-2 space-y-1 md:space-y-0">
                   <h4 className="font-medium text-navy-900 text-sm">You're joining as alumni:</h4>
-                  <Users className="h-3 w-3 md:h-4 md:w-4 text-navy-600" />
-                  <span className="text-navy-800 text-sm">{invitation.chapter_name}</span>
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-3 w-3 md:h-4 md:w-4 text-navy-600" />
+                    <span className="text-navy-800 text-sm">{invitation.chapter_name}</span>
+                  </div>
                 </div>
               </div>
 

@@ -1,7 +1,7 @@
 'use client';
 import { useState, KeyboardEvent } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Eye, EyeOff, AlertCircle, CheckCircle, Users, Shield, Loader2, Link, BookOpen, GraduationCap, X } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, AlertCircle, CheckCircle, Users, Shield, Loader2, Link, BookOpen, GraduationCap, X, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +28,8 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
     phone: '',
     sms_consent: false,
     graduation_year: new Date().getFullYear() + 4, // Default to 4 years from now
-    major: ''
+    major: '',
+    location: ''
   });
 
   const [majors, setMajors] = useState<string[]>([]);
@@ -384,6 +385,22 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                 )}
               </div>
 
+              {/* Location - Optional */}
+              <div className="space-y-0.5 md:space-y-1">
+                <Label htmlFor="location" className="text-sm flex items-center space-x-1">
+                  <MapPin className="h-3 w-3" />
+                  <span>Location (Optional)</span>
+                </Label>
+                <Input
+                  id="location"
+                  type="text"
+                  value={formData.location || ''}
+                  onChange={(e) => handleInputChange('location', e.target.value)}
+                  placeholder="City or state"
+                  className="h-8 md:h-9"
+                />
+              </div>
+
               {/* Password */}
               <div className="space-y-0.5 md:space-y-1">
                 <Label htmlFor="password" className="text-sm">Password *</Label>
@@ -438,10 +455,12 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
 
               {/* Chapter Info */}
               <div className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 rounded-lg p-1.5 md:p-2">
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-col md:flex-row md:items-center md:space-x-2 space-y-1 md:space-y-0">
                   <h4 className="font-medium text-navy-900 text-sm">You're joining:</h4>
-                  <Users className="h-3 w-3 md:h-4 md:w-4 text-navy-600" />
-                  <span className="text-navy-800 text-sm">{invitation.chapter_name}</span>
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-3 w-3 md:h-4 md:w-4 text-navy-600" />
+                    <span className="text-navy-800 text-sm">{invitation.chapter_name}</span>
+                  </div>
                 </div>
               </div>
 
@@ -464,7 +483,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                     <span>Creating Account...</span>
                   </div>
                 ) : (
-                  'Create Account & Join Chapter'
+                  'Create Account'
                 )}
               </Button>
 
