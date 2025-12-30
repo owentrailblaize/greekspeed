@@ -477,6 +477,10 @@ export async function GET(request: NextRequest) {
         }
         
         // REMOVED: Pagination from database queries - we'll fetch ALL records and paginate after sorting
+        // Add explicit limit to avoid Supabase's 1000 row default limit
+        chapterNameQuery = chapterNameQuery.limit(10000);
+        chapterIdQuery = chapterIdQuery.limit(10000);
+        
         // Execute both queries and combine results (fetch ALL matching records)
         const [chapterNameResult, chapterIdResult] = await Promise.all([
           chapterNameQuery,
@@ -494,8 +498,8 @@ export async function GET(request: NextRequest) {
           index === self.findIndex(a => a.id === alumni.id)
         );
         
-        // Calculate total count
-        const totalCount = Math.max(chapterNameResult.count || 0, chapterIdResult.count || 0);
+        // Calculate total count - use actual unique count after deduplication
+        const totalCount = uniqueResults.length;
         
         // Calculate mutual connections for all alumni if viewer is logged in
         let mutualConnectionsMap = new Map<string, Array<{ id: string; name: string; avatar: string | null }>>();
@@ -753,6 +757,10 @@ export async function GET(request: NextRequest) {
         }
         
         // REMOVED: Pagination from database queries - we'll fetch ALL records and paginate after sorting
+        // Add explicit limit to avoid Supabase's 1000 row default limit
+        chapterNameQuery = chapterNameQuery.limit(10000);
+        chapterIdQuery = chapterIdQuery.limit(10000);
+        
         const [chapterNameResult, chapterIdResult] = await Promise.all([
           chapterNameQuery,
           chapterIdQuery
@@ -767,7 +775,8 @@ export async function GET(request: NextRequest) {
           index === self.findIndex(a => a.id === alumni.id)
         );
         
-        const totalCount = Math.max(chapterNameResult.count || 0, chapterIdResult.count || 0);
+        // Calculate total count - use actual unique count after deduplication
+        const totalCount = uniqueResults.length;
         
         // Transform data to match your interface with privacy checks
         const transformedAlumni = uniqueResults?.map(alumni => {
@@ -864,8 +873,8 @@ export async function GET(request: NextRequest) {
           if (aHasAvatar && !bHasAvatar) return -1;
           if (!aHasAvatar && bHasAvatar) return 1;
           
-          const aHasProfessional = !!(a.jobTitle || a.company)
-          const bHasProfessional = !!(b.jobTitle || b.company)
+          const aHasProfessional = !!(isValidField(a.jobTitle) || isValidField(a.company));
+          const bHasProfessional = !!(isValidField(b.jobTitle) || isValidField(b.company));
           if (aHasProfessional && !bHasProfessional) return -1
           if (!aHasProfessional && bHasProfessional) return 1
           
@@ -944,6 +953,9 @@ export async function GET(request: NextRequest) {
     }
 
     // REMOVED: Pagination from database query - we'll fetch ALL records and paginate after sorting
+    // Add explicit limit to avoid Supabase's 1000 row default limit
+    query = query.limit(10000);
+    
     // Fetch ALL matching records without pagination or ordering
     const { data: alumni, error, count } = await query
 
