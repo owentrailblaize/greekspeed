@@ -1,14 +1,17 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, ArrowLeft, Search, Filter, X } from 'lucide-react';
+import { Users, ArrowLeft, Search, Filter, X, Loader2 } from 'lucide-react';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
+
+const INITIAL_LOAD_COUNT = 20;
+const LOAD_MORE_COUNT = 20;
 
 export default function ManageConnectionsPage() {
   const router = useRouter();
@@ -17,6 +20,9 @@ export default function ManageConnectionsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('recent');
+  const [displayCount, setDisplayCount] = useState(INITIAL_LOAD_COUNT);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   const getConnectionPartner = (connection: any) => {
     if (!user) return { name: 'Unknown', initials: 'U', avatar: null };
@@ -66,6 +72,57 @@ export default function ManageConnectionsPage() {
 
     return filtered;
   }, [connections, user, searchTerm, statusFilter, sortBy]);
+
+  // Reset display count when filters/search change
+  useEffect(() => {
+    setDisplayCount(INITIAL_LOAD_COUNT);
+  }, [searchTerm, statusFilter, sortBy]);
+
+  // Get displayed connections (lazy loaded subset)
+  const displayedConnections = useMemo(() => {
+    return filteredConnections.slice(0, displayCount);
+  }, [filteredConnections, displayCount]);
+
+  const hasMore = filteredConnections.length > displayCount;
+
+  // Load more connections
+  const loadMore = useCallback(() => {
+    if (isLoadingMore || !hasMore) return;
+    
+    setIsLoadingMore(true);
+    // Simulate slight delay for smooth UX
+    setTimeout(() => {
+      setDisplayCount(prev => Math.min(prev + LOAD_MORE_COUNT, filteredConnections.length));
+      setIsLoadingMore(false);
+    }, 150);
+  }, [isLoadingMore, hasMore, filteredConnections.length]);
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+          loadMore();
+        }
+      },
+      {
+        root: null,
+        rootMargin: '100px', // Start loading 100px before reaching the bottom
+        threshold: 0.1,
+      }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMore, isLoadingMore, loadMore]);
 
   const getStatusBadge = (connection: any) => {
     if (!user) return null;
@@ -163,43 +220,68 @@ export default function ManageConnectionsPage() {
       {/* Connections List */}
       <div className="px-4 py-4">
         {filteredConnections.length > 0 ? (
-          <div className="space-y-3">
-            {filteredConnections.map((connection) => {
-              const partner = getConnectionPartner(connection);
-              return (
-                <div
-                  key={connection.id}
-                  className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between"
-                >
-                  <div className="flex items-center space-x-3 flex-1 min-w-0">
-                    <div className="w-12 h-12 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold flex-shrink-0">
-                      {partner.avatar ? (
-                        <img 
-                          src={partner.avatar} 
-                          alt={partner.name}
-                          className="w-full h-full rounded-full object-cover"
-                        />
-                      ) : (
-                        partner.initials
-                      )}
+          <>
+            <div className="space-y-3">
+              {displayedConnections.map((connection) => {
+                const partner = getConnectionPartner(connection);
+                return (
+                  <div
+                    key={connection.id}
+                    className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between"
+                  >
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <div className="w-12 h-12 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold flex-shrink-0">
+                        {partner.avatar ? (
+                          <img 
+                            src={partner.avatar} 
+                            alt={partner.name}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          partner.initials
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {partner.name}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {connection.status === 'accepted' 
+                            ? `Connected ${new Date(connection.updated_at).toLocaleDateString()}`
+                            : new Date(connection.created_at).toLocaleDateString()
+                          }
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {partner.name}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {connection.status === 'accepted' 
-                          ? `Connected ${new Date(connection.updated_at).toLocaleDateString()}`
-                          : new Date(connection.created_at).toLocaleDateString()
-                        }
-                      </p>
-                    </div>
+                    {getStatusBadge(connection)}
                   </div>
-                  {getStatusBadge(connection)}
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+
+            {/* Loading indicator and observer target */}
+            {hasMore && (
+              <div ref={observerTarget} className="flex items-center justify-center py-6">
+                {isLoadingMore ? (
+                  <div className="flex items-center space-x-2 text-gray-500">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span className="text-sm">Loading more connections...</span>
+                  </div>
+                ) : (
+                  <div className="h-20" /> // Spacer for intersection observer
+                )}
+              </div>
+            )}
+
+            {/* Show count if all loaded */}
+            {!hasMore && filteredConnections.length > INITIAL_LOAD_COUNT && (
+              <div className="text-center py-4">
+                <p className="text-sm text-gray-500">
+                  Showing all {filteredConnections.length} connection{filteredConnections.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-12">
             <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
