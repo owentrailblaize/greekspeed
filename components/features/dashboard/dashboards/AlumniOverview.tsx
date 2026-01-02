@@ -19,6 +19,8 @@ import { useRouter } from 'next/navigation';
 import React from 'react';
 import { ChapterMemberData } from '@/types/chapter';
 import { MobileBottomNavigation } from './ui/MobileBottomNavigation';
+import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
+import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
 
 interface Profile {
   id: string;
@@ -339,24 +341,37 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
                       {networkingSpotlight.map((member) => (
                         <div key={member.id} className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
                           <div className="flex items-start space-x-3">
-                            {/* Avatar */}
-                            <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
-                              {member.avatar_url ? (
-                                <img 
-                                  src={member.avatar_url} 
-                                  alt={member.full_name}
-                                  className="w-full h-full rounded-full object-cover"
-                                />
-                              ) : (
-                                member.full_name?.charAt(0) || member.first_name?.charAt(0) || 'U'
-                              )}
-                            </div>
+                            {/* Avatar - Now Clickable */}
+                            {member.id ? (
+                              <ClickableAvatar
+                                userId={member.id}
+                                avatarUrl={member.avatar_url}
+                                fullName={member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim()}
+                                firstName={member.first_name}
+                                lastName={member.last_name}
+                                size="sm"
+                                className="w-10 h-10 shrink-0"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
+                                {member.full_name?.charAt(0) || member.first_name?.charAt(0) || 'U'}
+                              </div>
+                            )}
                             
                             <div className="flex-1 min-w-0">
                               <div className="flex justify-between items-start mb-1">
-                                <h4 className="font-medium text-gray-900 text-sm truncate">
-                                  {member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member'}
-                                </h4>
+                                {/* Name - Now Clickable */}
+                                {member.id && (member.full_name || member.first_name || member.last_name) ? (
+                                  <ClickableUserName
+                                    userId={member.id}
+                                    fullName={member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member'}
+                                    className="font-medium text-gray-900 text-sm truncate"
+                                  />
+                                ) : (
+                                  <h4 className="font-medium text-gray-900 text-sm truncate">
+                                    {member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member'}
+                                  </h4>
+                                )}
                                 {member.role === 'alumni' && (
                                   <Badge className="bg-blue-100 text-blue-800 text-xs">
                                     Alumni
