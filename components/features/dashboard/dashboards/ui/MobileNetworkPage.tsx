@@ -615,10 +615,9 @@ export function MobileNetworkPage() {
                           <Button
                             size="sm"
                             onClick={() => handleMessage(connection.id)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 h-8"
-                          >
+                            className="rounded-full bg-navy-600 hover:bg-navy-700 text-white text-sm px-3 h-8 shadow-md hover:shadow-lg transition-all duration-200 border border-navy-700/20"
+                            >
                             <MessageCircle className="h-3 w-3 mr-1" />
-                            Message
                           </Button>
                         </div>
                       );
@@ -653,7 +652,7 @@ export function MobileNetworkPage() {
                               onClick={() => setRecentlyConnectedLimit(prev => 
                                 Math.min(prev + LOAD_MORE_INCREMENT, recentlyConnected.length)
                               )}
-                              className="flex-1 text-blue-600 border-blue-600 hover:bg-blue-50"
+                              className="rounded-full flex-1 text-blue-600 border-blue-600 hover:bg-blue-50"
                             >
                               Load More ({remainingRecentlyConnected} remaining)
                             </Button>
@@ -722,7 +721,7 @@ export function MobileNetworkPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleMessage(connection.id)}
-                            className="text-blue-600 border-blue-600 hover:bg-blue-50 text-xs px-3 h-8"
+                            className="rounded-full text-blue-600 border-blue-600 hover:bg-blue-50 text-xs px-3 h-8 shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-navy-500/30"
                           >
                             <MessageCircle className="h-3 w-3 mr-1" />
                             Say hi
@@ -796,7 +795,7 @@ export function MobileNetworkPage() {
         {/* Manage my network */}
         <div
           onClick={() => router.push('/dashboard/network/manage')}
-          className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
+          className="bg-white rounded-full border border-gray-200 p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
         >
           <div className="flex items-center space-x-3">
             <Users className="h-5 w-5 text-gray-600" />
@@ -842,12 +841,20 @@ export function MobileNetworkPage() {
               </div>
             )}
 
-            {/* Show count if all loaded */}
-            {!hasMoreSuggestions && unconnectedMembers.length > INITIAL_SUGGESTIONS_COUNT && (
-              <div className="text-center py-4">
-                <p className="text-sm text-gray-500">
-                  Showing all {unconnectedMembers.length} suggestion{unconnectedMembers.length !== 1 ? 's' : ''}
-                </p>
+            {/* Show count and button when all suggestions are loaded */}
+            {!hasMoreSuggestions && unconnectedMembers.length > 0 && (
+              <div className="text-center py-4 space-y-3">
+                {unconnectedMembers.length > INITIAL_SUGGESTIONS_COUNT && (
+                  <p className="text-sm text-gray-500">
+                    Showing all {unconnectedMembers.length} suggestion{unconnectedMembers.length !== 1 ? 's' : ''}
+                  </p>
+                )}
+                <Button
+                  onClick={() => router.push('/dashboard/alumni/pipeline')}
+                  className="rounded-full bg-navy-600 hover:bg-navy-700 text-white text-sm px-6 py-2 shadow-md hover:shadow-lg transition-all duration-200 border border-navy-700/20"
+                >
+                  View More Connections
+                </Button>
               </div>
             )}
           </div>
