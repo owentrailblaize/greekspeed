@@ -12,6 +12,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { CommentModal } from './CommentModal';
 import { DeletePostModal } from './DeletePostModal';
 import { LinkPreviewCard } from './LinkPreviewCard';
+import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
+import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
 
 const MAX_COLLAPSED_CHARS = 220;
 
@@ -186,7 +188,15 @@ export function PostCard({
         <div className="space-y-3">
           {commentsPreview.map((comment) => (
             <div key={comment.id} className="text-sm text-gray-600">
-              <p className="font-medium text-gray-900">{comment.author?.full_name || 'Member'}</p>
+              {comment.author?.id && comment.author?.full_name ? (
+                <ClickableUserName
+                  userId={comment.author.id}
+                  fullName={comment.author.full_name}
+                  className="font-medium text-gray-900"
+                />
+              ) : (
+                <p className="font-medium text-gray-900">{comment.author?.full_name || 'Member'}</p>
+              )}
               <p className="text-xs text-gray-400">{formatTimestamp(comment.created_at)}</p>
               <p className="mt-1 leading-relaxed">{formatCommentSnippet(comment.content)}</p>
             </div>
@@ -319,26 +329,35 @@ export function PostCard({
           {/* Post Header */}
           <div className="flex items-start justify-between gap-3 mb-4">
             <div className="flex items-center gap-3">
-              <div className="h-11 w-11 bg-navy-100/80 rounded-full flex items-center justify-center text-navy-700 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
-                {post.author?.avatar_url ? (
-                  <div className="relative h-full w-full">
-                    <Image
-                      src={post.author.avatar_url}
-                      alt={post.author.full_name || 'User'}
-                      fill
-                      className="rounded-full object-cover"
-                      sizes="40px"
-                      priority={false}
-                    />
-                  </div>
-                ) : (
-                  post.author?.first_name?.charAt(0) || 'U'
-                )}
-              </div>
+              {post.author?.id ? (
+                <ClickableAvatar
+                  userId={post.author.id}
+                  avatarUrl={post.author.avatar_url}
+                  fullName={post.author.full_name}
+                  firstName={post.author.first_name}
+                  lastName={post.author.last_name}
+                  size="md"
+                  className="h-11 w-11 ring-2 ring-white shadow-sm"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <div className="h-11 w-11 bg-navy-100/80 rounded-full flex items-center justify-center text-navy-700 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
+                  {post.author?.first_name?.charAt(0) || 'U'}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-gray-900 text-sm break-words">
-                  {post.author?.full_name || 'Unknown User'}
-                </h4>
+                {post.author?.id && post.author?.full_name ? (
+                  <ClickableUserName
+                    userId={post.author.id}
+                    fullName={post.author.full_name}
+                    className="font-semibold text-gray-900 text-sm break-words block"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <h4 className="font-semibold text-gray-900 text-sm break-words">
+                    {post.author?.full_name || 'Unknown User'}
+                  </h4>
+                )}
                 <p className="text-xs text-gray-500">{formatTimestamp(post.created_at)}</p>
               </div>
             </div>
@@ -468,28 +487,37 @@ export function PostCard({
           {/* Post Header */}
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 sm:h-11 sm:w-11 bg-navy-100/80 rounded-full flex items-center justify-center text-navy-700 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
-                {post.author?.avatar_url ? (
-                  <div className="relative h-full w-full">
-                    <Image
-                      src={post.author.avatar_url}
-                      alt={post.author.full_name || 'User'}
-                      fill
-                      className="rounded-full object-cover"
-                      sizes="(max-width: 640px) 48px, 40px"
-                      priority={false}
-                    />
-                  </div>
-                ) : (
-                  post.author?.first_name?.charAt(0) || 'U'
-                )}
-              </div>
+              {post.author?.id ? (
+                <ClickableAvatar
+                  userId={post.author.id}
+                  avatarUrl={post.author.avatar_url}
+                  fullName={post.author.full_name}
+                  firstName={post.author.first_name}
+                  lastName={post.author.last_name}
+                  size="md"
+                  className="h-12 w-12 sm:h-11 sm:w-11 ring-2 ring-white shadow-sm"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <div className="h-12 w-12 sm:h-11 sm:w-11 bg-navy-100/80 rounded-full flex items-center justify-center text-navy-700 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
+                  {post.author?.first_name?.charAt(0) || 'U'}
+                </div>
+              )}
 
               <div className="flex-1 min-w-0 space-y-1.5">
               <div className="flex flex-wrap items-center gap-2">
-                <h4 className="font-semibold text-gray-900 text-base sm:text-sm break-words">
-                  {post.author?.full_name || 'Unknown User'}
-                </h4>
+                {post.author?.id && post.author?.full_name ? (
+                  <ClickableUserName
+                    userId={post.author.id}
+                    fullName={post.author.full_name}
+                    className="font-semibold text-gray-900 text-base sm:text-sm break-words"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <h4 className="font-semibold text-gray-900 text-base sm:text-sm break-words">
+                    {post.author?.full_name || 'Unknown User'}
+                  </h4>
+                )}
               </div>
 
               <p className="text-xs uppercase tracking-wide text-gray-400">
