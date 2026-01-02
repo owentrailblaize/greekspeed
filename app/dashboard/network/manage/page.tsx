@@ -103,7 +103,7 @@ export default function ManageConnectionsPage() {
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3">
         <div className="flex items-center space-x-3 mb-4">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push('/dashboard/alumni')}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600" />
@@ -133,7 +133,7 @@ export default function ManageConnectionsPage() {
 
         {/* Filters */}
         <div className="flex space-x-2">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={setStatusFilter} placeholder="Status">
             <SelectTrigger className="flex-1 h-9">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Status" />
@@ -147,7 +147,7 @@ export default function ManageConnectionsPage() {
             </SelectContent>
           </Select>
 
-          <Select value={sortBy} onValueChange={setSortBy}>
+          <Select value={sortBy} onValueChange={setSortBy} placeholder="Sort by">
             <SelectTrigger className="flex-1 h-9">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
