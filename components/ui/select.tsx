@@ -13,6 +13,107 @@ export interface SelectProps {
   className?: string;
 }
 
+export interface SelectItemProps {
+  value: string;
+  children: React.ReactNode;
+  onSelect?: (value: string, label: string) => void;
+  isSelected?: boolean;
+}
+
+// Define components first
+export const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
+  ({ value, children, onSelect, isSelected, ...props }, ref) => {
+    const handleClick = () => {
+      onSelect?.(value, children as string);
+    };
+
+    return (
+      <div
+        ref={ref}
+        onClick={handleClick}
+        className={cn(
+          "flex cursor-pointer items-center justify-between px-3 py-2 text-sm",
+          "hover:bg-gray-50 transition-colors",
+          isSelected && "bg-navy-50 text-navy-900"
+        )}
+        {...props}
+      >
+        <span>{children}</span>
+        {isSelected && <Check className="h-4 w-4 text-navy-600 flex-shrink-0" />}
+      </div>
+    );
+  }
+);
+SelectItem.displayName = "SelectItem";
+
+// Legacy components for compatibility
+export const SelectTrigger = ({ children, className, ...props }: { children: React.ReactNode; className?: string; [key: string]: any }) => {
+  return <>{children}</>;
+};
+SelectTrigger.displayName = "SelectTrigger";
+
+export const SelectValue = ({ placeholder }: { placeholder?: string }) => null;
+SelectValue.displayName = "SelectValue";
+
+export const SelectContent = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+SelectContent.displayName = "SelectContent";
+
+// Helper to recursively find all SelectItem children
+const findSelectItems = (children: React.ReactNode): React.ReactElement<SelectItemProps>[] => {
+  const items: React.ReactElement<SelectItemProps>[] = [];
+  
+  React.Children.forEach(children, (child) => {
+    if (React.isValidElement(child)) {
+      const props = child.props as any;
+      
+      // Check if this is a SelectItem by checking for the value prop
+      // SelectItem always has a value prop and children
+      if (props && typeof props.value === 'string' && props.children !== undefined) {
+        // This looks like a SelectItem - add it
+        items.push(child as React.ReactElement<SelectItemProps>);
+      } else {
+        // Not a SelectItem, but might contain SelectItems - recurse
+        if (props && props.children) {
+          items.push(...findSelectItems(props.children));
+        }
+      }
+    }
+  });
+  
+  return items;
+};
+
+// Helper to find custom trigger content
+const findTriggerContent = (children: React.ReactNode): { icon?: React.ReactNode; placeholder?: string } => {
+  let icon: React.ReactNode = null;
+  let placeholder: string | undefined;
+  
+  React.Children.forEach(children, (child) => {
+    if (React.isValidElement(child)) {
+      const childType = (child.type as any)?.displayName || (child.type as any)?.name;
+      if (child.type === SelectTrigger || childType === "SelectTrigger") {
+        const props = child.props as { children?: React.ReactNode };
+        if (props && props.children) {
+          React.Children.forEach(props.children, (triggerChild) => {
+            if (React.isValidElement(triggerChild)) {
+              const triggerChildType = (triggerChild.type as any)?.displayName || (triggerChild.type as any)?.name;
+              if (triggerChild.type === SelectValue || triggerChildType === "SelectValue") {
+                const valueProps = triggerChild.props as { placeholder?: string };
+                placeholder = valueProps?.placeholder;
+              } else if (triggerChild.type !== SelectValue && triggerChild.type !== SelectItem && triggerChildType !== "SelectValue" && triggerChildType !== "SelectItem") {
+                // Assume any other element is an icon
+                icon = triggerChild;
+              }
+            }
+          });
+        }
+      }
+    }
+  });
+  
+  return { icon, placeholder };
+};
+
 export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
   ({ value, onValueChange, placeholder, children, className, ...props }, ref) => {
     const [isOpen, setIsOpen] = React.useState(false);
@@ -22,6 +123,10 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
     const selectRef = React.useRef<HTMLDivElement>(null);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
     
+    const selectItems = React.useMemo(() => findSelectItems(children), [children]);
+    const triggerContent = React.useMemo(() => findTriggerContent(children), [children]);
+    const displayPlaceholder = triggerContent.placeholder || placeholder;
+    
     React.useEffect(() => {
       setMounted(true);
     }, []);
@@ -30,17 +135,14 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
       setSelectedValue(value || "");
       // Find the label for the current value
       if (value) {
-        React.Children.forEach(children, (child) => {
-          if (React.isValidElement(child) && child.type === SelectItem) {
-            if ((child as React.ReactElement<SelectItemProps>).props.value === value) {
-              setSelectedLabel((child as React.ReactElement<SelectItemProps>).props.children as string);
-            }
-          }
-        });
+        const item = selectItems.find(item => item.props.value === value);
+        if (item) {
+          setSelectedLabel(item.props.children as string);
+        }
       } else {
         setSelectedLabel("");
       }
-    }, [value, children]);
+    }, [value, selectItems]);
 
     React.useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
@@ -143,35 +245,36 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
             type="button"
             onClick={() => setIsOpen(!isOpen)}
             className={cn(
-              "flex h-9 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-base",
+              "flex h-9 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm",
               "focus:border-navy-500 focus:outline-none focus:ring-1 focus:ring-navy-500",
               "hover:border-gray-400 transition-colors"
             )}
           >
-            <span className={selectedValue ? "text-gray-900" : "text-gray-500"}>
-              {selectedLabel || placeholder}
-            </span>
-            <ChevronDown className={cn("h-4 w-4 text-gray-400 transition-transform", isOpen && "rotate-180")} />
+            <div className="flex items-center space-x-2 flex-1 min-w-0">
+              {triggerContent.icon}
+              <span className={cn(selectedValue ? "text-gray-900" : "text-gray-500", "truncate")}>
+                {selectedLabel || displayPlaceholder}
+              </span>
+            </div>
+            <ChevronDown className={cn("h-4 w-4 text-gray-400 transition-transform flex-shrink-0", isOpen && "rotate-180")} />
           </button>
         </div>
 
-        {mounted && isOpen && createPortal(
+        {mounted && isOpen && selectItems.length > 0 && createPortal(
           <div
             ref={dropdownRef}
-            className="fixed z-[9999] overflow-y-auto rounded-md border border-gray-200 bg-white shadow-xl"
+            className="fixed z-[99999] overflow-y-auto rounded-md border border-gray-200 bg-white shadow-xl"
             style={{
               position: 'fixed',
             }}
           >
             <div className="pt-1 pb-2">
-              {React.Children.map(children, (child) => {
-                if (React.isValidElement(child) && child.type === SelectItem) {
-                  return React.cloneElement(child as React.ReactElement<SelectItemProps>, {
-                    onSelect: handleSelect,
-                    isSelected: (child as React.ReactElement<SelectItemProps>).props.value === selectedValue,
-                  });
-                }
-                return child;
+              {selectItems.map((item) => {
+                return React.cloneElement(item, {
+                  onSelect: handleSelect,
+                  isSelected: item.props.value === selectedValue,
+                  key: item.props.value,
+                });
               })}
             </div>
           </div>,
@@ -182,40 +285,3 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
   }
 );
 Select.displayName = "Select";
-
-export interface SelectItemProps {
-  value: string;
-  children: React.ReactNode;
-  onSelect?: (value: string, label: string) => void;
-  isSelected?: boolean;
-}
-
-export const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
-  ({ value, children, onSelect, isSelected, ...props }, ref) => {
-    const handleClick = () => {
-      onSelect?.(value, children as string);
-    };
-
-    return (
-      <div
-        ref={ref}
-        onClick={handleClick}
-        className={cn(
-          "flex cursor-pointer items-center justify-between px-3 py-2 text-base",
-          "hover:bg-gray-50 transition-colors",
-          isSelected && "bg-navy-50 text-navy-900"
-        )}
-        {...props}
-      >
-        <span>{children}</span>
-        {isSelected && <Check className="h-4 w-4 text-navy-600" />}
-      </div>
-    );
-  }
-);
-SelectItem.displayName = "SelectItem";
-
-// Legacy components for compatibility
-export const SelectTrigger = Select;
-export const SelectValue = () => null;
-export const SelectContent = ({ children }: { children: React.ReactNode }) => <>{children}</>; 
