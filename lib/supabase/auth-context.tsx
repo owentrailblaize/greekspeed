@@ -26,6 +26,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, profileData?: ProfileData) => Promise<void>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInWithLinkedIn: () => Promise<void>;
   getAuthHeaders: () => Record<string, string>;
 }
 
@@ -355,6 +356,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signInWithLinkedIn = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'linkedin_oidc',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'openid profile email',
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+    } catch (error) {
+      console.error('LinkedIn sign-in error:', error);
+      throw error;
+    }
+  };
+
   const getAuthHeaders = useCallback(() => {
     if (!session?.access_token) {
       throw new Error('Authentication required');
@@ -375,9 +396,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUp,
       signOut,
       signInWithGoogle,
+      signInWithLinkedIn,
       getAuthHeaders,
     }),
-    [error, getAuthHeaders, loading, session, signIn, signInWithGoogle, signOut, signUp, user],
+    [error, getAuthHeaders, loading, session, signIn, signInWithGoogle, signInWithLinkedIn, signOut, signUp, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
