@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, UserPlus, X, CheckCircle, Link2, ChevronRight, Search } from 'lucide-react';
+import { Users, UserPlus, X, CheckCircle, Link2, ChevronRight, Search, MessageCircle } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
@@ -54,6 +54,19 @@ export function MobileNetworkPage() {
   const [sessionSeed, setSessionSeed] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'grow' | 'catchup'>('grow');
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [recentlyConnectedLimit, setRecentlyConnectedLimit] = useState(6);
+  const [reconnectLimit, setReconnectLimit] = useState(6);
+
+  // Constants for pagination
+  const INITIAL_LIMIT = 6;
+  const LOAD_MORE_INCREMENT = 6;
+  const MAX_DISPLAY = 25;
+
+  // Reset limits when switching tabs
+  useEffect(() => {
+    setRecentlyConnectedLimit(INITIAL_LIMIT);
+    setReconnectLimit(INITIAL_LIMIT);
+  }, [activeTab]);
 
   // Get or generate session seed for randomization
   useEffect(() => {
@@ -92,14 +105,112 @@ export function MobileNetworkPage() {
     );
   }, [connections, user]);
 
+  // Recently Connected - connections from last 30 days
+  const recentlyConnected = useMemo(() => {
+    if (!user || !connections) return [];
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    return connections
+      .filter(conn => 
+        conn.status === 'accepted' &&
+        (conn.requester_id === user.id || conn.recipient_id === user.id)
+      )
+      .filter(conn => {
+        const connectedDate = new Date(conn.updated_at || conn.created_at);
+        return connectedDate >= thirtyDaysAgo;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.updated_at || a.created_at);
+        const dateB = new Date(b.updated_at || b.created_at);
+        return dateB.getTime() - dateA.getTime(); // Most recent first
+      });
+  }, [connections, user]);
+
+  // Reconnect - connections inactive for 90+ days (exclude recently connected)
+  const reconnectConnections = useMemo(() => {
+    if (!user || !connections) return [];
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    
+    // Get IDs of recently connected to exclude them
+    const recentlyConnectedIds = new Set(
+      connections
+        .filter(conn => 
+          conn.status === 'accepted' &&
+          (conn.requester_id === user.id || conn.recipient_id === user.id)
+        )
+        .filter(conn => {
+          const connectedDate = new Date(conn.updated_at || conn.created_at);
+          return connectedDate >= thirtyDaysAgo;
+        })
+        .map(conn => conn.id)
+    );
+    
+    return connections
+      .filter(conn => 
+        conn.status === 'accepted' &&
+        (conn.requester_id === user.id || conn.recipient_id === user.id) &&
+        !recentlyConnectedIds.has(conn.id) // Exclude recently connected
+      )
+      .filter(conn => {
+        const partner = conn.requester_id === user.id ? conn.recipient : conn.requester;
+        const lastActive = partner.last_active_at || partner.updated_at;
+        if (!lastActive) return true; // Include if no activity data
+        
+        const lastActiveDate = new Date(lastActive);
+        return lastActiveDate < ninetyDaysAgo;
+      })
+      .sort((a, b) => {
+        const partnerA = a.requester_id === user.id ? a.recipient : a.requester;
+        const partnerB = b.requester_id === user.id ? b.recipient : b.requester;
+        const lastActiveA = partnerA.last_active_at || partnerA.updated_at;
+        const lastActiveB = partnerB.last_active_at || partnerB.updated_at;
+        
+        if (!lastActiveA) return 1;
+        if (!lastActiveB) return -1;
+        
+        return new Date(lastActiveA).getTime() - new Date(lastActiveB).getTime(); // Oldest first
+      });
+  }, [connections, user]);
+
   const getConnectionPartner = (connection: any) => {
-    if (!user) return { name: 'Unknown', initials: 'U', avatar: null };
+    if (!user) return { name: 'Unknown', initials: 'U', avatar: null, lastActive: null };
     const partner = connection.requester_id === user.id ? connection.recipient : connection.requester;
     return {
       name: partner.full_name || 'Unknown User',
       initials: partner.full_name?.charAt(0) || 'U',
-      avatar: partner.avatar_url
+      avatar: partner.avatar_url,
+      lastActive: partner.last_active_at || partner.updated_at
     };
+  };
+
+  const getDaysAgo = (dateString: string | null) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const formatDaysAgo = (days: number | null) => {
+    if (days === null) return 'No activity';
+    if (days === 0) return 'Today';
+    if (days === 1) return 'Yesterday';
+    if (days < 30) return `${days} days ago`;
+    if (days < 365) {
+      const months = Math.floor(days / 30);
+      return `${months} ${months === 1 ? 'month' : 'months'} ago`;
+    }
+    const years = Math.floor(days / 365);
+    return `${years} ${years === 1 ? 'year' : 'years'} ago`;
+  };
+
+  const handleMessage = (connectionId: string) => {
+    router.push(`/dashboard/messages?connection=${connectionId}`);
   };
 
   const handleConnectionAction = async (connectionId: string, action: 'accept' | 'decline') => {
@@ -361,58 +472,233 @@ export function MobileNetworkPage() {
           </>
         )}
 
-        {/* Catch up Tab - Sent Requests */}
+        {/* Catch up Tab - Recently Connected + Reconnect */}
         {activeTab === 'catchup' && (
           <>
-            {sentRequests.length > 0 && (
-              <div>
-                <h2 className="text-base font-semibold text-gray-900 mb-3">
-                  Sent Requests ({sentRequests.length})
-                </h2>
-                <div className="space-y-3">
-                  {sentRequests.map((connection) => {
-                    const partner = getConnectionPartner(connection);
-                    return (
-                      <div
-                        key={connection.id}
-                        className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between"
-                      >
-                        <div className="flex items-center space-x-3 flex-1 min-w-0">
-                          <div className="w-12 h-12 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold flex-shrink-0">
-                            {partner.avatar ? (
-                              <img 
-                                src={partner.avatar} 
-                                alt={partner.name}
-                                className="w-full h-full rounded-full object-cover"
-                              />
-                            ) : (
-                              partner.initials
-                            )}
+            {/* Recently Connected Section */}
+            {recentlyConnected.length > 0 && (() => {
+              const displayedRecentlyConnected = recentlyConnected.slice(0, recentlyConnectedLimit);
+              const hasMoreRecentlyConnected = recentlyConnected.length > recentlyConnectedLimit;
+              const remainingRecentlyConnected = recentlyConnected.length - recentlyConnectedLimit;
+              const isAtMax = recentlyConnectedLimit >= MAX_DISPLAY;
+              
+              return (
+                <div className="mb-6">
+                  <h2 className="text-base font-semibold text-gray-900 mb-3">
+                    Recently Connected ({recentlyConnected.length})
+                  </h2>
+                  <div className="space-y-3">
+                    {displayedRecentlyConnected.map((connection) => {
+                      const partner = getConnectionPartner(connection);
+                      const daysSinceConnection = getDaysAgo(connection.updated_at || connection.created_at);
+                      
+                      return (
+                        <div
+                          key={connection.id}
+                          className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between"
+                        >
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            <div className="w-12 h-12 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold flex-shrink-0">
+                              {partner.avatar ? (
+                                <img 
+                                  src={partner.avatar} 
+                                  alt={partner.name}
+                                  className="w-full h-full rounded-full object-cover"
+                                />
+                              ) : (
+                                partner.initials
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {partner.name}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                Connected {daysSinceConnection !== null && daysSinceConnection === 0 
+                                  ? 'today' 
+                                  : daysSinceConnection === 1 
+                                  ? 'yesterday'
+                                  : `${daysSinceConnection} days ago`
+                                }
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {partner.name}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-0.5">
-                              {new Date(connection.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => handleMessage(connection.id)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 h-8"
+                          >
+                            <MessageCircle className="h-3 w-3 mr-1" />
+                            Message
+                          </Button>
                         </div>
-                        <Badge variant="outline" className="text-xs">
-                          Pending
-                        </Badge>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Smart Toggle: Load More / Show Less */}
+                  {recentlyConnected.length > INITIAL_LIMIT && (
+                    <div className="mt-4">
+                      {isAtMax ? (
+                        <div className="space-y-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => setRecentlyConnectedLimit(INITIAL_LIMIT)}
+                            className="w-full text-gray-600 border-gray-300 hover:bg-gray-50"
+                          >
+                            Show Less
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => router.push('/dashboard/network/manage?filter=recently_connected')}
+                            className="w-full text-blue-600 border-blue-600 hover:bg-blue-50"
+                          >
+                            View All in Manage Network
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex space-x-2">
+                          {hasMoreRecentlyConnected && (
+                            <Button
+                              variant="outline"
+                              onClick={() => setRecentlyConnectedLimit(prev => 
+                                Math.min(prev + LOAD_MORE_INCREMENT, recentlyConnected.length)
+                              )}
+                              className="flex-1 text-blue-600 border-blue-600 hover:bg-blue-50"
+                            >
+                              Load More ({remainingRecentlyConnected} remaining)
+                            </Button>
+                          )}
+                          {recentlyConnectedLimit > INITIAL_LIMIT && (
+                            <Button
+                              variant="ghost"
+                              onClick={() => setRecentlyConnectedLimit(INITIAL_LIMIT)}
+                              className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                            >
+                              Show Less
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
-            {sentRequests.length === 0 && (
+            {/* Reconnect Section */}
+            {reconnectConnections.length > 0 && (() => {
+              const displayedReconnect = reconnectConnections.slice(0, reconnectLimit);
+              const hasMoreReconnect = reconnectConnections.length > reconnectLimit;
+              const remainingReconnect = reconnectConnections.length - reconnectLimit;
+              const isAtMax = reconnectLimit >= MAX_DISPLAY;
+              
+              return (
+                <div className={recentlyConnected.length > 0 ? 'mb-6' : ''}>
+                  <h2 className="text-base font-semibold text-gray-900 mb-3">
+                    Reconnect ({reconnectConnections.length})
+                  </h2>
+                  <div className="space-y-3">
+                    {displayedReconnect.map((connection) => {
+                      const partner = getConnectionPartner(connection);
+                      const daysSinceActive = getDaysAgo(partner.lastActive);
+                      
+                      return (
+                        <div
+                          key={connection.id}
+                          className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between"
+                        >
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            <div className="w-12 h-12 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold flex-shrink-0">
+                              {partner.avatar ? (
+                                <img 
+                                  src={partner.avatar} 
+                                  alt={partner.name}
+                                  className="w-full h-full rounded-full object-cover"
+                                />
+                              ) : (
+                                partner.initials
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {partner.name}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                Last active: {formatDaysAgo(daysSinceActive)}
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleMessage(connection.id)}
+                            className="text-blue-600 border-blue-600 hover:bg-blue-50 text-xs px-3 h-8"
+                          >
+                            <MessageCircle className="h-3 w-3 mr-1" />
+                            Say hi
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Smart Toggle: Load More / Show Less */}
+                  {reconnectConnections.length > INITIAL_LIMIT && (
+                    <div className="mt-4">
+                      {isAtMax ? (
+                        <div className="space-y-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => setReconnectLimit(INITIAL_LIMIT)}
+                            className="w-full text-gray-600 border-gray-300 hover:bg-gray-50"
+                          >
+                            Show Less
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => router.push('/dashboard/network/manage?filter=reconnect')}
+                            className="w-full text-blue-600 border-blue-600 hover:bg-blue-50"
+                          >
+                            View All in Manage Network
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex space-x-2">
+                          {hasMoreReconnect && (
+                            <Button
+                              variant="outline"
+                              onClick={() => setReconnectLimit(prev => 
+                                Math.min(prev + LOAD_MORE_INCREMENT, reconnectConnections.length)
+                              )}
+                              className="flex-1 text-blue-600 border-blue-600 hover:bg-blue-50"
+                            >
+                              Load More ({remainingReconnect} remaining)
+                            </Button>
+                          )}
+                          {reconnectLimit > INITIAL_LIMIT && (
+                            <Button
+                              variant="ghost"
+                              onClick={() => setReconnectLimit(INITIAL_LIMIT)}
+                              className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                            >
+                              Show Less
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Empty State */}
+            {recentlyConnected.length === 0 && reconnectConnections.length === 0 && (
               <div className="text-center py-12">
-                <UserPlus className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-600 text-base font-medium mb-1">No sent requests</p>
-                <p className="text-gray-500 text-sm">Your outgoing connection requests will appear here</p>
+                <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-600 text-base font-medium mb-1">No connections to catch up with</p>
+                <p className="text-gray-500 text-sm">Your recent and inactive connections will appear here</p>
               </div>
             )}
           </>
