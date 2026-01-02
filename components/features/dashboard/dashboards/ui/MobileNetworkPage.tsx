@@ -1,16 +1,17 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, UserPlus, X, CheckCircle, Link2, ChevronRight, Search, MessageCircle } from 'lucide-react';
+import { Users, UserPlus, X, CheckCircle, ChevronRight, Search, MessageCircle, Loader2 } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
-import { ChapterMemberData } from '@/types/chapter';
+import { ChapterMemberData, ChapterMember } from '@/types/chapter';
 import { cn } from '@/lib/utils';
+import { LinkedInStyleChapterCard } from '@/components/mychapter/LinkedInStyleChapterCard';
 
 // Seeded random number generator (deterministic - same seed = same sequence)
 function seededRandom(seed: number) {
@@ -56,17 +57,30 @@ export function MobileNetworkPage() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [recentlyConnectedLimit, setRecentlyConnectedLimit] = useState(6);
   const [reconnectLimit, setReconnectLimit] = useState(6);
+  const [suggestionsDisplayCount, setSuggestionsDisplayCount] = useState(6);
+  const [isLoadingMoreSuggestions, setIsLoadingMoreSuggestions] = useState(false);
+  const suggestionsObserverTarget = useRef<HTMLDivElement>(null);
 
   // Constants for pagination
   const INITIAL_LIMIT = 6;
   const LOAD_MORE_INCREMENT = 6;
   const MAX_DISPLAY = 25;
+  
+  // Constants for suggestions lazy loading
+  const INITIAL_SUGGESTIONS_COUNT = 6;
+  const LOAD_MORE_SUGGESTIONS_INCREMENT = 6;
+  const MAX_SUGGESTIONS_COUNT = 24;
 
   // Reset limits when switching tabs
   useEffect(() => {
     setRecentlyConnectedLimit(INITIAL_LIMIT);
     setReconnectLimit(INITIAL_LIMIT);
   }, [activeTab]);
+
+  // Reset suggestions display count when connections change (e.g., after connecting)
+  useEffect(() => {
+    setSuggestionsDisplayCount(INITIAL_SUGGESTIONS_COUNT);
+  }, [connections.length]);
 
   // Get or generate session seed for randomization
   useEffect(() => {
@@ -157,7 +171,7 @@ export function MobileNetworkPage() {
       )
       .filter(conn => {
         const partner = conn.requester_id === user.id ? conn.recipient : conn.requester;
-        const lastActive = partner.last_active_at || partner.updated_at;
+        const lastActive = (partner as any).last_active_at || (partner as any).updated_at || conn.updated_at;
         if (!lastActive) return true; // Include if no activity data
         
         const lastActiveDate = new Date(lastActive);
@@ -166,8 +180,8 @@ export function MobileNetworkPage() {
       .sort((a, b) => {
         const partnerA = a.requester_id === user.id ? a.recipient : a.requester;
         const partnerB = b.requester_id === user.id ? b.recipient : b.requester;
-        const lastActiveA = partnerA.last_active_at || partnerA.updated_at;
-        const lastActiveB = partnerB.last_active_at || partnerB.updated_at;
+        const lastActiveA = (partnerA as any).last_active_at || (partnerA as any).updated_at || a.updated_at;
+        const lastActiveB = (partnerB as any).last_active_at || (partnerB as any).updated_at || b.updated_at;
         
         if (!lastActiveA) return 1;
         if (!lastActiveB) return -1;
@@ -299,15 +313,90 @@ export function MobileNetworkPage() {
       ...otherMembers
     ];
     
-    const topPool = prioritizedMembers.slice(0, Math.min(20, prioritizedMembers.length));
+    // Get top 30 for variety, then shuffle and return up to 24
+    const topPool = prioritizedMembers.slice(0, Math.min(30, prioritizedMembers.length));
     
-    if (topPool.length <= 5) {
-      return topPool;
+    if (topPool.length <= MAX_SUGGESTIONS_COUNT) {
+      const shuffledPool = seededShuffle(topPool, sessionSeed);
+      return shuffledPool;
     }
     
     const shuffledPool = seededShuffle(topPool, sessionSeed);
-    return shuffledPool.slice(0, 5);
+    return shuffledPool.slice(0, MAX_SUGGESTIONS_COUNT);
   }, [chapterMembers, profile, snapshotTaken, localConnectionsSnapshot, sessionSeed]);
+
+  // Transform ChapterMemberData to ChapterMember for LinkedInStyleChapterCard
+  const transformToChapterMember = useCallback((member: ChapterMemberData): ChapterMember => {
+    const mutualConnections = (member as any).mutualConnections || [];
+    const mutualCount = (member as any).mutualConnectionsCount || 0;
+    
+    return {
+      id: member.id,
+      name: member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member',
+      year: member.grad_year ? `Class of ${member.grad_year}` : undefined,
+      major: member.major || undefined,
+      position: member.chapter_role || undefined,
+      interests: member.bio ? [member.bio] : [],
+      avatar: member.avatar_url || undefined,
+      verified: false,
+      mutualConnections: mutualConnections.map((mc: any) => ({
+        id: mc.id || mc.user_id || '',
+        name: mc.name || mc.full_name || 'Unknown',
+        avatar: mc.avatar || mc.avatar_url || undefined,
+      })),
+      mutualConnectionsCount: mutualCount,
+      description: member.bio || '',
+    };
+  }, []);
+
+  // Get displayed suggestions (lazy loaded subset)
+  const displayedSuggestions = useMemo(() => {
+    return unconnectedMembers.slice(0, suggestionsDisplayCount).map(transformToChapterMember);
+  }, [unconnectedMembers, suggestionsDisplayCount, transformToChapterMember]);
+
+  const hasMoreSuggestions = unconnectedMembers.length > suggestionsDisplayCount;
+
+  // Load more suggestions
+  const loadMoreSuggestions = useCallback(() => {
+    if (isLoadingMoreSuggestions || !hasMoreSuggestions) return;
+    
+    setIsLoadingMoreSuggestions(true);
+    setTimeout(() => {
+      setSuggestionsDisplayCount(prev => 
+        Math.min(prev + LOAD_MORE_SUGGESTIONS_INCREMENT, unconnectedMembers.length, MAX_SUGGESTIONS_COUNT)
+      );
+      setIsLoadingMoreSuggestions(false);
+    }, 150);
+  }, [isLoadingMoreSuggestions, hasMoreSuggestions, unconnectedMembers.length]);
+
+  // Intersection Observer for suggestions infinite scroll
+  useEffect(() => {
+    if (!hasMoreSuggestions) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMoreSuggestions && !isLoadingMoreSuggestions) {
+          loadMoreSuggestions();
+        }
+      },
+      {
+        root: null,
+        rootMargin: '200px', // Start loading 200px before reaching the bottom
+        threshold: 0.1,
+      }
+    );
+
+    const currentTarget = suggestionsObserverTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMoreSuggestions, isLoadingMoreSuggestions, loadMoreSuggestions]);
 
   const handleConnect = async (member: ChapterMemberData) => {
     if (!profile) return;
@@ -721,93 +810,46 @@ export function MobileNetworkPage() {
           <div>
             <h2 className="text-base font-semibold text-gray-900 mb-3">
               People you may know
-              {profile?.chapter_name && (
-                <span className="text-gray-600 font-normal"> from {profile.chapter_name}</span>
+              {profile?.chapter && (
+                <span className="text-gray-600 font-normal"> from {profile.chapter}</span>
               )}
             </h2>
-            {/* Horizontal scrollable cards */}
-            <div className="flex space-x-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-              {unconnectedMembers.map((member) => {
-                const memberName = member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member';
-                const mutualCount = (member as any).mutualConnectionsCount || 0;
-                
-                return (
-                  <div
-                    key={member.id}
-                    className="bg-white rounded-lg border border-gray-200 p-4 flex-shrink-0 w-[280px] relative"
-                  >
-                    {/* Dismiss button */}
-                    <button
-                      onClick={() => {
-                        // TODO: Implement dismiss functionality
-                      }}
-                      className="absolute top-2 right-2 w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
-                    >
-                      <X className="h-3 w-3 text-gray-600" />
-                    </button>
-
-                    {/* Avatar */}
-                    <div className="flex justify-center mb-3">
-                      <div className="w-16 h-16 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-lg font-semibold">
-                        {member.avatar_url ? (
-                          <img 
-                            src={member.avatar_url} 
-                            alt={memberName}
-                            className="w-full h-full rounded-full object-cover"
-                          />
-                        ) : (
-                          memberName.charAt(0).toUpperCase()
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Name */}
-                    <h3 className="text-sm font-semibold text-gray-900 text-center mb-1 truncate">
-                      {memberName}
-                    </h3>
-
-                    {/* Details */}
-                    <div className="text-center mb-3">
-                      {member.role === 'alumni' && (
-                        <Badge className="bg-blue-100 text-blue-800 text-xs mb-1">
-                          Alumni
-                        </Badge>
-                      )}
-                      {member.grad_year && (
-                        <p className="text-xs text-gray-600">
-                          Class of {member.grad_year}
-                        </p>
-                      )}
-                      {mutualCount > 0 && (
-                        <div className="flex items-center justify-center space-x-1 mt-1">
-                          <Link2 className="w-3 h-3 text-gray-400" />
-                          <span className="text-xs text-gray-500">
-                            {mutualCount === 1 
-                              ? '1 mutual connection' 
-                              : `${mutualCount} mutual connections`
-                            }
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Connect Button */}
-                    <Button
-                      size="sm"
-                      onClick={() => handleConnect(member)}
-                      disabled={connectionLoading === member.id}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm"
-                    >
-                      {connectionLoading === member.id ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        'Connect'
-                      )}
-                    </Button>
-                  </div>
-                );
-              })}
+            
+            {/* 2x2 Grid Layout */}
+            <div className="grid grid-cols-2 gap-3">
+              {displayedSuggestions.map((member) => (
+                <LinkedInStyleChapterCard
+                  key={member.id}
+                  member={member}
+                  onClick={() => {
+                    // Optional: Navigate to profile or handle card click
+                  }}
+                />
+              ))}
             </div>
+
+            {/* Loading indicator and observer target */}
+            {hasMoreSuggestions && (
+              <div ref={suggestionsObserverTarget} className="flex items-center justify-center py-6">
+                {isLoadingMoreSuggestions ? (
+                  <div className="flex items-center space-x-2 text-gray-500">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span className="text-sm">Loading more suggestions...</span>
+                  </div>
+                ) : (
+                  <div className="h-20" /> // Spacer for intersection observer
+                )}
+              </div>
+            )}
+
+            {/* Show count if all loaded */}
+            {!hasMoreSuggestions && unconnectedMembers.length > INITIAL_SUGGESTIONS_COUNT && (
+              <div className="text-center py-4">
+                <p className="text-sm text-gray-500">
+                  Showing all {unconnectedMembers.length} suggestion{unconnectedMembers.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
