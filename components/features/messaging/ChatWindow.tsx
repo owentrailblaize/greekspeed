@@ -7,6 +7,8 @@ import { Message } from '@/lib/hooks/useMessages';
 import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/features/profile/UserAvatar';
 import { ArrowLeft } from 'lucide-react';
+import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
+import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
 
 interface ChatWindowProps {
   messages: Message[];
@@ -22,6 +24,9 @@ interface ChatWindowProps {
   contactName?: string;
   contactAvatarUrl?: string | null;
   contactFullName?: string;
+  contactUserId?: string | null;
+  contactFirstName?: string | null;
+  contactLastName?: string | null;
 }
 
 export function ChatWindow({
@@ -37,7 +42,10 @@ export function ChatWindow({
   onBack,
   contactName = "Contact",
   contactAvatarUrl = null,
-  contactFullName = "Contact"
+  contactFullName = "Contact",
+  contactUserId = null,
+  contactFirstName = null,
+  contactLastName = null
 }: ChatWindowProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -186,20 +194,39 @@ export function ChatWindow({
             
             {/* Contact Info */}
             <div className="flex items-center space-x-3">
-              <UserAvatar
-                user={{
-                  email: null,
-                  user_metadata: {
-                    avatar_url: contactAvatarUrl,
-                    full_name: contactFullName || contactName
-                  }
-                }}
-                completionPercent={100}
-                hasUnread={false}
-                size="md"
-              />
+              {contactUserId ? (
+                <ClickableAvatar
+                  userId={contactUserId}
+                  avatarUrl={contactAvatarUrl}
+                  fullName={contactFullName || contactName}
+                  firstName={contactFirstName}
+                  lastName={contactLastName}
+                  size="md"
+                />
+              ) : (
+                <UserAvatar
+                  user={{
+                    email: null,
+                    user_metadata: {
+                      avatar_url: contactAvatarUrl,
+                      full_name: contactFullName || contactName
+                    }
+                  }}
+                  completionPercent={100}
+                  hasUnread={false}
+                  size="md"
+                />
+              )}
               <div>
-                <h3 className="font-medium text-gray-900">{contactName}</h3>
+                {contactUserId ? (
+                  <ClickableUserName
+                    userId={contactUserId}
+                    fullName={contactName}
+                    className="font-medium text-gray-900"
+                  />
+                ) : (
+                  <h3 className="font-medium text-gray-900">{contactName}</h3>
+                )}
               </div>
             </div>
           </div>

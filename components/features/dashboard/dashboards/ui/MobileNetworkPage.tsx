@@ -12,6 +12,8 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import { ChapterMemberData, ChapterMember } from '@/types/chapter';
 import { cn } from '@/lib/utils';
 import { LinkedInStyleChapterCard } from '@/components/mychapter/LinkedInStyleChapterCard';
+import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
+import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
 
 // Seeded random number generator (deterministic - same seed = same sequence)
 function seededRandom(seed: number) {
@@ -191,13 +193,16 @@ export function MobileNetworkPage() {
   }, [connections, user]);
 
   const getConnectionPartner = (connection: any) => {
-    if (!user) return { name: 'Unknown', initials: 'U', avatar: null, lastActive: null };
+    if (!user) return { name: 'Unknown', initials: 'U', avatar: null, lastActive: null, id: null, firstName: null, lastName: null };
     const partner = connection.requester_id === user.id ? connection.recipient : connection.requester;
     return {
       name: partner.full_name || 'Unknown User',
       initials: partner.full_name?.charAt(0) || 'U',
       avatar: partner.avatar_url,
-      lastActive: partner.last_active_at || partner.updated_at
+      lastActive: partner.last_active_at || partner.updated_at,
+      id: partner.id || null,
+      firstName: partner.first_name || null,
+      lastName: partner.last_name || null
     };
   };
 
@@ -498,21 +503,43 @@ export function MobileNetworkPage() {
                         className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between"
                       >
                         <div className="flex items-center space-x-3 flex-1 min-w-0">
-                          <div className="w-12 h-12 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold flex-shrink-0">
-                            {partner.avatar ? (
-                              <img 
-                                src={partner.avatar} 
-                                alt={partner.name}
-                                className="w-full h-full rounded-full object-cover"
+                          {partner.id ? (
+                            <ClickableAvatar
+                              userId={partner.id}
+                              avatarUrl={partner.avatar}
+                              fullName={partner.name}
+                              firstName={partner.firstName}
+                              lastName={partner.lastName}
+                              size="md"
+                              className="w-12 h-12 flex-shrink-0"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold flex-shrink-0">
+                              {partner.avatar ? (
+                                <img 
+                                  src={partner.avatar} 
+                                  alt={partner.name}
+                                  className="w-full h-full rounded-full object-cover"
+                                />
+                              ) : (
+                                partner.initials
+                              )}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            {partner.id ? (
+                              <ClickableUserName
+                                userId={partner.id}
+                                fullName={partner.name}
+                                className="text-sm font-medium text-gray-900 truncate"
+                                onClick={(e) => e.stopPropagation()}
                               />
                             ) : (
-                              partner.initials
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {partner.name}
+                              </p>
                             )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {partner.name}
-                            </p>
                             {connection.message && (
                               <p className="text-xs text-gray-500 mt-0.5 truncate">
                                 {connection.message}
@@ -587,21 +614,43 @@ export function MobileNetworkPage() {
                           className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between"
                         >
                           <div className="flex items-center space-x-3 flex-1 min-w-0">
-                            <div className="w-12 h-12 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold flex-shrink-0">
-                              {partner.avatar ? (
-                                <img 
-                                  src={partner.avatar} 
-                                  alt={partner.name}
-                                  className="w-full h-full rounded-full object-cover"
+                            {partner.id ? (
+                              <ClickableAvatar
+                                userId={partner.id}
+                                avatarUrl={partner.avatar}
+                                fullName={partner.name}
+                                firstName={partner.firstName}
+                                lastName={partner.lastName}
+                                size="md"
+                                className="w-12 h-12 flex-shrink-0"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold flex-shrink-0">
+                                {partner.avatar ? (
+                                  <img 
+                                    src={partner.avatar} 
+                                    alt={partner.name}
+                                    className="w-full h-full rounded-full object-cover"
+                                  />
+                                ) : (
+                                  partner.initials
+                                )}
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              {partner.id ? (
+                                <ClickableUserName
+                                  userId={partner.id}
+                                  fullName={partner.name}
+                                  className="text-sm font-medium text-gray-900 truncate"
+                                  onClick={(e) => e.stopPropagation()}
                                 />
                               ) : (
-                                partner.initials
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                  {partner.name}
+                                </p>
                               )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">
-                                {partner.name}
-                              </p>
                               <p className="text-xs text-gray-500 mt-0.5">
                                 Connected {daysSinceConnection !== null && daysSinceConnection === 0 
                                   ? 'today' 
@@ -697,21 +746,43 @@ export function MobileNetworkPage() {
                           className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between"
                         >
                           <div className="flex items-center space-x-3 flex-1 min-w-0">
-                            <div className="w-12 h-12 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold flex-shrink-0">
-                              {partner.avatar ? (
-                                <img 
-                                  src={partner.avatar} 
-                                  alt={partner.name}
-                                  className="w-full h-full rounded-full object-cover"
+                            {partner.id ? (
+                              <ClickableAvatar
+                                userId={partner.id}
+                                avatarUrl={partner.avatar}
+                                fullName={partner.name}
+                                firstName={partner.firstName}
+                                lastName={partner.lastName}
+                                size="md"
+                                className="w-12 h-12 flex-shrink-0"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold flex-shrink-0">
+                                {partner.avatar ? (
+                                  <img 
+                                    src={partner.avatar} 
+                                    alt={partner.name}
+                                    className="w-full h-full rounded-full object-cover"
+                                  />
+                                ) : (
+                                  partner.initials
+                                )}
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              {partner.id ? (
+                                <ClickableUserName
+                                  userId={partner.id}
+                                  fullName={partner.name}
+                                  className="text-sm font-medium text-gray-900 truncate"
+                                  onClick={(e) => e.stopPropagation()}
                                 />
                               ) : (
-                                partner.initials
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                  {partner.name}
+                                </p>
                               )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">
-                                {partner.name}
-                              </p>
                               <p className="text-xs text-gray-500 mt-0.5">
                                 Last active: {formatDaysAgo(daysSinceActive)}
                               </p>
