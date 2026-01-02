@@ -14,6 +14,7 @@ export default function SignInPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [linkedInLoading, setLinkedInLoading] = useState(false);
   const [error, setError] = useState('');
   const { signIn, user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -79,6 +80,31 @@ export default function SignInPage() {
     }
   };
 
+  const handleLinkedInSignIn = async () => {
+    try {
+      setLinkedInLoading(true);
+      setError('');
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'linkedin_oidc',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'openid profile email',
+        },
+      });
+
+      if (error) {
+        console.error('LinkedIn sign-in error:', error);
+        setError('LinkedIn sign-in failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('LinkedIn sign-in exception:', error);
+      setError('LinkedIn sign-in failed. Please try again.');
+    } finally {
+      setLinkedInLoading(false);
+    }
+  };
+
   const handleForgotPassword = () => {
     router.push('/auth/forgot-password');
   };
@@ -132,7 +158,7 @@ export default function SignInPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  disabled={loading || googleLoading}
+                  disabled={loading || googleLoading || linkedInLoading}
                   className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
                 />
               </div>
@@ -143,7 +169,7 @@ export default function SignInPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  disabled={loading || googleLoading}
+                  disabled={loading || googleLoading || linkedInLoading}
                   className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
                 />
               </div>
@@ -170,7 +196,7 @@ export default function SignInPage() {
               <Button 
                 type="submit" 
                 className="w-full h-11 rounded-full bg-navy-600 hover:bg-navy-700 text-white font-medium shadow-sm hover:shadow-md transition-all duration-200" 
-                disabled={loading || googleLoading}
+                disabled={loading || googleLoading || linkedInLoading}
               >
                 <span>Continue</span>
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -184,7 +210,7 @@ export default function SignInPage() {
                 variant="outline" 
                 className="w-full h-11 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium shadow-sm hover:shadow-md transition-all duration-200"
                 onClick={handleGoogleSignIn}
-                disabled={loading || googleLoading}
+                disabled={loading || googleLoading || linkedInLoading}
               >
                 <img 
                   src="https://developers.google.com/identity/images/g-logo.png" 
@@ -192,6 +218,22 @@ export default function SignInPage() {
                   className="w-5 h-5 mr-3"
                 />
                 {googleLoading ? 'Signing in...' : 'Sign in with Google'}
+              </Button>
+            </div>
+
+            {/* LinkedIn Sign In Button */}
+            <div className="mt-4">
+              <Button 
+                type="button"
+                variant="outline" 
+                className="w-full h-11 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium shadow-sm hover:shadow-md transition-all duration-200"
+                onClick={handleLinkedInSignIn}
+                disabled={loading || googleLoading || linkedInLoading}
+              >
+                <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+                {linkedInLoading ? 'Signing in...' : 'Sign in with LinkedIn'}
               </Button>
             </div>
 
@@ -300,7 +342,7 @@ export default function SignInPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      disabled={loading || googleLoading}
+                      disabled={loading || googleLoading || linkedInLoading}
                       className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
                     />
                   </div>
@@ -311,7 +353,7 @@ export default function SignInPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      disabled={loading || googleLoading}
+                      disabled={loading || googleLoading || linkedInLoading}
                       className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
                     />
                   </div>
@@ -338,7 +380,7 @@ export default function SignInPage() {
                   <Button 
                     type="submit" 
                     className="w-full h-11 rounded-full bg-navy-600 hover:bg-navy-700 text-white font-medium shadow-sm hover:shadow-md transition-all duration-200" 
-                    disabled={loading || googleLoading}
+                    disabled={loading || googleLoading || linkedInLoading}
                   >
                     <span>Continue</span>
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -352,7 +394,7 @@ export default function SignInPage() {
                     variant="outline" 
                     className="w-full h-11 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium shadow-sm hover:shadow-md transition-all duration-200"
                     onClick={handleGoogleSignIn}
-                    disabled={loading || googleLoading}
+                    disabled={loading || googleLoading || linkedInLoading}
                   >
                     <img 
                       src="https://developers.google.com/identity/images/g-logo.png" 
@@ -360,6 +402,22 @@ export default function SignInPage() {
                       className="w-5 h-5 mr-3"
                     />
                     {googleLoading ? 'Signing in...' : 'Sign in with Google'}
+                  </Button>
+                </div>
+
+                {/* LinkedIn Sign In Button */}
+                <div className="mt-4">
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    className="w-full h-11 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium shadow-sm hover:shadow-md transition-all duration-200"
+                    onClick={handleLinkedInSignIn}
+                    disabled={loading || googleLoading || linkedInLoading}
+                  >
+                    <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                    {linkedInLoading ? 'Signing in...' : 'Sign in with LinkedIn'}
                   </Button>
                 </div>
 

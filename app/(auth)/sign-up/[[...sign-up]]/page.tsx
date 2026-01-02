@@ -39,6 +39,7 @@ export default function SignUpPage() {
   const { signUp, user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [oauthLoading, setOauthLoading] = useState(false);
+  const [linkedInLoading, setLinkedInLoading] = useState(false);
   
   // Use the chapters hook to fetch dynamic data
   const { chapters, loading: chaptersLoading, error: chaptersError } = useChapters();
@@ -113,6 +114,31 @@ export default function SignUpPage() {
     }
   };
 
+  const handleLinkedInSignUp = async () => {
+    try {
+      setLinkedInLoading(true);
+      setError('');
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'linkedin_oidc',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'openid profile email',
+        },
+      });
+
+      if (error) {
+        console.error('LinkedIn sign-up error:', error);
+        setError('LinkedIn sign-up failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('LinkedIn sign-up exception:', error);
+      setError('LinkedIn sign-up failed. Please try again.');
+    } finally {
+      setLinkedInLoading(false);
+    }
+  };
+
   const handleEmailSignUp = () => {
     setShowEmailForm(true);
   };
@@ -149,7 +175,7 @@ export default function SignUpPage() {
 
   const isPhoneValid = phoneNumber === '' || isValidPhoneNumber(phoneNumber);
 
-  if (authLoading || oauthLoading) {
+  if (authLoading || oauthLoading || linkedInLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -191,7 +217,7 @@ export default function SignUpPage() {
                   variant="outline" 
                   className="w-full h-9 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-3 text-sm shadow-sm hover:shadow-md transition-all duration-200"
                   onClick={handleGoogleSignUp}
-                  disabled={loading}
+                  disabled={loading || linkedInLoading}
                 >
                   <img 
                     src="https://developers.google.com/identity/images/g-logo.png" 
@@ -205,8 +231,21 @@ export default function SignUpPage() {
                   type="button"
                   variant="outline" 
                   className="w-full h-9 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-3 text-sm shadow-sm hover:shadow-md transition-all duration-200"
+                  onClick={handleLinkedInSignUp}
+                  disabled={loading || linkedInLoading}
+                >
+                  <svg className="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  </svg>
+                  {linkedInLoading ? 'Signing up...' : 'Continue with LinkedIn'}
+                </Button>
+                
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  className="w-full h-9 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-3 text-sm shadow-sm hover:shadow-md transition-all duration-200"
                   onClick={handleEmailSignUp}
-                  disabled={loading}
+                  disabled={loading || linkedInLoading}
                 >
                   <Mail className="h-4 w-4 mr-3 text-gray-600" />
                   Continue with Email
@@ -511,7 +550,7 @@ export default function SignUpPage() {
                         variant="outline" 
                         className="w-full h-9 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-3 text-sm shadow-sm hover:shadow-md transition-all duration-200"
                         onClick={handleGoogleSignUp}
-                        disabled={loading}
+                        disabled={loading || linkedInLoading}
                       >
                         <img 
                           src="https://developers.google.com/identity/images/g-logo.png" 
@@ -525,8 +564,21 @@ export default function SignUpPage() {
                         type="button"
                         variant="outline" 
                         className="w-full h-9 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-3 text-sm shadow-sm hover:shadow-md transition-all duration-200"
+                        onClick={handleLinkedInSignUp}
+                        disabled={loading || linkedInLoading}
+                      >
+                        <svg className="w-4 h-4 mr-3" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                        </svg>
+                        {linkedInLoading ? 'Signing up...' : 'Continue with LinkedIn'}
+                      </Button>
+                      
+                      <Button 
+                        type="button"
+                        variant="outline" 
+                        className="w-full h-9 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-3 text-sm shadow-sm hover:shadow-md transition-all duration-200"
                         onClick={handleEmailSignUp}
-                        disabled={loading}
+                        disabled={loading || linkedInLoading}
                       >
                         <Mail className="h-4 w-4 mr-3 text-gray-600" />
                         Continue with Email
