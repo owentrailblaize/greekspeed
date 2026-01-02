@@ -9,6 +9,8 @@ import { Post, CreateCommentRequest } from '@/types/posts';
 import { useComments } from '@/lib/hooks/useComments';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { formatDistanceToNow } from 'date-fns';
+import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
+import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
 import Image from 'next/image';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { createPortal } from 'react-dom';
@@ -286,26 +288,35 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
             isMobile ? "px-0" : "px-0"
           )}>
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 sm:w-12 sm:h-12 bg-navy-100/70 rounded-full flex items-center justify-center text-navy-700 text-base font-semibold shrink-0 overflow-hidden ring-2 ring-white">
-                {post.author?.avatar_url ? (
-                  <Image
-                    src={post.author.avatar_url}
-                    alt={post.author.full_name || 'User'}
-                    width={48}
-                    height={48}
-                    className="h-full w-full rounded-full object-cover"
-                    sizes="48px"
-                  />
-                ) : (
-                  post.author?.first_name?.charAt(0) || 'U'
-                )}
-              </div>
+              {post.author?.id ? (
+                <ClickableAvatar
+                  userId={post.author.id}
+                  avatarUrl={post.author.avatar_url}
+                  fullName={post.author.full_name}
+                  firstName={post.author.first_name}
+                  lastName={post.author.last_name}
+                  size="md"
+                  className="w-12 h-12 sm:w-12 sm:h-12 ring-2 ring-white"
+                />
+              ) : (
+                <div className="w-12 h-12 sm:w-12 sm:h-12 bg-navy-100/70 rounded-full flex items-center justify-center text-navy-700 text-base font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+                  {post.author?.first_name?.charAt(0) || 'U'}
+                </div>
+              )}
               
               <div className="flex-1 min-w-0 space-y-3">
                 <div className="flex flex-wrap items-center gap-3">
-                  <h4 className="font-medium text-slate-900 text-base break-words">
-                    {post.author?.full_name || 'Unknown User'}
-                  </h4>
+                  {post.author?.id && post.author?.full_name ? (
+                    <ClickableUserName
+                      userId={post.author.id}
+                      fullName={post.author.full_name}
+                      className="font-medium text-slate-900 text-base break-words"
+                    />
+                  ) : (
+                    <h4 className="font-medium text-slate-900 text-base break-words">
+                      {post.author?.full_name || 'Unknown User'}
+                    </h4>
+                  )}
                   <p className="text-sm text-slate-500">
                     {formatTimestamp(post.created_at)}
                   </p>
@@ -452,26 +463,35 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                       }}
                     >
                       <div className="flex items-start gap-3 sm:gap-4">
-                        <div className="w-10 h-10 sm:w-10 sm:h-10 bg-navy-100/70 rounded-full flex items-center justify-center text-navy-700 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
-                          {comment.author?.avatar_url ? (
-                            <Image
-                              src={comment.author.avatar_url}
-                              alt={comment.author.full_name || 'User'}
-                              width={40}
-                              height={40}
-                              className="h-full w-full rounded-full object-cover"
-                              sizes="40px"
-                            />
-                          ) : (
-                            comment.author?.first_name?.charAt(0) || 'U'
-                          )}
-                        </div>
+                        {comment.author?.id ? (
+                          <ClickableAvatar
+                            userId={comment.author.id}
+                            avatarUrl={comment.author.avatar_url}
+                            fullName={comment.author.full_name}
+                            firstName={comment.author.first_name}
+                            lastName={comment.author.last_name}
+                            size="sm"
+                            className="w-10 h-10 sm:w-10 sm:h-10 ring-2 ring-white"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 sm:w-10 sm:h-10 bg-navy-100/70 rounded-full flex items-center justify-center text-navy-700 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+                            {comment.author?.first_name?.charAt(0) || 'U'}
+                          </div>
+                        )}
 
                         <div className={`flex-1 min-w-0 rounded-2xl border border-slate-200/60 bg-white/80 px-4 py-3 shadow-sm ${isLast ? '' : 'mb-4'}`}>
                           <div className="flex flex-wrap items-center gap-2 mb-2">
-                            <h5 className="font-medium text-slate-900 text-sm sm:text-base break-words">
-                              {comment.author?.full_name || 'Unknown User'}
-                            </h5>
+                            {comment.author?.id && comment.author?.full_name ? (
+                              <ClickableUserName
+                                userId={comment.author.id}
+                                fullName={comment.author.full_name}
+                                className="font-medium text-slate-900 text-sm sm:text-base break-words"
+                              />
+                            ) : (
+                              <h5 className="font-medium text-slate-900 text-sm sm:text-base break-words">
+                                {comment.author?.full_name || 'Unknown User'}
+                              </h5>
+                            )}
                             <p className="text-xs sm:text-sm text-slate-500">
                               {formatTimestamp(comment.created_at)}
                             </p>

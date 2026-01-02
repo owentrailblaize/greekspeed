@@ -183,6 +183,9 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
         contactName={otherUser?.full_name || 'Contact'}
         contactAvatarUrl={otherUser?.avatar_url || null}
         contactFullName={otherUser?.full_name || 'Contact'}
+        contactUserId={otherUser?.id || null}
+        contactFirstName={otherUser?.first_name || null}
+        contactLastName={otherUser?.last_name || null}
       />
     </div>
   );
