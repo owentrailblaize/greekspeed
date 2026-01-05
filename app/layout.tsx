@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import { AuthProvider } from '@/lib/supabase/auth-context';
 import { ProfileProvider } from '@/lib/contexts/ProfileContext';
+import { BrandingProvider } from '@/lib/contexts/BrandingContext';
 import { ConnectionsProvider } from '@/lib/contexts/ConnectionsContext';
 import AppQueryProvider from '@/lib/query/AppQueryProvider';
 import { Analytics } from '@vercel/analytics/react';
@@ -44,9 +45,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <AppQueryProvider>
             <AuthProvider>
               <ProfileProvider>
-                <ConnectionsProvider>
-                  {children}
-                </ConnectionsProvider>
+                <BrandingProvider>
+                  <ConnectionsProvider>
+                    {children}
+                  </ConnectionsProvider>
+                </BrandingProvider>
               </ProfileProvider>
             </AuthProvider>
           </AppQueryProvider>
