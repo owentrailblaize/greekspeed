@@ -450,19 +450,19 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                       variant="ghost"
                       size="sm"
                       onClick={() => handleCancelReply(comment.id)}
-                      className="h-8 px-3 text-xs text-slate-500 hover:text-slate-700"
+                      className="rounded-full h-8 px-3 text-xs text-slate-500 hover:text-slate-700"
                     >
                       Cancel
                     </Button>
                     <Button
                       onClick={() => handleSubmitReply(comment.id)}
                       disabled={!currentReplyContent.trim() || isSubmittingCurrentReply}
-                      className="h-8 w-8 rounded-full bg-navy-600/90 text-white shadow-sm transition-all duration-200 hover:bg-navy-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                      className="h-8 w-8 rounded-full bg-navy-600/90 text-white shadow-sm transition-all duration-200 hover:bg-navy-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center p-0"
                     >
                       {isSubmittingCurrentReply ? (
                         <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       ) : (
-                        <Send className="h-3 w-3" />
+                        <Send className="h-4 w-4 text-white" strokeWidth={2} />
                       )}
                     </Button>
                   </div>

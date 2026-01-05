@@ -58,12 +58,12 @@ function buildCommentTree(comments: PostComment[]): PostComment[] {
 
   // Sort root comments and replies by created_at
   rootComments.sort((a, b) => 
-    new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
   
   rootComments.forEach((comment) => {
     comment.replies.sort((a, b) => 
-      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
   });
 
