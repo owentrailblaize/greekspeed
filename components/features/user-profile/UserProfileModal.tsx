@@ -36,15 +36,18 @@ export function UserProfileModal({ profile, isOpen, onClose }: UserProfileModalP
   if (!profile || !isOpen || !mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm z-[10000]"
         onClick={onClose}
       />
       
       {/* Modal Card - Compact Design */}
-      <div className="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div 
+        className="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto z-[10001]"
+        onClick={(e) => e.stopPropagation()}
+      >
         {profile.type === 'alumni' ? (
           <AlumniProfileView profile={profile} onClose={onClose} />
         ) : (
