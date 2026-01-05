@@ -84,7 +84,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
   useEffect(() => {
     // Only preserve scroll if we're adding posts (not initial load)
     if (prevPostCountRef.current > 0 && mergedPosts.length > prevPostCountRef.current) {
-      const scrollOffset = rowVirtualizer.getScrollOffset();
+      const scrollOffset = window.scrollY;
       
       // Wait for next frame to allow virtualizer to update
       requestAnimationFrame(() => {
