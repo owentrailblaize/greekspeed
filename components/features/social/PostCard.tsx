@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { Card, CardContent } from '@/components/ui/card';
+// Card components removed for cardless design
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Heart, MessageCircle, Trash2, X, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -181,24 +181,26 @@ export function PostCard({
     }
 
     return (
-      <div className="mt-4 space-y-3 rounded-2xl border border-gray-100 bg-gray-50/70 p-4 shadow-inner">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">
-          {commentsPreview.length > 1 ? 'Most recent comments' : 'Most recent comment'}
+      <div className="mt-3 pt-3 border-t border-gray-100/50 space-y-2.5">
+        <p className="text-xs font-medium text-gray-500 mb-2">
+          {commentsPreview.length > 1 ? 'Recent comments' : 'Recent comment'}
         </p>
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {commentsPreview.map((comment) => (
-            <div key={comment.id} className="text-sm text-gray-600">
-              {comment.author?.id && comment.author?.full_name ? (
-                <ClickableUserName
-                  userId={comment.author.id}
-                  fullName={comment.author.full_name}
-                  className="font-medium text-gray-900"
-                />
-              ) : (
-                <p className="font-medium text-gray-900">{comment.author?.full_name || 'Member'}</p>
-              )}
-              <p className="text-xs text-gray-400">{formatTimestamp(comment.created_at)}</p>
-              <p className="mt-1 leading-relaxed">{formatCommentSnippet(comment.content)}</p>
+            <div key={comment.id} className="text-sm">
+              <div className="flex items-center gap-2 mb-1">
+                {comment.author?.id && comment.author?.full_name ? (
+                  <ClickableUserName
+                    userId={comment.author.id}
+                    fullName={comment.author.full_name}
+                    className="font-medium text-gray-900 text-sm"
+                  />
+                ) : (
+                  <span className="font-medium text-gray-900 text-sm">{comment.author?.full_name || 'Member'}</span>
+                )}
+                <span className="text-xs text-gray-400">{formatTimestamp(comment.created_at)}</span>
+              </div>
+              <p className="text-gray-700 text-sm leading-relaxed">{formatCommentSnippet(comment.content)}</p>
             </div>
           ))}
         </div>
@@ -320,14 +322,14 @@ export function PostCard({
 
   return (
     <>
-      {/* Mobile Layout - Card-less Feed */}
+      {/* Mobile Layout - Cardless Feed */}
       <div className="sm:hidden">
         <div 
-          className="mx-1 mb-4 px-4 py-5 rounded-2xl border border-gray-100 bg-white/80 shadow-sm last:mb-0 cursor-pointer hover:bg-gray-50/50 transition-colors"
+          className="px-4 py-4 border-b border-gray-200/80 cursor-pointer"
           onClick={handleCardClick}
         >
           {/* Post Header */}
-          <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-3">
               {post.author?.id ? (
                 <ClickableAvatar
@@ -377,79 +379,81 @@ export function PostCard({
             </div>
           </div>
 
-          {/* Post Content */}
-          <div className="mb-4 space-y-4">
-            {renderPostContent(
-              'text-gray-700 text-sm leading-relaxed',
-              'text-xs font-medium text-navy-600 hover:text-navy-700 transition-colors'
-            )}
-            {/* Display images - support both single (backward compat) and multiple */}
-            {(() => {
-              if (imageUrls.length === 0) return null;
-              
-              // Single image - display large and make clickable
-              if (imageUrls.length === 1) {
+          {/* Post Content - Wrapped in rounded container */}
+          <div className="mb-3">
+            <div className="rounded-2xl bg-gray-50/30 border border-gray-100/50 p-4 space-y-3">
+              {renderPostContent(
+                'text-gray-700 text-sm leading-relaxed',
+                'text-xs font-medium text-navy-600 hover:text-navy-700 transition-colors'
+              )}
+              {/* Display images - support both single (backward compat) and multiple */}
+              {(() => {
+                if (imageUrls.length === 0) return null;
+                
+                // Single image - display large and make clickable
+                if (imageUrls.length === 1) {
+                  return (
+                    <div 
+                      className="relative w-full overflow-hidden rounded-3xl aspect-[4/3] shadow-inner cursor-pointer hover:opacity-90 transition-opacity"
+                      style={{ maxHeight: '24rem' }}
+                      onClick={(e) => { e.stopPropagation(); handleImageClick(0); }}
+                    >
+                      <Image
+                        src={imageUrls[0]}
+                        alt="Post content"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, 700px"
+                        priority={false}
+                      />
+                    </div>
+                  );
+                }
+                
+                // Multiple images - display in horizontal scrollable row (clickable)
                 return (
-                  <div 
-                    className="relative w-full overflow-hidden rounded-3xl aspect-[4/3] shadow-inner cursor-pointer hover:opacity-90 transition-opacity"
-                    style={{ maxHeight: '24rem' }}
-                    onClick={(e) => { e.stopPropagation(); handleImageClick(0); }}
-                  >
-                    <Image
-                      src={imageUrls[0]}
-                      alt="Post content"
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 100vw, 700px"
-                      priority={false}
-                    />
+                  <div className="relative">
+                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+                      {imageUrls.map((url, index) => (
+                        <div
+                          key={index}
+                          className="relative shrink-0 w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={(e) => { e.stopPropagation(); handleImageClick(index); }}
+                        >
+                          <Image
+                            src={url}
+                            alt={`Post image ${index + 1}`}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 640px) 128px, 160px"
+                            priority={false}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    {/* Removed image count text */}
                   </div>
                 );
-              }
-              
-              // Multiple images - display in horizontal scrollable row (clickable)
-              return (
-                <div className="relative">
-                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
-                    {imageUrls.map((url, index) => (
-                      <div
-                        key={index}
-                        className="relative shrink-0 w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 cursor-pointer hover:opacity-90 transition-opacity"
-                        onClick={(e) => { e.stopPropagation(); handleImageClick(index); }}
-                      >
-                        <Image
-                          src={url}
-                          alt={`Post image ${index + 1}`}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 640px) 128px, 160px"
-                          priority={false}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  {/* Removed image count text */}
+              })()}
+              {/* Link Previews */}
+              {post.metadata?.link_previews && post.metadata.link_previews.length > 0 && (
+                <div className="space-y-3">
+                  {post.metadata.link_previews.map((preview, index) => (
+                    <LinkPreviewCard
+                      key={preview.url || index}
+                      preview={preview}
+                      className="max-w-full"
+                      hideImage={imageUrls.length > 0}
+                    />
+                  ))}
                 </div>
-              );
-            })()}
-            {/* Link Previews */}
-            {post.metadata?.link_previews && post.metadata.link_previews.length > 0 && (
-              <div className="space-y-3">
-                {post.metadata.link_previews.map((preview, index) => (
-                  <LinkPreviewCard
-                    key={preview.url || index}
-                    preview={preview}
-                    className="max-w-full"
-                    hideImage={imageUrls.length > 0}
-                  />
-                ))}
-              </div>
-            )}
-            {renderCommentsPreview()}
+              )}
+              {renderCommentsPreview()}
+            </div>
           </div>
 
           {/* Post Actions */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pt-2 border-t border-gray-100/50">
             <div className="flex items-center gap-3">
               <Button 
                 variant="ghost" 
@@ -478,14 +482,14 @@ export function PostCard({
         </div>
       </div>
 
-      {/* Desktop Layout - Preserved Card Design */}
-      <Card 
-        className="hidden sm:block rounded-3xl border border-gray-100 bg-white/80 shadow-sm transition hover:shadow-lg cursor-pointer"
+      {/* Desktop Layout - Cardless Design */}
+      <div 
+        className="hidden sm:block py-4 sm:py-5 border-b border-gray-200/90 cursor-pointer"
         onClick={handleCardClick}
       >
-        <CardContent className="space-y-4 p-6 sm:p-7">
+        <div className="space-y-4">
           {/* Post Header */}
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-3">
               {post.author?.id ? (
                 <ClickableAvatar
@@ -541,79 +545,81 @@ export function PostCard({
             </div>
           </div>
 
-          {/* Post Content */}
-          <div className="space-y-4">
-            {renderPostContent(
-              'text-gray-700 text-base sm:text-[0.95rem] leading-relaxed',
-              'text-xs font-medium text-navy-600 hover:text-navy-700 transition-colors'
-            )}
-            {/* Display images - support both single (backward compat) and multiple */}
-            {(() => {
-              if (imageUrls.length === 0) return null;
-              
-              // Single image - display large and make clickable
-              if (imageUrls.length === 1) {
+          {/* Post Content - Wrapped in rounded container */}
+          <div className="space-y-3">
+            <div className="rounded-2xl bg-gray-50/30 border border-gray-200/80 p-4 sm:p-5 space-y-3">
+              {renderPostContent(
+                'text-gray-700 text-base sm:text-[0.95rem] leading-relaxed',
+                'text-xs font-medium text-navy-600 hover:text-navy-700 transition-colors'
+              )}
+              {/* Display images - support both single (backward compat) and multiple */}
+              {(() => {
+                if (imageUrls.length === 0) return null;
+                
+                // Single image - display large and make clickable
+                if (imageUrls.length === 1) {
+                  return (
+                    <div 
+                      className="relative w-full overflow-hidden rounded-3xl aspect-[4/3] shadow-inner cursor-pointer hover:opacity-90 transition-opacity"
+                      style={{ maxHeight: '24rem' }}
+                      onClick={(e) => { e.stopPropagation(); handleImageClick(0); }}
+                    >
+                      <Image
+                        src={imageUrls[0]}
+                        alt="Post content"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, 700px"
+                        priority={false}
+                      />
+                    </div>
+                  );
+                }
+                
+                // Multiple images - display in horizontal scrollable row (clickable)
                 return (
-                  <div 
-                    className="relative w-full overflow-hidden rounded-3xl aspect-[4/3] shadow-inner cursor-pointer hover:opacity-90 transition-opacity"
-                    style={{ maxHeight: '24rem' }}
-                    onClick={(e) => { e.stopPropagation(); handleImageClick(0); }}
-                  >
-                    <Image
-                      src={imageUrls[0]}
-                      alt="Post content"
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 100vw, 700px"
-                      priority={false}
-                    />
+                  <div className="relative">
+                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+                      {imageUrls.map((url, index) => (
+                        <div
+                          key={index}
+                          className="relative shrink-0 w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={(e) => { e.stopPropagation(); handleImageClick(index); }}
+                        >
+                          <Image
+                            src={url}
+                            alt={`Post image ${index + 1}`}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 640px) 100vw, 700px"
+                            priority={false}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    {/* Removed image count text */}
                   </div>
                 );
-              }
-              
-              // Multiple images - display in horizontal scrollable row (clickable)
-              return (
-                <div className="relative">
-                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
-                    {imageUrls.map((url, index) => (
-                      <div
-                        key={index}
-                        className="relative shrink-0 w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 cursor-pointer hover:opacity-90 transition-opacity"
-                        onClick={(e) => { e.stopPropagation(); handleImageClick(index); }}
-                      >
-                        <Image
-                          src={url}
-                          alt={`Post image ${index + 1}`}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 640px) 100vw, 700px"
-                          priority={false}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  {/* Removed image count text */}
+              })()}
+              {/* Link Previews */}
+              {post.metadata?.link_previews && post.metadata.link_previews.length > 0 && (
+                <div className="space-y-3">
+                  {post.metadata.link_previews.map((preview, index) => (
+                    <LinkPreviewCard
+                      key={preview.url || index}
+                      preview={preview}
+                      className="max-w-full"
+                      hideImage={imageUrls.length > 0}
+                    />
+                  ))}
                 </div>
-              );
-            })()}
-            {/* Link Previews */}
-            {post.metadata?.link_previews && post.metadata.link_previews.length > 0 && (
-              <div className="space-y-3">
-                {post.metadata.link_previews.map((preview, index) => (
-                  <LinkPreviewCard
-                    key={preview.url || index}
-                    preview={preview}
-                    className="max-w-full"
-                    hideImage={imageUrls.length > 0}
-                  />
-                ))}
-              </div>
-            )}
-            {renderCommentsPreview()}
+              )}
+              {renderCommentsPreview()}
+            </div>
           </div>
 
           {/* Post Actions */}
-          <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+          <div className="flex items-center justify-between pt-3 border-t border-gray-100/50">
             <div className="flex items-center gap-3">
               <Button 
                 variant="ghost" 
@@ -639,8 +645,8 @@ export function PostCard({
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Image Viewer Modal */}
       <ImageViewerModal />
