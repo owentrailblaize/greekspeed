@@ -17,6 +17,59 @@ type CommentsCacheEntry = {
 
 const commentsCache = new Map<string, CommentsCacheEntry>();
 
+// Helper function to build comment tree from flat array
+// Only allows 1 level deep: POST -> COMMENT -> REPLY (no deeper nesting)
+function buildCommentTree(comments: PostComment[]): PostComment[] {
+  const commentMap = new Map<string, PostComment & { replies: PostComment[] }>();
+  const rootComments: (PostComment & { replies: PostComment[] })[] = [];
+
+  // First pass: create all comment nodes with empty replies array
+  comments.forEach((comment) => {
+    commentMap.set(comment.id, {
+      ...comment,
+      replies: [],
+    });
+  });
+
+  // Second pass: build tree structure (only 1 level deep)
+  comments.forEach((comment) => {
+    const node = commentMap.get(comment.id);
+    if (!node) return;
+
+    if (comment.parent_comment_id) {
+      // This is a reply - find its parent
+      const parent = commentMap.get(comment.parent_comment_id);
+      if (parent) {
+        // Only attach as reply if parent is a top-level comment (has no parent itself)
+        // This filters out level 2+ replies that might exist in the database
+        const parentComment = comments.find(c => c.id === comment.parent_comment_id);
+        if (parentComment && !parentComment.parent_comment_id) {
+          // Parent is top-level, so this reply is valid (level 1)
+          parent.replies.push(node);
+        }
+        // If parent is also a reply (has parent_comment_id), ignore this comment
+        // This prevents level 2+ replies from being displayed
+      }
+    } else {
+      // This is a top-level comment
+      rootComments.push(node);
+    }
+  });
+
+  // Sort root comments and replies by created_at
+  rootComments.sort((a, b) => 
+    new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
+  
+  rootComments.forEach((comment) => {
+    comment.replies.sort((a, b) => 
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+  });
+
+  return rootComments;
+}
+
 interface UseCommentsOptions {
   enabled?: boolean;
   initialComments?: PostComment[];
@@ -149,6 +202,59 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
         return comment;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to create comment');
+        return null;
+      }
+    },
+    [getAuthHeaders, pagination, postId, session, user],
+  );
+
+  const createReply = useCallback(
+    async (parentCommentId: string, replyData: CreateCommentRequest) => {
+      if (!user || !postId || !session) return null;
+
+      try {
+        const response = await fetch(`/api/posts/${postId}/comments`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+          },
+          body: JSON.stringify({
+            ...replyData,
+            parent_comment_id: parentCommentId,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create reply');
+        }
+
+        const { comment } = await response.json();
+
+        setComments((prevComments) => {
+          const timestamp = Date.now();
+          const updated = [...prevComments, comment];
+          commentsCache.set(postId, {
+            comments: updated,
+            pagination: {
+              ...pagination,
+              total: pagination.total + 1,
+            },
+            fetchedAt: timestamp,
+          });
+          setLastFetchedAt(timestamp);
+          setLoadedFromCache(false);
+          return updated;
+        });
+
+        setPagination((prev) => ({
+          ...prev,
+          total: prev.total + 1,
+        }));
+
+        return comment;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to create reply');
         return null;
       }
     },
@@ -318,11 +424,13 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
     fetchComments,
     refresh,
     createComment,
+    createReply,
     deleteComment,
     likeComment,
     refetch,
     invalidateCache,
     lastFetchedAt,
     loadedFromCache,
+    buildCommentTree: (comments: PostComment[]) => buildCommentTree(comments),
   };
 }

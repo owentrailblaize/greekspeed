@@ -62,6 +62,7 @@ export interface PostComment {
   likes_count: number;
   created_at: string;
   updated_at: string;
+  parent_comment_id?: string | null;
   author?: {
     id: string;
     full_name: string;
@@ -70,6 +71,7 @@ export interface PostComment {
     avatar_url: string | null;
   };
   is_liked?: boolean;
+  replies?: PostComment[];
 }
 
 export type PostCommentPreview = Omit<PostComment, 'is_liked'>;
@@ -93,6 +95,7 @@ export interface UpdatePostRequest {
 
 export interface CreateCommentRequest {
   content: string;
+  parent_comment_id?: string | null;
 }
 
 export interface UpdateCommentRequest {
