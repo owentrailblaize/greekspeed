@@ -156,7 +156,6 @@ export default function JoinPageClient() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <Users className="h-5 w-5 text-blue-600" />
               <span>Join {invitation.chapter_name}</span>
             </CardTitle>
           </CardHeader>
@@ -210,7 +209,7 @@ export default function JoinPageClient() {
             <div className="flex space-x-3">
               <Button
                 onClick={handleStartJoin}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                className="rounded-full flex-1 bg-blue-600 hover:bg-blue-700"
               >
                 Create Account
               </Button>

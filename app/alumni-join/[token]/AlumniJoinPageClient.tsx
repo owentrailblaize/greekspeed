@@ -156,108 +156,73 @@ export default function AlumniJoinPageClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-lg w-full"
+        className="max-w-2xl w-full"
       >
         <Card>
           <CardHeader>
-            <CardTitle className="text-center text-2xl flex items-center justify-center space-x-2">
-              <GraduationCap className="h-6 w-6 text-purple-600" />
-              <span>Join {invitation.chapter_name} Alumni</span>
+            <CardTitle className="flex items-center space-x-2">
+              <Users className="h-5 w-5 text-blue-600" />
+              <span>Join {invitation.chapter_name}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="text-center">
-              <p className="text-gray-600 mb-6">
+            <div>
+              <p className="text-gray-600 mb-4">
                 You've been invited to join {invitation.chapter_name} as an alumni member. 
-                Create your alumni account to connect with fellow graduates and stay involved.
+                Create your account to get started.
               </p>
             </div>
 
-            {/* Alumni Invitation Details */}
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-3">
-              <h3 className="font-medium text-purple-900 flex items-center space-x-2">
-                <GraduationCap className="h-4 w-4" />
-                <span>Alumni Invitation Details</span>
+            {/* Invitation Details */}
+            <div className="border-t pt-4">
+              <h3 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
+                <Shield className="h-4 w-4" />
+                <span>Invitation Details</span>
               </h3>
-              <div className="space-y-2 text-sm">
+              <div className="space-y-2 text-sm text-gray-600">
                 <div className="flex items-center space-x-2">
-                  <Users className="h-4 w-4 text-purple-600" />
-                  <span className="text-purple-800">
-                    {invitation.usage_count} alumni have already joined
+                  <Users className="h-4 w-4" />
+                  <span>
+                    {invitation.usage_count} {invitation.usage_count === 1 ? 'alumni has' : 'alumni have'} already joined
                     {invitation.max_uses && ` (${invitation.max_uses} max)`}
                   </span>
                 </div>
-                
                 <div className="flex items-center space-x-2">
-                  <Shield className="h-4 w-4 text-purple-600" />
-                  <span className="text-purple-800">
-                    {invitation.approval_mode === 'auto' ? 'Auto-approved alumni membership' : 'Requires admin approval'}
+                  <Shield className="h-4 w-4" />
+                  <span>
+                    {invitation.approval_mode === 'auto' ? 'Auto-approved membership' : 'Requires admin approval'}
                   </span>
                 </div>
-                
                 {invitation.expires_at && (
                   <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-purple-600" />
-                    <span className="text-purple-800">
+                    <Calendar className="h-4 w-4" />
+                    <span>
                       Expires {new Date(invitation.expires_at).toLocaleDateString()}
                     </span>
                   </div>
                 )}
-                
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-purple-800">
-                    Open to all email domains
-                  </span>
-                </div>
               </div>
             </div>
 
-            {/* Alumni Benefits */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 mb-2">Alumni Benefits</h4>
-              <ul className="text-sm text-blue-800 space-y-1">
-                <li>• Connect with fellow alumni and current members</li>
-                <li>• Access to alumni directory and networking opportunities</li>
-                <li>• Stay updated on chapter events and news</li>
-                <li>• Professional networking and career development resources</li>
-              </ul>
-            </div>
-
-            {/* Important Note */}
             {invitation.single_use && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <div className="flex items-start space-x-2">
-                  <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-amber-900">Single-Use Per Email</h4>
-                    <p className="text-sm text-amber-800 mt-1">
-                      Each email address can only use this alumni invitation once. Make sure to use your correct email address.
-                    </p>
-                  </div>
-                </div>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <p className="text-sm text-yellow-800">
+                  <strong>Note:</strong> Each email address can only use this invitation once. Make sure to use your correct email address.
+                </p>
               </div>
             )}
 
-            <Button
-              onClick={handleStartJoin}
-              className="w-full bg-purple-600 hover:bg-purple-700"
-              size="lg"
-            >
-              Create Account
-            </Button>
-
-            <div className="text-center">
-              <button
-                onClick={() => router.push('/')}
-                className="text-sm text-gray-500 hover:text-gray-700"
+            <div className="flex space-x-3">
+              <Button
+                onClick={handleStartJoin}
+                className="rounded-full flex-1 bg-blue-600 hover:bg-blue-700"
               >
-                Return to Home
-              </button>
+                Create Account
+              </Button>
             </div>
           </CardContent>
         </Card>
