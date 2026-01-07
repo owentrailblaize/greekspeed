@@ -23,6 +23,16 @@ export async function GET(
       }, { status: 400 });
     }
 
+    const invitation = validation.invitation!;
+
+    // Ensure this is an active member invitation
+    if (invitation.invitation_type !== 'active_member') {
+      return NextResponse.json({ 
+        valid: false,
+        error: 'This invitation is not for active members' 
+      }, { status: 400 });
+    }
+
     // Return the validated invitation data for the join page
     return NextResponse.json({
       valid: true,
@@ -36,7 +46,8 @@ export async function GET(
         single_use: validation.invitation!.single_use,
         expires_at: validation.invitation!.expires_at,
         max_uses: validation.invitation!.max_uses,
-        usage_count: validation.invitation!.usage_count
+        usage_count: validation.invitation!.usage_count,
+        invitation_type: validation.invitation!.invitation_type
       }
     });
   } catch (error) {

@@ -37,6 +37,16 @@ export default function JoinPageClient() {
           throw new Error(data.error || 'Invalid invitation');
         }
 
+        // Additional safety check: Ensure this is an active member invitation
+        if (data.invitation?.invitation_type && data.invitation.invitation_type !== 'active_member') {
+          // Redirect to the correct page based on invitation type
+          if (data.invitation.invitation_type === 'alumni') {
+            router.push(`/alumni-join/${token}`);
+            return;
+          }
+          throw new Error('This invitation is not for active members');
+        }
+
         setInvitation(data.invitation);
       } catch (error) {
         console.error('Error validating invitation:', error);
