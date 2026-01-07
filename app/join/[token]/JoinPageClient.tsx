@@ -28,12 +28,24 @@ export default function JoinPageClient() {
         
         if (!response.ok) {
           const errorData = await response.json();
+          
+          // If the error is about wrong invitation type, redirect to alumni join page
+          if (errorData.error === 'This invitation is not for active members') {
+            router.push(`/alumni-join/${token}`);
+            return;
+          }
+          
           throw new Error(errorData.error || 'Invalid invitation');
         }
 
         const data = await response.json();
         
         if (!data.valid) {
+          // If invalid due to wrong type, redirect
+          if (data.error === 'This invitation is not for active members') {
+            router.push(`/alumni-join/${token}`);
+            return;
+          }
           throw new Error(data.error || 'Invalid invitation');
         }
 
@@ -50,7 +62,15 @@ export default function JoinPageClient() {
         setInvitation(data.invitation);
       } catch (error) {
         console.error('Error validating invitation:', error);
-        setError(error instanceof Error ? error.message : 'Failed to validate invitation');
+        
+        // If error message indicates wrong type, try redirecting
+        const errorMessage = error instanceof Error ? error.message : 'Failed to validate invitation';
+        if (errorMessage.includes('not for active members')) {
+          router.push(`/alumni-join/${token}`);
+          return;
+        }
+        
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -59,7 +79,7 @@ export default function JoinPageClient() {
     if (token) {
       validateInvitation();
     }
-  }, [token]);
+  }, [token, router]);
 
   const handleJoinSuccess = (userData: any) => {
     setSignupSuccess(true);
