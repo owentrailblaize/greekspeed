@@ -195,7 +195,7 @@ export default function SignInPage() {
               {/* Continue Button */}
               <Button 
                 type="submit" 
-                className="w-full h-11 rounded-full bg-navy-600 hover:bg-navy-700 text-white font-medium shadow-sm hover:shadow-md transition-all duration-200" 
+                className="w-full h-11 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white font-medium shadow-sm hover:shadow-md transition-all duration-200" 
                 disabled={loading || googleLoading || linkedInLoading}
               >
                 <span>Continue</span>
@@ -379,7 +379,7 @@ export default function SignInPage() {
                   {/* Continue Button */}
                   <Button 
                     type="submit" 
-                    className="w-full h-11 rounded-full bg-navy-600 hover:bg-navy-700 text-white font-medium shadow-sm hover:shadow-md transition-all duration-200" 
+                    className="w-full h-11 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white font-medium shadow-sm hover:shadow-md transition-all duration-200" 
                     disabled={loading || googleLoading || linkedInLoading}
                   >
                     <span>Continue</span>

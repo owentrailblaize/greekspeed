@@ -455,7 +455,7 @@ export default function SignUpPage() {
                       <div className="mt-2 lg:mt-1">
                         <Button 
                           type="submit" 
-                          className="w-full h-7 rounded-full bg-navy-600 hover:bg-navy-700 text-white font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200" 
+                          className="w-full h-7 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200" 
                           disabled={loading}
                         >
                           {loading ? 'Creating account...' : 'Create Alumni Account'}
@@ -787,7 +787,7 @@ export default function SignUpPage() {
                         <div className="mt-2 lg:mt-1">
                           <Button 
                             type="submit" 
-                            className="w-full h-7 rounded-full bg-navy-600 hover:bg-navy-700 text-white font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200" 
+                            className="w-full h-7 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200" 
                             disabled={loading}
                           >
                             {loading ? 'Creating account...' : 'Create Alumni Account'}

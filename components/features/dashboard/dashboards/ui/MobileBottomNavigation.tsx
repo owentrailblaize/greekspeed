@@ -416,17 +416,17 @@ export function MobileBottomNavigation({
                       key={tab.id}
                       onClick={() => handleTabClick(tab)}
                       className={`flex flex-col items-center justify-center space-y-1 transition-colors relative ${
-                        isActive ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                        isActive ? 'text-brand-primary' : 'text-gray-500 hover:text-gray-700'
                       }`}
                     >
-                      <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
-                      <span className={`text-xs font-medium ${isActive ? 'text-blue-600' : 'text-gray-500'}`}>
+                      <Icon className={`h-5 w-5 ${isActive ? 'text-brand-primary' : 'text-gray-500'}`} />
+                      <span className={`text-xs font-medium ${isActive ? 'text-brand-primary' : 'text-gray-500'}`}>
                         {tab.label}
                       </span>
                       {isActive && (
                         <motion.div
                           layoutId="activeTabIndicator"
-                          className="absolute bottom-0 inset-x-0 mx-auto w-8 h-0.5 bg-blue-600 rounded-full"
+                          className="absolute bottom-0 inset-x-0 mx-auto w-8 h-0.5 bg-brand-primary rounded-full"
                         />
                       )}
                     </button>
@@ -443,24 +443,24 @@ export function MobileBottomNavigation({
                     const isActive = currentActiveTab === tab.id;
                     
                     return (
-                      <button
-                        key={tab.id}
-                        onClick={() => handleTabClick(tab)}
-                        className={`flex flex-col items-center justify-center flex-1 min-w-0 transition-colors relative ${
-                          isActive ? 'text-blue-600' : 'text-gray-500'
-                        }`}
-                      >
-                        <Icon className={`h-5 w-5 mb-0.5 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
-                        <span className={`text-xs font-medium truncate ${isActive ? 'text-blue-600' : 'text-gray-500'}`}>
-                          {tab.label}
-                        </span>
-                        {isActive && (
-                          <motion.div
-                            layoutId="activeTabIndicator"
-                            className="absolute bottom-0 inset-x-0 mx-auto w-8 h-0.5 bg-blue-600 rounded-full"
-                          />
-                        )}
-                      </button>
+                    <button
+                      key={tab.id}
+                      onClick={() => handleTabClick(tab)}
+                      className={`flex flex-col items-center justify-center flex-1 min-w-0 transition-colors relative ${
+                        isActive ? 'text-brand-primary' : 'text-gray-500'
+                      }`}
+                    >
+                      <Icon className={`h-5 w-5 mb-0.5 ${isActive ? 'text-brand-primary' : 'text-gray-500'}`} />
+                      <span className={`text-xs font-medium truncate ${isActive ? 'text-brand-primary' : 'text-gray-500'}`}>
+                        {tab.label}
+                      </span>
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeTabIndicator"
+                          className="absolute bottom-0 inset-x-0 mx-auto w-8 h-0.5 bg-brand-primary rounded-full"
+                        />
+                      )}
+                    </button>
                     );
                   })}
                 </div>
@@ -473,7 +473,7 @@ export function MobileBottomNavigation({
                       onClick={handleToolsClick}
                       className={`relative h-14 w-14 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg ${
                         isToolsMenuOpen
-                          ? 'bg-blue-600 text-white scale-110'
+                          ? 'bg-brand-primary text-white scale-110'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
@@ -493,24 +493,24 @@ export function MobileBottomNavigation({
                     const isActive = currentActiveTab === tab.id;
                     
                     return (
-                      <button
-                        key={tab.id}
-                        onClick={() => handleTabClick(tab)}
-                        className={`flex flex-col items-center justify-center flex-1 min-w-0 transition-colors relative ${
-                          isActive ? 'text-blue-600' : 'text-gray-500'
-                        }`}
-                      >
-                        <Icon className={`h-5 w-5 mb-0.5 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
-                        <span className={`text-xs font-medium truncate ${isActive ? 'text-blue-600' : 'text-gray-500'}`}>
-                          {tab.label}
-                        </span>
-                        {isActive && (
-                          <motion.div
-                            layoutId="activeTabIndicator"
-                            className="absolute bottom-0 inset-x-0 mx-auto w-8 h-0.5 bg-blue-600 rounded-full"
-                          />
-                        )}
-                      </button>
+                    <button
+                      key={tab.id}
+                      onClick={() => handleTabClick(tab)}
+                      className={`flex flex-col items-center justify-center flex-1 min-w-0 transition-colors relative ${
+                        isActive ? 'text-brand-primary' : 'text-gray-500'
+                      }`}
+                    >
+                      <Icon className={`h-5 w-5 mb-0.5 ${isActive ? 'text-brand-primary' : 'text-gray-500'}`} />
+                      <span className={`text-xs font-medium truncate ${isActive ? 'text-brand-primary' : 'text-gray-500'}`}>
+                        {tab.label}
+                      </span>
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeTabIndicator"
+                          className="absolute bottom-0 inset-x-0 mx-auto w-8 h-0.5 bg-brand-primary rounded-full"
+                        />
+                      )}
+                    </button>
                     );
                   })}
                 </div>
@@ -547,12 +547,12 @@ export function MobileBottomNavigation({
                       exit={{ opacity: 0, y: 10, scale: 0.9 }}
                       transition={{ duration: 0.2, delay: index * 0.05 }}
                       onClick={option.onClick}
-                      className="flex flex-col items-center justify-center h-14 w-14 rounded-full bg-white shadow-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 text-gray-700 hover:text-blue-600 transition-all duration-200 group shrink-0 relative"
+                      className="flex flex-col items-center justify-center h-14 w-14 rounded-full bg-white shadow-lg border border-gray-200 hover:bg-brand-primary/10 hover:border-brand-primary/30 text-gray-700 hover:text-brand-primary transition-all duration-200 group shrink-0 relative"
                       style={{ marginBottom: isCenter ? '12px' : '0px' }}
                       title={option.label} 
                     >
-                      <Icon className="h-5 w-5 mb-0.5 group-hover:text-blue-600 transition-colors" />
-                      <span className="text-[10px] font-medium group-hover:text-blue-600 transition-colors px-1 text-center leading-tight">
+                      <Icon className="h-5 w-5 mb-0.5 group-hover:text-brand-primary transition-colors" />
+                      <span className="text-[10px] font-medium group-hover:text-brand-primary transition-colors px-1 text-center leading-tight">
                         {option.label}
                       </span>
                     </motion.button>

@@ -527,7 +527,7 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
             
             <Button 
               onClick={() => setSuccessModalOpen(false)}
-              className="w-full bg-navy-600 hover:bg-navy-700"
+              className="w-full bg-brand-primary hover:bg-brand-primary-hover"
             >
               Got it!
             </Button>

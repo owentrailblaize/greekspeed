@@ -18,7 +18,7 @@ export function AlumniHeader() {
             <Users className="h-6 w-6 text-navy-600" />
             <h1 className="text-navy-900 font-medium">Alumni Pipeline</h1>
           </div>
-          <Button className="bg-navy-600 hover:bg-navy-700 text-white">Export List</Button>
+          <Button className="bg-brand-primary hover:bg-brand-primary-hover text-white">Export List</Button>
         </div>
         <div className="flex items-center space-x-4">
           <div className="flex-1 relative">
