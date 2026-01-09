@@ -13,6 +13,7 @@ import { ChapterBrandingList } from '@/components/features/branding/ChapterBrand
 import type { ChapterBranding } from '@/types/branding';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { cn } from '@/lib/utils';
 
 interface Chapter {
   id: string;
@@ -381,15 +382,26 @@ export default function DeveloperBrandingPage() {
                       <Button
                         key={chapter.id}
                         variant={selectedChapterId === chapter.id ? 'default' : 'outline'}
-                        className="w-full justify-start text-left h-auto py-3 px-4"
+                        className={cn(
+                          "w-full justify-start text-left h-auto py-3 px-4",
+                          selectedChapterId === chapter.id && "text-white"
+                        )}
                         onClick={() => handleChapterSelect(chapter)}
                       >
                         <div className="flex flex-col items-start w-full">
-                          <span className="font-medium">
+                          <span className={cn(
+                            "font-medium",
+                            selectedChapterId === chapter.id ? "text-white" : ""
+                          )}>                            
                             {chapter.chapter_name || chapter.name}
                           </span>
                           {chapter.university && (
-                            <span className="text-xs text-gray-500 mt-1">{chapter.university}</span>
+                            <span className={cn(
+                              "text-xs mt-1",
+                              selectedChapterId === chapter.id ? "text-white/90" : "text-gray-500"
+                            )}>
+                              {chapter.university}
+                            </span>
                           )}
                         </div>
                       </Button>
