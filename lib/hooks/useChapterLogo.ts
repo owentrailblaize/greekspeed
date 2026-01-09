@@ -33,12 +33,13 @@ export function useChapterLogo(
   const { branding } = useChapterBranding(chapterId);
 
   // Memoize the logo URL to prevent unnecessary re-renders
-  const logoUrl = useMemo(() => {
-    if (variant === 'secondary' && branding.secondaryLogo) {
-      return branding.secondaryLogo;
+  // Always returns a string (never null) due to fallback to DEFAULT_BRANDING_THEME
+  const logoUrl = useMemo((): string => {
+    if (variant === 'secondary') {
+      return branding.secondaryLogo ?? DEFAULT_BRANDING_THEME.primaryLogo;
     }
 
-    return branding.primaryLogo || DEFAULT_BRANDING_THEME.primaryLogo;
+    return branding.primaryLogo ?? DEFAULT_BRANDING_THEME.primaryLogo;
   }, [branding.primaryLogo, branding.secondaryLogo, variant]);
 
   return logoUrl;
