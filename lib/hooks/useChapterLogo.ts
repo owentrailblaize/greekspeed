@@ -33,13 +33,20 @@ export function useChapterLogo(
   const { branding } = useChapterBranding(chapterId);
 
   // Memoize the logo URL to prevent unnecessary re-renders
-  // Always returns a string (never null) due to fallback to DEFAULT_BRANDING_THEME
+  // Always returns a string (never null) due to fallback to '/logo.png'
+  // Use type assertion for DEFAULT_BRANDING_THEME.primaryLogo since we know it's always '/logo.png' at runtime
   const logoUrl = useMemo((): string => {
+    // DEFAULT_BRANDING_THEME.primaryLogo is always '/logo.png' at runtime, but typed as string | null
+    // Assert it as string for type safety
+    const defaultLogo: string = (DEFAULT_BRANDING_THEME.primaryLogo ?? '/logo.png') as string;
+    
     if (variant === 'secondary') {
-      return branding.secondaryLogo ?? DEFAULT_BRANDING_THEME.primaryLogo;
+      // Ensure result is always string by using nullish coalescing with explicitly typed defaultLogo
+      return (branding.secondaryLogo ?? defaultLogo) as string;
     }
 
-    return branding.primaryLogo ?? DEFAULT_BRANDING_THEME.primaryLogo;
+    // Ensure result is always string by using nullish coalescing with explicitly typed defaultLogo
+    return (branding.primaryLogo ?? defaultLogo) as string;
   }, [branding.primaryLogo, branding.secondaryLogo, variant]);
 
   return logoUrl;
