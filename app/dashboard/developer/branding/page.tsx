@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,7 @@ interface Chapter {
  */
 export default function DeveloperBrandingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { profile, isDeveloper } = useProfile();
   const { session } = useAuth();
 
@@ -61,20 +62,39 @@ export default function DeveloperBrandingPage() {
     }
   }, [profile, isDeveloper, router]);
 
-  // Check for chapter query parameter on mount and when chapters load
+  // Watch for URL changes and update view mode
   useEffect(() => {
-    if (chapters.length === 0 || selectedChapterId) return;
+    const viewParam = searchParams.get('view');
+    if (viewParam === 'sidebar' || viewParam === 'list') {
+      setViewMode(viewParam);
+    }
+  }, [searchParams]);
+
+  // Check for chapter query parameter - watch for URL changes
+  useEffect(() => {
+    if (chapters.length === 0) return;
     
-    const params = new URLSearchParams(window.location.search);
-    const chapterId = params.get('chapter');
+    const chapterId = searchParams.get('chapter');
+    
     if (chapterId) {
       const chapter = chapters.find((c) => c.id === chapterId);
-      if (chapter && chapter.id !== selectedChapterId) {
-        handleChapterSelect(chapter);
+      if (chapter) {
+        // Only select if not already selected and not currently loading
+        if (chapter.id !== selectedChapterId && !loadingBranding) {
+          handleChapterSelect(chapter);
+        }
+      }
+    } else {
+      // If no chapter in URL but one is selected, clear selection
+      if (selectedChapterId) {
+        setSelectedChapterId(null);
+        setSelectedChapter(null);
+        setBranding(null);
+        setError(null);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chapters.length]);
+  }, [searchParams, chapters.length, selectedChapterId, loadingBranding]);
 
   // Fetch all chapters
   const fetchChapters = useCallback(async () => {
@@ -140,6 +160,13 @@ export default function DeveloperBrandingPage() {
       setLoadingBranding(true);
       setError(null);
       setBranding(null);
+      
+      // Update URL to include chapter parameter (preserve view mode) only if not already set
+      const currentChapterId = searchParams.get('chapter');
+      const currentView = searchParams.get('view') || 'sidebar';
+      if (currentChapterId !== chapter.id) {
+        router.push(`/dashboard/developer/branding?chapter=${chapter.id}&view=${currentView}`, { scroll: false });
+      }
 
       // Fetch branding for selected chapter
       const headers: HeadersInit = {
@@ -215,6 +242,9 @@ export default function DeveloperBrandingPage() {
     setSelectedChapter(null);
     setBranding(null);
     setError(null);
+    // Update URL to remove chapter parameter but preserve view mode
+    const currentView = searchParams.get('view') || 'sidebar';
+    router.push(`/dashboard/developer/branding?view=${currentView}`, { scroll: false });
   };
 
   // Permission check
@@ -279,11 +309,12 @@ export default function DeveloperBrandingPage() {
                 variant={viewMode === 'sidebar' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => {
-                  setViewMode('sidebar');
-                  // Update URL without navigating
-                  const url = new URL(window.location.href);
-                  url.searchParams.set('view', 'sidebar');
-                  window.history.pushState({}, '', url);
+                  // Preserve chapter param if it exists
+                  const chapterParam = searchParams.get('chapter');
+                  const newUrl = chapterParam
+                    ? `/dashboard/developer/branding?chapter=${chapterParam}&view=sidebar`
+                    : '/dashboard/developer/branding?view=sidebar';
+                  router.push(newUrl);
                 }}
                 title="Sidebar View"
               >
@@ -294,11 +325,8 @@ export default function DeveloperBrandingPage() {
                 variant={viewMode === 'list' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => {
-                  setViewMode('list');
-                  // Update URL without navigating
-                  const url = new URL(window.location.href);
-                  url.searchParams.set('view', 'list');
-                  window.history.pushState({}, '', url);
+                  // Remove chapter param when switching to list view
+                  router.push('/dashboard/developer/branding?view=list');
                 }}
                 title="List View"
               >
