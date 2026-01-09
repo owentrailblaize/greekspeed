@@ -27,13 +27,13 @@ export function BrandingPreview({ branding, className }: BrandingPreviewProps) {
 
   return (
     <Card className={cn('w-full', className)}>
-      <CardHeader>
+      <CardHeader className="pb-1">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Eye className="h-5 w-5 text-gray-600" />
           <span>Brand Preview</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 pt-0">
         {/* Logo Previews */}
         <div className="space-y-4">
           <h3 className="text-sm font-medium text-gray-700">Logos</h3>

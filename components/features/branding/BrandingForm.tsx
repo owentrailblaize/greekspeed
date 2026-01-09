@@ -186,22 +186,23 @@ export function BrandingForm({
 
   return (
     <Card className={cn('p-6', className)}>
-      <CardHeader className="pb-4">
+      <CardHeader className="pb-2 pt-1">
         <CardTitle className="text-2xl font-bold">
           {initialData ? 'Edit Chapter Branding' : 'Create Chapter Branding'}
         </CardTitle>
-        <p className="text-gray-600 mt-1">Customize the visual identity for your chapter.</p>
+        <p className="text-gray-600 mt-1 text-sm">Customize the visual identity for your chapter.</p>
       </CardHeader>
-      <CardContent className="p-0">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <CardContent className="p-0 pt-2">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left Column: Form Fields */}
-            <div className="space-y-6">
+            <div className="space-y-4">
           {/* Primary Logo */}
           <LogoUploader
             variant="primary"
             chapterId={chapterId}
             currentLogoUrl={formData.primary_logo_url || null}
+            defaultLogoUrl={DEFAULT_BRANDING_THEME.primaryLogo}
             onUploadComplete={(url) => {
               updateField('primary_logo_url', url);
             }}
@@ -215,6 +216,7 @@ export function BrandingForm({
             variant="secondary"
             chapterId={chapterId}
             currentLogoUrl={formData.secondary_logo_url || null}
+            defaultLogoUrl={null}
             onUploadComplete={(url) => {
               updateField('secondary_logo_url', url);
             }}
@@ -275,7 +277,7 @@ export function BrandingForm({
           </div>
 
           {/* Form Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-200">
               <Button
                 type="button"
                 variant="outline"

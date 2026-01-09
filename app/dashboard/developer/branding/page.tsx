@@ -291,15 +291,14 @@ export default function DeveloperBrandingPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => router.push('/dashboard')}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                className="flex items-center space-x-2 text-black-600 hover:text-gray-900 hover:bg-gray-100 rounded-full"
               >
                 <ArrowLeft className="h-4 w-4" />
-                <span>Back to Dashboard</span>
+                <span>Dashboard</span>
               </Button>
               <div>
                 <div className="flex items-center space-x-2">
-                  <Palette className="h-6 w-6 text-brand-primary" />
-                  <h1 className="text-3xl font-bold text-navy-900">Branding Management</h1>
+                  <h1 className="text-3xl font-bold text-black-900">Branding Management</h1>
                 </div>
                 <p className="text-gray-600 mt-1">Manage branding for all chapters</p>
               </div>
@@ -317,6 +316,7 @@ export default function DeveloperBrandingPage() {
                   router.push(newUrl);
                 }}
                 title="Sidebar View"
+                className="rounded-full"
               >
                 <LayoutGrid className="h-4 w-4 mr-2" />
                 Sidebar
@@ -329,6 +329,7 @@ export default function DeveloperBrandingPage() {
                   router.push('/dashboard/developer/branding?view=list');
                 }}
                 title="List View"
+                className="rounded-full"
               >
                 <List className="h-4 w-4 mr-2" />
                 List
@@ -339,7 +340,7 @@ export default function DeveloperBrandingPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="max-w-full mx-auto px-6 py-6">
         {viewMode === 'list' ? (
           <ChapterBrandingList />
         ) : (
@@ -347,16 +348,15 @@ export default function DeveloperBrandingPage() {
             {/* Sidebar - Chapters List */}
             <div className="lg:col-span-4">
             <Card className="sticky top-6">
-              <CardHeader>
+              <CardHeader className="pb-2">
                 <CardTitle className="flex items-center space-x-2">
-                  <Building2 className="h-5 w-5" />
                   <span>Chapters</span>
                   <Badge variant="secondary" className="ml-auto">
                     {filteredChapters.length}
                   </Badge>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="pt-2 space-y-2">
                 {/* Search */}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />

@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Upload, X, Image as ImageIcon, Loader2, CheckCircle2 } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Loader2, CheckCircle2, RotateCcw } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { cn } from '@/lib/utils';
 
@@ -18,6 +18,8 @@ interface LogoUploaderProps {
   currentLogoUrl?: string | null;
   /** Callback when logo is removed (optional) */
   onRemove?: () => void;
+  /** Default logo URL for reset functionality (optional) */
+  defaultLogoUrl?: string | null;
   /** Additional className for styling */
   className?: string;
 }
@@ -34,6 +36,7 @@ export function LogoUploader({
   onUploadComplete,
   currentLogoUrl,
   onRemove,
+  defaultLogoUrl,
   className,
 }: LogoUploaderProps) {
   const [preview, setPreview] = useState<string | null>(currentLogoUrl || null);
@@ -226,6 +229,21 @@ export function LogoUploader({
   };
 
   /**
+   * Handle reset to default logo
+   */
+  const handleReset = () => {
+    if (defaultLogoUrl) {
+      setPreview(defaultLogoUrl);
+      setError(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      onUploadComplete(defaultLogoUrl);
+      toast.info(`${variant === 'primary' ? 'Primary' : 'Secondary'} logo reset to default`);
+    }
+  };
+
+  /**
    * Trigger file input click
    */
   const handleClick = () => {
@@ -238,18 +256,34 @@ export function LogoUploader({
         <label className="text-sm font-medium text-gray-700">
           {variant === 'primary' ? 'Primary' : 'Secondary'} Logo
         </label>
-        {preview && !uploading && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleRemove}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-          >
-            <X className="h-4 w-4 mr-1" />
-            Remove
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Reset to Default Button */}
+          {defaultLogoUrl && (preview || currentLogoUrl) && !uploading && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleReset}
+              className="text-gray-600 hover:text-gray-900"
+              title={`Reset to default ${variant === 'primary' ? 'primary' : 'secondary'} logo`}
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+          )}
+          {/* Remove Button */}
+          {preview && !uploading && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleRemove}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Remove
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Upload Area */}

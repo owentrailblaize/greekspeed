@@ -173,7 +173,8 @@ export function ChapterBrandingList({ className }: ChapterBrandingListProps) {
   };
 
   const handleCreateBranding = (chapterId: string) => {
-    router.push(`/dashboard/developer/branding?chapter=${chapterId}`);
+    // Navigate with query param - page will switch to sidebar view and select chapter
+    router.push(`/dashboard/developer/branding?chapter=${chapterId}&view=sidebar`);
   };
 
   if (loading && allChapters.length === 0) {
