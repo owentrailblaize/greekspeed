@@ -27,7 +27,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
   const { profile } = useProfile();
   
   // Get chapter ID from profile
-  const chapterId = profile?.chapter_id || null;
+  const chapterId = profile?.chapter_id ?? undefined;
   
   // Use the branding hook to get theme
   const { branding, loading, error } = useChapterBranding(chapterId);
