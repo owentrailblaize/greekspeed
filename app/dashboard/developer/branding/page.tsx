@@ -169,13 +169,17 @@ export default function DeveloperBrandingPage() {
         router.push(`/dashboard/developer/branding?chapter=${chapter.id}&view=${currentView}`, { scroll: false });
       }
 
+      // Validate session before making request
+      if (!session?.access_token) {
+        console.error('❌ No access token in session');
+        throw new Error('Session expired. Please log in again.');
+      }
+
       // Fetch branding for selected chapter
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
       };
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
-      }
 
       const brandingResponse = await fetch(`/api/branding/chapters/${chapter.id}`, {
         headers,
@@ -207,12 +211,16 @@ export default function DeveloperBrandingPage() {
     try {
       setSubmitting(true);
 
+      // Validate session before making request
+      if (!session?.access_token) {
+        console.error('❌ No access token in session');
+        throw new Error('Session expired. Please log in again.');
+      }
+
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
       };
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
-      }
 
       const response = await fetch(`/api/branding/chapters/${selectedChapterId}`, {
         method: 'PUT',

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import { canAccessDeveloperPortal } from '@/lib/developerPermissions';
 
@@ -28,13 +27,12 @@ async function authenticateRequest(request: NextRequest) {
     }
   }
   
-  // Fall back to cookies - use cookies() from next/headers
+  // Fall back to cookies - use request.cookies directly (more reliable in Next.js 15)
   try {
-    const cookieStore = await cookies();
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
         get(name: string) {
-          return cookieStore.get(name)?.value;
+          return request.cookies.get(name)?.value;
         },
         set() {}, // No-op for API routes
         remove() {}, // No-op for API routes
