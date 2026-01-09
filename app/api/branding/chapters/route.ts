@@ -7,6 +7,58 @@ import { canAccessDeveloperPortal } from '@/lib/developerPermissions';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
+// Helper to authenticate - supports both Bearer token and cookies
+async function authenticateRequest(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  
+  // Try Bearer token first (for client-side hooks)
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.replace('Bearer ', '');
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (!error && user) {
+      console.log('✅ Authenticated via Bearer token:', user.id);
+      return { 
+        user, 
+        supabase: createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY!) 
+      };
+    }
+  }
+  
+  // Fall back to cookies - use cookies() from next/headers
+  try {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set() {}, // No-op for API routes
+        remove() {}, // No-op for API routes
+      },
+    });
+    
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error || !user) {
+      console.log('❌ Cookie auth failed:', error?.message || 'No user');
+      return null;
+    }
+    
+    console.log('✅ Authenticated via cookies:', user.id);
+    return { 
+      user, 
+      supabase: createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY!) 
+    };
+  } catch (cookieError) {
+    console.error('❌ Cookie auth exception:', cookieError);
+    return null;
+  }
+}
+
 /**
  * GET /api/branding/chapters
  * List all chapter branding records (developer only)
@@ -14,27 +66,14 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
  */
 export async function GET(request: NextRequest) {
   try {
-    // Create authenticated supabase client using await cookies()
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value;
-          },
-          set() {}, // No-op for API routes
-          remove() {}, // No-op for API routes
-        },
-      }
-    );
-
-    // Get user session
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    // Authenticate using the helper function (supports Bearer token and cookies)
+    const auth = await authenticateRequest(request);
+    if (!auth) {
+      console.error('❌ GET /api/branding/chapters: Authentication failed');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const { user, supabase } = auth;
 
     // Get user profile
     const { data: profile, error: profileError } = await supabase
@@ -44,11 +83,13 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (profileError || !profile) {
+      console.error('❌ GET /api/branding/chapters: Profile not found', profileError);
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
     // Only developers can list all chapter branding
     if (!canAccessDeveloperPortal(profile)) {
+      console.error('❌ GET /api/branding/chapters: Insufficient permissions', { userId: user.id, isDeveloper: profile.is_developer });
       return NextResponse.json(
         { error: 'Insufficient permissions. Developer access required.' },
         { status: 403 }
@@ -62,8 +103,8 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
     const search = searchParams.get('search') || '';
 
-    // Use service role client for database operations
-    const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Use the authenticated supabase client (already service role from authenticateRequest)
+    const serviceSupabase = supabase;
 
     // Build query
     let query = serviceSupabase

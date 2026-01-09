@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Loader2, Palette, Search, Building2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Palette, Search, Building2, List, LayoutGrid } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { BrandingForm } from '@/components/features/branding/BrandingForm';
+import { ChapterBrandingList } from '@/components/features/branding/ChapterBrandingList';
 import type { ChapterBranding } from '@/types/branding';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useAuth } from '@/lib/supabase/auth-context';
@@ -41,6 +42,16 @@ export default function DeveloperBrandingPage() {
   const [loadingBranding, setLoadingBranding] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Initialize view mode from URL or default to sidebar
+  const getInitialViewMode = (): 'sidebar' | 'list' => {
+    if (typeof window === 'undefined') return 'sidebar';
+    const params = new URLSearchParams(window.location.search);
+    const viewParam = params.get('view');
+    return viewParam === 'list' ? 'list' : 'sidebar';
+  };
+  
+  const [viewMode, setViewMode] = useState<'sidebar' | 'list'>(getInitialViewMode());
 
   // Check if user is a developer
   useEffect(() => {
@@ -49,6 +60,21 @@ export default function DeveloperBrandingPage() {
       router.push('/dashboard');
     }
   }, [profile, isDeveloper, router]);
+
+  // Check for chapter query parameter on mount and when chapters load
+  useEffect(() => {
+    if (chapters.length === 0 || selectedChapterId) return;
+    
+    const params = new URLSearchParams(window.location.search);
+    const chapterId = params.get('chapter');
+    if (chapterId) {
+      const chapter = chapters.find((c) => c.id === chapterId);
+      if (chapter && chapter.id !== selectedChapterId) {
+        handleChapterSelect(chapter);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapters.length]);
 
   // Fetch all chapters
   const fetchChapters = useCallback(async () => {
@@ -248,15 +274,50 @@ export default function DeveloperBrandingPage() {
                 <p className="text-gray-600 mt-1">Manage branding for all chapters</p>
               </div>
             </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant={viewMode === 'sidebar' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => {
+                  setViewMode('sidebar');
+                  // Update URL without navigating
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('view', 'sidebar');
+                  window.history.pushState({}, '', url);
+                }}
+                title="Sidebar View"
+              >
+                <LayoutGrid className="h-4 w-4 mr-2" />
+                Sidebar
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => {
+                  setViewMode('list');
+                  // Update URL without navigating
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('view', 'list');
+                  window.history.pushState({}, '', url);
+                }}
+                title="List View"
+              >
+                <List className="h-4 w-4 mr-2" />
+                List
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Sidebar - Chapters List */}
-          <div className="lg:col-span-4">
+        {viewMode === 'list' ? (
+          <ChapterBrandingList />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Sidebar - Chapters List */}
+            <div className="lg:col-span-4">
             <Card className="sticky top-6">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
@@ -363,6 +424,7 @@ export default function DeveloperBrandingPage() {
             )}
           </div>
         </div>
+        )}
       </div>
     </div>
   );
