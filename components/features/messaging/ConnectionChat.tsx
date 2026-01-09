@@ -137,7 +137,7 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
             <p className="text-gray-500 mb-4">{error}</p>
             <Button
               onClick={() => refreshMessages()}
-              className="bg-navy-600 hover:bg-navy-700 text-white"
+              className="bg-brand-primary hover:bg-brand-primary-hover text-white"
             >
               Try Again
             </Button>

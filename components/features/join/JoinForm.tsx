@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectItem } from '@/components/ui/select';
 import { Invitation, JoinFormData } from '@/types/invitations';
 import { toast } from 'react-toastify';
 import { supabase } from '@/lib/supabase/client';
@@ -37,6 +38,10 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Generate graduation years for active members (current year - 10 to current year + 10)
+  const currentYear = new Date().getFullYear();
+  const graduationYears = Array.from({ length: 21 }, (_, i) => currentYear - 10 + i);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -299,27 +304,18 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
 
                 {/* Graduation Year */}
                 <div className="space-y-0.5 md:space-y-1">
-                  <Label htmlFor="graduation_year" className="text-sm flex items-center space-x-1">
-                    <GraduationCap className="h-3 w-3" />
-                    <span>Graduation Year *</span>
-                  </Label>
-                  <Input
-                    id="graduation_year"
-                    type="number"
-                    value={formData.graduation_year || ''}
-                    onChange={(e) => {
-                      const year = parseInt(e.target.value);
-                      if (!isNaN(year)) {
-                        handleInputChange('graduation_year', year);
-                      } else if (e.target.value === '') {
-                        handleInputChange('graduation_year', new Date().getFullYear() + 4);
-                      }
-                    }}
-                    placeholder="2028"
-                    min={new Date().getFullYear() - 10}
-                    max={new Date().getFullYear() + 10}
-                    className={`h-8 md:h-9 ${errors.graduation_year ? 'border-red-500' : ''}`}
-                  />
+                  <Label htmlFor="graduation_year" className="text-sm">Graduation Year *</Label>
+                  <Select
+                    value={formData.graduation_year.toString()}
+                    onValueChange={(value) => handleInputChange('graduation_year', parseInt(value))}
+                    placeholder="Select graduation year"
+                  >
+                    {graduationYears.map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </Select>
                   {errors.graduation_year && (
                     <p className="text-xs text-red-600 flex items-center space-x-1 mt-0.5">
                       <AlertCircle className="h-3 w-3" />

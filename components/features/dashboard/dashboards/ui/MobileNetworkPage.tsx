@@ -664,7 +664,7 @@ export function MobileNetworkPage() {
                           <Button
                             size="sm"
                             onClick={() => handleMessage(connection.id)}
-                            className="rounded-full bg-navy-600 hover:bg-navy-700 text-white text-sm px-3 h-8 shadow-md hover:shadow-lg transition-all duration-200 border border-navy-700/20"
+                            className="rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-sm px-3 h-8 shadow-md hover:shadow-lg transition-all duration-200 border border-brand-primary-hover/20"
                             >
                             <MessageCircle className="h-3 w-3 mr-1" />
                           </Button>
@@ -922,7 +922,7 @@ export function MobileNetworkPage() {
                 )}
                 <Button
                   onClick={() => router.push('/dashboard/alumni/pipeline')}
-                  className="rounded-full bg-navy-600 hover:bg-navy-700 text-white text-sm px-6 py-2 shadow-md hover:shadow-lg transition-all duration-200 border border-navy-700/20"
+                  className="rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-sm px-6 py-2 shadow-md hover:shadow-lg transition-all duration-200 border border-brand-primary-hover/20"
                 >
                   View More Connections
                 </Button>
@@ -958,7 +958,7 @@ export function MobileNetworkPage() {
             
             <Button 
               onClick={() => setSuccessModalOpen(false)}
-              className="w-full bg-navy-600 hover:bg-navy-700 h-12 text-base font-medium"
+              className="w-full bg-brand-primary hover:bg-brand-primary-hover h-12 text-base font-medium"
             >
               Got it!
             </Button>

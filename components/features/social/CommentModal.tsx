@@ -457,7 +457,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                     <Button
                       onClick={() => handleSubmitReply(comment.id)}
                       disabled={!currentReplyContent.trim() || isSubmittingCurrentReply}
-                      className="h-8 w-8 rounded-full bg-navy-600/90 text-white shadow-sm transition-all duration-200 hover:bg-navy-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center p-0"
+                      className="h-8 w-8 rounded-full bg-brand-primary text-white shadow-sm transition-all duration-200 hover:bg-brand-primary-hover disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center p-0"
                     >
                       {isSubmittingCurrentReply ? (
                         <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -830,7 +830,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
             <Button
               onClick={handleSubmitComment}
               disabled={!newComment.trim() || isSubmitting}
-              className="h-12 w-12 sm:h-12 sm:w-12 rounded-full bg-navy-600/90 text-white shadow-[0_18px_45px_-24px_rgba(30,64,175,0.9)] transition-all duration-200 hover:bg-navy-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="h-12 w-12 sm:h-12 sm:w-12 rounded-full bg-brand-primary text-white shadow-[0_18px_45px_-24px_rgba(30,64,175,0.9)] transition-all duration-200 hover:bg-brand-primary-hover disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {isSubmitting ? (
                 <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

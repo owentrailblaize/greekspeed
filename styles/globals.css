@@ -63,3 +63,19 @@ textarea {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Branding System CSS Variables */
+/* These variables will be dynamically injected by BrandingContext */
+
+:root {
+  /* Default Trailblaize colors - these are the fallbacks */
+  --brand-primary: #2346e0;        /* navy-600 equivalent */
+  --brand-primary-hover: #1833b5;  /* navy-700 equivalent */
+  --brand-accent: #4568ff;         /* navy-500 equivalent */
+  --brand-accent-light: #7090ff;   /* navy-400 equivalent */
+  --brand-focus: #3b82f6;          /* sky-300 equivalent for focus rings */
+}
+
+/* CSS variables will be dynamically injected by BrandingContext */
+/* When branding loads, these values will be updated via JavaScript */
+/* No need for [data-chapter-branding] selector - injected directly on :root */

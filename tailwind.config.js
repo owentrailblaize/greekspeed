@@ -19,6 +19,14 @@ module.exports = {
           800: "#102288",
           900: "#0b1965",
         },
+        // Brand colors that use CSS variables for dynamic theming
+        brand: {
+          primary: 'var(--brand-primary)',
+          'primary-hover': 'var(--brand-primary-hover)',
+          accent: 'var(--brand-accent)',
+          'accent-light': 'var(--brand-accent-light)',
+          focus: 'var(--brand-focus)',
+        },
       },
     },
   },
