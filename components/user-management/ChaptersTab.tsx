@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +19,8 @@ import {
   GraduationCap,
   Shield,
   AlertTriangle,
-  X
+  X,
+  Palette
 } from 'lucide-react';
 import { ViewChapterModal } from './ViewChapterModal';
 import { DeleteChapterModal } from './DeleteChapterModal';
@@ -44,6 +46,7 @@ interface Chapter {
 }
 
 export function ChaptersTab() {
+  const router = useRouter();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -271,6 +274,7 @@ export function ChaptersTab() {
                             size="sm"
                             onClick={() => handleViewChapter(chapter)}
                             className="hover:bg-blue-50 hover:text-blue-600"
+                            title="View Chapter"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -280,8 +284,19 @@ export function ChaptersTab() {
                             size="sm"
                             onClick={() => handleEditChapter(chapter)}
                             className="hover:bg-blue-50 hover:text-blue-600"
+                            title="Edit Chapter"
                           >
                             <Edit className="h-4 w-4" />
+                          </Button>
+                          
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => router.push(`/dashboard/user-management/chapters/${chapter.id}/branding`)}
+                            className="hover:bg-purple-50 hover:text-purple-600"
+                            title="Manage Branding"
+                          >
+                            <Palette className="h-4 w-4" />
                           </Button>
                           
                           <Button 
@@ -290,6 +305,7 @@ export function ChaptersTab() {
                             className="text-red-600 hover:bg-red-50 hover:text-red-700"
                             onClick={() => openDeleteModal(chapter)}
                             disabled={deletingChapterId === chapter.id}
+                            title="Delete Chapter"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
