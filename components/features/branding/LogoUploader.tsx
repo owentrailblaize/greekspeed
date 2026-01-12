@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Upload, X, Image as ImageIcon, Loader2, CheckCircle2, RotateCcw } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/supabase/auth-context';
 
 interface LogoUploaderProps {
   /** Logo variant: 'primary' or 'secondary' */
@@ -39,6 +40,7 @@ export function LogoUploader({
   defaultLogoUrl,
   className,
 }: LogoUploaderProps) {
+  const { session } = useAuth();
   const [preview, setPreview] = useState<string | null>(currentLogoUrl || null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -93,6 +95,11 @@ export function LogoUploader({
     setError(null);
 
     try {
+      // Validate session before making request
+      if (!session?.access_token) {
+        throw new Error('Session expired. Please log in again.');
+      }
+
       // Validate file
       const validationError = validateFile(file);
       if (validationError) {
@@ -128,9 +135,12 @@ export function LogoUploader({
       formData.append('chapterId', chapterId);
       formData.append('variant', variant);
 
-      // Upload to API
+      // Upload to API with Authorization header
       const response = await fetch('/api/branding/upload-logo', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
         body: formData,
       });
 

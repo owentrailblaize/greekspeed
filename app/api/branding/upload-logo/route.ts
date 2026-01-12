@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import { canAccessDeveloperPortal } from '@/lib/developerPermissions';
 import { canManageChapter } from '@/lib/permissions';
@@ -8,33 +7,71 @@ import { canManageChapter } from '@/lib/permissions';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
+// Helper to authenticate - supports both Bearer token and cookies
+async function authenticateRequest(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  
+  // Try Bearer token first (for client-side hooks)
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.replace('Bearer ', '');
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (!error && user) {
+      console.log('✅ Authenticated via Bearer token:', user.id);
+      return { 
+        user, 
+        supabase: createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY!) 
+      };
+    }
+  }
+  
+  // Fall back to cookies - use request.cookies directly (more reliable in Next.js 15)
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value;
+        },
+        set() {}, // No-op for API routes
+        remove() {}, // No-op for API routes
+      },
+    });
+    
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error || !user) {
+      console.log('❌ Cookie auth failed:', error?.message || 'No user');
+      return null;
+    }
+    
+    console.log('✅ Authenticated via cookies:', user.id);
+    return { 
+      user, 
+      supabase: createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY!) 
+    };
+  } catch (cookieError) {
+    console.error('❌ Cookie auth exception:', cookieError);
+    return null;
+  }
+}
+
 /**
  * POST /api/branding/upload-logo
  * Upload a logo file to Supabase Storage and return the public URL
  */
 export async function POST(request: NextRequest) {
   try {
-    // Create authenticated supabase client using await cookies()
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value;
-          },
-          set() {}, // No-op for API routes
-          remove() {}, // No-op for API routes
-        },
-      }
-    );
-
-    // Get user session
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    // Authenticate using the helper function (supports Bearer token and cookies)
+    const auth = await authenticateRequest(request);
+    if (!auth) {
+      console.error('❌ POST /api/branding/upload-logo: Authentication failed');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const { user, supabase } = auth;
 
     // Get user profile
     const { data: profile, error: profileError } = await supabase
