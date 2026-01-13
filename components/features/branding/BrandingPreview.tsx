@@ -142,6 +142,7 @@ export function BrandingPreview({ branding, className }: BrandingPreviewProps) {
           <h3 className="text-sm font-medium text-gray-700">Button Styles</h3>
           <div className="flex flex-wrap gap-3">
             <Button
+              type="button"
               style={{
                 backgroundColor: theme.primaryColor,
                 color: 'white',
@@ -156,6 +157,7 @@ export function BrandingPreview({ branding, className }: BrandingPreviewProps) {
               Primary Button
             </Button>
             <Button
+              type="button"
               variant="outline"
               style={{
                 borderColor: theme.primaryColor,
@@ -171,6 +173,7 @@ export function BrandingPreview({ branding, className }: BrandingPreviewProps) {
               Outline Button
             </Button>
             <Button
+              type="button"
               variant="ghost"
               style={{
                 color: theme.primaryColor,
@@ -231,7 +234,7 @@ export function BrandingPreview({ branding, className }: BrandingPreviewProps) {
                 className="h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-medium"
                 style={{ backgroundColor: theme.primaryColor }}
               >
-                U
+                JT
               </div>
             </div>
           </div>
@@ -249,6 +252,7 @@ export function BrandingPreview({ branding, className }: BrandingPreviewProps) {
                 This is how content will look with your brand colors.
               </p>
               <Button
+                type="button"
                 size="sm"
                 className="bg-brand-primary hover:bg-brand-primary-hover"
                 style={{
