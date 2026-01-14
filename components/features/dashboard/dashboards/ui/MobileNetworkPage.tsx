@@ -8,8 +8,12 @@ import { Users, UserPlus, X, CheckCircle, ChevronRight, Search, MessageCircle, L
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
+import { ConnectionManagement } from '@/components/ui/ConnectionManagement';
+import { ChapterMemberData } from '@/types/chapter';
+import { weightedRandomShuffle } from '@/lib/utils/weightedShuffle';
+import { calculateNetworkingPriority } from '@/lib/utils/networkingSpotlight';
 import { useAuth } from '@/lib/supabase/auth-context';
-import { ChapterMemberData, ChapterMember } from '@/types/chapter';
+import { ChapterMember } from '@/types/chapter';
 import { cn } from '@/lib/utils';
 import { LinkedInStyleChapterCard } from '@/components/mychapter/LinkedInStyleChapterCard';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
@@ -255,67 +259,56 @@ export function MobileNetworkPage() {
       )
     );
     
+    // Filter out current user, all users with any connection status, and users without avatars
     const availableMembers = chapterMembers.filter(member => 
       member.id !== profile.id && 
-      !connectedUserIds.has(member.id)
+      !connectedUserIds.has(member.id) &&
+      member.avatar_url && 
+      member.avatar_url.trim() !== '' // Only show members with valid avatars
     );
     
-    const calculateRelevanceScore = (member: any) => {
-      let score = 0;
-      const mutualCount = (member as any).mutualConnectionsCount || 0;
-      score += mutualCount * 100;
-      
-      if (member.avatar_url) score += 60;
-      if (member.bio && member.bio.trim() !== '') score += 20;
-      if (member.location && member.location.trim() !== '') score += 15;
-      if (member.phone && member.phone.trim() !== '') score += 10;
-      
-      const activityDate = (member as any).last_active_at || member.updated_at;
-      if (activityDate) {
-        const daysSinceActivity = (Date.now() - new Date(activityDate).getTime()) / (24 * 60 * 60 * 1000);
-        if (daysSinceActivity <= 30) score += 30;
-        else if (daysSinceActivity <= 90) score += 15;
-      }
-      
-      if (profile.grad_year && member.grad_year) {
-        const yearDiff = Math.abs(profile.grad_year - member.grad_year);
-        if (yearDiff <= 5) score += 20 - (yearDiff * 2);
-      }
-      
-      if (profile.location && member.location) {
-        if (profile.location.toLowerCase() === member.location.toLowerCase()) {
-          score += 25;
-        }
-      }
-      
-      return score;
-    };
-    
-    const sortedMembers = availableMembers.sort((a, b) => {
-      const scoreA = calculateRelevanceScore(a);
-      const scoreB = calculateRelevanceScore(b);
-      
-      if (scoreB !== scoreA) return scoreB - scoreA;
-      
-      const mutualA = (a as any).mutualConnectionsCount || 0;
-      const mutualB = (b as any).mutualConnectionsCount || 0;
-      if (mutualB !== mutualA) return mutualB - mutualA;
-      
-      const nameA = a.full_name || `${a.first_name || ''} ${a.last_name || ''}`.trim() || '';
-      const nameB = b.full_name || `${b.first_name || ''} ${b.last_name || ''}`.trim() || '';
-      return nameA.localeCompare(nameB);
-    });
-    
-    const alumniMembers = sortedMembers.filter(member => member.role === 'alumni');
-    const activeMembers = sortedMembers.filter(member => member.role === 'active_member');
-    const otherMembers = sortedMembers.filter(member => 
-      member.role !== 'alumni' && member.role !== 'active_member'
+    // Group by role: alumni, active_member, admin (and others)
+    const alumniMembers = availableMembers.filter(member => member.role === 'alumni');
+    const activeMembers = availableMembers.filter(member => member.role === 'active_member');
+    const adminMembers = availableMembers.filter(member => member.role === 'admin');
+    const otherMembers = availableMembers.filter(member => 
+      member.role !== 'alumni' && 
+      member.role !== 'active_member' && 
+      member.role !== 'admin'
     );
     
+    // Apply weighted random shuffle to each group
+    // Higher randomness factor = more random, lower = more predictable
+    const shuffledAlumni = weightedRandomShuffle(
+      alumniMembers,
+      calculateNetworkingPriority,
+      0.4 // 40% randomness factor
+    );
+    
+    const shuffledActive = weightedRandomShuffle(
+      activeMembers,
+      calculateNetworkingPriority,
+      0.4
+    );
+    
+    const shuffledAdmin = weightedRandomShuffle(
+      adminMembers,
+      calculateNetworkingPriority,
+      0.4
+    );
+    
+    const shuffledOther = weightedRandomShuffle(
+      otherMembers,
+      calculateNetworkingPriority,
+      0.4
+    );
+    
+    // Combine with priority order: alumni first, then active members, then admin, then others
     const prioritizedMembers = [
-      ...alumniMembers,
-      ...activeMembers,
-      ...otherMembers
+      ...shuffledAlumni,
+      ...shuffledActive,
+      ...shuffledAdmin,
+      ...shuffledOther
     ];
     
     // Get top 30 for variety, then shuffle and return up to 24

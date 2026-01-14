@@ -19,6 +19,8 @@ import { useRouter } from 'next/navigation';
 import React from 'react';
 import { ChapterMemberData } from '@/types/chapter';
 import { MobileBottomNavigation } from './ui/MobileBottomNavigation';
+import { weightedRandomShuffle } from '@/lib/utils/weightedShuffle';
+import { calculateNetworkingPriority } from '@/lib/utils/networkingSpotlight';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
 import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
 
@@ -108,7 +110,7 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
     }
   }, [profile?.id, connections, connectionsLoading, snapshotTaken]);
 
-  // Memoize the networking spotlight to prevent constant refreshing
+  // Memoize the networking spotlight with weighted random shuffling
   const networkingSpotlight = useMemo(() => {
     if (!chapterMembers || !profile || !snapshotTaken || sessionSeed === null) return [];
     
@@ -120,85 +122,56 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
       )
     );
     
-    // Filter out current user and users with any existing connection
+    // Filter out current user, users with any existing connection, and users without avatars
     const availableMembers = chapterMembers.filter(member => 
       member.id !== profile.id && 
-      !connectedUserIds.has(member.id)
+      !connectedUserIds.has(member.id) &&
+      member.avatar_url && 
+      member.avatar_url.trim() !== '' // Only show members with valid avatars
     );
     
-    // Calculate relevance score for each member
-    const calculateRelevanceScore = (member: any) => {
-      let score = 0;
-      
-      // 1. Mutual connections (highest weight - 100 points per connection)
-      const mutualCount = (member as any).mutualConnectionsCount || 0;
-      score += mutualCount * 100;
-      
-      // 2. Profile completeness (avatar = 30, bio = 20, location = 15, phone = 10)
-      if (member.avatar_url) score += 60;
-      if (member.bio && member.bio.trim() !== '') score += 20;
-      if (member.location && member.location.trim() !== '') score += 15;
-      if (member.phone && member.phone.trim() !== '') score += 10;
-      
-      // 3. Recent activity (30 points if updated within 30 days, 15 if within 90 days)
-      // Use last_active_at if available (more accurate), otherwise fall back to updated_at
-      const activityDate = (member as any).last_active_at || member.updated_at;
-      if (activityDate) {
-        const daysSinceActivity = (Date.now() - new Date(activityDate).getTime()) / (24 * 60 * 60 * 1000);
-        if (daysSinceActivity <= 30) score += 30;
-        else if (daysSinceActivity <= 90) score += 15;
-      }
-      
-      // 4. Graduation year proximity (if both have grad_year)
-      if (profile.grad_year && member.grad_year) {
-        const yearDiff = Math.abs(profile.grad_year - member.grad_year);
-        if (yearDiff <= 5) score += 20 - (yearDiff * 2); // Max 20 points, decreases by 2 per year
-      }
-      
-      // 5. Location similarity (if both have locations)
-      if (profile.location && member.location) {
-        if (profile.location.toLowerCase() === member.location.toLowerCase()) {
-          score += 25;
-        }
-      }
-      
-      return score;
-    };
-    
-    // Sort ALL members by relevance score first (not grouped yet)
-    const sortedMembers = availableMembers.sort((a, b) => {
-      const scoreA = calculateRelevanceScore(a);
-      const scoreB = calculateRelevanceScore(b);
-      
-      if (scoreB !== scoreA) {
-        return scoreB - scoreA; // Higher score first
-      }
-      
-      // Secondary: mutual connections
-      const mutualA = (a as any).mutualConnectionsCount || 0;
-      const mutualB = (b as any).mutualConnectionsCount || 0;
-      if (mutualB !== mutualA) {
-        return mutualB - mutualA;
-      }
-      
-      // Tertiary: alphabetical by name (fallback)
-      const nameA = a.full_name || `${a.first_name || ''} ${a.last_name || ''}`.trim() || '';
-      const nameB = b.full_name || `${b.first_name || ''} ${b.last_name || ''}`.trim() || '';
-      return nameA.localeCompare(nameB);
-    });
-    
-    // NOW separate by role (but they're already sorted by relevance)
-    const alumniMembers = sortedMembers.filter(member => member.role === 'alumni');
-    const activeMembers = sortedMembers.filter(member => member.role === 'active_member');
-    const otherMembers = sortedMembers.filter(member => 
-      member.role !== 'alumni' && member.role !== 'active_member'
+    // Group by role: alumni, active_member, admin (and others)
+    const alumniMembers = availableMembers.filter(member => member.role === 'alumni');
+    const activeMembers = availableMembers.filter(member => member.role === 'active_member');
+    const adminMembers = availableMembers.filter(member => member.role === 'admin');
+    const otherMembers = availableMembers.filter(member => 
+      member.role !== 'alumni' && 
+      member.role !== 'active_member' && 
+      member.role !== 'admin'
     );
     
-    // Combine: alumni first, then active members, then others (all sorted by relevance)
+    // Apply weighted random shuffle to each group
+    // Higher randomness factor = more random, lower = more predictable
+    const shuffledAlumni = weightedRandomShuffle(
+      alumniMembers,
+      calculateNetworkingPriority,
+      0.4 // 40% randomness factor
+    );
+    
+    const shuffledActive = weightedRandomShuffle(
+      activeMembers,
+      calculateNetworkingPriority,
+      0.4
+    );
+    
+    const shuffledAdmin = weightedRandomShuffle(
+      adminMembers,
+      calculateNetworkingPriority,
+      0.4
+    );
+    
+    const shuffledOther = weightedRandomShuffle(
+      otherMembers,
+      calculateNetworkingPriority,
+      0.4
+    );
+    
+    // Combine with priority order: alumni first, then active members, then admin, then others
     const prioritizedMembers = [
-      ...alumniMembers,
-      ...activeMembers,
-      ...otherMembers
+      ...shuffledAlumni,
+      ...shuffledActive,
+      ...shuffledAdmin,
+      ...shuffledOther
     ];
     
     // Instead of taking top 5, take top 15-20 and randomly select 5
