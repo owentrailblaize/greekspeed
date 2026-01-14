@@ -13,7 +13,7 @@ import { ChapterMemberData } from '@/types/chapter';
 import { weightedRandomShuffle } from '@/lib/utils/weightedShuffle';
 import { calculateNetworkingPriority } from '@/lib/utils/networkingSpotlight';
 import { useAuth } from '@/lib/supabase/auth-context';
-import { ChapterMemberData, ChapterMember } from '@/types/chapter';
+import { ChapterMember } from '@/types/chapter';
 import { cn } from '@/lib/utils';
 import { LinkedInStyleChapterCard } from '@/components/mychapter/LinkedInStyleChapterCard';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
