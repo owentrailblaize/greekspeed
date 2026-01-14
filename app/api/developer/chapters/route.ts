@@ -117,3 +117,63 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const chapterId = searchParams.get('chapterId');
+    const chapterData = await request.json();
+
+    if (!chapterId) {
+      return NextResponse.json({ error: 'Chapter ID is required' }, { status: 400 });
+    }
+
+    // Validate required fields
+    const requiredFields = ['name', 'university', 'national_fraternity', 'chapter_name', 'location', 'founded_year', 'member_count'];
+    for (const field of requiredFields) {
+      if (chapterData[field] === undefined || chapterData[field] === null) {
+        return NextResponse.json({ error: `${field} is required` }, { status: 400 });
+      }
+    }
+
+    // Prepare the update data (don't update created_at, but update updated_at)
+    const updateData = {
+      ...chapterData,
+      updated_at: new Date().toISOString(),
+      // Ensure these fields are handled properly
+      member_count: typeof chapterData.member_count === 'string' 
+        ? parseInt(chapterData.member_count) 
+        : chapterData.member_count,
+      founded_year: typeof chapterData.founded_year === 'string' 
+        ? parseInt(chapterData.founded_year) 
+        : chapterData.founded_year,
+    };
+
+    // Remove fields that shouldn't be updated
+    delete updateData.id;
+    delete updateData.created_at;
+
+    // Update the chapter
+    const { data: updatedChapter, error } = await supabase
+      .from('chapters')
+      .update(updateData)
+      .eq('id', chapterId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating chapter:', error);
+      return NextResponse.json({ error: 'Failed to update chapter' }, { status: 500 });
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      chapter: updatedChapter,
+      message: 'Chapter updated successfully' 
+    });
+
+  } catch (error) {
+    console.error('Error in update chapter API:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

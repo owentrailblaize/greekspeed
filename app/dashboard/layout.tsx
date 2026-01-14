@@ -5,9 +5,11 @@ import SubscriptionPaywall from '@/components/shared/SubscriptionPaywall';
 import { DashboardHeader } from '@/components/features/dashboard/DashboardHeader';
 import { useActivityTracking } from '@/lib/hooks/useActivityTracking';
 import { ModalProvider, useModal } from '@/lib/contexts/ModalContext';
+import { ProfileModalProvider, useProfileModal } from '@/lib/contexts/ProfileModalContext';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { EditProfileModal } from '@/components/features/profile/EditProfileModal';
 import { EditAlumniProfileModal } from '@/components/features/alumni/EditAlumniProfileModal';
+import { UserProfileModal } from '@/components/features/user-profile/UserProfileModal';
 import { ProfileService } from '@/lib/services/profileService';
 
 export default function DashboardLayout({
@@ -27,10 +29,15 @@ export default function DashboardLayout({
       <SubscriptionPaywall>
         <main className="flex-1">
           <ModalProvider>
-            {children}
-            
-            {/* Global Edit Profile Modal - Rendered at layout level */}
-            <EditProfileModalWrapper />
+            <ProfileModalProvider>
+              {children}
+              
+              {/* Global Edit Profile Modal - Rendered at layout level */}
+              <EditProfileModalWrapper />
+              
+              {/* Global User Profile Modal - Rendered at layout level */}
+              <UserProfileModalWrapper />
+            </ProfileModalProvider>
           </ModalProvider>
         </main>
       </SubscriptionPaywall>
@@ -94,6 +101,19 @@ function EditProfileModalWrapper() {
       profile={profile}
       onUpdate={handleProfileUpdate}
       variant={isMobile ? 'mobile' : 'desktop'}
+    />
+  );
+}
+
+// Global User Profile Modal Wrapper Component
+function UserProfileModalWrapper() {
+  const { isProfileModalOpen, currentProfile, closeUserProfile } = useProfileModal();
+
+  return (
+    <UserProfileModal
+      profile={currentProfile}
+      isOpen={isProfileModalOpen}
+      onClose={closeUserProfile}
     />
   );
 } 

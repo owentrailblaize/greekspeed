@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,10 +19,12 @@ import {
   GraduationCap,
   Shield,
   AlertTriangle,
-  X
+  X,
+  Palette
 } from 'lucide-react';
 import { ViewChapterModal } from './ViewChapterModal';
 import { DeleteChapterModal } from './DeleteChapterModal';
+import { EditChapterModal } from './EditChapterModal';
 import { CreateChapterForm } from './CreateChapterForm';
 
 interface Chapter {
@@ -43,6 +46,7 @@ interface Chapter {
 }
 
 export function ChaptersTab() {
+  const router = useRouter();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -54,7 +58,9 @@ export function ChaptersTab() {
   const [chapterToDelete, setChapterToDelete] = useState<Chapter | null>(null);
   const [deletingChapterId, setDeletingChapterId] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  
+  const [editChapter, setEditChapter] = useState<Chapter | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   // Add pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -134,6 +140,16 @@ export function ChaptersTab() {
     } finally {
       setDeletingChapterId(null);
     }
+  };
+
+  const handleEditChapter = (chapter: Chapter) => {
+    setEditChapter(chapter);
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditChapter(null);
   };
 
   const filteredChapters = chapters.filter(chapter =>
@@ -258,24 +274,30 @@ export function ChaptersTab() {
                             size="sm"
                             onClick={() => handleViewChapter(chapter)}
                             className="hover:bg-blue-50 hover:text-blue-600"
+                            title="View Chapter"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
                           
-                          {/* Edit Button with Lock Indicator */}
-                          <div className="relative">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              disabled
-                              className="h-8 w-8 p-0 bg-gray-50 cursor-not-allowed opacity-60"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <div className="absolute -top-1 -right-1">
-                              <Lock className="h-3 w-3 text-gray-500" />
-                            </div>
-                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleEditChapter(chapter)}
+                            className="hover:bg-blue-50 hover:text-blue-600"
+                            title="Edit Chapter"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => router.push(`/dashboard/user-management/chapters/${chapter.id}/branding`)}
+                            className="hover:bg-purple-50 hover:text-purple-600"
+                            title="Manage Branding"
+                          >
+                            <Palette className="h-4 w-4" />
+                          </Button>
                           
                           <Button 
                             variant="outline" 
@@ -283,6 +305,7 @@ export function ChaptersTab() {
                             className="text-red-600 hover:bg-red-50 hover:text-red-700"
                             onClick={() => openDeleteModal(chapter)}
                             disabled={deletingChapterId === chapter.id}
+                            title="Delete Chapter"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -356,6 +379,16 @@ export function ChaptersTab() {
         chapter={chapterToDelete}
         isDeleting={deletingChapterId === chapterToDelete?.id}
       />
+
+      {/* Edit Chapter Modal */}
+      {isEditModalOpen && editChapter && (
+        <EditChapterModal
+          isOpen={isEditModalOpen}
+          onClose={closeEditModal}
+          chapter={editChapter}
+          onSuccess={fetchChapters}
+        />
+      )}
     </div>
   );
 }

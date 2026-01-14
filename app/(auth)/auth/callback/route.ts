@@ -40,15 +40,36 @@ export async function GET(request: NextRequest) {
           .single();
 
         if (!existingProfile) {
-          // Create profile for new Google user with minimal info
+          // Determine provider
+          const provider = user.app_metadata?.provider || user.user_metadata?.provider || 'unknown';
+          const isLinkedIn = provider === 'linkedin_oidc';
+          const isGoogle = provider === 'google';
+          
+          // Extract LinkedIn URL if available
+          const linkedinSub = user.user_metadata?.sub;
+          const linkedinUrl = isLinkedIn && linkedinSub 
+            ? `https://www.linkedin.com/in/${linkedinSub}` 
+            : null;
+
+          // Determine default name based on provider
+          let defaultName = 'OAuth User';
+          if (isGoogle) {
+            defaultName = 'Google User';
+          } else if (isLinkedIn) {
+            defaultName = 'LinkedIn User';
+          }
+
+          // Create profile for new OAuth user
           const { error: profileError } = await supabase
             .from('profiles')
             .insert({
               id: user.id,
               email: user.email,
-              full_name: user.user_metadata?.full_name || user.user_metadata?.name || 'Google User',
-              first_name: user.user_metadata?.given_name || '',
-              last_name: user.user_metadata?.family_name || '',
+              full_name: user.user_metadata?.full_name || user.user_metadata?.name || defaultName,
+              first_name: user.user_metadata?.given_name || user.user_metadata?.first_name || '',
+              last_name: user.user_metadata?.family_name || user.user_metadata?.last_name || '',
+              linkedin_url: linkedinUrl,
+              avatar_url: user.user_metadata?.picture || user.user_metadata?.avatar_url || null,
               chapter: null,  // Will be filled in profile completion
               role: null,     // Will be filled in profile completion
               created_at: new Date().toISOString(),
@@ -57,6 +78,38 @@ export async function GET(request: NextRequest) {
 
           if (profileError) {
             console.error('Profile creation error:', profileError);
+          }
+        } else {
+          // Update existing profile with LinkedIn data if available
+          const provider = user.app_metadata?.provider || user.user_metadata?.provider || 'unknown';
+          const isLinkedIn = provider === 'linkedin_oidc';
+          
+          if (isLinkedIn) {
+            const linkedinSub = user.user_metadata?.sub;
+            const linkedinUrl = linkedinSub 
+              ? `https://www.linkedin.com/in/${linkedinSub}` 
+              : null;
+
+            // Update profile with LinkedIn URL and avatar if not already set
+            const updateData: any = {};
+            if (linkedinUrl && !existingProfile.linkedin_url) {
+              updateData.linkedin_url = linkedinUrl;
+            }
+            if (user.user_metadata?.picture && !existingProfile.avatar_url) {
+              updateData.avatar_url = user.user_metadata.picture;
+            }
+            
+            if (Object.keys(updateData).length > 0) {
+              updateData.updated_at = new Date().toISOString();
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update(updateData)
+                .eq('id', user.id);
+
+              if (updateError) {
+                console.error('Profile update error:', updateError);
+              }
+            }
           }
         }
 

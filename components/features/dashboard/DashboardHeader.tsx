@@ -12,6 +12,7 @@ import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { ProfileService } from '@/lib/services/profileService';
 import { MessageCircle, Lock } from 'lucide-react';
 import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
+import { useChapterLogo } from '@/lib/hooks/useChapterLogo';
 
 // Small helper for consistent tab styling
 function NavLink({ href, label, locked = false }: { href: string; label: string; locked?: boolean }) {
@@ -37,9 +38,9 @@ function NavLink({ href, label, locked = false }: { href: string; label: string;
     <Link
       href={href}
       className={cn(
-        'relative flex items-center justify-center h-8 rounded-full px-3 sm:px-4 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-300',
+        'relative flex items-center justify-center h-8 rounded-full px-3 sm:px-4 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-focus',
         isActive 
-          ? 'bg-sky-50 text-sky-700 font-medium shadow-sm hover:bg-sky-100 hover:shadow-md' 
+          ? 'bg-brand-primary/10 text-brand-primary font-medium shadow-sm hover:bg-brand-primary/20 hover:shadow-md' 
           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm shadow-sm'
       )}
     >
@@ -57,6 +58,9 @@ export function DashboardHeader() {
 
   // Check if financial tools feature is enabled
   const { enabled: financialToolsEnabled, loading: flagLoading } = useFeatureFlag('financial_tools_enabled');
+  
+  // Get dynamic logo URL from branding system
+  const logoUrl = useChapterLogo();
   
   // Count pending connection requests that require action
   const pendingConnections = connections.filter(conn => 
@@ -115,7 +119,7 @@ export function DashboardHeader() {
             className="flex items-center hover:opacity-80 transition-opacity"
           >
             <img
-              src="/logo.png"
+              src={logoUrl}
               alt="Trailblaize"
               className="h-28 w-auto max-h-full object-contain transition-all duration-300"
             />
@@ -139,9 +143,9 @@ export function DashboardHeader() {
           <Link
             href="/dashboard/messages"
             className={cn(
-              'hidden sm:flex items-center justify-center h-8 w-8 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300 shadow-sm',
+              'hidden sm:flex items-center justify-center h-8 w-8 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-focus shadow-sm',
               pathname === '/dashboard/messages' 
-                ? 'bg-sky-50 text-sky-700 hover:bg-sky-100 hover:shadow-md' 
+                ? 'bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 hover:shadow-md' 
                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-md'
             )}
           >
@@ -153,9 +157,9 @@ export function DashboardHeader() {
             <Link
               href="/dashboard/messages"
               className={cn(
-                'sm:hidden flex items-center justify-center h-8 w-8 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300 shadow-sm',
+                'sm:hidden flex items-center justify-center h-8 w-8 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-focus shadow-sm',
                 pathname === '/dashboard/messages' 
-                  ? 'bg-sky-50 text-sky-700 hover:bg-sky-100 hover:shadow-md' 
+                  ? 'bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 hover:shadow-md' 
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-md'
               )}
             >

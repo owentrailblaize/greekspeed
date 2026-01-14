@@ -13,7 +13,8 @@ import {
   ArrowRight,
   UserCheck,
   Shield,
-  Flag
+  Flag,
+  Palette
 } from 'lucide-react';
 
 export function DeveloperOverview() {
@@ -82,26 +83,6 @@ export function DeveloperOverview() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-navy-900">Developer Portal</h1>
-              <p className="text-gray-600">System administration and development tools</p>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                {accessLevel} access
-              </Badge>
-              <Badge variant="outline">
-                {userPermissions.length} permissions
-              </Badge>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-6">
         {/* Stats Overview */}
@@ -109,10 +90,10 @@ export function DeveloperOverview() {
           {/* Total Users Card */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium pb-0">Total Users</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground pt-0" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
                 +{stats.newUsersThisMonth} new from last month
@@ -126,7 +107,7 @@ export function DeveloperOverview() {
               <CardTitle className="text-sm font-medium">Total Alumni</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               <div className="text-2xl font-bold">{stats.totalAlumni.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
                 +{stats.newAlumniThisMonth} new from last month
@@ -140,7 +121,7 @@ export function DeveloperOverview() {
               <CardTitle className="text-sm font-medium">Chapters</CardTitle>
               <Shield className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               <div className="text-2xl font-bold">{stats.totalChapters}</div>
               <p className="text-xs text-muted-foreground">
                 +{stats.newChaptersThisMonth} new from last month
@@ -154,7 +135,7 @@ export function DeveloperOverview() {
               <CardTitle className="text-sm font-medium">System Health</CardTitle>
               <Network className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               <div className="text-2xl font-bold capitalize">{stats.systemHealth}</div>
               <p className="text-xs text-muted-foreground">
                 All systems operational
@@ -170,13 +151,13 @@ export function DeveloperOverview() {
             <p className="text-gray-600">Development and management tools for Trailblaize Internal. Request new features as needed Deft Point.</p>
           </div>
           
-          {/* Developer Tools Grid - Two Cards Side by Side */}
-          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Developer Tools Grid - Three Cards */}
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* User Management Card */}
             <Card className="hover:shadow-lg transition-all duration-200 border-2 border-blue-100 hover:border-blue-200">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center space-x-3 text-xl">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                     <Users className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
@@ -192,15 +173,15 @@ export function DeveloperOverview() {
                   {/* Feature List */}
                   <div className="flex flex-wrap items-center justify-center gap-3">
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <UserCheck className="h-4 w-4 text-green-500" />
+                      <UserCheck className="h-4 w-4 text-navy-500" />
                       <span>Create & Delete Users</span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Shield className="h-4 w-4 text-green-500" />
+                      <Shield className="h-4 w-4 text-navy-500" />
                       <span>Alumni Management</span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Users className="h-4 w-4 text-green-500" />
+                      <Users className="h-4 w-4 text-navy-500" />
                       <span>Chapter Assignment</span>
                     </div>
                   </div>
@@ -208,7 +189,7 @@ export function DeveloperOverview() {
                   {/* Action Button */}
                   <div className="pt-2">
                     <Button 
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full" 
                       onClick={() => window.location.href = '/dashboard/user-management'}
                     >
                       <span>Access User Management</span>
@@ -223,7 +204,7 @@ export function DeveloperOverview() {
             <Card className="hover:shadow-lg transition-all duration-200 border-2 border-blue-100 hover:border-blue-200">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center space-x-3 text-xl">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                     <Settings className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
@@ -231,7 +212,7 @@ export function DeveloperOverview() {
                   </div>
                 </CardTitle>
                 <p className="text-gray-600 mt-2">
-                  Manage chapter-specific feature flags. Enable or disable features like financial tools, recruitment CRM, and events management on a per-chapter basis.
+                  Enable or disable features like financial tools, recruitment CRM, and events management on a per-chapter basis.
                 </p>
               </CardHeader>
               <CardContent className="pt-0">
@@ -239,15 +220,15 @@ export function DeveloperOverview() {
                   {/* Feature List */}
                   <div className="flex flex-wrap items-center justify-center gap-3">
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Settings className="h-4 w-4 text-green-500" />
+                      <Settings className="h-4 w-4 text-navy-500" />
                       <span>Financial Tools</span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Settings className="h-4 w-4 text-green-500" />
+                      <Settings className="h-4 w-4 text-navy-500" />
                       <span>Recruitment CRM</span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Settings className="h-4 w-4 text-green-500" />
+                      <Settings className="h-4 w-4 text-navy-500" />
                       <span>Events Management</span>
                     </div>
                   </div>
@@ -255,10 +236,57 @@ export function DeveloperOverview() {
                   {/* Action Button */}
                   <div className="pt-2">
                     <Button 
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full" 
                       onClick={() => window.location.href = '/dashboard/feature-flags'}
                     >
                       <span>Manage Feature Flags</span>
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Branding Management Card */}
+            <Card className="hover:shadow-lg transition-all duration-200 border-2 border-blue-100 hover:border-blue-200">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center space-x-3 text-xl">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Palette className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <span className="text-gray-900">Branding Management</span>
+                  </div>
+                </CardTitle>
+                <p className="text-gray-600 mt-2">
+                  Manage chapter branding including logos, colors, and visual identity. Customize the look and feel for each chapter.
+                </p>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-4">
+                  {/* Feature List */}
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Palette className="h-4 w-4 text-navy-500" />
+                      <span>Logo Upload</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Palette className="h-4 w-4 text-navy-500" />
+                      <span>Color Customization</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Shield className="h-4 w-4 text-navy-500" />
+                      <span>Live Preview</span>
+                    </div>
+                  </div>
+                  
+                  {/* Action Button */}
+                  <div className="pt-2">
+                    <Button 
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full" 
+                      onClick={() => window.location.href = '/dashboard/developer/branding'}
+                    >
+                      <span>Manage Branding</span>
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                   </div>

@@ -170,7 +170,7 @@ export function LandingPage() {
               <Link href="/sign-up">
                 <Button 
                   size="lg" 
-                  className="bg-navy-600 hover:bg-navy-700 text-white px-4 py-2 md:px-6 md:py-4 text-sm md:text-lg rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 group whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300"
+                  className="bg-brand-primary hover:bg-brand-primary-hover text-white px-4 py-2 md:px-6 md:py-4 text-sm md:text-lg rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 group whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300"
                 >
                   Get Started
                   <ArrowRight className="ml-1.5 md:ml-2 h-4 w-4 md:h-5 md:w-5 group-hover:translate-x-1 transition-transform" />

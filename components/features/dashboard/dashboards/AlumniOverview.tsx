@@ -19,6 +19,8 @@ import { useRouter } from 'next/navigation';
 import React from 'react';
 import { ChapterMemberData } from '@/types/chapter';
 import { MobileBottomNavigation } from './ui/MobileBottomNavigation';
+import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
+import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
 
 interface Profile {
   id: string;
@@ -38,6 +40,28 @@ interface AlumniOverviewProps {
   fallbackChapterId?: string | null;
 }
 
+// Seeded random number generator (deterministic - same seed = same sequence)
+function seededRandom(seed: number) {
+  let value = seed;
+  return () => {
+    value = (value * 9301 + 49297) % 233280;
+    return value / 233280;
+  };
+}
+
+// Fisher-Yates shuffle with seeded random
+function seededShuffle<T>(array: T[], seed: number): T[] {
+  const shuffled = [...array];
+  const random = seededRandom(seed);
+  
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  
+  return shuffled;
+}
+
 export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOverviewProps) {
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id ?? fallbackChapterId ?? null;
@@ -52,6 +76,23 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
   const [connectedUserName, setConnectedUserName] = useState<string>('');
   const [localConnectionsSnapshot, setLocalConnectionsSnapshot] = useState<any[]>([]);
   const [snapshotTaken, setSnapshotTaken] = useState(false);
+  const [sessionSeed, setSessionSeed] = useState<number | null>(null);
+
+  // Get or generate session seed for randomization
+  useEffect(() => {
+    // Get seed from sessionStorage or generate a new one
+    const storageKey = 'networking-spotlight-seed';
+    const storedSeed = sessionStorage.getItem(storageKey);
+    
+    if (storedSeed) {
+      setSessionSeed(parseInt(storedSeed, 10));
+    } else {
+      // Generate new seed for this session
+      const newSeed = Math.floor(Math.random() * 1000000);
+      sessionStorage.setItem(storageKey, newSeed.toString());
+      setSessionSeed(newSeed);
+    }
+  }, []);
 
   const feedData = useMemo(() => {
     if (!initialFeed) return undefined;
@@ -69,7 +110,7 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
 
   // Memoize the networking spotlight to prevent constant refreshing
   const networkingSpotlight = useMemo(() => {
-    if (!chapterMembers || !profile || !snapshotTaken) return [];
+    if (!chapterMembers || !profile || !snapshotTaken || sessionSeed === null) return [];
     
     // Get IDs of users the current user has ANY connection with (pending, accepted, etc.)
     // Use the local snapshot, not the live connections
@@ -85,28 +126,95 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
       !connectedUserIds.has(member.id)
     );
     
-    // Prioritize alumni and active members, then sort by name for consistent ordering
-    const alumniMembers = availableMembers.filter(member => member.role === 'alumni');
-    const activeMembers = availableMembers.filter(member => member.role === 'active_member');
-    const otherMembers = availableMembers.filter(member => 
-      member.role !== 'alumni' && member.role !== 'active_member'
-    );
+    // Calculate relevance score for each member
+    const calculateRelevanceScore = (member: any) => {
+      let score = 0;
+      
+      // 1. Mutual connections (highest weight - 100 points per connection)
+      const mutualCount = (member as any).mutualConnectionsCount || 0;
+      score += mutualCount * 100;
+      
+      // 2. Profile completeness (avatar = 30, bio = 20, location = 15, phone = 10)
+      if (member.avatar_url) score += 60;
+      if (member.bio && member.bio.trim() !== '') score += 20;
+      if (member.location && member.location.trim() !== '') score += 15;
+      if (member.phone && member.phone.trim() !== '') score += 10;
+      
+      // 3. Recent activity (30 points if updated within 30 days, 15 if within 90 days)
+      // Use last_active_at if available (more accurate), otherwise fall back to updated_at
+      const activityDate = (member as any).last_active_at || member.updated_at;
+      if (activityDate) {
+        const daysSinceActivity = (Date.now() - new Date(activityDate).getTime()) / (24 * 60 * 60 * 1000);
+        if (daysSinceActivity <= 30) score += 30;
+        else if (daysSinceActivity <= 90) score += 15;
+      }
+      
+      // 4. Graduation year proximity (if both have grad_year)
+      if (profile.grad_year && member.grad_year) {
+        const yearDiff = Math.abs(profile.grad_year - member.grad_year);
+        if (yearDiff <= 5) score += 20 - (yearDiff * 2); // Max 20 points, decreases by 2 per year
+      }
+      
+      // 5. Location similarity (if both have locations)
+      if (profile.location && member.location) {
+        if (profile.location.toLowerCase() === member.location.toLowerCase()) {
+          score += 25;
+        }
+      }
+      
+      return score;
+    };
     
-    // Sort each group by name for consistent ordering (not random)
-    const sortByName = (a: any, b: any) => {
+    // Sort ALL members by relevance score first (not grouped yet)
+    const sortedMembers = availableMembers.sort((a, b) => {
+      const scoreA = calculateRelevanceScore(a);
+      const scoreB = calculateRelevanceScore(b);
+      
+      if (scoreB !== scoreA) {
+        return scoreB - scoreA; // Higher score first
+      }
+      
+      // Secondary: mutual connections
+      const mutualA = (a as any).mutualConnectionsCount || 0;
+      const mutualB = (b as any).mutualConnectionsCount || 0;
+      if (mutualB !== mutualA) {
+        return mutualB - mutualA;
+      }
+      
+      // Tertiary: alphabetical by name (fallback)
       const nameA = a.full_name || `${a.first_name || ''} ${a.last_name || ''}`.trim() || '';
       const nameB = b.full_name || `${b.first_name || ''} ${b.last_name || ''}`.trim() || '';
       return nameA.localeCompare(nameB);
-    };
+    });
     
+    // NOW separate by role (but they're already sorted by relevance)
+    const alumniMembers = sortedMembers.filter(member => member.role === 'alumni');
+    const activeMembers = sortedMembers.filter(member => member.role === 'active_member');
+    const otherMembers = sortedMembers.filter(member => 
+      member.role !== 'alumni' && member.role !== 'active_member'
+    );
+    
+    // Combine: alumni first, then active members, then others (all sorted by relevance)
     const prioritizedMembers = [
-      ...alumniMembers.sort(sortByName),
-      ...activeMembers.sort(sortByName),
-      ...otherMembers.sort(sortByName)
+      ...alumniMembers,
+      ...activeMembers,
+      ...otherMembers
     ];
     
-    return prioritizedMembers.slice(0, 5);
-  }, [chapterMembers, profile, snapshotTaken, localConnectionsSnapshot]);
+    // Instead of taking top 5, take top 15-20 and randomly select 5
+    // This ensures variety across sessions while maintaining relevance
+    const topPool = prioritizedMembers.slice(0, Math.min(20, prioritizedMembers.length));
+    
+    // If we have 5 or fewer, just return them all
+    if (topPool.length <= 5) {
+      return topPool;
+    }
+    
+    // Use seeded shuffle to randomly select 5 from the top pool
+    // Same seed = same selection within session
+    const shuffledPool = seededShuffle(topPool, sessionSeed);
+    return shuffledPool.slice(0, 5);
+  }, [chapterMembers, profile, snapshotTaken, localConnectionsSnapshot, sessionSeed]);
 
   const handleConnect = async (member: ChapterMemberData) => {
     if (!profile) return;
@@ -233,24 +341,37 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
                       {networkingSpotlight.map((member) => (
                         <div key={member.id} className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
                           <div className="flex items-start space-x-3">
-                            {/* Avatar */}
-                            <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
-                              {member.avatar_url ? (
-                                <img 
-                                  src={member.avatar_url} 
-                                  alt={member.full_name}
-                                  className="w-full h-full rounded-full object-cover"
-                                />
-                              ) : (
-                                member.full_name?.charAt(0) || member.first_name?.charAt(0) || 'U'
-                              )}
-                            </div>
+                            {/* Avatar - Now Clickable */}
+                            {member.id ? (
+                              <ClickableAvatar
+                                userId={member.id}
+                                avatarUrl={member.avatar_url}
+                                fullName={member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim()}
+                                firstName={member.first_name}
+                                lastName={member.last_name}
+                                size="sm"
+                                className="w-10 h-10 shrink-0"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
+                                {member.full_name?.charAt(0) || member.first_name?.charAt(0) || 'U'}
+                              </div>
+                            )}
                             
                             <div className="flex-1 min-w-0">
                               <div className="flex justify-between items-start mb-1">
-                                <h4 className="font-medium text-gray-900 text-sm truncate">
-                                  {member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member'}
-                                </h4>
+                                {/* Name - Now Clickable */}
+                                {member.id && (member.full_name || member.first_name || member.last_name) ? (
+                                  <ClickableUserName
+                                    userId={member.id}
+                                    fullName={member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member'}
+                                    className="font-medium text-gray-900 text-sm truncate"
+                                  />
+                                ) : (
+                                  <h4 className="font-medium text-gray-900 text-sm truncate">
+                                    {member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member'}
+                                  </h4>
+                                )}
                                 {member.role === 'alumni' && (
                                   <Badge className="bg-blue-100 text-blue-800 text-xs">
                                     Alumni
@@ -406,7 +527,7 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
             
             <Button 
               onClick={() => setSuccessModalOpen(false)}
-              className="w-full bg-navy-600 hover:bg-navy-700"
+              className="w-full bg-brand-primary hover:bg-brand-primary-hover"
             >
               Got it!
             </Button>

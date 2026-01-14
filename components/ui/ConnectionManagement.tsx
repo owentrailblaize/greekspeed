@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { Check, X, UserPlus, Users, Clock, UserX } from 'lucide-react';
+import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
+import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
 
 interface ConnectionManagementProps {
   variant?: 'desktop' | 'mobile';
@@ -58,12 +60,15 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
   };
 
   const getConnectionPartner = (connection: any) => {
-    if (!user) return { name: 'Unknown', initials: 'U', avatar: null };
+    if (!user) return { name: 'Unknown', initials: 'U', avatar: null, id: null, firstName: null, lastName: null };
     const partner = connection.requester_id === user.id ? connection.recipient : connection.requester;
     return {
       name: partner.full_name || 'Unknown User',
       initials: partner.full_name?.charAt(0) || 'U',
-      avatar: partner.avatar_url
+      avatar: partner.avatar_url,
+      id: partner.id || null,
+      firstName: partner.first_name || null,
+      lastName: partner.last_name || null
     };
   };
 
@@ -160,21 +165,41 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                   return (
                     <div key={connection.id} className={`flex items-center justify-between ${cardPadding} border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors`}>
                       <div className="flex items-center space-x-3">
-                        <div className={`${avatarSize} bg-navy-100 rounded-full flex items-center justify-center text-navy-600 ${textSize} font-semibold`}>
-                          {partner.avatar ? (
-                            <img 
-                              src={partner.avatar} 
-                              alt={partner.name}
-                              className="w-full h-full object-cover rounded-full"
+                        {partner.id ? (
+                          <ClickableAvatar
+                            userId={partner.id}
+                            avatarUrl={partner.avatar}
+                            fullName={partner.name}
+                            firstName={partner.firstName}
+                            lastName={partner.lastName}
+                            size={isMobile ? 'sm' : 'md'}
+                            className={avatarSize}
+                          />
+                        ) : (
+                          <div className={`${avatarSize} bg-navy-100 rounded-full flex items-center justify-center text-navy-600 ${textSize} font-semibold`}>
+                            {partner.avatar ? (
+                              <img 
+                                src={partner.avatar} 
+                                alt={partner.name}
+                                className="w-full h-full object-cover rounded-full"
+                              />
+                            ) : (
+                              partner.initials
+                            )}
+                          </div>
+                        )}
+                        <div>
+                          {partner.id ? (
+                            <ClickableUserName
+                              userId={partner.id}
+                              fullName={isMobile ? partner.name : `Connection Request from ${partner.name}`}
+                              className={`font-medium text-gray-900 ${textSize}`}
                             />
                           ) : (
-                            partner.initials
+                            <p className={`font-medium text-gray-900 ${textSize}`}>
+                              {isMobile ? partner.name : `Connection Request from ${partner.name}`}
+                            </p>
                           )}
-                        </div>
-                        <div>
-                          <p className={`font-medium text-gray-900 ${textSize}`}>
-                            {isMobile ? partner.name : `Connection Request from ${partner.name}`}
-                          </p>
                           {connection.message && (
                             <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600 mt-1`}>{connection.message}</p>
                           )}
@@ -242,21 +267,41 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                   return (
                     <div key={connection.id} className={`flex items-center justify-between ${cardPadding} border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors`}>
                       <div className="flex items-center space-x-3">
-                        <div className={`${avatarSize} bg-navy-100 rounded-full flex items-center justify-center text-navy-600 ${textSize} font-semibold`}>
-                          {partner.avatar ? (
-                            <img 
-                              src={partner.avatar} 
-                              alt={partner.name}
-                              className="w-full h-full object-cover rounded-full"
+                        {partner.id ? (
+                          <ClickableAvatar
+                            userId={partner.id}
+                            avatarUrl={partner.avatar}
+                            fullName={partner.name}
+                            firstName={partner.firstName}
+                            lastName={partner.lastName}
+                            size={isMobile ? 'sm' : 'md'}
+                            className={avatarSize}
+                          />
+                        ) : (
+                          <div className={`${avatarSize} bg-navy-100 rounded-full flex items-center justify-center text-navy-600 ${textSize} font-semibold`}>
+                            {partner.avatar ? (
+                              <img 
+                                src={partner.avatar} 
+                                alt={partner.name}
+                                className="w-full h-full object-cover rounded-full"
+                              />
+                            ) : (
+                              partner.initials
+                            )}
+                          </div>
+                        )}
+                        <div>
+                          {partner.id ? (
+                            <ClickableUserName
+                              userId={partner.id}
+                              fullName={isMobile ? `Request sent to ${partner.name}` : `Request sent to ${partner.name}`}
+                              className={`font-medium text-gray-900 ${textSize}`}
                             />
                           ) : (
-                            partner.initials
+                            <p className={`font-medium text-gray-900 ${textSize}`}>
+                              {isMobile ? `Request sent to ${partner.name}` : `Request sent to ${partner.name}`}
+                            </p>
                           )}
-                        </div>
-                        <div>
-                          <p className={`font-medium text-gray-900 ${textSize}`}>
-                            {isMobile ? `Request sent to ${partner.name}` : `Request sent to ${partner.name}`}
-                          </p>
                           <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mt-1`}>
                             {new Date(connection.created_at).toLocaleDateString()}
                           </p>
@@ -289,21 +334,41 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                   return (
                     <div key={connection.id} className={`flex items-center justify-between ${cardPadding} border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors`}>
                       <div className="flex items-center space-x-3">
-                        <div className={`${avatarSize} bg-navy-100 rounded-full flex items-center justify-center text-navy-600 ${textSize} font-semibold`}>
-                          {partner.avatar ? (
-                            <img 
-                              src={partner.avatar} 
-                              alt={partner.name}
-                              className="w-full h-full object-cover rounded-full"
+                        {partner.id ? (
+                          <ClickableAvatar
+                            userId={partner.id}
+                            avatarUrl={partner.avatar}
+                            fullName={partner.name}
+                            firstName={partner.firstName}
+                            lastName={partner.lastName}
+                            size={isMobile ? 'sm' : 'md'}
+                            className={avatarSize}
+                          />
+                        ) : (
+                          <div className={`${avatarSize} bg-navy-100 rounded-full flex items-center justify-center text-navy-600 ${textSize} font-semibold`}>
+                            {partner.avatar ? (
+                              <img 
+                                src={partner.avatar} 
+                                alt={partner.name}
+                                className="w-full h-full object-cover rounded-full"
+                              />
+                            ) : (
+                              partner.initials
+                            )}
+                          </div>
+                        )}
+                        <div>
+                          {partner.id ? (
+                            <ClickableUserName
+                              userId={partner.id}
+                              fullName={partner.name}
+                              className={`font-medium text-gray-900 ${textSize}`}
                             />
                           ) : (
-                            partner.initials
+                            <p className={`font-medium text-gray-900 ${textSize}`}>
+                              {partner.name}
+                            </p>
                           )}
-                        </div>
-                        <div>
-                          <p className={`font-medium text-gray-900 ${textSize}`}>
-                            {partner.name}
-                          </p>
                           <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mt-1`}>
                             Connected {new Date(connection.updated_at).toLocaleDateString()}
                           </p>
@@ -336,21 +401,41 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                   return (
                     <div key={connection.id} className={`flex items-center justify-between ${cardPadding} border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors`}>
                       <div className="flex items-center space-x-3">
-                        <div className={`${avatarSize} bg-navy-100 rounded-full flex items-center justify-center text-navy-600 ${textSize} font-semibold`}>
-                          {partner.avatar ? (
-                            <img 
-                              src={partner.avatar} 
-                              alt={partner.name}
-                              className="w-full h-full object-cover rounded-full"
+                        {partner.id ? (
+                          <ClickableAvatar
+                            userId={partner.id}
+                            avatarUrl={partner.avatar}
+                            fullName={partner.name}
+                            firstName={partner.firstName}
+                            lastName={partner.lastName}
+                            size={isMobile ? 'sm' : 'md'}
+                            className={avatarSize}
+                          />
+                        ) : (
+                          <div className={`${avatarSize} bg-navy-100 rounded-full flex items-center justify-center text-navy-600 ${textSize} font-semibold`}>
+                            {partner.avatar ? (
+                              <img 
+                                src={partner.avatar} 
+                                alt={partner.name}
+                                className="w-full h-full object-cover rounded-full"
+                              />
+                            ) : (
+                              partner.initials
+                            )}
+                          </div>
+                        )}
+                        <div>
+                          {partner.id ? (
+                            <ClickableUserName
+                              userId={partner.id}
+                              fullName={partner.name}
+                              className={`font-medium text-gray-900 ${textSize}`}
                             />
                           ) : (
-                            partner.initials
+                            <p className={`font-medium text-gray-900 ${textSize}`}>
+                              {partner.name}
+                            </p>
                           )}
-                        </div>
-                        <div>
-                          <p className={`font-medium text-gray-900 ${textSize}`}>
-                            {partner.name}
-                          </p>
                           <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mt-1`}>
                             Declined {new Date(connection.updated_at).toLocaleDateString()}
                           </p>

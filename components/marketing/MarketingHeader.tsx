@@ -67,15 +67,15 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
                 onClick={() => scrollToSection(id)}
                 className={`text-sm font-semibold transition-all duration-300 relative py-2 ${
                   activeSection === id 
-                    ? "text-navy-600" 
-                    : "text-gray-600 hover:text-navy-600"
+                    ? "text-brand-primary" 
+                    : "text-gray-600 hover:text-brand-primary"
                 }`}
               >
                 {label}
                 {activeSection === id && (
                   <motion.div
                     layoutId="activeIndicator"
-                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-navy-600 to-blue-600 rounded-full"
+                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-primary to-brand-accent rounded-full"
                     initial={false}
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
@@ -86,7 +86,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
             {user && (
               <Link 
                 href="/dashboard" 
-                className="text-sm font-semibold text-gray-600 hover:text-navy-600 transition-colors py-2"
+                className="text-sm font-semibold text-gray-600 hover:text-brand-primary transition-colors py-2"
               >
                 Dashboard
               </Link>
@@ -106,7 +106,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
                       font-medium
                       shadow-sm hover:shadow-md
                       transition-all duration-200
-                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300
+                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-focus
                       px-5
                     "
                     size="sm"
@@ -117,15 +117,15 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
                 <Link href="/sign-up">
                   <Button 
                     className="
-                      bg-gradient-to-b from-navy-500 via-navy-600 to-navy-700 
-                      hover:from-navy-600 hover:via-navy-700 hover:to-navy-800 
+                      bg-brand-primary 
+                      hover:bg-brand-primary-hover 
                       text-white 
                       rounded-full font-medium
                       border border-white/30 
                       shadow-[0_4px_14px_0_rgba(30,50,100,0.39)] 
                       hover:shadow-[0_6px_20px_0_rgba(30,50,100,0.5)]
                       transition-all duration-200
-                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300
+                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-focus
                       px-6
                     "
                     size="sm"
@@ -143,7 +143,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
                 <Button 
                   variant="ghost" 
                   onClick={() => signOut()} 
-                  className="hover:text-navy-600 hover:bg-gray-100/50"
+                  className="hover:text-brand-primary hover:bg-gray-100/50"
                   size="sm"
                 >
                   Sign Out
@@ -184,8 +184,8 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
                   onClick={() => scrollToSection(id)} 
                   className={`block w-full text-left py-3 px-4 rounded-lg transition-all font-medium ${
                     activeSection === id
-                      ? "text-navy-600 bg-navy-50/80 shadow-sm"
-                      : "text-gray-700 hover:text-navy-600 hover:bg-gray-50"
+                      ? "text-brand-primary bg-brand-primary/10 shadow-sm"
+                      : "text-gray-700 hover:text-brand-primary hover:bg-gray-50"
                   }`}
                 >
                   {label}
@@ -194,7 +194,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
               {user && (
                 <Link 
                   href="/dashboard" 
-                  className="block w-full text-left py-3 px-4 rounded-lg text-gray-700 hover:text-navy-600 hover:bg-gray-50 transition-all font-medium"
+                  className="block w-full text-left py-3 px-4 rounded-lg text-gray-700 hover:text-brand-primary hover:bg-gray-50 transition-all font-medium"
                 >
                   Dashboard
                 </Link>
@@ -206,12 +206,12 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
                       <Button 
                         variant="outline"
                         className="
-                          border border-gray-200 bg-white text-navy-600 hover:bg-white-50 hover:bg-white-900
+                          border border-gray-200 bg-white text-brand-primary hover:bg-gray-50
                           rounded-full
                           font-medium
                           shadow-sm hover:shadow-md
                           transition-all duration-200
-                          focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300
+                          focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-focus
                           px-10 min-w-[140px] md:px-4 md:min-w-0
                           md:justify-start
                           md:w-full
@@ -226,19 +226,13 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
                     <Button 
                       className="
                         w-full
-                        bg-navy-600 hover:bg-navy-700
+                        bg-brand-primary hover:bg-brand-primary-hover
                         text-white 
                         rounded-full
                         font-medium
                         shadow-sm hover:shadow-md
                         transition-all duration-200
-                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300
-                        md:bg-gradient-to-b md:from-navy-500 md:via-navy-600 md:to-navy-700 
-                        md:hover:from-navy-600 md:hover:via-navy-700 md:hover:to-navy-800 
-                        md:border md:border-white/30 
-                        md:shadow-[0_4px_14px_0_rgba(30,50,100,0.39)] 
-                        md:hover:shadow-[0_6px_20px_0_rgba(30,50,100,0.5)]
-                        md:backdrop-blur-sm
+                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-focus
                       "
                       size="lg"
                     >

@@ -42,6 +42,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
   const { profile } = useProfile();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const mergedPosts = useMemo(() => posts, [posts]);
+  const prevPostCountRef = useRef(mergedPosts.length);
 
   useEffect(() => {
     if (!expandedPostId) return;
@@ -78,6 +79,31 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     measureElement: (el) => el?.getBoundingClientRect().height ?? 420,
     overscan: 8,
   });
+
+  // Preserve scroll position when new posts are added
+  useEffect(() => {
+    // Only preserve scroll if we're adding posts (not initial load)
+    if (prevPostCountRef.current > 0 && mergedPosts.length > prevPostCountRef.current) {
+      const scrollOffset = window.scrollY;
+      
+      // Wait for next frame to allow virtualizer to update
+      requestAnimationFrame(() => {
+        // Remeasure to ensure accurate positioning
+        rowVirtualizer.measure();
+        
+        // Restore scroll position
+        if (scrollOffset !== undefined && scrollOffset !== null) {
+          rowVirtualizer.scrollToOffset(scrollOffset, {
+            align: 'start',
+            behavior: 'auto', // Instant, not smooth
+          });
+        }
+      });
+    }
+    
+    // Update ref for next comparison
+    prevPostCountRef.current = mergedPosts.length;
+  }, [mergedPosts.length, rowVirtualizer]);
 
   const handleCreatePost = async (postData: CreatePostRequest) => {
     try {

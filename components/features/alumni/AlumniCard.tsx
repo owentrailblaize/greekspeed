@@ -51,7 +51,7 @@ export function AlumniCard({ name, pledgeYear, role, company, tags }: AlumniCard
               )}
             </div>
 
-            <Button className="w-full mt-4 bg-navy-600 hover:bg-navy-700 text-white rounded-lg" size="sm">
+            <Button className="w-full mt-4 bg-brand-primary hover:bg-brand-primary-hover text-white rounded-lg" size="sm">
               Connect
             </Button>
           </div>
