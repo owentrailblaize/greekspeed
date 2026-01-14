@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { createPortal } from 'react-dom';
 import { 
@@ -96,20 +96,37 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
     profile: any;
   }) {
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
+    // Update position calculation function
+    const updateDropdownPosition = useCallback(() => {
       if (isOpen) {
-        // Calculate position relative to the trigger button
         const triggerButton = document.querySelector('[data-user-dropdown-trigger]') as HTMLElement;
         if (triggerButton) {
           const rect = triggerButton.getBoundingClientRect();
+          // FIXED: Don't add scroll offsets for fixed positioning (viewport relative)
           setDropdownPosition({
-            top: rect.bottom + window.scrollY + 4, // 4px gap
-            right: window.innerWidth - rect.right - window.scrollX
+            top: rect.bottom + 4, // 4px gap - viewport relative
+            right: window.innerWidth - rect.right // viewport relative
           });
         }
       }
     }, [isOpen]);
+
+    useEffect(() => {
+      if (isOpen) {
+        updateDropdownPosition();
+        
+        // Add scroll and resize listeners to update position dynamically
+        window.addEventListener('scroll', updateDropdownPosition, true);
+        window.addEventListener('resize', updateDropdownPosition);
+        
+        return () => {
+          window.removeEventListener('scroll', updateDropdownPosition, true);
+          window.removeEventListener('resize', updateDropdownPosition);
+        };
+      }
+    }, [isOpen, updateDropdownPosition]);
 
     const handleMenuItemClick = (item: any) => {
       if (item.locked) {
@@ -128,6 +145,31 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
       onClose();
     };
 
+    // Handle click outside - better approach than backdrop
+    useEffect(() => {
+      if (!isOpen) return;
+
+      const handleClickOutside = (event: MouseEvent) => {
+        const target = event.target as Node;
+        const triggerButton = document.querySelector('[data-user-dropdown-trigger]') as HTMLElement;
+        
+        // Check if click is outside both trigger and dropdown
+        const isClickInTrigger = triggerButton?.contains(target);
+        const isClickInDropdown = dropdownRef.current?.contains(target);
+        
+        if (!isClickInTrigger && !isClickInDropdown) {
+          onClose();
+        }
+      };
+
+      // Use mousedown instead of click to catch the event earlier
+      document.addEventListener('mousedown', handleClickOutside);
+      
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, [isOpen, onClose]);
+
     // Prevent body scroll when dropdown is open
     useEffect(() => {
       if (isOpen) {
@@ -145,19 +187,20 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
 
     const desktopDropdownContent = (
       <>
-        {/* Backdrop */}
+        {/* Backdrop - removed onClick handler, now handled by click outside */}
         <div 
-          className="fixed inset-0 bg-transparent z-[99998]"
-          onClick={onClose}
+          className="fixed inset-0 bg-transparent z-[99998] pointer-events-none"
         />
         
         {/* Desktop Dropdown Content */}
         <div 
+          ref={dropdownRef}
           className="fixed z-[99999] w-64 p-2 min-w-[8rem] overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg"
           style={{
             top: `${dropdownPosition.top}px`,
             right: `${dropdownPosition.right}px`
           }}
+          onClick={(e) => e.stopPropagation()} // Prevent clicks inside from bubbling
         >
           {/* Profile Completion Banner */}
           {completionPercent < 100 && (
@@ -375,7 +418,10 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
       <div className="hidden md:block">
         <button 
           className="flex items-center space-x-2 rounded-2xl hover:bg-gray-50 transition-colors p-2"
-          onClick={() => setIsDesktopDropdownOpen(!isDesktopDropdownOpen)}
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent event bubbling
+            setIsDesktopDropdownOpen(!isDesktopDropdownOpen);
+          }}
           data-user-dropdown-trigger
         >
           <UserAvatar

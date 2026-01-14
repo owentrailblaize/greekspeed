@@ -11,6 +11,10 @@ import { EditProfileModal } from '@/components/features/profile/EditProfileModal
 import { EditAlumniProfileModal } from '@/components/features/alumni/EditAlumniProfileModal';
 import { UserProfileModal } from '@/components/features/user-profile/UserProfileModal';
 import { ProfileService } from '@/lib/services/profileService';
+import { ProfileUpdatePromptModal } from '@/components/features/profile/ProfileUpdatePromptModal';
+import type { DetectedChange } from '@/components/features/profile/ProfileUpdatePromptModal';
+import { useAuth } from '@/lib/supabase/auth-context';
+import type { CreatePostRequest } from '@/types/posts';
 
 export default function DashboardLayout({
   children,
@@ -50,6 +54,11 @@ function EditProfileModalWrapper() {
   const { isEditProfileModalOpen, closeEditProfileModal } = useModal();
   const { profile, refreshProfile } = useProfile();
   const [isMobile, setIsMobile] = useState(false);
+  
+  // State for profile update prompt modal
+  const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);
+  const [detectedChanges, setDetectedChanges] = useState<DetectedChange[]>([]);
+  const { getAuthHeaders, session } = useAuth();
 
   // Detect mobile viewport
   useEffect(() => {
@@ -78,18 +87,81 @@ function EditProfileModalWrapper() {
     }
   };
 
+  // Handler for when profile is updated with detected changes
+  const handleProfileUpdatedWithChanges = (changes: DetectedChange[]) => {
+    setDetectedChanges(changes);
+    setShowUpdatePrompt(true);
+  };
+
+  // Handle post creation from prompt modal
+  const handleCreatePost = async (content: string) => {
+    if (!profile?.chapter_id || !session) {
+      throw new Error('Missing required information to create post');
+    }
+
+    const headers = {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    };
+
+    const postData: CreatePostRequest = {
+      content,
+      post_type: 'text',
+    };
+
+    const response = await fetch('/api/posts', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(postData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error?.error ?? 'Failed to create post');
+    }
+
+    // Post created successfully - close prompt modal
+    setShowUpdatePrompt(false);
+    setDetectedChanges([]);
+  };
+
+  // Handle skip from prompt modal
+  const handleSkipPost = () => {
+    setShowUpdatePrompt(false);
+    setDetectedChanges([]);
+  };
+
   if (!profile) return null;
 
   // Use alumni-specific modal for alumni users
   if (profile.role === 'alumni') {
     return (
-      <EditAlumniProfileModal
-        isOpen={isEditProfileModalOpen}
-        onClose={closeEditProfileModal}
-        profile={profile}
-        onUpdate={handleProfileUpdate}
-        variant={isMobile ? 'mobile' : 'desktop'}
-      />
+      <>
+        <EditAlumniProfileModal
+          isOpen={isEditProfileModalOpen}
+          onClose={closeEditProfileModal}
+          profile={profile}
+          onUpdate={handleProfileUpdate}
+          variant={isMobile ? 'mobile' : 'desktop'}
+          onProfileUpdatedWithChanges={handleProfileUpdatedWithChanges}
+        />
+        
+        {/* Profile Update Prompt Modal */}
+        {showUpdatePrompt && detectedChanges.length > 0 && (
+          <ProfileUpdatePromptModal
+            isOpen={showUpdatePrompt}
+            onClose={handleSkipPost}
+            onPost={handleCreatePost}
+            onSkip={handleSkipPost}
+            detectedChanges={detectedChanges}
+            userProfile={{
+              full_name: profile.full_name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
+              avatar_url: profile.avatar_url,
+              chapter: profile.chapter,
+            }}
+          />
+        )}
+      </>
     );
   }
 

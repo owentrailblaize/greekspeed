@@ -16,6 +16,11 @@ import { supabase } from '@/lib/supabase/client';
 import { trackActivity, ActivityTypes } from '@/lib/utils/activityUtils';
 import { useFormPersistence } from '@/lib/hooks/useFormPersistence';
 import { useModal } from '@/lib/contexts/ModalContext';
+import { useProfileUpdateDetection } from '@/lib/hooks/useProfileUpdateDetection';
+import { ProfileUpdatePromptModal } from './ProfileUpdatePromptModal';
+import type { DetectedChange } from './ProfileUpdatePromptModal';
+import { useAuth } from '@/lib/supabase/auth-context';
+import type { CreatePostRequest } from '@/types/posts';
 import Link from 'next/link';
 import { industries } from '@/lib/alumniConstants';
 
@@ -80,8 +85,18 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
   // Add state to track if alumni data has been merged
   const [alumniDataMerged, setAlumniDataMerged] = useState(false);
 
-  const { updateProfile, refreshProfile } = useProfile();
+  // Profile update prompt modal state
+  const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);
+  const [detectedChanges, setDetectedChanges] = useState<DetectedChange[]>([]);
+
+  const { updateProfile, refreshProfile, profile: currentProfile } = useProfile();
   const { openEditProfileModal, closeEditProfileModal } = useModal();
+  const { getAuthHeaders, session } = useAuth();
+
+  // Initialize profile update detection hook
+  const { detectChanges, setBaseline, clearBaseline } = useProfileUpdateDetection({
+    ignoreNotSpecified: true,
+  });
 
   // Add loading state to prevent modal flicker
   const [isModalReady, setIsModalReady] = useState(false);
@@ -183,6 +198,28 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
       setAlumniDataMerged(true);
     }
   }, [alumniData, updateFormData, alumniDataMerged, hasUnsavedChanges]);
+
+  // Set baseline for change detection when modal opens
+  useEffect(() => {
+    if (isOpen && profile) {
+      if (profile.role === 'alumni' && alumniData) {
+        setBaseline({
+          role: profile.role || null,
+          job_title: alumniData.job_title || null,
+          company: alumniData.company || null,
+          industry: alumniData.industry || null,
+        });
+      } else {
+        setBaseline({
+          role: profile.role || null,
+        });
+      }
+    } else if (!isOpen) {
+      clearBaseline();
+      setShowUpdatePrompt(false);
+      setDetectedChanges([]);
+    }
+  }, [isOpen, profile, alumniData, setBaseline, clearBaseline]);
 
   // Email validation regex
   const validateEmail = (email: string): boolean => {
@@ -483,13 +520,78 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
           }
         };
         await updateAlumniData();
+        
+        // Detect changes for alumni
+        const changes = detectChanges({
+          role: profile.role || null,
+          job_title: formData.job_title?.trim() || null,
+          company: formData.company?.trim() || null,
+          industry: formData.industry?.trim() || null,
+        });
+        
+        if (changes.length > 0 && profile?.chapter_id) {
+          setDetectedChanges(changes);
+          setShowUpdatePrompt(true);
+          // Don't close modal yet - wait for user to handle prompt
+          setLoading(false);
+          return;
+        }
       }
+      
+      // No changes detected or not alumni, close normally
       onClose();
     } catch (error) {
       console.error('Error updating profile:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle post creation from prompt modal
+  const handleCreatePost = async (content: string) => {
+    if (!profile?.chapter_id || !session) {
+      throw new Error('Missing required information to create post');
+    }
+
+    const headers = {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    };
+
+    const postData: CreatePostRequest = {
+      content,
+      post_type: 'text',
+    };
+
+    const response = await fetch('/api/posts', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(postData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error?.error ?? 'Failed to create post');
+    }
+
+    // Post created successfully - close modals
+    setShowUpdatePrompt(false);
+    setDetectedChanges([]);
+    onClose();
+  };
+
+  // Handle skip from prompt modal
+  const handleSkipPost = () => {
+    setShowUpdatePrompt(false);
+    setDetectedChanges([]);
+    onClose();
+  };
+
+  // Handle prompt modal close
+  const handlePromptClose = () => {
+    setShowUpdatePrompt(false);
+    setDetectedChanges([]);
+    onClose();
   };
 
   // Enhanced close handler with unsaved changes warning
@@ -1035,13 +1137,28 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
               type="submit"
               disabled={loading}
               className={`flex-1 rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
-              onClick={handleSubmit}
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </div>
       </div>
+
+      {/* Profile Update Prompt Modal */}
+      {showUpdatePrompt && profile && detectedChanges.length > 0 && (
+        <ProfileUpdatePromptModal
+          isOpen={showUpdatePrompt}
+          onClose={handlePromptClose}
+          onPost={handleCreatePost}
+          onSkip={handleSkipPost}
+          detectedChanges={detectedChanges}
+          userProfile={{
+            full_name: profile.full_name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
+            avatar_url: profile.avatar_url,
+            chapter: profile.chapter,
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, User, Mail, Building, Briefcase, HelpCircle, Image, Upload, Linkedin, MapPin, Phone, Home, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,8 @@ import { BannerService } from '@/lib/services/bannerService';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/lib/supabase/client';
 import { trackActivity, ActivityTypes } from '@/lib/utils/activityUtils';
+import { useProfileUpdateDetection } from '@/lib/hooks/useProfileUpdateDetection';
+import type { DetectedChange } from '@/components/features/profile/ProfileUpdatePromptModal';
 import { industries } from '@/lib/alumniConstants';
 import { Select, SelectItem } from '@/components/ui/select';
 
@@ -23,12 +25,13 @@ interface EditAlumniProfileModalProps {
   profile: any;
   onUpdate: (updatedProfile: any) => void;
   variant?: 'desktop' | 'mobile';
+  onProfileUpdatedWithChanges?: (changes: DetectedChange[]) => void;
 }
 
 // Storage key for sessionStorage
 const STORAGE_KEY = 'editAlumniProfileFormData';
 
-export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, variant = 'desktop' }: EditAlumniProfileModalProps) {
+export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, variant = 'desktop', onProfileUpdatedWithChanges }: EditAlumniProfileModalProps) {
   // Form state with persistence
   const [formData, setFormData] = useState({
     first_name: '',
@@ -65,6 +68,14 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
   const [isModalReady, setIsModalReady] = useState(false);
 
   const { updateProfile, refreshProfile } = useProfile();
+
+  // Initialize profile update detection hook
+  const { detectChanges, setBaseline, clearBaseline, getBaseline } = useProfileUpdateDetection({
+    ignoreNotSpecified: true,
+  });
+
+  // Form ref for programmatic submission
+  const formRef = useRef<HTMLFormElement>(null);
 
   // SessionStorage persistence functions
   const saveFormDataToStorage = useCallback((data: typeof formData) => {
@@ -195,6 +206,14 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
       }
     }
   }, [profile, isOpen, loadAlumniData]);
+
+  // Cleanup when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      // Reset when modal closes
+      clearBaseline();
+    }
+  }, [isOpen, clearBaseline]);
 
   // Validation functions - same as original
   const validateEmail = (email: string): boolean => {
@@ -383,6 +402,13 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
 
     setLoading(true);
     try {
+      const baselineValues = {
+        role: profile.role || null,
+        job_title: alumniData?.job_title || null,
+        company: alumniData?.company || null,
+        industry: alumniData?.industry || null,
+      };
+
       // Update alumni table only
       const alumniUpdates = {
         first_name: formData.first_name.trim(),
@@ -451,7 +477,39 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
       // Clear saved form data on successful save
       clearFormDataFromStorage();
       
-      // Close modal after successful save
+      // Detect changes for profile update prompt
+      // Use the baselineValues we captured at the start (before save)
+      const valuesToDetect = {
+        role: profile.role || null,
+        job_title: formData.job_title?.trim() || null,
+        company: formData.company?.trim() || null,
+        industry: formData.industry?.trim() || null,
+      };
+      
+      console.log('🔍 Baseline values (before save):', baselineValues);
+      console.log('🔍 Values being passed to detectChanges:', valuesToDetect);
+      
+      // Set the baseline in the hook using the values we captured
+      setBaseline(baselineValues);
+      
+      const changes = detectChanges(valuesToDetect);
+      
+      console.log('🔍 Detected changes:', changes);
+      console.log('🔍 Profile chapter_id:', profile?.chapter_id);
+      console.log('🔍 Should show prompt?', changes.length > 0 && profile?.chapter_id);
+
+      if (changes.length > 0 && profile?.chapter_id) {
+        console.log('✅ Calling callback with detected changes');
+        // Call the callback with detected changes, then close the modal
+        onProfileUpdatedWithChanges?.(changes);
+        setLoading(false);
+        onClose();
+        return;
+      } else {
+        console.log('❌ Not showing prompt - changes:', changes.length, 'chapter_id:', profile?.chapter_id);
+      }
+
+      // No changes detected, close normally
       onClose();
     } catch (error) {
       console.error('Error updating alumni profile:', error);
@@ -470,6 +528,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
     clearFormDataFromStorage();
     onClose();
   };
+
 
   // Only render modal when open and ready
   if (!isOpen || !isModalReady) return null;
@@ -494,7 +553,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
 
         {/* Scrollable Content Area - exact same structure as original */}
         <div className={`flex-1 overflow-y-auto ${isMobile ? 'p-4' : 'p-6'}`}>
-          <form onSubmit={handleSubmit} className={isMobile ? 'space-y-4' : 'space-y-6'}>
+          <form ref={formRef} onSubmit={handleSubmit} className={isMobile ? 'space-y-4' : 'space-y-6'}>
             {/* Combined Profile Photo & Banner Card - exact same as original */}
             <Card className="p-0">
               <CardContent className={`relative ${isMobile ? 'h-32' : 'h-64'} p-0 overflow-hidden`}>
@@ -913,22 +972,32 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
           </form>
         </div>
 
-        {/* Footer - same as original */}
-        <div className={`flex justify-between items-center border-t border-gray-200 flex-shrink-0 ${isMobile ? 'p-4 pb-[calc(16px+env(safe-area-inset-bottom))]' : 'p-6'}`}>
-          
-          <div className="flex space-x-3">
+        {/* Footer - moved OUTSIDE scrollable area and form */}
+        <div className={`flex justify-end items-center border-t border-gray-200 flex-shrink-0 ${isMobile ? 'p-4 pb-[calc(16px+env(safe-area-inset-bottom))]' : 'p-6'}`}>
+          <div className={`flex ${isMobile ? 'space-x-2' : 'space-x-3'}`}>
             <Button
               type="button"
               variant="outline"
               onClick={handleCancel}
+              className={`rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300`}
             >
               Cancel
             </Button>
             <Button
-              type="submit"
+              type="button"
               disabled={loading}
-              className="bg-navy-600 hover:bg-navy-700"
-              onClick={handleSubmit}
+              onClick={(e) => {
+                e.preventDefault();
+                if (formRef.current) {
+                  const syntheticEvent = {
+                    preventDefault: () => {},
+                    currentTarget: formRef.current,
+                    target: formRef.current,
+                  } as unknown as React.FormEvent<HTMLFormElement>;
+                  handleSubmit(syntheticEvent);
+                }  
+              }}
+              className={`rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </Button>

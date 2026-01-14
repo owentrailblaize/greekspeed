@@ -148,7 +148,7 @@ export function DeveloperOverview() {
                 <div className="mb-8">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Developer Tools</h2>
-            <p className="text-gray-600">Development and management tools for Trailblaize Internal. Request new features as needed Deft Point.</p>
+            <p className="text-gray-600">Development and management tools for Trailblaize Internal. Request new features as needed <a href="https://www.deftpointconsulting.com" className="text-color-">Deft Point.</a></p>
           </div>
           
           {/* Developer Tools Grid - Three Cards */}
