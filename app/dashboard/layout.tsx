@@ -15,6 +15,7 @@ import { ProfileUpdatePromptModal } from '@/components/features/profile/ProfileU
 import type { DetectedChange } from '@/components/features/profile/ProfileUpdatePromptModal';
 import { useAuth } from '@/lib/supabase/auth-context';
 import type { CreatePostRequest } from '@/types/posts';
+import { isPromptInCooldown, recordPromptShown } from '@/lib/utils/profileUpdateCooldown';
 
 export default function DashboardLayout({
   children,
@@ -89,6 +90,18 @@ function EditProfileModalWrapper() {
 
   // Handler for when profile is updated with detected changes
   const handleProfileUpdatedWithChanges = (changes: DetectedChange[]) => {
+    if (!profile?.id) return;
+    
+    // Check if prompt is in cooldown period
+    if (isPromptInCooldown(profile.id)) {
+      // Skip showing prompt - within cooldown period
+      return;
+    }
+    
+    // Record that we're showing this prompt (starts cooldown)
+    recordPromptShown(profile.id);
+    
+    // Show the prompt
     setDetectedChanges(changes);
     setShowUpdatePrompt(true);
   };

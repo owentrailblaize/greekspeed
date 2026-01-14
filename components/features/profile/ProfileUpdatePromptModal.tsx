@@ -272,7 +272,7 @@ export function ProfileUpdatePromptModal({
             {hasMultipleChanges && (
               <Card className="border-slate-200/80 bg-slate-50/50">
                 <CardContent className="p-4">
-                  <p className="text-xs font-medium text-slate-600 mb-2">Updates detected:</p>
+                  <p className="text-xs font-medium text-slate-600 mb-2">Look Like You've Updated Your Profile:</p>
                   <ul className="space-y-1.5">
                     {detectedChanges.map((change, idx) => (
                       <li key={idx} className="flex items-center gap-2 text-xs text-slate-700">
