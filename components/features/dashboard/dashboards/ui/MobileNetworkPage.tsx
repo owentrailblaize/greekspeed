@@ -259,13 +259,27 @@ export function MobileNetworkPage() {
       )
     );
     
-    // Filter out current user, all users with any connection status, and users without avatars
-    const availableMembers = chapterMembers.filter(member => 
+    // First, get members with avatars (prioritized)
+    const membersWithAvatars = chapterMembers.filter(member => 
       member.id !== profile.id && 
       !connectedUserIds.has(member.id) &&
       member.avatar_url && 
-      member.avatar_url.trim() !== '' // Only show members with valid avatars
+      member.avatar_url.trim() !== ''
     );
+    
+    // If we have fewer than MAX_SUGGESTIONS_COUNT members with avatars, also include members without avatars
+    // This ensures we always have suggestions if available
+    let availableMembers = membersWithAvatars;
+    if (membersWithAvatars.length < MAX_SUGGESTIONS_COUNT) {
+      const membersWithoutAvatars = chapterMembers.filter(member => 
+        member.id !== profile.id && 
+        !connectedUserIds.has(member.id) &&
+        (!member.avatar_url || member.avatar_url.trim() === '')
+      );
+      // Combine: members with avatars first, then members without avatars
+      // The priority calculation will still favor those with avatars due to avatar bonus
+      availableMembers = [...membersWithAvatars, ...membersWithoutAvatars];
+    }
     
     // Group by role: alumni, active_member, admin (and others)
     const alumniMembers = availableMembers.filter(member => member.role === 'alumni');
