@@ -11,6 +11,14 @@ interface ProfileState {
   job_title?: string | null;
   company?: string | null;
   industry?: string | null;
+  
+  // Active member fields (for active members)
+  major?: string | null;
+  minor?: string | null;
+  grad_year?: string | number | null;
+  gpa?: string | number | null;
+  location?: string | null;
+  hometown?: string | null;
 }
 
 interface UseProfileUpdateDetectionOptions {
@@ -207,6 +215,49 @@ export function useProfileUpdateDetection(
       changes.forEach(change => {
         if (change.field === 'job_title' || change.field === 'company' || change.field === 'industry') {
           change.type = 'career_update';
+        }
+      });
+    }
+
+    // Check active member fields (academic/profile fields)
+    const activeMemberFields = [
+      { key: 'major' as const, changeType: 'major_change' as const },
+      { key: 'minor' as const, changeType: 'minor_change' as const },
+      { key: 'grad_year' as const, changeType: 'grad_year_change' as const },
+      { key: 'gpa' as const, changeType: 'gpa_change' as const },
+      { key: 'location' as const, changeType: 'location_change' as const },
+      { key: 'hometown' as const, changeType: 'hometown_change' as const },
+    ] as const;
+
+    for (const { key, changeType } of activeMemberFields) {
+      // Normalize grad_year and gpa to strings for comparison
+      const oldValue = key === 'grad_year' || key === 'gpa' 
+        ? normalizeValue(baseline[key]?.toString())
+        : normalizeValue(baseline[key]);
+      const newValue = key === 'grad_year' || key === 'gpa'
+        ? normalizeValue(currentProfile[key]?.toString())
+        : normalizeValue(currentProfile[key]);
+
+      if (hasChanged(oldValue, newValue)) {
+        changes.push({
+          type: changeType,
+          field: key,
+          oldValue: !shouldIgnoreValue(oldValue) ? oldValue : undefined,
+          newValue: newValue,
+        });
+      }
+    }
+
+    // If multiple academic fields changed together, consolidate to academic_update
+    const academicFieldsChanged = changes.filter(
+      c => c.field === 'major' || c.field === 'minor' || c.field === 'grad_year' || c.field === 'gpa'
+    );
+
+    if (academicFieldsChanged.length > 1) {
+      // Consolidate all to academic_update
+      changes.forEach(change => {
+        if (change.field === 'major' || change.field === 'minor' || change.field === 'grad_year' || change.field === 'gpa') {
+          change.type = 'academic_update';
         }
       });
     }

@@ -5,15 +5,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { X, Sparkles, Briefcase, TrendingUp, UserRound } from 'lucide-react';
+import { X, Sparkles, Briefcase, TrendingUp, UserRound, GraduationCap, Calculator, MapPin, Home } from 'lucide-react';
 import ImageWithFallback from '@/components/figma/ImageWithFallback';
 import { Card, CardContent } from '@/components/ui/card';
 
 export interface DetectedChange {
-  type: 'career_update' | 'role_transition' | 'company_change' | 'industry_change';
+  type: 'career_update' | 'role_transition' | 'company_change' | 'industry_change' | 'academic_update' | 'major_change' | 'minor_change' | 'grad_year_change' | 'gpa_change' | 'location_change' | 'hometown_change';
   oldValue?: string;
   newValue: string;
-  field: 'job_title' | 'company' | 'industry' | 'role';
+  field: 'job_title' | 'company' | 'industry' | 'role' | 'major' | 'minor' | 'grad_year' | 'gpa' | 'location' | 'hometown';
 }
 
 interface ProfileUpdatePromptModalProps {
@@ -66,6 +66,59 @@ function generatePostTemplate(changes: DetectedChange[]): string {
       }
       return `Just updated my profile! 🎉`;
     
+    case 'academic_update':
+      const major = changes.find(c => c.field === 'major')?.newValue;
+      const minor = changes.find(c => c.field === 'minor')?.newValue;
+      const gradYear = changes.find(c => c.field === 'grad_year')?.newValue;
+      const gpa = changes.find(c => c.field === 'gpa')?.newValue;
+      
+      if (major && minor) {
+        return `Switched my major to ${major} with a minor in ${minor}! 📚`;
+      }
+      if (major) {
+        return `Changed my major to ${major}! Excited for this new academic path! 📖`;
+      }
+      if (minor) {
+        return `Added ${minor} as my minor! 🎓`;
+      }
+      if (gradYear) {
+        return `Updated my graduation year to ${gradYear}! Can't wait to graduate! 🎓`;
+      }
+      if (gpa) {
+        return `Just updated my GPA to ${gpa}! 📊`;
+      }
+      return 'Just updated my academic information! 📚';
+    
+    case 'major_change':
+      return change.newValue 
+        ? `Changed my major to ${change.newValue}! Excited for this new academic path! 📖`
+        : '';
+    
+    case 'minor_change':
+      return change.newValue
+        ? `Added ${change.newValue} as my minor! 🎓`
+        : '';
+    
+    case 'grad_year_change':
+      return change.newValue
+        ? `Updated my graduation year to ${change.newValue}! Can't wait to graduate! 🎓`
+        : '';
+    
+    case 'gpa_change':
+      return change.newValue
+        ? `Just updated my GPA to ${change.newValue}! 📊`
+        : '';
+    
+    case 'location_change':
+      return change.newValue
+        ? `Moved to ${change.newValue}! 🗺️`
+        : '';
+    
+    case 'hometown_change':
+      return change.newValue
+        ? `Updated my hometown to ${change.newValue}! 🏠`
+        : '';
+    
     default:
       return 'Just updated my profile! 🎉';
   }
@@ -81,6 +134,16 @@ function getChangeIcon(type: DetectedChange['type']) {
       return <TrendingUp className="h-5 w-5" />;
     case 'role_transition':
       return <UserRound className="h-5 w-5" />;
+    case 'academic_update':
+    case 'major_change':
+    case 'minor_change':
+    case 'grad_year_change':
+    case 'gpa_change':
+      return <GraduationCap className="h-5 w-5" />;
+    case 'location_change':
+      return <MapPin className="h-5 w-5" />;
+    case 'hometown_change':
+      return <Home className="h-5 w-5" />;
     default:
       return <Sparkles className="h-5 w-5" />;
   }

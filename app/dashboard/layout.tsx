@@ -167,13 +167,32 @@ function EditProfileModalWrapper() {
 
   // Use regular modal for non-alumni users
   return (
-    <EditProfileModal
-      isOpen={isEditProfileModalOpen}
-      onClose={closeEditProfileModal}
-      profile={profile}
-      onUpdate={handleProfileUpdate}
-      variant={isMobile ? 'mobile' : 'desktop'}
-    />
+    <>
+      <EditProfileModal
+        isOpen={isEditProfileModalOpen}
+        onClose={closeEditProfileModal}
+        profile={profile}
+        onUpdate={handleProfileUpdate}
+        variant={isMobile ? 'mobile' : 'desktop'}
+        onProfileUpdatedWithChanges={handleProfileUpdatedWithChanges}
+      />
+      
+      {/* Profile Update Prompt Modal */}
+      {showUpdatePrompt && detectedChanges.length > 0 && (
+        <ProfileUpdatePromptModal
+          isOpen={showUpdatePrompt}
+          onClose={handleSkipPost}
+          onPost={handleCreatePost}
+          onSkip={handleSkipPost}
+          detectedChanges={detectedChanges}
+          userProfile={{
+            full_name: profile.full_name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
+            avatar_url: profile.avatar_url,
+            chapter: profile.chapter,
+          }}
+        />
+      )}
+    </>
   );
 }
 
