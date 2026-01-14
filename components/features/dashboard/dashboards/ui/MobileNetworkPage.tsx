@@ -10,6 +10,8 @@ import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { ConnectionManagement } from '@/components/ui/ConnectionManagement';
 import { ChapterMemberData } from '@/types/chapter';
+import { weightedRandomShuffle } from '@/lib/utils/weightedShuffle';
+import { calculateNetworkingPriority } from '@/lib/utils/networkingSpotlight';
 
 export function MobileNetworkPage() {
   const router = useRouter();
@@ -35,7 +37,7 @@ export function MobileNetworkPage() {
     }
   }, [profile?.id, connections, connectionsLoading, snapshotTaken]);
 
-  // Memoize the unconnected members using the local connections snapshot
+  // Memoize the unconnected members with weighted random shuffling
   const unconnectedMembers = useMemo(() => {
     if (!chapterMembers || !profile || !snapshotTaken) return [];
     
@@ -47,31 +49,56 @@ export function MobileNetworkPage() {
       )
     );
     
-    // Filter out current user and all users with any connection status
+    // Filter out current user, all users with any connection status, and users without avatars
     const availableMembers = chapterMembers.filter(member => 
       member.id !== profile.id && 
-      !connectedUserIds.has(member.id)
+      !connectedUserIds.has(member.id) &&
+      member.avatar_url && 
+      member.avatar_url.trim() !== '' // Only show members with valid avatars
     );
     
-    // Prioritize alumni and active members, then sort by name for consistent ordering
+    // Group by role: alumni, active_member, admin (and others)
     const alumniMembers = availableMembers.filter(member => member.role === 'alumni');
     const activeMembers = availableMembers.filter(member => member.role === 'active_member');
+    const adminMembers = availableMembers.filter(member => member.role === 'admin');
     const otherMembers = availableMembers.filter(member => 
-      member.role !== 'alumni' && member.role !== 'active_member'
+      member.role !== 'alumni' && 
+      member.role !== 'active_member' && 
+      member.role !== 'admin'
     );
     
-    // Sort each group by name for consistent ordering (not random)
-    const sortByName = (a: any, b: any) => {
-      const nameA = a.full_name || `${a.first_name || ''} ${a.last_name || ''}`.trim() || '';
-      const nameB = b.full_name || `${b.first_name || ''} ${b.last_name || ''}`.trim() || '';
-      return nameA.localeCompare(nameB);
-    };
+    // Apply weighted random shuffle to each group
+    // Higher randomness factor = more random, lower = more predictable
+    const shuffledAlumni = weightedRandomShuffle(
+      alumniMembers,
+      calculateNetworkingPriority,
+      0.4 // 40% randomness factor
+    );
     
-    // Combine with priority order: alumni first, then active members, then others
+    const shuffledActive = weightedRandomShuffle(
+      activeMembers,
+      calculateNetworkingPriority,
+      0.4
+    );
+    
+    const shuffledAdmin = weightedRandomShuffle(
+      adminMembers,
+      calculateNetworkingPriority,
+      0.4
+    );
+    
+    const shuffledOther = weightedRandomShuffle(
+      otherMembers,
+      calculateNetworkingPriority,
+      0.4
+    );
+    
+    // Combine with priority order: alumni first, then active members, then admin, then others
     const prioritizedMembers = [
-      ...alumniMembers.sort(sortByName),
-      ...activeMembers.sort(sortByName),
-      ...otherMembers.sort(sortByName)
+      ...shuffledAlumni,
+      ...shuffledActive,
+      ...shuffledAdmin,
+      ...shuffledOther
     ];
     
     return prioritizedMembers.slice(0, 5); // Limit to 5 results
