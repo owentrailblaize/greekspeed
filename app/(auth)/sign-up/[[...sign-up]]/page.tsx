@@ -39,6 +39,7 @@ export default function SignUpPage() {
   const { signUp, user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [oauthLoading, setOauthLoading] = useState(false);
+  const [linkedInLoading, setLinkedInLoading] = useState(false);
   
   // Use the chapters hook to fetch dynamic data
   const { chapters, loading: chaptersLoading, error: chaptersError } = useChapters();
@@ -113,6 +114,31 @@ export default function SignUpPage() {
     }
   };
 
+  const handleLinkedInSignUp = async () => {
+    try {
+      setLinkedInLoading(true);
+      setError('');
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'linkedin_oidc',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'openid profile email',
+        },
+      });
+
+      if (error) {
+        console.error('LinkedIn sign-up error:', error);
+        setError('LinkedIn sign-up failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('LinkedIn sign-up exception:', error);
+      setError('LinkedIn sign-up failed. Please try again.');
+    } finally {
+      setLinkedInLoading(false);
+    }
+  };
+
   const handleEmailSignUp = () => {
     setShowEmailForm(true);
   };
@@ -149,7 +175,7 @@ export default function SignUpPage() {
 
   const isPhoneValid = phoneNumber === '' || isValidPhoneNumber(phoneNumber);
 
-  if (authLoading || oauthLoading) {
+  if (authLoading || oauthLoading || linkedInLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -191,7 +217,7 @@ export default function SignUpPage() {
                   variant="outline" 
                   className="w-full h-9 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-3 text-sm shadow-sm hover:shadow-md transition-all duration-200"
                   onClick={handleGoogleSignUp}
-                  disabled={loading}
+                  disabled={loading || linkedInLoading}
                 >
                   <img 
                     src="https://developers.google.com/identity/images/g-logo.png" 
@@ -205,8 +231,23 @@ export default function SignUpPage() {
                   type="button"
                   variant="outline" 
                   className="w-full h-9 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-3 text-sm shadow-sm hover:shadow-md transition-all duration-200"
+                  onClick={handleLinkedInSignUp}
+                  disabled={loading || linkedInLoading}
+                >
+                  <img 
+                    src="/linkedin-icon.png" 
+                    alt="LinkedIn" 
+                    className="w-5 h-5 mr-3"
+                  />
+                  {linkedInLoading ? 'Signing up...' : 'Continue with LinkedIn'}
+                </Button>
+                
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  className="w-full h-9 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-3 text-sm shadow-sm hover:shadow-md transition-all duration-200"
                   onClick={handleEmailSignUp}
-                  disabled={loading}
+                  disabled={loading || linkedInLoading}
                 >
                   <Mail className="h-4 w-4 mr-3 text-gray-600" />
                   Continue with Email
@@ -416,7 +457,7 @@ export default function SignUpPage() {
                       <div className="mt-2 lg:mt-1">
                         <Button 
                           type="submit" 
-                          className="w-full h-7 rounded-full bg-navy-600 hover:bg-navy-700 text-white font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200" 
+                          className="w-full h-7 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200" 
                           disabled={loading}
                         >
                           {loading ? 'Creating account...' : 'Create Alumni Account'}
@@ -511,7 +552,7 @@ export default function SignUpPage() {
                         variant="outline" 
                         className="w-full h-9 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-3 text-sm shadow-sm hover:shadow-md transition-all duration-200"
                         onClick={handleGoogleSignUp}
-                        disabled={loading}
+                        disabled={loading || linkedInLoading}
                       >
                         <img 
                           src="https://developers.google.com/identity/images/g-logo.png" 
@@ -525,8 +566,23 @@ export default function SignUpPage() {
                         type="button"
                         variant="outline" 
                         className="w-full h-9 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-3 text-sm shadow-sm hover:shadow-md transition-all duration-200"
+                        onClick={handleLinkedInSignUp}
+                        disabled={loading || linkedInLoading}
+                      >
+                        <img 
+                          src="/linkedin-icon.svg" 
+                          alt="LinkedIn" 
+                          className="w-4 h-4 mr-3"
+                        />
+                        {linkedInLoading ? 'Signing up...' : 'Continue with LinkedIn'}
+                      </Button>
+                      
+                      <Button 
+                        type="button"
+                        variant="outline" 
+                        className="w-full h-9 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-3 text-sm shadow-sm hover:shadow-md transition-all duration-200"
                         onClick={handleEmailSignUp}
-                        disabled={loading}
+                        disabled={loading || linkedInLoading}
                       >
                         <Mail className="h-4 w-4 mr-3 text-gray-600" />
                         Continue with Email
@@ -735,7 +791,7 @@ export default function SignUpPage() {
                         <div className="mt-2 lg:mt-1">
                           <Button 
                             type="submit" 
-                            className="w-full h-7 rounded-full bg-navy-600 hover:bg-navy-700 text-white font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200" 
+                            className="w-full h-7 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200" 
                             disabled={loading}
                           >
                             {loading ? 'Creating account...' : 'Create Alumni Account'}

@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, MessageSquare, Menu, X, ChevronRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
+import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
 
 interface MessagesSidebarProps {
   connections: Connection[];
@@ -367,19 +369,31 @@ export function MessagesSidebar({
                     onClick={() => onConnectionSelect(connection.id)}
                     title={otherUser.full_name}
                   >
-                    <div className="relative">
-                      <UserAvatar
-                        user={{ 
-                          email: null, 
-                          user_metadata: { 
-                            avatar_url: otherUser.avatar_url, 
-                            full_name: otherUser.full_name 
-                          } 
-                        }}
-                        completionPercent={100}
-                        hasUnread={hasUnread}
-                        size="md"
-                      />
+                    <div className="relative" onClick={(e) => e.stopPropagation()}>
+                      {otherUser.id ? (
+                        <ClickableAvatar
+                          userId={otherUser.id}
+                          avatarUrl={otherUser.avatar_url}
+                          fullName={otherUser.full_name}
+                          firstName={otherUser.first_name}
+                          lastName={otherUser.last_name}
+                          size="md"
+                          className="relative"
+                        />
+                      ) : (
+                        <UserAvatar
+                          user={{ 
+                            email: null, 
+                            user_metadata: { 
+                              avatar_url: otherUser.avatar_url, 
+                              full_name: otherUser.full_name 
+                            } 
+                          }}
+                          completionPercent={100}
+                          hasUnread={hasUnread}
+                          size="md"
+                        />
+                      )}
                       {/* Unread dot indicator */}
                       {hasUnread && (
                         <div className="absolute -top-1 -right-1 w-3 h-3 bg-navy-600 rounded-full border-2 border-white"></div>
@@ -402,19 +416,31 @@ export function MessagesSidebar({
                 >
                   <div className="flex items-center space-x-3">
                     {/* Avatar with unread indicator */}
-                    <div className="flex-shrink-0 relative">
-                      <UserAvatar
-                        user={{ 
-                          email: null, 
-                          user_metadata: { 
-                            avatar_url: otherUser.avatar_url, 
-                            full_name: otherUser.full_name 
-                          } 
-                        }}
-                        completionPercent={100}
-                        hasUnread={hasUnread}
-                        size="md"
-                      />
+                    <div className="flex-shrink-0 relative" onClick={(e) => e.stopPropagation()}>
+                      {otherUser.id ? (
+                        <ClickableAvatar
+                          userId={otherUser.id}
+                          avatarUrl={otherUser.avatar_url}
+                          fullName={otherUser.full_name}
+                          firstName={otherUser.first_name}
+                          lastName={otherUser.last_name}
+                          size="md"
+                          className="relative"
+                        />
+                      ) : (
+                        <UserAvatar
+                          user={{ 
+                            email: null, 
+                            user_metadata: { 
+                              avatar_url: otherUser.avatar_url, 
+                              full_name: otherUser.full_name 
+                            } 
+                          }}
+                          completionPercent={100}
+                          hasUnread={hasUnread}
+                          size="md"
+                        />
+                      )}
                       {/* Unread dot indicator */}
                       {hasUnread && (
                         <div className="absolute -top-1 -right-1 w-3 h-3 bg-navy-600 rounded-full border-2 border-white"></div>
@@ -425,11 +451,22 @@ export function MessagesSidebar({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 min-w-0">
-                          <h3 className={`font-medium truncate ${
-                            isSelected ? 'text-navy-900' : 'text-gray-900'
-                          } ${hasUnread ? 'font-semibold' : ''}`}>
-                            {otherUser.full_name}
-                          </h3>
+                          {otherUser.id ? (
+                            <ClickableUserName
+                              userId={otherUser.id}
+                              fullName={otherUser.full_name}
+                              className={`font-medium truncate ${
+                                isSelected ? 'text-navy-900' : 'text-gray-900'
+                              } ${hasUnread ? 'font-semibold' : ''}`}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          ) : (
+                            <h3 className={`font-medium truncate ${
+                              isSelected ? 'text-navy-900' : 'text-gray-900'
+                            } ${hasUnread ? 'font-semibold' : ''}`}>
+                              {otherUser.full_name}
+                            </h3>
+                          )}
                           {/* Unread count badge */}
                           {hasUnread && unreadCount > 0 && (
                             <span className="flex-shrink-0 bg-navy-600 text-white text-xs font-semibold rounded-full px-2 py-0.5 min-w-[20px] text-center">

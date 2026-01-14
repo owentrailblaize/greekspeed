@@ -8,6 +8,8 @@ import { useAuth } from "@/lib/supabase/auth-context";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
+import { ClickableAvatar } from "@/components/features/user-profile/ClickableAvatar";
+import { ClickableUserName } from "@/components/features/user-profile/ClickableUserName";
 
 interface LinkedInStyleChapterCardProps {
   member: ChapterMember;
@@ -219,35 +221,57 @@ export function LinkedInStyleChapterCard({ member, onClick }: LinkedInStyleChapt
           className={`px-4 pt-2 sm:pt-4 pb-3 sm:pb-4 relative flex-1 flex flex-col ${onClick ? 'cursor-pointer' : ''}`}
           onClick={handleCardClick}
         >
-          {/* Avatar */}
+          {/* Avatar - Now Clickable */}
           <div className="flex justify-center mb-2">
-            <div className="w-16 h-16 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden relative">
-              {avatar ? (
-                <ImageWithFallback 
-                  src={avatar} 
-                  alt={name} 
-                  width={64} 
-                  height={64} 
-                  className="w-full h-full object-cover" 
+            {id ? (
+              <div className="w-16 h-16 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden relative">
+                <ClickableAvatar
+                  userId={id}
+                  avatarUrl={avatar}
+                  fullName={name}
+                  size="lg"
+                  className="w-full h-full"
+                  onClick={(e) => e.stopPropagation()}
                 />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
-                  <span className="text-white font-medium text-lg">
-                    {name
-                      ?.split(" ")
-                      ?.map((n) => n[0])
-                      ?.join("") || "?"}
-                  </span>
-                </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="w-16 h-16 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden relative">
+                {avatar ? (
+                  <ImageWithFallback 
+                    src={avatar} 
+                    alt={name} 
+                    width={64} 
+                    height={64} 
+                    className="w-full h-full object-cover" 
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
+                    <span className="text-white font-medium text-lg">
+                      {name
+                        ?.split(" ")
+                        ?.map((n) => n[0])
+                        ?.join("") || "?"}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Name */}
+          {/* Name - Now Clickable */}
           <div className="text-center sm:mb-2 h-6 flex flex-col justify-center">
-            <h3 className="font-semibold text-gray-900 text-xs sm:text-base leading-tight truncate">
-              {name}
-            </h3>
+            {id && name ? (
+              <ClickableUserName
+                userId={id}
+                fullName={name}
+                className="font-semibold text-gray-900 text-xs sm:text-base leading-tight truncate"
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <h3 className="font-semibold text-gray-900 text-xs sm:text-base leading-tight truncate">
+                {name}
+              </h3>
+            )}
           </div>
 
           {/* Position and Year - Desktop: same row, Mobile: stacked or badges */}

@@ -71,7 +71,7 @@ export async function GET(
         )
       `)
       .eq('post_id', postId)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {
@@ -132,7 +132,7 @@ export async function POST(
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const { id: postId } = await params;
     const body = await request.json();
-    const { content } = body;
+    const { content, parent_comment_id } = body;
 
     if (!content || !content.trim()) {
       return NextResponse.json({ error: 'Comment content is required' }, { status: 400 });
@@ -173,13 +173,45 @@ export async function POST(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
+    // Validate parent_comment_id if provided
+    if (parent_comment_id) {
+      const { data: parentComment, error: parentError } = await supabase
+        .from('post_comments')
+        .select('id, post_id, parent_comment_id')
+        .eq('id', parent_comment_id)
+        .single();
+
+      if (parentError || !parentComment) {
+        return NextResponse.json(
+          { error: 'Parent comment not found' },
+          { status: 404 }
+        );
+      }
+
+      if (parentComment.post_id !== postId) {
+        return NextResponse.json(
+          { error: 'Parent comment does not belong to this post' },
+          { status: 400 }
+        );
+      }
+
+      // Prevent replying to replies - only allow replying to top-level comments
+      if (parentComment.parent_comment_id) {
+        return NextResponse.json(
+          { error: 'You can only reply to top-level comments, not replies' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Create comment
     const { data: comment, error: createError } = await supabase
       .from('post_comments')
       .insert({
         post_id: postId,
         author_id: user.id,
-        content: content.trim()
+        content: content.trim(),
+        parent_comment_id: parent_comment_id || null
       })
       .select(`
         *,
