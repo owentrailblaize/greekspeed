@@ -117,9 +117,18 @@ function EditProfileModalWrapper() {
       ...getAuthHeaders(),
     };
 
+    const metadata: CreatePostRequest['metadata'] = detectedChanges.length > 0 ? {
+      profile_update: {
+        source: 'profile_update_prompt',
+        changed_fields: detectedChanges.map(c => c.field),
+        change_types: detectedChanges.map(c => c.type),
+      },
+    } : undefined;
+
     const postData: CreatePostRequest = {
       content,
       post_type: 'text',
+      ...(metadata && { metadata }),
     };
 
     const response = await fetch('/api/posts', {

@@ -16,6 +16,11 @@ export interface Post {
   image_url?: string;
   metadata?: Record<string, any> & {
     link_previews?: LinkPreview[];
+    profile_update?: {
+      source: 'profile_update_prompt';
+      changed_fields: string[];
+      change_types: string[];
+    }
   };
   likes_count: number;
   comments_count: number;
@@ -84,6 +89,11 @@ export interface CreatePostRequest {
     image_urls?: string[];
     image_count?: number;
     link_previews?: LinkPreview[];
+    profile_updates?: {
+      source: 'profile_update_prompt';
+      changed_fields: string[];
+      changed_types: string[];
+    };
   };
 }
 
