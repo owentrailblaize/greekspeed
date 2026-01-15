@@ -107,7 +107,17 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServerSupabaseClient();
     const body = await request.json();
-    const { title, content, announcement_type, is_scheduled, scheduled_at, send_sms, metadata } = body;
+    const {
+      title,
+      content,
+      announcement_type,
+      is_scheduled,
+      scheduled_at,
+      send_sms,
+      // New flag: when true, also send SMS to alumni
+      send_sms_to_alumni,
+      metadata
+    } = body;
 
     // Get authenticated user
     const authHeader = request.headers.get('authorization');
@@ -258,7 +268,8 @@ export async function POST(request: NextRequest) {
         // Don't fail the announcement creation if email fails
       }
 
-      // Send SMS notifications only if send_sms is true (parallel to email, don't block if SMS fails)
+      // Send SMS notifications to active members/admins only if send_sms is true
+      // (parallel to email, don't block if SMS fails)
       if (send_sms === true) {
         try {
           // Get chapter members with phone numbers and SMS consent
@@ -362,6 +373,103 @@ export async function POST(request: NextRequest) {
           }
         } catch (smsError) {
           console.error('❌ Error sending announcement SMS:', smsError);
+          // Don't fail the announcement creation if SMS fails
+        }
+      }
+
+      // Send SMS notifications to alumni only if send_sms_to_alumni is true
+      if (send_sms_to_alumni === true) {
+        try {
+          const { data: alumni, error: alumniError } = await supabase
+            .from('profiles')
+            .select(`
+              id,
+              phone,
+              first_name,
+              chapter_id,
+              role,
+              sms_consent
+            `)
+            .eq('chapter_id', profile.chapter_id)
+            .eq('role', 'alumni')
+            .not('phone', 'is', null)
+            .neq('phone', '')
+            .eq('sms_consent', true);
+
+          if (!alumniError && alumni && alumni.length > 0) {
+            const validAlumni = alumni
+              .map(alum => ({
+                ...alum,
+                formattedPhone: SMSService.formatPhoneNumber(alum.phone!),
+              }))
+              .filter(alum => SMSService.isValidPhoneNumber(alum.phone!));
+
+            if (validAlumni.length > 0) {
+              // Message formatting mirrors the member SMS block to respect Telnyx compliance
+              const senderPrefix = '[Trailblaize]'; // Match Telnyx campaign samples
+              const optOutText = ' Reply STOP to opt out.';
+              const complianceText = ' Msg & data rates may apply';
+
+              const titlePrefix = `${senderPrefix} ${announcement.title}: `;
+              const fixedComplianceLength = optOutText.length + complianceText.length;
+
+              // Calculate available space for content (account for ellipsis if needed: 3 chars)
+              const availableForContent = 160 - titlePrefix.length - fixedComplianceLength - 3;
+              const truncatedContent = announcement.content.substring(0, Math.max(0, availableForContent));
+              const needsEllipsis = announcement.content.length > truncatedContent.length;
+
+              const smsMessage = `${titlePrefix}${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}`.substring(0, 160);
+
+              const phoneNumbers = validAlumni.map(alum => alum.formattedPhone);
+              const isSandbox = SMSService.isInSandboxMode();
+              const recipientsToUse = isSandbox ? phoneNumbers.slice(0, 3) : phoneNumbers;
+
+              if (recipientsToUse.length > 0) {
+                console.log('🚀 Initiating SMS processing for alumni announcement:', {
+                  announcementId: announcement.id,
+                  recipientsCount: recipientsToUse.length,
+                  messagePreview: smsMessage.substring(0, 50) + '...',
+                  timestamp: new Date().toISOString(),
+                });
+
+                try {
+                  const result = await SMSService.sendBulkSMS(recipientsToUse, smsMessage);
+
+                  console.log('✅ Alumni announcement SMS sent:', {
+                    total: recipientsToUse.length,
+                    success: result.success,
+                    failed: result.failed,
+                    announcementId: announcement.id
+                  });
+
+                  // Log alumni SMS activity; schema mirrors member logging
+                  try {
+                    const supabaseLog = createServerSupabaseClient();
+                    await supabaseLog.from('sms_logs').insert({
+                      chapter_id: profile.chapter_id,
+                      sent_by: user.id,
+                      message: smsMessage,
+                      recipients_count: recipientsToUse.length,
+                      success_count: result.success,
+                      failed_count: result.failed,
+                      test_mode: false,
+                    });
+                  } catch (logError) {
+                    console.error('Failed to log alumni SMS to database:', logError);
+                  }
+                } catch (error) {
+                  console.error('❌ Alumni announcement SMS failed:', {
+                    error: error instanceof Error ? error.message : String(error),
+                    announcementId: announcement.id,
+                    stack: error instanceof Error ? error.stack : undefined
+                  });
+                  // Don't throw - SMS failure shouldn't block announcement creation
+                }
+              }
+            }
+          }
+        } catch (smsError) {
+          console.error('❌ Error sending alumni announcement SMS:', smsError);
           // Don't fail the announcement creation if SMS fails
         }
       }

@@ -61,10 +61,49 @@ export async function GET(request: NextRequest) {
         member.sms_consent === true
         ).length;
 
+        // Get alumni in the same chapter
+        const { data: alumni, error: alumniError } = await supabase
+        .from('profiles')
+        .select(`
+            id,
+            email,
+            phone,
+            sms_consent
+        `)
+        .eq('chapter_id', chapterId)
+        .eq('role', 'alumni');
+
+        if (alumniError || !alumni) {
+        return NextResponse.json({ error: 'Failed to fetch alumni' }, { status: 500 });
+        }
+
+        // Count alumni email recipients using same preference logic
+        let alumniEmailCount = 0;
+        for (const alum of alumni) {
+        if (alum.email) {
+            try {
+            const allowed = await canSendEmailNotification(alum.id, 'announcement');
+            if (allowed) alumniEmailCount++;
+            } catch {
+            // Skip on error
+            }
+        }
+        }
+
+        // Count alumni SMS recipients (has phone AND sms_consent = true)
+        const alumniSmsCount = alumni.filter(alum => 
+        alum.phone && 
+        alum.phone.trim() !== '' && 
+        alum.sms_consent === true
+        ).length;
+
         return NextResponse.json({
         email_recipients: emailCount,
         sms_recipients: smsCount,
-        total_members: members.length
+        total_members: members.length,
+        alumni_email_recipients: alumniEmailCount,
+        alumni_sms_recipients: alumniSmsCount,
+        total_alumni: alumni.length
         });
     } catch (error) {
         console.error('Error getting recipient counts:', error);
