@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { X, Sparkles, Briefcase, TrendingUp, UserRound, GraduationCap, Calculator, MapPin, Home } from 'lucide-react';
 import ImageWithFallback from '@/components/figma/ImageWithFallback';
 import { Card, CardContent } from '@/components/ui/card';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 
 export interface DetectedChange {
   type:
@@ -55,6 +56,7 @@ interface ProfileUpdatePromptModalProps {
     dontShowAgain?: boolean;
     preferredTemplateType?: string;
   }) => void;
+  isMobile?: boolean;
 }
 
 // Template generator function
@@ -198,6 +200,7 @@ export function ProfileUpdatePromptModal({
   userProfile,
   initialTemplate,
   onUpdatePreferences,
+  isMobile,
 }: ProfileUpdatePromptModalProps) {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -275,39 +278,39 @@ export function ProfileUpdatePromptModal({
   const primaryChange = detectedChanges[0];
   const hasMultipleChanges = detectedChanges.length > 1;
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent
-        className="sm:max-w-[600px] max-w-[85vw] max-h-[90vh] sm:max-h-[85vh] overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-sm shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] sm:rounded-3xl rounded-2xl p-0 flex flex-col"
-      >
-        {/* Fixed Header */}
-        <div className="shrink-0 p-6 sm:p-8 pb-4 sm:pb-4 border-b border-slate-200/50">
-          <DialogHeader className="flex flex-row items-start justify-between pb-2">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-10 h-10 rounded-full bg-navy-100/70 flex items-center justify-center text-navy-700">
-                  {primaryChange ? getChangeIcon(primaryChange.type) : <Sparkles className="h-5 w-5" />}
-                </div>
-                <DialogTitle className="text-xl font-semibold tracking-tight text-slate-900">
-                  Share your update?
-                </DialogTitle>
+  const contentBody = (
+    <>
+      {/* Fixed Header + User Info */}
+      <div className="shrink-0 p-6 sm:p-8 pb-4 sm:pb-4 border-b border-slate-200/50">
+        <div className="flex flex-row items-start justify-between pb-2">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-10 h-10 rounded-full bg-navy-100/70 flex items-center justify-center text-navy-700">
+                {primaryChange ? getChangeIcon(primaryChange.type) : <Sparkles className="h-5 w-5" />}
               </div>
-              <p className="text-sm text-slate-400 mt-1">
-                Let your chapter know about your profile changes
-              </p>
+              <h2 className="text-xl font-semibold tracking-tight text-slate-900">
+                Share your update?
+              </h2>
             </div>
-          </DialogHeader>
+            <p className="text-sm text-slate-400 mt-1">
+              Let your chapter know about your profile changes
+            </p>
+          </div>
+        </div>
+      </div>
 
-          {/* User Info Badge */}
-          <div className="flex items-start gap-3 mt-4">
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto min-h-0 px-6 sm:px-8 py-4 sm:py-6">
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 mb-4">
             <div className="w-10 h-10 sm:w-11 sm:h-11 bg-navy-100/70 rounded-full flex items-center justify-center text-navy-700 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
               {userProfile.avatar_url ? (
-                <ImageWithFallback 
-                  src={userProfile.avatar_url} 
-                  alt={userProfile.full_name || 'User'} 
-                  width={44} 
-                  height={44} 
-                  className="w-full h-full object-cover" 
+                <ImageWithFallback
+                  src={userProfile.avatar_url}
+                  alt={userProfile.full_name || 'User'}
+                  width={44}
+                  height={44}
+                  className="w-full h-full object-cover"
                 />
               ) : (
                 userProfile.full_name?.charAt(0) || 'U'
@@ -320,108 +323,121 @@ export function ProfileUpdatePromptModal({
               </Badge>
             </div>
           </div>
-        </div>
-
-        {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto min-h-0 px-6 sm:px-8 py-4 sm:py-6">
-          <div className="space-y-4">
-            {/* Change Summary Card (if multiple changes) */}
-            {hasMultipleChanges && (
-              <Card className="border-slate-200/80 bg-slate-50/50">
-                <CardContent className="p-4">
-                  <p className="text-xs font-medium text-slate-600 mb-2">Look Like You've Updated Your Profile:</p>
-                  <ul className="space-y-1.5">
-                    {detectedChanges.map((change, idx) => (
-                      <li key={idx} className="flex items-center gap-2 text-xs text-slate-700">
-                        <span className="text-slate-400">•</span>
-                        <span className="capitalize">{change.field.replace('_', ' ')}</span>
-                        {change.oldValue && change.oldValue !== 'Not Specified' && (
-                          <>
-                            <span className="text-slate-400">→</span>
-                            <span className="text-slate-500 line-through">{change.oldValue}</span>
-                          </>
-                        )}
-                        <span className="text-slate-400">→</span>
-                        <span className="font-medium text-slate-900">{change.newValue}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Preview Card */}
-            <Card className="border-slate-200/80 bg-white">
+          {hasMultipleChanges && (
+            <Card className="border-slate-200/80 bg-slate-50/50">
               <CardContent className="p-4">
-                <p className="text-xs font-medium text-slate-600 mb-2">Preview:</p>
-                <div className="text-sm text-slate-700 whitespace-pre-wrap">
-                  {content || 'Your post will appear here...'}
-                </div>
+                <p className="text-xs font-medium text-slate-600 mb-2">Look Like You've Updated Your Profile:</p>
+                <ul className="space-y-1.5">
+                  {detectedChanges.map((change, idx) => (
+                    <li key={idx} className="flex items-center gap-2 text-xs text-slate-700">
+                      <span className="text-slate-400">•</span>
+                      <span className="capitalize">{change.field.replace('_', ' ')}</span>
+                      {change.oldValue && change.oldValue !== 'Not Specified' && (
+                        <>
+                          <span className="text-slate-400">→</span>
+                          <span className="text-slate-500 line-through">{change.oldValue}</span>
+                        </>
+                      )}
+                      <span className="text-slate-400">→</span>
+                      <span className="font-medium text-slate-900">{change.newValue}</span>
+                    </li>
+                  ))}
+                </ul>
               </CardContent>
             </Card>
+          )}
 
-            {/* Editable Textarea */}
-            <div>
-              <label htmlFor="post-content" className="block text-sm font-medium text-slate-700 mb-2">
-                Edit your post
-              </label>
-              <Textarea
-                ref={textareaRef}
-                id="post-content"
-                placeholder="What do you want to share?"
-                value={content}
-                onChange={(e) => {
-                  setContent(e.target.value);
-                  setError(null);
-                }}
-                className="min-h-[120px] sm:min-h-[100px] resize-none rounded-2xl border border-slate-200 bg-slate-50/80 p-5 text-base sm:text-lg text-slate-800 placeholder:text-slate-400 focus:border-navy-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-200 transition"
-              />
-              <p className="text-xs text-slate-500 mt-2">
-                {content.length} characters
-              </p>
-            </div>
-
-            {/* Error message */}
-            {error && (
-              <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700">
-                {error}
+          <Card className="border-slate-200/80 bg-white">
+            <CardContent className="p-4">
+              <p className="text-xs font-medium text-slate-600 mb-2">Preview:</p>
+              <div className="text-sm text-slate-700 whitespace-pre-wrap">
+                {content || 'Your post will appear here...'}
               </div>
-            )}
-          </div>
-        </div>
+            </CardContent>
+          </Card>
 
-        {/* Fixed Footer */}
-        <div className="shrink-0 border-t border-slate-200/70 bg-slate-50/70 p-4 sm:p-3 shadow-inner">
-          <div className="flex flex-col gap-3">
-            <label className="flex items-center gap-2 text-xs sm:text-sm text-slate-600">
-              <input
-                type="checkbox"
-                checked={dontShowAgain}
-                onChange={(e) => setDontShowAgain(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-brand-primary focus:ring-brand-primary"
-              />
-              <span>Don&apos;t show this profile update prompt again</span>
+          <div>
+            <label htmlFor="post-content" className="block text-sm font-medium text-slate-700 mb-2">
+              Edit your post
             </label>
+            <Textarea
+              ref={textareaRef}
+              id="post-content"
+              placeholder="What do you want to share?"
+              value={content}
+              onChange={(e) => {
+                setContent(e.target.value);
+                setError(null);
+              }}
+              className="min-h-[120px] sm:min-h-[100px] resize-none rounded-2xl border border-slate-200 bg-slate-50/80 p-5 text-base sm:text-lg text-slate-800 placeholder:text-slate-400 focus:border-navy-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-200 transition"
+            />
+            <p className="text-xs text-slate-500 mt-2">{content.length} characters</p>
+          </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
-              <Button
-                variant="ghost"
-                onClick={handleSkip}
-                disabled={isSubmitting}
-                className="w-full sm:w-auto h-11 sm:h-10 rounded-full border border-slate-200 bg-white/90 px-6 text-slate-600 shadow-sm transition hover:bg-white hover:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Skip
-              </Button>
-              <Button
-                onClick={handlePost}
-                disabled={!content.trim() || isSubmitting}
-                className="w-full sm:w-auto h-12 sm:h-10 rounded-full bg-brand-primary px-8 text-sm font-semibold tracking-wide text-white shadow-[0_18px_45px_-24px_rgba(30,64,175,0.9)] transition-all duration-200 hover:bg-brand-primary-hover hover:-translate-y-0.5 hover:shadow-[0_22px_55px_-28px_rgba(30,64,175,0.85)] disabled:translate-y-0 disabled:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? 'Posting…' : 'Post'}
-              </Button>
+          {error && (
+            <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+              {error}
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* Fixed Footer */}
+      <div className="shrink-0 border-t border-slate-200/70 bg-slate-50/70 p-4 sm:p-3 shadow-inner">
+        <div className="flex flex-col gap-3">
+          <label className="flex items-center gap-2 text-xs sm:text-sm text-slate-600">
+            <input
+              type="checkbox"
+              checked={dontShowAgain}
+              onChange={(e) => setDontShowAgain(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-brand-primary focus:ring-brand-primary"
+            />
+            <span>Don&apos;t show this profile update prompt again</span>
+          </label>
+
+          <div className="flex flex-row flex-wrap items-center justify-end gap-3">
+            <Button
+              variant="ghost"
+              onClick={handleSkip}
+              disabled={isSubmitting}
+              className="flex-1 min-w-[120px] h-11 sm:h-10 rounded-full border border-slate-200 bg-white/90 px-6 text-slate-600 shadow-sm transition hover:bg-white hover:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Skip
+            </Button>
+            <Button
+              onClick={handlePost}
+              disabled={!content.trim() || isSubmitting}
+              className="flex-1 min-w-[120px] h-12 sm:h-10 rounded-full bg-brand-primary px-8 text-sm font-semibold tracking-wide text-white shadow-[0_18px_45px_-24px_rgba(30,64,175,0.9)] transition-all duration-200 hover:bg-brand-primary-hover hover:-translate-y-0.5 hover:shadow-[0_22px_55px_-28px_rgba(30,64,175,0.85)] disabled:translate-y-0 disabled:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? 'Posting…' : 'Post'}
+            </Button>
           </div>
         </div>
+      </div>
+    </>
+  );
+
+  // Mobile: bottom drawer
+  if (isMobile) {
+    return (
+      <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <SheetContent
+          side="bottom"
+          className="h-[80vh] max-h-[90vh] rounded-t-3xl rounded-b-none p-0 flex flex-col border border-slate-200/80 bg-white/95 shadow-[0_-24px_80px_rgba(15,23,42,0.6)]"
+        >
+          {contentBody}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // Desktop: existing dialog
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent
+        className="sm:max-w-[600px] max-w-[85vw] max-h-[90vh] sm:max-h-[85vh] overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-sm shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] sm:rounded-3xl rounded-2xl p-0 flex flex-col"
+      >
+        {contentBody}
       </DialogContent>
     </Dialog>
   );

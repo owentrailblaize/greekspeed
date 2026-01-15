@@ -262,6 +262,7 @@ function EditProfileModalWrapper() {
               chapter: profile.chapter,
             }}
             onUpdatePreferences={handleUpdatePromptPrefs}
+            isMobile={isMobile}
           />
         )}
       </>
@@ -294,6 +295,7 @@ function EditProfileModalWrapper() {
             chapter: profile.chapter,
           }}
           onUpdatePreferences={handleUpdatePromptPrefs}
+          isMobile={isMobile}
         />
       )}
     </>
