@@ -51,6 +51,10 @@ interface ProfileUpdatePromptModalProps {
     chapter?: string | null;
   };
   initialTemplate?: string;
+  onUpdatePreferences?: (prefs: {
+    dontShowAgain?: boolean;
+    preferredTemplateType?: string;
+  }) => void;
 }
 
 // Template generator function
@@ -192,11 +196,14 @@ export function ProfileUpdatePromptModal({
   onSkip,
   detectedChanges,
   userProfile,
-  initialTemplate
+  initialTemplate,
+  onUpdatePreferences,
 }: ProfileUpdatePromptModalProps) {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
+  const [preferredTemplateType, setPreferredTemplateType] = useState<string | undefined>(undefined);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Generate and set initial template when modal opens
@@ -222,8 +229,18 @@ export function ProfileUpdatePromptModal({
       setContent('');
       setError(null);
       setIsSubmitting(false);
+      setDontShowAgain(false);
+      setPreferredTemplateType(undefined);
     }
   }, [isOpen]);
+
+  const persistPreferences = () => {
+    if (!onUpdatePreferences) return;
+    onUpdatePreferences({
+      dontShowAgain,
+      preferredTemplateType,
+    });
+  };
 
   const handlePost = async () => {
     const trimmedContent = content.trim();
@@ -236,6 +253,8 @@ export function ProfileUpdatePromptModal({
     setError(null);
 
     try {
+      // Persist any preference changes when user posts
+      persistPreferences();
       await onPost(trimmedContent);
       // Modal will close via parent component after successful post
     } catch (err) {
@@ -247,6 +266,8 @@ export function ProfileUpdatePromptModal({
   };
 
   const handleSkip = () => {
+    // Persist any preference changes when user skips
+    persistPreferences();
     onSkip();
     onClose();
   };
@@ -371,22 +392,34 @@ export function ProfileUpdatePromptModal({
 
         {/* Fixed Footer */}
         <div className="shrink-0 border-t border-slate-200/70 bg-slate-50/70 p-4 sm:p-3 shadow-inner">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
-            <Button
-              variant="ghost"
-              onClick={handleSkip}
-              disabled={isSubmitting}
-              className="w-full sm:w-auto h-11 sm:h-10 rounded-full border border-slate-200 bg-white/90 px-6 text-slate-600 shadow-sm transition hover:bg-white hover:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Skip
-            </Button>
-            <Button
-              onClick={handlePost}
-              disabled={!content.trim() || isSubmitting}
-              className="w-full sm:w-auto h-12 sm:h-10 rounded-full bg-brand-primary px-8 text-sm font-semibold tracking-wide text-white shadow-[0_18px_45px_-24px_rgba(30,64,175,0.9)] transition-all duration-200 hover:bg-brand-primary-hover hover:-translate-y-0.5 hover:shadow-[0_22px_55px_-28px_rgba(30,64,175,0.85)] disabled:translate-y-0 disabled:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? 'Posting…' : 'Post'}
-            </Button>
+          <div className="flex flex-col gap-3">
+            <label className="flex items-center gap-2 text-xs sm:text-sm text-slate-600">
+              <input
+                type="checkbox"
+                checked={dontShowAgain}
+                onChange={(e) => setDontShowAgain(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-brand-primary focus:ring-brand-primary"
+              />
+              <span>Don&apos;t show this profile update prompt again</span>
+            </label>
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
+              <Button
+                variant="ghost"
+                onClick={handleSkip}
+                disabled={isSubmitting}
+                className="w-full sm:w-auto h-11 sm:h-10 rounded-full border border-slate-200 bg-white/90 px-6 text-slate-600 shadow-sm transition hover:bg-white hover:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Skip
+              </Button>
+              <Button
+                onClick={handlePost}
+                disabled={!content.trim() || isSubmitting}
+                className="w-full sm:w-auto h-12 sm:h-10 rounded-full bg-brand-primary px-8 text-sm font-semibold tracking-wide text-white shadow-[0_18px_45px_-24px_rgba(30,64,175,0.9)] transition-all duration-200 hover:bg-brand-primary-hover hover:-translate-y-0.5 hover:shadow-[0_22px_55px_-28px_rgba(30,64,175,0.85)] disabled:translate-y-0 disabled:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? 'Posting…' : 'Post'}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>

@@ -16,6 +16,11 @@ import type { DetectedChange } from '@/components/features/profile/ProfileUpdate
 import { useAuth } from '@/lib/supabase/auth-context';
 import type { CreatePostRequest } from '@/types/posts';
 import { isPromptInCooldown, recordPromptShown } from '@/lib/utils/profileUpdateCooldown';
+import {
+  getProfileUpdatePrefs,
+  saveProfileUpdatePrefs,
+  type ProfileUpdatePrefs,
+} from '@/lib/utils/profileUpdatePreferences';
 
 export default function DashboardLayout({
   children,
@@ -154,6 +159,12 @@ function EditProfileModalWrapper() {
   // Handler for when profile is updated with detected changes
   const handleProfileUpdatedWithChanges = (changes: DetectedChange[]) => {
     if (!profile?.id) return;
+
+    // Respect user preference: "don't show again"
+    const prefs = getProfileUpdatePrefs(profile.id);
+    if (prefs.dontShowAgain) {
+      return;
+    }
     
     // Check if prompt is in cooldown period
     if (isPromptInCooldown(profile.id)) {
@@ -167,6 +178,12 @@ function EditProfileModalWrapper() {
     // Show the prompt
     setDetectedChanges(changes);
     setShowUpdatePrompt(true);
+  };
+
+  // Handler for updating user prompt preferences from the modal
+  const handleUpdatePromptPrefs = (prefs: ProfileUpdatePrefs) => {
+    if (!profile?.id) return;
+    saveProfileUpdatePrefs(profile.id, prefs);
   };
 
   // Handle post creation from prompt modal
@@ -244,6 +261,7 @@ function EditProfileModalWrapper() {
               avatar_url: profile.avatar_url,
               chapter: profile.chapter,
             }}
+            onUpdatePreferences={handleUpdatePromptPrefs}
           />
         )}
       </>
@@ -275,6 +293,7 @@ function EditProfileModalWrapper() {
             avatar_url: profile.avatar_url,
             chapter: profile.chapter,
           }}
+          onUpdatePreferences={handleUpdatePromptPrefs}
         />
       )}
     </>
