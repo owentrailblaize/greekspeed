@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import SubscriptionPaywall from '@/components/shared/SubscriptionPaywall';
 import { DashboardHeader } from '@/components/features/dashboard/DashboardHeader';
 import { useActivityTracking } from '@/lib/hooks/useActivityTracking';
@@ -11,6 +11,16 @@ import { EditProfileModal } from '@/components/features/profile/EditProfileModal
 import { EditAlumniProfileModal } from '@/components/features/alumni/EditAlumniProfileModal';
 import { UserProfileModal } from '@/components/features/user-profile/UserProfileModal';
 import { ProfileService } from '@/lib/services/profileService';
+import { ProfileUpdatePromptModal } from '@/components/features/profile/ProfileUpdatePromptModal';
+import type { DetectedChange } from '@/components/features/profile/ProfileUpdatePromptModal';
+import { useAuth } from '@/lib/supabase/auth-context';
+import type { CreatePostRequest } from '@/types/posts';
+import { isPromptInCooldown, recordPromptShown } from '@/lib/utils/profileUpdateCooldown';
+import {
+  getProfileUpdatePrefs,
+  saveProfileUpdatePrefs,
+  type ProfileUpdatePrefs,
+} from '@/lib/utils/profileUpdatePreferences';
 
 export default function DashboardLayout({
   children,
@@ -50,6 +60,11 @@ function EditProfileModalWrapper() {
   const { isEditProfileModalOpen, closeEditProfileModal } = useModal();
   const { profile, refreshProfile } = useProfile();
   const [isMobile, setIsMobile] = useState(false);
+  
+  // State for profile update prompt modal
+  const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);
+  const [detectedChanges, setDetectedChanges] = useState<DetectedChange[]>([]);
+  const { getAuthHeaders, session } = useAuth();
 
   // Detect mobile viewport
   useEffect(() => {
@@ -78,30 +93,212 @@ function EditProfileModalWrapper() {
     }
   };
 
+  // Detect role/member_status transitions coming from outside the edit modals (e.g. admin changes),
+  // using localStorage to persist the last-seen values across sessions.
+  useEffect(() => {
+    if (!profile?.id || typeof window === 'undefined') return;
+
+    const userId = profile.id;
+    const currentRole = profile.role || null;
+    const currentStatus = (profile as any).member_status || null;
+
+    const STORAGE_KEY = `profile-last-seen-role-status-${userId}`;
+
+    type Stored = { role?: string | null; member_status?: string | null };
+
+    let stored: Stored | null = null;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        stored = JSON.parse(raw) as Stored;
+      }
+    } catch (e) {
+      console.error('Error reading last-seen role/status from storage', e);
+      stored = null;
+    }
+
+    const prevRole = stored?.role ?? null;
+    const prevStatus = stored?.member_status ?? null;
+
+    const changes: DetectedChange[] = [];
+
+    // Detect role transition
+    if (prevRole !== null && prevRole !== currentRole && currentRole) {
+      changes.push({
+        type: 'role_transition',
+        field: 'role',
+        oldValue: prevRole || undefined,
+        newValue: currentRole,
+      });
+    }
+
+    // Detect member_status change
+    if (prevStatus !== null && prevStatus !== currentStatus && currentStatus) {
+      changes.push({
+        type: 'member_status_change',
+        field: 'member_status',
+        oldValue: prevStatus || undefined,
+        newValue: currentStatus,
+      });
+    }
+
+    // Always update stored baseline to current values
+    try {
+      const toStore: Stored = { role: currentRole, member_status: currentStatus };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
+    } catch (e) {
+      console.error('Error writing last-seen role/status to storage', e);
+    }
+
+    if (changes.length === 0) return;
+
+    // Reuse the existing cooldown + prompt pipeline
+    handleProfileUpdatedWithChanges(changes);
+  }, [profile?.id, profile?.role, (profile as any)?.member_status]);
+
+  // Handler for when profile is updated with detected changes
+  const handleProfileUpdatedWithChanges = (changes: DetectedChange[]) => {
+    if (!profile?.id) return;
+
+    // Respect user preference: "don't show again"
+    const prefs = getProfileUpdatePrefs(profile.id);
+    if (prefs.dontShowAgain) {
+      return;
+    }
+    
+    // Check if prompt is in cooldown period
+    if (isPromptInCooldown(profile.id)) {
+      // Skip showing prompt - within cooldown period
+      return;
+    }
+    
+    // Record that we're showing this prompt (starts cooldown)
+    recordPromptShown(profile.id);
+    
+    // Show the prompt
+    setDetectedChanges(changes);
+    setShowUpdatePrompt(true);
+  };
+
+  // Handler for updating user prompt preferences from the modal
+  const handleUpdatePromptPrefs = (prefs: ProfileUpdatePrefs) => {
+    if (!profile?.id) return;
+    saveProfileUpdatePrefs(profile.id, prefs);
+  };
+
+  // Handle post creation from prompt modal
+  const handleCreatePost = async (content: string) => {
+    if (!profile?.chapter_id || !session) {
+      throw new Error('Missing required information to create post');
+    }
+
+    const headers = {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    };
+
+    const metadata: CreatePostRequest['metadata'] = detectedChanges.length > 0 ? {
+      profile_update: {
+        source: 'profile_update_prompt',
+        changed_fields: detectedChanges.map(c => c.field),
+        change_types: detectedChanges.map(c => c.type),
+      },
+    } : undefined;
+
+    const postData: CreatePostRequest = {
+      content,
+      post_type: 'text',
+      ...(metadata && { metadata }),
+    };
+
+    const response = await fetch('/api/posts', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(postData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error?.error ?? 'Failed to create post');
+    }
+
+    // Post created successfully - close prompt modal
+    setShowUpdatePrompt(false);
+    setDetectedChanges([]);
+  };
+
+  // Handle skip from prompt modal
+  const handleSkipPost = () => {
+    setShowUpdatePrompt(false);
+    setDetectedChanges([]);
+  };
+
   if (!profile) return null;
 
   // Use alumni-specific modal for alumni users
   if (profile.role === 'alumni') {
     return (
-      <EditAlumniProfileModal
-        isOpen={isEditProfileModalOpen}
-        onClose={closeEditProfileModal}
-        profile={profile}
-        onUpdate={handleProfileUpdate}
-        variant={isMobile ? 'mobile' : 'desktop'}
-      />
+      <>
+        <EditAlumniProfileModal
+          isOpen={isEditProfileModalOpen}
+          onClose={closeEditProfileModal}
+          profile={profile}
+          onUpdate={handleProfileUpdate}
+          variant={isMobile ? 'mobile' : 'desktop'}
+          onProfileUpdatedWithChanges={handleProfileUpdatedWithChanges}
+        />
+        
+        {/* Profile Update Prompt Modal */}
+        {showUpdatePrompt && detectedChanges.length > 0 && (
+          <ProfileUpdatePromptModal
+            isOpen={showUpdatePrompt}
+            onClose={handleSkipPost}
+            onPost={handleCreatePost}
+            onSkip={handleSkipPost}
+            detectedChanges={detectedChanges}
+            userProfile={{
+              full_name: profile.full_name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
+              avatar_url: profile.avatar_url,
+              chapter: profile.chapter,
+            }}
+            onUpdatePreferences={handleUpdatePromptPrefs}
+            isMobile={isMobile}
+          />
+        )}
+      </>
     );
   }
 
   // Use regular modal for non-alumni users
   return (
-    <EditProfileModal
-      isOpen={isEditProfileModalOpen}
-      onClose={closeEditProfileModal}
-      profile={profile}
-      onUpdate={handleProfileUpdate}
-      variant={isMobile ? 'mobile' : 'desktop'}
-    />
+    <>
+      <EditProfileModal
+        isOpen={isEditProfileModalOpen}
+        onClose={closeEditProfileModal}
+        profile={profile}
+        onUpdate={handleProfileUpdate}
+        variant={isMobile ? 'mobile' : 'desktop'}
+        onProfileUpdatedWithChanges={handleProfileUpdatedWithChanges}
+      />
+      
+      {/* Profile Update Prompt Modal */}
+      {showUpdatePrompt && detectedChanges.length > 0 && (
+        <ProfileUpdatePromptModal
+          isOpen={showUpdatePrompt}
+          onClose={handleSkipPost}
+          onPost={handleCreatePost}
+          onSkip={handleSkipPost}
+          detectedChanges={detectedChanges}
+          userProfile={{
+            full_name: profile.full_name || `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
+            avatar_url: profile.avatar_url,
+            chapter: profile.chapter,
+          }}
+          onUpdatePreferences={handleUpdatePromptPrefs}
+          isMobile={isMobile}
+        />
+      )}
+    </>
   );
 }
 
