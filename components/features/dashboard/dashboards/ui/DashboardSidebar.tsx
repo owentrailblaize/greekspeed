@@ -38,7 +38,9 @@ export function DashboardSidebar({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Navigation groups with dropdowns - conditionally include Dues and Financial group
+  // Navigation groups with dropdowns
+  // Budget is intentionally always available as a high-level planning tool,
+  // while detailed financial tools like Dues remain behind the financial_tools_enabled flag.
   const navigationGroups = [
     {
       id: 'manage',
@@ -46,6 +48,8 @@ export function DashboardSidebar({
       icon: Settings,
       items: [
         { id: 'members' as FeatureView, label: 'Members', icon: Users },
+        // Always show Budget for general chapter budget planning
+        { id: 'budget' as FeatureView, label: 'Budget', icon: TrendingUp },
         // Only include Dues if financial tools are enabled
         ...(financialToolsEnabled ? [{ id: 'dues' as FeatureView, label: 'Dues', icon: DollarSign }] : []),
         { id: 'invitations' as FeatureView, label: 'Invitations', icon: UserPlus },
@@ -55,13 +59,12 @@ export function DashboardSidebar({
         ...(!financialToolsEnabled ? [{ id: 'vendors' as FeatureView, label: 'Vendors', icon: BookOpen }] : []),
       ]
     },
-    // Only include Financial group if financial tools are enabled
+    // Optional Financial group for additional finance tools when enabled
     ...(financialToolsEnabled ? [{
       id: 'financial',
       label: 'Financial',
       icon: TrendingUp,
       items: [
-        { id: 'budget' as FeatureView, label: 'Budget', icon: TrendingUp },
         { id: 'vendors' as FeatureView, label: 'Vendors', icon: BookOpen },
       ]
     }] : [])

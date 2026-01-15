@@ -146,9 +146,10 @@ export function MobileOperationsPage() {
     }
   }, [activeTab]);
 
-  // Redirect to members tab if financial tabs are selected but disabled
+  // Redirect to members tab if Dues tab is selected but financial tools are disabled.
+  // Budget remains available as a high-level planning tool even when financial tools are off.
   useEffect(() => {
-    if (!financialToolsEnabled && (activeTab === 'dues' || activeTab === 'budget')) {
+    if (!financialToolsEnabled && activeTab === 'dues') {
       setActiveTab('members');
     }
   }, [activeTab, financialToolsEnabled]);
@@ -332,13 +333,13 @@ export function MobileOperationsPage() {
       <div className="max-w-md mx-auto">
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-          <TabsList className={`grid w-full mb-4 ${financialToolsEnabled ? 'grid-cols-3' : 'grid-cols-1'}`}>
+          <TabsList className={`grid w-full mb-4 ${financialToolsEnabled ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <TabsTrigger value="members" className="text-xs">Members</TabsTrigger>
+            {/* Budget is always available for chapter-level planning */}
+            <TabsTrigger value="budget" className="text-xs">Budget</TabsTrigger>
+            {/* Dues remains gated behind financial tools */}
             {financialToolsEnabled && (
-              <>
-                <TabsTrigger value="dues" className="text-xs">Dues</TabsTrigger>
-                <TabsTrigger value="budget" className="text-xs">Budget</TabsTrigger>
-              </>
+              <TabsTrigger value="dues" className="text-xs">Dues</TabsTrigger>
             )}
           </TabsList>
 
@@ -518,7 +519,7 @@ export function MobileOperationsPage() {
             )}
           </TabsContent>
 
-          {/* Dues Tab */}
+          {/* Dues Tab (still gated behind financial tools) */}
           {financialToolsEnabled && (
             <TabsContent value="dues" className="space-y-4">
               {/* Stats Grid */}
@@ -630,9 +631,8 @@ export function MobileOperationsPage() {
             </TabsContent>
           )}
 
-          {/* Budget Tab */}
-          {financialToolsEnabled && (
-            <TabsContent value="budget" className="space-y-4">
+          {/* Budget Tab (always available) */}
+          <TabsContent value="budget" className="space-y-4">
               {/* Budget Overview Cards */}
               <div className="grid grid-cols-2 gap-3">
                 <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
@@ -798,7 +798,6 @@ export function MobileOperationsPage() {
                 })()}
               </div>
             </TabsContent>
-          )}
         </Tabs>
 
         {/* Modals */}
