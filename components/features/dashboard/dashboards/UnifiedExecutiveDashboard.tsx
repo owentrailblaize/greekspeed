@@ -44,7 +44,7 @@ export function UnifiedExecutiveDashboard({
   // Redirect to overview if financial features are selected but disabled
   useEffect(() => {
     // Remove 'vendors' from this check - it should always be accessible
-    if (!financialToolsEnabled && (activeFeature === 'dues' || activeFeature === 'budget')) {
+    if (!financialToolsEnabled && activeFeature === 'dues') {
       setActiveFeature('overview');
     }
     // Redirect to overview if events is selected but disabled
@@ -81,12 +81,8 @@ export function UnifiedExecutiveDashboard({
         // If disabled, redirect to overview
         return <OverviewView selectedRole={selectedRole} onFeatureChange={setActiveFeature} />;
       case 'budget':
-        // Only render if financial tools are enabled
-        if (financialToolsEnabled) {
-          return <BudgetView />;
-        }
-        // If disabled, redirect to overview
-        return <OverviewView selectedRole={selectedRole} onFeatureChange={setActiveFeature} />;
+        // Budget is always available as a general chapter budget view
+        return <BudgetView />;
       case 'vendors':
         // Vendors is always accessible (not protected by financial flag)
         return <VendorsView />;

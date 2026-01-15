@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, User, Mail, Building, Shield, FileText, Phone, MapPin, GraduationCap, Home, Calculator, Image, Upload, Linkedin, Briefcase, HelpCircle, Edit, AlertTriangle, Save, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,8 @@ import { supabase } from '@/lib/supabase/client';
 import { trackActivity, ActivityTypes } from '@/lib/utils/activityUtils';
 import { useFormPersistence } from '@/lib/hooks/useFormPersistence';
 import { useModal } from '@/lib/contexts/ModalContext';
+import { useProfileUpdateDetection } from '@/lib/hooks/useProfileUpdateDetection';
+import type { DetectedChange } from './ProfileUpdatePromptModal';
 import Link from 'next/link';
 import { industries } from '@/lib/alumniConstants';
 
@@ -25,9 +27,10 @@ interface EditProfileModalProps {
   profile: any;
   onUpdate: (updatedProfile: any) => void;
   variant?: 'desktop' | 'mobile';
+  onProfileUpdatedWithChanges?: (changes: DetectedChange[]) => void;
 }
 
-export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant = 'desktop' }: EditProfileModalProps) {
+export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant = 'desktop', onProfileUpdatedWithChanges }: EditProfileModalProps) {
   // Use enhanced form persistence hook
   const {
     formData,
@@ -80,8 +83,16 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
   // Add state to track if alumni data has been merged
   const [alumniDataMerged, setAlumniDataMerged] = useState(false);
 
-  const { updateProfile, refreshProfile } = useProfile();
+  const { updateProfile, refreshProfile, profile: currentProfile } = useProfile();
   const { openEditProfileModal, closeEditProfileModal } = useModal();
+
+  // Initialize profile update detection hook
+  const { detectChanges, setBaseline, clearBaseline } = useProfileUpdateDetection({
+    ignoreNotSpecified: true,
+  });
+
+  // Form ref for programmatic submission
+  const formRef = useRef<HTMLFormElement>(null);
 
   // Add loading state to prevent modal flicker
   const [isModalReady, setIsModalReady] = useState(false);
@@ -183,6 +194,33 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
       setAlumniDataMerged(true);
     }
   }, [alumniData, updateFormData, alumniDataMerged, hasUnsavedChanges]);
+
+  // Set baseline for change detection when modal opens
+  useEffect(() => {
+    if (isOpen && profile) {
+      if (profile.role === 'alumni' && alumniData) {
+        setBaseline({
+          role: profile.role || null,
+          job_title: alumniData.job_title || null,
+          company: alumniData.company || null,
+          industry: alumniData.industry || null,
+        });
+      } else {
+        // Set baseline for active members with academic/profile fields
+        setBaseline({
+          role: profile.role || null,
+          major: profile.major || null,
+          minor: profile.minor || null,
+          grad_year: profile.grad_year?.toString() || null,
+          gpa: profile.gpa?.toString() || null,
+          location: profile.location || null,
+          hometown: profile.hometown || null,
+        });
+      }
+    } else if (!isOpen) {
+      clearBaseline();
+    }
+  }, [isOpen, profile, alumniData, setBaseline, clearBaseline]);
 
   // Email validation regex
   const validateEmail = (email: string): boolean => {
@@ -394,6 +432,24 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
 
     setLoading(true);
     try {
+      // Capture baseline values BEFORE save (for active members)
+      const baselineValues = profile?.role === 'alumni' 
+      ? {
+          role: profile.role || null,
+          job_title: alumniData?.job_title || null,
+          company: alumniData?.company || null,
+          industry: alumniData?.industry || null,
+        }
+      : {
+          role: profile.role || null,
+          major: profile.major || null,
+          minor: profile.minor || null,
+          grad_year: profile.grad_year?.toString() || null,
+          gpa: profile.gpa?.toString() || null,
+          location: profile.location || null,
+          hometown: profile.hometown || null,
+        };
+
       // Update profile data - only include fields that exist in profiles table
       const profileUpdates: any = {
         first_name: formData.first_name,
@@ -483,7 +539,47 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
           }
         };
         await updateAlumniData();
+        
+        // Detect changes for alumni
+        const changes = detectChanges({
+          role: profile.role || null,
+          job_title: formData.job_title?.trim() || null,
+          company: formData.company?.trim() || null,
+          industry: formData.industry?.trim() || null,
+        });
+        
+        if (changes.length > 0 && profile?.chapter_id) {
+          // Call the callback with detected changes, then close the modal
+          onProfileUpdatedWithChanges?.(changes);
+          setLoading(false);
+          onClose();
+          return;
+        }
+      } else {
+
+        setBaseline(baselineValues);
+
+        // Detect changes for active members
+        const changes = detectChanges({
+          role: profile.role || null,
+          major: formData.major?.trim() || null,
+          minor: formData.minor?.trim() || null,
+          grad_year: formData.grad_year ? String(formData.grad_year).trim() : null,
+          gpa: formData.gpa ? String(formData.gpa).trim() : null,
+          location: formData.location?.trim() || null,
+          hometown: formData.hometown?.trim() || null,
+        });
+        
+        if (changes.length > 0 && profile?.chapter_id) {
+          // Call the callback with detected changes, then close the modal
+          onProfileUpdatedWithChanges?.(changes);
+          setLoading(false);
+          onClose();
+          return;
+        }
       }
+      
+      // No changes detected, close normally
       onClose();
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -491,6 +587,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
       setLoading(false);
     }
   };
+
 
   // Enhanced close handler with unsaved changes warning
   const handleClose = () => {
@@ -526,7 +623,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
 
         {/* Scrollable Content Area */}
         <div className={`flex-1 overflow-y-auto ${isMobile ? 'p-4' : 'p-6'}`}>
-          <form onSubmit={handleSubmit} className={isMobile ? 'space-y-4' : 'space-y-6'}>
+          <form ref={formRef} onSubmit={handleSubmit} className={isMobile ? 'space-y-4' : 'space-y-6'}>
             {/* Combined Profile Photo & Banner */}
             <div className={`relative ${isMobile ? 'h-32' : 'h-64'} overflow-hidden rounded-lg`}>
               {/* Banner Section - Make it clickable */}
@@ -1032,10 +1129,20 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
               Cancel
             </Button>
             <Button
-              type="submit"
+              type="button"
               disabled={loading}
+              onClick={(e) => {
+                e.preventDefault();
+                if (formRef.current) {
+                  const syntheticEvent = {
+                    preventDefault: () => {},
+                    currentTarget: formRef.current,
+                    target: formRef.current,
+                  } as unknown as React.FormEvent<HTMLFormElement>;
+                  handleSubmit(syntheticEvent);
+                }
+              }}
               className={`flex-1 rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
-              onClick={handleSubmit}
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </Button>
