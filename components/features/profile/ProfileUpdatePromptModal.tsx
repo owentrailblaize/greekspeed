@@ -10,10 +10,33 @@ import ImageWithFallback from '@/components/figma/ImageWithFallback';
 import { Card, CardContent } from '@/components/ui/card';
 
 export interface DetectedChange {
-  type: 'career_update' | 'role_transition' | 'company_change' | 'industry_change' | 'academic_update' | 'major_change' | 'minor_change' | 'grad_year_change' | 'gpa_change' | 'location_change' | 'hometown_change';
+  type:
+    | 'career_update'
+    | 'role_transition'
+    | 'member_status_change'
+    | 'company_change'
+    | 'industry_change'
+    | 'academic_update'
+    | 'major_change'
+    | 'minor_change'
+    | 'grad_year_change'
+    | 'gpa_change'
+    | 'location_change'
+    | 'hometown_change';
   oldValue?: string;
   newValue: string;
-  field: 'job_title' | 'company' | 'industry' | 'role' | 'major' | 'minor' | 'grad_year' | 'gpa' | 'location' | 'hometown';
+  field:
+    | 'job_title'
+    | 'company'
+    | 'industry'
+    | 'role'
+    | 'member_status'
+    | 'major'
+    | 'minor'
+    | 'grad_year'
+    | 'gpa'
+    | 'location'
+    | 'hometown';
 }
 
 interface ProfileUpdatePromptModalProps {
@@ -64,7 +87,19 @@ function generatePostTemplate(changes: DetectedChange[]): string {
       if (change.newValue === 'alumni') {
         return `Excited to announce I've graduated and joined the alumni network! 🎓✨`;
       }
-      return `Just updated my profile! 🎉`;
+      if (change.newValue === 'active_member') {
+        return `I'm excited to be an active member this term and keep contributing to the chapter. 💙`;
+      }
+      return `Just updated my role to ${change.newValue}. Looking forward to what's next!`;
+
+    case 'member_status_change':
+      if (change.newValue === 'graduated') {
+        return `I've officially graduated and transitioned to a new chapter beyond campus. 🎓`;
+      }
+      if (change.newValue === 'inactive') {
+        return `My member status has changed, but I'm still grateful for my time with the chapter.`;
+      }
+      return `My member status is now ${change.newValue}.`;
     
     case 'academic_update':
       const major = changes.find(c => c.field === 'major')?.newValue;
@@ -133,6 +168,7 @@ function getChangeIcon(type: DetectedChange['type']) {
     case 'industry_change':
       return <TrendingUp className="h-5 w-5" />;
     case 'role_transition':
+    case 'member_status_change':
       return <UserRound className="h-5 w-5" />;
     case 'academic_update':
     case 'major_change':

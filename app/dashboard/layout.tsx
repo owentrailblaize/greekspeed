@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import SubscriptionPaywall from '@/components/shared/SubscriptionPaywall';
 import { DashboardHeader } from '@/components/features/dashboard/DashboardHeader';
 import { useActivityTracking } from '@/lib/hooks/useActivityTracking';
@@ -87,6 +87,69 @@ function EditProfileModalWrapper() {
       console.error('Error updating profile:', error);
     }
   };
+
+  // Detect role/member_status transitions coming from outside the edit modals (e.g. admin changes),
+  // using localStorage to persist the last-seen values across sessions.
+  useEffect(() => {
+    if (!profile?.id || typeof window === 'undefined') return;
+
+    const userId = profile.id;
+    const currentRole = profile.role || null;
+    const currentStatus = (profile as any).member_status || null;
+
+    const STORAGE_KEY = `profile-last-seen-role-status-${userId}`;
+
+    type Stored = { role?: string | null; member_status?: string | null };
+
+    let stored: Stored | null = null;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        stored = JSON.parse(raw) as Stored;
+      }
+    } catch (e) {
+      console.error('Error reading last-seen role/status from storage', e);
+      stored = null;
+    }
+
+    const prevRole = stored?.role ?? null;
+    const prevStatus = stored?.member_status ?? null;
+
+    const changes: DetectedChange[] = [];
+
+    // Detect role transition
+    if (prevRole !== null && prevRole !== currentRole && currentRole) {
+      changes.push({
+        type: 'role_transition',
+        field: 'role',
+        oldValue: prevRole || undefined,
+        newValue: currentRole,
+      });
+    }
+
+    // Detect member_status change
+    if (prevStatus !== null && prevStatus !== currentStatus && currentStatus) {
+      changes.push({
+        type: 'member_status_change',
+        field: 'member_status',
+        oldValue: prevStatus || undefined,
+        newValue: currentStatus,
+      });
+    }
+
+    // Always update stored baseline to current values
+    try {
+      const toStore: Stored = { role: currentRole, member_status: currentStatus };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
+    } catch (e) {
+      console.error('Error writing last-seen role/status to storage', e);
+    }
+
+    if (changes.length === 0) return;
+
+    // Reuse the existing cooldown + prompt pipeline
+    handleProfileUpdatedWithChanges(changes);
+  }, [profile?.id, profile?.role, (profile as any)?.member_status]);
 
   // Handler for when profile is updated with detected changes
   const handleProfileUpdatedWithChanges = (changes: DetectedChange[]) => {

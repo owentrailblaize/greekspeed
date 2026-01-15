@@ -6,6 +6,11 @@ import type { DetectedChange } from '@/components/features/profile/ProfileUpdate
 interface ProfileState {
   // Profile table fields
   role?: string | null;
+  /**
+   * Member status field (e.g., active, graduated, inactive)
+   * This is typically controlled by admins, not end-users.
+   */
+  member_status?: string | null;
   
   // Alumni table fields (for alumni users)
   job_title?: string | null;
@@ -166,6 +171,19 @@ export function useProfileUpdateDetection(
         field: 'role',
         oldValue: oldRole || undefined,
         newValue: newRole,
+      });
+    }
+
+    // Check member_status transitions (e.g., active → graduated)
+    const oldStatus = normalizeValue(baseline.member_status);
+    const newStatus = normalizeValue(currentProfile.member_status);
+
+    if (hasChanged(oldStatus, newStatus) && !shouldIgnoreValue(newStatus)) {
+      changes.push({
+        type: 'member_status_change',
+        field: 'member_status',
+        oldValue: oldStatus || undefined,
+        newValue: newStatus,
       });
     }
 
