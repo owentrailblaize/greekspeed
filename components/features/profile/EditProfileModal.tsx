@@ -558,14 +558,14 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
       } else {
 
         setBaseline(baselineValues);
-        
+
         // Detect changes for active members
         const changes = detectChanges({
           role: profile.role || null,
           major: formData.major?.trim() || null,
           minor: formData.minor?.trim() || null,
-          grad_year: formData.grad_year?.trim() || null,
-          gpa: formData.gpa?.trim() || null,
+          grad_year: formData.grad_year ? String(formData.grad_year).trim() : null,
+          gpa: formData.gpa ? String(formData.gpa).trim() : null,
           location: formData.location?.trim() || null,
           hometown: formData.hometown?.trim() || null,
         });
