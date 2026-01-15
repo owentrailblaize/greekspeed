@@ -432,6 +432,7 @@ export default function SignUpPage() {
                         <Select 
                           value={role} 
                           onValueChange={(value: string) => setRole(value as 'Alumni')}
+                          disableDynamicPositioning={true}
                         >
                           <SelectItem value="">Select your role</SelectItem>
                           {userRoles.map((userRole) => (
@@ -766,6 +767,7 @@ export default function SignUpPage() {
                           <Select 
                             value={role} 
                             onValueChange={(value: string) => setRole(value as 'Alumni')}
+                            disableDynamicPositioning={true}
                           >
                             <SelectItem value="">Select your role</SelectItem>
                             {userRoles.map((userRole) => (

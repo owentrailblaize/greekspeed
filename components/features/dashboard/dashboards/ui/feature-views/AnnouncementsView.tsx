@@ -24,14 +24,20 @@ export function AnnouncementsView() {
   const [announcement, setAnnouncement] = useState("");
   const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementType, setAnnouncementType] = useState<'general' | 'urgent' | 'event' | 'academic'>('general');
-  const [sendSMS, setSendSMS] = useState(false);
+  // Separate SMS toggles so execs can explicitly choose members vs alumni audiences
+  const [sendSmsToMembers, setSendSmsToMembers] = useState(false);
+  const [sendSmsToAlumni, setSendSmsToAlumni] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailRecipientCount, setEmailRecipientCount] = useState<number | null>(null);
-  const [smsRecipientCount, setSmsRecipientCount] = useState<number | null>(null);
+  const [memberSmsRecipientCount, setMemberSmsRecipientCount] = useState<number | null>(null);
+  const [alumniSmsRecipientCount, setAlumniSmsRecipientCount] = useState<number | null>(null);
   const [loadingRecipients, setLoadingRecipients] = useState(false);
 
   useEffect(() => {
-    setSendSMS(announcementType === 'urgent');
+    // Preserve existing behavior: auto-enable member SMS for urgent
+    setSendSmsToMembers(announcementType === 'urgent');
+    // Alumni SMS starts off opt-in for clarity
+    setSendSmsToAlumni(false);
   }, [announcementType]);
 
   useEffect(() => {
@@ -52,7 +58,14 @@ export function AnnouncementsView() {
         if (response.ok) {
           const data = await response.json();
           setEmailRecipientCount(data.email_recipients);
-          setSmsRecipientCount(data.sms_recipients);
+          // Maintain existing behavior for member SMS counts
+          setMemberSmsRecipientCount(data.sms_recipients);
+          // New alumni-specific SMS count, falls back to 0 if not present
+          setAlumniSmsRecipientCount(
+            typeof data.alumni_sms_recipients === 'number'
+              ? data.alumni_sms_recipients
+              : null
+          );
         }
       } catch (error) {
         console.error('Error fetching recipient counts:', error);
@@ -76,7 +89,10 @@ export function AnnouncementsView() {
         title: announcementTitle.trim(),
         content: announcement.trim(),
         announcement_type: announcementType,
-        send_sms: sendSMS,
+        // Existing behavior: member/admin SMS
+        send_sms: sendSmsToMembers,
+        // New: alumni SMS flag so backend can target alumni separately
+        send_sms_to_alumni: sendSmsToAlumni,
         metadata: {}
       };
 
@@ -86,7 +102,8 @@ export function AnnouncementsView() {
       setAnnouncement("");
       setAnnouncementTitle("");
       setAnnouncementType('general');
-      setSendSMS(false);
+      setSendSmsToMembers(false);
+      setSendSmsToAlumni(false);
       
       toast.success('Announcement sent successfully!');
     } catch (error) {
@@ -133,14 +150,27 @@ export function AnnouncementsView() {
         
         <div className="flex items-center justify-between">
           <div className="flex flex-col space-y-3 flex-1">
+            {/* Member SMS toggle */}
             <div className="flex items-center space-x-2">
               <Checkbox
-                id="send-sms-notification"
-                checked={sendSMS}
-                onCheckedChange={(checked) => setSendSMS(checked as boolean)}
+                id="send-sms-members"
+                checked={sendSmsToMembers}
+                onCheckedChange={(checked) => setSendSmsToMembers(checked as boolean)}
               />
-              <Label htmlFor="send-sms-notification" className="text-sm cursor-pointer">
-                Send SMS notification
+              <Label htmlFor="send-sms-members" className="text-sm cursor-pointer">
+                Send SMS to active members
+              </Label>
+            </div>
+
+            {/* Alumni SMS toggle */}
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="send-sms-alumni"
+                checked={sendSmsToAlumni}
+                onCheckedChange={(checked) => setSendSmsToAlumni(checked as boolean)}
+              />
+              <Label htmlFor="send-sms-alumni" className="text-sm cursor-pointer">
+                Send SMS to alumni
               </Label>
             </div>
             
@@ -151,10 +181,16 @@ export function AnnouncementsView() {
                   Email will be sent to <span className="font-medium">{emailRecipientCount}</span> {emailRecipientCount === 1 ? 'member' : 'members'} with email notifications enabled
                 </p>
               )}
-              {sendSMS && smsRecipientCount !== null && (
+              {sendSmsToMembers && memberSmsRecipientCount !== null && (
                 <p className="flex items-center gap-1">
                   <Smartphone className="h-3 w-3" />
-                  SMS will be sent to <span className="font-medium">{smsRecipientCount}</span> {smsRecipientCount === 1 ? 'member' : 'members'} with SMS consent
+                  SMS will be sent to <span className="font-medium">{memberSmsRecipientCount}</span> {memberSmsRecipientCount === 1 ? 'member' : 'members'} with SMS consent
+                </p>
+              )}
+              {sendSmsToAlumni && alumniSmsRecipientCount !== null && (
+                <p className="flex items-center gap-1">
+                  <Smartphone className="h-3 w-3" />
+                  SMS will be sent to <span className="font-medium">{alumniSmsRecipientCount}</span> {alumniSmsRecipientCount === 1 ? 'alumni' : 'alumni'} with SMS consent
                 </p>
               )}
               {loadingRecipients && (
