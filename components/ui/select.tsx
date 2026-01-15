@@ -11,6 +11,7 @@ export interface SelectProps {
   placeholder?: string;
   children: React.ReactNode;
   className?: string;
+  disableDynamicPositioning?: boolean;
 }
 
 export interface SelectItemProps {
@@ -115,7 +116,7 @@ const findTriggerContent = (children: React.ReactNode): { icon?: React.ReactNode
 };
 
 export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
-  ({ value, onValueChange, placeholder, children, className, ...props }, ref) => {
+  ({ value, onValueChange, placeholder, children, className, disableDynamicPositioning = false, ...props }, ref) => {
     const [isOpen, setIsOpen] = React.useState(false);
     const [selectedValue, setSelectedValue] = React.useState(value || "");
     const [selectedLabel, setSelectedLabel] = React.useState<string>("");
@@ -165,52 +166,63 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
         const updatePosition = () => {
           if (selectRef.current && dropdownRef.current) {
             const rect = selectRef.current.getBoundingClientRect();
-            const viewportHeight = window.innerHeight;
             const viewportWidth = window.innerWidth;
             
-            // Calculate available space
-            const spaceBelow = viewportHeight - rect.bottom;
-            const spaceAbove = rect.top;
-            const maxDropdownHeight = 240; // max-h-60 = 240px
-            const minDropdownHeight = 100; // Minimum height to show at least a few items
-            const padding = 8; // Padding from viewport edges
-            
-            // Determine if we should open upward
-            // Open upward if there's more space above OR if space below is insufficient
-            const shouldOpenUpward = spaceBelow < maxDropdownHeight && spaceAbove > spaceBelow;
-            
-            let topPosition: number;
-            let maxHeight: number;
-            
-            if (shouldOpenUpward) {
-              // Position above the trigger
-              const availableHeight = spaceAbove - padding;
-              maxHeight = Math.min(maxDropdownHeight, Math.max(minDropdownHeight, availableHeight));
-              topPosition = rect.top - maxHeight - 4;
-              
-              // Ensure we don't go above the viewport
-              if (topPosition < padding) {
-                topPosition = padding;
-                maxHeight = Math.min(maxDropdownHeight, rect.top - padding - 4);
-              }
+            if (disableDynamicPositioning) {
+              // Simple positioning: always below, no dynamic behavior
+              dropdownRef.current.style.top = `${rect.bottom + 4}px`;
+              dropdownRef.current.style.left = `${rect.left}px`;
+              dropdownRef.current.style.width = `${rect.width}px`;
+              dropdownRef.current.style.minWidth = `${rect.width}px`;
+              dropdownRef.current.style.maxHeight = `240px`;
             } else {
-              // Position below the trigger (default)
-              const availableHeight = spaceBelow - padding;
-              maxHeight = Math.min(maxDropdownHeight, Math.max(minDropdownHeight, availableHeight));
-              topPosition = rect.bottom + 4;
+              // Existing dynamic positioning logic
+              const viewportHeight = window.innerHeight;
               
-              // Ensure we don't go below the viewport
-              if (topPosition + maxHeight > viewportHeight - padding) {
-                maxHeight = viewportHeight - topPosition - padding;
+              // Calculate available space
+              const spaceBelow = viewportHeight - rect.bottom;
+              const spaceAbove = rect.top;
+              const maxDropdownHeight = 240; // max-h-60 = 240px
+              const minDropdownHeight = 100; // Minimum height to show at least a few items
+              const padding = 8; // Padding from viewport edges
+              
+              // Determine if we should open upward
+              // Open upward if there's more space above OR if space below is insufficient
+              const shouldOpenUpward = spaceBelow < maxDropdownHeight && spaceAbove > spaceBelow;
+              
+              let topPosition: number;
+              let maxHeight: number;
+              
+              if (shouldOpenUpward) {
+                // Position above the trigger
+                const availableHeight = spaceAbove - padding;
+                maxHeight = Math.min(maxDropdownHeight, Math.max(minDropdownHeight, availableHeight));
+                topPosition = rect.top - maxHeight - 4;
+                
+                // Ensure we don't go above the viewport
+                if (topPosition < padding) {
+                  topPosition = padding;
+                  maxHeight = Math.min(maxDropdownHeight, rect.top - padding - 4);
+                }
+              } else {
+                // Position below the trigger (default)
+                const availableHeight = spaceBelow - padding;
+                maxHeight = Math.min(maxDropdownHeight, Math.max(minDropdownHeight, availableHeight));
+                topPosition = rect.bottom + 4;
+                
+                // Ensure we don't go below the viewport
+                if (topPosition + maxHeight > viewportHeight - padding) {
+                  maxHeight = viewportHeight - topPosition - padding;
+                }
               }
+              
+              // Set position and size
+              dropdownRef.current.style.top = `${topPosition}px`;
+              dropdownRef.current.style.left = `${Math.max(padding, Math.min(rect.left, viewportWidth - rect.width - padding))}px`;
+              dropdownRef.current.style.width = `${rect.width}px`;
+              dropdownRef.current.style.minWidth = `${rect.width}px`;
+              dropdownRef.current.style.maxHeight = `${maxHeight}px`;
             }
-            
-            // Set position and size
-            dropdownRef.current.style.top = `${topPosition}px`;
-            dropdownRef.current.style.left = `${Math.max(padding, Math.min(rect.left, viewportWidth - rect.width - padding))}px`;
-            dropdownRef.current.style.width = `${rect.width}px`;
-            dropdownRef.current.style.minWidth = `${rect.width}px`;
-            dropdownRef.current.style.maxHeight = `${maxHeight}px`;
           }
         };
         
@@ -221,15 +233,20 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
         });
         
         // Update on scroll/resize
+        // Always listen to scroll and resize to keep dropdown aligned with field
         window.addEventListener('scroll', updatePosition, true);
         window.addEventListener('resize', updatePosition);
+        
+        // Also listen to touchmove for mobile scrolling
+        window.addEventListener('touchmove', updatePosition, { passive: true });
         
         return () => {
           window.removeEventListener('scroll', updatePosition, true);
           window.removeEventListener('resize', updatePosition);
+          window.removeEventListener('touchmove', updatePosition);
         };
       }
-    }, [isOpen]);
+    }, [isOpen, disableDynamicPositioning]);
 
     const handleSelect = (value: string, label: string) => {
       setSelectedValue(value);
