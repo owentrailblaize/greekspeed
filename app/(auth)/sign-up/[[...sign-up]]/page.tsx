@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectItem } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Star, Mail, Info, Users, ArrowLeft } from 'lucide-react';
+import { Star, Mail, Info, Users, ArrowLeft, Linkedin } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useChapters } from '@/lib/hooks/useChapters';
 import { Chapter } from '@/types/chapter';
@@ -40,6 +40,7 @@ export default function SignUpPage() {
   const router = useRouter();
   const [oauthLoading, setOauthLoading] = useState(false);
   const [linkedInLoading, setLinkedInLoading] = useState(false);
+  const [linkedInIconError, setLinkedInIconError] = useState(false);
   
   // Use the chapters hook to fetch dynamic data
   const { chapters, loading: chaptersLoading, error: chaptersError } = useChapters();
@@ -234,11 +235,16 @@ export default function SignUpPage() {
                   onClick={handleLinkedInSignUp}
                   disabled={loading || linkedInLoading}
                 >
-                  <img 
-                    src="/linkedin-icon.png" 
-                    alt="LinkedIn" 
-                    className="w-5 h-5 mr-3"
-                  />
+                  {linkedInIconError ? (
+                    <Linkedin className="h-5 w-5 mr-3 text-gray-600" />
+                  ) : (
+                    <img 
+                      src="/linkedin-icon.png" 
+                      alt="LinkedIn" 
+                      className="w-5 h-5 mr-3"
+                      onError={() => setLinkedInIconError(true)}
+                    />
+                  )}
                   {linkedInLoading ? 'Signing up...' : 'Continue with LinkedIn'}
                 </Button>
                 
@@ -569,11 +575,16 @@ export default function SignUpPage() {
                         onClick={handleLinkedInSignUp}
                         disabled={loading || linkedInLoading}
                       >
-                        <img 
-                          src="/linkedin-icon.svg" 
-                          alt="LinkedIn" 
-                          className="w-4 h-4 mr-3"
-                        />
+                        {linkedInIconError ? (
+                          <Linkedin className="h-4 w-4 mr-3 text-gray-600" />
+                        ) : (
+                          <img 
+                            src="/linkedin-icon.png" 
+                            alt="LinkedIn" 
+                            className="w-4 h-4 mr-3"
+                            onError={() => setLinkedInIconError(true)}
+                          />
+                        )}
                         {linkedInLoading ? 'Signing up...' : 'Continue with LinkedIn'}
                       </Button>
                       
