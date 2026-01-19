@@ -6,15 +6,17 @@ interface ContentNavigationTabsProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   tabs: Array<{ id: string; label: string }>;
+  stickyTop?: string;
 }
 
 export function ContentNavigationTabs({
   activeTab,
   onTabChange,
   tabs,
+  stickyTop = '0',
 }: ContentNavigationTabsProps) {
   return (
-    <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+    <div className={`bg-white border-b border-gray-200 sticky z-40`} style={{ top: stickyTop }}>
       <div className="flex">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
