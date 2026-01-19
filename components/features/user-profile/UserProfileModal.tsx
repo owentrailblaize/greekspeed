@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { UnifiedUserProfile } from '@/types/user-profile';
 import { AlumniProfileView } from './AlumniProfileView';
 import { UserProfileView } from './UserProfileView';
+import { useIsMobile } from '@/lib/hooks/useIsMobile';
 
 interface UserProfileModalProps {
   profile: UnifiedUserProfile | null;
@@ -14,6 +15,7 @@ interface UserProfileModalProps {
 
 export function UserProfileModal({ profile, isOpen, onClose }: UserProfileModalProps) {
   const [mounted, setMounted] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     setMounted(true);
@@ -21,7 +23,7 @@ export function UserProfileModal({ profile, isOpen, onClose }: UserProfileModalP
 
   // Handle ESC key to close modal
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || isMobile) return; // Don't handle ESC on mobile
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -31,9 +33,10 @@ export function UserProfileModal({ profile, isOpen, onClose }: UserProfileModalP
 
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, isMobile]);
 
-  if (!profile || !isOpen || !mounted) return null;
+  // Don't render modal on mobile
+  if (isMobile || !profile || !isOpen || !mounted) return null;
 
   return createPortal(
     <div className="fixed inset-0 z-[10000] flex items-center justify-center">

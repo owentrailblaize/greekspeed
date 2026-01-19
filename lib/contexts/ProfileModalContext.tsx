@@ -1,9 +1,11 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { UnifiedUserProfile, UserProfileData } from '@/types/user-profile';
 import { fetchUserProfile, alumniToUnifiedProfile } from '@/lib/services/userProfileService';
 import { Alumni } from '@/lib/alumniConstants';
+import { useIsMobile } from '@/lib/hooks/useIsMobile';
 
 interface ProfileModalContextType {
   isProfileModalOpen: boolean;
@@ -20,10 +22,19 @@ export function ProfileModalProvider({ children }: { children: ReactNode }) {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [currentProfile, setCurrentProfile] = useState<UnifiedUserProfile | null>(null);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const isMobile = useIsMobile();
 
   const openUserProfile = useCallback(async (userId: string) => {
     if (!userId) return;
     
+    // On mobile, navigate to profile page instead of opening modal
+    if (isMobile) {
+      router.push(`/dashboard/profile/${userId}`);
+      return;
+    }
+
+    // Desktop: Open modal as before
     setLoading(true);
     try {
       // Try to fetch the profile
@@ -39,7 +50,7 @@ export function ProfileModalProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isMobile, router]);
 
   const openUserProfileWithData = useCallback((userData: UserProfileData | Alumni) => {
     let profile: UnifiedUserProfile;
@@ -51,10 +62,17 @@ export function ProfileModalProvider({ children }: { children: ReactNode }) {
       // It's already a UserProfileData or UnifiedUserProfile
       profile = userData as UnifiedUserProfile;
     }
-    
+
+    // On mobile, navigate to profile page
+    if (isMobile) {
+      router.push(`/dashboard/profile/${profile.id}`);
+      return;
+    }
+
+    // Desktop: Open modal
     setCurrentProfile(profile);
     setIsProfileModalOpen(true);
-  }, []);
+  }, [isMobile, router]);
 
   const closeUserProfile = useCallback(() => {
     setIsProfileModalOpen(false);

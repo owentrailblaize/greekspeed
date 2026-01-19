@@ -21,7 +21,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils";
 import { trackActivity, ActivityTypes } from "@/lib/utils/activityUtils";
-import { createPortal } from 'react-dom'; // Add this import
+import { createPortal } from 'react-dom';
+import { useIsMobile } from '@/lib/hooks/useIsMobile';
 
 interface AlumniProfileModalProps {
   alumni: Alumni | null;
@@ -51,10 +52,21 @@ const getChapterName = (chapterId: string, isMobile: boolean = false): string =>
 export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileModalProps) {
   const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
+  const isMobile = useIsMobile();
+  const router = useRouter();
   
-  // Track profile view when modal opens
+  // On mobile, route to profile page instead of showing modal
   useEffect(() => {
-    if (isOpen && alumni && user && user.id !== alumni.id) {
+    if (isOpen && isMobile && alumni?.id) {
+      router.push(`/dashboard/profile/${alumni.id}`);
+      onClose(); // Close modal state
+      return;
+    }
+  }, [isOpen, isMobile, alumni, router, onClose]);
+  
+  // Track profile view when modal opens (desktop only)
+  useEffect(() => {
+    if (isOpen && !isMobile && alumni && user && user.id !== alumni.id) {
       trackActivity(user.id, ActivityTypes.PROFILE_VIEW, {
         viewedProfileId: alumni.id,
         viewedProfileName: alumni.fullName,
@@ -63,8 +75,7 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
         console.error('Failed to track profile view:', error);
       });
     }
-  }, [isOpen, alumni, user]);
-  const router = useRouter();
+  }, [isOpen, isMobile, alumni, user]);
   const { 
     sendConnectionRequest, 
     updateConnectionStatus, 
@@ -79,7 +90,8 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
     setMounted(true);
   }, []);
 
-  if (!alumni || !isOpen || !mounted) return null;
+  // Don't render modal on mobile
+  if (!alumni || !isOpen || !mounted || isMobile) return null;
 
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel') => {
     if (!user || user.id === alumni.id) return;

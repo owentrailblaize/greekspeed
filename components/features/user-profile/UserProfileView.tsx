@@ -23,9 +23,10 @@ import { cn } from "@/lib/utils";
 interface UserProfileViewProps {
   profile: UnifiedUserProfile;
   onClose: () => void;
+  hideCloseButton?: boolean;
 }
 
-export function UserProfileView({ profile, onClose }: UserProfileViewProps) {
+export function UserProfileView({ profile, onClose, hideCloseButton = false }: UserProfileViewProps) {
   const { user } = useAuth();
   const router = useRouter();
   const { 
@@ -182,15 +183,17 @@ export function UserProfileView({ profile, onClose }: UserProfileViewProps) {
         {/* Background Banner */}
         <div className="h-20 bg-gradient-to-r from-navy-100 to-blue-100 rounded-t-xl" />
         
-        {/* Close Button - Positioned in top-right corner */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          className="absolute top-3 right-3 h-8 w-8 p-0 bg-white/80 hover:bg-white rounded-full shadow-sm"
-        >
-          <X className="h-4 w-4" />
-        </Button>
+        {/* Close Button - Only show if not hidden */}
+        {!hideCloseButton && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="absolute top-3 right-3 h-8 w-8 p-0 bg-white/80 hover:bg-white rounded-full shadow-sm"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
         
         {/* Profile Content Overlapping Banner */}
         <div className="px-6 -mt-10 relative">
