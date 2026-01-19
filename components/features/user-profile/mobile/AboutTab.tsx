@@ -6,7 +6,9 @@ import {
   Phone, 
   Building2, 
   GraduationCap,
-  MapPin
+  Briefcase,
+  Calendar,
+  User
 } from "lucide-react";
 import { UnifiedUserProfile } from "@/types/user-profile";
 
@@ -27,6 +29,24 @@ const getChapterName = (chapterId: string | null | undefined): string => {
   return chapterMap[chapterId] || chapterId;
 };
 
+interface InfoRowProps {
+  label: string;
+  value: string | React.ReactNode;
+}
+
+function InfoRow({ label, value }: InfoRowProps) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 border-b border-gray-100 last:border-0">
+      <span className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-0">
+        {label}
+      </span>
+      <div className="text-sm font-medium text-gray-900 break-words text-right sm:text-left">
+        {value}
+      </div>
+    </div>
+  );
+}
+
 export function AboutTab({ profile }: AboutTabProps) {
   const alumni = profile.alumni || {};
   const userData = profile.user || {};
@@ -36,110 +56,140 @@ export function AboutTab({ profile }: AboutTabProps) {
   const isPhonePublic = isAlumni ? (alumni.isPhonePublic !== false && alumni.is_phone_public !== false) : true;
 
   return (
-    <div className="px-4 py-6 space-y-6">
-      {/* Contact Information */}
-      <div className="space-y-3">
-        <h3 className="font-semibold text-gray-900 text-base flex items-center">
-          <Mail className="h-4 w-4 mr-2 text-gray-400" />
-          Contact
-        </h3>
-        <div className="space-y-2 text-sm pl-6">
-          <div>
-            <span className="text-gray-500 block mb-1">Email</span>
-            <span className="text-gray-900">
-              {profile.email || (!isEmailPublic ? 'Hidden by user' : 'Not available')}
-            </span>
-          </div>
-          <div>
-            <span className="text-gray-500 block mb-1">Phone</span>
-            <span className="text-gray-900">
-              {profile.phone || (!isPhonePublic ? 'Hidden by user' : 'Not available')}
-            </span>
-          </div>
-          {profile.location && profile.location !== "Not Specified" && (
+    <div className="max-w-2xl mx-auto px-4 py-6">
+      {/* Single Card Layout */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="p-6 space-y-6">
+          {/* Chapter Section */}
+          {profile.chapter && (
             <div>
-              <span className="text-gray-500 block mb-1">Location</span>
-              <span className="text-gray-900 flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
-                {profile.location}
-              </span>
+              <div className="flex items-center gap-2 mb-4">
+                <Building2 className="h-4 w-4 text-gray-400" />
+                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                  Chapter
+                </h3>
+              </div>
+              <p className="text-sm text-gray-900 ml-6">
+                {getChapterName(profile.chapter_id) || profile.chapter}
+              </p>
             </div>
           )}
-        </div>
-      </div>
 
-      {/* Professional / Academic Information */}
-      <div className="space-y-3">
-        <h3 className="font-semibold text-gray-900 text-base flex items-center">
-          {isAlumni ? (
-            <Building2 className="h-4 w-4 mr-2 text-gray-400" />
-          ) : (
-            <GraduationCap className="h-4 w-4 mr-2 text-gray-400" />
+          {/* Contact Section */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <Mail className="h-4 w-4 text-gray-400" />
+              <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                Contact
+              </h3>
+            </div>
+            <div className="space-y-0 ml-6">
+              <InfoRow
+                label="Email"
+                value={profile.email || (!isEmailPublic ? 'Hidden by user' : 'Not available')}
+              />
+              <InfoRow
+                label="Phone"
+                value={profile.phone || (!isPhonePublic ? 'Hidden by user' : 'Not available')}
+              />
+            </div>
+          </div>
+
+          {/* Academic Section - For Regular Users */}
+          {!isAlumni && (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <GraduationCap className="h-4 w-4 text-gray-400" />
+                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                  Academic
+                </h3>
+              </div>
+              <div className="space-y-0 ml-6">
+                {userData.grad_year && (
+                  <InfoRow
+                    label="Grad Year"
+                    value={userData.grad_year.toString()}
+                  />
+                )}
+                {userData.major && (
+                  <InfoRow
+                    label="Major"
+                    value={userData.major}
+                  />
+                )}
+                {userData.minor && (
+                  <InfoRow
+                    label="Minor"
+                    value={userData.minor}
+                  />
+                )}
+                {userData.role && (
+                  <InfoRow
+                    label="Role"
+                    value={<Badge variant="outline" className="text-xs">{userData.role}</Badge>}
+                  />
+                )}
+              </div>
+            </div>
           )}
-          {isAlumni ? 'Professional' : 'Academic'}
-        </h3>
-        <div className="space-y-2 text-sm pl-6">
-          {isAlumni ? (
+
+          {/* Professional Section - For Alumni */}
+          {isAlumni && (
             <>
-              {alumni.industry && alumni.industry !== "Not Specified" && (
-                <div>
-                  <span className="text-gray-500 block mb-1">Industry</span>
-                  <Badge variant="outline" className="text-xs">{alumni.industry}</Badge>
+              {/* Divider */}
+              <div className="border-t border-gray-200 my-6"></div>
+
+              {/* Professional Section */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Briefcase className="h-4 w-4 text-gray-400" />
+                  <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                    Professional
+                  </h3>
                 </div>
-              )}
-              {alumni.graduationYear && (
-                <div>
-                  <span className="text-gray-500 block mb-1">Graduation Year</span>
-                  <span className="text-gray-900">{alumni.graduationYear}</span>
+                <div className="space-y-0 ml-6">
+                  {alumni.industry && alumni.industry !== "Not Specified" && (
+                    <InfoRow
+                      label="Industry"
+                      value={<Badge variant="outline" className="text-xs">{alumni.industry}</Badge>}
+                    />
+                  )}
+                  {alumni.graduationYear && (
+                    <InfoRow
+                      label="Graduation Year"
+                      value={alumni.graduationYear.toString()}
+                    />
+                  )}
+                  {alumni.company && alumni.company !== "Not Specified" && (
+                    <InfoRow
+                      label="Company"
+                      value={alumni.company}
+                    />
+                  )}
+                  {alumni.jobTitle && alumni.jobTitle !== "Not Specified" && (
+                    <InfoRow
+                      label="Job Title"
+                      value={alumni.jobTitle}
+                    />
+                  )}
+                  {alumni.isActivelyHiring && (
+                    <InfoRow
+                      label="Status"
+                      value={
+                        <Badge className="bg-gradient-to-r from-gray-600 to-gray-700 text-white text-xs">
+                          Actively Hiring
+                        </Badge>
+                      }
+                    />
+                  )}
+                  {alumni.description && (
+                    <InfoRow
+                      label="Description"
+                      value={<span className="text-sm text-gray-700 whitespace-pre-wrap break-words">{alumni.description}</span>}
+                    />
+                  )}
                 </div>
-              )}
-              {profile.chapter && (
-                <div>
-                  <span className="text-gray-500 block mb-1">Chapter</span>
-                  <span className="text-gray-900">{getChapterName(profile.chapter_id)}</span>
-                </div>
-              )}
-              {alumni.lastContact && (
-                <div>
-                  <span className="text-gray-500 block mb-1">Last Contact</span>
-                  <span className="text-gray-900 text-xs">
-                    {alumni.lastContact ? new Date(alumni.lastContact).toLocaleDateString() : 'Never'}
-                  </span>
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              {userData.grad_year && (
-                <div>
-                  <span className="text-gray-500 block mb-1">Grad Year</span>
-                  <span className="text-gray-900">{userData.grad_year}</span>
-                </div>
-              )}
-              {userData.major && (
-                <div>
-                  <span className="text-gray-500 block mb-1">Major</span>
-                  <span className="text-gray-900">{userData.major}</span>
-                </div>
-              )}
-              {userData.minor && (
-                <div>
-                  <span className="text-gray-500 block mb-1">Minor</span>
-                  <span className="text-gray-900">{userData.minor}</span>
-                </div>
-              )}
-              {userData.role && (
-                <div>
-                  <span className="text-gray-500 block mb-1">Role</span>
-                  <Badge variant="outline" className="text-xs">{userData.role}</Badge>
-                </div>
-              )}
-              {profile.chapter && (
-                <div>
-                  <span className="text-gray-500 block mb-1">Chapter</span>
-                  <span className="text-gray-900">{profile.chapter}</span>
-                </div>
-              )}
+              </div>
             </>
           )}
         </div>

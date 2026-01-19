@@ -12,7 +12,8 @@ import {
   Star,
   Handshake,
   Calendar,
-  ArrowLeft
+  ArrowLeft,
+  MapPin
 } from "lucide-react";
 import { UnifiedUserProfile } from "@/types/user-profile";
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
@@ -332,32 +333,29 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
             <p className="text-base text-gray-600 mb-1">{userData.chapter_role}</p>
           )}
           
-          {/* Company / Chapter */}
+          {/* Company (Alumni only) */}
           {isAlumni && alumni.company && (
             <div className="flex items-center justify-center space-x-2 text-gray-600 text-sm mb-2">
               <Building2 className="h-4 w-4" />
               <span>{alumni.company}</span>
             </div>
           )}
-          {!isAlumni && profile.chapter && (
-            <div className="flex items-center justify-center space-x-2 text-gray-500 text-sm mb-2">
-              <Building2 className="h-3 w-3" />
-              <span>{profile.chapter}</span>
-            </div>
+          
+          {/* Bio / Description - Primary display */}
+          {(isAlumni ? (alumni.description || profile.bio) : profile.bio) && (
+            <p className="text-gray-700 text-center mb-2 text-sm leading-relaxed px-2">
+              {isAlumni ? (alumni.description || profile.bio) : profile.bio}
+            </p>
           )}
           
-          {/* Location if available */}
+          {/* Location - Primary display */}
           {profile.location && profile.location !== "Not Specified" && (
-            <p className="text-gray-500 text-sm">{profile.location}</p>
+            <div className="flex items-center justify-center space-x-1 text-gray-600 text-sm">
+              <MapPin className="h-3 w-3" />
+              <span>{profile.location}</span>
+            </div>
           )}
         </div>
-
-        {/* Bio / Description */}
-        {(isAlumni ? (alumni.description || profile.bio) : profile.bio) && (
-          <p className="text-gray-600 text-center mb-4 text-sm leading-relaxed px-2">
-            {isAlumni ? (alumni.description || profile.bio) : profile.bio}
-          </p>
-        )}
 
         {/* Connection Button */}
         <div className="mb-4">
