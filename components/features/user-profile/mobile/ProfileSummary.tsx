@@ -106,6 +106,24 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
     return status === 'accepted';
   };
 
+  const canSendEmail = () => {
+    if (!user || user.id === userId) return false;
+    // Check if email exists and is public
+    if (!profile.email) return false;
+    // For alumni, check privacy settings
+    if (isAlumni) {
+      return isEmailPublic;
+    }
+    // For regular users, email is always available if it exists
+    return true;
+  };
+
+  const handleEmailClick = () => {
+    if (!profile.email || !canSendEmail()) return;
+    // Open default email client with mailto link
+    window.location.href = `mailto:${profile.email}?subject=Reaching out from Trailblaize`;
+  };
+
   const renderConnectionButton = () => {
     if (!user || user.id === userId) return null;
     
@@ -348,15 +366,26 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
 
         {/* Action Buttons */}
         <div className="flex space-x-2 pt-3 border-t border-gray-200">
-          <Button className="flex-1" variant="ghost" size="sm" disabled>
+          <Button 
+            className={cn(
+              "flex-1 rounded-full",
+              canSendEmail()
+                ? "border-navy-600 text-navy-600 hover:bg-navy-50" 
+                : "text-gray-400 border-gray-200"
+            )}
+            variant={canSendEmail() ? "outline" : "ghost"}
+            size="sm" 
+            onClick={handleEmailClick}
+            disabled={!canSendEmail()}
+          >
             <Mail className="h-4 w-4 mr-2" />
             <span>Email</span>
-            <Lock className="h-3 w-3 ml-2 text-gray-400" />
+            {!canSendEmail() && <Lock className="h-3 w-3 ml-2 text-gray-400" />}
           </Button>
           
           <Button 
             className={cn(
-              "flex-1",
+              "flex-1 rounded-full",
               canSendMessage() 
                 ? "border-navy-600 text-navy-600 hover:bg-navy-50" 
                 : "text-gray-400 border-gray-200"

@@ -90,6 +90,17 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
     return status === 'accepted';
   };
 
+  const canSendEmail = () => {
+    if (!user || user.id === userId) return false;
+    // For regular users, email is available if it exists
+    return !!profile.email;
+  };
+
+  const handleEmailClick = () => {
+    if (!profile.email || !canSendEmail()) return;
+    window.location.href = `mailto:${profile.email}?subject=Reaching out from Trailblaize`;
+  };
+
   const renderConnectionButton = () => {
     if (!user || user.id === userId) return null;
     
@@ -323,16 +334,27 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
 
         {/* Action Buttons */}
         <div className="flex space-x-2 pt-3 border-t border-gray-200">
-          <Button className="flex-1" variant="ghost" size="sm" disabled>
+          <Button 
+            className={cn(
+              "flex-1 rounded-full",
+              canSendEmail()
+                ? "border-navy-600 text-navy-600 hover:bg-navy-50" 
+                : "text-gray-400 border-gray-200"
+            )}
+            variant={canSendEmail() ? "outline" : "ghost"}
+            size="sm" 
+            onClick={handleEmailClick}
+            disabled={!canSendEmail()}
+          >
             <Mail className="h-3 w-3 mr-2" />
             <span className="hidden sm:inline">Send Email</span>
             <span className="sm:hidden">Email</span>
-            <Lock className="h-3 w-3 ml-2 text-gray-400" />
+            {!canSendEmail() && <Lock className="h-3 w-3 ml-2 text-gray-400" />}
           </Button>
           
           <Button 
             className={cn(
-              "flex-1",
+              "flex-1 rounded-full",
               canSendMessage() 
                 ? "border-navy-600 text-navy-600 hover:bg-navy-50" 
                 : "text-gray-400 border-gray-200"
