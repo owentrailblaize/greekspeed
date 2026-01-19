@@ -1,0 +1,32 @@
+{
+    "$schema": "https://unpkg.com/knip@latest/schema.json",
+    "entry": [
+      "app/**/page.{ts,tsx}",
+      "app/**/layout.{ts,tsx}",
+      "app/**/route.{ts,tsx}"
+    ],
+    "project": [
+      "app/**/*.{ts,tsx}",
+      "components/**/*.{ts,tsx}",
+      "lib/**/*.{ts,tsx}",
+      "types/**/*.{ts,tsx,d.ts}"
+    ],
+    "ignore": [
+      "**/*.test.{ts,tsx}",
+      "**/*.spec.{ts,tsx}",
+      ".next/**",
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      "coverage/**",
+      "**/*.d.ts",
+      "next-env.d.ts",
+      "sentry.*.config.ts"
+    ],
+    "paths": {
+      "@/*": ["./*"],
+      "@/components/*": ["./components/*"],
+      "@/lib/*": ["./lib/*"],
+      "@/constants/*": ["./constants/*"]
+    }
+}
