@@ -213,7 +213,15 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
   return (
     <div className="relative">
       {/* Banner Section - Larger for mobile */}
-      <div className="h-32 bg-gradient-to-r from-navy-100 via-blue-100 to-blue-50 relative">
+      <div className="h-32 bg-gradient-to-r from-navy-100 via-blue-100 to-blue-50 relative overflow-hidden">
+        {/* Banner Image */}
+        {profile.banner_url ? (
+          <img 
+            src={profile.banner_url} 
+            alt="Profile banner" 
+            className="w-full h-full object-cover"
+          />
+        ) : null}
         {/* Back Button - Positioned in top-left of banner */}
         <button
           onClick={onClose}

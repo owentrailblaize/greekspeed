@@ -15,6 +15,7 @@ export interface UnifiedUserProfile {
   first_name?: string | null;
   last_name?: string | null;
   avatar_url?: string | null;
+  banner_url?: string | null;
   email?: string | null;
   phone?: string | null;
   chapter?: string | null;
