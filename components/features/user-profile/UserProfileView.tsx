@@ -254,11 +254,11 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
         <Link
           href={`/profile/${getProfileSlug()}`}
           onClick={handleViewFullProfile}
-          className="absolute top-20 left-14 px-3 py-1.5 text-sm font-medium text-navy-900 hover:text-navy-700 transition-colors z-20 flex items-center gap-1.5 bg-white/90 hover:bg-white rounded-md border-0"
+          className="absolute top-20 left-14 px-3 py-1.5 text-sm font-medium text-slate-900 hover:text-slate-700 transition-colors z-20 flex items-center gap-1.5 bg-white/90 hover:bg-white rounded-md border-0"
           title="View full profile page"
         >
-          <span>View Full Profile</span>
-          <ArrowRight className="h-3.5 w-3.5" />
+          <span className="font-light">View Full Profile</span>
+          <ArrowRight className="h-3.5 w-3.5 font-light" />
         </Link>
         
         {/* Profile Content Overlapping Banner */}

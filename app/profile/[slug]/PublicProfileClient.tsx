@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { UnifiedUserProfile } from '@/types/user-profile';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, Building2, MessageSquare, Users, Lock, X } from 'lucide-react';
+import { ArrowLeft, MapPin, Building2, MessageSquare, MessageCircle, Users, UserPlus, Clock, Lock, X } from 'lucide-react';
 import { MobileBottomNavigation } from '@/components/features/dashboard/dashboards/ui/MobileBottomNavigation';
 import { ProfileSummary } from '@/components/features/user-profile/mobile/ProfileSummary';
 import { ContentNavigationTabs } from '@/components/features/profile/mobile/ContentNavigationTabs';
@@ -240,20 +240,20 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
             onClick={handleClose}
             className="absolute top-3 left-3 z-10 h-10 w-10 rounded-full flex items-center justify-center cursor-pointer group"
             style={{
-              background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%)',
+              background: 'linear-gradient(135deg, #e5e7eb 0%, #fff 100%)',
               boxShadow: `
-                0 6px 12px rgba(30, 64, 175, 0.4),
-                0 2px 4px rgba(30, 64, 175, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3),
-                inset 0 -1px 0 rgba(0, 0, 0, 0.2)
+                0 6px 12px rgba(0, 0, 0, 0.15),
+                0 2px 4px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.05)
               `,
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(0, 0, 0, 0.1)',
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
             }}
             title="Go back"
           >
-            <ArrowLeft className="h-5 w-5 text-white relative z-10 drop-shadow-lg transition-transform duration-200 group-hover:scale-110" />
+            <ArrowLeft className="h-5 w-5 text-slate-600 relative z-10 drop-shadow-sm transition-transform duration-200 group-hover:scale-110" />
           </button>
 
           {/* Share Button */}
@@ -400,6 +400,27 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-blue-600 via-blue-500 to-navy-600" />
             )}
+
+            {/* Back Button - Desktop */}
+            <button
+              onClick={handleClose}
+              className="absolute top-3 left-3 md:top-4 md:left-8 z-10 h-10 w-10 rounded-full flex items-center justify-center cursor-pointer group"
+              style={{
+                background: 'linear-gradient(135deg, #e5e7eb 0%, #fff 100%)',
+                boxShadow: `
+                  0 6px 12px rgba(0, 0, 0, 0.15),
+                  0 2px 4px rgba(0, 0, 0, 0.1),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                  inset 0 -1px 0 rgba(0, 0, 0, 0.05)
+                `,
+                border: '1px solid rgba(0, 0, 0, 0.1)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+              }}
+              title="Go back"
+            >
+              <ArrowLeft className="h-5 w-5 text-slate-600 relative z-10 drop-shadow-sm transition-transform duration-200 group-hover:scale-110" />
+            </button>
           </div>
 
           {/* Avatar - Overlapping Banner */}
@@ -423,7 +444,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
         </div>
 
         {/* Profile Info Section - Below Banner/Avatar */}
-        <div className={`pt-8 md:pt-10 pb-6 px-8 md:px-16 max-w-7xl mx-auto ${!isLoggedIn && !dismissedModal ? 'pt-24' : ''}`}>
+        <div className={`pt-8 md:pt-10 px-8 md:px-16 max-w-7xl mx-auto ${!isLoggedIn && !dismissedModal ? 'pt-24' : ''}`}>
           {/* Name and Action Buttons */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
@@ -511,12 +532,13 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                   <Button
                     onClick={() => handleConnectionAction('connect')}
                     disabled={connectionLoading}
-                    className="bg-navy-600 hover:bg-navy-700 text-white px-6"
+                    className="border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium px-6"
+                    variant="outline"
                   >
                     {connectionLoading ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b border-white mr-2" />
+                      <div className="animate-spin rounded-full h-4 w-4 border-b border-navy-600 mr-2" />
                     ) : (
-                      <Users className="h-4 w-4 mr-2" />
+                      <UserPlus className="h-4 w-4 mr-2" />
                     )}
                     Connect
                   </Button>
@@ -525,8 +547,9 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                   <Button
                     variant="outline"
                     disabled
-                    className="border-gray-300 text-gray-600 px-6"
+                    className="border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 transition-colors duration-200 rounded-full font-medium px-6"
                   >
+                    <Clock className="h-4 w-4 mr-2" />
                     Pending
                   </Button>
                 )}
@@ -535,7 +558,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                     <Button
                       onClick={() => handleConnectionAction('accept')}
                       disabled={connectionLoading}
-                      className="bg-green-600 hover:bg-green-700 text-white px-6"
+                      className="bg-green-600 hover:bg-green-700 text-white px-6 rounded-full font-medium"
                     >
                       Accept
                     </Button>
@@ -543,7 +566,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                       onClick={() => handleConnectionAction('decline')}
                       disabled={connectionLoading}
                       variant="outline"
-                      className="border-red-300 text-red-600 px-6"
+                      className="border-red-300 text-red-600 px-6 rounded-full font-medium"
                     >
                       Decline
                     </Button>
@@ -552,11 +575,13 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                 {connectionStatus === 'accepted' && (
                   <Button
                     onClick={() => handleConnectionAction('message')}
-                    variant="outline"
-                    className="border-navy-600 text-navy-600 px-6"
+                    className="text-white rounded-full font-medium px-6"
+                    style={{
+                      background: 'linear-gradient(340deg, rgba(228, 236, 255, 1) 0%, rgba(130, 130, 255, 0.95) 34%, rgba(35, 70, 224, 0.93) 85%)'
+                    }}
                   >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Message
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Connected
                   </Button>
                 )}
                 <CopyProfileLinkButton
