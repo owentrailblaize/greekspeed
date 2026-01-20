@@ -395,7 +395,11 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
               <ImageWithFallback
                 src={profile.banner_url}
                 alt={`${profile.full_name}'s banner`}
-                className="w-full h-full object-cover"
+                fill
+                sizes="100vw"
+                quality={90}
+                priority
+                className="object-cover"
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-blue-600 via-blue-500 to-navy-600" />
