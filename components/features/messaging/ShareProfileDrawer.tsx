@@ -13,6 +13,8 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import { UserAvatar } from '@/components/features/profile/UserAvatar';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
 import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
+import { generateProfileLink } from '@/lib/utils/profileLinkUtils';
+import { supabase } from '@/lib/supabase/client';
 
 interface ShareProfileDrawerProps {
   isOpen: boolean;
@@ -60,9 +62,35 @@ export function ShareProfileDrawer({
   // Generate profile link when drawer opens or profile changes
   useEffect(() => {
     if (isOpen && profileToShare.id) {
-      const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-      const link = `${baseUrl}/dashboard/profile/${profileToShare.id}`;
-      setProfileLink(link);
+      // Fetch profile to get slug for clean URL
+      async function fetchProfileSlug() {
+        try {
+          // Fetch profile from database to get slug
+          const { data: profileData, error } = await supabase
+            .from('profiles')
+            .select('profile_slug, username')
+            .eq('id', profileToShare.id)
+            .single();
+
+          if (!error && profileData) {
+            // Use slug if available, otherwise fall back to userId
+            const slug = profileData.profile_slug || profileData.username || null;
+            const link = generateProfileLink(profileToShare.id, slug);
+            setProfileLink(link);
+          } else {
+            // Fallback to userId if fetch fails
+            const link = generateProfileLink(profileToShare.id);
+            setProfileLink(link);
+          }
+        } catch (error) {
+          console.error('Failed to fetch profile slug:', error);
+          // Fallback to userId if fetch fails
+          const link = generateProfileLink(profileToShare.id);
+          setProfileLink(link);
+        }
+      }
+      
+      fetchProfileSlug();
     }
   }, [isOpen, profileToShare.id]);
 

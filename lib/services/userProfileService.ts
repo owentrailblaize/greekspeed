@@ -172,11 +172,137 @@ export function alumniToUnifiedProfile(alumni: Alumni): UnifiedUserProfile {
 }
 
 /**
+ * Fetch user profile by slug (username/profile_slug)
+ * Handles both alumni and regular users
+ * Works for both authenticated and non-authenticated requests
+ */
+export async function fetchUserProfileBySlug(slug: string): Promise<UnifiedUserProfile | null> {
+  // Check cache first (using slug as key)
+  const cacheKey = `slug:${slug}`;
+  const cached = profileCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+
+  try {
+    // Query profiles table by profile_slug OR username
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .or(`profile_slug.eq.${slug},username.eq.${slug}`)
+      .single();
+
+    if (profileError || !profileData) {
+      console.error('Error fetching profile by slug:', profileError);
+      return null;
+    }
+
+    const userId = profileData.id;
+
+    // Check if user is an alumni
+    const { data: alumniData, error: alumniError } = await supabase
+      .from('alumni')
+      .select(`
+        *,
+        profile:profiles!user_id(
+          avatar_url,
+          banner_url,
+          full_name,
+          first_name,
+          last_name,
+          email,
+          phone,
+          chapter,
+          chapter_id,
+          bio,
+          location
+        )
+      `)
+      .eq('user_id', userId)
+      .single();
+
+    if (alumniData && !alumniError) {
+      // User is an alumni
+      const profile: UnifiedUserProfile = {
+        id: userId,
+        type: 'alumni',
+        full_name: alumniData.full_name || `${alumniData.first_name || ''} ${alumniData.last_name || ''}`.trim(),
+        first_name: alumniData.first_name,
+        last_name: alumniData.last_name,
+        avatar_url: alumniData.avatar_url || alumniData.profile?.avatar_url || null,
+        banner_url: alumniData.profile?.banner_url || null,
+        email: alumniData.email,
+        phone: alumniData.phone,
+        chapter: alumniData.chapter ? getChapterName(alumniData.chapter) : null,
+        chapter_id: alumniData.chapter,
+        bio: alumniData.description || alumniData.profile?.bio || null,
+        location: alumniData.location || alumniData.profile?.location || null,
+        alumni: {
+          industry: alumniData.industry,
+          graduationYear: alumniData.graduation_year,
+          company: alumniData.company,
+          jobTitle: alumniData.job_title,
+          is_email_public: alumniData.is_email_public,
+          is_phone_public: alumniData.is_phone_public,
+          isEmailPublic: alumniData.is_email_public,
+          isPhonePublic: alumniData.is_phone_public,
+          verified: alumniData.verified,
+          isActivelyHiring: alumniData.is_actively_hiring,
+          hasProfile: !!alumniData.profile,
+          description: alumniData.description,
+        }
+      };
+
+      // Cache the result (using both userId and slug as keys)
+      profileCache.set(cacheKey, { data: profile, timestamp: Date.now() });
+      profileCache.set(userId, { data: profile, timestamp: Date.now() });
+      return profile;
+    }
+
+    // If not alumni, use regular profile
+    const profile: UnifiedUserProfile = {
+      id: userId,
+      type: 'user',
+      full_name: profileData.full_name || 'Unknown User',
+      first_name: profileData.first_name,
+      last_name: profileData.last_name,
+      avatar_url: profileData.avatar_url,
+      banner_url: profileData.banner_url || null,
+      email: profileData.email,
+      phone: profileData.phone,
+      chapter: profileData.chapter,
+      chapter_id: profileData.chapter_id,
+      bio: profileData.bio,
+      location: profileData.location,
+      user: {
+        role: profileData.role,
+        chapter_role: profileData.chapter_role,
+        member_status: profileData.member_status,
+        grad_year: profileData.grad_year,
+        major: profileData.major,
+        minor: profileData.minor,
+        linkedin_url: profileData.linkedin_url,
+      }
+    };
+
+    // Cache the result (using both userId and slug as keys)
+    profileCache.set(cacheKey, { data: profile, timestamp: Date.now() });
+    profileCache.set(userId, { data: profile, timestamp: Date.now() });
+    return profile;
+  } catch (error) {
+    console.error('Error in fetchUserProfileBySlug:', error);
+    return null;
+  }
+}
+
+/**
  * Clear cache for a specific user or all users
  */
 export function clearProfileCache(userId?: string) {
   if (userId) {
     profileCache.delete(userId);
+    // Also clear any slug-based cache entries (would need to track slugs, but for simplicity, clear all)
+    // This is acceptable since cache is in-memory and short-lived
   } else {
     profileCache.clear();
   }

@@ -12,6 +12,7 @@ import { ContentNavigationTabs } from '@/components/features/profile/mobile/Cont
 import { PostsTab } from '@/components/features/user-profile/mobile/PostsTab';
 import { AboutTab } from '@/components/features/user-profile/mobile/AboutTab';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { supabase } from '@/lib/supabase/client';
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -35,6 +36,22 @@ export default function UserProfilePage() {
       try {
         setLoading(true);
         setError(null);
+        
+        // First, check if profile has a slug for redirect
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('profile_slug, username')
+          .eq('id', userId)
+          .single();
+
+        // If profile has a slug, redirect to the clean URL
+        if (profileData?.profile_slug || profileData?.username) {
+          const slug = profileData.profile_slug || profileData.username;
+          router.replace(`/profile/${slug}`, { scroll: false });
+          return;
+        }
+
+        // Otherwise, load profile normally (backward compatibility)
         const fetchedProfile = await fetchUserProfile(userId);
         
         if (fetchedProfile) {
@@ -51,7 +68,7 @@ export default function UserProfilePage() {
     }
 
     loadProfile();
-  }, [userId]);
+  }, [userId, router]);
 
   const handleClose = () => {
     router.back(); // Use browser back navigation
