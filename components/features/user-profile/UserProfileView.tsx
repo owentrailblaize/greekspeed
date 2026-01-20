@@ -11,8 +11,11 @@ import {
   GraduationCap,
   Users,
   Lock,
-  Share2
+  Share2,
+  ExternalLink,
+  ArrowRight
 } from "lucide-react";
+import Link from 'next/link';
 import { UnifiedUserProfile } from "@/types/user-profile";
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
 import { useConnections } from "@/lib/contexts/ConnectionsContext";
@@ -113,6 +116,20 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
   const handleEmailClick = () => {
     if (!profile.email || !canSendEmail()) return;
     window.location.href = `mailto:${profile.email}?subject=Reaching out from Trailblaize`;
+  };
+
+  const getProfileSlug = () => {
+    // Check if profile has username or profile_slug
+    const slug = profile.profile_slug || profile.username || profile.id;
+    return slug;
+  };
+
+  const handleViewFullProfile = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const slug = getProfileSlug();
+    router.push(`/profile/${slug}`);
+    onClose(); // Close modal when navigating
   };
 
   const renderConnectionButton = () => {
@@ -232,6 +249,17 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
             <Share2 className="h-4 w-4" />
           </Button>
         )}
+
+        {/* View Full Profile Link - Text link, positioned to the right of Share button, below banner */}
+        <Link
+          href={`/profile/${getProfileSlug()}`}
+          onClick={handleViewFullProfile}
+          className="absolute top-20 left-14 px-3 py-1.5 text-sm font-medium text-navy-900 hover:text-navy-700 transition-colors z-20 flex items-center gap-1.5 bg-white/90 hover:bg-white rounded-md border-0"
+          title="View full profile page"
+        >
+          <span>View Full Profile</span>
+          <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
         
         {/* Profile Content Overlapping Banner */}
         <div className="px-6 -mt-10 relative">

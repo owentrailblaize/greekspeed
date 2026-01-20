@@ -15,8 +15,10 @@ import { DashboardHeader } from '@/components/features/dashboard/DashboardHeader
 import { CopyProfileLinkButton } from '@/components/profile/CopyProfileLinkButton';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
+import { useMutualConnections } from '@/lib/hooks/useMutualConnections';
 import Link from 'next/link';
 import ImageWithFallback from '@/components/figma/ImageWithFallback';
+import { SimilarConnections } from '@/components/profile/public/SimilarConnections';
 
 interface PublicProfileClientProps {
   slug: string;
@@ -41,6 +43,8 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
   const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'declined' | 'blocked'>('none');
   const [connectionLoading, setConnectionLoading] = useState(false);
   const [dismissedModal, setDismissedModal] = useState(false);
+  const [tabsVisible, setTabsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   // Fetch fresh profile data with viewer info
   useEffect(() => {
@@ -81,13 +85,52 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
     }
   }, [user, connections, profile.id, connectionsLoading]);
 
-  const handleClose = () => {
-    router.back();
-  };
+    // Handle scroll to hide/show tabs
+    useEffect(() => {
+        const handleScroll = () => {
+        const currentScrollY = window.scrollY;
+        
+        // Hide tabs when scrolling down, show when scrolling up
+        // Only hide after scrolling past a threshold (e.g., 100px)
+        if (currentScrollY > 100) {
+            if (currentScrollY > lastScrollY) {
+            // Scrolling down - hide tabs
+            setTabsVisible(false);
+            } else if (currentScrollY < lastScrollY) {
+            // Scrolling up - show tabs
+            setTabsVisible(true);
+            }
+        } else {
+            // Always show tabs when near top
+            setTabsVisible(true);
+        }
+        
+        setLastScrollY(currentScrollY);
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [lastScrollY]);
+
+    const handleClose = () => {
+        router.back();
+    };
 
   const isOwnProfile = user?.id === profile.id;
   const isLoggedIn = !!user;
   const isConnected = connectionStatus === 'accepted';
+
+  // Fetch mutual connections (only for logged-in users viewing someone else's profile)
+  const { mutualConnections, count: mutualCount } = useMutualConnections(
+    isLoggedIn && !isOwnProfile ? profile.id : undefined
+  );
+
+  // Bio truncation for non-authenticated users
+  const MAX_BIO_LENGTH = 150;
+  const shouldTruncateBio = !isLoggedIn && profile.bio && profile.bio.length > MAX_BIO_LENGTH;
+  const displayBio = shouldTruncateBio && profile.bio
+    ? `${profile.bio.substring(0, MAX_BIO_LENGTH)}...` 
+    : profile.bio || null;
 
   // Handle connection actions
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel' | 'message') => {
@@ -284,6 +327,15 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
         )}
       </div>
 
+      {/* Similar Connections Section - Mobile */}
+      <div className="px-4 py-6 bg-white border-t border-gray-200">
+        <SimilarConnections
+          slug={slug}
+          profileId={profile.id}
+          isLoggedIn={isLoggedIn}
+        />
+      </div>
+
         <MobileBottomNavigation />
       </div>
 
@@ -337,7 +389,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
         )}
 
         {/* Banner Section - Full Width */}
-        <div className={`relative w-full ${isLoggedIn ? 'pt-14' : 'pt-16'}`}>
+        <div className={`relative w-full ${!isLoggedIn ? 'pt-16 md:pt-18' : ''}`}>
           <div className="w-full h-[160px] lg:h-[180px] relative overflow-hidden">
             {profile.banner_url ? (
               <ImageWithFallback
@@ -375,15 +427,64 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
           {/* Name and Action Buttons */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                {profile.full_name}
-              </h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                  {profile.full_name}
+                </h1>
+                {/* Mutual Connections Count - Only for authenticated users viewing someone else's profile */}
+                {isLoggedIn && !isOwnProfile && mutualCount > 0 && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full border border-blue-200">
+                    <div className="flex -space-x-1">
+                      {mutualConnections.slice(0, 3).map((conn, i) => (
+                        <div
+                          key={conn.id || `mutual-${i}`}
+                          className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative z-10"
+                          style={{ zIndex: 10 - i }}
+                          title={conn.name}
+                        >
+                          {conn.avatar ? (
+                            <ImageWithFallback
+                              src={conn.avatar}
+                              alt={conn.name || 'Mutual connection'}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
+                              <span className="text-white text-xs font-medium">
+                                {conn.name
+                                  ?.split(' ')
+                                  ?.map((n) => n[0])
+                                  ?.join('')
+                                  ?.toUpperCase()
+                                  ?.slice(0, 2) || '?'}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <span className="text-sm text-gray-700 font-medium">
+                      {mutualCount === 1 ? '1 mutual connection' : `${mutualCount} mutual connections`}
+                    </span>
+                  </div>
+                )}
+              </div>
               
               {/* Bio */}
-              {profile.bio && (
-                <p className="text-lg text-gray-700 mb-4 max-w-3xl leading-relaxed">
-                  {profile.bio}
-                </p>
+              {displayBio && (
+                <div className="mb-4 max-w-3xl">
+                  <p className="text-lg text-gray-700 leading-relaxed">
+                    {displayBio}
+                  </p>
+                  {shouldTruncateBio && (
+                    <Link 
+                      href="/sign-in"
+                      className="text-sm text-navy-600 hover:text-navy-700 font-medium mt-2 inline-block"
+                    >
+                      Sign in to see more
+                    </Link>
+                  )}
+                </div>
               )}
 
               {/* Location and Chapter */}
@@ -506,8 +607,13 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
           </div>
         )}
 
-        {/* Tab Navigation - Sticky */}
-        <div className="border-b border-gray-200 bg-white sticky top-16 z-10 shadow-sm">
+        {/* Tab Navigation - Hides on scroll down, shows on scroll up */}
+        <div 
+          className={`border-b border-gray-200 bg-white z-10 shadow-sm transition-transform duration-300 ease-in-out ${
+            tabsVisible ? 'translate-y-0' : '-translate-y-full'
+          }`}
+          style={{ position: 'relative' }}
+        >
           <div className="max-w-7xl mx-auto px-8 md:px-16">
             <div className="flex space-x-8">
               {tabs.map((tab) => (
@@ -546,6 +652,15 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                 canSeeFullProfile={isOwnProfile || isConnected}
               />
             )}
+          </div>
+
+          {/* Similar Connections Section - Desktop */}
+          <div className="mt-8 pt-8 border-t border-gray-200">
+            <SimilarConnections
+              slug={slug}
+              profileId={profile.id}
+              isLoggedIn={isLoggedIn}
+            />
           </div>
         </div>
       </div>

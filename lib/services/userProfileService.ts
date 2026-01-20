@@ -47,7 +47,9 @@ export async function fetchUserProfile(userId: string): Promise<UnifiedUserProfi
           chapter,
           chapter_id,
           bio,
-          location
+          location,
+          username,
+          profile_slug
         )
       `)
       .eq('user_id', userId)
@@ -67,9 +69,11 @@ export async function fetchUserProfile(userId: string): Promise<UnifiedUserProfi
         phone: alumniData.phone,
         chapter: alumniData.chapter ? getChapterName(alumniData.chapter) : null,
         chapter_id: alumniData.chapter,
-        bio: alumniData.description || alumniData.profile?.bio || null,
-        location: alumniData.location || alumniData.profile?.location || null,
-        alumni: {
+      bio: alumniData.description || alumniData.profile?.bio || null,
+      location: alumniData.location || alumniData.profile?.location || null,
+      username: alumniData.profile?.username || null,
+      profile_slug: alumniData.profile?.profile_slug || null,
+      alumni: {
           industry: alumniData.industry,
           graduationYear: alumniData.graduation_year,
           company: alumniData.company,
@@ -116,6 +120,8 @@ export async function fetchUserProfile(userId: string): Promise<UnifiedUserProfi
       chapter_id: profileData.chapter_id,
       bio: profileData.bio,
       location: profileData.location,
+      username: profileData.username || null,
+      profile_slug: profileData.profile_slug || null,
       user: {
         role: profileData.role,
         chapter_role: profileData.chapter_role,
@@ -216,7 +222,9 @@ export async function fetchUserProfileBySlug(slug: string): Promise<UnifiedUserP
           chapter,
           chapter_id,
           bio,
-          location
+          location,
+          username,
+          profile_slug
         )
       `)
       .eq('user_id', userId)
@@ -236,9 +244,11 @@ export async function fetchUserProfileBySlug(slug: string): Promise<UnifiedUserP
         phone: alumniData.phone,
         chapter: alumniData.chapter ? getChapterName(alumniData.chapter) : null,
         chapter_id: alumniData.chapter,
-        bio: alumniData.description || alumniData.profile?.bio || null,
-        location: alumniData.location || alumniData.profile?.location || null,
-        alumni: {
+      bio: alumniData.description || alumniData.profile?.bio || null,
+      location: alumniData.location || alumniData.profile?.location || null,
+      username: alumniData.profile?.username || null,
+      profile_slug: alumniData.profile?.profile_slug || null,
+      alumni: {
           industry: alumniData.industry,
           graduationYear: alumniData.graduation_year,
           company: alumniData.company,
@@ -275,6 +285,8 @@ export async function fetchUserProfileBySlug(slug: string): Promise<UnifiedUserP
       chapter_id: profileData.chapter_id,
       bio: profileData.bio,
       location: profileData.location,
+      username: profileData.username || null,
+      profile_slug: profileData.profile_slug || null,
       user: {
         role: profileData.role,
         chapter_role: profileData.chapter_role,

@@ -22,6 +22,8 @@ export interface UnifiedUserProfile {
   chapter_id?: string | null;
   bio?: string | null;
   location?: string | null;
+  username?: string | null;
+  profile_slug?: string | null;
   
   // Alumni-specific fields (optional)
   alumni?: {
