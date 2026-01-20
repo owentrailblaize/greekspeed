@@ -75,17 +75,17 @@ export function ShareProfileDrawer({
           if (!error && profileData) {
             // Use slug if available, otherwise fall back to userId
             const slug = profileData.profile_slug || profileData.username || null;
-            const link = generateProfileLink(profileToShare.id, slug);
+            const link = generateProfileLink(profileToShare.id, slug, { ref: 'share' });
             setProfileLink(link);
           } else {
             // Fallback to userId if fetch fails
-            const link = generateProfileLink(profileToShare.id);
+            const link = generateProfileLink(profileToShare.id, null, { ref: 'share' });
             setProfileLink(link);
           }
         } catch (error) {
           console.error('Failed to fetch profile slug:', error);
           // Fallback to userId if fetch fails
-          const link = generateProfileLink(profileToShare.id);
+          const link = generateProfileLink(profileToShare.id, null, { ref: 'share' });
           setProfileLink(link);
         }
       }

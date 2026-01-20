@@ -12,7 +12,8 @@ import {
   Star,
   Handshake,
   Calendar,
-  MapPin
+  MapPin,
+  Share2
 } from "lucide-react";
 import { UnifiedUserProfile } from "@/types/user-profile";
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
@@ -21,6 +22,7 @@ import { useAuth } from "@/lib/supabase/auth-context";
 import { useState } from "react";
 import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils";
+import { ShareProfileDrawer } from "@/components/features/messaging/ShareProfileDrawer";
 
 interface ProfileSummaryProps {
   profile: UnifiedUserProfile;
@@ -48,9 +50,11 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
     updateConnectionStatus, 
     cancelConnectionRequest, 
     getConnectionStatus,
-    getConnectionId
+    getConnectionId,
+    connections
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
+  const [shareDrawerOpen, setShareDrawerOpen] = useState(false);
 
   const alumni = profile.alumni || {};
   const userData = profile.user || {};
@@ -106,6 +110,10 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
     return status === 'accepted';
   };
 
+  // Email and phone privacy settings - defined before canSendEmail()
+  const isEmailPublic = isAlumni ? (alumni.isEmailPublic !== false && alumni.is_email_public !== false) : true;
+  const isPhonePublic = isAlumni ? (alumni.isPhonePublic !== false && alumni.is_phone_public !== false) : true;
+
   const canSendEmail = () => {
     if (!user || user.id === userId) return false;
     if (!profile.email) return false;
@@ -130,6 +138,18 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
     if (!profile.email || !canSendEmail()) return;
     // Open default email client with mailto link
     window.location.href = `mailto:${profile.email}?subject=Reaching out from Trailblaize`;
+  };
+
+  const handleShareProfile = () => {
+    if (!user) return;
+    setShareDrawerOpen(true);
+  };
+
+  const canShareProfile = () => {
+    if (!user || user.id === userId) return false;
+    // Check if user has at least one accepted connection
+    const acceptedConnections = connections.filter(conn => conn.status === 'accepted');
+    return acceptedConnections.length > 0;
   };
 
   const renderConnectionButton = () => {
@@ -233,11 +253,21 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
     }
   };
 
-  const isEmailPublic = isAlumni ? (alumni.isEmailPublic !== false && alumni.is_email_public !== false) : true;
-  const isPhonePublic = isAlumni ? (alumni.isPhonePublic !== false && alumni.is_phone_public !== false) : true;
-
   return (
     <div className="relative">
+      {/* Share Profile Button - Icon only, overlapping banner, similar to desktop */}
+      {canShareProfile() && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleShareProfile}
+          className="absolute top-10 left-3 h-10 w-10 p-0 bg-white/90 hover:bg-white border-navy-600 text-navy-600 rounded-full shadow-sm flex items-center justify-center z-20"
+          title="Share this profile with someone"
+        >
+          <Share2 className="h-4 w-4" />
+        </Button>
+      )}
+
       {/* Profile Content Overlapping Banner */}
       {/* Note: Banner is rendered in PublicProfileClient.tsx with back button and copy button */}
       <div className="px-4 -mt-16 relative">
@@ -355,6 +385,18 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
           </Button>
         </div>
       </div>
+
+      {/* Share Profile Drawer */}
+      <ShareProfileDrawer
+        isOpen={shareDrawerOpen}
+        onClose={() => setShareDrawerOpen(false)}
+        profileToShare={{
+          id: userId,
+          type: profile.type === 'alumni' ? 'alumni' : 'member',
+          name: profile.full_name,
+          avatarUrl: profile.avatar_url || undefined
+        }}
+      />
     </div>
   );
 }
