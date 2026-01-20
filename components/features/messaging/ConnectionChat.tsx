@@ -22,6 +22,18 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
   const searchParams = useSearchParams();
   const router = useRouter();
   const [hasSharedProfile, setHasSharedProfile] = useState(false);
+  
+  // State declarations must come before useEffect hooks that reference them
+  const [connection, setConnection] = useState<Connection | null>(null);
+  const [otherUser, setOtherUser] = useState<{
+    id: string;
+    full_name: string;
+    first_name: string | null;
+    last_name: string | null;
+    chapter: string | null;
+    avatar_url: string | null;
+  } | null>(null);
+
   const {
     messages,
     loading,
@@ -74,16 +86,6 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
       shareProfile();
     }
   }, [searchParams, connection, connectionId, hasSharedProfile, loading, sendMessage, router]);
-
-  const [connection, setConnection] = useState<Connection | null>(null);
-  const [otherUser, setOtherUser] = useState<{
-    id: string;
-    full_name: string;
-    first_name: string | null;
-    last_name: string | null;
-    chapter: string | null;
-    avatar_url: string | null;
-  } | null>(null);
 
   // Find connection and other user details
   useEffect(() => {
