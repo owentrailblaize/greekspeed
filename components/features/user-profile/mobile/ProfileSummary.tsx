@@ -12,7 +12,6 @@ import {
   Star,
   Handshake,
   Calendar,
-  ArrowLeft,
   MapPin
 } from "lucide-react";
 import { UnifiedUserProfile } from "@/types/user-profile";
@@ -231,59 +230,8 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
 
   return (
     <div className="relative">
-      {/* Banner Section - Larger for mobile */}
-      <div className="h-32 bg-gradient-to-r from-navy-100 via-blue-100 to-blue-50 relative overflow-hidden">
-        {/* Banner Image */}
-        {profile.banner_url ? (
-          <img 
-            src={profile.banner_url} 
-            alt="Profile banner" 
-            className="w-full h-full object-cover"
-          />
-        ) : null}
-        {/* Back Button - Positioned in top-left of banner */}
-        <button
-          onClick={onClose}
-          className="absolute top-3 left-3 z-10 h-10 w-10 rounded-full flex items-center justify-center cursor-pointer group"
-          style={{
-            background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%)',
-            boxShadow: `
-              0 6px 12px rgba(30, 64, 175, 0.4),
-              0 2px 4px rgba(30, 64, 175, 0.3),
-              inset 0 1px 0 rgba(255, 255, 255, 0.3),
-              inset 0 -1px 0 rgba(0, 0, 0, 0.2)
-            `,
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-          }}
-          title="Go back"
-        >
-          {/* Inner glow effect */}
-          <div 
-            className="absolute inset-0 rounded-full opacity-40"
-            style={{
-              background: 'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent 70%)',
-            }}
-          />
-          {/* Icon */}
-          <ArrowLeft 
-            className="h-5 w-5 text-white relative z-10 drop-shadow-lg transition-transform duration-200 group-hover:scale-110"
-            style={{
-              filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4))',
-            }}
-          />
-          {/* Hover shine effect */}
-          <div 
-            className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            style={{
-              background: 'radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.3), transparent 60%)',
-            }}
-          />
-        </button>
-      </div>
-      
       {/* Profile Content Overlapping Banner */}
+      {/* Note: Banner is rendered in PublicProfileClient.tsx with back button and copy button */}
       <div className="px-4 -mt-16 relative">
         {/* Avatar - Larger for mobile */}
         <div className="flex justify-center mb-3">
