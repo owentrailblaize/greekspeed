@@ -66,7 +66,8 @@ export function AboutTab({ profile, isLoggedIn = false, canSeeFullProfile = fals
   // Determine if sensitive info should be shown
   const showEmail = isLoggedIn && (canSeeFullProfile || isEmailPublic);
   const showPhone = isLoggedIn && (canSeeFullProfile || isPhonePublic);
-  const showPrivateInfo = isLoggedIn && canSeeFullProfile;
+  // Show professional info to all logged-in users (not just connected ones)
+  const showPrivateInfo = isLoggedIn;
 
   return (
     <div className="w-full px-8 md:px-16 py-8 max-w-7xl mx-auto">
