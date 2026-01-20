@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { generateUniqueUsername, generateProfileSlug } from '@/lib/utils/usernameUtils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -99,6 +100,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create auth user' }, { status: 500 });
     }
 
+    // Generate username and slug
+    const username = await generateUniqueUsername(firstName, lastName);
+    const profileSlug = generateProfileSlug(username);
+
     // 2. Create profile in profiles table - Use upsert to handle existing records
     const { data: newProfile, error: profileError } = await supabase
       .from('profiles')
@@ -108,6 +113,8 @@ export async function POST(request: NextRequest) {
         full_name: `${firstName} ${lastName}`,
         first_name: firstName,
         last_name: lastName,
+        username: username,
+        profile_slug: profileSlug,
         chapter: chapterName, // Store the chapter name, not UUID
         chapter_id: chapterId, // Store the chapter ID separately
         role: role,
@@ -131,12 +138,21 @@ export async function POST(request: NextRequest) {
       // Check if profile already exists
       const { data: existingProfile } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, username, profile_slug')
         .eq('id', newUserAuth.user.id)
         .single();
       
       if (existingProfile) {
         // Profile already exists, updating instead
+        // Generate username if not exists
+        let username = existingProfile.username;
+        let profileSlug = existingProfile.profile_slug;
+        
+        if (!username) {
+          username = await generateUniqueUsername(firstName, lastName, newUserAuth.user.id);
+          profileSlug = generateProfileSlug(username);
+        }
+
         // Update existing profile - REMOVE developer_permissions here too
         const { data: updatedProfile, error: updateError } = await supabase
           .from('profiles')
@@ -145,6 +161,8 @@ export async function POST(request: NextRequest) {
             full_name: `${firstName} ${lastName}`,
             first_name: firstName,
             last_name: lastName,
+            username: username,
+            profile_slug: profileSlug,
             chapter: chapterName, // Store the chapter name, not UUID
             chapter_id: chapterId, // Store the chapter ID separately
             role: role,

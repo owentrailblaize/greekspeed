@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
+import { generateUniqueUsername, generateProfileSlug } from '@/lib/utils/usernameUtils';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -59,6 +60,14 @@ export async function GET(request: NextRequest) {
             defaultName = 'LinkedIn User';
           }
 
+          // Extract first and last name for username generation
+          const firstName = user.user_metadata?.given_name || user.user_metadata?.first_name || '';
+          const lastName = user.user_metadata?.family_name || user.user_metadata?.last_name || '';
+          
+          // Generate username for OAuth user
+          const username = await generateUniqueUsername(firstName, lastName, user.id);
+          const profileSlug = generateProfileSlug(username);
+
           // Create profile for new OAuth user
           const { error: profileError } = await supabase
             .from('profiles')
@@ -66,8 +75,10 @@ export async function GET(request: NextRequest) {
               id: user.id,
               email: user.email,
               full_name: user.user_metadata?.full_name || user.user_metadata?.name || defaultName,
-              first_name: user.user_metadata?.given_name || user.user_metadata?.first_name || '',
-              last_name: user.user_metadata?.family_name || user.user_metadata?.last_name || '',
+              first_name: firstName,
+              last_name: lastName,
+              username: username,
+              profile_slug: profileSlug,
               linkedin_url: linkedinUrl,
               avatar_url: user.user_metadata?.picture || user.user_metadata?.avatar_url || null,
               chapter: null,  // Will be filled in profile completion
