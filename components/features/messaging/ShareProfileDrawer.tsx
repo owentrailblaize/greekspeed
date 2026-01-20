@@ -97,15 +97,27 @@ export function ShareProfileDrawer({
     messageType: 'text' | 'profile' = 'text',
     metadata?: Record<string, unknown>
   ) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/9b79d5f7-95d0-4f63-a221-cc92278c376d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ShareProfileDrawer.tsx:84',message:'handleSendMessage called',data:{hasConnectionId:!!selectedConnectionId,selectedConnectionId,content:content.substring(0,50),messageType,metadata,metadataStringified:JSON.stringify(metadata)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
     if (!selectedConnectionId) return;
     
     try {
       if (messageType === 'profile') {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/9b79d5f7-95d0-4f63-a221-cc92278c376d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ShareProfileDrawer.tsx:93',message:'Calling sendMessage with profile type',data:{content:content.substring(0,50),messageType:'profile',metadata},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+        
         await sendMessage(content, 'profile', metadata);
       } else {
         await sendMessage(content, 'text');
       }
     } catch (error) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/9b79d5f7-95d0-4f63-a221-cc92278c376d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ShareProfileDrawer.tsx:104',message:'handleSendMessage error',data:{error:error instanceof Error?error.message:String(error),errorStack:error instanceof Error?error.stack:undefined},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+      
       console.error('Failed to send message:', error);
       throw error;
     }

@@ -61,8 +61,16 @@ export function MessageInputWithProfileLink({
     
     setIsSending(true);
     try {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/9b79d5f7-95d0-4f63-a221-cc92278c376d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MessageInputWithProfileLink.tsx:58',message:'handleSend called',data:{finalMessage,finalMessageLength:finalMessage.length,hasProfileInfo:!!profileInfo,hasProfileLink:!!profileLink,messageContainsLink:profileInfo?finalMessage.includes(profileLink):false,profileInfo},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+      
       // Check if message contains profile link
       if (profileInfo && finalMessage.includes(profileLink)) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/9b79d5f7-95d0-4f63-a221-cc92278c376d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MessageInputWithProfileLink.tsx:65',message:'Sending profile message',data:{messageType:'profile',metadata:{shared_profile_id:profileInfo.id,shared_profile_type:profileInfo.type},profileInfo},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+        
         // Send as profile message type
         await onSendMessage(
           finalMessage,
@@ -73,6 +81,10 @@ export function MessageInputWithProfileLink({
           }
         );
       } else {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/9b79d5f7-95d0-4f63-a221-cc92278c376d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MessageInputWithProfileLink.tsx:76',message:'Sending text message',data:{messageType:'text'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
+        
         // Send as regular text message
         await onSendMessage(finalMessage, 'text');
       }
