@@ -1,16 +1,17 @@
 import Image, { ImageProps } from "next/image";
 import { cn } from "@/lib/utils";
 
-export default function ImageWithFallback({ src, alt, className, loading, ...rest }: ImageProps) {
+export default function ImageWithFallback({ src, alt, className, loading, fill, priority, ...rest }: ImageProps) {
   const fallback = "/logo.png";
   return (
     <Image
       src={src || fallback}
       alt={alt}
-      width={64}
-      height={64}
+      {...(fill ? { fill: true } : { width: 64, height: 64 })}
       className={cn(className)}
-      loading={loading || "lazy"} // Enable lazy loading by default for better performance
+      {...(priority ? { priority: true } : { loading: loading || "lazy" })}
+      sizes={rest.sizes || fill ? "100vw" : undefined}
+      quality={rest.quality || fill ? 90 : 75}
       onError={(e) => {
         const target = e.currentTarget as HTMLImageElement;
         target.src = fallback;
@@ -18,4 +19,4 @@ export default function ImageWithFallback({ src, alt, className, loading, ...res
       {...rest}
     />
   );
-} 
+}

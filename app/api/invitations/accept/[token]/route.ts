@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { validateInvitationToken, validateEmailDomain, hasEmailUsedInvitation, recordInvitationUsage } from '@/lib/utils/invitationUtils';
+import { generateUniqueUsername, generateProfileSlug } from '@/lib/utils/usernameUtils';
 import { JoinFormData } from '@/types/invitations';
 
 export async function POST(
@@ -121,10 +122,20 @@ export async function POST(
     }
 
     if (autoProfile) {
+      // Generate username if needed
+      const username = await generateUniqueUsername(
+        first_name || full_name.split(' ')[0],
+        last_name || full_name.split(' ').slice(1).join(' '),
+        authData.user.id
+      );
+      const profileSlug = generateProfileSlug(username);
+
       // Profile auto-created by trigger, updating with all required fields
       const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
         .update({
+          username: username,
+          profile_slug: profileSlug,
           chapter_id: invitation.chapter_id,
           chapter: validation.chapter_name,
           role: 'active_member',
@@ -169,6 +180,14 @@ export async function POST(
         console.error('❌ Invitation Accept: Error verifying profile update:', verifyError);
       }
     } else {
+      // Generate username
+      const username = await generateUniqueUsername(
+        first_name || full_name.split(' ')[0],
+        last_name || full_name.split(' ').slice(1).join(' '),
+        authData.user.id
+      );
+      const profileSlug = generateProfileSlug(username);
+
       // No auto-profile found, creating manually with all required fields
       const { error: profileError } = await supabase
         .from('profiles')
@@ -178,6 +197,8 @@ export async function POST(
           full_name,
           first_name: first_name || full_name.split(' ')[0],
           last_name: last_name || full_name.split(' ').slice(1).join(' '),
+          username: username,
+          profile_slug: profileSlug,
           phone: phone.trim(),
           sms_consent: body.sms_consent || false,
           chapter_id: invitation.chapter_id,

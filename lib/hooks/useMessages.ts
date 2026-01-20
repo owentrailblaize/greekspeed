@@ -5,13 +5,21 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import { supabase } from '@/lib/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
+export interface ProfileMessageMetadata {
+  shared_profile_id: string;
+  shared_profile_name: string;
+  shared_profile_avatar?: string;
+  shared_profile_type: 'member' | 'alumni';
+  [key: string]: unknown;
+}
+
 export interface Message {
   id: string;
   connection_id: string;
   sender_id: string;
   content: string;
-  message_type: 'text' | 'image' | 'file' | 'link';
-  metadata?: Record<string, unknown>;
+  message_type: 'text' | 'image' | 'file' | 'link' | 'profile';
+  metadata?: Record<string, unknown> | ProfileMessageMetadata;
   created_at: string;
   updated_at: string;
   sender: {
@@ -91,7 +99,7 @@ export function useMessages(connectionId: string | null) {
     }
   }, [connectionId, user, session]);
 
-  const sendMessage = async (content: string, messageType: 'text' | 'image' | 'file' | 'link' = 'text', metadata?: Record<string, unknown>) => {
+  const sendMessage = async (content: string, messageType: 'text' | 'image' | 'file' | 'link' | 'profile' = 'text', metadata?: Record<string, unknown>) => {
     if (!connectionId || !user || !content.trim()) return;
     
     try {
@@ -117,19 +125,29 @@ export function useMessages(connectionId: string | null) {
       setMessages(prev => [...prev, optimisticMessage]);
       
       // Add authentication header to POST request
+      const requestPayload = {
+        connectionId,
+        content: content.trim(),
+        messageType,
+        metadata
+      };
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/9b79d5f7-95d0-4f63-a221-cc92278c376d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useMessages.ts:128',message:'Sending API request',data:{connectionId,content:content.trim().substring(0,50),messageType,metadata,hasMetadata:!!metadata,metadataKeys:metadata?Object.keys(metadata):[],hasSession:!!session,hasAccessToken:!!session?.access_token,requestPayload},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+      
       const response = await fetch('/api/messages', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.access_token}`
         },
-        body: JSON.stringify({
-          connectionId,
-          content: content.trim(),
-          messageType,
-          metadata
-        })
+        body: JSON.stringify(requestPayload)
       });
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/9b79d5f7-95d0-4f63-a221-cc92278c376d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useMessages.ts:142',message:'API response received',data:{status:response.status,statusText:response.statusText,ok:response.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       
       if (!response.ok) {
         // Try to get the error message from the response

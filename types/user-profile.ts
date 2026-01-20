@@ -15,12 +15,15 @@ export interface UnifiedUserProfile {
   first_name?: string | null;
   last_name?: string | null;
   avatar_url?: string | null;
+  banner_url?: string | null;
   email?: string | null;
   phone?: string | null;
   chapter?: string | null;
   chapter_id?: string | null;
   bio?: string | null;
   location?: string | null;
+  username?: string | null;
+  profile_slug?: string | null;
   
   // Alumni-specific fields (optional)
   alumni?: {
@@ -48,6 +51,7 @@ export interface UnifiedUserProfile {
     major?: string;
     minor?: string;
     linkedin_url?: string | null;
+    pledge_class?: string | null;
   };
 }
 

@@ -56,6 +56,8 @@ export interface Profile {
   avatar_url: string | null;
   banner_url?: string | null;
   linkedin_url?: string | null; // Add this field
+  username?: string | null;
+  profile_slug?: string | null;
   created_at: string;
   updated_at: string;
   is_developer?: boolean;
@@ -67,6 +69,7 @@ export interface Profile {
 export interface ProfileFormData {
   first_name?: string;
   last_name?: string;
+  username?: string;
   email?: string;
   chapter?: string;
   role?: string;

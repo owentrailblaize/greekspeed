@@ -12,8 +12,12 @@ import {
   Handshake,
   Calendar,
   Users,
-  Lock
+  Lock,
+  Share2,
+  ExternalLink,
+  ArrowRight
 } from "lucide-react";
+import Link from 'next/link';
 import { UnifiedUserProfile } from "@/types/user-profile";
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
 import { useConnections } from "@/lib/contexts/ConnectionsContext";
@@ -21,10 +25,12 @@ import { useAuth } from "@/lib/supabase/auth-context";
 import { useState } from "react";
 import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils";
+import { ShareProfileDrawer } from "@/components/features/messaging/ShareProfileDrawer";
 
 interface AlumniProfileViewProps {
   profile: UnifiedUserProfile;
   onClose: () => void;
+  hideCloseButton?: boolean;
 }
 
 const getChapterName = (chapterId: string | null | undefined): string => {
@@ -40,7 +46,7 @@ const getChapterName = (chapterId: string | null | undefined): string => {
   return chapterMap[chapterId] || chapterId;
 };
 
-export function AlumniProfileView({ profile, onClose }: AlumniProfileViewProps) {
+export function AlumniProfileView({ profile, onClose, hideCloseButton = false }: AlumniProfileViewProps) {
   const { user } = useAuth();
   const router = useRouter();
   const { 
@@ -51,6 +57,7 @@ export function AlumniProfileView({ profile, onClose }: AlumniProfileViewProps) 
     getConnectionId
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
+  const [shareDrawerOpen, setShareDrawerOpen] = useState(false);
 
   const alumni = profile.alumni || {};
   const userId = profile.id;
@@ -98,10 +105,48 @@ export function AlumniProfileView({ profile, onClose }: AlumniProfileViewProps) 
     }
   };
 
+  const handleShareProfile = () => {
+    if (!user) return;
+    setShareDrawerOpen(true);
+  };
+
+  const canShareProfile = () => {
+    if (!user || user.id === userId) return false;
+    // Can share if user has at least one accepted connection
+    return true; // We'll validate in the messages page
+  };
+
   const canSendMessage = () => {
     if (!user || user.id === userId) return false;
     const status = getConnectionStatus(userId);
     return status === 'accepted';
+  };
+
+  const isEmailPublic = alumni.isEmailPublic !== false && alumni.is_email_public !== false;
+  
+  const canSendEmail = () => {
+    if (!user || user.id === userId) return false;
+    // Check if email exists and is public for alumni
+    return !!(profile.email && isEmailPublic);
+  };
+
+  const handleEmailClick = () => {
+    if (!profile.email || !canSendEmail()) return;
+    window.location.href = `mailto:${profile.email}?subject=Reaching out from Trailblaize`;
+  };
+
+  const getProfileSlug = () => {
+    // Check if profile has username or profile_slug
+    const slug = profile.profile_slug || profile.username || profile.id;
+    return slug;
+  };
+
+  const handleViewFullProfile = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const slug = getProfileSlug();
+    router.push(`/profile/${slug}`);
+    onClose(); // Close modal when navigating
   };
 
   const renderConnectionButton = () => {
@@ -216,7 +261,6 @@ export function AlumniProfileView({ profile, onClose }: AlumniProfileViewProps) 
     }
   };
 
-  const isEmailPublic = alumni.isEmailPublic !== false && alumni.is_email_public !== false;
   const isPhonePublic = alumni.isPhonePublic !== false && alumni.is_phone_public !== false;
 
   return (
@@ -226,15 +270,41 @@ export function AlumniProfileView({ profile, onClose }: AlumniProfileViewProps) 
         {/* Background Banner */}
         <div className="h-20 bg-gradient-to-r from-navy-100 to-blue-100 rounded-t-xl" />
         
-        {/* Close Button - Positioned in top-right corner */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          className="absolute top-3 right-3 h-8 w-8 p-0 bg-white/80 hover:bg-white rounded-full shadow-sm"
+        {/* Close Button - Only show if not hidden */}
+        {!hideCloseButton && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="absolute top-3 right-3 h-8 w-8 p-0 bg-white/80 hover:bg-white rounded-full shadow-sm"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+
+        {/* Share Profile Button - Icon only, circular, top left below banner */}
+        {canShareProfile() && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShareProfile}
+            className="absolute top-16 left-3 h-10 w-10 p-0 bg-white/90 hover:bg-white border-navy-600 text-navy-600 rounded-full shadow-sm flex items-center justify-center z-20"
+            title="Share this profile with someone"
+          >
+            <Share2 className="h-4 w-4" />
+          </Button>
+        )}
+
+        {/* View Full Profile Link - Text link, positioned to the right of Share button, below banner */}
+        <Link
+          href={`/profile/${getProfileSlug()}`}
+          onClick={handleViewFullProfile}
+          className="absolute top-20 left-14 px-3 py-1.5 text-sm font-medium text-slate-900 hover:text-slate-700 transition-colors z-20 flex items-center gap-1.5 bg-white/90 hover:bg-white rounded-md border-0"
+          title="View full profile page"
         >
-          <X className="h-4 w-4" />
-        </Button>
+          <span className="font-light">View Full Profile</span>
+          <ArrowRight className="h-3.5 w-3.5 font-light" />
+        </Link>
         
         {/* Profile Content Overlapping Banner */}
         <div className="px-6 -mt-10 relative">
@@ -371,17 +441,28 @@ export function AlumniProfileView({ profile, onClose }: AlumniProfileViewProps) 
 
         {/* Action Buttons - Updated with messaging functionality */}
         <div className="flex space-x-2 pt-3 border-t border-gray-200">
-          <Button className="flex-1" variant="ghost" size="sm" disabled>
+          <Button 
+            className={cn(
+              "flex-1 rounded-full",
+              canSendEmail()
+                ? "border-navy-600 text-navy-600 hover:bg-navy-50" 
+                : "text-gray-400 border-gray-200"
+            )}
+            variant={canSendEmail() ? "outline" : "ghost"}
+            size="sm" 
+            onClick={handleEmailClick}
+            disabled={!canSendEmail()}
+          >
             <Mail className="h-3 w-3 mr-2" />
             <span className="hidden sm:inline">Send Email</span>
             <span className="sm:hidden">Email</span>
-            <Lock className="h-3 w-3 ml-2 text-gray-400" />
+            {!canSendEmail() && <Lock className="h-3 w-3 ml-2 text-gray-400" />}
           </Button>
           
           {/* ✅ Updated Send Message Button */}
           <Button 
             className={cn(
-              "flex-1",
+              "flex-1 rounded-full",
               canSendMessage() 
                 ? "border-navy-600 text-navy-600 hover:bg-navy-50" 
                 : "text-gray-400 border-gray-200"
@@ -398,6 +479,18 @@ export function AlumniProfileView({ profile, onClose }: AlumniProfileViewProps) 
           </Button>
         </div>
       </div>
+
+      {/* Share Profile Drawer */}
+      <ShareProfileDrawer
+        isOpen={shareDrawerOpen}
+        onClose={() => setShareDrawerOpen(false)}
+        profileToShare={{
+          id: userId,
+          type: profile.type === 'alumni' ? 'alumni' : 'member',
+          name: profile.full_name,
+          avatarUrl: profile.avatar_url || undefined
+        }}
+      />
     </>
   );
 }

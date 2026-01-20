@@ -20,6 +20,8 @@ import { useProfileUpdateDetection } from '@/lib/hooks/useProfileUpdateDetection
 import type { DetectedChange } from './ProfileUpdatePromptModal';
 import Link from 'next/link';
 import { industries } from '@/lib/alumniConstants';
+import { UsernameInput } from './UsernameInput';
+import { generateProfileSlug } from '@/lib/utils/usernameUtils';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -42,6 +44,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
   } = useFormPersistence({
     first_name: '',
     last_name: '',
+    username: '',
     email: '',
     chapter: '',
     role: '',
@@ -131,6 +134,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
         last_name: profile.last_name || profile.full_name?.split(' ')[1] || '',
         email: profile.email || '',
         chapter: profile.chapter || profile.chapter_name || profile.chapter_name || 'Not set',
+        username: profile.username || profile.profile_slug || '',
         role: profile.role || profile.user_role || profile.role_name || 'Not set',
         bio: profile.bio || profile.description || '',
         phone: profile.phone || profile.phone_number || '',
@@ -296,6 +300,44 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
     }
   };
 
+  // Auto-suggest username when firstName/lastName change (only if username is empty)
+  const [usernameManuallySet, setUsernameManuallySet] = useState(false);
+  
+  useEffect(() => {
+    // Only suggest if username is empty and names are provided
+    if (!usernameManuallySet && !formData.username && formData.first_name && formData.last_name) {
+      const suggestUsername = async () => {
+        try {
+          const params = new URLSearchParams({
+            firstName: formData.first_name,
+            lastName: formData.last_name,
+          });
+          const response = await fetch(`/api/username/suggestions?${params.toString()}`);
+          const data = await response.json();
+          
+          if (response.ok && data.suggestions && data.suggestions.length > 0) {
+            // Use the first suggestion
+            updateFormData({ username: data.suggestions[0] });
+          }
+        } catch (error) {
+          console.error('Error fetching username suggestions:', error);
+          // Fallback: generate base username client-side
+          const { generateBaseUsername } = await import('@/lib/utils/usernameUtils');
+          const suggested = generateBaseUsername(formData.first_name, formData.last_name);
+          updateFormData({ username: suggested });
+        }
+      };
+
+      suggestUsername();
+    }
+  }, [formData.first_name, formData.last_name]); // Only trigger when names change
+
+  // Track if username was manually set
+  const handleUsernameChange = (value: string) => {
+    setUsernameManuallySet(true);
+    handleInputChange('username', value);
+  };
+
   // Handle avatar file selection with upload
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -425,6 +467,30 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
       newErrors.linkedin_url = 'Please enter a valid LinkedIn URL';
     }
 
+    // Validate username if provided
+    if (formData.username) {
+      const { validateUsername } = await import('@/lib/utils/usernameUtils');
+      const validation = validateUsername(formData.username);
+      if (!validation.valid) {
+        newErrors.username = validation.error || 'Invalid username';
+      } else {
+        // Check availability (final check before submit)
+        try {
+          const params = new URLSearchParams({ username: formData.username });
+          if (profile?.id) {
+            params.append('excludeUserId', profile.id);
+          }
+          const response = await fetch(`/api/username/check?${params.toString()}`);
+          const data = await response.json();
+          if (!response.ok || !data.available) {
+            newErrors.username = data.message || 'Username is not available';
+          }
+        } catch (error) {
+          newErrors.username = 'Failed to verify username availability';
+        }
+      }
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -465,6 +531,15 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
         gpa: formData.gpa ? parseFloat(formData.gpa) : null,
         linkedin_url: formData.linkedin_url || null
       };
+
+      // Add username and update profile_slug if username changed
+      if (formData.username) {
+        profileUpdates.username = formData.username;
+        // Generate new profile_slug if username is different from current
+        if (formData.username !== (profile?.username || profile?.profile_slug || '')) {
+          profileUpdates.profile_slug = generateProfileSlug(formData.username);
+        }
+      }
 
       // Remove undefined values to avoid overwriting with null
       Object.keys(profileUpdates).forEach(key => {
@@ -760,6 +835,22 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                     />
                   </div>
                 </div>
+
+                {/* Username Field */}
+                <UsernameInput
+                  value={formData.username}
+                  onChange={handleUsernameChange}
+                  onValidationChange={(valid) => {
+                    if (!valid && !errors.username) {
+                      // Validation will be handled by UsernameInput component
+                    }
+                  }}
+                  excludeUserId={profile?.id}
+                  firstName={formData.first_name}
+                  lastName={formData.last_name}
+                  error={errors.username}
+                  disabled={loading}
+                />
 
                 {/* Email and Graduation Year in same row for alumni */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

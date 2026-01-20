@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 
 import { ActivityTypes, trackActivity } from '@/lib/utils/activityUtils';
+import { generateUniqueUsername, generateProfileSlug } from '@/lib/utils/usernameUtils';
 import { supabase } from './client';
 
 interface ProfileData {
@@ -220,6 +221,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ? (profileData.role.toLowerCase() === 'alumni' ? 'alumni' : profileData.role.toLowerCase())
           : null;
 
+          // Generate username
+          const username = await generateUniqueUsername(
+            profileData?.firstName || null,
+            profileData?.lastName || null,
+            data.user.id
+          );
+          const profileSlug = generateProfileSlug(username);
+
           const { error: profileError } = await supabase
             .from('profiles')
             .upsert(
@@ -229,6 +238,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 full_name: fullName,
                 first_name: profileData?.firstName || null,
                 last_name: profileData?.lastName || null,
+                username: username,
+                profile_slug: profileSlug,
                 chapter: profileData?.chapter || null,
                 role: normalizedRole,
                 phone: profileData?.phone || null,
