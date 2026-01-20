@@ -271,6 +271,14 @@ export async function POST(request: NextRequest) {
       }
 
       // Build validated metadata object
+      // TypeScript Guard: ensure profileData is not null
+      if (!profileData) {
+        return NextResponse.json({
+          error: 'Profile data is missing'
+        }, { status: 500 });
+      }
+
+      // Build validated metadata object
       metadata.shared_profile_id = profileData.id;
       metadata.shared_profile_name = profileData.name;
       if (profileData.avatar) {
