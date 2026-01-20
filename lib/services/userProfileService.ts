@@ -7,6 +7,28 @@ const profileCache = new Map<string, { data: UnifiedUserProfile; timestamp: numb
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 /**
+ * Invalidate profile cache entries
+ * Clears cache for a specific user ID and/or slug
+ */
+export function invalidateProfileCache(userId?: string, slug?: string) {
+  if (userId) {
+    profileCache.delete(userId);
+  }
+  if (slug) {
+    profileCache.delete(`slug:${slug}`);
+  }
+  // Clear all slug-based entries if we need to be thorough (optional)
+  if (slug) {
+    // Clear old slug entries - this is best effort since we might not know old slug
+    for (const key of profileCache.keys()) {
+      if (key.startsWith('slug:')) {
+        profileCache.delete(key);
+      }
+    }
+  }
+}
+
+/**
  * Get chapter name from chapter ID
  */
 const getChapterName = (chapterId: string): string => {

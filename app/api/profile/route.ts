@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
+import { generateProfileSlug } from '@/lib/utils/usernameUtils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -55,16 +56,41 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
     
+    // Get current profile to check if username changed
+    const { data: currentProfile } = await supabase
+      .from('profiles')
+      .select('username, profile_slug')
+      .eq('id', user.id)
+      .single();
+
+    // Prepare update data
+    const updateData: any = {
+      ...body,
+      full_name: body.first_name && body.last_name 
+        ? `${body.first_name} ${body.last_name}` 
+        : undefined,
+      updated_at: new Date().toISOString()
+    };
+
+    // If username changed, generate new profile_slug
+    if (body.username !== undefined) {
+      const currentUsername = currentProfile?.username || currentProfile?.profile_slug || '';
+      if (body.username !== currentUsername) {
+        updateData.profile_slug = generateProfileSlug(body.username);
+      }
+    }
+
+    // Remove undefined values
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === undefined) {
+        delete updateData[key];
+      }
+    });
+    
     // Update profile
     const { data: profile, error } = await supabase
       .from('profiles')
-      .update({
-        ...body,
-        full_name: body.first_name && body.last_name 
-          ? `${body.first_name} ${body.last_name}` 
-          : undefined,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', user.id)
       .select()
       .single();
