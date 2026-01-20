@@ -44,7 +44,8 @@
     "tailwind-merge": "^3.3.1",
     "telnyx": "^3.9.0",
     "twilio": "^5.9.0",
-    "us-state-codes": "^1.1.2"
+    "us-state-codes": "^1.1.2",
+    "vaul": "^1.1.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
