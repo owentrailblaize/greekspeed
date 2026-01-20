@@ -54,12 +54,26 @@ export function MessageList({
     // Check if content is just a URL (starts with http/https)
     const isUrlPattern = /^https?:\/\/.+$/i.test(contentTrimmed);
     
-    // If content contains the profile ID in a URL pattern, remove it
+    // If content contains a profile URL, remove it
     let textWithoutUrl = contentTrimmed;
     if (profileMetadata?.shared_profile_id && isUrlPattern) {
-      const urlRegex = new RegExp(`https?://[^\\s]*/dashboard/profile/${profileMetadata.shared_profile_id}[^\\s]*`, 'gi');
-      textWithoutUrl = contentTrimmed.replace(urlRegex, '').trim();
+      // Match profile URLs with slug format: /profile/{slug} or /profile/{userId}
+      // Also match dashboard profile URLs: /dashboard/profile/{userId}
+      // Match the full URL including query parameters
+      const profileUrlPatterns = [
+        // Match /profile/{slug or userId} with optional query params
+        new RegExp(`https?://[^\\s]*/profile/[^\\s]*`, 'gi'),
+        // Match /dashboard/profile/{userId} with optional query params (for backward compatibility)
+        new RegExp(`https?://[^\\s]*/dashboard/profile/${profileMetadata.shared_profile_id}[^\\s]*`, 'gi'),
+      ];
+      
+      // Remove all matching profile URL patterns
+      profileUrlPatterns.forEach(pattern => {
+        textWithoutUrl = textWithoutUrl.replace(pattern, '').trim();
+      });
     } else if (isUrlPattern) {
+      // If it's just a URL pattern but we don't have profile metadata, treat as empty
+      // This handles the case where a profile link URL was sent but metadata is missing
       textWithoutUrl = '';
     }
     

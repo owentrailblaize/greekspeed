@@ -65,8 +65,8 @@ export class ProfileService {
       let oldSlug: string | undefined;
       if (profileData.username !== undefined) {
         const currentProfile = await this.getCurrentProfile();
-        oldUsername = currentProfile?.username;
-        oldSlug = currentProfile?.profile_slug;
+        oldUsername = currentProfile?.username ?? undefined;
+        oldSlug = currentProfile?.profile_slug ?? undefined;
         const currentUsername = currentProfile?.username || currentProfile?.profile_slug || '';
         // If username changed, generate new profile_slug
         if (profileData.username !== currentUsername) {
