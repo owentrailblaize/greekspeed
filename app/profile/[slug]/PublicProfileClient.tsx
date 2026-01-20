@@ -18,7 +18,6 @@ import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useMutualConnections } from '@/lib/hooks/useMutualConnections';
 import Link from 'next/link';
 import ImageWithFallback from '@/components/figma/ImageWithFallback';
-import { SimilarConnections } from '@/components/profile/public/SimilarConnections';
 
 interface PublicProfileClientProps {
   slug: string;
@@ -327,14 +326,6 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
         )}
       </div>
 
-      {/* Similar Connections Section - Mobile */}
-      <div className="px-4 py-6 bg-white border-t border-gray-200">
-        <SimilarConnections
-          slug={slug}
-          profileId={profile.id}
-          isLoggedIn={isLoggedIn}
-        />
-      </div>
 
         <MobileBottomNavigation />
       </div>
@@ -342,7 +333,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
       {/* Desktop Layout - LinkedIn Style */}
       <div className="min-h-screen bg-white hidden sm:block">
         {/* Conditional Header: DashboardHeader for logged-in, MarketingHeader for logged-out */}
-        {isLoggedIn ? <DashboardHeader /> : <MarketingHeader />}
+        {isLoggedIn ? <DashboardHeader /> : <MarketingHeader hideNavigation={true} />}
 
         {/* Top Slide-Down Sign-In Modal */}
         {!isLoggedIn && !dismissedModal && (
@@ -683,14 +674,6 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
             )}
           </div>
 
-          {/* Similar Connections Section - Desktop */}
-          <div className="mt-8 pt-8 border-t border-gray-200">
-            <SimilarConnections
-              slug={slug}
-              profileId={profile.id}
-              isLoggedIn={isLoggedIn}
-            />
-          </div>
         </div>
       </div>
     </>

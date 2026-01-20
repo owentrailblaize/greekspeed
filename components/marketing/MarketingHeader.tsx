@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button";
 interface MarketingHeaderProps {
   activeSection?: string;
   onSectionChange?: (section: string) => void;
+  hideNavigation?: boolean; // Hide Features, Pricing, About Us links
 }
 
-export function MarketingHeader({ activeSection = "home", onSectionChange }: MarketingHeaderProps) {
+export function MarketingHeader({ activeSection = "home", onSectionChange, hideNavigation = false }: MarketingHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, signOut } = useAuth();
@@ -56,42 +57,44 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-10">
-            {[
-              { id: "features", label: "Features" },
-              { id: "pricing", label: "Pricing" },
-              { id: "about", label: "About Us" },
-            ].map(({ id, label }) => (
-              <button
-                key={id}
-                onClick={() => scrollToSection(id)}
-                className={`text-sm font-semibold transition-all duration-300 relative py-2 ${
-                  activeSection === id 
-                    ? "text-brand-primary" 
-                    : "text-gray-600 hover:text-brand-primary"
-                }`}
-              >
-                {label}
-                {activeSection === id && (
-                  <motion.div
-                    layoutId="activeIndicator"
-                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-primary to-brand-accent rounded-full"
-                    initial={false}
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                  />
-                )}
-              </button>
-            ))}
-            {/* Dashboard link for authenticated users */}
-            {user && (
-              <Link 
-                href="/dashboard" 
-                className="text-sm font-semibold text-gray-600 hover:text-brand-primary transition-colors py-2"
-              >
-                Dashboard
-              </Link>
-            )}
-          </div>
+          {!hideNavigation && (
+            <div className="hidden md:flex items-center space-x-10">
+              {[
+                { id: "features", label: "Features" },
+                { id: "pricing", label: "Pricing" },
+                { id: "about", label: "About Us" },
+              ].map(({ id, label }) => (
+                <button
+                  key={id}
+                  onClick={() => scrollToSection(id)}
+                  className={`text-sm font-semibold transition-all duration-300 relative py-2 ${
+                    activeSection === id 
+                      ? "text-brand-primary" 
+                      : "text-gray-600 hover:text-brand-primary"
+                  }`}
+                >
+                  {label}
+                  {activeSection === id && (
+                    <motion.div
+                      layoutId="activeIndicator"
+                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-primary to-brand-accent rounded-full"
+                      initial={false}
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                </button>
+              ))}
+              {/* Dashboard link for authenticated users */}
+              {user && (
+                <Link 
+                  href="/dashboard" 
+                  className="text-sm font-semibold text-gray-600 hover:text-brand-primary transition-colors py-2"
+                >
+                  Dashboard
+                </Link>
+              )}
+            </div>
+          )}
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center space-x-3">
@@ -174,30 +177,34 @@ export function MarketingHeader({ activeSection = "home", onSectionChange }: Mar
             className="md:hidden bg-white/95 backdrop-blur-xl border-t border-gray-200"
           >
             <div className="px-6 py-5 space-y-1">
-              {[
-                { id: "features", label: "Features" },
-                { id: "pricing", label: "Pricing" },
-                { id: "about", label: "About Us" },
-              ].map(({ id, label }) => (
-                <button 
-                  key={id} 
-                  onClick={() => scrollToSection(id)} 
-                  className={`block w-full text-left py-3 px-4 rounded-lg transition-all font-medium ${
-                    activeSection === id
-                      ? "text-brand-primary bg-brand-primary/10 shadow-sm"
-                      : "text-gray-700 hover:text-brand-primary hover:bg-gray-50"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-              {user && (
-                <Link 
-                  href="/dashboard" 
-                  className="block w-full text-left py-3 px-4 rounded-lg text-gray-700 hover:text-brand-primary hover:bg-gray-50 transition-all font-medium"
-                >
-                  Dashboard
-                </Link>
+              {!hideNavigation && (
+                <>
+                  {[
+                    { id: "features", label: "Features" },
+                    { id: "pricing", label: "Pricing" },
+                    { id: "about", label: "About Us" },
+                  ].map(({ id, label }) => (
+                    <button 
+                      key={id} 
+                      onClick={() => scrollToSection(id)} 
+                      className={`block w-full text-left py-3 px-4 rounded-lg transition-all font-medium ${
+                        activeSection === id
+                          ? "text-brand-primary bg-brand-primary/10 shadow-sm"
+                          : "text-gray-700 hover:text-brand-primary hover:bg-gray-50"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                  {user && (
+                    <Link 
+                      href="/dashboard" 
+                      className="block w-full text-left py-3 px-4 rounded-lg text-gray-700 hover:text-brand-primary hover:bg-gray-50 transition-all font-medium"
+                    >
+                      Dashboard
+                    </Link>
+                  )}
+                </>
               )}
               {!user ? (
                 <div className="pt-4 border-t border-gray-200 mt-4 space-y-4">
