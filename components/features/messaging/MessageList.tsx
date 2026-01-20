@@ -42,21 +42,55 @@ export function MessageList({
     }
   };
 
-  const renderProfileMessage = (metadata: ProfileMessageMetadata, isOwnMessage: boolean) => {
+  // Helper function to extract text content from profile messages
+  const getProfileMessageContent = (message: Message) => {
+    if (message.message_type !== 'profile' || !message.content) {
+      return { hasText: !!message.content, text: message.content || '', isProfileOnly: false };
+    }
+    
+    const contentTrimmed = message.content.trim();
+    const profileMetadata = message.metadata as ProfileMessageMetadata;
+    
+    // Check if content is just a URL (starts with http/https)
+    const isUrlPattern = /^https?:\/\/.+$/i.test(contentTrimmed);
+    
+    // If content contains the profile ID in a URL pattern, remove it
+    let textWithoutUrl = contentTrimmed;
+    if (profileMetadata?.shared_profile_id && isUrlPattern) {
+      const urlRegex = new RegExp(`https?://[^\\s]*/dashboard/profile/${profileMetadata.shared_profile_id}[^\\s]*`, 'gi');
+      textWithoutUrl = contentTrimmed.replace(urlRegex, '').trim();
+    } else if (isUrlPattern) {
+      textWithoutUrl = '';
+    }
+    
+    return { 
+      hasText: !!textWithoutUrl, 
+      text: textWithoutUrl,
+      isProfileOnly: !textWithoutUrl && !!profileMetadata
+    };
+  };
+
+  const renderProfileMessage = (metadata: ProfileMessageMetadata, isOwnMessage: boolean, standalone: boolean = false) => {
     const profileMetadata = metadata as ProfileMessageMetadata;
     
     return (
       <div 
-        className={`mt-2 p-3 rounded-lg border cursor-pointer transition-colors ${
+        className={`${standalone ? '' : 'mt-2'} p-3 rounded-lg border cursor-pointer transition-colors ${
           isOwnMessage 
-            ? 'bg-white/10 border-white/20 hover:bg-white/20' 
+            ? standalone 
+              ? 'bg-blue-50 border-blue-200 hover:bg-blue-100' // More visible when standalone
+              : 'bg-white/10 border-white/20 hover:bg-white/20' // Original transparent for inside bubble
             : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
         }`}
         onClick={() => handleProfileClick(profileMetadata.shared_profile_id, profileMetadata.shared_profile_type)}
       >
         <div className="flex items-center space-x-3">
           {profileMetadata.shared_profile_avatar ? (
-            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-white/20">
+            <div className={`w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 ${
+              isOwnMessage && standalone 
+                ? 'border-blue-200' 
+                : 'border-white/20'
+            }`}>
               <ImageWithFallback
                 src={profileMetadata.shared_profile_avatar}
                 alt={profileMetadata.shared_profile_name}
@@ -71,10 +105,22 @@ export function MessageList({
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className={`text-sm font-medium truncate ${isOwnMessage ? 'text-white' : 'text-gray-900'}`}>
+            <p className={`text-sm font-medium truncate ${
+              isOwnMessage && standalone 
+                ? 'text-gray-900' // Dark text for light background
+                : isOwnMessage 
+                  ? 'text-white' // White text for transparent background
+                  : 'text-gray-900'
+            }`}>
               {profileMetadata.shared_profile_name}
             </p>
-            <p className={`text-xs capitalize ${isOwnMessage ? 'text-white/70' : 'text-gray-500'}`}>
+            <p className={`text-xs capitalize ${
+              isOwnMessage && standalone 
+                ? 'text-gray-500' // Gray text for light background
+                : isOwnMessage 
+                  ? 'text-white/70' // Transparent white for transparent background
+                  : 'text-gray-500'
+            }`}>
               {profileMetadata.shared_profile_type}
             </p>
           </div>
@@ -290,44 +336,50 @@ export function MessageList({
                             </div>
                           </div>
                         ) : (
-                          <div className="bg-white border border-gray-200 text-gray-900 px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
-                            {/* For profile messages, hide URL and only show additional text if it exists */}
-                            {message.message_type === 'profile' && message.content ? (
-                              (() => {
-                                const contentTrimmed = message.content.trim();
-                                const profileMetadata = message.metadata as ProfileMessageMetadata;
-                                
-                                // Check if content is just a URL (starts with http/https)
-                                const isUrlPattern = /^https?:\/\/.+$/i.test(contentTrimmed);
-                                
-                                // If content contains the profile ID in a URL pattern, remove it
-                                let textWithoutUrl = contentTrimmed;
-                                if (profileMetadata?.shared_profile_id && isUrlPattern) {
-                                  // Remove URL patterns that contain the profile ID
-                                  const urlRegex = new RegExp(`https?://[^\\s]*/dashboard/profile/${profileMetadata.shared_profile_id}[^\\s]*`, 'gi');
-                                  textWithoutUrl = contentTrimmed.replace(urlRegex, '').trim();
-                                } else if (isUrlPattern) {
-                                  // If it's just a URL pattern and no profile ID match, assume it's the profile link
-                                  textWithoutUrl = '';
-                                }
-                                
-                                return textWithoutUrl ? (
-                                  <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere mb-2">
-                                    {textWithoutUrl}
-                                  </p>
-                                ) : null;
-                              })()
-                            ) : (
-                              message.content && (
-                                <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                                  {message.content}
-                                </p>
-                              )
-                            )}
-                            {message.message_type === 'profile' && message.metadata && (
-                              renderProfileMessage(message.metadata as ProfileMessageMetadata, false)
-                            )}
-                          </div>
+                          (() => {
+                            const { hasText, text, isProfileOnly } = getProfileMessageContent(message);
+                            const isProfileMessage = message.message_type === 'profile' && message.metadata;
+                            
+                            return (
+                              <>
+                                {/* Case 1: Profile message with no text - just show card, no bubble */}
+                                {isProfileOnly ? (
+                                  <div className="relative group min-w-0 max-w-full">
+                                    {renderProfileMessage(message.metadata as ProfileMessageMetadata, false, true)}
+                                  </div>
+                                ) : (
+                                  <>
+                                    {/* Case 2: Has text - show text in bubble */}
+                                    {hasText && (
+                                      <div className="relative group min-w-0 max-w-full">
+                                        <div className="bg-white border border-gray-200 text-gray-900 px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
+                                          <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                                            {text}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    )}
+                                    {/* Case 3: Profile card below text (if profile message) */}
+                                    {isProfileMessage && (
+                                      <div className="relative group min-w-0 max-w-full mt-2">
+                                        {renderProfileMessage(message.metadata as ProfileMessageMetadata, false, true)}
+                                      </div>
+                                    )}
+                                    {/* Case 4: Regular message (not profile) */}
+                                    {!isProfileMessage && message.content && (
+                                      <div className="relative group min-w-0 max-w-full">
+                                        <div className="bg-white border border-gray-200 text-gray-900 px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
+                                          <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                                            {message.content}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </>
+                            );
+                          })()
                         )}
                       </div>
                       
@@ -376,75 +428,140 @@ export function MessageList({
                             </div>
                           </div>
                         ) : (
-                          <div className="bg-navy-600 text-white px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
-                            {/* For profile messages, hide URL and only show additional text if it exists */}
-                            {message.message_type === 'profile' && message.content ? (
-                              (() => {
-                                const contentTrimmed = message.content.trim();
-                                const profileMetadata = message.metadata as ProfileMessageMetadata;
-                                
-                                // Check if content is just a URL (starts with http/https)
-                                const isUrlPattern = /^https?:\/\/.+$/i.test(contentTrimmed);
-                                
-                                // If content contains the profile ID in a URL pattern, remove it
-                                let textWithoutUrl = contentTrimmed;
-                                if (profileMetadata?.shared_profile_id && isUrlPattern) {
-                                  // Remove URL patterns that contain the profile ID
-                                  const urlRegex = new RegExp(`https?://[^\\s]*/dashboard/profile/${profileMetadata.shared_profile_id}[^\\s]*`, 'gi');
-                                  textWithoutUrl = contentTrimmed.replace(urlRegex, '').trim();
-                                } else if (isUrlPattern) {
-                                  // If it's just a URL pattern and no profile ID match, assume it's the profile link
-                                  textWithoutUrl = '';
-                                }
-                                
-                                return textWithoutUrl ? (
-                                  <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere mb-2">
-                                    {textWithoutUrl}
-                                  </p>
-                                ) : null;
-                              })()
-                            ) : (
-                              message.content && (
-                                <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                                  {message.content}
-                                </p>
-                              )
-                            )}
-                            {message.message_type === 'profile' && message.metadata && (
-                              renderProfileMessage(message.metadata as ProfileMessageMetadata, true)
-                            )}
+                          (() => {
+                            const { hasText, text, isProfileOnly } = getProfileMessageContent(message);
+                            const isProfileMessage = message.message_type === 'profile' && message.metadata;
                             
-                            {/* Message actions menu */}
-                            <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => setShowMenuFor(showMenuFor === message.id ? null : message.id)}
-                                className="h-6 w-6 p-0 bg-white/90 hover:bg-white shadow-sm"
-                              >
-                                <MoreHorizontal className="w-3 h-3" />
-                              </Button>
-                              
-                              {showMenuFor === message.id && (
-                                <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10">
-                                  <button
-                                    onClick={() => handleEdit(message)}
-                                    className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
-                                  >
-                                    <Edit className="w-3 h-3 mr-2" />
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() => handleDelete(message.id)}
-                                    className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
-                                  >
-                                    <Trash2 className="w-3 h-3 mr-2" />
-                                    Delete
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                            return (
+                              <>
+                                {/* Case 1: Profile message with no text - just show card, no bubble */}
+                                {isProfileOnly ? (
+                                  <div className="relative group min-w-0 max-w-full">
+                                    {renderProfileMessage(message.metadata as ProfileMessageMetadata, true, true)}
+                                    {/* Message actions menu for profile-only messages */}
+                                    <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => setShowMenuFor(showMenuFor === message.id ? null : message.id)}
+                                        className="h-6 w-6 p-0 bg-white/90 hover:bg-white shadow-sm"
+                                      >
+                                        <MoreHorizontal className="w-3 h-3" />
+                                      </Button>
+                                      
+                                      {showMenuFor === message.id && (
+                                        <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10">
+                                          <button
+                                            onClick={() => handleEdit(message)}
+                                            className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                                          >
+                                            <Edit className="w-3 h-3 mr-2" />
+                                            Edit
+                                          </button>
+                                          <button
+                                            onClick={() => handleDelete(message.id)}
+                                            className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
+                                          >
+                                            <Trash2 className="w-3 h-3 mr-2" />
+                                            Delete
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    {/* Case 2: Has text - show text in bubble */}
+                                    {hasText && (
+                                      <div className="relative group min-w-0 max-w-full">
+                                        <div className="bg-navy-600 text-white px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
+                                          <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                                            {text}
+                                          </p>
+                                        </div>
+                                        {/* Message actions menu */}
+                                        <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => setShowMenuFor(showMenuFor === message.id ? null : message.id)}
+                                            className="h-6 w-6 p-0 bg-white/90 hover:bg-white shadow-sm"
+                                          >
+                                            <MoreHorizontal className="w-3 h-3" />
+                                          </Button>
+                                          
+                                          {showMenuFor === message.id && (
+                                            <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10">
+                                              <button
+                                                onClick={() => handleEdit(message)}
+                                                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                                              >
+                                                <Edit className="w-3 h-3 mr-2" />
+                                                Edit
+                                              </button>
+                                              <button
+                                                onClick={() => handleDelete(message.id)}
+                                                className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
+                                              >
+                                                <Trash2 className="w-3 h-3 mr-2" />
+                                                Delete
+                                              </button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                    {/* Case 3: Profile card below text (if profile message) */}
+                                    {isProfileMessage && (
+                                      <div className="relative group min-w-0 max-w-full mt-2">
+                                        {renderProfileMessage(message.metadata as ProfileMessageMetadata, true, true)}
+                                      </div>
+                                    )}
+                                    {/* Case 4: Regular message (not profile) */}
+                                    {!isProfileMessage && message.content && (
+                                      <div className="relative group min-w-0 max-w-full">
+                                        <div className="bg-navy-600 text-white px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
+                                          <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                                            {message.content}
+                                          </p>
+                                        </div>
+                                        {/* Message actions menu */}
+                                        <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => setShowMenuFor(showMenuFor === message.id ? null : message.id)}
+                                            className="h-6 w-6 p-0 bg-white/90 hover:bg-white shadow-sm"
+                                          >
+                                            <MoreHorizontal className="w-3 h-3" />
+                                          </Button>
+                                          
+                                          {showMenuFor === message.id && (
+                                            <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10">
+                                              <button
+                                                onClick={() => handleEdit(message)}
+                                                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                                              >
+                                                <Edit className="w-3 h-3 mr-2" />
+                                                Edit
+                                              </button>
+                                              <button
+                                                onClick={() => handleDelete(message.id)}
+                                                className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
+                                              >
+                                                <Trash2 className="w-3 h-3 mr-2" />
+                                                Delete
+                                              </button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </>
+                            );
+                          })()
                         )}
                       </div>
                       
