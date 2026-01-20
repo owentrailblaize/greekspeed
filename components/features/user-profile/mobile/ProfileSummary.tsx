@@ -108,13 +108,21 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
 
   const canSendEmail = () => {
     if (!user || user.id === userId) return false;
-    // Check if email exists and is public
     if (!profile.email) return false;
-    // For alumni, check privacy settings
+    
+    // Get connection status
+    const status = getConnectionStatus(userId);
+    const isConnected = status === 'accepted';
+    
+    // Connected users can always email each other
+    if (isConnected) return true;
+    
+    // For alumni, check privacy settings if not connected
     if (isAlumni) {
       return isEmailPublic;
     }
-    // For regular users, email is always available if it exists
+    
+    // For regular users, email is available if it exists
     return true;
   };
 
