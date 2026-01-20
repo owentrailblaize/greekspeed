@@ -12,15 +12,15 @@ const RESERVED_WORDS = [
 
 /**
  * Sanitize a string to be URL-safe
- * Converts to lowercase, removes special characters, allows hyphens
+ * Converts to lowercase, removes special characters, allows hyphens and dots
  */
 export function sanitizeUsername(input: string): string {
   return input
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9-]/g, '') // Remove all non-alphanumeric except hyphens
-    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+    .replace(/[^a-z0-9.-]/g, '') // Remove all non-alphanumeric except hyphens and dots
+    .replace(/[-.]+/g, (match) => match[0]) // Replace multiple hyphens/dots with single character
+    .replace(/^[-.]|[-.]$/g, ''); // Remove leading/trailing hyphens or dots
 }
 
 /**
@@ -63,8 +63,9 @@ export function isReservedWord(username: string): boolean {
  * Validate username format
  * Rules:
  * - 3-50 characters
- * - Lowercase alphanumeric and hyphens only
- * - Cannot start or end with hyphen
+ * - Lowercase alphanumeric, hyphens, and dots only
+ * - Cannot start or end with hyphen or dot
+ * - Cannot have consecutive dots or hyphens
  * - Cannot be a reserved word
  */
 export function validateUsername(username: string): { valid: boolean; error?: string } {
@@ -83,14 +84,19 @@ export function validateUsername(username: string): { valid: boolean; error?: st
     return { valid: false, error: 'Username must be 50 characters or less' };
   }
   
-  // Format check (lowercase, alphanumeric, hyphens only)
-  if (!/^[a-z0-9-]+$/.test(trimmed)) {
-    return { valid: false, error: 'Username can only contain lowercase letters, numbers, and hyphens' };
+  // Format check (lowercase, alphanumeric, hyphens, and dots only)
+  if (!/^[a-z0-9.-]+$/.test(trimmed)) {
+    return { valid: false, error: 'Username can only contain lowercase letters, numbers, hyphens, and dots' };
   }
   
-  // Cannot start or end with hyphen
-  if (trimmed.startsWith('-') || trimmed.endsWith('-')) {
-    return { valid: false, error: 'Username cannot start or end with a hyphen' };
+  // Cannot start or end with hyphen or dot
+  if (trimmed.startsWith('-') || trimmed.endsWith('-') || trimmed.startsWith('.') || trimmed.endsWith('.')) {
+    return { valid: false, error: 'Username cannot start or end with a hyphen or dot' };
+  }
+  
+  // Cannot have consecutive dots or hyphens
+  if (/\.{2,}/.test(trimmed) || /-{2,}/.test(trimmed)) {
+    return { valid: false, error: 'Username cannot contain consecutive dots or hyphens' };
   }
   
   // Cannot be reserved word

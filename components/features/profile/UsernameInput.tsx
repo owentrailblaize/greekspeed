@@ -158,7 +158,7 @@ export function UsernameInput({
       {/* Helper Text */}
       {!displayError && value && availabilityState !== 'available' && (
         <p className="text-xs text-gray-500">
-          Username can contain lowercase letters, numbers, and hyphens. 3-50 characters.
+          Username can contain lowercase letters, numbers, hyphens, and dots. 3-50 characters.
         </p>
       )}
     </div>
