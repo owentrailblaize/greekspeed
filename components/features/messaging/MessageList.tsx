@@ -185,7 +185,7 @@ export function MessageList({
   }
 
   return (
-    <div className="h-full overflow-y-auto p-4">
+    <div className="h-full overflow-y-auto overflow-x-hidden p-4">
       {/* Load more button */}
       {hasMore && (
         <div className="flex justify-center mb-4">
@@ -234,7 +234,7 @@ export function MessageList({
               >
                 {/* Left side - Avatar and content for received messages */}
                 {!isOwnMessage && (
-                  <div className="flex items-end space-x-2 max-w-[70%]">
+                  <div className="flex items-end space-x-2 max-w-[70%] min-w-0">
                     {/* Avatar */}
                     <div className="flex-shrink-0">
                       <UserAvatar
@@ -252,14 +252,14 @@ export function MessageList({
                     </div>
                     
                     {/* Message content */}
-                    <div className="flex flex-col">
+                    <div className="flex flex-col min-w-0 flex-1">
                       {/* Sender name */}
                       <span className="text-xs text-gray-500 mb-1 px-2">
                         {message.sender.full_name}
                       </span>
                       
                       {/* Message bubble */}
-                      <div className="relative group">
+                      <div className="relative group min-w-0 max-w-full">
                         {isEditing ? (
                           <div className="bg-white border border-navy-200 rounded-lg p-3 shadow-sm">
                             <textarea
@@ -290,10 +290,40 @@ export function MessageList({
                             </div>
                           </div>
                         ) : (
-                          <div className="bg-white border border-gray-200 text-gray-900 px-4 py-2 rounded-lg shadow-sm">
-                            <p className="text-sm whitespace-pre-wrap break-words">
-                              {message.content}
-                            </p>
+                          <div className="bg-white border border-gray-200 text-gray-900 px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
+                            {/* For profile messages, hide URL and only show additional text if it exists */}
+                            {message.message_type === 'profile' && message.content ? (
+                              (() => {
+                                const contentTrimmed = message.content.trim();
+                                const profileMetadata = message.metadata as ProfileMessageMetadata;
+                                
+                                // Check if content is just a URL (starts with http/https)
+                                const isUrlPattern = /^https?:\/\/.+$/i.test(contentTrimmed);
+                                
+                                // If content contains the profile ID in a URL pattern, remove it
+                                let textWithoutUrl = contentTrimmed;
+                                if (profileMetadata?.shared_profile_id && isUrlPattern) {
+                                  // Remove URL patterns that contain the profile ID
+                                  const urlRegex = new RegExp(`https?://[^\\s]*/dashboard/profile/${profileMetadata.shared_profile_id}[^\\s]*`, 'gi');
+                                  textWithoutUrl = contentTrimmed.replace(urlRegex, '').trim();
+                                } else if (isUrlPattern) {
+                                  // If it's just a URL pattern and no profile ID match, assume it's the profile link
+                                  textWithoutUrl = '';
+                                }
+                                
+                                return textWithoutUrl ? (
+                                  <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere mb-2">
+                                    {textWithoutUrl}
+                                  </p>
+                                ) : null;
+                              })()
+                            ) : (
+                              message.content && (
+                                <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                                  {message.content}
+                                </p>
+                              )
+                            )}
                             {message.message_type === 'profile' && message.metadata && (
                               renderProfileMessage(message.metadata as ProfileMessageMetadata, false)
                             )}
@@ -311,9 +341,9 @@ export function MessageList({
 
                 {/* Right side - Content and avatar for own messages */}
                 {isOwnMessage && (
-                  <div className="flex items-end space-x-2 max-w-[70%]">
+                  <div className="flex items-end space-x-2 max-w-[70%] min-w-0">
                     {/* Message content */}
-                    <div className="flex flex-col items-end">
+                    <div className="flex flex-col items-end min-w-0 flex-1">
                       {/* Message bubble */}
                       <div className="relative group">
                         {isEditing ? (
@@ -346,10 +376,40 @@ export function MessageList({
                             </div>
                           </div>
                         ) : (
-                          <div className="bg-navy-600 text-white px-4 py-2 rounded-lg shadow-sm">
-                            <p className="text-sm whitespace-pre-wrap break-words">
-                              {message.content}
-                            </p>
+                          <div className="bg-navy-600 text-white px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
+                            {/* For profile messages, hide URL and only show additional text if it exists */}
+                            {message.message_type === 'profile' && message.content ? (
+                              (() => {
+                                const contentTrimmed = message.content.trim();
+                                const profileMetadata = message.metadata as ProfileMessageMetadata;
+                                
+                                // Check if content is just a URL (starts with http/https)
+                                const isUrlPattern = /^https?:\/\/.+$/i.test(contentTrimmed);
+                                
+                                // If content contains the profile ID in a URL pattern, remove it
+                                let textWithoutUrl = contentTrimmed;
+                                if (profileMetadata?.shared_profile_id && isUrlPattern) {
+                                  // Remove URL patterns that contain the profile ID
+                                  const urlRegex = new RegExp(`https?://[^\\s]*/dashboard/profile/${profileMetadata.shared_profile_id}[^\\s]*`, 'gi');
+                                  textWithoutUrl = contentTrimmed.replace(urlRegex, '').trim();
+                                } else if (isUrlPattern) {
+                                  // If it's just a URL pattern and no profile ID match, assume it's the profile link
+                                  textWithoutUrl = '';
+                                }
+                                
+                                return textWithoutUrl ? (
+                                  <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere mb-2">
+                                    {textWithoutUrl}
+                                  </p>
+                                ) : null;
+                              })()
+                            ) : (
+                              message.content && (
+                                <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                                  {message.content}
+                                </p>
+                              )
+                            )}
                             {message.message_type === 'profile' && message.metadata && (
                               renderProfileMessage(message.metadata as ProfileMessageMetadata, true)
                             )}
