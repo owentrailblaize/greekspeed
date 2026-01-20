@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Message } from '@/lib/hooks/useMessages';
+import { Message, ProfileMessageMetadata } from '@/lib/hooks/useMessages';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/features/profile/UserAvatar';
-import { MoreHorizontal, Edit, Trash2, Check, X } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Check, X, User } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import ImageWithFallback from '@/components/figma/ImageWithFallback';
+import { useRouter } from 'next/navigation';
 
 interface MessageListProps {
   messages: Message[];
@@ -26,10 +28,60 @@ export function MessageList({
   onDeleteMessage 
 }: MessageListProps) {
   const { user } = useAuth();
+  const router = useRouter();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [showMenuFor, setShowMenuFor] = useState<string | null>(null);
+
+  const handleProfileClick = (profileId: string, profileType: 'member' | 'alumni') => {
+    if (profileType === 'alumni') {
+      router.push(`/dashboard/profile/${profileId}`);
+    } else {
+      router.push(`/dashboard/profile/${profileId}`);
+    }
+  };
+
+  const renderProfileMessage = (metadata: ProfileMessageMetadata, isOwnMessage: boolean) => {
+    const profileMetadata = metadata as ProfileMessageMetadata;
+    
+    return (
+      <div 
+        className={`mt-2 p-3 rounded-lg border cursor-pointer transition-colors ${
+          isOwnMessage 
+            ? 'bg-white/10 border-white/20 hover:bg-white/20' 
+            : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+        }`}
+        onClick={() => handleProfileClick(profileMetadata.shared_profile_id, profileMetadata.shared_profile_type)}
+      >
+        <div className="flex items-center space-x-3">
+          {profileMetadata.shared_profile_avatar ? (
+            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-white/20">
+              <ImageWithFallback
+                src={profileMetadata.shared_profile_avatar}
+                alt={profileMetadata.shared_profile_name}
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
+              <User className="w-5 h-5 text-gray-600" />
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className={`text-sm font-medium truncate ${isOwnMessage ? 'text-white' : 'text-gray-900'}`}>
+              {profileMetadata.shared_profile_name}
+            </p>
+            <p className={`text-xs capitalize ${isOwnMessage ? 'text-white/70' : 'text-gray-500'}`}>
+              {profileMetadata.shared_profile_type}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Add debug logging (remove after fixing)
   useEffect(() => {
@@ -242,6 +294,9 @@ export function MessageList({
                             <p className="text-sm whitespace-pre-wrap break-words">
                               {message.content}
                             </p>
+                            {message.message_type === 'profile' && message.metadata && (
+                              renderProfileMessage(message.metadata as ProfileMessageMetadata, false)
+                            )}
                           </div>
                         )}
                       </div>
@@ -295,6 +350,9 @@ export function MessageList({
                             <p className="text-sm whitespace-pre-wrap break-words">
                               {message.content}
                             </p>
+                            {message.message_type === 'profile' && message.metadata && (
+                              renderProfileMessage(message.metadata as ProfileMessageMetadata, true)
+                            )}
                             
                             {/* Message actions menu */}
                             <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">

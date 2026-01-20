@@ -5,13 +5,21 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import { supabase } from '@/lib/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
+export interface ProfileMessageMetadata {
+  shared_profile_id: string;
+  shared_profile_name: string;
+  shared_profile_avatar?: string;
+  shared_profile_type: 'member' | 'alumni';
+  [key: string]: unknown;
+}
+
 export interface Message {
   id: string;
   connection_id: string;
   sender_id: string;
   content: string;
-  message_type: 'text' | 'image' | 'file' | 'link';
-  metadata?: Record<string, unknown>;
+  message_type: 'text' | 'image' | 'file' | 'link' | 'profile';
+  metadata?: Record<string, unknown> | ProfileMessageMetadata;
   created_at: string;
   updated_at: string;
   sender: {
@@ -91,7 +99,7 @@ export function useMessages(connectionId: string | null) {
     }
   }, [connectionId, user, session]);
 
-  const sendMessage = async (content: string, messageType: 'text' | 'image' | 'file' | 'link' = 'text', metadata?: Record<string, unknown>) => {
+  const sendMessage = async (content: string, messageType: 'text' | 'image' | 'file' | 'link' | 'profile' = 'text', metadata?: Record<string, unknown>) => {
     if (!connectionId || !user || !content.trim()) return;
     
     try {

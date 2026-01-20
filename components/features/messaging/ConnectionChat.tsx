@@ -8,6 +8,7 @@ import { ChatWindow } from './ChatWindow';
 import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/features/profile/UserAvatar';
 import { ArrowLeft, Phone, Video, MoreHorizontal } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 interface ConnectionChatProps {
   connectionId: string;
@@ -18,6 +19,9 @@ interface ConnectionChatProps {
 export function ConnectionChat({ connectionId, onBack, className = '' }: ConnectionChatProps) {
   const { user } = useAuth();
   const { connections } = useConnections();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [hasSharedProfile, setHasSharedProfile] = useState(false);
   const {
     messages,
     loading,
@@ -38,6 +42,38 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
       markAllAsRead();
     }
   }, [connectionId, user, messages.length, markAllAsRead]);
+
+  // Handle profile sharing from URL params
+  useEffect(() => {
+    const shareProfileId = searchParams.get('shareProfile');
+    const profileType = searchParams.get('profileType');
+    
+    if (shareProfileId && profileType && connection && connection.status === 'accepted' && !hasSharedProfile && !loading) {
+      const shareProfile = async () => {
+        try {
+          // Determine profile type ('member' or 'alumni')
+          const messageType = profileType === 'alumni' ? 'alumni' : 'member';
+          
+          await sendMessage(
+            `Check out this profile!`,
+            'profile',
+            {
+              shared_profile_id: shareProfileId,
+              shared_profile_type: messageType
+            }
+          );
+          
+          setHasSharedProfile(true);
+          // Clean up URL params after sharing
+          router.replace('/dashboard/messages');
+        } catch (error) {
+          console.error('Failed to share profile:', error);
+        }
+      };
+      
+      shareProfile();
+    }
+  }, [searchParams, connection, connectionId, hasSharedProfile, loading, sendMessage, router]);
 
   const [connection, setConnection] = useState<Connection | null>(null);
   const [otherUser, setOtherUser] = useState<{

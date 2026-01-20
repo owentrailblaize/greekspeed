@@ -64,12 +64,24 @@ function MessagesPageContent() {
   // ✅ Add effect to handle URL parameters
   useEffect(() => {
     const connectionParam = searchParams.get('connection');
+    const shareProfileParam = searchParams.get('shareProfile');
+    const profileTypeParam = searchParams.get('profileType');
+    
     if (connectionParam) {
       const connectionExists = connections.some(conn => conn.id === connectionParam);
       if (connectionExists) {
         setSelectedConnectionId(connectionParam);
-        router.replace('/dashboard/messages');
+        // If sharing profile, keep the params for ConnectionChat to handle
+        if (shareProfileParam && profileTypeParam) {
+          // Keep share params in URL for ConnectionChat to read
+        } else {
+          router.replace('/dashboard/messages');
+        }
       }
+    } else if (shareProfileParam && profileTypeParam) {
+      // If shareProfile param exists but no connection, show connections list
+      // User should select a connection to share with
+      router.replace('/dashboard/messages');
     }
   }, [searchParams, connections, router]);
 

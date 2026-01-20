@@ -10,7 +10,8 @@ import {
   Building2, 
   GraduationCap,
   Users,
-  Lock
+  Lock,
+  Share2
 } from "lucide-react";
 import { UnifiedUserProfile } from "@/types/user-profile";
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
@@ -19,6 +20,7 @@ import { useAuth } from "@/lib/supabase/auth-context";
 import { useState } from "react";
 import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils";
+import { ShareProfileDrawer } from "@/components/features/messaging/ShareProfileDrawer";
 
 interface UserProfileViewProps {
   profile: UnifiedUserProfile;
@@ -37,6 +39,7 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
     getConnectionId
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
+  const [shareDrawerOpen, setShareDrawerOpen] = useState(false);
 
   const userData = profile.user || {};
   const userId = profile.id;
@@ -82,6 +85,17 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
       router.push(`/dashboard/messages?connection=${connectionId}`);
       onClose();
     }
+  };
+
+  const handleShareProfile = () => {
+    if (!user) return;
+    setShareDrawerOpen(true);
+  };
+
+  const canShareProfile = () => {
+    if (!user || user.id === userId) return false;
+    // Can share if user has at least one accepted connection
+    return true; // We'll validate in the messages page
   };
 
   const canSendMessage = () => {
@@ -203,6 +217,19 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
             className="absolute top-3 right-3 h-8 w-8 p-0 bg-white/80 hover:bg-white rounded-full shadow-sm"
           >
             <X className="h-4 w-4" />
+          </Button>
+        )}
+
+        {/* Share Profile Button - Icon only, circular, top left below banner */}
+        {canShareProfile() && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShareProfile}
+            className="absolute top-16 left-3 h-10 w-10 p-0 bg-white/90 hover:bg-white border-navy-600 text-navy-600 rounded-full shadow-sm flex items-center justify-center z-20"
+            title="Share this profile with someone"
+          >
+            <Share2 className="h-4 w-4" />
           </Button>
         )}
         
@@ -371,6 +398,18 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
           </Button>
         </div>
       </div>
+
+      {/* Share Profile Drawer */}
+      <ShareProfileDrawer
+        isOpen={shareDrawerOpen}
+        onClose={() => setShareDrawerOpen(false)}
+        profileToShare={{
+          id: userId,
+          type: profile.type === 'alumni' ? 'alumni' : 'member',
+          name: profile.full_name,
+          avatarUrl: profile.avatar_url || undefined
+        }}
+      />
     </>
   );
 }

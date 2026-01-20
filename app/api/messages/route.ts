@@ -169,6 +169,78 @@ export async function POST(request: NextRequest) {
     // ✅ FIXED: Use the actual authenticated user's ID as sender_id
     const senderId = user.id;
 
+    // ✅ NEW: Validate profile message type and profile existence
+    if (messageType === 'profile') {
+      const profileId = metadata?.shared_profile_id;
+      const profileType = metadata?.shared_profile_type;
+
+      if (!profileId) {
+        return NextResponse.json({ 
+          error: 'Profile ID required for profile message type' 
+        }, { status: 400 });
+      }
+
+      if (!profileType || !['member', 'alumni'].includes(profileType)) {
+        return NextResponse.json({ 
+          error: 'Valid profile type (member or alumni) required' 
+        }, { status: 400 });
+      }
+
+      // Validate profile exists in database
+      let profileExists = false;
+      let profileData = null;
+
+      if (profileType === 'alumni') {
+        // Check alumni table
+        const { data: alumniData, error: alumniError } = await supabase
+          .from('alumni')
+          .select('user_id, first_name, last_name, full_name, avatar_url')
+          .eq('user_id', profileId)
+          .single();
+
+        if (!alumniError && alumniData) {
+          profileExists = true;
+          profileData = {
+            id: alumniData.user_id,
+            name: alumniData.full_name || `${alumniData.first_name || ''} ${alumniData.last_name || ''}`.trim(),
+            avatar: alumniData.avatar_url || null,
+            type: 'alumni' as const
+          };
+        }
+      } else {
+        // Check profiles table for member
+        const { data: profileRecord, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, full_name, first_name, last_name, avatar_url')
+          .eq('id', profileId)
+          .single();
+
+        if (!profileError && profileRecord) {
+          profileExists = true;
+          profileData = {
+            id: profileRecord.id,
+            name: profileRecord.full_name || `${profileRecord.first_name || ''} ${profileRecord.last_name || ''}`.trim(),
+            avatar: profileRecord.avatar_url || null,
+            type: 'member' as const
+          };
+        }
+      }
+
+      if (!profileExists) {
+        return NextResponse.json({ 
+          error: 'Profile not found in database' 
+        }, { status: 404 });
+      }
+
+      // Build validated metadata object
+      metadata.shared_profile_id = profileData.id;
+      metadata.shared_profile_name = profileData.name;
+      if (profileData.avatar) {
+        metadata.shared_profile_avatar = profileData.avatar;
+      }
+      metadata.shared_profile_type = profileData.type;
+    }
+
     // Create new message
     const { data: message, error } = await supabase
       .from('messages')
