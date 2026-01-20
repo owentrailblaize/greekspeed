@@ -124,6 +124,7 @@ export async function fetchUserProfile(userId: string): Promise<UnifiedUserProfi
         major: profileData.major,
         minor: profileData.minor,
         linkedin_url: profileData.linkedin_url,
+        pledge_class: profileData.pledge_class,
       }
     };
 
@@ -282,6 +283,7 @@ export async function fetchUserProfileBySlug(slug: string): Promise<UnifiedUserP
         major: profileData.major,
         minor: profileData.minor,
         linkedin_url: profileData.linkedin_url,
+        pledge_class: profileData.pledge_class,
       }
     };
 

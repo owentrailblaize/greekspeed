@@ -1,11 +1,13 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { Lock } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ContentNavigationTabsProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
-  tabs: Array<{ id: string; label: string }>;
+  tabs: Array<{ id: string; label: string; disabled?: boolean }>;
   stickyTop?: string;
 }
 
@@ -20,17 +22,28 @@ export function ContentNavigationTabs({
       <div className="flex">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
+          const isDisabled = tab.disabled;
           return (
             <button
               key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className={`flex-1 relative py-3 px-4 text-sm font-medium transition-colors ${
+              onClick={() => {
+                if (!isDisabled) {
+                  onTabChange(tab.id);
+                }
+              }}
+              disabled={isDisabled}
+              className={cn(
+                "flex-1 relative py-3 px-4 text-sm font-medium transition-colors flex items-center justify-center gap-1.5",
                 isActive
                   ? 'text-navy-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
+                  : 'text-gray-500 hover:text-gray-700',
+                isDisabled && 'opacity-60 cursor-not-allowed'
+              )}
             >
               {tab.label}
+              {isDisabled && (
+                <Lock className="h-3 w-3 text-gray-400" />
+              )}
               {isActive && (
                 <motion.div
                   layoutId="activeTabIndicator"

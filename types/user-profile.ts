@@ -49,6 +49,7 @@ export interface UnifiedUserProfile {
     major?: string;
     minor?: string;
     linkedin_url?: string | null;
+    pledge_class?: string | null;
   };
 }
 

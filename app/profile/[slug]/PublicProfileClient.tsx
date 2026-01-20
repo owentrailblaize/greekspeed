@@ -4,16 +4,17 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { UnifiedUserProfile } from '@/types/user-profile';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Share2, MapPin, Building2, MessageSquare, Users } from 'lucide-react';
+import { ArrowLeft, MapPin, Building2, MessageSquare, Users, Lock, X } from 'lucide-react';
 import { MobileBottomNavigation } from '@/components/features/dashboard/dashboards/ui/MobileBottomNavigation';
 import { ProfileSummary } from '@/components/features/user-profile/mobile/ProfileSummary';
 import { ContentNavigationTabs } from '@/components/features/profile/mobile/ContentNavigationTabs';
 import { PostsTab } from '@/components/features/user-profile/mobile/PostsTab';
 import { AboutTab } from '@/components/features/user-profile/mobile/AboutTab';
 import { MarketingHeader } from '@/components/marketing/MarketingHeader';
+import { DashboardHeader } from '@/components/features/dashboard/DashboardHeader';
+import { CopyProfileLinkButton } from '@/components/profile/CopyProfileLinkButton';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
-import { generateProfileLink } from '@/lib/utils/profileLinkUtils';
 import Link from 'next/link';
 import ImageWithFallback from '@/components/figma/ImageWithFallback';
 
@@ -39,6 +40,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
   const [activeTab, setActiveTab] = useState('posts');
   const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'declined' | 'blocked'>('none');
   const [connectionLoading, setConnectionLoading] = useState(false);
+  const [dismissedModal, setDismissedModal] = useState(false);
 
   // Fetch fresh profile data with viewer info
   useEffect(() => {
@@ -81,17 +83,6 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
 
   const handleClose = () => {
     router.back();
-  };
-
-  const handleShare = async () => {
-    const link = generateProfileLink(profile.id, slug || null);
-    try {
-      await navigator.clipboard.writeText(link);
-      // You can add a toast notification here
-      alert('Link copied to clipboard!');
-    } catch (error) {
-      console.error('Failed to copy link:', error);
-    }
   };
 
   const isOwnProfile = user?.id === profile.id;
@@ -169,10 +160,17 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
     );
   }
 
-  // Define tabs
+  // Define tabs - show Posts tab with lock indicator for non-logged-in
   const tabs = [
-    { id: 'posts', label: 'Posts' },
-    { id: 'about', label: 'About' },
+    { 
+      id: 'posts', 
+      label: 'Posts',
+      requiresAuth: true 
+    },
+    { 
+      id: 'about', 
+      label: 'About' 
+    },
   ];
 
   // Render profile
@@ -216,13 +214,16 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
           </button>
 
           {/* Share Button */}
-          <button
-            onClick={handleShare}
-            className="absolute top-3 right-3 z-10 h-10 w-10 rounded-full flex items-center justify-center cursor-pointer group bg-white/90 backdrop-blur-sm hover:bg-white transition-colors shadow-md"
-            title="Share profile"
-          >
-            <Share2 className="h-5 w-5 text-gray-700" />
-          </button>
+          <div className="absolute top-3 right-3 z-10">
+            <CopyProfileLinkButton
+              slug={slug}
+              userId={profile.id}
+              variant="icon"
+              buttonVariant="outline"
+              size="sm"
+              className="h-10 w-10 bg-white/90 backdrop-blur-sm hover:bg-white shadow-md border-0"
+            />
+          </div>
         </div>
 
         {/* Profile Summary Section */}
@@ -248,31 +249,95 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
         {/* Sticky Tab Navigation */}
         <ContentNavigationTabs
           activeTab={activeTab}
-          onTabChange={setActiveTab}
-          tabs={tabs}
+          onTabChange={(tabId) => {
+            const tab = tabs.find(t => t.id === tabId);
+            if (tab?.requiresAuth && !isLoggedIn) {
+              return; // Don't allow switching to locked tab
+            }
+            setActiveTab(tabId);
+          }}
+          tabs={tabs.map(tab => ({
+            id: tab.id,
+            label: tab.label,
+            disabled: tab.requiresAuth && !isLoggedIn
+          }))}
           stickyTop="0"
         />
 
-        {/* Scrollable Content Area */}
-        <div className="bg-gray-50 min-h-[400px]">
-          {activeTab === 'posts' && (
-            <PostsTab userId={profile.id} isOwnProfile={isOwnProfile} />
-          )}
-          {activeTab === 'about' && (
-            <AboutTab profile={profile} />
-          )}
-        </div>
+      {/* Scrollable Content Area */}
+      <div className="bg-gray-50 min-h-[400px]">
+        {activeTab === 'posts' && (
+          <PostsTab 
+            userId={profile.id} 
+            isOwnProfile={isOwnProfile}
+            requireAuth={true}
+            isLoggedIn={isLoggedIn}
+            profileName={profile.first_name || profile.full_name}
+          />
+        )}
+        {activeTab === 'about' && (
+          <AboutTab 
+            profile={profile}
+            isLoggedIn={isLoggedIn}
+            canSeeFullProfile={isOwnProfile || isConnected}
+          />
+        )}
+      </div>
 
         <MobileBottomNavigation />
       </div>
 
       {/* Desktop Layout - LinkedIn Style */}
       <div className="min-h-screen bg-white hidden sm:block">
-        {/* Fixed Marketing Header */}
-        <MarketingHeader />
+        {/* Conditional Header: DashboardHeader for logged-in, MarketingHeader for logged-out */}
+        {isLoggedIn ? <DashboardHeader /> : <MarketingHeader />}
+
+        {/* Top Slide-Down Sign-In Modal */}
+        {!isLoggedIn && !dismissedModal && (
+          <div className="fixed top-16 left-0 right-0 z-40 animate-[slide-down_0.3s_ease-out] shadow-lg">
+            <div className="bg-white border-b border-gray-200">
+              <div className="max-w-7xl mx-auto px-8 py-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <Lock className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900">
+                        View {profile.first_name || profile.full_name}'s full profile
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        See contact information, professional details, and more
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Link href="/sign-in">
+                      <Button variant="outline" className="px-6 rounded-full">
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link href="/sign-up">
+                      <Button className="bg-navy-600 hover:bg-navy-700 text-white px-6 rounded-full">
+                        Join Trailblaize
+                      </Button>
+                    </Link>
+                    <button
+                      onClick={() => setDismissedModal(true)}
+                      className="text-gray-400 hover:text-gray-600 p-2 -mr-2"
+                      aria-label="Dismiss"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Banner Section - Full Width */}
-        <div className="relative w-full pt-16">
+        <div className={`relative w-full ${isLoggedIn ? 'pt-14' : 'pt-16'}`}>
           <div className="w-full h-[160px] lg:h-[180px] relative overflow-hidden">
             {profile.banner_url ? (
               <ImageWithFallback
@@ -306,7 +371,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
         </div>
 
         {/* Profile Info Section - Below Banner/Avatar */}
-        <div className="pt-8 md:pt-10 pb-6 px-8 md:px-16 max-w-7xl mx-auto">
+        <div className={`pt-8 md:pt-10 pb-6 px-8 md:px-16 max-w-7xl mx-auto ${!isLoggedIn && !dismissedModal ? 'pt-24' : ''}`}>
           {/* Name and Action Buttons */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
@@ -393,26 +458,26 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                     Message
                   </Button>
                 )}
-                <Button
-                  variant="outline"
-                  onClick={handleShare}
-                  className="border-gray-300 text-gray-700 px-6 rounded-full"
-                >
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share
-                </Button>
+                <CopyProfileLinkButton
+                  slug={slug}
+                  userId={profile.id}
+                  variant="default"
+                  buttonVariant="outline"
+                  size="default"
+                  className="border-gray-300 text-gray-700 px-6"
+                />
               </div>
             )}
             {!isLoggedIn && (
               <div className="ml-4">
-                <Button
-                  variant="outline"
-                  onClick={handleShare}
-                  className="border-gray-300 text-gray-700 px-6 rounded-full"
-                >
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share
-                </Button>
+                <CopyProfileLinkButton
+                  slug={slug}
+                  userId={profile.id}
+                  variant="default"
+                  buttonVariant="outline"
+                  size="default"
+                  className="border-gray-300 text-gray-700 px-6"
+                />
               </div>
             )}
           </div>
@@ -466,10 +531,20 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
         <div className="bg-gray-50 min-h-screen">
           <div className="max-w-7xl mx-auto px-8 md:px-16 py-8">
             {activeTab === 'posts' && (
-              <PostsTab userId={profile.id} isOwnProfile={isOwnProfile} />
+              <PostsTab 
+                userId={profile.id} 
+                isOwnProfile={isOwnProfile}
+                requireAuth={true}
+                isLoggedIn={isLoggedIn}
+                profileName={profile.first_name || profile.full_name}
+              />
             )}
             {activeTab === 'about' && (
-              <AboutTab profile={profile} />
+              <AboutTab 
+                profile={profile}
+                isLoggedIn={isLoggedIn}
+                canSeeFullProfile={isOwnProfile || isConnected}
+              />
             )}
           </div>
         </div>

@@ -3,16 +3,62 @@
 import { useUserPosts } from '@/lib/hooks/useUserPosts';
 import { PostCard } from '@/components/features/social/PostCard';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { Lock } from 'lucide-react';
 
 interface PostsTabProps {
   userId: string;
   isOwnProfile?: boolean;
   onDeletePost?: (postId: string) => void;
+  requireAuth?: boolean;
+  isLoggedIn?: boolean;
+  profileName?: string;
 }
 
-export function PostsTab({ userId, isOwnProfile = false, onDeletePost }: PostsTabProps) {
+export function PostsTab({ 
+  userId, 
+  isOwnProfile = false, 
+  onDeletePost,
+  requireAuth = false,
+  isLoggedIn = false,
+  profileName
+}: PostsTabProps) {
   const { posts, loading, error, likePost, deletePost, refetch } = useUserPosts(userId);
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
+
+  // Show sign-up wall if auth is required and user is not logged in
+  if (requireAuth && !isLoggedIn) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 px-4">
+        <div className="max-w-md text-center">
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 rounded-full bg-navy-100 flex items-center justify-center">
+              <Lock className="h-8 w-8 text-navy-600" />
+            </div>
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            Sign in to see posts
+          </h3>
+          <p className="text-gray-600 mb-6">
+            Create an account or sign in to view {profileName || 'this user'}'s posts and activity.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Link href="/sign-in">
+              <Button variant="outline" className="px-6">
+                Sign In
+              </Button>
+            </Link>
+            <Link href="/sign-up">
+              <Button className="bg-navy-600 hover:bg-navy-700 text-white px-6">
+                Join Trailblaize
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleLike = async (postId: string) => {
     await likePost(postId);
