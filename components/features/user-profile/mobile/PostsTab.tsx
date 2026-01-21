@@ -32,7 +32,7 @@ export function PostsTab({
     return (
       <div className="flex flex-col items-center justify-center px-4">
         <div className="max-w-md text-center">
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-center mb-4 pt-4 sm:pt-0">
             <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{
               background: 'linear-gradient(135deg, #e5e7eb 0%, #fff 100%)'
             }}>

@@ -83,36 +83,10 @@ export default function UserProfilePage() {
     return (
       <div className="min-h-screen bg-white sm:hidden pb-20">
         {/* Banner skeleton */}
-        <div className="h-32 bg-gradient-to-r from-navy-100 via-blue-100 to-blue-50 relative">
-          {/* Back Button */}
-          <button
-            onClick={handleClose}
-            className="absolute top-3 left-3 z-10 h-10 w-10 rounded-full flex items-center justify-center cursor-pointer group"
-            style={{
-              background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%)',
-              boxShadow: `
-                0 6px 12px rgba(30, 64, 175, 0.4),
-                0 2px 4px rgba(30, 64, 175, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3),
-                inset 0 -1px 0 rgba(0, 0, 0, 0.2)
-              `,
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-            }}
-            title="Go back"
-          >
-            <ArrowLeft 
-              className="h-5 w-5 text-white relative z-10 drop-shadow-lg transition-transform duration-200 group-hover:scale-110"
-              style={{
-                filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4))',
-              }}
-            />
-          </button>
-        </div>
-
+        <div className="h-32 bg-gray-200 animate-pulse rounded-t-lg"></div>
+        
         {/* Profile content skeleton */}
-        <div className="px-4 -mt-16 relative">
+        <div className="px-4 pt-4 relative">
           {/* Avatar skeleton */}
           <div className="flex justify-center mb-3">
             <div className="w-20 h-20 rounded-full border-4 border-white bg-gray-200 animate-pulse"></div>
@@ -206,10 +180,10 @@ export default function UserProfilePage() {
         <div className="flex items-center justify-center h-[calc(100vh-200px)] px-4 pt-8">
           <div className="text-center">
             <div className="mb-4">
-              <Loader2 className="h-12 w-12 text-red-500 mx-auto mb-4 animate-spin" />
+              <Loader2 className="h-12 w-12 text-red-300 mx-auto mb-4 animate-spin" />
             </div>
-            <p className="text-red-600 mb-4 font-medium">{error || 'Profile not found'}</p>
-            <Button onClick={handleClose} variant="outline">
+            <p className="text-black mb-4 font-medium">{error || 'Profile not found'}</p>
+            <Button onClick={handleClose} variant="outline" className="rounded-full">
               Go Back
             </Button>
           </div>

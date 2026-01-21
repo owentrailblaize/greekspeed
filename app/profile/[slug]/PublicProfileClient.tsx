@@ -183,13 +183,18 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
       <>
         {/* Mobile Loading */}
         <div className="min-h-screen bg-white sm:hidden pb-20">
+          {/* Add MarketingHeader for non-authenticated users */}
+          {!isLoggedIn && <MarketingHeader hideNavigation={true} />}
+          
           <div className="flex items-center justify-center h-screen">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600 mx-auto mb-4"></div>
               <p className="text-gray-600">Loading profile...</p>
             </div>
           </div>
-          <MobileBottomNavigation />
+          
+          {/* Only show MobileBottomNavigation for authenticated users */}
+          {isLoggedIn && <MobileBottomNavigation />}
         </div>
         {/* Desktop Loading */}
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 hidden sm:flex items-center justify-center">
@@ -220,10 +225,13 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
     <>
       {/* Mobile Layout */}
       <div className="min-h-screen bg-white sm:hidden pb-20">
+        {/* Add MarketingHeader for non-authenticated users */}
+        {!isLoggedIn && <MarketingHeader hideNavigation={true} />}
+        
         {/* Header with Back and Share buttons */}
         <div className="relative">
           {profile.banner_url ? (
-            <div className="h-32 bg-gradient-to-r from-navy-100 via-blue-100 to-blue-50 relative">
+            <div className={`bg-gradient-to-r from-navy-100 via-blue-100 to-blue-50 relative ${!isLoggedIn ? 'h-40' : 'h-32'}`}>
               <img
                 src={profile.banner_url}
                 alt={`${profile.full_name}'s banner`}
@@ -231,29 +239,31 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
               />
             </div>
           ) : (
-            <div className="h-32 bg-gradient-to-r from-navy-100 via-blue-100 to-blue-50 relative" />
+            <div className={`bg-gradient-to-r from-navy-100 via-blue-100 to-blue-50 relative ${!isLoggedIn ? 'h-40' : 'h-32'}`} />
           )}
           
           {/* Back Button */}
-          <button
-            onClick={handleClose}
-            className="absolute top-3 left-3 z-10 h-10 w-10 rounded-full flex items-center justify-center cursor-pointer group"
-            style={{
-              background: 'linear-gradient(135deg, #e5e7eb 0%, #fff 100%)',
-              boxShadow: `
-                0 6px 12px rgba(0, 0, 0, 0.15),
-                0 2px 4px rgba(0, 0, 0, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.9),
-                inset 0 -1px 0 rgba(0, 0, 0, 0.05)
-              `,
-              border: '1px solid rgba(0, 0, 0, 0.1)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-            }}
-            title="Go back"
-          >
-            <ArrowLeft className="h-5 w-5 text-slate-600 relative z-10 drop-shadow-sm transition-transform duration-200 group-hover:scale-110" />
-          </button>
+          {isLoggedIn && (
+            <button
+              onClick={handleClose}
+              className="absolute top-3 left-3 z-10 h-10 w-10 rounded-full flex items-center justify-center cursor-pointer group"
+              style={{
+                background: 'linear-gradient(135deg, #e5e7eb 0%, #fff 100%)',
+                boxShadow: `
+                  0 6px 12px rgba(0, 0, 0, 0.15),
+                  0 2px 4px rgba(0, 0, 0, 0.1),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                  inset 0 -1px 0 rgba(0, 0, 0, 0.05)
+                `,
+                border: '1px solid rgba(0, 0, 0, 0.1)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+              }}
+              title="Go back"
+            >
+              <ArrowLeft className="h-5 w-5 text-slate-600 relative z-10 drop-shadow-sm transition-transform duration-200 group-hover:scale-110" />
+            </button>
+          )}
 
           {/* Share Button */}
           <div className="absolute top-3 right-3 z-10">
@@ -280,7 +290,11 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                 <p className="text-xs text-gray-600 mt-0.5">View full profiles and message members</p>
               </div>
               <Link href="/sign-up">
-                <Button size="sm" className="bg-navy-600 hover:bg-navy-700 text-white">
+                <Button size="sm" className="hover:bg-navy-700 text-white rounded-full"
+                style={{
+                  background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%)'
+                }}
+                >
                   Sign Up
                 </Button>
               </Link>
@@ -326,8 +340,8 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
         )}
       </div>
 
-
-        <MobileBottomNavigation />
+        {/* Only show MobileBottomNavigation for authenticated users */}
+        {isLoggedIn && <MobileBottomNavigation />}
       </div>
 
       {/* Desktop Layout - LinkedIn Style */}
@@ -397,25 +411,27 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
             )}
 
             {/* Back Button - Desktop */}
-            <button
-              onClick={handleClose}
-              className="absolute top-3 left-3 md:top-4 md:left-8 z-10 h-10 w-10 rounded-full flex items-center justify-center cursor-pointer group"
-              style={{
-                background: 'linear-gradient(135deg, #e5e7eb 0%, #fff 100%)',
-                boxShadow: `
-                  0 6px 12px rgba(0, 0, 0, 0.15),
-                  0 2px 4px rgba(0, 0, 0, 0.1),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.9),
-                  inset 0 -1px 0 rgba(0, 0, 0, 0.05)
-                `,
-                border: '1px solid rgba(0, 0, 0, 0.1)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-              }}
-              title="Go back"
-            >
-              <ArrowLeft className="h-5 w-5 text-slate-600 relative z-10 drop-shadow-sm transition-transform duration-200 group-hover:scale-110" />
-            </button>
+            {isLoggedIn && (
+              <button
+                onClick={handleClose}
+                className="absolute top-3 left-3 md:top-4 md:left-8 z-10 h-10 w-10 rounded-full flex items-center justify-center cursor-pointer group"
+                style={{
+                  background: 'linear-gradient(135deg, #e5e7eb 0%, #fff 100%)',
+                  boxShadow: `
+                    0 6px 12px rgba(0, 0, 0, 0.15),
+                    0 2px 4px rgba(0, 0, 0, 0.1),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                    inset 0 -1px 0 rgba(0, 0, 0, 0.05)
+                  `,
+                  border: '1px solid rgba(0, 0, 0, 0.1)',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                }}
+                title="Go back"
+              >
+                <ArrowLeft className="h-5 w-5 text-slate-600 relative z-10 drop-shadow-sm transition-transform duration-200 group-hover:scale-110" />
+              </button>
+            )}
           </div>
 
           {/* Avatar - Overlapping Banner */}
@@ -618,7 +634,18 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                   </p>
                 </div>
                 <Link href="/sign-up">
-                  <Button className="bg-navy-600 hover:bg-navy-700 text-white px-6 rounded-full">
+                  <Button
+                    className="text-white px-6 rounded-full transition-transform duration-200 hover:scale-60 hover:shadow-lg"
+                    style={{
+                      background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%)',
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.background = 'linear-gradient(120deg, #2563eb 0%, #1e40af 100%)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.background = 'linear-gradient(135deg, #1e40af 0%, #2563eb 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%)';
+                    }}
+                  >
                     Join
                   </Button>
                 </Link>
