@@ -37,15 +37,6 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
   const [collapsedReplies, setCollapsedReplies] = useState<Set<string>>(new Set());
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
   
-  // Use global mobile detection and viewport tracking
-  const isMobile = useIsMobile();
-  const { viewport, keyboardHeight } = useMobileModal({ 
-    isOpen, 
-    lockBody: true,
-    autoFocus: false,
-    focusElement: textareaRef.current 
-  });
-  
   const {
     comments,
     loading,
@@ -67,6 +58,15 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
   const { isProfileModalOpen } = useProfileModal();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const commentsScrollRef = useRef<HTMLDivElement | null>(null);
+  
+  // Use global mobile detection and viewport tracking (after refs are declared)
+  const isMobile = useIsMobile();
+  const { viewport, keyboardHeight } = useMobileModal({ 
+    isOpen, 
+    lockBody: true,
+    autoFocus: false,
+    focusElement: textareaRef.current 
+  });
   
   // Build comment tree from flat array
   const commentTree = useMemo(() => {
