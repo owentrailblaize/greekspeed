@@ -30,21 +30,33 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
   // Filter connections by status
   const pendingRequests = connections.filter(conn => 
     conn.status === 'pending' && conn.recipient_id === user?.id
-  );
+  ).sort((a, b) => {
+    // Sort by created_at descending (newest first)
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
   
   const sentRequests = connections.filter(conn => 
     conn.status === 'pending' && conn.requester_id === user?.id
-  );
+  ).sort((a, b) => {
+    // Sort by created_at descending (newest first)
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
   
   const acceptedConnections = connections.filter(conn => 
     conn.status === 'accepted' && 
     (conn.requester_id === user?.id || conn.recipient_id === user?.id)
-  );
+  ).sort((a, b) => {
+    // Sort by updated_at descending (newest first)
+    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+  });
 
   const declinedConnections = connections.filter(conn => 
     conn.status === 'declined' && 
     (conn.requester_id === user?.id || conn.recipient_id === user?.id)
-  );
+  ).sort((a, b) => {
+    // Sort by updated_at descending (newest first)
+    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+  });
 
   const handleConnectionAction = async (connectionId: string, action: 'accept' | 'decline') => {
     setProcessingId(connectionId);
@@ -215,7 +227,7 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                           size="sm"
                           onClick={() => handleConnectionAction(connection.id, 'accept')}
                           disabled={processingId === connection.id}
-                          className={`bg-green-600 hover:bg-green-700 text-white ${buttonSize}`}
+                          className={`bg-navy-600 hover:bg-navy-700 text-white rounded-full font-medium shadow-sm ${buttonSize}`}
                         >
                           {processingId === connection.id ? (
                             <div className={`animate-spin rounded-full ${iconSize} border-b border-white`} />
@@ -231,7 +243,7 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                           variant="outline"
                           onClick={() => handleConnectionAction(connection.id, 'decline')}
                           disabled={processingId === connection.id}
-                          className={`text-red-600 border-red-300 hover:bg-red-50 ${buttonSize}`}
+                          className={`text-red-600 border-red-300 hover:bg-red-50 rounded-full font-medium shadow-sm ${buttonSize}`}
                         >
                           {processingId === connection.id ? (
                             <div className={`animate-spin rounded-full ${iconSize} border-b border-red-600`} />
