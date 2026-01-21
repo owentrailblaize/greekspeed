@@ -5,6 +5,7 @@ import { AuthProvider } from '@/lib/supabase/auth-context';
 import { ProfileProvider } from '@/lib/contexts/ProfileContext';
 import { BrandingProvider } from '@/lib/contexts/BrandingContext';
 import { ConnectionsProvider } from '@/lib/contexts/ConnectionsContext';
+import { ViewportProvider } from '@/lib/contexts/ViewportContext';
 import AppQueryProvider from '@/lib/query/AppQueryProvider';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -48,7 +49,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <ProfileProvider>
                 <BrandingProvider>
                   <ConnectionsProvider>
-                    {children}
+                    <ViewportProvider>
+                      {children}
+                    </ViewportProvider>
                   </ConnectionsProvider>
                 </BrandingProvider>
               </ProfileProvider>

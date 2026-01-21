@@ -79,3 +79,42 @@ textarea {
 /* CSS variables will be dynamically injected by BrandingContext */
 /* When branding loads, these values will be updated via JavaScript */
 /* No need for [data-chapter-branding] selector - injected directly on :root */
+
+/* Mobile Viewport & Keyboard CSS Variables */
+/* These are updated dynamically by ViewportContext via Visual Viewport API */
+:root {
+  /* Dynamic viewport height - updated via JS */
+  --vvh: 100dvh;
+  --vvh-fallback: 100vh;
+  
+  /* Keyboard height - calculated from visual viewport */
+  --kb: 0px;
+  
+  /* Safe area insets (iOS notch/home indicator) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* Fallback for browsers without dvh support */
+@supports not (height: 100dvh) {
+  :root {
+    --vvh: var(--vvh-fallback);
+  }
+}
+
+/* Utility classes for mobile keyboard-aware containers */
+.mobile-sheet {
+  height: var(--vvh);
+  max-height: var(--vvh);
+}
+
+.mobile-input-container {
+  padding-bottom: calc(var(--kb) + var(--safe-bottom));
+}
+
+.mobile-scroll-area {
+  padding-bottom: calc(var(--kb) + 80px); /* Adjust based on input height */
+  -webkit-overflow-scrolling: touch;
+}
