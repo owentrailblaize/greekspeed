@@ -11,6 +11,7 @@ interface ProfileModalContextType {
   isProfileModalOpen: boolean;
   currentProfile: UnifiedUserProfile | null;
   loading: boolean;
+  error: string | null;
   openUserProfile: (userId: string) => Promise<void>;
   openUserProfileWithData: (userData: UserProfileData | Alumni) => void;
   closeUserProfile: () => void;
@@ -22,6 +23,7 @@ export function ProfileModalProvider({ children }: { children: ReactNode }) {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [currentProfile, setCurrentProfile] = useState<UnifiedUserProfile | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const isMobile = useIsMobile();
 
@@ -36,17 +38,23 @@ export function ProfileModalProvider({ children }: { children: ReactNode }) {
 
     // Desktop: Open modal as before
     setLoading(true);
+    setError(null);
     try {
       // Try to fetch the profile
       const profile = await fetchUserProfile(userId);
       if (profile) {
         setCurrentProfile(profile);
         setIsProfileModalOpen(true);
+        setError(null); // Clear any previous errors
       } else {
-        console.error('Failed to fetch user profile');
+        setError('Profile not found');
+        setIsProfileModalOpen(true); // Open modal to show error
       }
-    } catch (error) {
-      console.error('Error opening user profile:', error);
+    } catch (err) {
+      console.error('Error opening user profile:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load profile';
+      setError(errorMessage);
+      setIsProfileModalOpen(true); // Open modal to show error
     } finally {
       setLoading(false);
     }
@@ -76,6 +84,7 @@ export function ProfileModalProvider({ children }: { children: ReactNode }) {
 
   const closeUserProfile = useCallback(() => {
     setIsProfileModalOpen(false);
+    setError(null); // Clear error when closing
     // Don't clear currentProfile immediately to avoid flicker
     setTimeout(() => {
       setCurrentProfile(null);
@@ -88,6 +97,7 @@ export function ProfileModalProvider({ children }: { children: ReactNode }) {
         isProfileModalOpen,
         currentProfile,
         loading,
+        error,
         openUserProfile,
         openUserProfileWithData,
         closeUserProfile,

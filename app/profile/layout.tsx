@@ -19,13 +19,15 @@ export default function ProfileLayout({
 
 // Global User Profile Modal Wrapper Component
 function UserProfileModalWrapper() {
-  const { isProfileModalOpen, currentProfile, closeUserProfile } = useProfileModal();
+  const { isProfileModalOpen, currentProfile, loading, error, closeUserProfile } = useProfileModal();
 
   return (
     <UserProfileModal
       profile={currentProfile}
       isOpen={isProfileModalOpen}
       onClose={closeUserProfile}
+      loading={loading}
+      error={error}
     />
   );
 }
