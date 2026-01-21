@@ -44,8 +44,8 @@ interface InfoRowProps {
 
 function InfoRow({ label, value }: InfoRowProps) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4 border-b border-gray-100 last:border-0">
-      <span className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2 sm:mb-0">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between 2 border-b border-gray-100 last:border-0">
+      <span className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1 sm:mb-0">
         {label}
       </span>
       <div className="text-base font-medium text-gray-900 break-words sm:text-right">
@@ -70,13 +70,13 @@ export function AboutTab({ profile, isLoggedIn = false, canSeeFullProfile = fals
   const showPrivateInfo = isLoggedIn;
 
   return (
-    <div className="w-full px-8 md:px-16 py-8 max-w-7xl mx-auto">
+    <div className="w-full px-8 md:px-16 py-4 max-w-7xl mx-auto">
       {/* Full-width, cardless layout */}
-      <div className="space-y-8">
+      <div className="space-y-4">
           {/* Chapter Section - Always visible */}
           {profile.chapter && (
-            <div className="pb-6 border-b border-gray-200">
-              <div className="flex items-center gap-2 mb-4">
+            <div className="pb-3 border-b border-gray-200">
+              <div className="flex items-center gap-2 mb-2">
                 <Building2 className="h-5 w-5 text-gray-400" />
                 <h3 className="text-base font-semibold text-gray-900 uppercase tracking-wide">
                   Chapter
@@ -97,7 +97,7 @@ export function AboutTab({ profile, isLoggedIn = false, canSeeFullProfile = fals
                   General Information
                 </h3>
               </div>
-              <div className="space-y-4 ml-7">
+              <div className="space-y-2 ml-7">
                 {profile.location && (
                   <InfoRow
                     label="Location"
@@ -165,7 +165,7 @@ export function AboutTab({ profile, isLoggedIn = false, canSeeFullProfile = fals
           {/* Contact Section - Locked for non-logged-in */}
           <div className="relative pb-6 border-b border-gray-200">
             {!isLoggedIn && (
-              <div className="absolute top-0 right-0 flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 z-10">
+              <div className="absolute top-0 right-0 flex items-center gap-1 bg-blue-50/85 border border-blue-300 px-3 py-1 rounded-full shadow-sm z-10">
                 <Lock className="h-4 w-4 text-blue-600" />
                 <span className="text-xs font-medium text-blue-600">Sign in required</span>
               </div>
@@ -202,7 +202,7 @@ export function AboutTab({ profile, isLoggedIn = false, canSeeFullProfile = fals
           {!isAlumni && (
             <div className="relative pb-6 border-b border-gray-200">
               {!isLoggedIn && (
-                <div className="absolute top-0 right-0 flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 z-10">
+              <div className="absolute top-0 right-0 flex items-center gap-1 bg-blue-50/85 border border-blue-300 px-2 py-1 rounded-full shadow-sm z-10">
                   <Lock className="h-4 w-4 text-blue-600" />
                   <span className="text-xs font-medium text-blue-600">Sign in required</span>
                 </div>
@@ -261,7 +261,7 @@ export function AboutTab({ profile, isLoggedIn = false, canSeeFullProfile = fals
           {isAlumni && (
             <div className="relative pb-6 border-b border-gray-200">
               {!isLoggedIn && (
-                <div className="absolute top-0 right-0 flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 z-10">
+                <div className="absolute top-0 right-0 flex items-center gap-1 bg-blue-50/85 border border-blue-300 px-3 py-1 rounded-full shadow-sm z-10">
                   <Lock className="h-4 w-4 text-blue-600" />
                   <span className="text-xs font-medium text-blue-600">Sign in required</span>
                 </div>
