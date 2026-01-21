@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { generateUniqueUsername, generateProfileSlug } from '@/lib/utils/usernameUtils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -85,6 +86,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create user account' }, { status: 500 });
     }
 
+    // Generate username and slug
+    const username = await generateUniqueUsername(firstName, lastName);
+    const profileSlug = generateProfileSlug(username);
+
     // Then, create the profile record
     const { error: profileError } = await supabase
       .from('profiles')
@@ -94,6 +99,8 @@ export async function POST(request: NextRequest) {
         first_name: firstName,
         last_name: lastName,
         full_name: `${firstName} ${lastName}`,
+        username: username,
+        profile_slug: profileSlug,
         role,
         chapter,
         member_status: memberStatus,

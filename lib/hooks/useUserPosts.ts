@@ -57,10 +57,14 @@ export function useUserPosts(userId: string) {
             .eq('user_id', user.id)
             .single();
 
+          // Ensure counts are present (default to 0 if missing)
           return {
             ...post,
             is_liked: !!likeData,
-            is_author: post.author_id === user.id
+            is_author: post.author_id === user.id,
+            likes_count: post.likes_count ?? 0,
+            comments_count: post.comments_count ?? 0,
+            shares_count: post.shares_count ?? 0,
           };
         })
       );
@@ -72,6 +76,48 @@ export function useUserPosts(userId: string) {
       setLoading(false);
     }
   }, [user, userId]);
+
+  const likePost = useCallback(async (postId: string) => {
+    if (!user) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`/api/posts/${postId}/like`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to like post');
+      }
+
+      const { liked } = await response.json();
+
+      // Update the post in local state
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
+          post.id === postId
+            ? {
+                ...post,
+                is_liked: liked,
+                likes_count: liked
+                  ? (post.likes_count || 0) + 1
+                  : Math.max(0, (post.likes_count || 0) - 1),
+              }
+            : post
+        )
+      );
+    } catch (err) {
+      console.error('Failed to like post:', err);
+      setError(err instanceof Error ? err.message : 'Failed to like post');
+    }
+  }, [user]);
 
   const deletePost = useCallback(async (postId: string) => {
     if (!user) return;
@@ -112,6 +158,7 @@ export function useUserPosts(userId: string) {
     loading,
     error,
     fetchUserPosts,
+    likePost,
     deletePost,
     refetch: fetchUserPosts
   };

@@ -11,8 +11,10 @@ import {
   Handshake,
   Calendar,
   Users,
-  Lock
+  Lock,
+  ArrowRight
 } from "lucide-react";
+import Link from 'next/link';
 import { Alumni } from "@/lib/alumniConstants";
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
 import { useConnections } from "@/lib/contexts/ConnectionsContext";
@@ -21,7 +23,10 @@ import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils";
 import { trackActivity, ActivityTypes } from "@/lib/utils/activityUtils";
-import { createPortal } from 'react-dom'; // Add this import
+import { createPortal } from 'react-dom';
+import { useIsMobile } from '@/lib/hooks/useIsMobile';
+import { ShareProfileDrawer } from "@/components/features/messaging/ShareProfileDrawer";
+import { supabase } from "@/lib/supabase/client";
 
 interface AlumniProfileModalProps {
   alumni: Alumni | null;
@@ -51,10 +56,21 @@ const getChapterName = (chapterId: string, isMobile: boolean = false): string =>
 export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileModalProps) {
   const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
+  const isMobile = useIsMobile();
+  const router = useRouter();
   
-  // Track profile view when modal opens
+  // On mobile, route to profile page instead of showing modal
   useEffect(() => {
-    if (isOpen && alumni && user && user.id !== alumni.id) {
+    if (isOpen && isMobile && alumni?.id) {
+      router.push(`/dashboard/profile/${alumni.id}`);
+      onClose(); // Close modal state
+      return;
+    }
+  }, [isOpen, isMobile, alumni, router, onClose]);
+  
+  // Track profile view when modal opens (desktop only)
+  useEffect(() => {
+    if (isOpen && !isMobile && alumni && user && user.id !== alumni.id) {
       trackActivity(user.id, ActivityTypes.PROFILE_VIEW, {
         viewedProfileId: alumni.id,
         viewedProfileName: alumni.fullName,
@@ -63,23 +79,50 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
         console.error('Failed to track profile view:', error);
       });
     }
-  }, [isOpen, alumni, user]);
-  const router = useRouter();
+  }, [isOpen, isMobile, alumni, user]);
   const { 
     sendConnectionRequest, 
     updateConnectionStatus, 
     cancelConnectionRequest, 
     getConnectionStatus,
-    getConnectionId
+    getConnectionId,
+    connections
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
+  const [shareDrawerOpen, setShareDrawerOpen] = useState(false);
+  const [profileSlug, setProfileSlug] = useState<string | null>(null);
 
   // Ensure component is mounted (for SSR)
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!alumni || !isOpen || !mounted) return null;
+  // Fetch profile slug for View Full Profile link
+  useEffect(() => {
+    if (alumni?.id && isOpen && !isMobile) {
+      const alumniId = alumni.id; 
+      async function fetchProfileSlug() {
+        try {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('profile_slug, username')
+            .eq('id', alumniId)
+            .single();
+          
+          if (profileData) {
+            setProfileSlug(profileData.profile_slug || profileData.username || null);
+          }
+        } catch (error) {
+          console.error('Failed to fetch profile slug:', error);
+          setProfileSlug(null);
+        }
+      }
+      fetchProfileSlug();
+    }
+  }, [alumni?.id, isOpen, isMobile]);
+
+  // Don't render modal on mobile
+  if (!alumni || !isOpen || !mounted || isMobile) return null;
 
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel') => {
     if (!user || user.id === alumni.id) return;
@@ -131,6 +174,44 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
     
     const status = getConnectionStatus(alumni.id);
     return status === 'accepted'; // Only allow messaging if connected
+  };
+
+  const isEmailPublic = alumni.isEmailPublic !== false && alumni.is_email_public !== false;
+  
+  const canSendEmail = () => {
+    if (!user || user.id === alumni.id) return false;
+    // Check if email exists and is public for alumni
+    return !!(alumni.email && isEmailPublic);
+  };
+
+  const handleEmailClick = () => {
+    if (!alumni.email || !canSendEmail()) return;
+    window.location.href = `mailto:${alumni.email}?subject=Reaching out from Trailblaize`;
+  };
+
+  const handleShareProfile = () => {
+    if (!user) return;
+    setShareDrawerOpen(true);
+  };
+
+  const canShareProfile = () => {
+    if (!user || user.id === alumni.id) return false;
+    // Can share if user has at least one accepted connection
+    const acceptedConnections = connections.filter(conn => conn.status === 'accepted');
+    return acceptedConnections.length > 0;
+  };
+
+  const getProfileSlug = () => {
+    // Use fetched slug if available, otherwise fallback to ID
+    return profileSlug || alumni.id;
+  };
+
+  const handleViewFullProfile = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const slug = getProfileSlug();
+    router.push(`/profile/${slug}`);
+    onClose(); // Close modal when navigating
   };
 
   const renderConnectionButton = () => {
@@ -273,6 +354,32 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
           >
             <X className="h-4 w-4" />
           </Button>
+
+          {/* Share Profile Button - Icon only, circular, top left below banner */}
+          {canShareProfile() && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShareProfile}
+              className="absolute top-16 left-3 h-10 w-10 p-0 bg-white/90 hover:bg-white border-navy-600 text-navy-600 rounded-full shadow-sm flex items-center justify-center z-20"
+              title="Share this profile with someone"
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+          )}
+
+          {/* View Full Profile Link - Text link, positioned to the right of Share button, below banner */}
+          {alumni.hasProfile && (
+            <Link
+              href={`/profile/${getProfileSlug()}`}
+              onClick={handleViewFullProfile}
+              className="absolute top-20 left-14 px-3 py-1.5 text-sm font-medium text-slate-900 hover:text-slate-700 transition-colors z-20 flex items-center gap-1.5 bg-white/90 hover:bg-white rounded-md border-0"
+              title="View full profile page"
+            >
+              <span className="font-light">View Full Profile</span>
+              <ArrowRight className="h-3.5 w-3.5 font-light" />
+            </Link>
+          )}
           
           {/* Profile Content Overlapping Banner */}
           <div className="px-6 -mt-10 relative">
@@ -403,17 +510,28 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
 
           {/* Action Buttons - Updated with messaging functionality */}
           <div className="flex space-x-2 pt-3 border-t border-gray-200">
-            <Button className="flex-1" variant="ghost" size="sm" disabled>
+            <Button 
+              className={cn(
+                "flex-1 rounded-full",
+                canSendEmail()
+                  ? "border-navy-600 text-navy-600 hover:bg-navy-50" 
+                  : "text-gray-400 border-gray-200"
+              )}
+              variant={canSendEmail() ? "outline" : "ghost"}
+              size="sm" 
+              onClick={handleEmailClick}
+              disabled={!canSendEmail()}
+            >
               <Mail className="h-3 w-3 mr-2" />
               <span className="hidden sm:inline">Send Email</span>
               <span className="sm:hidden">Email</span>
-              <Lock className="h-3 w-3 ml-2 text-gray-400" />
+              {!canSendEmail() && <Lock className="h-3 w-3 ml-2 text-gray-400" />}
             </Button>
             
             {/* ✅ Updated Send Message Button */}
             <Button 
               className={cn(
-                "flex-1",
+                "flex-1 rounded-full",
                 canSendMessage() 
                   ? "border-navy-600 text-navy-600 hover:bg-navy-50" 
                   : "text-gray-400 border-gray-200"
@@ -431,6 +549,18 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
           </div>
         </div>
       </div>
+
+      {/* Share Profile Drawer */}
+      <ShareProfileDrawer
+        isOpen={shareDrawerOpen}
+        onClose={() => setShareDrawerOpen(false)}
+        profileToShare={{
+          id: alumni.id,
+          type: 'alumni',
+          name: alumni.fullName,
+          avatarUrl: alumni.avatar || undefined
+        }}
+      />
     </div>,
     document.body
   );

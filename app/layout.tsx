@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://www.trailblaize.net'),
   icons: {
     icon: [
+      { url: '/favicon.ico', sizes: 'any' },
       // Prioritize PNG files - browsers will use these for better quality
       { url: '/android-chrome-192x192.png', type: 'image/png', sizes: '192x192' },
       { url: '/android-chrome-512x512.png', type: 'image/png', sizes: '512x512' },

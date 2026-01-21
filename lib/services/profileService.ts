@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/supabase/client';
 import { Profile, ProfileFormData, ProfileCompletion } from '@/types/profile';
+import { generateProfileSlug } from '@/lib/utils/usernameUtils';
+import { invalidateProfileCache } from './userProfileService';
 
 export class ProfileService {
   // Get current user's profile
@@ -58,6 +60,20 @@ export class ProfileService {
         updateData.full_name = `${firstName} ${lastName}`.trim();
       }
 
+      // Handle username updates - generate profile_slug if username changes
+      let oldUsername: string | undefined;
+      let oldSlug: string | undefined;
+      if (profileData.username !== undefined) {
+        const currentProfile = await this.getCurrentProfile();
+        oldUsername = currentProfile?.username ?? undefined;
+        oldSlug = currentProfile?.profile_slug ?? undefined;
+        const currentUsername = currentProfile?.username || currentProfile?.profile_slug || '';
+        // If username changed, generate new profile_slug
+        if (profileData.username !== currentUsername) {
+          updateData.profile_slug = generateProfileSlug(profileData.username);
+        }
+      }
+
       // Remove undefined values to avoid overwriting with null
       Object.keys(updateData).forEach(key => {
         if (updateData[key] === undefined) {
@@ -87,6 +103,18 @@ export class ProfileService {
         profile.chapter = profile.chapters?.name || null;
         delete profile.chapters; // Remove the nested chapters object
       }
+
+      // Invalidate cache - clear old and new slugs if username changed
+      if (oldUsername || oldSlug) {
+        invalidateProfileCache(undefined, oldUsername);
+        invalidateProfileCache(undefined, oldSlug);
+      }
+      if (profile.username || profile.profile_slug) {
+        invalidateProfileCache(undefined, profile.username);
+        invalidateProfileCache(undefined, profile.profile_slug);
+      }
+      // Always invalidate userId cache after updates
+      invalidateProfileCache(user.id);
 
       // Profile updated successfully
       return profile;

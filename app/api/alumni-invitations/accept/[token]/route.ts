@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { validateInvitationToken, validateEmailDomain, hasEmailUsedInvitation, recordInvitationUsage } from '@/lib/utils/invitationUtils';
+import { generateUniqueUsername, generateProfileSlug } from '@/lib/utils/usernameUtils';
 
 // New interface for alumni form data
 interface AlumniJoinFormData {
@@ -116,6 +117,10 @@ export async function POST(
     // Wait for auth user to be fully created
     await new Promise(resolve => setTimeout(resolve, 1000));
 
+    // Generate username
+    const username = await generateUniqueUsername(normalizedFirstName, normalizedLastName);
+    const profileSlug = generateProfileSlug(username);
+
     // Create the profile with alumni role
     const { error: profileError } = await supabase
       .from('profiles')
@@ -125,6 +130,8 @@ export async function POST(
         full_name: normalizedFullName,
         first_name: normalizedFirstName,
         last_name: normalizedLastName,
+        username: username,
+        profile_slug: profileSlug,
         phone: normalizedPhone,
         sms_consent: body.sms_consent || false,
         chapter_id: invitation.chapter_id,

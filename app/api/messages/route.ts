@@ -77,9 +77,17 @@ export async function POST(request: NextRequest) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const body = await request.json();
+    
+    // #region agent log
+    console.log('[DEBUG] POST /api/messages - Request body:', JSON.stringify({connectionId: body.connectionId, content: body.content?.substring(0, 50), messageType: body.messageType, metadata: body.metadata, hasMetadata: !!body.metadata}, null, 2));
+    // #endregion
+    
     const { connectionId, content, messageType = 'text', metadata = {} } = body;
 
     if (!connectionId || !content) {
+      // #region agent log
+      console.log('[DEBUG] POST /api/messages - Missing required fields:', { hasConnectionId: !!connectionId, hasContent: !!content });
+      // #endregion
       return NextResponse.json({ error: 'Connection ID and content required' }, { status: 400 });
     }
 
@@ -169,16 +177,132 @@ export async function POST(request: NextRequest) {
     // ✅ FIXED: Use the actual authenticated user's ID as sender_id
     const senderId = user.id;
 
+    // ✅ NEW: Validate profile message type and profile existence
+    if (messageType === 'profile') {
+      // #region agent log
+      console.log('[DEBUG] POST /api/messages - Validating profile message:', { messageType, metadata: JSON.stringify(metadata), hasMetadata: !!metadata });
+      // #endregion
+      
+      const profileId = metadata?.shared_profile_id;
+      const profileType = metadata?.shared_profile_type;
+
+      // #region agent log
+      console.log('[DEBUG] POST /api/messages - Profile validation checks:', { profileId, profileType, hasProfileId: !!profileId, hasProfileType: !!profileType });
+      // #endregion
+
+      if (!profileId) {
+        // #region agent log
+        console.log('[DEBUG] POST /api/messages - Missing profile ID');
+        // #endregion
+        return NextResponse.json({ 
+          error: 'Profile ID required for profile message type' 
+        }, { status: 400 });
+      }
+
+      if (!profileType || !['member', 'alumni'].includes(profileType)) {
+        // #region agent log
+        console.log('[DEBUG] POST /api/messages - Invalid profile type:', { profileType });
+        // #endregion
+        return NextResponse.json({ 
+          error: 'Valid profile type (member or alumni) required' 
+        }, { status: 400 });
+      }
+
+      // Validate profile exists in database
+      let profileExists = false;
+      let profileData = null;
+
+      if (profileType === 'alumni') {
+        // #region agent log
+        console.log('[DEBUG] POST /api/messages - Checking alumni table for profileId:', profileId);
+        // #endregion
+        
+        // Check alumni table
+        const { data: alumniData, error: alumniError } = await supabase
+          .from('alumni')
+          .select('user_id, first_name, last_name, full_name, avatar_url')
+          .eq('user_id', profileId)
+          .single();
+
+        // #region agent log
+        console.log('[DEBUG] POST /api/messages - Alumni query result:', { hasError: !!alumniError, error: alumniError?.message, hasData: !!alumniData, profileId });
+        // #endregion
+
+        if (!alumniError && alumniData) {
+          profileExists = true;
+          profileData = {
+            id: alumniData.user_id,
+            name: alumniData.full_name || `${alumniData.first_name || ''} ${alumniData.last_name || ''}`.trim(),
+            avatar: alumniData.avatar_url || null,
+            type: 'alumni' as const
+          };
+        }
+      } else {
+        // #region agent log
+        console.log('[DEBUG] POST /api/messages - Checking profiles table for profileId:', profileId);
+        // #endregion
+        
+        // Check profiles table for member
+        const { data: profileRecord, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, full_name, first_name, last_name, avatar_url')
+          .eq('id', profileId)
+          .single();
+
+        // #region agent log
+        console.log('[DEBUG] POST /api/messages - Profiles query result:', { hasError: !!profileError, error: profileError?.message, hasData: !!profileRecord, profileId });
+        // #endregion
+
+        if (!profileError && profileRecord) {
+          profileExists = true;
+          profileData = {
+            id: profileRecord.id,
+            name: profileRecord.full_name || `${profileRecord.first_name || ''} ${profileRecord.last_name || ''}`.trim(),
+            avatar: profileRecord.avatar_url || null,
+            type: 'member' as const
+          };
+        }
+      }
+
+      if (!profileExists) {
+        return NextResponse.json({ 
+          error: 'Profile not found in database' 
+        }, { status: 404 });
+      }
+
+      // Build validated metadata object
+      // TypeScript Guard: ensure profileData is not null
+      if (!profileData) {
+        return NextResponse.json({
+          error: 'Profile data is missing'
+        }, { status: 500 });
+      }
+
+      // Build validated metadata object
+      metadata.shared_profile_id = profileData.id;
+      metadata.shared_profile_name = profileData.name;
+      if (profileData.avatar) {
+        metadata.shared_profile_avatar = profileData.avatar;
+      }
+      metadata.shared_profile_type = profileData.type;
+    }
+
     // Create new message
+    const insertData = {
+      connection_id: connectionId,
+      sender_id: senderId, // ✅ Now correctly set to the actual sender
+      content,
+      message_type: messageType,
+      metadata
+    };
+    
+    // #region agent log
+    console.log('[DEBUG] POST /api/messages - Inserting message:', JSON.stringify({...insertData, content: insertData.content.substring(0, 50), metadata: JSON.stringify(metadata)}, null, 2));
+    // #endregion
+    
     const { data: message, error } = await supabase
       .from('messages')
-      .insert({
-        connection_id: connectionId,
-        sender_id: senderId, // ✅ Now correctly set to the actual sender
-        content,
-        message_type: messageType,
-        metadata
-      })
+      .insert(insertData)
       .select(`
         *,
         sender:profiles!sender_id(
@@ -194,9 +318,16 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
+      // #region agent log
+      console.error('[DEBUG] POST /api/messages - Message creation error:', JSON.stringify({error: error.message, code: error.code, details: error.details, hint: error.hint, insertData: {...insertData, content: insertData.content.substring(0, 50)}}, null, 2));
+      // #endregion
       console.error('Message creation error:', error);
       return NextResponse.json({ error: 'Failed to create message' }, { status: 500 });
     }
+    
+    // #region agent log
+    console.log('[DEBUG] POST /api/messages - Message created successfully:', { messageId: message?.id, connectionId, messageType });
+    // #endregion
 
     // Calculate recipient ID once (used for both email and SMS)
     const recipientId = connection.requester_id === senderId ? connection.recipient_id : connection.requester_id;

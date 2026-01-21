@@ -18,6 +18,8 @@ import { useProfileUpdateDetection } from '@/lib/hooks/useProfileUpdateDetection
 import type { DetectedChange } from '@/components/features/profile/ProfileUpdatePromptModal';
 import { industries } from '@/lib/alumniConstants';
 import { Select, SelectItem } from '@/components/ui/select';
+import { UsernameInput } from '@/components/features/profile/UsernameInput';
+import { generateProfileSlug } from '@/lib/utils/usernameUtils';
 
 interface EditAlumniProfileModalProps {
   isOpen: boolean;
@@ -36,6 +38,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
+    username: '',
     email: '',
     chapter: '',
     graduation_year: '',
@@ -131,6 +134,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
       const initialFormData = savedFormData || {
         first_name: data.first_name || '',
         last_name: data.last_name || '',
+        username: profile?.username || profile?.profile_slug || '',
         email: data.email || '',
         chapter: data.chapter || '',
         graduation_year: data.graduation_year?.toString() || '',
@@ -276,6 +280,47 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
     }
   };
 
+  // Auto-suggest username when firstName/lastName change
+  const [usernameManuallySet, setUsernameManuallySet] = useState(false);
+  
+  useEffect(() => {
+    // Only suggest if username is empty and names are provided
+    if (!usernameManuallySet && !formData.username && formData.first_name && formData.last_name) {
+      const suggestUsername = async () => {
+        try {
+          const params = new URLSearchParams({
+            firstName: formData.first_name,
+            lastName: formData.last_name,
+          });
+          const response = await fetch(`/api/username/suggestions?${params.toString()}`);
+          const data = await response.json();
+          
+          if (response.ok && data.suggestions && data.suggestions.length > 0) {
+            const newFormData = { ...formData, username: data.suggestions[0] };
+            setFormData(newFormData);
+            saveFormDataToStorage(newFormData);
+          }
+        } catch (error) {
+          console.error('Error fetching username suggestions:', error);
+          // Fallback: generate base username client-side
+          const { generateBaseUsername } = await import('@/lib/utils/usernameUtils');
+          const suggested = generateBaseUsername(formData.first_name, formData.last_name);
+          const newFormData = { ...formData, username: suggested };
+          setFormData(newFormData);
+          saveFormDataToStorage(newFormData);
+        }
+      };
+
+      suggestUsername();
+    }
+  }, [formData.first_name, formData.last_name]);
+
+  // Track if username was manually set
+  const handleUsernameChange = (value: string) => {
+    setUsernameManuallySet(true);
+    handleInputChange('username', value);
+  };
+
   // File upload handlers - exact same as original
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -395,6 +440,30 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
       newErrors.linkedin_url = 'Please enter a valid LinkedIn URL';
     }
 
+    // Validate username if provided
+    if (formData.username) {
+      const { validateUsername } = await import('@/lib/utils/usernameUtils');
+      const validation = validateUsername(formData.username);
+      if (!validation.valid) {
+        newErrors.username = validation.error || 'Invalid username';
+      } else {
+        // Check availability (final check before submit)
+        try {
+          const params = new URLSearchParams({ username: formData.username });
+          if (profile?.id) {
+            params.append('excludeUserId', profile.id);
+          }
+          const response = await fetch(`/api/username/check?${params.toString()}`);
+          const data = await response.json();
+          if (!response.ok || !data.available) {
+            newErrors.username = data.message || 'Username is not available';
+          }
+        } catch (error) {
+          newErrors.username = 'Failed to verify username availability';
+        }
+      }
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -453,7 +522,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
       console.log('✅ Alumni data updated successfully:', data);
 
       // Update basic profile fields for consistency
-      const profileUpdates = {
+      const profileUpdates: any = {
         first_name: formData.first_name.trim(),
         last_name: formData.last_name.trim(),
         email: formData.email.trim(),
@@ -461,6 +530,15 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         location: formData.location?.trim() || null,
         linkedin_url: formData.linkedin_url?.trim() || null
       };
+
+      // Add username and update profile_slug if username changed
+      if (formData.username) {
+        profileUpdates.username = formData.username;
+        // Generate new profile_slug if username is different from current
+        if (formData.username !== (profile?.username || profile?.profile_slug || '')) {
+          profileUpdates.profile_slug = generateProfileSlug(formData.username);
+        }
+      }
 
       await onUpdate(profileUpdates);
 
@@ -680,6 +758,22 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
                     />
                   </div>
                 </div>
+
+                {/* Username Field */}
+                <UsernameInput
+                  value={formData.username}
+                  onChange={handleUsernameChange}
+                  onValidationChange={(valid) => {
+                    if (!valid && !errors.username) {
+                      // Validation will be handled by UsernameInput component
+                    }
+                  }}
+                  excludeUserId={profile?.id}
+                  firstName={formData.first_name}
+                  lastName={formData.last_name}
+                  error={errors.username}
+                  disabled={loading}
+                />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
