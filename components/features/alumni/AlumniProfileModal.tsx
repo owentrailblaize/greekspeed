@@ -11,8 +11,10 @@ import {
   Handshake,
   Calendar,
   Users,
-  Lock
+  Lock,
+  ArrowRight
 } from "lucide-react";
+import Link from 'next/link';
 import { Alumni } from "@/lib/alumniConstants";
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
 import { useConnections } from "@/lib/contexts/ConnectionsContext";
@@ -23,6 +25,8 @@ import { cn } from "@/lib/utils";
 import { trackActivity, ActivityTypes } from "@/lib/utils/activityUtils";
 import { createPortal } from 'react-dom';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
+import { ShareProfileDrawer } from "@/components/features/messaging/ShareProfileDrawer";
+import { supabase } from "@/lib/supabase/client";
 
 interface AlumniProfileModalProps {
   alumni: Alumni | null;
@@ -81,14 +85,40 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
     updateConnectionStatus, 
     cancelConnectionRequest, 
     getConnectionStatus,
-    getConnectionId
+    getConnectionId,
+    connections
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
+  const [shareDrawerOpen, setShareDrawerOpen] = useState(false);
+  const [profileSlug, setProfileSlug] = useState<string | null>(null);
 
   // Ensure component is mounted (for SSR)
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Fetch profile slug for View Full Profile link
+  useEffect(() => {
+    if (alumni?.id && isOpen && !isMobile) {
+      async function fetchProfileSlug() {
+        try {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('profile_slug, username')
+            .eq('id', alumni.id)
+            .single();
+          
+          if (profileData) {
+            setProfileSlug(profileData.profile_slug || profileData.username || null);
+          }
+        } catch (error) {
+          console.error('Failed to fetch profile slug:', error);
+          setProfileSlug(null);
+        }
+      }
+      fetchProfileSlug();
+    }
+  }, [alumni?.id, isOpen, isMobile]);
 
   // Don't render modal on mobile
   if (!alumni || !isOpen || !mounted || isMobile) return null;
@@ -156,6 +186,31 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
   const handleEmailClick = () => {
     if (!alumni.email || !canSendEmail()) return;
     window.location.href = `mailto:${alumni.email}?subject=Reaching out from Trailblaize`;
+  };
+
+  const handleShareProfile = () => {
+    if (!user) return;
+    setShareDrawerOpen(true);
+  };
+
+  const canShareProfile = () => {
+    if (!user || user.id === alumni.id) return false;
+    // Can share if user has at least one accepted connection
+    const acceptedConnections = connections.filter(conn => conn.status === 'accepted');
+    return acceptedConnections.length > 0;
+  };
+
+  const getProfileSlug = () => {
+    // Use fetched slug if available, otherwise fallback to ID
+    return profileSlug || alumni.id;
+  };
+
+  const handleViewFullProfile = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const slug = getProfileSlug();
+    router.push(`/profile/${slug}`);
+    onClose(); // Close modal when navigating
   };
 
   const renderConnectionButton = () => {
@@ -298,6 +353,32 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
           >
             <X className="h-4 w-4" />
           </Button>
+
+          {/* Share Profile Button - Icon only, circular, top left below banner */}
+          {canShareProfile() && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShareProfile}
+              className="absolute top-16 left-3 h-10 w-10 p-0 bg-white/90 hover:bg-white border-navy-600 text-navy-600 rounded-full shadow-sm flex items-center justify-center z-20"
+              title="Share this profile with someone"
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+          )}
+
+          {/* View Full Profile Link - Text link, positioned to the right of Share button, below banner */}
+          {alumni.hasProfile && (
+            <Link
+              href={`/profile/${getProfileSlug()}`}
+              onClick={handleViewFullProfile}
+              className="absolute top-20 left-14 px-3 py-1.5 text-sm font-medium text-slate-900 hover:text-slate-700 transition-colors z-20 flex items-center gap-1.5 bg-white/90 hover:bg-white rounded-md border-0"
+              title="View full profile page"
+            >
+              <span className="font-light">View Full Profile</span>
+              <ArrowRight className="h-3.5 w-3.5 font-light" />
+            </Link>
+          )}
           
           {/* Profile Content Overlapping Banner */}
           <div className="px-6 -mt-10 relative">
@@ -467,6 +548,18 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
           </div>
         </div>
       </div>
+
+      {/* Share Profile Drawer */}
+      <ShareProfileDrawer
+        isOpen={shareDrawerOpen}
+        onClose={() => setShareDrawerOpen(false)}
+        profileToShare={{
+          id: alumni.id,
+          type: 'alumni',
+          name: alumni.fullName,
+          avatarUrl: alumni.avatar || undefined
+        }}
+      />
     </div>,
     document.body
   );
