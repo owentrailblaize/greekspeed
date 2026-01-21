@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Users, DollarSign, Shield, Star, Check } from "lucide-react";
 import Link from "next/link";
@@ -92,6 +92,21 @@ export function LandingPage() {
   const [activeSection, setActiveSection] = useState("home");
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
   const { user } = useAuth();
+
+  // Handle hash navigation on page load
+  useEffect(() => {
+    const hash = window.location.hash.replace('#', '');
+    if (hash && ['features', 'pricing', 'about'].includes(hash)) {
+      // Wait for page to render, then scroll to section
+      setTimeout(() => {
+        const element = document.getElementById(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+          setActiveSection(hash);
+        }
+      }, 100);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">

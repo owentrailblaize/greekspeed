@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, User } from "lucide-react";
 import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { Button } from "@/components/ui/button";
 
@@ -17,6 +18,8 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, signOut } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,13 +30,20 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
   }, []);
 
   const scrollToSection = (sectionId: string) => {
-    if (onSectionChange) {
-      onSectionChange(sectionId);
-    }
     setMobileMenuOpen(false);
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+    
+    // If we're on the landing page, scroll to section
+    if (pathname === '/') {
+      if (onSectionChange) {
+        onSectionChange(sectionId);
+      }
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    } else {
+      // Otherwise, navigate to landing page with hash
+      router.push(`/#${sectionId}`);
     }
   };
 
@@ -177,35 +187,34 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
             className="md:hidden bg-white/95 backdrop-blur-xl border-t border-gray-200"
           >
             <div className="px-6 py-5 space-y-1">
-              {!hideNavigation && (
-                <>
-                  {[
-                    { id: "features", label: "Features" },
-                    { id: "pricing", label: "Pricing" },
-                    { id: "about", label: "About Us" },
-                  ].map(({ id, label }) => (
-                    <button 
-                      key={id} 
-                      onClick={() => scrollToSection(id)} 
-                      className={`block w-full text-left py-3 px-4 rounded-lg transition-all font-medium ${
-                        activeSection === id
-                          ? "text-brand-primary bg-brand-primary/10 shadow-sm"
-                          : "text-gray-700 hover:text-brand-primary hover:bg-gray-50"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                  {user && (
-                    <Link 
-                      href="/dashboard" 
-                      className="block w-full text-left py-3 px-4 rounded-lg text-gray-700 hover:text-brand-primary hover:bg-gray-50 transition-all font-medium"
-                    >
-                      Dashboard
-                    </Link>
-                  )}
-                </>
-              )}
+              {/* Mobile Navigation - Always show on mobile, even if hideNavigation is true */}
+              <>
+                {[
+                  { id: "features", label: "Features" },
+                  { id: "pricing", label: "Pricing" },
+                  { id: "about", label: "About Us" },
+                ].map(({ id, label }) => (
+                  <button 
+                    key={id} 
+                    onClick={() => scrollToSection(id)} 
+                    className={`block w-full text-left py-3 px-4 rounded-lg transition-all font-medium ${
+                      activeSection === id
+                        ? "text-brand-primary bg-brand-primary/10 shadow-sm"
+                        : "text-gray-700 hover:text-brand-primary hover:bg-gray-50"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+                {user && (
+                  <Link 
+                    href="/dashboard" 
+                    className="block w-full text-left py-3 px-4 rounded-lg text-gray-700 hover:text-brand-primary hover:bg-gray-50 transition-all font-medium"
+                  >
+                    Dashboard
+                  </Link>
+                )}
+              </>
               {!user ? (
                 <div className="pt-4 border-t border-gray-200 mt-4 space-y-4">
                   <div className="flex justify-center">
