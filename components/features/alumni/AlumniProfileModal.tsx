@@ -100,12 +100,13 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
   // Fetch profile slug for View Full Profile link
   useEffect(() => {
     if (alumni?.id && isOpen && !isMobile) {
+      const alumniId = alumni.id; 
       async function fetchProfileSlug() {
         try {
           const { data: profileData } = await supabase
             .from('profiles')
             .select('profile_slug, username')
-            .eq('id', alumni.id)
+            .eq('id', alumniId)
             .single();
           
           if (profileData) {
