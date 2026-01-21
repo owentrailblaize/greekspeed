@@ -23,6 +23,7 @@ import { useState } from "react";
 import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils";
 import { ShareProfileDrawer } from "@/components/features/messaging/ShareProfileDrawer";
+import { MobileMessagesDrawer } from "@/components/features/messaging/MobileMessagesDrawer";
 
 interface ProfileSummaryProps {
   profile: UnifiedUserProfile;
@@ -55,6 +56,8 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
   const [shareDrawerOpen, setShareDrawerOpen] = useState(false);
+  const [messagesDrawerOpen, setMessagesDrawerOpen] = useState(false);
+  const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
 
   const alumni = profile.alumni || {};
   const userData = profile.user || {};
@@ -99,8 +102,18 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
   const handleMessageClick = () => {
     const connectionId = getConnectionId(userId);
     if (connectionId) {
-      router.push(`/dashboard/messages?connection=${connectionId}`);
-      onClose();
+      // Check if mobile
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      
+      if (isMobile) {
+        // Open mobile messages drawer
+        setSelectedConnectionId(connectionId);
+        setMessagesDrawerOpen(true);
+      } else {
+        // Desktop: navigate to messages page
+        router.push(`/dashboard/messages?connection=${connectionId}`);
+        onClose();
+      }
     }
   };
 
@@ -396,6 +409,16 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
           name: profile.full_name,
           avatarUrl: profile.avatar_url || undefined
         }}
+      />
+
+      {/* Mobile Messages Drawer */}
+      <MobileMessagesDrawer
+        isOpen={messagesDrawerOpen}
+        onClose={() => {
+          setMessagesDrawerOpen(false);
+          setSelectedConnectionId(null);
+        }}
+        connectionId={selectedConnectionId}
       />
     </div>
   );
