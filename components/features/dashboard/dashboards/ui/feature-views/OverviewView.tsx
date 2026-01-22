@@ -56,9 +56,11 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
   const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementType, setAnnouncementType] = useState<'general' | 'urgent' | 'event' | 'academic'>('general');
   const [sendSMS, setSendSMS] = useState(false);
+  const [sendSmsToAlumni, setSendSmsToAlumni] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailRecipientCount, setEmailRecipientCount] = useState<number | null>(null);
   const [smsRecipientCount, setSmsRecipientCount] = useState<number | null>(null);
+  const [alumniSmsRecipientCount, setAlumniSmsRecipientCount] = useState<number | null>(null);
   const [loadingRecipients, setLoadingRecipients] = useState(false);
 
   // Event form state
@@ -100,6 +102,11 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
           const data = await response.json();
           setEmailRecipientCount(data.email_recipients);
           setSmsRecipientCount(data.sms_recipients);
+          setAlumniSmsRecipientCount(
+            typeof data.alumni_sms_recipients === 'number'
+              ? data.alumni_sms_recipients
+              : null
+          );
         }
       } catch (error) {
         console.error('Error fetching recipient counts:', error);
@@ -124,6 +131,7 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
         content: announcement.trim(),
         announcement_type: announcementType,
         send_sms: sendSMS,
+        send_sms_to_alumni: sendSmsToAlumni,
         metadata: {}
       };
 
@@ -134,6 +142,7 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
       setAnnouncementTitle("");
       setAnnouncementType('general');
       setSendSMS(false);
+      setSendSmsToAlumni(false);
       
       toast.success('Announcement sent successfully!');
     } catch (error) {
@@ -490,15 +499,27 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
             
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
               <div className="flex flex-col space-y-2 flex-1">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="send-sms-notification"
-                    checked={sendSMS}
-                    onCheckedChange={(checked) => setSendSMS(checked as boolean)}
-                  />
-                  <Label htmlFor="send-sms-notification" className="text-sm cursor-pointer">
-                    Send SMS notification
-                  </Label>
+                <div className="flex flex-col space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="send-sms-notification"
+                      checked={sendSMS}
+                      onCheckedChange={(checked) => setSendSMS(checked as boolean)}
+                    />
+                    <Label htmlFor="send-sms-notification" className="text-sm cursor-pointer">
+                      Send SMS to active members
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="send-sms-alumni"
+                      checked={sendSmsToAlumni}
+                      onCheckedChange={(checked) => setSendSmsToAlumni(checked as boolean)}
+                    />
+                    <Label htmlFor="send-sms-alumni" className="text-sm cursor-pointer">
+                      Send SMS to alumni
+                    </Label>
+                  </div>
                 </div>
                 
                 <div className="text-xs text-gray-600 space-y-1 pl-6">
@@ -512,6 +533,12 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
                     <p className="flex items-center gap-1 whitespace-nowrap">
                       <Smartphone className="h-3 w-3 flex-shrink-0" />
                       <span>SMS will be sent to <span className="font-medium">{smsRecipientCount}</span> Members</span>
+                    </p>
+                  )}
+                  {sendSmsToAlumni && alumniSmsRecipientCount !== null && (
+                    <p className="flex items-center gap-1 whitespace-nowrap">
+                      <Smartphone className="h-3 w-3 flex-shrink-0" />
+                      <span>SMS will be sent to <span className="font-medium">{alumniSmsRecipientCount}</span> Alumni</span>
                     </p>
                   )}
                   {loadingRecipients && (
