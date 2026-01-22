@@ -176,7 +176,8 @@ export class SMSNotificationService {
     // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
 
-    // GSM-safe, concise message with link
+    // Format message to match Telnyx campaign sample pattern
+    // Pattern: [Trailblaize] Message notification: New message from {name}. Reply STOP to opt-out. Msg & data rates may apply
     const senderPrefix = '[Trailblaize]';
     const messagePrefix = 'Message notification: ';
     const optOutText = ' Reply STOP to opt-out.';
@@ -195,12 +196,6 @@ export class SMSNotificationService {
         // No maxParts limit - let Telnyx handle full message concatenation
       }
     );
-    
-    let message = `${senderPrefix} ${baseText}${finalSenderName} ${link}${compliance}`;
-    message = toGsmSafe(message);
-    if (message.length > 160) {
-      message = message.substring(0, 157) + '...';
-    }
 
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
@@ -339,12 +334,6 @@ export class SMSNotificationService {
         // No maxParts limit - let Telnyx handle full message concatenation
       }
     );
-    
-    let message = `${senderPrefix} ${finalName}${baseText} ${link}${compliance}`;
-    message = toGsmSafe(message);
-    if (message.length > 160) {
-      message = message.substring(0, 157) + '...';
-    }
 
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
