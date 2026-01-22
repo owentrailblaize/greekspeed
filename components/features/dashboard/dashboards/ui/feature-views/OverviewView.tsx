@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, CheckCircle, Crown, Settings, Clock, UserCheck, DollarSign, Calendar, BookOpen } from 'lucide-react';
+import { Users, CheckCircle, Crown, Settings, Clock, UserCheck, DollarSign, Calendar, BookOpen, Loader2 } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useChapterBudget } from '@/lib/hooks/useChapterBudget';
 import { Button } from '@/components/ui/button';
@@ -64,6 +64,8 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
   // Event form state
   const [showEventForm, setShowEventForm] = useState(false);
   const [isSubmittingEvent, setIsSubmittingEvent] = useState(false);
+
+  const [loadingCounts, setLoadingCounts] = useState(true);
 
   // Events hook for creating events
   const { createEvent } = useEvents({ 
@@ -169,6 +171,8 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
   };
 
   const fetchOverviewData = async () => {
+    setLoadingCounts(true);
+
     // Fetch member stats
     try {
       const memberResponse = await fetch(`/api/chapter/member-count?chapter_id=${chapterId}`);
@@ -255,6 +259,8 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
     } catch (error) {
       console.error('Error fetching vendors:', error);
     }
+
+    setLoadingCounts(false);
   };
 
   const getStatsCards = () => {
@@ -263,7 +269,7 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
         return [
           { 
             label: 'Total Members', 
-            value: memberCount ?? 0, 
+            value: loadingCounts ? null : (memberCount ?? 0), 
             icon: Users, 
             color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
             textColor: 'text-navy-700',
@@ -271,7 +277,7 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
           },
           { 
             label: 'Active Members', 
-            value: activeMemberCount ?? 0, 
+            value: loadingCounts ? null : (activeMemberCount ?? 0), 
             icon: CheckCircle, 
             color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
             textColor: 'text-navy-700',
@@ -279,7 +285,7 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
           },
           { 
             label: 'Alumni', 
-            value: alumniCount ?? 0, 
+            value: loadingCounts ? null : (alumniCount ?? 0), 
             icon: Crown, 
             color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
             textColor: 'text-navy-700',
@@ -363,7 +369,7 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
         return [
           { 
             label: 'Total Members', 
-            value: memberCount ?? 0, 
+            value: loadingCounts ? null : (memberCount ?? 0), 
             icon: Users, 
             color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
             textColor: 'text-navy-700',
@@ -371,7 +377,7 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
           },
           { 
             label: 'Active Members', 
-            value: activeMemberCount ?? 0, 
+            value: loadingCounts ? null : (activeMemberCount ?? 0), 
             icon: CheckCircle, 
             color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
             textColor: 'text-navy-700',
@@ -440,9 +446,15 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
                 <div className="flex items-center justify-between">
                   <div>
                     <p className={`${stat.textColor} text-sm font-medium mb-1`}>{stat.label}</p>
-                    <p className={`text-2xl font-semibold ${stat.textColor.replace('700', '900')}`}>
-                      {stat.value}
-                    </p>
+                    {stat.value === null ? (
+                      <div className="flex items-center space-x-2">
+                        <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+                      </div>
+                    ) : (
+                      <p className={`text-2xl font-semibold ${stat.textColor.replace('700', '900')}`}>
+                        {typeof stat.value === 'string' ? stat.value : stat.value.toLocaleString()}
+                      </p>
+                    )}
                   </div>
                   <Icon className={`h-8 w-8 ${stat.iconColor}`} />
                 </div>

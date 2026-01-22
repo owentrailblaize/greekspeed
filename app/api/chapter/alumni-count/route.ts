@@ -15,24 +15,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Chapter ID is required' }, { status: 400 });
     }
 
-    // First, get the chapter name from the chapters table
-    const { data: chapterData, error: chapterError } = await supabase
-      .from('chapters')
-      .select('name')
-      .eq('id', chapterId)
-      .single();
-
-    if (chapterError || !chapterData) {
-      console.error('Error fetching chapter name:', chapterError);
-      return NextResponse.json({ error: 'Chapter not found' }, { status: 404 });
-    }
-
-    // Count alumni members using the chapter name (not chapter_id)
+    // Count alumni members using role field (not member_status) and chapter_id
+    // Note: Alumni have role='alumni' but member_status='active', so we must filter by role
     const { count, error } = await supabase
       .from('profiles')
       .select('*', { count: 'exact', head: true })
-      .eq('chapter', chapterData.name) // Use chapter name, not chapter_id
-      .eq('member_status', 'alumni');
+      .eq('chapter_id', chapterId)
+      .eq('role', 'alumni');
 
     if (error) {
       console.error('Error counting alumni:', error);
