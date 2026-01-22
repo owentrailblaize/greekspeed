@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
           const lastName = user.user_metadata?.family_name || user.user_metadata?.last_name || '';
           
           // Generate username for OAuth user
-          const username = await generateUniqueUsername(firstName, lastName, user.id);
+          const username = await generateUniqueUsername(supabase, firstName, lastName, user.id);
           const profileSlug = generateProfileSlug(username);
 
           // Create profile for new OAuth user
