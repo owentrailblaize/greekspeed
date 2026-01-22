@@ -40,7 +40,7 @@ export async function POST(
 
     // Validate graduation year range
     const currentYear = new Date().getFullYear();
-    const minYear = currentYear - 10;
+    const minYear = 1950;
     const maxYear = currentYear + 10;
     if (graduation_year < minYear || graduation_year > maxYear) {
       return NextResponse.json({ 
