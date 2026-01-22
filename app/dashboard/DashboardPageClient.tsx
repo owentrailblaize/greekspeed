@@ -49,7 +49,7 @@ export default function DashboardPageClient({
           // Only redirect if still incomplete after waiting
           if (!profile.chapter || !profile.role) {
             console.warn('Email signup profile appears incomplete after loading delay');
-            // Don't redirect - email signups should have complete profiles
+            router.push('/profile/complete');
           }
         }, 3000);
         

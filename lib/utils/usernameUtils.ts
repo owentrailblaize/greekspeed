@@ -1,5 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
-
 // Reserved words that cannot be used as usernames
 const RESERVED_WORDS = [
   'admin', 'api', 'dashboard', 'profile', 'settings', 'messages',
@@ -109,21 +107,16 @@ export function validateUsername(username: string): { valid: boolean; error?: st
 
 /**
  * Check if username exists in database
+ * @param supabseClient - The supabase client to use
+ * @param username - The username to check
+ * @param excludeUserId - The user ID to exclude from the check
  */
 export async function usernameExists(
+  supabseClient: any,
   username: string,
   excludeUserId?: string
 ): Promise<boolean> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
-  if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error('Missing Supabase environment variables');
-  }
-  
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
-  
-  let query = supabase
+  let query = supabseClient
     .from('profiles')
     .select('id')
     .eq('username', username.toLowerCase().trim())
@@ -132,9 +125,9 @@ export async function usernameExists(
   if (excludeUserId) {
     query = query.neq('id', excludeUserId);
   }
-  
+
   const { data, error } = await query;
-  
+
   if (error) {
     console.error('Error checking username existence:', error);
     throw error;
@@ -146,8 +139,13 @@ export async function usernameExists(
 /**
  * Generate a unique username with duplicate handling
  * Tries: john.doe, john.doe1, john.doe2, etc.
+ * @param supabaseClient - The Supabase client instance to use
+ * @param firstName - User's first name
+ * @param lastName - User's last name
+ * @param excludeUserId - Optional user ID to exclude from check
  */
 export async function generateUniqueUsername(
+  supabaseClient: any,
   firstName: string | null,
   lastName: string | null,
   excludeUserId?: string
@@ -158,12 +156,12 @@ export async function generateUniqueUsername(
   if (isReservedWord(baseUsername)) {
     baseUsername = `${baseUsername}1`;
   }
-  
+
   let username = baseUsername;
   let counter = 0;
   const maxAttempts = 1000; // Safety limit
   
-  while (await usernameExists(username, excludeUserId)) {
+  while (await usernameExists(supabaseClient, username, excludeUserId)) {
     counter++;
     if (counter > maxAttempts) {
       // Fallback: use timestamp if we can't find a unique name
@@ -175,7 +173,7 @@ export async function generateUniqueUsername(
     // Try: baseUsername1, baseUsername2, etc.
     username = `${baseUsername}${counter}`;
   }
-  
+
   return username;
 }
 

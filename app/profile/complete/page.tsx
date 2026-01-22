@@ -275,6 +275,7 @@ export default function ProfileCompletePage() {
                       <Select 
                         value={formData.role} 
                         onValueChange={(value: string) => setFormData(prev => ({ ...prev, role: value as 'Alumni' }))}
+                        disableDynamicPositioning={true}
                       >
                         <SelectItem value="">Select your role</SelectItem>
                         {userRoles.map((userRole) => (
@@ -297,7 +298,7 @@ export default function ProfileCompletePage() {
                     <div className="mt-1">
                       <Button
                         type="submit"
-                        className="w-full h-7 bg-navy-600 hover:bg-navy-700 text-white font-medium text-sm"
+                        className="w-full h-7 bg-navy-600 hover:bg-navy-700 text-white font-medium text-sm rounded-full"
                         disabled={loading}
                       >
                         {loading ? (
