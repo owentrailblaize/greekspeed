@@ -59,15 +59,34 @@ export const getEarlierCutoffYear = (): number => {
 }
 
 export const industries = [
-  "Technology",
-  "Finance", 
+  "Aerospace & Defense",
+  "Agriculture",
+  "Architecture & Planning",
+  "Arts, Design & Entertainment",
+  "Construction",
   "Consulting",
-  "Healthcare",
   "Education",
-  "Marketing",
-  "Sales",
+  "Energy & Utilities",
+  "Engineering",
+  "Finance",
+  "Food & Beverage",
+  "Government & Public Administration",
+  "Healthcare",
+  "Hospitality & Tourism",
+  "Human Resources & Staffing",
+  "Insurance",
   "Legal",
-  "Non-profit"
+  "Manufacturing",
+  "Marketing",
+  "Media & Communications",
+  "Non-profit",
+  "Pharmaceuticals & Biotechnology",
+  "Real Estate",
+  "Retail & E-commerce",
+  "Sales",
+  "Technology",
+  "Telecommunications",
+  "Transportation & Logistics"
 ];
 
 export const chapters = [
