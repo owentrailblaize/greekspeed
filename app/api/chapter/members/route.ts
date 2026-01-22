@@ -241,7 +241,25 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Transform members with mutual connections
+    // Fetch last_active_at from profiles table if not in view
+    // Get all member IDs to fetch activity data
+    const memberIds = members.map((m: any) => m.id).filter(Boolean);
+    let lastActiveMap = new Map<string, string | null>();
+    
+    if (memberIds.length > 0) {
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, last_active_at')
+        .in('id', memberIds);
+      
+      if (!profilesError && profiles) {
+        profiles.forEach((profile: any) => {
+          lastActiveMap.set(profile.id, profile.last_active_at);
+        });
+      }
+    }
+
+    // Transform members with mutual connections and lastActiveAt
     const transformedMembers = members.map((member: any) => {
       const mutualConnections = mutualConnectionsMap.get(member.id) || [];
       
@@ -252,7 +270,8 @@ export async function GET(request: NextRequest) {
           name: mc.name,
           avatar: mc.avatar || undefined
         })),
-        mutualConnectionsCount: mutualConnections.length
+        mutualConnectionsCount: mutualConnections.length,
+        lastActiveAt: lastActiveMap.get(member.id) || member.last_active_at || null
       };
     });
 

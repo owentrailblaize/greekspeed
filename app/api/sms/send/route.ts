@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
     // This ensures compliance text is never truncated and supports multi-part messages
     const senderPrefix = '[Trailblaize]';
     const optOutText = ' Reply STOP to opt out.';
-    const complianceText = ' Msg & data rates may apply';
+    const complianceText = ' Msg/data rates apply';
     
     // Check if message already has compliance text
     const hasCompliance = message.includes('Reply STOP') || message.includes('[Trailblaize]');

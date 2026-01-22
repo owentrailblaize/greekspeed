@@ -1,6 +1,7 @@
 import { SMSService } from './smsServiceTelnyx';
 import { SMSMessageFormatter } from './smsMessageFormatter';
 import { createClient } from '@supabase/supabase-js';
+import { toGsmSafe } from '@/lib/utils/smsUtils';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -45,7 +46,30 @@ export class SMSNotificationService {
     // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
     
-    const message = `New announcement: ${announcementTitle}. View at: trailblaize.net/dashboard`;
+    // GSM-safe, concise message with link
+    const senderPrefix = '[Trailblaize]';
+    const link = 'https://trailblaize.net/dashboard';
+    const compliance = ' Reply STOP to opt out. HELP for help. Msg/data rates apply.';
+    
+    const safeTitle = toGsmSafe(announcementTitle);
+    const baseText = 'New: ';
+    
+    // Calculate available space
+    const fixedLength = senderPrefix.length + 1 + baseText.length + 1 + link.length + compliance.length;
+    const maxTitleLength = 160 - fixedLength;
+    
+    // Truncate title if needed
+    let finalTitle = safeTitle;
+    if (safeTitle.length > maxTitleLength) {
+      finalTitle = safeTitle.substring(0, Math.max(0, maxTitleLength - 3)) + '...';
+    }
+    
+    let message = `${senderPrefix} ${baseText}${finalTitle} ${link}${compliance}`;
+    message = toGsmSafe(message);
+    if (message.length > 160) {
+      message = message.substring(0, 157) + '...';
+    }
+    
     const result = await SMSService.sendSMS({ to: formattedPhone, body: message });
     
     await this.logSMS({
@@ -152,8 +176,7 @@ export class SMSNotificationService {
     // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
 
-    // Format message to match Telnyx campaign sample pattern
-    // Pattern: [Trailblaize] Message notification: New message from {name}. Reply STOP to opt-out. Msg & data rates may apply
+    // GSM-safe, concise message with link
     const senderPrefix = '[Trailblaize]';
     const messagePrefix = 'Message notification: ';
     const optOutText = ' Reply STOP to opt-out.';
@@ -173,6 +196,12 @@ export class SMSNotificationService {
       }
     );
     
+    let message = `${senderPrefix} ${baseText}${finalSenderName} ${link}${compliance}`;
+    message = toGsmSafe(message);
+    if (message.length > 160) {
+      message = message.substring(0, 157) + '...';
+    }
+
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
       messageLength: messageParts.fullMessage.length,
@@ -311,6 +340,12 @@ export class SMSNotificationService {
       }
     );
     
+    let message = `${senderPrefix} ${finalName}${baseText} ${link}${compliance}`;
+    message = toGsmSafe(message);
+    if (message.length > 160) {
+      message = message.substring(0, 157) + '...';
+    }
+
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
       messageLength: messageParts.fullMessage.length,

@@ -28,19 +28,49 @@ export default function AlumniJoinPageClient() {
         
         if (!response.ok) {
           const errorData = await response.json();
+          
+          // If the error is about wrong invitation type, redirect to active member join page
+          if (errorData.error === 'This invitation is not for alumni') {
+            router.push(`/join/${token}`);
+            return;
+          }
+          
           throw new Error(errorData.error || 'Invalid alumni invitation');
         }
 
         const data = await response.json();
         
         if (!data.valid) {
+          // If invalid due to wrong type, redirect
+          if (data.error === 'This invitation is not for alumni') {
+            router.push(`/join/${token}`);
+            return;
+          }
           throw new Error(data.error || 'Invalid alumni invitation');
+        }
+
+        // Additional safety check: Ensure this is an alumni invitation
+        if (data.invitation?.invitation_type && data.invitation.invitation_type !== 'alumni') {
+          // Redirect to the correct page based on invitation type
+          if (data.invitation.invitation_type === 'active_member') {
+            router.push(`/join/${token}`);
+            return;
+          }
+          throw new Error('This invitation is not for alumni');
         }
 
         setInvitation(data.invitation);
       } catch (error) {
         console.error('Error validating alumni invitation:', error);
-        setError(error instanceof Error ? error.message : 'Failed to validate alumni invitation');
+        
+        // If error message indicates wrong type, try redirecting
+        const errorMessage = error instanceof Error ? error.message : 'Failed to validate alumni invitation';
+        if (errorMessage.includes('not for alumni')) {
+          router.push(`/join/${token}`);
+          return;
+        }
+        
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -49,7 +79,7 @@ export default function AlumniJoinPageClient() {
     if (token) {
       validateInvitation();
     }
-  }, [token]);
+  }, [token, router]);
 
   const handleJoinSuccess = (userData: any) => {
     setSignupSuccess(true);
