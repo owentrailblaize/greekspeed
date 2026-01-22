@@ -14,6 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { CompactCalendarCard } from '../CompactCalendarCard';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { createPortal } from 'react-dom';
+import { toast } from 'react-toastify';
 
 export function EventsView() {
   const { profile } = useProfile();
@@ -76,15 +77,21 @@ export function EventsView() {
     if (!editingEvent) return;
     
     try {
-      await updateEvent(editingEvent.id, {
+      const result = await updateEvent(editingEvent.id, {
         ...eventData,
         updated_by: profile?.id || 'system'
       });
-      
-      setShowEventForm(false);
-      setEditingEvent(null);
+
+      if (result) {
+        toast.success('Event updated successfully!');
+        setShowEventForm(false);
+        setEditingEvent(null);
+      } else {
+        toast.error('Failed to update event. Please try again.');
+      } 
     } catch (error) {
       console.error('Error updating event:', error);
+      toast.error('Failed to update event. Please try again.');
     }
   };
 
