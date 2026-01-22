@@ -53,11 +53,14 @@ export async function PATCH(
       }
     }
 
+    // Filter out fields that shouldn't be updated directly (like send_sms which is not a DB column)
+    const { send_sms, created_by, created_at, ...allowedUpdateData } = updateData;
+
     // Update the event
     const { data: updatedEvent, error } = await supabase
       .from('events')
       .update({
-        ...updateData,
+        ...allowedUpdateData,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)

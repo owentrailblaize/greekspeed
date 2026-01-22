@@ -14,6 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { CompactCalendarCard } from '../CompactCalendarCard';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { createPortal } from 'react-dom';
+import { toast } from 'react-toastify';
 
 export function EventsView() {
   const { profile } = useProfile();
@@ -23,6 +24,7 @@ export function EventsView() {
   const [sortColumn, setSortColumn] = useState<'title' | 'date' | 'location' | 'budget' | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const eventsPerPage = 6;
   
   const { 
@@ -58,6 +60,7 @@ export function EventsView() {
   const handleCreateEvent = async (eventData: CreateEventRequest) => {
     if (!chapterId) return;
     
+    setIsSubmitting(true);
     try {
       await createEvent({
         ...eventData,
@@ -67,24 +70,37 @@ export function EventsView() {
       
       setShowEventForm(false);
       setEditingEvent(null);
+      toast.success('Event created successfully!');
     } catch (error) {
       console.error('Error creating event:', error);
+      toast.error('Failed to create event. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleUpdateEvent = async (eventData: UpdateEventRequest) => {
     if (!editingEvent) return;
     
+    setIsSubmitting(true);
     try {
-      await updateEvent(editingEvent.id, {
+      const result = await updateEvent(editingEvent.id, {
         ...eventData,
         updated_by: profile?.id || 'system'
       });
-      
-      setShowEventForm(false);
-      setEditingEvent(null);
+
+      if (result) {
+        toast.success('Event updated successfully!');
+        setShowEventForm(false);
+        setEditingEvent(null);
+      } else {
+        toast.error('Failed to update event. Please try again.');
+      } 
     } catch (error) {
       console.error('Error updating event:', error);
+      toast.error('Failed to update event. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -514,7 +530,9 @@ export function EventsView() {
                 setShowEventForm(false);
                 setEditingEvent(null);
               }}
-              loading={false}
+              loading={isSubmitting}
+              isOpen={showEventForm}
+              isMobile={false}
             />
           </div>
         </div>,

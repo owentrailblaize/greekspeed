@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { X, Calendar, MapPin, DollarSign, FileText, Mail, Smartphone } from 'lucide-react';
+import { X, Calendar, MapPin, DollarSign, FileText, Mail, Smartphone, Loader2 } from 'lucide-react';
 import { Event, CreateEventRequest, UpdateEventRequest } from '@/types/events';
 import { useAuth} from '@/lib/supabase/auth-context';
 import { useProfile } from '@/lib/contexts/ProfileContext';
@@ -415,7 +415,14 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
               disabled={loading}
               className="w-full rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Saving...' : (event ? 'Update Event' : 'Create Event')}
+              {loading ? (
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>{event ? 'Updating...' : 'Creating...'}</span>
+                </div>
+              ) : (
+                event ? 'Update Event' : 'Create Event'
+              )}
             </Button>
           </div>
         </div>
@@ -440,7 +447,14 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
               disabled={loading}
               className="rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 disabled:opacity-50 disabled:cursor-not-allowed h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
             >
-              {loading ? 'Saving...' : (event ? 'Update Event' : 'Create Event')}
+              {loading ? (
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>{event ? 'Updating...' : 'Creating...'}</span>
+                </div>
+              ) : (
+                event ? 'Update Event' : 'Create Event'
+              )}
             </Button>
           </div>
         </div>
