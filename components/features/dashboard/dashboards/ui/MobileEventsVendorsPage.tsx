@@ -45,6 +45,7 @@ export function MobileEventsVendorsPage() {
   // Events state
   const [showEventForm, setShowEventForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [isSubmittingEvent, setIsSubmittingEvent] = useState(false);
   const { 
     events, 
     loading: eventsLoading, 
@@ -79,6 +80,7 @@ export function MobileEventsVendorsPage() {
   const handleCreateEvent = async (eventData: CreateEventRequest) => {
     if (!chapterId) return;
     
+    setIsSubmittingEvent(true);
     try {
       await createEvent({
         ...eventData,
@@ -92,12 +94,15 @@ export function MobileEventsVendorsPage() {
     } catch (error) {
       console.error('Error creating event:', error);
       toast.error('Failed to create event');
+    } finally {
+      setIsSubmittingEvent(false);
     }
   };
 
   const handleUpdateEvent = async (eventData: UpdateEventRequest) => {
     if (!editingEvent) return;
     
+    setIsSubmittingEvent(true);
     try {
       await updateEvent(editingEvent.id, {
         ...eventData,
@@ -110,6 +115,8 @@ export function MobileEventsVendorsPage() {
     } catch (error) {
       console.error('Error updating event:', error);
       toast.error('Failed to update event');
+    } finally {
+      setIsSubmittingEvent(false);
     }
   };
 
@@ -737,7 +744,7 @@ export function MobileEventsVendorsPage() {
                     setShowEventForm(false);
                     setEditingEvent(null);
                   }}
-                  loading={false}
+                  loading={isSubmittingEvent}
                   isOpen={true}
                   isMobile={true}
                 />
@@ -760,7 +767,7 @@ export function MobileEventsVendorsPage() {
                     setShowEventForm(false);
                     setEditingEvent(null);
                   }}
-                  loading={false}
+                  loading={isSubmittingEvent}
                   isOpen={true}
                 />
               </div>
