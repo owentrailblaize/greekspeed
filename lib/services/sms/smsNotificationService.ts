@@ -1,4 +1,5 @@
 import { SMSService } from './smsServiceTelnyx';
+import { SMSMessageFormatter } from './smsMessageFormatter';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -14,24 +15,6 @@ interface SMSNotificationData {
 }
 
 export class SMSNotificationService {
-  
-  // Helper function to format compliant SMS messages
-  private static formatCompliantMessage(
-    content: string,
-    maxLength: number = 160
-  ): string {
-    const senderPrefix = '[Trailblaize]';
-    const optOutText = ' Reply STOP to opt out.';
-    const complianceText = ' Msg & data rates may apply';
-    
-    const fixedLength = senderPrefix.length + 1 + optOutText.length + complianceText.length;
-    const availableForContent = maxLength - fixedLength - 3; // -3 for ellipsis safety
-    
-    const truncatedContent = content.substring(0, Math.max(0, availableForContent));
-    const needsEllipsis = content.length > truncatedContent.length;
-    
-    return `${senderPrefix} ${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}`.substring(0, maxLength);
-  }
 
   // Log SMS attempt to database
   private static async logSMS(data: SMSNotificationData, success: boolean, messageId?: string, error?: string) {
@@ -98,37 +81,38 @@ export class SMSNotificationService {
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
 
     // Format message to match Telnyx campaign sample EXACTLY
-    // Sample: [Trailblaize] Event reminder: Chapter formal is this Saturday at 8 PM. Check your email for details. Reply STOP to unsubscribe or HELP for help. Msg & data rates may apply. Message frequency varies. Contact support@trailblaize.net
+    // Sample: [Trailblaize] Event reminder: Chapter formal is this Saturday at 8 PM. Check your email for details. Reply STOP to unsubscribe or HELP for help. Msg & data rates may apply
     const senderPrefix = '[Trailblaize]';
     const reminderPrefix = 'Event reminder: ';
     const optOutText = ' Reply STOP to unsubscribe or HELP for help.';
     const complianceText = ' Msg & data rates may apply';
 
-    // Build message prefix
-    const messagePrefix = `${senderPrefix} ${reminderPrefix}`;
-    const fixedComplianceLength = optOutText.length + complianceText.length;
-    
-    // Calculate available space for content (account for ellipsis if needed: 3 chars)
-    // Note: SMS has 160 char limit, but we'll truncate if needed
-    const availableForContent = 160 - messagePrefix.length - fixedComplianceLength - 3;
-    
     // Build event content - match sample format: "Event reminder: {details}"
     // Sample uses: "Chapter formal is this Saturday at 8 PM. Check your email for details."
-    // We'll use: "{eventTitle} on {eventDate}. Check your email for details."
+    // We'll use: "{eventTitle} on {eventDate}."
     const eventContent = `${eventTitle} on ${eventDate}.`;
-    const truncatedContent = eventContent.substring(0, Math.max(0, availableForContent));
-    const needsEllipsis = eventContent.length > truncatedContent.length;
-
-    // Build compliant message matching Telnyx sample exactly
-    const message = `${messagePrefix}${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}`.substring(0, 160);
     
+    // Use formatter to ensure compliance text is never truncated
+    const messageParts = SMSMessageFormatter.formatCompliantMessage(
+      `${reminderPrefix}${eventContent}`,
+      {
+        senderPrefix,
+        optOutText,
+        complianceText,
+        // No maxParts limit - let Telnyx handle full message concatenation
+      }
+    );
+
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
-      messageLength: message.length,
-      messagePreview: message.substring(0, 80) + '...'
+      messageLength: messageParts.fullMessage.length,
+      parts: messageParts.estimatedParts,
+      encoding: messageParts.encoding,
+      messagePreview: messageParts.fullMessage.substring(0, 80) + '...'
     });
 
-    const result = await SMSService.sendSMS({ to: formattedPhone, body: message });
+    // Send full message - Telnyx handles concatenation automatically
+    const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
     
     console.log('📬 SMS send result:', {
       success: result.success,
@@ -142,7 +126,7 @@ export class SMSNotificationService {
       chapterId,
       phoneNumber: formattedPhone,
       messageType: 'event',
-      messageContent: message
+      messageContent: messageParts.fullMessage
     }, result.success, result.messageId, result.error);
     
     return result.success;
@@ -175,27 +159,30 @@ export class SMSNotificationService {
     const optOutText = ' Reply STOP to opt-out.';
     const complianceText = ' Msg & data rates may apply';
 
-    // Build message prefix
-    const fullPrefix = `${senderPrefix} ${messagePrefix}`;
-    const fixedComplianceLength = optOutText.length + complianceText.length;
+    // Build message content
+    const messageContent = `New message from ${senderName}.`;
     
-    // Calculate available space for sender name (account for ellipsis if needed: 3 chars)
-    const availableForSender = 160 - fullPrefix.length - fixedComplianceLength - 3 - 21; // -21 for "New message from " and "."
-    
-    // Truncate sender name if needed
-    const truncatedSenderName = senderName.substring(0, Math.max(0, availableForSender));
-    const needsEllipsis = senderName.length > truncatedSenderName.length;
-
-    // Build compliant message matching Telnyx sample pattern
-    const message = `${fullPrefix}New message from ${truncatedSenderName}${needsEllipsis ? '...' : ''}.${optOutText}${complianceText}`.substring(0, 160);
+    // Use formatter to ensure compliance text is never truncated
+    const messageParts = SMSMessageFormatter.formatCompliantMessage(
+      `${messagePrefix}${messageContent}`,
+      {
+        senderPrefix,
+        optOutText,
+        complianceText,
+        // No maxParts limit - let Telnyx handle full message concatenation
+      }
+    );
     
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
-      messageLength: message.length,
-      messagePreview: message.substring(0, 80) + '...'
+      messageLength: messageParts.fullMessage.length,
+      parts: messageParts.estimatedParts,
+      encoding: messageParts.encoding,
+      messagePreview: messageParts.fullMessage.substring(0, 80) + '...'
     });
 
-    const result = await SMSService.sendSMS({ to: formattedPhone, body: message });
+    // Send full message - Telnyx handles concatenation automatically
+    const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
     
     console.log('📬 SMS send result:', {
       success: result.success,
@@ -209,7 +196,7 @@ export class SMSNotificationService {
       chapterId,
       phoneNumber: formattedPhone,
       messageType: 'message',
-      messageContent: message
+      messageContent: messageParts.fullMessage
     }, result.success, result.messageId, result.error);
     
     return result.success;
@@ -236,36 +223,35 @@ export class SMSNotificationService {
 
     // Format message to match Telnyx campaign sample pattern
     // Pattern: [Trailblaize] Connection request: {content}. Check your email for details. Reply STOP to unsubscribe or HELP for help. Msg & data rates may apply
-    const senderPrefix = '[Trailblaize]';
     const connectionPrefix = 'Connection request: ';
     const optOutText = ' Reply STOP to unsubscribe or HELP for help.';
     const complianceText = ' Msg & data rates may apply';
 
-    // Build message prefix
-    const fullPrefix = `${senderPrefix} ${connectionPrefix}`;
-    const fixedComplianceLength = optOutText.length + complianceText.length;
-    
-    // Calculate available space for content (account for ellipsis if needed: 3 chars)
-    const availableForContent = 160 - fullPrefix.length - fixedComplianceLength - 3 - 32; // -32 for "Check your email for details. "
-    
     // Build connection content - match sample format
     // Sample: "{requesterName} wants to connect with you on Trailblaize. Check your email for details."
     const connectionContent = `${requesterName} wants to connect with you on Trailblaize. Check your email for details.`;
     
-    // Truncate if needed to fit available space
-    const truncatedContent = connectionContent.substring(0, Math.max(0, availableForContent));
-    const needsEllipsis = connectionContent.length > truncatedContent.length;
-
-    // Build compliant message matching Telnyx sample pattern
-    const message = `${fullPrefix}${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}`.substring(0, 160);
+    // Use formatter to ensure compliance text is never truncated
+    const messageParts = SMSMessageFormatter.formatConnectionMessage(
+      connectionPrefix,
+      connectionContent,
+      {
+        optOutText,
+        complianceText,
+        // No maxParts limit - let Telnyx handle full message concatenation
+      }
+    );
     
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
-      messageLength: message.length,
-      messagePreview: message.substring(0, 80) + '...'
+      messageLength: messageParts.fullMessage.length,
+      parts: messageParts.estimatedParts,
+      encoding: messageParts.encoding,
+      messagePreview: messageParts.fullMessage.substring(0, 80) + '...'
     });
 
-    const result = await SMSService.sendSMS({ to: formattedPhone, body: message });
+    // Send full message - Telnyx handles concatenation automatically
+    const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
     
     console.log('📬 SMS send result:', {
       success: result.success,
@@ -279,7 +265,7 @@ export class SMSNotificationService {
       chapterId,
       phoneNumber: formattedPhone,
       messageType: 'connection_request',
-      messageContent: message
+      messageContent: messageParts.fullMessage
     }, result.success, result.messageId, result.error);
     
     return result.success;
@@ -306,36 +292,35 @@ export class SMSNotificationService {
 
     // Format message to match Telnyx campaign sample pattern
     // Pattern: [Trailblaize] Connection update: {content}. Check your email for details. Reply STOP to unsubscribe or HELP for help. Msg & data rates may apply
-    const senderPrefix = '[Trailblaize]';
     const connectionPrefix = 'Connection update: ';
     const optOutText = ' Reply STOP to unsubscribe or HELP for help.';
     const complianceText = ' Msg & data rates may apply';
 
-    // Build message prefix
-    const fullPrefix = `${senderPrefix} ${connectionPrefix}`;
-    const fixedComplianceLength = optOutText.length + complianceText.length;
-    
-    // Calculate available space for content (account for ellipsis if needed: 3 chars)
-    const availableForContent = 160 - fullPrefix.length - fixedComplianceLength - 3 - 32; // -32 for "Check your email for details. "
-    
     // Build connection content - match sample format
     // Sample: "{accepterName} accepted your connection request on Trailblaize! Check your email for details."
     const connectionContent = `${accepterName} accepted your connection request on Trailblaize! Check your email for details.`;
     
-    // Truncate if needed to fit available space
-    const truncatedContent = connectionContent.substring(0, Math.max(0, availableForContent));
-    const needsEllipsis = connectionContent.length > truncatedContent.length;
-
-    // Build compliant message matching Telnyx sample pattern
-    const message = `${fullPrefix}${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}`.substring(0, 160);
+    // Use formatter to ensure compliance text is never truncated
+    const messageParts = SMSMessageFormatter.formatConnectionMessage(
+      connectionPrefix,
+      connectionContent,
+      {
+        optOutText,
+        complianceText,
+        // No maxParts limit - let Telnyx handle full message concatenation
+      }
+    );
     
     console.log('📝 SMS message prepared:', {
       to: formattedPhone,
-      messageLength: message.length,
-      messagePreview: message.substring(0, 80) + '...'
+      messageLength: messageParts.fullMessage.length,
+      parts: messageParts.estimatedParts,
+      encoding: messageParts.encoding,
+      messagePreview: messageParts.fullMessage.substring(0, 80) + '...'
     });
 
-    const result = await SMSService.sendSMS({ to: formattedPhone, body: message });
+    // Send full message - Telnyx handles concatenation automatically
+    const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
     
     console.log('📬 SMS send result:', {
       success: result.success,
@@ -349,7 +334,7 @@ export class SMSNotificationService {
       chapterId,
       phoneNumber: formattedPhone,
       messageType: 'connection_accepted',
-      messageContent: message
+      messageContent: messageParts.fullMessage
     }, result.success, result.messageId, result.error);
     
     return result.success;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { SMSService } from '@/lib/services/sms/smsServiceTelnyx';
+import { SMSMessageFormatter } from '@/lib/services/sms/smsMessageFormatter';
 
 // Configure function timeout for Vercel (60 seconds for Pro plan)
 export const maxDuration = 60;
@@ -121,7 +122,8 @@ export async function POST(request: NextRequest) {
 
     const phoneNumbers = recipientsToUse.map(member => member.formattedPhone);
 
-    // Format message with compliance text (if not already included)
+    // Format message with compliance text using SMSMessageFormatter
+    // This ensures compliance text is never truncated and supports multi-part messages
     const senderPrefix = '[Trailblaize]';
     const optOutText = ' Reply STOP to opt out.';
     const complianceText = ' Msg & data rates may apply';
@@ -130,20 +132,38 @@ export async function POST(request: NextRequest) {
     const hasCompliance = message.includes('Reply STOP') || message.includes('[Trailblaize]');
     
     let compliantMessage: string;
+    let messageParts;
+    
     if (hasCompliance) {
-      // Message already has compliance text, use as-is (but ensure it's under 160)
-      compliantMessage = message.substring(0, 160);
+      // Message already has compliance text, use as-is
+      // Still use formatter to calculate parts and detect encoding
+      messageParts = SMSMessageFormatter.formatCompliantMessage(message, {
+        senderPrefix: '',
+        optOutText: '',
+        complianceText: ''
+      });
+      compliantMessage = message;
     } else {
-      // Add compliance text
-      const fixedLength = senderPrefix.length + 1 + optOutText.length + complianceText.length;
-      const availableForContent = 160 - fixedLength - 3;
-      const truncatedContent = message.substring(0, Math.max(0, availableForContent));
-      const needsEllipsis = message.length > truncatedContent.length;
-      
-      compliantMessage = `${senderPrefix} ${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}`.substring(0, 160);
+      // Format with compliance text - formatter ensures compliance text is never truncated
+      messageParts = SMSMessageFormatter.formatCompliantMessage(message, {
+        senderPrefix,
+        optOutText,
+        complianceText,
+        // No maxParts limit - let Telnyx handle full message concatenation
+      });
+      compliantMessage = messageParts.fullMessage;
     }
 
-    // Send SMS messages
+    // Log message info for monitoring
+    console.log('📱 SMS Message Info:', {
+      parts: messageParts?.estimatedParts || 1,
+      encoding: messageParts?.encoding || 'GSM-7',
+      willBeConcatenated: messageParts?.willBeConcatenated || false,
+      length: compliantMessage.length,
+      hasCompliance
+    });
+
+    // Send SMS messages - Telnyx handles concatenation automatically
     const result = await SMSService.sendBulkSMS(phoneNumbers, compliantMessage);
 
     // Log the SMS sending activity
