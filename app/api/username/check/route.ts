@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { usernameExists, validateUsername } from '@/lib/utils/usernameUtils';
+import { createServerSupabaseClient } from '@/lib/supabase/client';
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = createServerSupabaseClient();
     const { searchParams } = new URL(request.url);
     const username = searchParams.get('username');
     const excludeUserId = searchParams.get('excludeUserId') || undefined;
@@ -24,7 +26,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if username exists
-    const exists = await usernameExists(username, excludeUserId);
+    const exists = await usernameExists(supabase, username, excludeUserId);
 
     return NextResponse.json({
       available: !exists,

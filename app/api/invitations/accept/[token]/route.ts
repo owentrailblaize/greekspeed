@@ -123,7 +123,7 @@ export async function POST(
 
     if (autoProfile) {
       // Generate username if needed
-      const username = await generateUniqueUsername(
+      const username = await generateUniqueUsername(supabase,
         first_name || full_name.split(' ')[0],
         last_name || full_name.split(' ').slice(1).join(' '),
         authData.user.id
@@ -181,7 +181,7 @@ export async function POST(
       }
     } else {
       // Generate username
-      const username = await generateUniqueUsername(
+      const username = await generateUniqueUsername(supabase,
         first_name || full_name.split(' ')[0],
         last_name || full_name.split(' ').slice(1).join(' '),
         authData.user.id

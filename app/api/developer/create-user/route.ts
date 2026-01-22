@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate username and slug
-    const username = await generateUniqueUsername(firstName, lastName);
+    const username = await generateUniqueUsername(supabase, firstName, lastName, newUserAuth.user.id);
     const profileSlug = generateProfileSlug(username);
 
     // 2. Create profile in profiles table - Use upsert to handle existing records
@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
         let profileSlug = existingProfile.profile_slug;
         
         if (!username) {
-          username = await generateUniqueUsername(firstName, lastName, newUserAuth.user.id);
+          username = await generateUniqueUsername(supabase, firstName, lastName, newUserAuth.user.id);
           profileSlug = generateProfileSlug(username);
         }
 
