@@ -118,7 +118,7 @@ export async function POST(
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Generate username
-    const username = await generateUniqueUsername(normalizedFirstName, normalizedLastName);
+    const username = await generateUniqueUsername(supabase, normalizedFirstName, normalizedLastName, authData.user.id);
     const profileSlug = generateProfileSlug(username);
 
     // Create the profile with alumni role
