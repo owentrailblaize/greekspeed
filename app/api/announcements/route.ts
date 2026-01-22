@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { SMSService } from '@/lib/services/sms/smsServiceTelnyx';
+import { SMSMessageFormatter } from '@/lib/services/sms/smsMessageFormatter';
 import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
 
 // Configure function timeout for Vercel (60 seconds for Pro plan)
@@ -298,25 +299,29 @@ export async function POST(request: NextRequest) {
               .filter(member => SMSService.isValidPhoneNumber(member.phone!));
 
             if (validSMSMembers.length > 0) {
-              // Format message to match your Telnyx approved sample messages exactly
-              // CRITICAL: Must match case and format from your Telnyx campaign samples
-              const senderPrefix = '[Trailblaize]'; // Match your sample messages (capitalized, not all caps)
+              // Format message using SMSMessageFormatter - ensures compliance text is never truncated
+              // Telnyx will automatically handle concatenation for messages longer than 160 chars
               const optOutText = ' Reply STOP to opt out.';
               const complianceText = ' Msg & data rates may apply';
 
-              // Build title prefix (includes sender prefix, space, title, and colon)
-              const titlePrefix = `${senderPrefix} ${announcement.title}: `;
-              const fixedComplianceLength = optOutText.length + complianceText.length;
+              const messageParts = SMSMessageFormatter.formatAnnouncementMessage(
+                announcement.title,
+                announcement.content,
+                {
+                  optOutText,
+                  complianceText,
+                  // No maxParts limit - let Telnyx handle full message concatenation
+                }
+              );
 
-              // Calculate available space for content (account for ellipsis if needed: 3 chars)
-              const availableForContent = 160 - titlePrefix.length - fixedComplianceLength - 3;
-              
-              // Truncate content if needed
-              const truncatedContent = announcement.content.substring(0, Math.max(0, availableForContent));
-              const needsEllipsis = announcement.content.length > truncatedContent.length;
-
-              // Build compliant message matching your Telnyx samples exactly
-              const smsMessage = `${titlePrefix}${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}`.substring(0, 160);
+              // Log message info for monitoring
+              console.log('📱 SMS Message Info:', {
+                parts: messageParts.estimatedParts,
+                encoding: messageParts.encoding,
+                willBeConcatenated: messageParts.willBeConcatenated,
+                length: messageParts.fullMessage.length,
+                announcementId: announcement.id
+              });
                             
               // Get phone numbers
               const phoneNumbers = validSMSMembers.map(member => member.formattedPhone);
@@ -330,19 +335,22 @@ export async function POST(request: NextRequest) {
                 console.log('🚀 Initiating SMS processing for announcement:', {
                   announcementId: announcement.id,
                   recipientsCount: recipientsToUse.length,
-                  messagePreview: smsMessage.substring(0, 50) + '...',
+                  messagePreview: messageParts.fullMessage.substring(0, 50) + '...',
+                  estimatedParts: messageParts.estimatedParts,
                   timestamp: new Date().toISOString(),
                 });
 
                 // Await the SMS call to ensure it completes before function returns
                 try {
-                  const result = await SMSService.sendBulkSMS(recipientsToUse, smsMessage);
+                  // Send full message - Telnyx handles concatenation automatically
+                  const result = await SMSService.sendBulkSMS(recipientsToUse, messageParts.fullMessage);
                   
                   console.log('✅ Announcement SMS sent:', {
                     total: recipientsToUse.length,
                     success: result.success,
                     failed: result.failed,
-                    announcementId: announcement.id
+                    announcementId: announcement.id,
+                    parts: messageParts.estimatedParts
                   });
 
                   // Log to database
@@ -351,7 +359,7 @@ export async function POST(request: NextRequest) {
                     await supabase.from('sms_logs').insert({
                       chapter_id: profile.chapter_id,
                       sent_by: user.id,
-                      message: smsMessage,
+                      message: messageParts.fullMessage,
                       recipients_count: recipientsToUse.length,
                       success_count: result.success,
                       failed_count: result.failed,
@@ -405,20 +413,29 @@ export async function POST(request: NextRequest) {
               .filter(alum => SMSService.isValidPhoneNumber(alum.phone!));
 
             if (validAlumni.length > 0) {
-              // Message formatting mirrors the member SMS block to respect Telnyx compliance
-              const senderPrefix = '[Trailblaize]'; // Match Telnyx campaign samples
+              // Format message using SMSMessageFormatter - ensures compliance text is never truncated
+              // Telnyx will automatically handle concatenation for messages longer than 160 chars
               const optOutText = ' Reply STOP to opt out.';
               const complianceText = ' Msg & data rates may apply';
 
-              const titlePrefix = `${senderPrefix} ${announcement.title}: `;
-              const fixedComplianceLength = optOutText.length + complianceText.length;
+              const messageParts = SMSMessageFormatter.formatAnnouncementMessage(
+                announcement.title,
+                announcement.content,
+                {
+                  optOutText,
+                  complianceText,
+                  // No maxParts limit - let Telnyx handle full message concatenation
+                }
+              );
 
-              // Calculate available space for content (account for ellipsis if needed: 3 chars)
-              const availableForContent = 160 - titlePrefix.length - fixedComplianceLength - 3;
-              const truncatedContent = announcement.content.substring(0, Math.max(0, availableForContent));
-              const needsEllipsis = announcement.content.length > truncatedContent.length;
-
-              const smsMessage = `${titlePrefix}${truncatedContent}${needsEllipsis ? '...' : ''}${optOutText}${complianceText}`.substring(0, 160);
+              // Log message info for monitoring
+              console.log('📱 Alumni SMS Message Info:', {
+                parts: messageParts.estimatedParts,
+                encoding: messageParts.encoding,
+                willBeConcatenated: messageParts.willBeConcatenated,
+                length: messageParts.fullMessage.length,
+                announcementId: announcement.id
+              });
 
               const phoneNumbers = validAlumni.map(alum => alum.formattedPhone);
               const isSandbox = SMSService.isInSandboxMode();
@@ -428,18 +445,21 @@ export async function POST(request: NextRequest) {
                 console.log('🚀 Initiating SMS processing for alumni announcement:', {
                   announcementId: announcement.id,
                   recipientsCount: recipientsToUse.length,
-                  messagePreview: smsMessage.substring(0, 50) + '...',
+                  messagePreview: messageParts.fullMessage.substring(0, 50) + '...',
+                  estimatedParts: messageParts.estimatedParts,
                   timestamp: new Date().toISOString(),
                 });
 
                 try {
-                  const result = await SMSService.sendBulkSMS(recipientsToUse, smsMessage);
+                  // Send full message - Telnyx handles concatenation automatically
+                  const result = await SMSService.sendBulkSMS(recipientsToUse, messageParts.fullMessage);
 
                   console.log('✅ Alumni announcement SMS sent:', {
                     total: recipientsToUse.length,
                     success: result.success,
                     failed: result.failed,
-                    announcementId: announcement.id
+                    announcementId: announcement.id,
+                    parts: messageParts.estimatedParts
                   });
 
                   // Log alumni SMS activity; schema mirrors member logging
@@ -448,7 +468,7 @@ export async function POST(request: NextRequest) {
                     await supabaseLog.from('sms_logs').insert({
                       chapter_id: profile.chapter_id,
                       sent_by: user.id,
-                      message: smsMessage,
+                      message: messageParts.fullMessage,
                       recipients_count: recipientsToUse.length,
                       success_count: result.success,
                       failed_count: result.failed,
