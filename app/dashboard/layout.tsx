@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Script from 'next/script';
 import SubscriptionPaywall from '@/components/shared/SubscriptionPaywall';
 import { DashboardHeader } from '@/components/features/dashboard/DashboardHeader';
 import { useActivityTracking } from '@/lib/hooks/useActivityTracking';
@@ -30,8 +31,47 @@ export default function DashboardLayout({
   // Initialize activity tracking for all dashboard pages
   useActivityTracking()
 
+  // Determine which app ID to use based on environment
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const oneSignalAppId = isDevelopment 
+    ? (process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID_DEV || process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID)
+    : process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || 'd116623c-dfe9-452b-97ba-8d2dd66dcf68';
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* OneSignal SDK (dashboard only) */}
+      <Script 
+        src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" 
+        strategy="afterInteractive" 
+      />
+      <Script
+        id="onesignal-init"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            window.OneSignalDeferred = window.OneSignalDeferred || [];
+            OneSignalDeferred.push(async function(OneSignal) {
+              try {
+                await OneSignal.init({
+                  appId: "${oneSignalAppId}",
+                  notifyButton: {
+                    enable: false,
+                  },
+                  allowLocalhostAsSecureOrigin: ${isDevelopment ? 'true' : 'false'},
+                  serviceWorkerParam: {
+                    scope: '/',
+                  },
+                  serviceWorkerPath: '/OneSignalSDKWorker.js',
+                });
+                console.log('✅ OneSignal initialized with app ID:', "${oneSignalAppId}");
+              } catch (error) {
+                console.error('❌ OneSignal initialization error:', error);
+              }
+            });
+          `,
+        }}
+      />
+      
       {/* Always show the header */}
       <DashboardHeader />
       
