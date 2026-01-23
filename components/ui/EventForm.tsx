@@ -386,9 +386,16 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
               <div className="text-xs text-gray-600 space-y-1 pl-6">
                 {emailRecipientCount !== null && (
                   <p className="flex items-center gap-1">
-                    <Mail className="h-3 w-3" />
+                  <Mail className="h-3 w-3" />
+                  {/* Mobile: Shorter text */}
+                  <span className="sm:hidden">
+                    Email to <span className="font-medium">{emailRecipientCount}</span> email notifs enabled
+                  </span>
+                  {/* Desktop: Full text */}
+                  <span className="hidden sm:inline">
                     Email will be sent to <span className="font-medium">{emailRecipientCount}</span> {emailRecipientCount === 1 ? 'member' : 'members'} with email notifications enabled
-                  </p>
+                  </span>
+                </p>
                 )}
                 {formData.send_sms && smsRecipientCount !== null && (
                   <p className="flex items-center gap-1">
@@ -407,17 +414,6 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
                 )}
               </div>
             </div>
-            
-            {/* Email Notification Info */}
-            <div className="space-y-3 sm:space-y-2">
-              <div className="flex items-center space-x-2 text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span>
-                  <strong>Email notifications</strong> will be sent to all active chapter members when this event is published.
-                </span>
-              </div>
-            </div>
-
           </form>
         </CardContent>
       </div>
