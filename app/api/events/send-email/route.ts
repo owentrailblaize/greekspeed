@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   try {
     const requestBody = await request.json();
     
-    const { eventId, chapterId, send_sms } = requestBody;
+    const { eventId, chapterId, send_sms, send_sms_to_alumni } = requestBody;
 
     if (!eventId || !chapterId) {
       console.error('Missing required parameters:', { eventId, chapterId });
@@ -259,6 +259,148 @@ export async function POST(request: NextRequest) {
       }
     } else {
       console.log('ℹ️ SMS notifications skipped (send_sms = false)');
+    }
+
+    // Send SMS notifications to alumni only if send_sms_to_alumni is true
+    if (send_sms_to_alumni === true) {
+      try {
+        console.log('📱 Starting SMS notification process for event (alumni):', {
+          eventId: event.id,
+          eventTitle: event.title,
+          chapterId: chapterId
+        });
+
+        // Get chapter alumni with phone numbers and SMS consent
+        const { data: alumni, error: alumniError } = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            phone,
+            first_name,
+            chapter_id,
+            role,
+            sms_consent
+          `)
+          .eq('chapter_id', chapterId)
+          .eq('role', 'alumni')
+          .not('phone', 'is', null)
+          .neq('phone', '')
+          .eq('sms_consent', true);
+
+        if (alumniError) {
+          console.error('❌ Error fetching alumni for SMS:', alumniError);
+        } else if (!alumni || alumni.length === 0) {
+          console.log('ℹ️ No SMS-eligible alumni found:', {
+            chapterId,
+            reason: 'No alumni with phone numbers and SMS consent'
+          });
+        } else {
+          console.log('📋 Found SMS-eligible alumni:', {
+            total: alumni.length,
+            alumni: alumni.map(a => ({
+              id: a.id,
+              firstName: a.first_name,
+              phone: a.phone,
+              hasConsent: a.sms_consent
+            }))
+          });
+
+          // Format and validate phone numbers
+          const validAlumni = alumni
+            .map(alum => ({
+              ...alum,
+              formattedPhone: SMSService.formatPhoneNumber(alum.phone!),
+            }))
+            .filter(alum => SMSService.isValidPhoneNumber(alum.phone!));
+
+          console.log('✅ Validated alumni for SMS:', {
+            total: validAlumni.length,
+            valid: validAlumni.map(a => ({
+              id: a.id,
+              firstName: a.first_name,
+              original: a.phone,
+              formatted: a.formattedPhone
+            })),
+            invalid: alumni.length - validAlumni.length
+          });
+
+          if (validAlumni.length > 0) {
+            // Format event date for SMS message
+            const eventDate = new Date(event.start_time);
+            const formattedDate = eventDate.toLocaleDateString('en-US', {
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit'
+            });
+
+            // Determine if we should use test mode
+            const isSandbox = SMSService.isInSandboxMode();
+            const alumniToNotify = isSandbox ? validAlumni.slice(0, 3) : validAlumni;
+
+            console.log('🚀 Preparing to send SMS to alumni:', {
+              totalEligible: validAlumni.length,
+              willNotify: alumniToNotify.length,
+              isSandbox: isSandbox,
+              eventDate: formattedDate,
+              recipients: alumniToNotify.map(a => ({
+                name: a.first_name,
+                phone: a.formattedPhone
+              }))
+            });
+
+            // Send SMS notifications in parallel (don't await - fire and forget)
+            Promise.all(
+              alumniToNotify.map(alum =>
+                SMSNotificationService.sendEventNotification(
+                  alum.formattedPhone,
+                  alum.first_name || 'Alumni',
+                  event.title,
+                  formattedDate,
+                  alum.id,
+                  chapterId
+                )
+              )
+            )
+              .then(results => {
+                const successCount = results.filter(r => r === true).length;
+                const failedCount = results.length - successCount;
+                console.log('✅ Event SMS notifications to alumni completed:', {
+                  eventId: event.id,
+                  eventTitle: event.title,
+                  total: alumniToNotify.length,
+                  success: successCount,
+                  failed: failedCount,
+                  successRate: `${((successCount / alumniToNotify.length) * 100).toFixed(1)}%`,
+                  recipients: alumniToNotify.map((a, i) => ({
+                    name: a.first_name,
+                    phone: a.formattedPhone,
+                    status: results[i] ? 'success' : 'failed'
+                  }))
+                });
+              })
+              .catch(error => {
+                console.error('❌ Event SMS notifications to alumni failed:', {
+                  eventId: event.id,
+                  error: error.message,
+                  stack: error.stack
+                });
+                // Don't throw - SMS failure shouldn't block email sending
+              });
+          }
+        }
+      } catch (smsError) {
+        console.error('❌ Error in alumni SMS notification process:', {
+          eventId: event.id,
+          error: smsError instanceof Error ? smsError.message : 'Unknown error',
+          stack: smsError instanceof Error ? smsError.stack : undefined
+        });
+        // Don't fail the request if SMS fails
+      }
+    } else {
+      console.log('ℹ️ Alumni SMS notifications skipped (send_sms_to_alumni = false)');
     }
 
 

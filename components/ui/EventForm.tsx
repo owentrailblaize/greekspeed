@@ -37,12 +37,14 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
     budget_label: '',
     budget_amount: undefined,
     send_sms: false,
+    send_sms_to_alumni: false,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [emailRecipientCount, setEmailRecipientCount] = useState<number | null>(null);
   const [smsRecipientCount, setSmsRecipientCount] = useState<number | null>(null);
+  const [alumniSmsRecipientCount, setAlumniSmsRecipientCount] = useState<number | null>(null);
   const [loadingRecipients, setLoadingRecipients] = useState(false);
 
   useEffect(() => {
@@ -56,6 +58,7 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
         budget_label: event.budget_label || '',
         budget_amount: event.budget_amount || undefined,
         send_sms: false,
+        send_sms_to_alumni: false,
       });
     }
   }, [event]);
@@ -88,6 +91,11 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
           const data = await response.json();
           setEmailRecipientCount(data.email_recipients);
           setSmsRecipientCount(data.sms_recipients);
+          setAlumniSmsRecipientCount(
+            typeof data.alumni_sms_recipients === 'number'
+              ? data.alumni_sms_recipients
+              : null
+          );
         }
       } catch (error) {
         console.error('Error fetching recipient counts:', error);
@@ -349,17 +357,29 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
               </div>
             </div>
             
-            {/* SMS Notification Checkbox */}
+            {/* SMS Notification Checkboxes */}
             <div className="space-y-3 sm:space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="send_sms"
-                  checked={formData.send_sms || false}
-                  onCheckedChange={(checked) => handleInputChange('send_sms', checked as boolean)}
-                />
-                <Label htmlFor="send_sms" className="text-base sm:text-sm cursor-pointer">
-                  Send SMS notification
-                </Label>
+              <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-6">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="send_sms"
+                    checked={formData.send_sms || false}
+                    onCheckedChange={(checked) => handleInputChange('send_sms', checked as boolean)}
+                  />
+                  <Label htmlFor="send_sms" className="text-base sm:text-sm cursor-pointer">
+                    Send SMS to active members
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="send_sms_to_alumni"
+                    checked={formData.send_sms_to_alumni || false}
+                    onCheckedChange={(checked) => handleInputChange('send_sms_to_alumni', checked as boolean)}
+                  />
+                  <Label htmlFor="send_sms_to_alumni" className="text-base sm:text-sm cursor-pointer">
+                    Send SMS to alumni
+                  </Label>
+                </div>
               </div>
               
               {/* Notification disclaimers */}
@@ -373,7 +393,13 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
                 {formData.send_sms && smsRecipientCount !== null && (
                   <p className="flex items-center gap-1">
                     <Smartphone className="h-3 w-3" />
-                    SMS will be sent to <span className="font-medium">{smsRecipientCount}</span> {smsRecipientCount === 1 ? 'member' : 'members'} with SMS consent
+                    SMS to members: <span className="font-medium">{smsRecipientCount}</span> {smsRecipientCount === 1 ? 'recipient' : 'recipients'}
+                  </p>
+                )}
+                {formData.send_sms_to_alumni && alumniSmsRecipientCount !== null && (
+                  <p className="flex items-center gap-1">
+                    <Smartphone className="h-3 w-3" />
+                    SMS to alumni: <span className="font-medium">{alumniSmsRecipientCount}</span> {alumniSmsRecipientCount === 1 ? 'recipient' : 'recipients'}
                   </p>
                 )}
                 {loadingRecipients && (
