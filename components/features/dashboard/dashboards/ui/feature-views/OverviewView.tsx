@@ -55,10 +55,12 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
   const [announcement, setAnnouncement] = useState("");
   const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementType, setAnnouncementType] = useState<'general' | 'urgent' | 'event' | 'academic'>('general');
-  const [sendSMS, setSendSMS] = useState(false);
+  const [sendSmsToMembers, setSendSmsToMembers] = useState(false);
+  const [sendSmsToAlumni, setSendSmsToAlumni] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailRecipientCount, setEmailRecipientCount] = useState<number | null>(null);
-  const [smsRecipientCount, setSmsRecipientCount] = useState<number | null>(null);
+  const [memberSmsRecipientCount, setMemberSmsRecipientCount] = useState<number | null>(null);
+  const [alumniSmsRecipientCount, setAlumniSmsRecipientCount] = useState<number | null>(null);
   const [loadingRecipients, setLoadingRecipients] = useState(false);
 
   // Event form state
@@ -80,7 +82,10 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
   }, [chapterId, selectedRole]);
 
   useEffect(() => {
-    setSendSMS(announcementType === 'urgent');
+    // Preserve existing behavior: urgent auto-enables member SMS
+    setSendSmsToMembers(announcementType === 'urgent');
+    // Alumni SMS starts as opt-in per announcement
+    setSendSmsToAlumni(false);
   }, [announcementType]);
 
   useEffect(() => {
@@ -101,7 +106,12 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
         if (response.ok) {
           const data = await response.json();
           setEmailRecipientCount(data.email_recipients);
-          setSmsRecipientCount(data.sms_recipients);
+          setMemberSmsRecipientCount(data.sms_recipients);
+          setAlumniSmsRecipientCount(
+            typeof data.alumni_sms_recipients === 'number'
+              ? data.alumni_sms_recipients
+              : null
+          );
         }
       } catch (error) {
         console.error('Error fetching recipient counts:', error);
@@ -125,7 +135,8 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
         title: announcementTitle.trim(),
         content: announcement.trim(),
         announcement_type: announcementType,
-        send_sms: sendSMS,
+        send_sms: sendSmsToMembers,
+        send_sms_to_alumni: sendSmsToAlumni,
         metadata: {}
       };
 
@@ -135,7 +146,8 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
       setAnnouncement("");
       setAnnouncementTitle("");
       setAnnouncementType('general');
-      setSendSMS(false);
+      setSendSmsToMembers(false);
+      setSendSmsToAlumni(false);
       
       toast.success('Announcement sent successfully!');
     } catch (error) {
@@ -502,15 +514,27 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
             
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
               <div className="flex flex-col space-y-2 flex-1">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="send-sms-notification"
-                    checked={sendSMS}
-                    onCheckedChange={(checked) => setSendSMS(checked as boolean)}
-                  />
-                  <Label htmlFor="send-sms-notification" className="text-sm cursor-pointer">
-                    Send SMS notification
-                  </Label>
+                <div className="flex flex-col md:flex-row md:items-center md:space-x-8 space-y-2 md:space-y-0">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="send-sms-members"
+                      checked={sendSmsToMembers}
+                      onCheckedChange={(checked) => setSendSmsToMembers(checked as boolean)}
+                    />
+                    <Label htmlFor="send-sms-members" className="text-sm cursor-pointer">
+                      Send SMS to active members
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="send-sms-alumni"
+                      checked={sendSmsToAlumni}
+                      onCheckedChange={(checked) => setSendSmsToAlumni(checked as boolean)}
+                    />
+                    <Label htmlFor="send-sms-alumni" className="text-sm cursor-pointer">
+                      Send SMS to alumni
+                    </Label>
+                  </div>
                 </div>
                 
                 <div className="text-xs text-gray-600 space-y-1 pl-6">
@@ -520,10 +544,16 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
                       <span>Email will be sent to <span className="font-medium">{emailRecipientCount}</span> Members</span>
                     </p>
                   )}
-                  {sendSMS && smsRecipientCount !== null && (
+                  {sendSmsToMembers && memberSmsRecipientCount !== null && (
                     <p className="flex items-center gap-1 whitespace-nowrap">
                       <Smartphone className="h-3 w-3 flex-shrink-0" />
-                      <span>SMS will be sent to <span className="font-medium">{smsRecipientCount}</span> Members</span>
+                      <span>SMS to members: <span className="font-medium">{memberSmsRecipientCount}</span> {memberSmsRecipientCount === 1 ? 'recipient' : 'recipients'}</span>
+                    </p>
+                  )}
+                  {sendSmsToAlumni && alumniSmsRecipientCount !== null && (
+                    <p className="flex items-center gap-1 whitespace-nowrap">
+                      <Smartphone className="h-3 w-3 flex-shrink-0" />
+                      <span>SMS to alumni: <span className="font-medium">{alumniSmsRecipientCount}</span> {alumniSmsRecipientCount === 1 ? 'recipient' : 'recipients'}</span>
                     </p>
                   )}
                   {loadingRecipients && (
