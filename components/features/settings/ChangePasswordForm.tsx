@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, ArrowLeft, Check, X, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, Check, X, Loader2, Link } from 'lucide-react';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { DashboardHeader } from '@/components/features/dashboard/DashboardHeader';
 
 interface ChangePasswordFormProps {
   showBackButton?: boolean;
@@ -360,6 +361,16 @@ export function ChangePasswordForm({
             {error}
           </div>
         )}
+
+
+        <div className="text-center mb-4">
+          <a 
+            href="/auth/forgot-password" 
+            className="text-sm text-navy-600 hover:text-navy-700 underline"
+          >
+            Forgot your password?
+          </a>
+        </div>
 
         <Button 
           type="submit" 
