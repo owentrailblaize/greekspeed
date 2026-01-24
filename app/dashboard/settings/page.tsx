@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Settings, Shield, Bell, ArrowLeft, ToggleLeft, ToggleRight, Mail, User, Phone, Calendar, Lock, User as UserIcon, HelpCircle, Menu, X } from 'lucide-react';
+import { Settings, Shield, Bell, ArrowLeft, ToggleLeft, ToggleRight, Mail, User, Phone, Calendar, Lock, User as UserIcon, HelpCircle, Menu, X, BellOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { ChangePasswordForm } from '@/components/features/settings/ChangePasswordForm';
+import { useOneSignal } from '@/lib/hooks/useOneSignal';
+import { OneSignalService } from '@/lib/services/push/oneSignalService';
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('security');
@@ -25,6 +27,35 @@ export default function SettingsPage() {
     message_notifications: true,
     connection_notifications: true,
   });
+  
+  const [oneSignalReady, setOneSignalReady] = useState(false);
+
+  useEffect(() => {
+    const checkOneSignal = async () => {
+      if (typeof window !== 'undefined' && window.OneSignal) {
+        setOneSignalReady(true);
+      } else {
+        // Wait for OneSignal to initialize
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        const interval = setInterval(() => {
+          attempts++;
+          if (window.OneSignal) {
+            setOneSignalReady(true);
+            clearInterval(interval);
+          } else if (attempts >= maxAttempts) {
+            clearInterval(interval);
+            console.warn('⚠️ OneSignal failed to initialize after 5 seconds');
+          }
+        }, 500);
+        
+        return () => clearInterval(interval);
+      }
+    };
+    
+    checkOneSignal();
+  }, []);
 
   // Helper to PATCH only changed fields
   const updateEmailSettings = async (payload:Partial<typeof emailPrefs> & { email_enabled?: boolean }) => {
@@ -49,8 +80,24 @@ export default function SettingsPage() {
   const [smsEnabled, setSmsEnabled] = useState(false);
   const [loadingSettings, setLoadingSettings] = useState(true);
 
+  // Push notification state
+  const { 
+    subscription: pushSubscription, 
+    loading: pushLoading, 
+    requestPermission, 
+    subscribe, 
+    unsubscribe,
+    isSupported: pushSupported 
+  } = useOneSignal();
+  const [pushEnabled, setPushEnabled] = useState(false);
+
   const router = useRouter();
   const { profile, loading: profileLoading } = useProfile();
+
+  // Sync pushEnabled with subscription state
+  useEffect(() => {
+    setPushEnabled(pushSubscription.isSubscribed && pushSubscription.permission === 'granted');
+  }, [pushSubscription]);
 
   // Fetch notification settings on mount
   useEffect(() => {
@@ -119,6 +166,129 @@ export default function SettingsPage() {
       // Revert on error
       setSmsEnabled(!value);
       // You could add a toast notification here
+    }
+  };
+
+  // Push notification toggle handler
+  const handlePushToggle = async (value: boolean) => {
+    if (!profile?.id) {
+      alert('Please log in to enable push notifications');
+      return;
+    }
+  
+    // Optimistically update UI
+    const previousState = pushEnabled;
+    setPushEnabled(value);
+
+    try {
+      // Wait for OneSignal to be ready
+      if (typeof window === 'undefined' || !window.OneSignal) {
+        console.log('⏳ Waiting for OneSignal to initialize...');
+        // Wait up to 5 seconds for OneSignal to initialize
+        let attempts = 0;
+        while (!window.OneSignal && attempts < 50) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
+        }
+        
+        if (!window.OneSignal) {
+          throw new Error('OneSignal failed to initialize. Please refresh the page and try again.');
+        }
+      }
+
+      if (value) {
+        // Check if OneSignal is supported
+        if (!pushSupported) {
+          throw new Error('Push notifications are not supported in this browser');
+        }
+
+        // Request permission first (must be triggered by user action)
+        console.log('🔔 Requesting push notification permission...');
+        
+        try {
+          const permission = await requestPermission();
+          console.log('📋 Permission result:', permission);
+          
+          if (permission === 'granted') {
+            console.log('✅ Permission granted, subscribing...');
+            
+            // Subscribe and get subscription details
+            await subscribe();
+            const sub = await OneSignalService.getSubscription();
+            
+            if (sub.playerId) {
+              console.log('📱 Saving subscription to backend:', sub.playerId);
+              
+              // Save to backend
+              const response = await fetch('/api/push/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  playerId: sub.playerId,
+                  subscriptionToken: sub.token,
+                  deviceInfo: {
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                  },
+                }),
+              });
+
+              if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to save subscription');
+              }
+
+              const result = await response.json();
+              console.log('✅ Push notification subscription saved:', result);
+              setPushEnabled(true);
+            } else {
+              throw new Error('Failed to get Player ID from OneSignal');
+            }
+          } else if (permission === 'denied') {
+            alert('Push notifications were blocked. Please enable them in your browser settings (Settings → Privacy → Site Settings → Notifications).');
+            setPushEnabled(false);
+          } else {
+            // Default state - user dismissed prompt
+            console.log('ℹ️ User dismissed permission prompt');
+            setPushEnabled(false);
+          }
+        } catch (permError) {
+          console.error('❌ Permission request error:', permError);
+          throw new Error(`Failed to request permission: ${permError instanceof Error ? permError.message : 'Unknown error'}`);
+        }
+      } else {
+        // Unsubscribe
+        console.log('🔕 Unsubscribing from push notifications...');
+        const sub = await OneSignalService.getSubscription();
+        
+        if (sub.playerId) {
+          const response = await fetch('/api/push/subscribe', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ playerId: sub.playerId }),
+          });
+
+          if (!response.ok) {
+            console.warn('⚠️ Failed to delete subscription from backend, but unsubscribing locally');
+          }
+        }
+        
+        await unsubscribe();
+        setPushEnabled(false);
+        console.log('✅ Push notifications disabled');
+      }
+    } catch (error) {
+      console.error('❌ Error toggling push notifications:', error);
+      
+      // Revert UI state on error
+      setPushEnabled(previousState);
+      
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Failed to update push notification settings. Please try again.';
+      
+      alert(`Error: ${errorMessage}`);
     }
   };
 
@@ -533,6 +703,58 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Push Notifications */}
+      {pushSupported && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            {pushEnabled ? (
+              <Bell className="w-5 h-5 text-blue-600" />
+            ) : (
+              <BellOff className="w-5 h-5 text-gray-400" />
+            )}
+            Push Notifications
+          </h3>
+          
+          <div className="p-4 border rounded-xl bg-white">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h4 className="font-medium text-gray-900">Enable Push Notifications</h4>
+                <p className="text-sm text-gray-600">
+                  {pushEnabled 
+                    ? 'Receive push notifications on your device' 
+                    : pushSubscription.permission === 'denied'
+                    ? 'Notifications blocked. Enable in browser settings.'
+                    : 'Get real-time notifications on your device'}
+                </p>
+                {pushSubscription.playerId && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Player ID: {pushSubscription.playerId.substring(0, 20)}...
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center space-x-3 ml-4">
+                <span className="text-sm text-gray-500">
+                  {pushEnabled ? 'Enabled' : 'Disabled'}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handlePushToggle(!pushEnabled)}
+                  className="p-0 h-auto"
+                  disabled={pushLoading}
+                >
+                  {pushEnabled ? (
+                    <ToggleRight className="w-8 h-8 text-green-600" />
+                  ) : (
+                    <ToggleLeft className="w-8 h-8 text-gray-400" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 

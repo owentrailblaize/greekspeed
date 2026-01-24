@@ -8,6 +8,7 @@ import { useActivityTracking } from '@/lib/hooks/useActivityTracking';
 import { ModalProvider, useModal } from '@/lib/contexts/ModalContext';
 import { ProfileModalProvider, useProfileModal } from '@/lib/contexts/ProfileModalContext';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { OneSignalService } from '@/lib/services/push/oneSignalService';
 import { EditProfileModal } from '@/components/features/profile/EditProfileModal';
 import { EditAlumniProfileModal } from '@/components/features/alumni/EditAlumniProfileModal';
 import { UserProfileModal } from '@/components/features/user-profile/UserProfileModal';
@@ -31,11 +32,29 @@ export default function DashboardLayout({
   // Initialize activity tracking for all dashboard pages
   useActivityTracking()
 
+  const { profile } = useProfile();
+
   // Determine which app ID to use based on environment
   const isDevelopment = process.env.NODE_ENV === 'development';
   const oneSignalAppId = isDevelopment 
     ? (process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID_DEV || process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID)
     : process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || 'd116623c-dfe9-452b-97ba-8d2dd66dcf68';
+
+  // Link OneSignal external user ID when profile is available
+  useEffect(() => {
+    if (profile?.id && typeof window !== 'undefined') {
+      // Wait for OneSignal to initialize, then set external user ID
+      const timer = setTimeout(async () => {
+        try {
+          await OneSignalService.setExternalUserId(profile.id);
+        } catch (error) {
+          console.error('Error setting OneSignal external user ID:', error);
+        }
+      }, 2000); // Give OneSignal time to initialize
+
+      return () => clearTimeout(timer);
+    }
+  }, [profile?.id]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -66,6 +85,8 @@ export default function DashboardLayout({
                 console.log('✅ OneSignal initialized with app ID:', "${oneSignalAppId}");
               } catch (error) {
                 console.error('❌ OneSignal initialization error:', error);
+                // Continue anyway - push notifications may still work without service worker in some cases
+                console.warn('⚠️ Continuing without service worker - some features may be limited');
               }
             });
           `,

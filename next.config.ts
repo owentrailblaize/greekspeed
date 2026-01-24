@@ -24,6 +24,29 @@ const nextConfig = {
   env: {
     CUSTOM_ENV: process.env.CUSTOM_ENV,
   },
+  // Ensure service worker files are served correctly
+  async headers() {
+    return [
+      {
+        source: '/OneSignalSDKWorker.js',
+        headers: [
+          {
+            key: 'Service-Worker-Allowed',
+            value: '/',
+          },
+        ],
+      },
+      {
+        source: '/OneSignalSDK.sw.js',
+        headers: [
+          {
+            key: 'Service-Worker-Allowed',
+            value: '/',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default withSentryConfig(nextConfig, {
