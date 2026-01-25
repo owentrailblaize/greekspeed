@@ -616,7 +616,7 @@ export default function SettingsPage() {
         <Sheet open={showMobileMenu} onOpenChange={setShowMobileMenu}>
           <SheetContent 
             side="bottom" 
-            className="h-[80vh] max-h-[90vh] rounded-t-3xl rounded-b-none p-0 flex flex-col border border-slate-200/80 bg-white/95 shadow-[0_-24px_80px_rgba(15,23,42,0.6)]"
+            className="!h-auto max-h-[85dvh] mt-[15dvh] rounded-t-3xl rounded-b-none p-0 flex flex-col border border-slate-200/80 bg-white/95 shadow-[0_-24px_80px_rgba(15,23,42,0.6)]"
           >
             <SheetHeader className="px-4 pt-6 pb-4 border-b border-gray-200">
               <SheetTitle className="text-left">Settings</SheetTitle>
