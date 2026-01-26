@@ -44,6 +44,11 @@ export interface CreateEventRequest {
   budget_label?: string;
   budget_amount?: number;
   send_sms?: boolean;
+  /**
+   * Whether to send an SMS notification to alumni.
+   * Used when execs choose the "Send SMS to alumni" option.
+   */
+  send_sms_to_alumni?: boolean;
   created_by?: string;
   updated_by?: string;
 }

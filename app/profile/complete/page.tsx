@@ -11,17 +11,26 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Star, User, Building2, GraduationCap, MapPin, Briefcase, Info, Users } from 'lucide-react';
 import { useChapters } from '@/lib/hooks/useChapters';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 
 // User roles for the dropdown - Only Alumni allowed for public signup
-const userRoles = [
+const defaultUserRoles = [
   { value: 'alumni', label: 'Alumni' }
+];
+
+// Active member role (only for invitation-based signups)
+const activeMemberRole = [
+  { value: 'active_member', label: 'Active Member' }
 ];
 
 export default function ProfileCompletePage() {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [invitationLoading, setInvitationLoading] = useState(true); // Start as true, set to false when done
+  const [hasInvitation, setHasInvitation] = useState(false); // Track if user came from invitation
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -33,16 +42,106 @@ export default function ProfileCompletePage() {
   // Use the chapters hook to fetch dynamic data
   const { chapters, loading: chaptersLoading, error: chaptersError } = useChapters();
 
+  // Determine available roles based on invitation status
+  const availableRoles = hasInvitation 
+    ? [...defaultUserRoles, ...activeMemberRole] // Show both if from invitation
+    : defaultUserRoles; // Only alumni for public signup
+
+    // Check for invitation token in sessionStorage and auto-populate
+    useEffect(() => {
+      const checkInvitation = async () => {
+        if (typeof window === 'undefined') {
+          setInvitationLoading(false);
+          return;
+        }
+        
+        setInvitationLoading(true); // Set loading to true at start
+        
+        const invitationToken = sessionStorage.getItem('invitation_token');
+        const invitationType = sessionStorage.getItem('invitation_type');
+        
+        if (invitationToken && user) {
+          try {
+            setHasInvitation(true); // Mark that user came from invitation
+            console.log('Found invitation token in sessionStorage, fetching invitation data');
+            const response = await fetch(`/api/join/${invitationToken}`);
+            
+            if (response.ok) {
+              const data = await response.json();
+              if (data.valid && data.invitation) {
+                const invitationTypeValue = data.invitation.invitation_type || invitationType;
+                const roleValue = invitationTypeValue === 'alumni' ? 'alumni' : 'active_member';
+                
+                console.log('Invitation data retrieved:', {
+                  chapterName: data.invitation.chapter_name,
+                  chapterId: data.invitation.chapter_id,
+                  invitationType: invitationTypeValue,
+                  roleToSet: roleValue
+                });
+                
+                // Auto-populate chapter and role from invitation
+                setFormData(prev => ({
+                  ...prev,
+                  chapter: data.invitation.chapter_name || prev.chapter,
+                  role: roleValue
+                }));
+                
+                console.log('Form data updated with role:', roleValue);
+                
+                // Clean up sessionStorage AFTER a delay to ensure form is populated
+                setTimeout(() => {
+                  sessionStorage.removeItem('invitation_token');
+                  sessionStorage.removeItem('invitation_type');
+                  sessionStorage.removeItem('oauth_redirect');
+                }, 1000);
+              }
+            } else {
+              // Try alumni-join endpoint if active member endpoint fails
+              const alumniResponse = await fetch(`/api/alumni-join/${invitationToken}`);
+              if (alumniResponse.ok) {
+                const data = await alumniResponse.json();
+                if (data.valid && data.invitation) {
+                  setHasInvitation(true);
+                  setFormData(prev => ({
+                    ...prev,
+                    chapter: data.invitation.chapter_name || prev.chapter,
+                    role: 'alumni'
+                  }));
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching invitation data:', error);
+          }
+        }
+        
+        // Also check if profile already has chapter/role (from successful callback)
+        if (profile?.chapter && profile?.role) {
+          // If profile has role, user likely came from invitation flow
+          if (profile.role === 'active_member') {
+            setHasInvitation(true);
+          }
+          setFormData(prev => ({
+            ...prev,
+            chapter: profile.chapter || prev.chapter,
+            role: profile.role || prev.role
+          }));
+        }
+        
+        setInvitationLoading(false);
+      };
+      
+      checkInvitation();
+    }, [user, profile]);
+
   // Pre-populate form with OAuth data
   useEffect(() => {
     if (user?.user_metadata) {
-      // OAuth user metadata
-      
       setFormData(prev => ({
         ...prev,
-        firstName: user.user_metadata.given_name || user.user_metadata.first_name || user.user_metadata.name?.split(' ')[0] || '',
-        lastName: user.user_metadata.family_name || user.user_metadata.last_name || user.user_metadata.name?.split(' ').slice(1).join(' ') || '',
-        email: user.email || '',
+        firstName: user.user_metadata.given_name || user.user_metadata.first_name || user.user_metadata.name?.split(' ')[0] || prev.firstName,
+        lastName: user.user_metadata.family_name || user.user_metadata.last_name || user.user_metadata.name?.split(' ').slice(1).join(' ') || prev.lastName,
+        email: user.email || prev.email,
       }));
     }
   }, [user]);
@@ -182,22 +281,24 @@ export default function ProfileCompletePage() {
                   <h2 className="text-lg font-bold text-gray-900">Complete Your Profile</h2>
                 </div>
 
-                {/* Information Banner - Compact */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
-                  <div className="flex items-start space-x-2">
-                    <Info className="h-3 w-3 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-medium text-blue-900 text-xs mb-1">Alumni Profile Only</h3>
-                      <p className="text-xs text-blue-800 mb-1">
-                        This profile completion is for alumni only. Active members must be invited by chapter administrators.
-                      </p>
-                      <div className="flex items-center space-x-1 text-xs text-blue-700">
-                        <Users className="h-3 w-3" />
-                        <span>Need to join as an active member? Contact your chapter admin for an invitation.</span>
+                {/* Information Banner - Compact - Conditional based on invitation */}
+                {!hasInvitation && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
+                    <div className="flex items-start space-x-2">
+                      <Info className="h-3 w-3 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-medium text-blue-900 text-xs mb-1">Alumni Profile Only</h3>
+                        <p className="text-xs text-blue-800 mb-1">
+                          This profile completion is for alumni only. Active members must be invited by chapter administrators.
+                        </p>
+                        <div className="flex items-center space-x-1 text-xs text-blue-700">
+                          <Users className="h-3 w-3" />
+                          <span>Need to join as an active member? Contact your chapter admin for an invitation.</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Form - Compact and optimized */}
                 <div className="text-left">
@@ -250,43 +351,71 @@ export default function ProfileCompletePage() {
                     {/* Chapter Selection - Compact */}
                     <div className="space-y-1">
                       <Label htmlFor="chapter" className="text-xs font-medium text-gray-700">Chapter</Label>
-                      <Select 
-                        value={formData.chapter} 
-                        onValueChange={(value: string) => setFormData(prev => ({ ...prev, chapter: value }))}
-                      >
-                        <SelectItem value="">{chaptersLoading ? 'Loading chapters...' : 'Select your chapter'}</SelectItem>
-                        {chapters.map((chapterData) => (
-                          <SelectItem key={chapterData.id} value={chapterData.name}>
-                            {chapterData.name}
+                      <div className={invitationLoading || chaptersLoading ? 'pointer-events-none opacity-60' : ''}>
+                        <Select 
+                          value={formData.chapter} 
+                          onValueChange={(value: string) => setFormData(prev => ({ ...prev, chapter: value }))}
+                        >
+                          <SelectItem value="">
+                            {invitationLoading 
+                              ? 'Loading invitation data...' 
+                              : chaptersLoading 
+                              ? 'Loading chapters...' 
+                              : 'Select your chapter'}
                           </SelectItem>
-                        ))}
-                      </Select>
+                          {chapters.map((chapterData) => (
+                            <SelectItem key={chapterData.id} value={chapterData.name}>
+                              {chapterData.name}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                      </div>
+                      {invitationLoading && (
+                        <p className="text-xs text-blue-600 flex items-center">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
+                          Loading your invitation data...
+                        </p>
+                      )}
                       {chaptersError && (
                         <p className="text-red-500 text-xs">Failed to load chapters. Please refresh the page.</p>
                       )}
-                      {chapters.length === 0 && !chaptersLoading && (
+                      {chapters.length === 0 && !chaptersLoading && !invitationLoading && (
                         <p className="text-yellow-500 text-xs">No chapters available. Please contact support.</p>
                       )}
                     </div>
 
-                    {/* Role Selection - Compact - Only Alumni */}
+                    {/* Role Selection - Compact - Dynamic based on invitation */}
                     <div className="space-y-1">
                       <Label htmlFor="role" className="text-xs font-medium text-gray-700">Role</Label>
-                      <Select 
-                        value={formData.role} 
-                        onValueChange={(value: string) => setFormData(prev => ({ ...prev, role: value as 'Alumni' }))}
-                        disableDynamicPositioning={true}
-                      >
-                        <SelectItem value="">Select your role</SelectItem>
-                        {userRoles.map((userRole) => (
-                          <SelectItem key={userRole.value} value={userRole.value}>
-                            {userRole.label}
+                      <div className={invitationLoading ? 'pointer-events-none opacity-60' : ''}>
+                        <Select 
+                          value={formData.role} 
+                          onValueChange={(value: string) => setFormData(prev => ({ ...prev, role: value }))}
+                          disableDynamicPositioning={true}
+                        >
+                          <SelectItem value="">
+                            {invitationLoading ? 'Loading your role...' : 'Select your role'}
                           </SelectItem>
-                        ))}
-                      </Select>
-                      <p className="text-xs text-gray-500">
-                        Alumni accounts can access the alumni network and connect with other graduates.
-                      </p>
+                          {availableRoles.map((userRole) => (
+                            <SelectItem key={userRole.value} value={userRole.value}>
+                              {userRole.label}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                      </div>
+                      {invitationLoading && (
+                        <p className="text-xs text-blue-600 flex items-center">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
+                          Auto-populating from invitation...
+                        </p>
+                      )}
+                      {!invitationLoading && (
+                        <p className="text-xs text-gray-500">
+                          {hasInvitation 
+                            ? 'Your role is determined by your invitation type. Active members have full chapter access.'
+                            : 'Alumni accounts can access the alumni network and connect with other graduates.'}
+                        </p>
+                      )}
                     </div>
 
                     {/* Error Messages - Compact */}

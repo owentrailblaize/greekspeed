@@ -81,8 +81,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'End time must be after start time' }, { status: 400 });
     }
 
-    // Extract send_sms flag (it's not a database column, just a notification flag)
-    const { send_sms, ...dbEventData } = eventData;
+    // Extract send_sms and send_sms_to_alumni flags (they're not database columns, just notification flags)
+    const { send_sms, send_sms_to_alumni, ...dbEventData } = eventData;
     
     // Create the event
     const insertData = {
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
         : process.env.NEXT_PUBLIC_APP_URL || 'https://www.trailblaize.net';
         const emailUrl = `${baseUrl}/api/events/send-email`;
         
-        // Trigger email sending asynchronously - pass send_sms flag
+        // Trigger email sending asynchronously - pass send_sms and send_sms_to_alumni flags
         const emailResponse = await fetch(emailUrl, {
           method: 'POST',
           headers: {
@@ -121,7 +121,8 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify({
             eventId: newEvent.id,
             chapterId: newEvent.chapter_id,
-            send_sms: send_sms || false
+            send_sms: send_sms || false,
+            send_sms_to_alumni: send_sms_to_alumni || false
           })
         });
 
