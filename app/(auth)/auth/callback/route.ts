@@ -77,30 +77,52 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      // Get user data
-      const { data: { user } } = await supabase.auth.getUser();
+      // Use user from session data (more reliable than calling getUser again)
+      const user = data?.session?.user || data?.user;
       
-      if (user) {
-        // If invitation token exists, handle invitation flow
+      if (!user) {
+        console.error('No user found after session exchange. Session data:', JSON.stringify(data, null, 2));
         if (invitationToken) {
-          try {
-            // Use service role client for admin operations (profile creation)
-            const { createServerSupabaseClient } = await import('@/lib/supabase/client');
-            const serverSupabase = createServerSupabaseClient();
-            
-            // Validate invitation token
-            const validation = await validateInvitationToken(invitationToken);
-            
-            if (!validation.valid || !validation.invitation) {
-              console.error('Invalid invitation token:', validation.error);
-              const redirectPath = invitationType === 'alumni' 
-                ? `/alumni-join/${invitationToken}` 
-                : `/join/${invitationToken}`;
-              return NextResponse.redirect(
-                `${requestUrl.origin}${redirectPath}?error=${encodeURIComponent(validation.error || 'Invalid invitation')}`
-              );
-            }
-            
+          const redirectPath = invitationType === 'alumni' 
+            ? `/alumni-join/${invitationToken}` 
+            : `/join/${invitationToken}`;
+          return NextResponse.redirect(
+            `${requestUrl.origin}${redirectPath}?error=${encodeURIComponent('User not found after authentication')}`
+          );
+        }
+        return NextResponse.redirect(
+          `${requestUrl.origin}/sign-in?error=${encodeURIComponent('User not found after authentication')}`
+        );
+      }
+
+      console.log('OAuth callback - User authenticated:', user.id, user.email, 'Provider:', user.app_metadata?.provider);
+      
+      // Get service role client early for profile operations (avoids RLS issues)
+      const { createServerSupabaseClient } = await import('@/lib/supabase/client');
+      const serverSupabase = createServerSupabaseClient();
+      
+      // Check if profile already exists using server client (bypasses RLS)
+      const { data: existingProfile, error: profileCheckError } = await serverSupabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (profileCheckError && profileCheckError.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('Error checking for existing profile:', profileCheckError);
+      }
+      
+      // If invitation token exists, handle invitation flow
+      if (invitationToken) {
+        try {
+          // Validate invitation token
+          const validation = await validateInvitationToken(invitationToken);
+          
+          if (!validation.valid || !validation.invitation) {
+            console.error('Invalid invitation token:', validation.error);
+            // Fall through to create basic profile without invitation
+            console.log('Falling back to basic profile creation without invitation');
+          } else {
             const invitation = validation.invitation;
             
             // Validate email domain if restricted
@@ -124,13 +146,6 @@ export async function GET(request: NextRequest) {
                 `${requestUrl.origin}${redirectPath}?error=${encodeURIComponent('This email has already been used with this invitation')}`
               );
             }
-            
-            // Check if profile already exists using regular client (with RLS)
-            const { data: existingProfile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', user.id)
-              .single();
 
             // Determine provider
             const provider = user.app_metadata?.provider || user.user_metadata?.provider || 'unknown';
@@ -156,6 +171,7 @@ export async function GET(request: NextRequest) {
             const memberStatus = invitationType === 'alumni' ? 'alumni' : 'active';
 
             if (!existingProfile) {
+              console.log('Creating profile for user:', user.id, 'with invitation:', invitation.id);
               // Create profile with invitation association using server client
               const { error: profileError } = await serverSupabase
                 .from('profiles')
@@ -174,7 +190,6 @@ export async function GET(request: NextRequest) {
                   role: role,
                   member_status: memberStatus,
                   welcome_seen: false,
-                  // Required fields will be filled in completion step
                   phone: null,
                   grad_year: null,
                   major: null,
@@ -184,18 +199,30 @@ export async function GET(request: NextRequest) {
                 });
 
               if (profileError) {
-                console.error('Profile creation error:', profileError);
-                const redirectPath = invitationType === 'alumni' 
-                  ? `/alumni-join/${invitationToken}` 
-                  : `/join/${invitationToken}`;
-                return NextResponse.redirect(
-                  `${requestUrl.origin}${redirectPath}?error=${encodeURIComponent('Failed to create profile')}`
-                );
+                console.error('Profile creation error (with invitation):', profileError);
+                console.error('Profile error details:', {
+                  code: profileError.code,
+                  message: profileError.message,
+                  details: profileError.details,
+                  hint: profileError.hint
+                });
+                // Don't redirect on error - try to create basic profile instead
+                console.log('Attempting to create basic profile without invitation data');
+              } else {
+                console.log('Profile created successfully for user:', user.id);
+                // Record invitation usage
+                await recordInvitationUsage(invitation.id, user.email || '', user.id);
+                
+                // Redirect directly to dashboard
+                const redirectUrl = `${requestUrl.origin}/dashboard`;
+                const htmlResponse = createHtmlRedirect(redirectUrl, response, cookieStore);
+                return htmlResponse;
               }
             } else {
+              console.log('Profile already exists for user:', user.id, 'updating with invitation data');
               // Profile exists - update with invitation data if not already associated
               if (!existingProfile.chapter_id && invitation.chapter_id) {
-                await serverSupabase
+                const { error: updateError } = await serverSupabase
                   .from('profiles')
                   .update({
                     chapter_id: invitation.chapter_id,
@@ -207,157 +234,144 @@ export async function GET(request: NextRequest) {
                     updated_at: new Date().toISOString()
                   })
                   .eq('id', user.id);
-              }
-            }
 
-            // Record invitation usage
-            await recordInvitationUsage(invitation.id, user.email || '', user.id);
-
-            // Redirect directly to dashboard - chapter and role are already set from invitation
-            const redirectUrl = `${requestUrl.origin}/dashboard`;
-
-            // Return HTML redirect with proper cookies
-            return new NextResponse(
-              `<!DOCTYPE html>
-              <html>
-                <head>
-                  <meta http-equiv="refresh" content="0;url=${redirectUrl}">
-                  <script>window.location.href="${redirectUrl}";</script>
-                </head>
-                <body>
-                  <p>Redirecting... <a href="${redirectUrl}">Click here if not redirected</a></p>
-                </body>
-              </html>`,
-              {
-                status: 200,
-                headers: {
-                  'Content-Type': 'text/html',
-                  'Cache-Control': 'no-cache, no-store, must-revalidate',
-                  ...response.headers,
+                if (updateError) {
+                  console.error('Profile update error:', updateError);
                 }
               }
-            );
-            
-          } catch (invitationError) {
-            console.error('Invitation processing error:', invitationError);
-            const redirectPath = invitationType === 'alumni' 
-              ? `/alumni-join/${invitationToken}` 
-              : `/join/${invitationToken}`;
-            return NextResponse.redirect(
-              `${requestUrl.origin}${redirectPath}?error=${encodeURIComponent('Failed to process invitation')}`
-            );
+              // Record invitation usage
+              await recordInvitationUsage(invitation.id, user.email || '', user.id);
+              
+              // Redirect directly to dashboard
+              const redirectUrl = `${requestUrl.origin}/dashboard`;
+              const htmlResponse = createHtmlRedirect(redirectUrl, response, cookieStore);
+              return htmlResponse;
+            }
           }
+        } catch (invitationError) {
+          console.error('Invitation processing error:', invitationError);
+          // Don't redirect - fall through to create basic profile
+          console.log('Falling back to basic profile creation');
+        }
+      }
+
+      // ALWAYS ensure profile exists (fallback for missing invitation token or errors)
+      if (!existingProfile) {
+        console.log('Creating basic profile for user (no invitation or fallback):', user.id);
+        
+        // Determine provider
+        const provider = user.app_metadata?.provider || user.user_metadata?.provider || 'unknown';
+        const isLinkedIn = provider === 'linkedin_oidc';
+        const isGoogle = provider === 'google';
+        
+        // Extract LinkedIn URL if available
+        const linkedinSub = user.user_metadata?.sub;
+        const linkedinUrl = isLinkedIn && linkedinSub 
+          ? `https://www.linkedin.com/in/${linkedinSub}` 
+          : null;
+
+        // Determine default name based on provider
+        let defaultName = 'OAuth User';
+        if (isGoogle) {
+          defaultName = 'Google User';
+        } else if (isLinkedIn) {
+          defaultName = 'LinkedIn User';
         }
 
-        // No invitation token - handle as regular OAuth signup (existing logic)
-        // Use service role client for admin operations (profile creation)
-        const { createServerSupabaseClient } = await import('@/lib/supabase/client');
-        const serverSupabase = createServerSupabaseClient();
+        // Extract first and last name for username generation
+        const firstName = user.user_metadata?.given_name || user.user_metadata?.first_name || '';
+        const lastName = user.user_metadata?.family_name || user.user_metadata?.last_name || '';
         
-        // Check if profile already exists using regular client (with RLS)
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
+        // Generate username for OAuth user
+        const username = await generateUniqueUsername(serverSupabase, firstName, lastName, user.id);
+        const profileSlug = generateProfileSlug(username);
 
-        if (!existingProfile) {
-          // Determine provider
-          const provider = user.app_metadata?.provider || user.user_metadata?.provider || 'unknown';
-          const isLinkedIn = provider === 'linkedin_oidc';
-          const isGoogle = provider === 'google';
-          
-          // Extract LinkedIn URL if available
+        // Create profile for new OAuth user
+        const { error: profileError } = await serverSupabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email,
+            full_name: user.user_metadata?.full_name || user.user_metadata?.name || defaultName,
+            first_name: firstName,
+            last_name: lastName,
+            username: username,
+            profile_slug: profileSlug,
+            linkedin_url: linkedinUrl,
+            avatar_url: user.user_metadata?.picture || user.user_metadata?.avatar_url || null,
+            chapter: null,  // Will be filled in profile completion
+            role: null,     // Will be filled in profile completion
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+
+        if (profileError) {
+          console.error('Profile creation error (fallback):', profileError);
+          console.error('Profile error details:', {
+            code: profileError.code,
+            message: profileError.message,
+            details: profileError.details,
+            hint: profileError.hint
+          });
+          // Even if profile creation fails, redirect to sign-in with error
+          return NextResponse.redirect(
+            `${requestUrl.origin}/sign-in?error=${encodeURIComponent('Profile creation failed. Please contact support.')}`
+          );
+        }
+        console.log('Basic profile created successfully for user:', user.id);
+      } else {
+        // Update existing profile with OAuth data if available
+        const provider = user.app_metadata?.provider || user.user_metadata?.provider || 'unknown';
+        const isLinkedIn = provider === 'linkedin_oidc';
+        
+        if (isLinkedIn) {
           const linkedinSub = user.user_metadata?.sub;
-          const linkedinUrl = isLinkedIn && linkedinSub 
+          const linkedinUrl = linkedinSub 
             ? `https://www.linkedin.com/in/${linkedinSub}` 
             : null;
 
-          // Determine default name based on provider
-          let defaultName = 'OAuth User';
-          if (isGoogle) {
-            defaultName = 'Google User';
-          } else if (isLinkedIn) {
-            defaultName = 'LinkedIn User';
+          // Update profile with LinkedIn URL and avatar if not already set
+          const updateData: any = {};
+          if (linkedinUrl && !existingProfile.linkedin_url) {
+            updateData.linkedin_url = linkedinUrl;
           }
-
-          // Extract first and last name for username generation
-          const firstName = user.user_metadata?.given_name || user.user_metadata?.first_name || '';
-          const lastName = user.user_metadata?.family_name || user.user_metadata?.last_name || '';
-          
-          // Generate username for OAuth user
-          const username = await generateUniqueUsername(serverSupabase, firstName, lastName, user.id);
-          const profileSlug = generateProfileSlug(username);
-
-          // Create profile for new OAuth user
-          const { error: profileError } = await serverSupabase
-            .from('profiles')
-            .insert({
-              id: user.id,
-              email: user.email,
-              full_name: user.user_metadata?.full_name || user.user_metadata?.name || defaultName,
-              first_name: firstName,
-              last_name: lastName,
-              username: username,
-              profile_slug: profileSlug,
-              linkedin_url: linkedinUrl,
-              avatar_url: user.user_metadata?.picture || user.user_metadata?.avatar_url || null,
-              chapter: null,  // Will be filled in profile completion
-              role: null,     // Will be filled in profile completion
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            });
-
-          if (profileError) {
-            console.error('Profile creation error:', profileError);
+          if (user.user_metadata?.picture && !existingProfile.avatar_url) {
+            updateData.avatar_url = user.user_metadata.picture;
           }
-        } else {
-          // Update existing profile with LinkedIn data if available
-          const provider = user.app_metadata?.provider || user.user_metadata?.provider || 'unknown';
-          const isLinkedIn = provider === 'linkedin_oidc';
           
-          if (isLinkedIn) {
-            const linkedinSub = user.user_metadata?.sub;
-            const linkedinUrl = linkedinSub 
-              ? `https://www.linkedin.com/in/${linkedinSub}` 
-              : null;
+          if (Object.keys(updateData).length > 0) {
+            updateData.updated_at = new Date().toISOString();
+            const { error: updateError } = await serverSupabase
+              .from('profiles')
+              .update(updateData)
+              .eq('id', user.id);
 
-            // Update profile with LinkedIn URL and avatar if not already set
-            const updateData: any = {};
-            if (linkedinUrl && !existingProfile.linkedin_url) {
-              updateData.linkedin_url = linkedinUrl;
-            }
-            if (user.user_metadata?.picture && !existingProfile.avatar_url) {
-              updateData.avatar_url = user.user_metadata.picture;
-            }
-            
-            if (Object.keys(updateData).length > 0) {
-              updateData.updated_at = new Date().toISOString();
-              const { error: updateError } = await serverSupabase
-                .from('profiles')
-                .update(updateData)
-                .eq('id', user.id);
-
-              if (updateError) {
-                console.error('Profile update error:', updateError);
-              }
+            if (updateError) {
+              console.error('Profile update error:', updateError);
             }
           }
         }
+      }
 
-        // Check if profile is incomplete (missing chapter or role) - new OAuth users need to complete profile
-        const profile = existingProfile || null;
-        const isIncomplete = !profile?.chapter || !profile?.role;
+      // Check if profile is incomplete (missing chapter or role)
+      const finalProfileCheck = await serverSupabase
+        .from('profiles')
+        .select('chapter, role')
+        .eq('id', user.id)
+        .single();
 
-        // Redirect new OAuth users to profile completion, existing users with complete profiles to dashboard
-        if (isIncomplete) {
-          return NextResponse.redirect(`${requestUrl.origin}/profile/complete`);
-        } else {
-          return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
-        }
+      const profile = finalProfileCheck.data;
+      const isIncomplete = !profile?.chapter || !profile?.role;
+
+      // Redirect based on profile completeness
+      if (isIncomplete) {
+        return NextResponse.redirect(`${requestUrl.origin}/profile/complete`);
+      } else {
+        return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
       }
     } catch (error) {
       console.error('Callback processing error:', error);
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       if (invitationToken) {
         const redirectPath = invitationType === 'alumni' 
           ? `/alumni-join/${invitationToken}` 
@@ -381,4 +395,46 @@ export async function GET(request: NextRequest) {
   }
   // Redirect to sign-in instead of sign-up to avoid marketing page
   return NextResponse.redirect(`${requestUrl.origin}/sign-in`);
+}
+
+// Helper function for HTML redirect with cookies
+function createHtmlRedirect(redirectUrl: string, response: NextResponse, cookieStore: any) {
+  const htmlResponse = new NextResponse(
+    `<!DOCTYPE html>
+    <html>
+      <head>
+        <meta http-equiv="refresh" content="0;url=${redirectUrl}">
+        <script>window.location.href="${redirectUrl}";</script>
+      </head>
+      <body>
+        <p>Redirecting... <a href="${redirectUrl}">Click here if not redirected</a></p>
+      </body>
+    </html>`,
+    {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+      }
+    }
+  );
+  
+  // Copy all cookies from the response to the HTML response
+  response.headers.forEach((value, key) => {
+    if (key.toLowerCase() === 'set-cookie') {
+      htmlResponse.headers.append(key, value);
+    }
+  });
+  
+  // Also copy cookies from response.cookies
+  response.cookies.getAll().forEach((cookie) => {
+    htmlResponse.cookies.set(cookie.name, cookie.value, {
+      path: '/',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    });
+  });
+  
+  return htmlResponse;
 } 
