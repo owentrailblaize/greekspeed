@@ -14,8 +14,13 @@ import { useChapters } from '@/lib/hooks/useChapters';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 
 // User roles for the dropdown - Only Alumni allowed for public signup
-const userRoles = [
+const defaultUserRoles = [
   { value: 'alumni', label: 'Alumni' }
+];
+
+// Active member role (only for invitation-based signups)
+const activeMemberRole = [
+  { value: 'active_member', label: 'Active Member' }
 ];
 
 export default function ProfileCompletePage() {
@@ -25,6 +30,7 @@ export default function ProfileCompletePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [invitationLoading, setInvitationLoading] = useState(false);
+  const [hasInvitation, setHasInvitation] = useState(false); // Track if user came from invitation
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -36,6 +42,11 @@ export default function ProfileCompletePage() {
   // Use the chapters hook to fetch dynamic data
   const { chapters, loading: chaptersLoading, error: chaptersError } = useChapters();
 
+  // Determine available roles based on invitation status
+  const availableRoles = hasInvitation 
+    ? [...defaultUserRoles, ...activeMemberRole] // Show both if from invitation
+    : defaultUserRoles; // Only alumni for public signup
+
     // Check for invitation token in sessionStorage and auto-populate
     useEffect(() => {
       const checkInvitation = async () => {
@@ -46,29 +57,52 @@ export default function ProfileCompletePage() {
         
         if (invitationToken && user) {
           try {
+            setHasInvitation(true); // Mark that user came from invitation
             console.log('Found invitation token in sessionStorage, fetching invitation data');
             const response = await fetch(`/api/join/${invitationToken}`);
             
             if (response.ok) {
               const data = await response.json();
               if (data.valid && data.invitation) {
+                const invitationTypeValue = data.invitation.invitation_type || invitationType;
+                const roleValue = invitationTypeValue === 'alumni' ? 'alumni' : 'active_member';
+                
                 console.log('Invitation data retrieved:', {
                   chapterName: data.invitation.chapter_name,
                   chapterId: data.invitation.chapter_id,
-                  invitationType: data.invitation.invitation_type || invitationType
+                  invitationType: invitationTypeValue,
+                  roleToSet: roleValue
                 });
                 
                 // Auto-populate chapter and role from invitation
                 setFormData(prev => ({
                   ...prev,
                   chapter: data.invitation.chapter_name || prev.chapter,
-                  role: (data.invitation.invitation_type || invitationType) === 'alumni' ? 'alumni' : 'active_member'
+                  role: roleValue
                 }));
                 
-                // Clean up sessionStorage
-                sessionStorage.removeItem('invitation_token');
-                sessionStorage.removeItem('invitation_type');
-                sessionStorage.removeItem('oauth_redirect');
+                console.log('Form data updated with role:', roleValue);
+                
+                // Clean up sessionStorage AFTER a delay to ensure form is populated
+                setTimeout(() => {
+                  sessionStorage.removeItem('invitation_token');
+                  sessionStorage.removeItem('invitation_type');
+                  sessionStorage.removeItem('oauth_redirect');
+                }, 1000);
+              }
+            } else {
+              // Try alumni-join endpoint if active member endpoint fails
+              const alumniResponse = await fetch(`/api/alumni-join/${invitationToken}`);
+              if (alumniResponse.ok) {
+                const data = await alumniResponse.json();
+                if (data.valid && data.invitation) {
+                  setHasInvitation(true);
+                  setFormData(prev => ({
+                    ...prev,
+                    chapter: data.invitation.chapter_name || prev.chapter,
+                    role: 'alumni'
+                  }));
+                }
               }
             }
           } catch (error) {
@@ -78,6 +112,10 @@ export default function ProfileCompletePage() {
         
         // Also check if profile already has chapter/role (from successful callback)
         if (profile?.chapter && profile?.role) {
+          // If profile has role, user likely came from invitation flow
+          if (profile.role === 'active_member') {
+            setHasInvitation(true);
+          }
           setFormData(prev => ({
             ...prev,
             chapter: profile.chapter || prev.chapter,
@@ -238,22 +276,24 @@ export default function ProfileCompletePage() {
                   <h2 className="text-lg font-bold text-gray-900">Complete Your Profile</h2>
                 </div>
 
-                {/* Information Banner - Compact */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
-                  <div className="flex items-start space-x-2">
-                    <Info className="h-3 w-3 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-medium text-blue-900 text-xs mb-1">Alumni Profile Only</h3>
-                      <p className="text-xs text-blue-800 mb-1">
-                        This profile completion is for alumni only. Active members must be invited by chapter administrators.
-                      </p>
-                      <div className="flex items-center space-x-1 text-xs text-blue-700">
-                        <Users className="h-3 w-3" />
-                        <span>Need to join as an active member? Contact your chapter admin for an invitation.</span>
+                {/* Information Banner - Compact - Conditional based on invitation */}
+                {!hasInvitation && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
+                    <div className="flex items-start space-x-2">
+                      <Info className="h-3 w-3 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-medium text-blue-900 text-xs mb-1">Alumni Profile Only</h3>
+                        <p className="text-xs text-blue-800 mb-1">
+                          This profile completion is for alumni only. Active members must be invited by chapter administrators.
+                        </p>
+                        <div className="flex items-center space-x-1 text-xs text-blue-700">
+                          <Users className="h-3 w-3" />
+                          <span>Need to join as an active member? Contact your chapter admin for an invitation.</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Form - Compact and optimized */}
                 <div className="text-left">
@@ -325,23 +365,25 @@ export default function ProfileCompletePage() {
                       )}
                     </div>
 
-                    {/* Role Selection - Compact - Only Alumni */}
+                    {/* Role Selection - Compact - Dynamic based on invitation */}
                     <div className="space-y-1">
                       <Label htmlFor="role" className="text-xs font-medium text-gray-700">Role</Label>
                       <Select 
                         value={formData.role} 
-                        onValueChange={(value: string) => setFormData(prev => ({ ...prev, role: value as 'Alumni' }))}
+                        onValueChange={(value: string) => setFormData(prev => ({ ...prev, role: value }))}
                         disableDynamicPositioning={true}
                       >
                         <SelectItem value="">Select your role</SelectItem>
-                        {userRoles.map((userRole) => (
+                        {availableRoles.map((userRole) => (
                           <SelectItem key={userRole.value} value={userRole.value}>
                             {userRole.label}
                           </SelectItem>
                         ))}
                       </Select>
                       <p className="text-xs text-gray-500">
-                        Alumni accounts can access the alumni network and connect with other graduates.
+                        {hasInvitation 
+                          ? 'Your role is determined by your invitation type. Active members have full chapter access.'
+                          : 'Alumni accounts can access the alumni network and connect with other graduates.'}
                       </p>
                     </div>
 
