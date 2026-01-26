@@ -120,24 +120,33 @@ export default function JoinPageClient() {
       // Set flag and store invitation token to indicate OAuth redirect is happening
       sessionStorage.setItem('oauth_redirect', 'true');
       sessionStorage.setItem('invitation_token', invitation.token);
-      
-      // Include invitation token in the redirect URL as a query parameter
-      const redirectUrl = new URL(`${window.location.origin}/auth/callback`);
-      redirectUrl.searchParams.set('invitation_token', invitation.token);
-      redirectUrl.searchParams.set('invitation_type', 'active_member');
-      
+      sessionStorage.setItem('invitation_type', 'active_member');
+
+      console.log('Initiating LinkedIn OAuth with invitation:', {
+        token: invitation.token,
+        type: 'active_member',
+        chapter_id: invitation.chapter_id,
+        chapter_name: invitation.chapter_name
+      });
+
+      // Use Supabase's queryParams option (more reliable than URL query params)
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
-          redirectTo: redirectUrl.toString(),
+          redirectTo: `${window.location.origin}/auth/callback`,
           scopes: 'openid profile email',
+          queryParams: {
+            invitation_token: invitation.token,
+            invitation_type: 'active_member',
+          },
         },
       });
-
+        
       if (error) {
         console.error('LinkedIn sign-up error:', error);
         sessionStorage.removeItem('oauth_redirect');
         sessionStorage.removeItem('invitation_token');
+        sessionStorage.removeItem('invitation_type');
         setError('LinkedIn sign-up failed. Please try again.');
         toast.error('LinkedIn sign-up failed. Please try again.');
       }
@@ -145,6 +154,7 @@ export default function JoinPageClient() {
       console.error('LinkedIn sign-up exception:', error);
       sessionStorage.removeItem('oauth_redirect');
       sessionStorage.removeItem('invitation_token');
+      sessionStorage.removeItem('invitation_type');
       setError('LinkedIn sign-up failed. Please try again.');
       toast.error('LinkedIn sign-up failed. Please try again.');
     } finally {

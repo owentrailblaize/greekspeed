@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Star, User, Building2, GraduationCap, MapPin, Briefcase, Info, Users } from 'lucide-react';
 import { useChapters } from '@/lib/hooks/useChapters';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 
 // User roles for the dropdown - Only Alumni allowed for public signup
 const userRoles = [
@@ -19,9 +20,11 @@ const userRoles = [
 
 export default function ProfileCompletePage() {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [invitationLoading, setInvitationLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -33,16 +36,69 @@ export default function ProfileCompletePage() {
   // Use the chapters hook to fetch dynamic data
   const { chapters, loading: chaptersLoading, error: chaptersError } = useChapters();
 
+    // Check for invitation token in sessionStorage and auto-populate
+    useEffect(() => {
+      const checkInvitation = async () => {
+        if (typeof window === 'undefined') return;
+        
+        const invitationToken = sessionStorage.getItem('invitation_token');
+        const invitationType = sessionStorage.getItem('invitation_type');
+        
+        if (invitationToken && user) {
+          try {
+            console.log('Found invitation token in sessionStorage, fetching invitation data');
+            const response = await fetch(`/api/join/${invitationToken}`);
+            
+            if (response.ok) {
+              const data = await response.json();
+              if (data.valid && data.invitation) {
+                console.log('Invitation data retrieved:', {
+                  chapterName: data.invitation.chapter_name,
+                  chapterId: data.invitation.chapter_id,
+                  invitationType: data.invitation.invitation_type || invitationType
+                });
+                
+                // Auto-populate chapter and role from invitation
+                setFormData(prev => ({
+                  ...prev,
+                  chapter: data.invitation.chapter_name || prev.chapter,
+                  role: (data.invitation.invitation_type || invitationType) === 'alumni' ? 'alumni' : 'active_member'
+                }));
+                
+                // Clean up sessionStorage
+                sessionStorage.removeItem('invitation_token');
+                sessionStorage.removeItem('invitation_type');
+                sessionStorage.removeItem('oauth_redirect');
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching invitation data:', error);
+          }
+        }
+        
+        // Also check if profile already has chapter/role (from successful callback)
+        if (profile?.chapter && profile?.role) {
+          setFormData(prev => ({
+            ...prev,
+            chapter: profile.chapter || prev.chapter,
+            role: profile.role || prev.role
+          }));
+        }
+        
+        setInvitationLoading(false);
+      };
+      
+      checkInvitation();
+    }, [user, profile]);
+
   // Pre-populate form with OAuth data
   useEffect(() => {
     if (user?.user_metadata) {
-      // OAuth user metadata
-      
       setFormData(prev => ({
         ...prev,
-        firstName: user.user_metadata.given_name || user.user_metadata.first_name || user.user_metadata.name?.split(' ')[0] || '',
-        lastName: user.user_metadata.family_name || user.user_metadata.last_name || user.user_metadata.name?.split(' ').slice(1).join(' ') || '',
-        email: user.email || '',
+        firstName: user.user_metadata.given_name || user.user_metadata.first_name || user.user_metadata.name?.split(' ')[0] || prev.firstName,
+        lastName: user.user_metadata.family_name || user.user_metadata.last_name || user.user_metadata.name?.split(' ').slice(1).join(' ') || prev.lastName,
+        email: user.email || prev.email,
       }));
     }
   }, [user]);

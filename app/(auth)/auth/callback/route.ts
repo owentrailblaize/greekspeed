@@ -12,7 +12,37 @@ export async function GET(request: NextRequest) {
   
   // Extract invitation token and type from query params
   const invitationToken = requestUrl.searchParams.get('invitation_token');
-  const invitationType = requestUrl.searchParams.get('invitation_type'); // 'active_member' or 'alumni'
+  let invitationType = requestUrl.searchParams.get('invitation_type'); // 'active_member' or 'alumni'
+  
+  console.log('OAuth callback received:', {
+    hasCode: !!code,
+    hasError: !!error,
+    invitationToken,
+    invitationType,
+    requestUrl: requestUrl.toString(),
+    origin: requestUrl.origin,
+    allParams: Object.fromEntries(requestUrl.searchParams.entries())
+  });
+
+  // If no code and no error, this might be a redirect loop or hash fragment issue
+  // LinkedIn OAuth sometimes redirects to /sign-in with hash fragments instead of /auth/callback with query params
+  if (!code && !error) {
+    console.warn('Callback hit without code or error - might be hash fragment redirect issue');
+    console.warn('This can happen when OAuth provider redirects with hash fragments instead of query params');
+    
+    // If we have an invitation token, preserve it in the redirect
+    if (invitationToken) {
+      const redirectPath = invitationType === 'alumni' 
+        ? `/alumni-join/${invitationToken}` 
+        : `/join/${invitationToken}`;
+      console.log('Preserving invitation token in redirect to:', redirectPath);
+      return NextResponse.redirect(`${requestUrl.origin}${redirectPath}`);
+    }
+    
+    // Otherwise redirect to sign-in to let client-side handle hash fragments
+    // The sign-in page will process the hash and redirect appropriately
+    return NextResponse.redirect(`${requestUrl.origin}/sign-in`);
+  }
 
   // Create response for cookie handling
   const cookieStore = await cookies();
@@ -95,7 +125,13 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      console.log('OAuth callback - User authenticated:', user.id, user.email, 'Provider:', user.app_metadata?.provider);
+      console.log('OAuth callback - User authenticated:', {
+        userId: user.id,
+        email: user.email,
+        provider: user.app_metadata?.provider,
+        userMetadata: user.user_metadata,
+        appMetadata: user.app_metadata
+      });
       
       // Get service role client early for profile operations (avoids RLS issues)
       const { createServerSupabaseClient } = await import('@/lib/supabase/client');
@@ -124,6 +160,23 @@ export async function GET(request: NextRequest) {
             console.log('Falling back to basic profile creation without invitation');
           } else {
             const invitation = validation.invitation;
+            
+            // IMPORTANT: Use invitation.invitation_type if invitationType query param is missing
+            // This ensures we get the correct type even if LinkedIn strips query params
+            if (!invitationType && invitation.invitation_type) {
+              invitationType = invitation.invitation_type;
+              console.log('Recovered invitation_type from invitation object:', invitationType);
+            }
+            
+            console.log('Invitation validation result:', {
+              valid: validation.valid,
+              hasInvitation: !!validation.invitation,
+              invitationId: invitation.id,
+              chapterId: invitation.chapter_id,
+              chapterName: validation.chapter_name,
+              invitationType: invitationType,
+              invitationTypeFromInvitation: invitation.invitation_type
+            });
             
             // Validate email domain if restricted
             const { validateEmailDomain, hasEmailUsedInvitation } = await import('@/lib/utils/invitationUtils');
@@ -166,11 +219,34 @@ export async function GET(request: NextRequest) {
             const username = await generateUniqueUsername(serverSupabase, firstName, lastName, user.id);
             const profileSlug = generateProfileSlug(username);
 
-            // Determine role based on invitation type
-            const role = invitationType === 'alumni' ? 'alumni' : 'active_member';
-            const memberStatus = invitationType === 'alumni' ? 'alumni' : 'active';
+            // Determine role based on invitation type (use invitation.invitation_type as fallback)
+            const role = (invitationType === 'alumni' || invitation.invitation_type === 'alumni') 
+              ? 'alumni' 
+              : 'active_member';
+            const memberStatus = (invitationType === 'alumni' || invitation.invitation_type === 'alumni') 
+              ? 'alumni' 
+              : 'active';
+            
+            console.log('Setting profile with:', {
+              role,
+              memberStatus,
+              chapterId: invitation.chapter_id,
+              chapterName: validation.chapter_name,
+              invitationTypeUsed: invitationType || invitation.invitation_type
+            });
 
             if (!existingProfile) {
+              console.log('About to create profile with:', {
+                userId: user.id,
+                email: user.email,
+                fullName,
+                firstName,
+                lastName,
+                chapterId: invitation.chapter_id,
+                chapterName: validation.chapter_name,
+                role,
+                memberStatus
+              });
               console.log('Creating profile for user:', user.id, 'with invitation:', invitation.id);
               // Create profile with invitation association using server client
               const { error: profileError } = await serverSupabase
