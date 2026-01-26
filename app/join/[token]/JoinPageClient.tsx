@@ -255,7 +255,7 @@ export default function JoinPageClient() {
               <span>Join {invitation.chapter_name}</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 pt-0">
+          <CardContent className="space-y-2 pt-2">
             <div>
               <p className="text-gray-600 mb-2">
                 You've been invited to join {invitation.chapter_name} as an active member. 
@@ -277,6 +277,16 @@ export default function JoinPageClient() {
                 <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
+
+            {/* Divider */}
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-gray-500">Or</span>
+              </div>
+            </div>
 
             {/* Authentication Options */}
             <div className="space-y-3">

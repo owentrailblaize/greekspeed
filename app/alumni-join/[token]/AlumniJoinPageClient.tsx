@@ -2,11 +2,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { AlertCircle, Users, Shield, Calendar, CheckCircle, Loader2, GraduationCap } from 'lucide-react';
+import { AlertCircle, Users, Shield, Calendar, CheckCircle, Loader2, GraduationCap, Linkedin, Mail } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlumniJoinForm } from '@/components/features/join/AlumniJoinForm';
 import { Invitation } from '@/types/invitations';
+import { supabase } from '@/lib/supabase/client';
+import { toast } from 'react-toastify';
 
 export default function AlumniJoinPageClient() {
   const params = useParams();
@@ -17,10 +19,22 @@ export default function AlumniJoinPageClient() {
   const [showJoinForm, setShowJoinForm] = useState(false);
   const [showApprovalPending, setShowApprovalPending] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
+  const [linkedInLoading, setLinkedInLoading] = useState(false);
+  const [linkedInIconError, setLinkedInIconError] = useState(false);
 
   const token = params.token as string;
 
   useEffect(() => {
+    // Check for OAuth callback errors
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorParam = urlParams.get('error');
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam));
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+      return;
+    }
+
     const validateInvitation = async () => {
       try {
         setLoading(true);
@@ -94,6 +108,58 @@ export default function AlumniJoinPageClient() {
 
   const handleStartJoin = () => {
     setShowJoinForm(true);
+  };
+
+  const handleLinkedInSignUp = async () => {
+    if (!invitation) return;
+    
+    try {
+      setLinkedInLoading(true);
+      setError(null);
+      
+      // Set flag and store invitation token to indicate OAuth redirect is happening
+      sessionStorage.setItem('oauth_redirect', 'true');
+      sessionStorage.setItem('invitation_token', invitation.token);
+      sessionStorage.setItem('invitation_type', 'alumni');
+
+      console.log('Initiating LinkedIn OAuth with alumni invitation:', {
+        token: invitation.token,
+        type: 'alumni',
+        chapter_id: invitation.chapter_id,
+        chapter_name: invitation.chapter_name
+      });
+
+      // Use Supabase's queryParams option (more reliable than URL query params)
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'linkedin_oidc',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'openid profile email',
+          queryParams: {
+            invitation_token: invitation.token,
+            invitation_type: 'alumni',
+          },
+        },
+      });
+        
+      if (error) {
+        console.error('LinkedIn sign-up error:', error);
+        sessionStorage.removeItem('oauth_redirect');
+        sessionStorage.removeItem('invitation_token');
+        sessionStorage.removeItem('invitation_type');
+        setError('LinkedIn sign-up failed. Please try again.');
+        toast.error('LinkedIn sign-up failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('LinkedIn sign-up exception:', error);
+      sessionStorage.removeItem('oauth_redirect');
+      sessionStorage.removeItem('invitation_token');
+      sessionStorage.removeItem('invitation_type');
+      setError('LinkedIn sign-up failed. Please try again.');
+      toast.error('LinkedIn sign-up failed. Please try again.');
+    } finally {
+      setLinkedInLoading(false);
+    }
   };
 
   if (loading) {
@@ -215,12 +281,50 @@ export default function AlumniJoinPageClient() {
               </div>
             )}
 
-            <div className="flex space-x-3">
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
+            {/* Divider */}
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-gray-500">Or</span>
+              </div>
+            </div>
+
+            {/* Authentication Options */}
+            <div className="space-y-3">
+              <Button
+                onClick={handleLinkedInSignUp}
+                disabled={linkedInLoading}
+                className="w-full h-11 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-4 text-sm shadow-sm hover:shadow-md transition-all duration-200 bg-white"
+              >
+                {linkedInIconError ? (
+                  <Linkedin className="h-5 w-5 mr-3 text-gray-600" />
+                ) : (
+                  <img
+                    src="/linkedin-icon.png"
+                    alt="LinkedIn"
+                    className="w-5 h-5 mr-3"
+                    onError={() => setLinkedInIconError(true)}
+                  />
+                )}
+                {linkedInLoading ? 'Connecting...' : 'Continue with LinkedIn'}
+              </Button>
+
               <Button
                 onClick={handleStartJoin}
-                className="rounded-full flex-1 bg-blue-600 hover:bg-blue-700"
+                disabled={linkedInLoading}
+                className="w-full h-11 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm hover:shadow-md transition-all duration-200"
               >
-                Create Account
+                <Mail className="h-4 w-4 mr-2" />
+                Continue with Email
               </Button>
             </div>
           </CardContent>

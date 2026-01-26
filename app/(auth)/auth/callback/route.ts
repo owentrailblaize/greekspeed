@@ -286,6 +286,65 @@ export async function GET(request: NextRequest) {
                 console.log('Attempting to create basic profile without invitation data');
               } else {
                 console.log('Profile created successfully for user:', user.id);
+                
+                // If this is an alumni invitation, create alumni record
+                if (role === 'alumni') {
+                  try {
+                    const nowIso = new Date().toISOString();
+                    
+                    // Check if alumni record already exists
+                    const { data: existingAlumni, error: fetchAlumniError } = await serverSupabase
+                      .from('alumni')
+                      .select('description, avatar_url, verified, is_actively_hiring, last_contact, tags, mutual_connections, created_at')
+                      .eq('user_id', user.id)
+                      .maybeSingle();
+
+                    if (fetchAlumniError && fetchAlumniError.code !== 'PGRST116') {
+                      console.error('Error checking for existing alumni record:', fetchAlumniError);
+                    }
+
+                    const alumniPayload = {
+                      user_id: user.id,
+                      first_name: firstName,
+                      last_name: lastName,
+                      full_name: fullName,
+                      email: user.email || '',
+                      chapter: validation.chapter_name,
+                      chapter_id: invitation.chapter_id,
+                      industry: 'Not specified',
+                      graduation_year: new Date().getFullYear(),
+                      company: 'Not specified',
+                      job_title: 'Not specified',
+                      phone: null,
+                      location: 'Not specified',
+                      linkedin_url: linkedinUrl,
+                      description: existingAlumni?.description ?? `Alumni from ${validation.chapter_name}`,
+                      avatar_url: existingAlumni?.avatar_url ?? (user.user_metadata?.picture || user.user_metadata?.avatar_url || null),
+                      verified: existingAlumni?.verified ?? false,
+                      is_actively_hiring: existingAlumni?.is_actively_hiring ?? false,
+                      last_contact: existingAlumni?.last_contact ?? null,
+                      tags: existingAlumni?.tags ?? null,
+                      mutual_connections: existingAlumni?.mutual_connections ?? [],
+                      created_at: existingAlumni?.created_at ?? nowIso,
+                      updated_at: nowIso
+                    };
+
+                    const { error: alumniError } = await serverSupabase
+                      .from('alumni')
+                      .upsert(alumniPayload, { onConflict: 'user_id' });
+
+                    if (alumniError) {
+                      console.error('Alumni record creation error:', alumniError);
+                      // Don't block the flow - profile is already created
+                    } else {
+                      console.log('Alumni record created successfully for user:', user.id);
+                    }
+                  } catch (alumniError) {
+                    console.error('Alumni record creation exception:', alumniError);
+                    // Don't block the flow - profile is already created
+                  }
+                }
+                
                 // Record invitation usage
                 await recordInvitationUsage(invitation.id, user.email || '', user.id);
                 
@@ -315,6 +374,65 @@ export async function GET(request: NextRequest) {
                   console.error('Profile update error:', updateError);
                 }
               }
+              
+              // If this is an alumni invitation, create/update alumni record
+              if (role === 'alumni') {
+                try {
+                  const nowIso = new Date().toISOString();
+                  
+                  // Check if alumni record already exists
+                  const { data: existingAlumni, error: fetchAlumniError } = await serverSupabase
+                    .from('alumni')
+                    .select('description, avatar_url, verified, is_actively_hiring, last_contact, tags, mutual_connections, created_at')
+                    .eq('user_id', user.id)
+                    .maybeSingle();
+
+                  if (fetchAlumniError && fetchAlumniError.code !== 'PGRST116') {
+                    console.error('Error checking for existing alumni record:', fetchAlumniError);
+                  }
+
+                  const alumniPayload = {
+                    user_id: user.id,
+                    first_name: firstName,
+                    last_name: lastName,
+                    full_name: fullName,
+                    email: user.email || '',
+                    chapter: validation.chapter_name,
+                    chapter_id: invitation.chapter_id,
+                    industry: 'Not specified',
+                    graduation_year: new Date().getFullYear(),
+                    company: 'Not specified',
+                    job_title: 'Not specified',
+                    phone: null,
+                    location: 'Not specified',
+                    linkedin_url: linkedinUrl || existingProfile.linkedin_url,
+                    description: existingAlumni?.description ?? `Alumni from ${validation.chapter_name}`,
+                    avatar_url: existingAlumni?.avatar_url ?? (user.user_metadata?.picture || existingProfile.avatar_url || null),
+                    verified: existingAlumni?.verified ?? false,
+                    is_actively_hiring: existingAlumni?.is_actively_hiring ?? false,
+                    last_contact: existingAlumni?.last_contact ?? null,
+                    tags: existingAlumni?.tags ?? null,
+                    mutual_connections: existingAlumni?.mutual_connections ?? [],
+                    created_at: existingAlumni?.created_at ?? nowIso,
+                    updated_at: nowIso
+                  };
+
+                  const { error: alumniError } = await serverSupabase
+                    .from('alumni')
+                    .upsert(alumniPayload, { onConflict: 'user_id' });
+
+                  if (alumniError) {
+                    console.error('Alumni record upsert error:', alumniError);
+                    // Don't block the flow - profile is already updated
+                  } else {
+                    console.log('Alumni record created/updated successfully for user:', user.id);
+                  }
+                } catch (alumniError) {
+                  console.error('Alumni record upsert exception:', alumniError);
+                  // Don't block the flow - profile is already updated
+                }
+              }
+              
               // Record invitation usage
               await recordInvitationUsage(invitation.id, user.email || '', user.id);
               
