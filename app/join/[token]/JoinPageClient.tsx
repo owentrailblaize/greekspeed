@@ -250,48 +250,17 @@ export default function JoinPageClient() {
         className="max-w-2xl w-full"
       >
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-2">
             <CardTitle className="flex items-center space-x-2">
               <span>Join {invitation.chapter_name}</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-2 pt-0">
             <div>
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 mb-2">
                 You've been invited to join {invitation.chapter_name} as an active member. 
                 Create your account to get started.
               </p>
-            </div>
-
-            {/* Invitation Details */}
-            <div className="border-t pt-4">
-              <h3 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
-                <Shield className="h-4 w-4" />
-                <span>Invitation Details</span>
-              </h3>
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex items-center space-x-2">
-                  <Users className="h-4 w-4" />
-                  <span>
-                    {invitation.usage_count} {invitation.usage_count === 1 ? 'person has' : 'people have'} already joined
-                    {invitation.max_uses && ` (${invitation.max_uses} max)`}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Shield className="h-4 w-4" />
-                  <span>
-                    {invitation.approval_mode === 'auto' ? 'Auto-approved membership' : 'Requires admin approval'}
-                  </span>
-                </div>
-                {invitation.expires_at && (
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>
-                      Expires {new Date(invitation.expires_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                )}
-              </div>
             </div>
 
             {invitation.single_use && (
