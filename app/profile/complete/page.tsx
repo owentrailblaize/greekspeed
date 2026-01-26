@@ -29,7 +29,7 @@ export default function ProfileCompletePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [invitationLoading, setInvitationLoading] = useState(false);
+  const [invitationLoading, setInvitationLoading] = useState(true); // Start as true, set to false when done
   const [hasInvitation, setHasInvitation] = useState(false); // Track if user came from invitation
   const [formData, setFormData] = useState({
     firstName: '',
@@ -50,7 +50,12 @@ export default function ProfileCompletePage() {
     // Check for invitation token in sessionStorage and auto-populate
     useEffect(() => {
       const checkInvitation = async () => {
-        if (typeof window === 'undefined') return;
+        if (typeof window === 'undefined') {
+          setInvitationLoading(false);
+          return;
+        }
+        
+        setInvitationLoading(true); // Set loading to true at start
         
         const invitationToken = sessionStorage.getItem('invitation_token');
         const invitationType = sessionStorage.getItem('invitation_type');
@@ -346,21 +351,35 @@ export default function ProfileCompletePage() {
                     {/* Chapter Selection - Compact */}
                     <div className="space-y-1">
                       <Label htmlFor="chapter" className="text-xs font-medium text-gray-700">Chapter</Label>
-                      <Select 
-                        value={formData.chapter} 
-                        onValueChange={(value: string) => setFormData(prev => ({ ...prev, chapter: value }))}
-                      >
-                        <SelectItem value="">{chaptersLoading ? 'Loading chapters...' : 'Select your chapter'}</SelectItem>
-                        {chapters.map((chapterData) => (
-                          <SelectItem key={chapterData.id} value={chapterData.name}>
-                            {chapterData.name}
+                      <div className={invitationLoading || chaptersLoading ? 'pointer-events-none opacity-60' : ''}>
+                        <Select 
+                          value={formData.chapter} 
+                          onValueChange={(value: string) => setFormData(prev => ({ ...prev, chapter: value }))}
+                        >
+                          <SelectItem value="">
+                            {invitationLoading 
+                              ? 'Loading invitation data...' 
+                              : chaptersLoading 
+                              ? 'Loading chapters...' 
+                              : 'Select your chapter'}
                           </SelectItem>
-                        ))}
-                      </Select>
+                          {chapters.map((chapterData) => (
+                            <SelectItem key={chapterData.id} value={chapterData.name}>
+                              {chapterData.name}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                      </div>
+                      {invitationLoading && (
+                        <p className="text-xs text-blue-600 flex items-center">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
+                          Loading your invitation data...
+                        </p>
+                      )}
                       {chaptersError && (
                         <p className="text-red-500 text-xs">Failed to load chapters. Please refresh the page.</p>
                       )}
-                      {chapters.length === 0 && !chaptersLoading && (
+                      {chapters.length === 0 && !chaptersLoading && !invitationLoading && (
                         <p className="text-yellow-500 text-xs">No chapters available. Please contact support.</p>
                       )}
                     </div>
@@ -368,23 +387,35 @@ export default function ProfileCompletePage() {
                     {/* Role Selection - Compact - Dynamic based on invitation */}
                     <div className="space-y-1">
                       <Label htmlFor="role" className="text-xs font-medium text-gray-700">Role</Label>
-                      <Select 
-                        value={formData.role} 
-                        onValueChange={(value: string) => setFormData(prev => ({ ...prev, role: value }))}
-                        disableDynamicPositioning={true}
-                      >
-                        <SelectItem value="">Select your role</SelectItem>
-                        {availableRoles.map((userRole) => (
-                          <SelectItem key={userRole.value} value={userRole.value}>
-                            {userRole.label}
+                      <div className={invitationLoading ? 'pointer-events-none opacity-60' : ''}>
+                        <Select 
+                          value={formData.role} 
+                          onValueChange={(value: string) => setFormData(prev => ({ ...prev, role: value }))}
+                          disableDynamicPositioning={true}
+                        >
+                          <SelectItem value="">
+                            {invitationLoading ? 'Loading your role...' : 'Select your role'}
                           </SelectItem>
-                        ))}
-                      </Select>
-                      <p className="text-xs text-gray-500">
-                        {hasInvitation 
-                          ? 'Your role is determined by your invitation type. Active members have full chapter access.'
-                          : 'Alumni accounts can access the alumni network and connect with other graduates.'}
-                      </p>
+                          {availableRoles.map((userRole) => (
+                            <SelectItem key={userRole.value} value={userRole.value}>
+                              {userRole.label}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                      </div>
+                      {invitationLoading && (
+                        <p className="text-xs text-blue-600 flex items-center">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
+                          Auto-populating from invitation...
+                        </p>
+                      )}
+                      {!invitationLoading && (
+                        <p className="text-xs text-gray-500">
+                          {hasInvitation 
+                            ? 'Your role is determined by your invitation type. Active members have full chapter access.'
+                            : 'Alumni accounts can access the alumni network and connect with other graduates.'}
+                        </p>
+                      )}
                     </div>
 
                     {/* Error Messages - Compact */}
