@@ -1,31 +1,79 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/client';
+import { createServerClient } from '@supabase/ssr';
 import { generateUniqueUsername, generateProfileSlug } from '@/lib/utils/usernameUtils';
+import { validateInvitationToken, recordInvitationUsage } from '@/lib/utils/invitationUtils';
+import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
   const error = requestUrl.searchParams.get('error');
   const errorDescription = requestUrl.searchParams.get('error_description');
+  
+  // Extract invitation token and type from query params
+  const invitationToken = requestUrl.searchParams.get('invitation_token');
+  const invitationType = requestUrl.searchParams.get('invitation_type'); // 'active_member' or 'alumni'
+
+  // Create response for cookie handling
+  const cookieStore = await cookies();
+  let response = NextResponse.next();
+
+  // Create Supabase client with cookie handling (NOT service role)
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          cookieStore.set(name, value, options);
+          response.cookies.set(name, value, options);
+        },
+        remove(name: string, options: any) {
+          cookieStore.delete(name);
+          response.cookies.set(name, '', { ...options, maxAge: 0 });
+        },
+      },
+    }
+  );
 
   // Handle OAuth errors
   if (error) {
     console.error('OAuth error:', error, errorDescription);
+    // Redirect back to invitation page if token exists, otherwise to sign-in (NOT sign-up)
+    if (invitationToken) {
+      const redirectPath = invitationType === 'alumni' 
+        ? `/alumni-join/${invitationToken}` 
+        : `/join/${invitationToken}`;
+      return NextResponse.redirect(
+        `${requestUrl.origin}${redirectPath}?error=${encodeURIComponent(errorDescription || 'Authentication failed')}`
+      );
+    }
     return NextResponse.redirect(
-      `${requestUrl.origin}/sign-up?error=${encodeURIComponent(errorDescription || 'Authentication failed')}`
+      `${requestUrl.origin}/sign-in?error=${encodeURIComponent(errorDescription || 'Authentication failed')}`
     );
   }
 
   // Handle successful OAuth callback
   if (code) {
     try {
-      // Exchange code for session
+      // Exchange code for session - this will set cookies automatically
       const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
       
       if (exchangeError) {
         console.error('Session exchange error:', exchangeError);
+        if (invitationToken) {
+          const redirectPath = invitationType === 'alumni' 
+            ? `/alumni-join/${invitationToken}` 
+            : `/join/${invitationToken}`;
+          return NextResponse.redirect(
+            `${requestUrl.origin}${redirectPath}?error=${encodeURIComponent('Failed to complete authentication')}`
+          );
+        }
         return NextResponse.redirect(
-          `${requestUrl.origin}/sign-up?error=${encodeURIComponent('Failed to complete authentication')}`
+          `${requestUrl.origin}/sign-in?error=${encodeURIComponent('Failed to complete authentication')}`
         );
       }
 
@@ -33,7 +81,180 @@ export async function GET(request: NextRequest) {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        // Check if profile already exists
+        // If invitation token exists, handle invitation flow
+        if (invitationToken) {
+          try {
+            // Use service role client for admin operations (profile creation)
+            const { createServerSupabaseClient } = await import('@/lib/supabase/client');
+            const serverSupabase = createServerSupabaseClient();
+            
+            // Validate invitation token
+            const validation = await validateInvitationToken(invitationToken);
+            
+            if (!validation.valid || !validation.invitation) {
+              console.error('Invalid invitation token:', validation.error);
+              const redirectPath = invitationType === 'alumni' 
+                ? `/alumni-join/${invitationToken}` 
+                : `/join/${invitationToken}`;
+              return NextResponse.redirect(
+                `${requestUrl.origin}${redirectPath}?error=${encodeURIComponent(validation.error || 'Invalid invitation')}`
+              );
+            }
+            
+            const invitation = validation.invitation;
+            
+            // Validate email domain if restricted
+            const { validateEmailDomain, hasEmailUsedInvitation } = await import('@/lib/utils/invitationUtils');
+            if (!validateEmailDomain(user.email || '', invitation.email_domain_allowlist)) {
+              const redirectPath = invitationType === 'alumni' 
+                ? `/alumni-join/${invitationToken}` 
+                : `/join/${invitationToken}`;
+              return NextResponse.redirect(
+                `${requestUrl.origin}${redirectPath}?error=${encodeURIComponent('Email domain is not allowed for this invitation')}`
+              );
+            }
+            
+            // Check if this email has already used this invitation
+            const hasUsed = await hasEmailUsedInvitation(invitation.id, user.email || '');
+            if (hasUsed) {
+              const redirectPath = invitationType === 'alumni' 
+                ? `/alumni-join/${invitationToken}` 
+                : `/join/${invitationToken}`;
+              return NextResponse.redirect(
+                `${requestUrl.origin}${redirectPath}?error=${encodeURIComponent('This email has already been used with this invitation')}`
+              );
+            }
+            
+            // Check if profile already exists using regular client (with RLS)
+            const { data: existingProfile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', user.id)
+              .single();
+
+            // Determine provider
+            const provider = user.app_metadata?.provider || user.user_metadata?.provider || 'unknown';
+            const isLinkedIn = provider === 'linkedin_oidc';
+            
+            // Extract LinkedIn URL if available
+            const linkedinSub = user.user_metadata?.sub;
+            const linkedinUrl = isLinkedIn && linkedinSub 
+              ? `https://www.linkedin.com/in/${linkedinSub}` 
+              : null;
+
+            // Extract names
+            const firstName = user.user_metadata?.given_name || user.user_metadata?.first_name || '';
+            const lastName = user.user_metadata?.family_name || user.user_metadata?.last_name || '';
+            const fullName = user.user_metadata?.full_name || user.user_metadata?.name || `${firstName} ${lastName}`.trim() || 'OAuth User';
+            
+            // Generate username (use server client for admin operations)
+            const username = await generateUniqueUsername(serverSupabase, firstName, lastName, user.id);
+            const profileSlug = generateProfileSlug(username);
+
+            // Determine role based on invitation type
+            const role = invitationType === 'alumni' ? 'alumni' : 'active_member';
+            const memberStatus = invitationType === 'alumni' ? 'alumni' : 'active';
+
+            if (!existingProfile) {
+              // Create profile with invitation association using server client
+              const { error: profileError } = await serverSupabase
+                .from('profiles')
+                .insert({
+                  id: user.id,
+                  email: user.email,
+                  full_name: fullName,
+                  first_name: firstName,
+                  last_name: lastName,
+                  username: username,
+                  profile_slug: profileSlug,
+                  linkedin_url: linkedinUrl,
+                  avatar_url: user.user_metadata?.picture || user.user_metadata?.avatar_url || null,
+                  chapter_id: invitation.chapter_id,
+                  chapter: validation.chapter_name,
+                  role: role,
+                  member_status: memberStatus,
+                  welcome_seen: false,
+                  // Required fields will be filled in completion step
+                  phone: null,
+                  grad_year: null,
+                  major: null,
+                  location: null,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                });
+
+              if (profileError) {
+                console.error('Profile creation error:', profileError);
+                const redirectPath = invitationType === 'alumni' 
+                  ? `/alumni-join/${invitationToken}` 
+                  : `/join/${invitationToken}`;
+                return NextResponse.redirect(
+                  `${requestUrl.origin}${redirectPath}?error=${encodeURIComponent('Failed to create profile')}`
+                );
+              }
+            } else {
+              // Profile exists - update with invitation data if not already associated
+              if (!existingProfile.chapter_id && invitation.chapter_id) {
+                await serverSupabase
+                  .from('profiles')
+                  .update({
+                    chapter_id: invitation.chapter_id,
+                    chapter: validation.chapter_name,
+                    role: role,
+                    member_status: memberStatus,
+                    linkedin_url: linkedinUrl || existingProfile.linkedin_url,
+                    avatar_url: user.user_metadata?.picture || existingProfile.avatar_url,
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('id', user.id);
+              }
+            }
+
+            // Record invitation usage
+            await recordInvitationUsage(invitation.id, user.email || '', user.id);
+
+            // Redirect directly to dashboard - chapter and role are already set from invitation
+            const redirectUrl = `${requestUrl.origin}/dashboard`;
+
+            // Return HTML redirect with proper cookies
+            return new NextResponse(
+              `<!DOCTYPE html>
+              <html>
+                <head>
+                  <meta http-equiv="refresh" content="0;url=${redirectUrl}">
+                  <script>window.location.href="${redirectUrl}";</script>
+                </head>
+                <body>
+                  <p>Redirecting... <a href="${redirectUrl}">Click here if not redirected</a></p>
+                </body>
+              </html>`,
+              {
+                status: 200,
+                headers: {
+                  'Content-Type': 'text/html',
+                  'Cache-Control': 'no-cache, no-store, must-revalidate',
+                  ...response.headers,
+                }
+              }
+            );
+            
+          } catch (invitationError) {
+            console.error('Invitation processing error:', invitationError);
+            const redirectPath = invitationType === 'alumni' 
+              ? `/alumni-join/${invitationToken}` 
+              : `/join/${invitationToken}`;
+            return NextResponse.redirect(
+              `${requestUrl.origin}${redirectPath}?error=${encodeURIComponent('Failed to process invitation')}`
+            );
+          }
+        }
+
+        // No invitation token - handle as regular OAuth signup (existing logic)
+        // Use service role client for admin operations (profile creation)
+        const { createServerSupabaseClient } = await import('@/lib/supabase/client');
+        const serverSupabase = createServerSupabaseClient();
+        
+        // Check if profile already exists using regular client (with RLS)
         const { data: existingProfile } = await supabase
           .from('profiles')
           .select('*')
@@ -65,11 +286,11 @@ export async function GET(request: NextRequest) {
           const lastName = user.user_metadata?.family_name || user.user_metadata?.last_name || '';
           
           // Generate username for OAuth user
-          const username = await generateUniqueUsername(supabase, firstName, lastName, user.id);
+          const username = await generateUniqueUsername(serverSupabase, firstName, lastName, user.id);
           const profileSlug = generateProfileSlug(username);
 
           // Create profile for new OAuth user
-          const { error: profileError } = await supabase
+          const { error: profileError } = await serverSupabase
             .from('profiles')
             .insert({
               id: user.id,
@@ -112,7 +333,7 @@ export async function GET(request: NextRequest) {
             
             if (Object.keys(updateData).length > 0) {
               updateData.updated_at = new Date().toISOString();
-              const { error: updateError } = await supabase
+              const { error: updateError } = await serverSupabase
                 .from('profiles')
                 .update(updateData)
                 .eq('id', user.id);
@@ -137,12 +358,27 @@ export async function GET(request: NextRequest) {
       }
     } catch (error) {
       console.error('Callback processing error:', error);
+      if (invitationToken) {
+        const redirectPath = invitationType === 'alumni' 
+          ? `/alumni-join/${invitationToken}` 
+          : `/join/${invitationToken}`;
+        return NextResponse.redirect(
+          `${requestUrl.origin}${redirectPath}?error=${encodeURIComponent('Authentication processing failed')}`
+        );
+      }
       return NextResponse.redirect(
-        `${requestUrl.origin}/sign-up?error=${encodeURIComponent('Authentication processing failed')}`
+        `${requestUrl.origin}/sign-in?error=${encodeURIComponent('Authentication processing failed')}`
       );
     }
   }
 
-  // Fallback redirect - Fixed URL
-  return NextResponse.redirect(`${requestUrl.origin}/sign-up`);
+  // Fallback redirect - NEVER redirect to sign-up (marketing page)
+  if (invitationToken) {
+    const redirectPath = invitationType === 'alumni' 
+      ? `/alumni-join/${invitationToken}` 
+      : `/join/${invitationToken}`;
+    return NextResponse.redirect(`${requestUrl.origin}${redirectPath}`);
+  }
+  // Redirect to sign-in instead of sign-up to avoid marketing page
+  return NextResponse.redirect(`${requestUrl.origin}/sign-in`);
 } 
