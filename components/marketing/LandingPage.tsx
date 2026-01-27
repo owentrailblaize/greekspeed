@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Users, DollarSign, Shield, Star, Check } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -194,10 +195,90 @@ export function LandingPage() {
             </motion.div>
 
             {/* Trusted By Section - Inside Hero */}
-            <div className="w-full mt-8 md:mt-12">
+            <div className="w-full mt-4 md:mt-6">
               <TrustedBySection />
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Features Section - New */}
+      <section className="pt-0 pb-16 md:pb-24 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          {/* Two Cards with Screenshots */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mb-16 md:mb-24 place-items-center">
+            {/* Card 1: System of Record */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+              className="flex flex-col items-center gap-8 w-full max-w-[363px]"
+            >
+              <div className="w-full rounded-lg shadow-lg overflow-hidden" style={{ width: '363px', height: '413px' }}>
+                <Image 
+                  src="/screenshots/system-of-record.png" 
+                  alt="System of Record Dashboard"
+                  width={363}
+                  height={413}
+                  className="w-full h-full object-cover"
+                  priority
+                />
+              </div>
+              <div className="flex flex-col items-center gap-2 w-full text-center">
+                <h3 className="text-2xl font-semibold text-black text-center w-full font-sans" style={{ fontSize: '24px', lineHeight: '28.80px', fontWeight: 600 }}>
+                  System of Record
+                </h3>
+                <p className="text-xs text-center w-full font-sans" style={{ fontSize: '12px', lineHeight: '17.40px', fontWeight: 500, color: 'rgba(0, 0, 0, 0.55)' }}>
+                  One secure source of truth for members and communication.
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Card 2: Unified Alumni Network */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.1 }}
+              viewport={{ once: true }}
+              className="flex flex-col items-center gap-8 w-full max-w-[363px]"
+            >
+              <div className="w-full rounded-lg shadow-lg overflow-hidden" style={{ width: '363px', height: '413px' }}>
+                <Image 
+                  src="/screenshots/unified-alumni-network.png" 
+                  alt="Unified Alumni Network Dashboard"
+                  width={363}
+                  height={413}
+                  className="w-full h-full object-cover"
+                  priority
+                />
+              </div>
+              <div className="flex flex-col items-center gap-2 w-full text-center">
+                <h3 className="text-2xl font-semibold text-black text-center w-full font-sans" style={{ fontSize: '24px', lineHeight: '28.80px', fontWeight: 600 }}>
+                  Unified Alumni Network
+                </h3>
+                <p className="text-xs text-center w-full font-sans" style={{ fontSize: '12px', lineHeight: '17.40px', fontWeight: 500, color: 'rgba(0, 0, 0, 0.55)' }}>
+                  Profiles, messaging, and networking in one place.
+                </p>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Bottom Headline Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-normal mb-6 instrument-serif-regular text-gray-900">
+              Alumni Relationship Management At Scale
+            </h2>
+            <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed font-sans">
+              Trailblaize turns out-dated spreadsheets and email lists into an interactive community.
+            </p>
+          </motion.div>
         </div>
       </section>
 

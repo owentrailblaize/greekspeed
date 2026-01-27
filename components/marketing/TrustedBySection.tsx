@@ -53,7 +53,7 @@ export const TrustedBySection: React.FC = () => {
   const duplicatedLogos = [...logos, ...logos, ...logos];
 
   return (
-    <div className="relative w-full pt-6 md:pt-8 pb-2 md:pb-4 overflow-hidden">
+    <div className="relative w-full pt-0 pb-2 md:pb-4 overflow-hidden">
       <div className="w-full max-w-6xl mx-auto px-4">
         <div className="text-center mb-6 md:mb-8">
           <motion.p
@@ -70,9 +70,9 @@ export const TrustedBySection: React.FC = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="relative mx-auto max-w-6xl"
+          className="relative mx-auto max-w-6xl overflow-hidden"
         >
-<div className="relative py-6 md:py-8 px-4">
+          <div className="relative py-6 md:py-8 px-4">
             <div className="flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
               <motion.div
                 animate={{
@@ -91,7 +91,7 @@ export const TrustedBySection: React.FC = () => {
                 {duplicatedLogos.map((logo, index) => (
                   <div
                     key={index}
-                    className="flex flex-col items-center justify-center min-w-[120px] md:min-w-[160px] group"
+                    className="flex flex-col items-center justify-center min-w-[120px] md:min-w-[160px] group flex-shrink-0"
                   >
                     <div className="opacity-60 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center h-12 w-12 md:h-16 md:w-16 mb-2">
                       <Image
