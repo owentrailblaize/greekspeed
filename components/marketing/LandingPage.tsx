@@ -105,7 +105,6 @@ const pricingPlans = [
 
 export function LandingPage() {
   const [activeSection, setActiveSection] = useState("home");
-  const [activePricingCard, setActivePricingCard] = useState<number | null>(1); // Start with middle card (index 1)
   const { user } = useAuth();
 
   // Handle hash navigation on page load
@@ -356,39 +355,44 @@ export function LandingPage() {
           </motion.div>
 
           {/* Pricing Cards */}
-          {/* Mobile: Overlapping Cards */}
-          <div className="md:hidden relative h-[500px] mb-8 px-4">
-            {pricingPlans.map((plan, index) => {
-              const isActive = activePricingCard === index;
-              // Calculate z-index: active card on top, others based on distance from middle
-              const zIndex = isActive ? 50 : 40 - Math.abs(index - 1) * 5;
-              // Calculate translateX: offset cards horizontally so edges are visible
-              const translateX = isActive ? 0 : (index - 1) * -20; // Left card goes left, right card goes right
-              // Calculate translateY: active card at top, others slightly offset
-              const translateY = isActive ? 0 : Math.abs(index - 1) * 20;
-              // Scale: active card full size, others slightly smaller
-              const scale = isActive ? 1 : 0.90;
-              
-              return (
+          {/* Mobile: Side-by-side Overlapping Cards */}
+          <div className="md:hidden mb-8 px-4">
+            <div className="flex items-center justify-center relative overflow-visible" style={{ minHeight: '450px' }}>
+              {pricingPlans.map((plan, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: index * 0.1 }}
                   viewport={{ once: true }}
-                  className="absolute inset-x-4"
+                  className="relative flex-shrink-0 group"
                   style={{
-                    zIndex,
-                    transform: `translateX(${translateX}px) translateY(${translateY}px) scale(${scale})`,
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    width: '85%',
+                    marginLeft: index > 0 ? '-15%' : '0',
+                    zIndex: 30,
                   }}
-                  onClick={() => setActivePricingCard(index)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.zIndex = '40';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.zIndex = '30';
+                  }}
+                  onTouchStart={(e) => {
+                    // Bring card to front on touch
+                    e.currentTarget.style.zIndex = '40';
+                  }}
+                  onTouchEnd={(e) => {
+                    // Keep card on top briefly, then reset
+                    setTimeout(() => {
+                      e.currentTarget.style.zIndex = '30';
+                    }, 300);
+                  }}
                 >
-                  <Card className={`h-full bg-white border cursor-pointer ${
+                  <Card className={`h-full bg-white border cursor-pointer transition-all duration-300 ${
                     plan.popular 
                       ? "border-gray-300 shadow-lg" 
                       : "border-gray-200 shadow-sm"
-                  } transition-all duration-300 ${isActive ? 'shadow-xl' : ''}`}>
+                  } group-hover:scale-105 group-hover:shadow-xl`}>
                     <CardContent className="p-4 h-full flex flex-col">
                       {/* Title */}
                       <div className="mb-3">
@@ -443,8 +447,8 @@ export function LandingPage() {
                     </CardContent>
                   </Card>
                 </motion.div>
-              );
-            })}
+              ))}
+            </div>
           </div>
           
           {/* Desktop: Grid Layout (unchanged) */}
