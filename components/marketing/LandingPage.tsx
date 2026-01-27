@@ -195,7 +195,7 @@ export function LandingPage() {
             </motion.div>
 
             {/* Trusted By Section - Inside Hero */}
-            <div className="w-full mt-4 md:mt-6">
+            <div className="w-full mt-2 md:mt-4">
               <TrustedBySection />
             </div>
           </div>
@@ -206,7 +206,7 @@ export function LandingPage() {
       <section className="pt-0 pb-16 md:pb-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           {/* Two Cards with Screenshots */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mb-16 md:mb-24 place-items-center">
+          <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-6 mb-8 md:mb-16">
             {/* Card 1: System of Record */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
