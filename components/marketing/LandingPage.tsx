@@ -333,140 +333,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="pt-4 md:pt-12 pb-8 md:pb-12 bg-gradient-to-tr from-slate-100 to-white">
-        <div className="max-w-7xl mx-auto px-6">
-          {/* Header Section with Title and Graphic */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="mb-6 md:mb-8"
-          >
-            <div className="flex flex-col lg:flex-row items-start justify-between gap-6 lg:items-center">
-              <div className="flex-1">
-                <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 leading-tight">
-                  Built for
-                  <br />
-                  <span className="bg-gradient-to-r from-navy-600 via-blue-600 to-blue-500 bg-clip-text text-transparent">
-                    Greek Life.
-                  </span>
-                </h2>
-                <p className="text-lg text-gray-600 max-w-2xl leading-relaxed">
-                  Unlock the full potential of your chapter with our comprehensive platform. Manage operations, connect alumni, and strengthen your community—all in one place.
-                </p>
-              </div>
-              {/* Graphic on the right */}
-              <div className="hidden lg:block lg:flex-shrink-0">
-                <div className="w-64 h-64 relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <HeroIcon className="w-full h-full opacity-10" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Top Row - Left Narrower, Right Wider */}
-          <div className="grid grid-cols-1 md:grid-cols-[0.45fr_0.55fr] gap-8 mb-8">
-            {features.slice(0, 2).map((feature, index) => {
-              const IconComponent = feature.icon;
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: feature.delay }}
-                  viewport={{ once: true }}
-                  whileHover={{ y: -8, scale: 1.02 }}
-                  className="group"
-                >
-                  <Card className="bg-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 relative overflow-hidden">
-                    {/* Subtle gradient background overlay */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${index % 2 === 0 ? 'from-blue-50/50' : 'from-navy-50/30'} to-transparent pointer-events-none`} />
-                    
-                    <CardContent className="p-6 relative">
-                      {/* Circular button in top-right corner */}
-                      <div className="absolute top-8 right-8">
-                        <button className="w-12 h-12 rounded-full bg-gradient-to-r from-navy-600 to-blue-600 hover:from-navy-500 hover:to-blue-500 flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg z-10">
-                          <ArrowRight className="h-5 w-5 text-white rotate-45" />
-                        </button>
-                      </div>
-
-                      {/* Description text at the TOP */}
-                      <div>
-                        {/* Mobile version - shorter text */}
-                        <p className="text-gray-600 leading-relaxed text-xs md:text-base mb-4 md:mb-6 pr-16 md:pr-20 md:hidden">
-                          {feature.mobileDescription}
-                        </p>
-                        {/* Desktop version - full text */}
-                        <p className="text-gray-600 leading-relaxed text-base mb-6 pr-20 hidden md:block">
-                          {feature.description}
-                        </p>
-                      </div>
-
-                      {/* Large Title at the BOTTOM */}
-                      <h3 className="text-4xl md:text-5xl font-light text-gray-900">
-                        {feature.title}
-                      </h3>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          {/* Bottom Row - Left Wider, Right Narrower */}
-          <div className="grid grid-cols-1 md:grid-cols-[0.55fr_0.45fr] gap-8">
-            {features.slice(2, 4).map((feature, index) => {
-              const IconComponent = feature.icon;
-              return (
-                <motion.div
-                  key={index + 2}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: feature.delay }}
-                  viewport={{ once: true }}
-                  whileHover={{ y: -8, scale: 1.02 }}
-                  className="group"
-                >
-                  <Card className="bg-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 relative overflow-hidden">
-                    {/* Subtle gradient background overlay */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${index % 2 === 0 ? 'from-blue-50/50' : 'from-navy-50/30'} to-transparent pointer-events-none`} />
-                    
-                    <CardContent className="p-6 relative">
-                      {/* Circular button in top-right corner */}
-                      <div className="absolute top-8 right-8">
-                        <button className="w-12 h-12 rounded-full bg-gradient-to-r from-navy-600 to-blue-600 hover:from-navy-500 hover:to-blue-500 flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg z-10">
-                          <ArrowRight className="h-5 w-5 text-white rotate-45" />
-                        </button>
-                      </div>
-
-                      {/* Description text at the TOP */}
-                      <div>
-                        {/* Mobile version - shorter text */}
-                        <p className="text-gray-600 leading-relaxed text-xs md:text-base mb-4 md:mb-6 pr-16 md:pr-20 md:hidden">
-                          {feature.mobileDescription}
-                        </p>
-                        {/* Desktop version - full text */}
-                        <p className="text-gray-600 leading-relaxed text-base mb-6 pr-20 hidden md:block">
-                          {feature.description}
-                        </p>
-                      </div>
-
-                      {/* Large Title at the BOTTOM */}
-                      <h3 className="text-4xl md:text-5xl font-light text-gray-900">
-                        {feature.title}
-                      </h3>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+      
 
       {/* Pricing Section */}
       <section id="pricing" className="py-16 md:py-24 bg-white">
@@ -559,140 +426,44 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* About Section */}
-      <section id="about" className="relative py-14 overflow-hidden">
-        {/* Background similar to hero */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white to-navy-50/30"></div>
-        
-        {/* Decorative background elements */}
-        <div className="absolute top-20 left-10 w-32 h-32 bg-blue-200/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-10 w-40 h-40 bg-navy-200/20 rounded-full blur-3xl"></div>
-        
-        <div className="max-w-7xl mx-auto px-6 relative">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="text-center mb-14"
-          >
-            <div className="inline-block mb-4">
-              <span className="text-sm font-medium text-gray-500 tracking-wide">ESTABLISHED 2025</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium text-gray-900 mb-6">
-              About Trailblaize
-            </h2>
-            <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
-              Built by Greek life alumni who understand the unique challenges of chapter management. We're passionate about helping organizations thrive through better technology.
-            </p>
-          </motion.div>
-
-          {/* Statistics Row */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            viewport={{ once: true }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-14"
-          >
-            <div className="text-center md:text-left">
-              <div className="text-5xl md:text-6xl font-light text-gray-900 mb-2">2025</div>
-              <div className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Year Founded</div>
-              <div className="text-sm text-gray-600">Fresh and innovative</div>
-            </div>
-            <div className="text-center md:text-left">
-              <div className="text-5xl md:text-6xl font-light text-gray-900 mb-2">3+</div>
-              <div className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Active Chapters</div>
-              <div className="text-sm text-gray-600">Growing rapidly</div>
-            </div>
-            <div className="text-center md:text-left">
-              <div className="text-5xl md:text-6xl font-light text-gray-900 mb-2">5,000+</div>
-              <div className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Alumni Network</div>
-              <div className="text-sm text-gray-600">Strong connections</div>
-            </div>
-            <div className="text-center md:text-left">
-              <div className="text-5xl md:text-6xl font-light text-gray-900 mb-2">24/7</div>
-              <div className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Support</div>
-              <div className="text-sm text-gray-600">Always available</div>
-            </div>
-          </motion.div>
-
-          {/* Mission Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-            {/* Mission Content */}
-            <motion.div 
-              initial={{ opacity: 0, x: -30 }} 
-              whileInView={{ opacity: 1, x: 0 }} 
-              transition={{ duration: 0.8 }} 
-              viewport={{ once: true }}
-              className="md:col-span-2"
-            >
-              <div className="mb-6">
-                <h3 className="text-3xl font-bold text-gray-900 mb-4">Our Mission</h3>
-                <p className="text-lg text-gray-600 leading-relaxed">
-                  To modernize Greek life operations by providing intuitive, powerful tools that strengthen alumni connections, streamline financial management, and empower chapter leadership.
-                </p>
-              </div>
-              
-              <div className="mt-8 flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <span>Available Now</span>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
-      <section className="py-10 bg-white">
+      <section className="py-16 md:py-24 bg-white">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }}>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Ready to Transform Your Chapter?</h2>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">Join hundreds of chapters already using Trailblaize to strengthen their communities and streamline operations.</p>
-            <div className="flex flex-row items-center justify-center gap-4">
-              <Link href="/sign-up">
-                <Button 
-                  size="lg" 
-                  className="
-                    bg-navy-600 hover:bg-navy-700 
-                    text-white 
-                    px-4 py-2 md:px-8 md:py-4 
-                    text-sm md:text-lg 
-                    rounded-full
-                    font-medium
-                    shadow-sm hover:shadow-md
-                    transition-all duration-200
-                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300
-                    group
-                    whitespace-nowrap
-                  "
-                >
-                  Start Today
-                  <ArrowRight className="ml-1.5 md:ml-2 h-4 w-4 md:h-5 md:w-5 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="
-                  border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900
-                  px-4 py-2 md:px-8 md:py-4 
-                  text-sm md:text-lg
-                  rounded-full
-                  font-medium
-                  shadow-sm hover:shadow-md
-                  transition-all duration-200
-                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300
-                  whitespace-nowrap
-                "
-                onClick={() => window.open('mailto:support@trailblaize.com?subject=Schedule a Demo')}
-              >
-                Schedule Demo
-              </Button>
-            </div>
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }} 
+            whileInView={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.8 }} 
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-normal mb-6 instrument-serif-regular text-gray-900">
+              Ready To Join The Network?
+            </h2>
+            <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed font-sans">
+              Build your alumni community, connect across generations, and start creating real opportunities.
+            </p>
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="
+                border-2 border-slate-200 
+                bg-white 
+                text-slate-950 
+                hover:bg-slate-50 
+                hover:border-slate-700
+                hover:text-slate-700
+                px-24 py-3 
+                text-base md:text-lg
+                rounded-xl
+                font-medium
+                font-sans
+                shadow-sm hover:shadow-md
+                transition-all duration-200
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500
+              "
+              onClick={() => window.open('mailto:support@trailblaize.com?subject=Book a Demo', '_blank')}
+            >
+              Book a Demo
+            </Button>
           </motion.div>
         </div>
       </section>
