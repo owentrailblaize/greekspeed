@@ -78,7 +78,7 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
           <Card>
             <CardContent className="p-6">
               <div className="flex flex-col items-center space-y-4">
-                <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                <Loader2 className="h-6 w-6 animate-spin text-brand-accent" />
                 <div className="text-center">
                   <h3 className="text-sm font-medium text-gray-900">Loading Statistics</h3>
                   <p className="text-xs text-gray-600">Fetching invitation data...</p>
@@ -90,7 +90,7 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center space-x-2 text-base">
-                <Info className="h-4 w-4 text-blue-600" />
+                <Info className="h-4 w-4 text-brand-accent" />
                 <span>Invitation Statistics</span>
               </CardTitle>
             </CardHeader>
@@ -122,7 +122,7 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center space-x-2 text-base">
-                <Info className="h-4 w-4 text-blue-600" />
+                <Info className="h-4 w-4 text-brand-accent" />
                 <span>How Invitations Work</span>
               </CardTitle>
             </CardHeader>
@@ -196,8 +196,8 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
                   <li>Member is assigned to the chapter with appropriate role and status</li>
                 </ol>
               </div>
-              <div className="bg-blue-50 p-2 md:p-3 rounded-lg">
-                <p className="text-xs md:text-sm text-blue-800">
+              <div className="bg-accent-50 p-2 md:p-3 rounded-lg">
+                <p className="text-xs md:text-sm text-accent-800">
                   <strong>Key Point:</strong> One invitation link can be used by multiple people with different email addresses, but each email can only use each invitation once.
                 </p>
               </div>
@@ -210,7 +210,7 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
       <div className="flex-shrink-0 border-t bg-white p-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
         <Button 
           onClick={onClose} 
-          className="w-full rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-12 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Close
         </Button>

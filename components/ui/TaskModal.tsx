@@ -170,7 +170,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
             </h3>
             <button
               onClick={onClose}
-              className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 p-1"
+              className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 p-1"
             >
               <X className="h-5 w-5" />
             </button>
@@ -195,7 +195,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
                 value={newTask.title}
                 onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
                 placeholder="Enter task title"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 text-sm h-9"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary text-sm h-9"
               />
             </div>
             
@@ -210,7 +210,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
                 onChange={(e) => setNewTask(prev => ({ ...prev, description: e.target.value }))}
                 placeholder="Enter task description"
                 rows={3}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 text-sm min-h-[60px] max-h-[120px] resize-y"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary text-sm min-h-[60px] max-h-[120px] resize-y"
               />
             </div>
             
@@ -227,7 +227,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-1">
-                        <Users className="h-3 w-3 text-navy-600" />
+                        <Users className="h-3 w-3 text-brand-primary" />
                         <span className="text-xs font-medium text-gray-700">Executive</span>
                         <span className="text-xs text-gray-500">({executiveMembers.length})</span>
                       </div>
@@ -272,7 +272,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-1">
-                        <UserCheck className="h-3 w-3 text-blue-600" />
+                        <UserCheck className="h-3 w-3 text-brand-accent" />
                         <span className="text-xs font-medium text-gray-700">Active</span>
                         <span className="text-xs text-gray-500">({activeMembers.length})</span>
                       </div>
@@ -326,7 +326,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
                   type="date"
                   value={newTask.due_date}
                   onChange={(e) => setNewTask(prev => ({ ...prev, due_date: e.target.value }))}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 text-sm h-9"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary text-sm h-9"
                 />
               </div>
               
@@ -362,7 +362,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
               variant="outline"
               onClick={onClose}
               disabled={creating}
-              className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 h-8"
+              className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 h-8"
             >
               Cancel
             </Button>
@@ -370,7 +370,7 @@ export function TaskModal({ isOpen, onClose, onSubmit, chapterMembers, creating 
               type="button"
               onClick={handleSubmit}
               disabled={creating || !newTask.title || (Array.isArray(newTask.assignee_id) && newTask.assignee_id.length === 0)}
-              className="inline-flex justify-center rounded-md border border-transparent bg-navy-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 h-8"
+              className="inline-flex justify-center rounded-md border border-transparent bg-brand-primary px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-primary-hover focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 h-8"
             >
               {creating ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
               {Array.isArray(newTask.assignee_id) && newTask.assignee_id.length > 1 

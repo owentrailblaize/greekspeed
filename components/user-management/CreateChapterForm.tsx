@@ -126,7 +126,7 @@ export function CreateChapterForm({ onClose, onSuccess }: CreateChapterFormProps
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center space-x-2">
-              <Building2 className="h-5 w-5 text-blue-600" />
+              <Building2 className="h-5 w-5 text-brand-accent" />
               <span>Create New Chapter</span>
             </CardTitle>
             <Button

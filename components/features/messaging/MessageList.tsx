@@ -92,7 +92,7 @@ export function MessageList({
         className={`${standalone ? '' : 'mt-2'} p-3 rounded-lg border cursor-pointer transition-colors ${
           isOwnMessage 
             ? standalone 
-              ? 'bg-blue-50 border-blue-200 hover:bg-blue-100' // More visible when standalone
+              ? 'bg-accent-50 border-accent-200 hover:bg-accent-100' // More visible when standalone
               : 'bg-white/10 border-white/20 hover:bg-white/20' // Original transparent for inside bubble
             : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
         }`}
@@ -102,7 +102,7 @@ export function MessageList({
           {profileMetadata.shared_profile_avatar ? (
             <div className={`w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 ${
               isOwnMessage && standalone 
-                ? 'border-blue-200' 
+                ? 'border-accent-200' 
                 : 'border-white/20'
             }`}>
               <ImageWithFallback
@@ -221,7 +221,7 @@ export function MessageList({
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600 mx-auto mb-2"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary mx-auto mb-2"></div>
           <p className="text-gray-500">Loading messages...</p>
         </div>
       </div>
@@ -254,10 +254,10 @@ export function MessageList({
             disabled={loading}
             variant="outline"
             size="sm"
-            className="text-navy-600 border-navy-200 hover:bg-navy-50"
+            className="text-brand-primary border-primary-200 hover:bg-primary-50"
           >
             {loading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b border-navy-600 mr-2" />
+              <div className="animate-spin rounded-full h-4 w-4 border-b border-brand-primary mr-2" />
             ) : (
               'Load more messages'
             )}
@@ -321,7 +321,7 @@ export function MessageList({
                       {/* Message bubble */}
                       <div className="relative group min-w-0 max-w-full">
                         {isEditing ? (
-                          <div className="bg-white border border-navy-200 rounded-lg p-3 shadow-sm">
+                          <div className="bg-white border border-primary-200 rounded-lg p-3 shadow-sm">
                             <textarea
                               value={editContent}
                               onChange={(e) => setEditContent(e.target.value)}
@@ -342,7 +342,7 @@ export function MessageList({
                               <Button
                                 size="sm"
                                 onClick={handleSaveEdit}
-                                className="h-6 px-2 text-xs bg-navy-600 hover:bg-navy-700"
+                                className="h-6 px-2 text-xs bg-brand-primary hover:bg-brand-primary-hover"
                               >
                                 <Check className="w-3 h-3 mr-1" />
                                 Save
@@ -413,7 +413,7 @@ export function MessageList({
                       {/* Message bubble */}
                       <div className="relative group">
                         {isEditing ? (
-                          <div className="bg-white border border-navy-200 rounded-lg p-3 shadow-sm">
+                          <div className="bg-white border border-primary-200 rounded-lg p-3 shadow-sm">
                             <textarea
                               value={editContent}
                               onChange={(e) => setEditContent(e.target.value)}
@@ -434,7 +434,7 @@ export function MessageList({
                               <Button
                                 size="sm"
                                 onClick={handleSaveEdit}
-                                className="h-6 px-2 text-xs bg-navy-600 hover:bg-navy-700"
+                                className="h-6 px-2 text-xs bg-brand-primary hover:bg-brand-primary-hover"
                               >
                                 <Check className="w-3 h-3 mr-1" />
                                 Save
@@ -488,7 +488,7 @@ export function MessageList({
                                     {/* Case 2: Has text - show text in bubble */}
                                     {hasText && (
                                       <div className="relative group min-w-0 max-w-full">
-                                        <div className="bg-navy-600 text-white px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
+                                        <div className="bg-brand-primary text-white px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
                                           <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
                                             {text}
                                           </p>
@@ -534,7 +534,7 @@ export function MessageList({
                                     {/* Case 4: Regular message (not profile) */}
                                     {!isProfileMessage && message.content && (
                                       <div className="relative group min-w-0 max-w-full">
-                                        <div className="bg-navy-600 text-white px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
+                                        <div className="bg-brand-primary text-white px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
                                           <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
                                             {message.content}
                                           </p>

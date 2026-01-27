@@ -229,7 +229,7 @@ export default function ChapterBrandingPage() {
               <div>
                 <div className="flex items-center space-x-2">
                   <Palette className="h-6 w-6 text-brand-primary" />
-                  <h1 className="text-3xl font-bold text-navy-900">Chapter Branding</h1>
+                  <h1 className="text-3xl font-bold text-primary-900">Chapter Branding</h1>
                 </div>
                 {chapterInfo && (
                   <p className="text-gray-600 mt-1">

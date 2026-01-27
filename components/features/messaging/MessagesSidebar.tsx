@@ -222,7 +222,7 @@ export function MessagesSidebar({
         </div>
         <div className="flex-1 flex items-center justify-center min-h-0">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-navy-600 mx-auto mb-2"></div>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary mx-auto mb-2"></div>
             <p className="text-gray-500">Loading user...</p>
           </div>
         </div>
@@ -237,7 +237,7 @@ export function MessagesSidebar({
         <div className="flex-shrink-0 bg-white border-b border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <MessageSquare className="h-5 w-5 text-navy-600 flex-shrink-0" />
+              <MessageSquare className="h-5 w-5 text-brand-primary flex-shrink-0" />
               {!sidebarCollapsed && (
                 <motion.h2 
                   initial={{ opacity: 0 }}
@@ -292,7 +292,7 @@ export function MessagesSidebar({
                 placeholder="Search connections..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-navy-300"
+                className="pl-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-primary-300"
               />
             </motion.div>
           )}
@@ -308,7 +308,7 @@ export function MessagesSidebar({
               placeholder="Search connections..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-navy-300"
+              className="pl-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-primary-300"
             />
           </div>
         </div>
@@ -319,10 +319,10 @@ export function MessagesSidebar({
         {loading ? (
           <div className="flex items-center justify-center py-8">
             {sidebarCollapsed ? (
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-navy-600"></div>
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary"></div>
             ) : (
               <>
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-navy-600"></div>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary"></div>
                 <span className="ml-2 text-gray-500">Loading...</span>
               </>
             )}
@@ -364,7 +364,7 @@ export function MessagesSidebar({
                   <div
                     key={connection.id}
                     className={`flex justify-center py-2 cursor-pointer transition-colors ${
-                      isSelected ? 'bg-navy-50' : 'hover:bg-gray-100'
+                      isSelected ? 'bg-primary-50' : 'hover:bg-gray-100'
                     }`}
                     onClick={() => onConnectionSelect(connection.id)}
                     title={otherUser.full_name}
@@ -396,7 +396,7 @@ export function MessagesSidebar({
                       )}
                       {/* Unread dot indicator */}
                       {hasUnread && (
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-navy-600 rounded-full border-2 border-white"></div>
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-brand-primary rounded-full border-2 border-white"></div>
                       )}
                     </div>
                   </div>
@@ -409,9 +409,9 @@ export function MessagesSidebar({
                   key={connection.id}
                   className={`px-4 py-3 cursor-pointer transition-colors ${
                     isSelected 
-                      ? 'bg-navy-50 border-r-2 border-navy-600' 
+                      ? 'bg-primary-50 border-r-2 border-brand-primary' 
                       : 'hover:bg-gray-100'
-                  } ${hasUnread && !isSelected ? 'bg-blue-50/50' : ''}`}
+                  } ${hasUnread && !isSelected ? 'bg-accent-50/50' : ''}`}
                   onClick={() => onConnectionSelect(connection.id)}
                 >
                   <div className="flex items-center space-x-3">
@@ -443,7 +443,7 @@ export function MessagesSidebar({
                       )}
                       {/* Unread dot indicator */}
                       {hasUnread && (
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-navy-600 rounded-full border-2 border-white"></div>
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-brand-primary rounded-full border-2 border-white"></div>
                       )}
                     </div>
                     
@@ -456,27 +456,27 @@ export function MessagesSidebar({
                               userId={otherUser.id}
                               fullName={otherUser.full_name}
                               className={`font-medium truncate ${
-                                isSelected ? 'text-navy-900' : 'text-gray-900'
+                                isSelected ? 'text-primary-900' : 'text-gray-900'
                               } ${hasUnread ? 'font-semibold' : ''}`}
                               onClick={(e) => e.stopPropagation()}
                             />
                           ) : (
                             <h3 className={`font-medium truncate ${
-                              isSelected ? 'text-navy-900' : 'text-gray-900'
+                              isSelected ? 'text-primary-900' : 'text-gray-900'
                             } ${hasUnread ? 'font-semibold' : ''}`}>
                               {otherUser.full_name}
                             </h3>
                           )}
                           {/* Unread count badge */}
                           {hasUnread && unreadCount > 0 && (
-                            <span className="flex-shrink-0 bg-navy-600 text-white text-xs font-semibold rounded-full px-2 py-0.5 min-w-[20px] text-center">
+                            <span className="flex-shrink-0 bg-brand-primary text-white text-xs font-semibold rounded-full px-2 py-0.5 min-w-[20px] text-center">
                               {unreadCount > 99 ? '99+' : unreadCount}
                             </span>
                           )}
                         </div>
                         {lastActivity && (
                           <span className={`text-xs flex-shrink-0 ml-2 ${
-                            hasUnread ? 'text-navy-600 font-medium' : 'text-gray-400'
+                            hasUnread ? 'text-brand-primary font-medium' : 'text-gray-400'
                           }`}>
                             {formatDistanceToNow(new Date(lastActivity), { addSuffix: true })}
                           </span>

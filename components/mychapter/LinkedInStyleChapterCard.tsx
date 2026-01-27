@@ -116,11 +116,11 @@ export function LinkedInStyleChapterCard({ member, onClick }: LinkedInStyleChapt
           <Button
             onClick={(e) => handleConnectionAction('connect', e)}
             disabled={isLoading}
-            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
+            className="w-full border border-brand-primary text-brand-primary bg-white hover:bg-primary-50 transition-colors duration-200 rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
             variant="outline"
           >
             {isLoading ? (
-              <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b border-navy-600 mr-1 sm:mr-2" />
+              <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b border-brand-primary mr-1 sm:mr-2" />
             ) : (
               <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             )}
@@ -184,7 +184,7 @@ export function LinkedInStyleChapterCard({ member, onClick }: LinkedInStyleChapt
         return (
           <Button
             onClick={(e) => handleConnectionAction('connect', e)}
-            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
+            className="w-full border border-brand-primary text-brand-primary bg-white hover:bg-primary-50 transition-colors duration-200 rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
             variant="outline"
           >
             <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
@@ -245,7 +245,7 @@ export function LinkedInStyleChapterCard({ member, onClick }: LinkedInStyleChapt
                     className="w-full h-full object-cover" 
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
+                  <div className="w-full h-full bg-gradient-to-br from-brand-primary to-brand-primary flex items-center justify-center">
                     <span className="text-white font-medium text-lg">
                       {name
                         ?.split(" ")
@@ -289,7 +289,7 @@ export function LinkedInStyleChapterCard({ member, onClick }: LinkedInStyleChapt
             {/* Desktop: Position and Year on same row */}
             <div className="hidden sm:flex items-center justify-center gap-2">
               {hasPosition && (
-                <p className="text-xs font-medium text-navy-600 leading-tight truncate">{position}</p>
+                <p className="text-xs font-medium text-brand-primary leading-tight truncate">{position}</p>
               )}
               {hasPosition && hasYear && (
                 <span className="text-gray-300">•</span>
@@ -307,7 +307,7 @@ export function LinkedInStyleChapterCard({ member, onClick }: LinkedInStyleChapt
             {/* Mobile: Show position if available, or "Chapter Member" placeholder */}
             <div className="sm:hidden">
               {hasPosition ? (
-                <p className="text-xs font-medium text-navy-600 leading-tight truncate">{position}</p>
+                <p className="text-xs font-medium text-brand-primary leading-tight truncate">{position}</p>
               ) : (
                 <Badge 
                   variant="secondary" 
@@ -337,7 +337,7 @@ export function LinkedInStyleChapterCard({ member, onClick }: LinkedInStyleChapt
               {hasMajor && (
                 <Badge 
                   variant="secondary" 
-                  className="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 px-2 py-0.5"
+                  className="text-xs bg-accent-50 text-accent-700 hover:bg-accent-100 px-2 py-0.5"
                 >
                   {major}
                 </Badge>

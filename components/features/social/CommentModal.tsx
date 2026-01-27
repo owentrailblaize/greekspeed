@@ -366,7 +366,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                     setReplyingToCommentId(comment.id);
                     setReplyContent(prev => ({ ...prev, [comment.id]: '' }));
                   }}
-                  className="text-xs sm:text-sm h-8 rounded-full px-4 bg-blue-50/80 text-blue-500 border border-transparent hover:bg-blue-100 shadow-sm transition"
+                  className="text-xs sm:text-sm h-8 rounded-full px-4 bg-accent-50/80 text-accent-500 border border-transparent hover:bg-accent-100 shadow-sm transition"
                 >
                   <Reply className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   Reply
@@ -377,7 +377,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
               {depth === 0 && hasReplies && (
                 <button
                   onClick={() => toggleReplies(comment.id)}
-                  className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 px-2 py-1 rounded-md hover:bg-blue-50/50 transition-colors"
+                  className="text-xs text-brand-accent hover:text-accent-700 font-medium flex items-center gap-1 px-2 py-1 rounded-md hover:bg-accent-50/50 transition-colors"
                   aria-label={isCollapsed ? `Show ${totalReplyCount} replies` : `Hide replies`}
                 >
                   {isCollapsed ? (
@@ -411,12 +411,12 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
             {isReplying && (
               <div className="mt-3 pt-3 border-t border-slate-100">
                 <div className="mb-2">
-                  <p className="text-xs text-blue-600 font-medium">
+                  <p className="text-xs text-brand-accent font-medium">
                     Replying to {comment.author?.full_name || 'this comment'}
                   </p>
                 </div>
                 <div className="flex items-end gap-3">
-                  <div className="w-8 h-8 bg-navy-100/70 rounded-full flex items-center justify-center text-navy-700 text-xs font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+                  <div className="w-8 h-8 bg-primary-100/70 rounded-full flex items-center justify-center text-brand-primary-hover text-xs font-semibold shrink-0 overflow-hidden ring-2 ring-white">
                     {profile?.avatar_url ? (
                       <Image
                         src={profile.avatar_url}
@@ -441,7 +441,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                           handleSubmitReply(comment.id);
                         }
                       }}
-                      className="min-h-[40px] max-h-[100px] resize-none rounded-xl border border-transparent bg-white/80 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-navy-300 focus:bg-white focus:ring-2 focus:ring-navy-200 transition"
+                      className="min-h-[40px] max-h-[100px] resize-none rounded-xl border border-transparent bg-white/80 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-primary-300 focus:bg-white focus:ring-2 focus:ring-primary-200 transition"
                       rows={1}
                     />
                   </div>
@@ -479,7 +479,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                 {hiddenRepliesCount > 0 && (
                   <button
                     onClick={() => expandReplies(comment.id)}
-                    className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 px-3 py-2 rounded-md hover:bg-blue-50/50 transition-colors ml-8 sm:ml-12"
+                    className="text-xs text-brand-accent hover:text-accent-700 font-medium flex items-center gap-1 px-3 py-2 rounded-md hover:bg-accent-50/50 transition-colors ml-8 sm:ml-12"
                     aria-label={`Show ${hiddenRepliesCount} more replies`}
                   >
                     <ChevronDown className="h-3 w-3" />
@@ -494,7 +494,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
               <div className="mt-2 ml-0">
                 <button
                   onClick={() => toggleReplies(comment.id)}
-                  className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 px-3 py-2 rounded-md hover:bg-blue-50/50 transition-colors"
+                  className="text-xs text-brand-accent hover:text-accent-700 font-medium flex items-center gap-1 px-3 py-2 rounded-md hover:bg-accent-50/50 transition-colors"
                 >
                   <ChevronDown className="h-3 w-3" />
                   Show {totalReplyCount} {totalReplyCount === 1 ? 'reply' : 'replies'}
@@ -639,7 +639,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                   className="w-12 h-12 sm:w-12 sm:h-12 ring-2 ring-white"
                 />
               ) : (
-                <div className="w-12 h-12 sm:w-12 sm:h-12 bg-navy-100/70 rounded-full flex items-center justify-center text-navy-700 text-base font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+                <div className="w-12 h-12 sm:w-12 sm:h-12 bg-primary-100/70 rounded-full flex items-center justify-center text-brand-primary-hover text-base font-semibold shrink-0 overflow-hidden ring-2 ring-white">
                   {post.author?.first_name?.charAt(0) || 'U'}
                 </div>
               )}
@@ -737,7 +737,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-9 rounded-full px-4 bg-blue-50/80 text-blue-500 border border-transparent hover:bg-blue-100 shadow-sm transition"
+                    className="h-9 rounded-full px-4 bg-accent-50/80 text-accent-500 border border-transparent hover:bg-accent-100 shadow-sm transition"
                   >
                     <MessageCircle className={`h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2`} />
                     <span className="text-xs sm:text-sm">{post.comments_count}</span>
@@ -751,7 +751,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
           {loading ? (
             <div className="px-6 py-12 text-center bg-white/60">
               <div className="flex flex-col items-center justify-center space-y-3">
-                <div className="w-10 h-10 border-2 border-navy-600 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-10 h-10 border-2 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
                 <p className="text-slate-500 text-sm sm:text-base font-medium">Loading comments...</p>
               </div>
             </div>
@@ -800,7 +800,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
           isMobile ? "px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))]" : "px-6 py-4"
         )}>
           <div className="flex items-end gap-4">
-            <div className="w-10 h-10 sm:w-10 sm:h-10 bg-navy-100/70 rounded-full flex items-center justify-center text-navy-700 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+            <div className="w-10 h-10 sm:w-10 sm:h-10 bg-primary-100/70 rounded-full flex items-center justify-center text-brand-primary-hover text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
               {profile?.avatar_url ? (
                 <Image
                   src={profile.avatar_url}
@@ -822,7 +822,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="min-h-[48px] sm:min-h-[52px] max-h-[140px] resize-none rounded-2xl border border-transparent bg-white/80 px-4 py-3 text-sm sm:text-base text-slate-800 placeholder:text-slate-400 focus:border-navy-300 focus:bg-white focus:ring-2 focus:ring-navy-200 transition"
+                className="min-h-[48px] sm:min-h-[52px] max-h-[140px] resize-none rounded-2xl border border-transparent bg-white/80 px-4 py-3 text-sm sm:text-base text-slate-800 placeholder:text-slate-400 focus:border-primary-300 focus:bg-white focus:ring-2 focus:ring-primary-200 transition"
                 rows={1}
               />
             </div>

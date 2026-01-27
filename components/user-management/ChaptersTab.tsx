@@ -273,7 +273,7 @@ export function ChaptersTab() {
                             variant="outline" 
                             size="sm"
                             onClick={() => handleViewChapter(chapter)}
-                            className="hover:bg-blue-50 hover:text-blue-600"
+                            className="hover:bg-accent-50 hover:text-brand-accent"
                             title="View Chapter"
                           >
                             <Eye className="h-4 w-4" />
@@ -283,7 +283,7 @@ export function ChaptersTab() {
                             variant="outline" 
                             size="sm"
                             onClick={() => handleEditChapter(chapter)}
-                            className="hover:bg-blue-50 hover:text-blue-600"
+                            className="hover:bg-accent-50 hover:text-brand-accent"
                             title="Edit Chapter"
                           >
                             <Edit className="h-4 w-4" />

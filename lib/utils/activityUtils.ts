@@ -49,7 +49,7 @@ export function getActivityStatus(lastActiveAt?: string | null): ActivityInfo {
   } else if (diffHours < 24) {
     return { 
       status: 'warm', 
-      color: 'bg-blue-500', 
+      color: 'bg-accent-500', 
       text: 'Recently Active', 
       timeAgo: 'Recently Active',
       isOnline: false
@@ -71,7 +71,7 @@ export function getActivityStatus(lastActiveAt?: string | null): ActivityInfo {
 export function getActivityBgColor(status: ActivityStatus): string {
   const colors = {
     hot: 'bg-green-500',
-    warm: 'bg-blue-500',
+    warm: 'bg-accent-500',
     cold: 'bg-gray-400'
   }
   return colors[status]
@@ -83,7 +83,7 @@ export function getActivityBgColor(status: ActivityStatus): string {
 export function getActivityColor(status: ActivityStatus): string {
   const colors = {
     hot: 'text-green-600',
-    warm: 'text-blue-600',
+    warm: 'text-brand-accent',
     cold: 'text-gray-500'
   }
   return colors[status]

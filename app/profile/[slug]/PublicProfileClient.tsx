@@ -188,7 +188,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
           
           <div className="flex items-center justify-center h-screen">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600 mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary mx-auto mb-4"></div>
               <p className="text-gray-600">Loading profile...</p>
             </div>
           </div>
@@ -197,9 +197,9 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
           {isLoggedIn && <MobileBottomNavigation />}
         </div>
         {/* Desktop Loading */}
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 hidden sm:flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-accent-50/20 hidden sm:flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
             <p className="text-gray-600 text-lg">Loading profile...</p>
           </div>
         </div>
@@ -231,7 +231,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
         {/* Header with Back and Share buttons */}
         <div className="relative">
           {profile.banner_url ? (
-            <div className={`bg-gradient-to-r from-navy-100 via-blue-100 to-blue-50 relative ${!isLoggedIn ? 'h-40' : 'h-32'}`}>
+            <div className={`bg-gradient-to-r from-primary-100 via-accent-100 to-accent-50 relative ${!isLoggedIn ? 'h-40' : 'h-32'}`}>
               <img
                 src={profile.banner_url}
                 alt={`${profile.full_name}'s banner`}
@@ -239,7 +239,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
               />
             </div>
           ) : (
-            <div className={`bg-gradient-to-r from-navy-100 via-blue-100 to-blue-50 relative ${!isLoggedIn ? 'h-40' : 'h-32'}`} />
+            <div className={`bg-gradient-to-r from-primary-100 via-accent-100 to-accent-50 relative ${!isLoggedIn ? 'h-40' : 'h-32'}`} />
           )}
           
           {/* Back Button */}
@@ -283,14 +283,14 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
 
         {/* Sign-up CTA for non-logged-in users */}
         {!isLoggedIn && (
-          <div className="px-4 py-3 bg-blue-50 border-b border-blue-100">
+          <div className="px-4 py-3 bg-accent-50 border-b border-accent-100">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-900">Join Trailblaize to connect</p>
                 <p className="text-xs text-gray-600 mt-0.5">View full profiles and message members</p>
               </div>
               <Link href="/sign-up">
-                <Button size="sm" className="hover:bg-navy-700 text-white rounded-full"
+                <Button size="sm" className="hover:bg-brand-primary-hover text-white rounded-full"
                 style={{
                   background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%)'
                 }}
@@ -356,8 +356,8 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
               <div className="max-w-7xl mx-auto px-8 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                      <Lock className="h-5 w-5 text-blue-600" />
+                    <div className="w-10 h-10 rounded-full bg-accent-100 flex items-center justify-center flex-shrink-0">
+                      <Lock className="h-5 w-5 text-brand-accent" />
                     </div>
                     <div>
                       <h3 className="text-base font-semibold text-gray-900">
@@ -375,7 +375,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                       </Button>
                     </Link>
                     <Link href="/sign-up">
-                      <Button className="bg-navy-600 hover:bg-navy-700 text-white px-6 rounded-full">
+                      <Button className="bg-brand-primary hover:bg-brand-primary-hover text-white px-6 rounded-full">
                         Join Trailblaize
                       </Button>
                     </Link>
@@ -407,7 +407,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                 className="object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-blue-600 via-blue-500 to-navy-600" />
+              <div className="w-full h-full bg-gradient-to-br from-brand-accent via-accent-500 to-brand-primary" />
             )}
 
             {/* Back Button - Desktop */}
@@ -444,7 +444,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
+                <div className="w-full h-full bg-gradient-to-br from-brand-primary to-brand-primary flex items-center justify-center">
                   <span className="text-white font-bold text-2xl md:text-3xl">
                     {profile.first_name?.[0] || ''}{profile.last_name?.[0] || ''}
                   </span>
@@ -465,7 +465,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                 </h1>
                 {/* Mutual Connections Count - Only for authenticated users viewing someone else's profile */}
                 {isLoggedIn && !isOwnProfile && mutualCount > 0 && (
-                  <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full border border-blue-200">
+                  <div className="flex items-center gap-2 px-3 py-1 bg-accent-50 rounded-full border border-accent-200">
                     <div className="flex -space-x-1">
                       {mutualConnections.slice(0, 3).map((conn, i) => (
                         <div
@@ -511,7 +511,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                   {shouldTruncateBio && (
                     <Link 
                       href="/sign-in"
-                      className="text-sm text-navy-600 hover:text-navy-700 font-medium mt-2 inline-block"
+                      className="text-sm text-brand-primary hover:text-brand-primary-hover font-medium mt-2 inline-block"
                     >
                       Sign in to see more
                     </Link>
@@ -543,11 +543,11 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                   <Button
                     onClick={() => handleConnectionAction('connect')}
                     disabled={connectionLoading}
-                    className="border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium px-6"
+                    className="border border-brand-primary text-brand-primary bg-white hover:bg-primary-50 transition-colors duration-200 rounded-full font-medium px-6"
                     variant="outline"
                   >
                     {connectionLoading ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b border-navy-600 mr-2" />
+                      <div className="animate-spin rounded-full h-4 w-4 border-b border-brand-primary mr-2" />
                     ) : (
                       <UserPlus className="h-4 w-4 mr-2" />
                     )}
@@ -622,7 +622,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
 
         {/* Sign-up CTA - Below Profile Info */}
         {!isLoggedIn && (
-          <div className="bg-gradient-to-r from-blue-50 to-navy-50 border-y border-blue-100">
+          <div className="bg-gradient-to-r from-accent-50 to-primary-50 border-y border-accent-100">
             <div className="max-w-7xl mx-auto px-8 md:px-16 py-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -669,7 +669,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                   onClick={() => setActiveTab(tab.id)}
                   className={`py-4 px-2 border-b-2 transition-colors font-medium ${
                     activeTab === tab.id
-                      ? 'border-navy-600 text-navy-600'
+                      ? 'border-brand-primary text-brand-primary'
                       : 'border-transparent text-gray-600 hover:text-gray-900'
                   }`}
                 >

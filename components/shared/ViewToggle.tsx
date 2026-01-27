@@ -18,7 +18,7 @@ export function ViewToggle({ viewMode, onViewChange }: ViewToggleProps) {
         className={cn(
           "flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md transition-all duration-200",
           viewMode === 'card'
-            ? "bg-white text-navy-600 shadow-sm"
+            ? "bg-white text-brand-primary shadow-sm"
             : "text-gray-600 hover:text-gray-900"
         )}
       >
@@ -34,7 +34,7 @@ export function ViewToggle({ viewMode, onViewChange }: ViewToggleProps) {
         className={cn(
           "flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md transition-all duration-200",
           viewMode === 'table'
-            ? "bg-white text-navy-600 shadow-sm"
+            ? "bg-white text-brand-primary shadow-sm"
             : "text-gray-600 hover:text-gray-900"
         )}
       >

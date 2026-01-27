@@ -35,7 +35,7 @@ export function ProfileHeaderSection({
   return (
     <div className="bg-white border-b border-gray-200">
       {/* Banner Section */}
-      <div className="relative w-full h-32 bg-gradient-to-r from-navy-600 via-blue-400 to-blue-100 overflow-hidden">
+      <div className="relative w-full h-32 bg-gradient-to-r from-brand-primary via-accent-400 to-accent-100 overflow-hidden">
         {profile.banner_url ? (
           <img
             src={profile.banner_url}
@@ -63,7 +63,7 @@ export function ProfileHeaderSection({
             />
             {completion && completion.percentage < 100 && (
               <div className="absolute -bottom-1.5 -right-3">
-                <Badge className="text-navy-600 border-navy-600 border-opacity-80 text-xs px-1.5 py-0.5">
+                <Badge className="text-brand-primary border-brand-primary border-opacity-80 text-xs px-1.5 py-0.5">
                   {completion.percentage}%
                 </Badge>
               </div>
@@ -152,7 +152,7 @@ export function ProfileHeaderSection({
             <Button
             onClick={onEditClick}
             variant="outline"
-            className="mx-auto rounded-full text-navy-600 border-navy-600 hover:bg-navy-50 h-10 text-base px-6"
+            className="mx-auto rounded-full text-brand-primary border-brand-primary hover:bg-primary-50 h-10 text-base px-6"
             >
             <Edit className="w-5 h-5 mr-2" />
             Edit Profile

@@ -44,7 +44,7 @@ export function DashboardClient() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
           <p className="text-gray-600">Loading dashboard...</p>
         </div>
       </div>
@@ -68,7 +68,7 @@ export function DashboardClient() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-navy-900 mb-2">Dashboard</h1>
+          <h1 className="text-3xl font-bold text-primary-900 mb-2">Dashboard</h1>
           <p className="text-gray-600">Welcome back! Here&apos;s your account overview.</p>
         </div>
         <Button 
@@ -85,7 +85,7 @@ export function DashboardClient() {
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <User className="h-5 w-5 text-navy-600" />
+            <User className="h-5 w-5 text-brand-primary" />
             <span>Account Information</span>
           </CardTitle>
         </CardHeader>
@@ -131,8 +131,8 @@ export function DashboardClient() {
         <Card className="hover:shadow-md transition-shadow cursor-pointer">
           <CardContent className="p-6">
             <div className="text-center">
-              <div className="w-12 h-12 bg-navy-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <User className="h-6 w-6 text-navy-600" />
+              <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <User className="h-6 w-6 text-brand-primary" />
               </div>
               <h3 className="font-medium mb-2">View Profile</h3>
               <p className="text-sm text-gray-600">Manage your account settings</p>
@@ -143,8 +143,8 @@ export function DashboardClient() {
         <Card className="hover:shadow-md transition-shadow cursor-pointer">
           <CardContent className="p-6">
             <div className="text-center">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Mail className="h-6 w-6 text-blue-600" />
+              <div className="w-12 h-12 bg-accent-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Mail className="h-6 w-6 text-brand-accent" />
               </div>
               <h3 className="font-medium mb-2">Alumni Network</h3>
               <p className="text-sm text-gray-600">Connect with fellow alumni</p>

@@ -358,7 +358,7 @@ export function MobileOperationsPage() {
               </div>
               <Button 
                 onClick={() => setShowAddMemberModal(true)}
-                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 w-full md:w-auto transition-all duration-300"
+                className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 w-full md:w-auto transition-all duration-300"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Member
@@ -367,18 +367,18 @@ export function MobileOperationsPage() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-3">
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+              <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-slate-700 font-medium mb-1">Total Members</p>
                       <p className="text-xl font-semibold text-slate-900">{filteredUsers.length}</p>
                     </div>
-                    <Users className="h-5 w-5 text-navy-500" />
+                    <Users className="h-5 w-5 text-brand-primary" />
                   </div>
                 </CardContent>
               </Card>
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+              <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -387,7 +387,7 @@ export function MobileOperationsPage() {
                         {filteredUsers.filter(u => u.member_status === 'active').length}
                       </p>
                     </div>
-                    <CheckCircle className="h-5 w-5 text-navy-500" />
+                    <CheckCircle className="h-5 w-5 text-brand-primary" />
                   </div>
                 </CardContent>
               </Card>
@@ -396,10 +396,10 @@ export function MobileOperationsPage() {
             {/* Members List */}
             {membersLoading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+                <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
               </div>
             ) : filteredUsers.length === 0 ? (
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+              <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
                 <CardContent className="p-8 text-center">
                   <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-slate-700">No members found</p>
@@ -409,19 +409,19 @@ export function MobileOperationsPage() {
               <>
                 <div className="space-y-2">
                   {paginatedUsers.map((user) => (
-                    <Card key={user.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                    <Card key={user.id} className="p-3 bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-sm truncate text-slate-900">{user.full_name}</h3>
                           <p className="text-xs text-slate-700 truncate">{user.email}</p>
                           <div className="flex items-center space-x-2 mt-1">
                             {user.role && (
-                              <Badge variant="secondary" className="text-xs border-navy-200 text-navy-700">
+                              <Badge variant="secondary" className="text-xs border-primary-200 text-brand-primary-hover">
                                 {user.role}
                               </Badge>
                             )}
                             {user.chapter_role && (
-                              <Badge variant="outline" className="text-xs border-navy-200 text-navy-700">
+                              <Badge variant="outline" className="text-xs border-primary-200 text-brand-primary-hover">
                                 {user.chapter_role}
                               </Badge>
                             )}
@@ -432,7 +432,7 @@ export function MobileOperationsPage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => openViewModal(user)}
-                            className="h-8 w-8 p-0 text-navy-700 hover:text-navy-900 hover:bg-navy-50"
+                            className="h-8 w-8 p-0 text-brand-primary-hover hover:text-primary-900 hover:bg-primary-50"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -440,7 +440,7 @@ export function MobileOperationsPage() {
                             size="sm"
                             variant="ghost"
                             onClick={() => openEditModal(user)}
-                            className="h-8 w-8 p-0 text-navy-700 hover:text-navy-900 hover:bg-navy-50"
+                            className="h-8 w-8 p-0 text-brand-primary-hover hover:text-primary-900 hover:bg-primary-50"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -470,7 +470,7 @@ export function MobileOperationsPage() {
                         size="sm"
                         onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                         disabled={currentPage === 1 || membersLoading}
-                        className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ChevronLeft className="h-3.5 w-3.5 mr-1" />
                         Previous
@@ -486,7 +486,7 @@ export function MobileOperationsPage() {
                         size="sm"
                         onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                         disabled={currentPage === totalPages || membersLoading}
-                        className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Next
                         <ChevronRight className="h-3.5 w-3.5 ml-1" />
@@ -503,8 +503,8 @@ export function MobileOperationsPage() {
                             onClick={() => setCurrentPage(page)}
                             className={`h-8 w-8 p-0 text-xs rounded-full transition-all duration-300 ${
                               currentPage === page
-                                ? 'bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20'
-                                : 'bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900'
+                                ? 'bg-brand-primary text-white hover:bg-brand-primary-hover shadow-lg shadow-navy-100/20'
+                                : 'bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900'
                             }`}
                             disabled={membersLoading}
                           >
@@ -524,32 +524,32 @@ export function MobileOperationsPage() {
             <TabsContent value="dues" className="space-y-4">
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-3">
-                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+                <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-slate-700 font-medium mb-1">Total Due</p>
                         <p className="text-lg font-semibold text-slate-900">${duesStats.totalDue.toLocaleString()}</p>
                       </div>
-                      <DollarSign className="h-5 w-5 text-navy-500" />
+                      <DollarSign className="h-5 w-5 text-brand-primary" />
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+                <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-slate-700 font-medium mb-1">Paid</p>
                         <p className="text-lg font-semibold text-slate-900">${duesStats.totalPaid.toLocaleString()}</p>
                       </div>
-                      <CheckCircle className="h-5 w-5 text-navy-500" />
+                      <CheckCircle className="h-5 w-5 text-brand-primary" />
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
               {/* Collection Rate */}
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+              <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                 <CardContent className="p-4">
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
@@ -566,10 +566,10 @@ export function MobileOperationsPage() {
                 <h3 className="text-sm font-semibold mb-2">Dues Cycles</h3>
                 {duesLoading ? (
                   <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+                    <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
                   </div>
                 ) : cycles.length === 0 ? (
-                  <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+                  <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
                     <CardContent className="p-4 text-center">
                       <p className="text-sm text-slate-700">No dues cycles found</p>
                     </CardContent>
@@ -577,7 +577,7 @@ export function MobileOperationsPage() {
                 ) : (
                   <div className="space-y-2">
                     {cycles.map((cycle) => (
-                      <Card key={cycle.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                      <Card key={cycle.id} className="p-3 bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                         <div className="flex items-center justify-between">
                           <div>
                             <h4 className="font-medium text-sm text-slate-900">{cycle.name}</h4>
@@ -599,7 +599,7 @@ export function MobileOperationsPage() {
               <div>
                 <h3 className="text-sm font-semibold mb-2 text-slate-900">Recent Assignments</h3>
                 {assignments.length === 0 ? (
-                  <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+                  <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
                     <CardContent className="p-4 text-center">
                       <p className="text-sm text-slate-700">No assignments found</p>
                     </CardContent>
@@ -607,7 +607,7 @@ export function MobileOperationsPage() {
                 ) : (
                   <div className="space-y-2">
                     {assignments.slice(0, 5).map((assignment) => (
-                      <Card key={assignment.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                      <Card key={assignment.id} className="p-3 bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
                             <h4 className="font-medium text-sm truncate text-slate-900">{assignment.user.full_name}</h4>
@@ -635,18 +635,18 @@ export function MobileOperationsPage() {
           <TabsContent value="budget" className="space-y-4">
               {/* Budget Overview Cards */}
               <div className="grid grid-cols-2 gap-3">
-                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+                <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-slate-700 font-medium mb-1">Allocated</p>
                         <p className="text-lg font-semibold text-slate-900">${budgetData.totalAllocated.toLocaleString()}</p>
                       </div>
-                      <TrendingUp className="h-5 w-5 text-navy-500" />
+                      <TrendingUp className="h-5 w-5 text-brand-primary" />
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+                <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -655,15 +655,15 @@ export function MobileOperationsPage() {
                           ${budgetData.remaining.toLocaleString()}
                         </p>
                       </div>
-                      <DollarSign className="h-5 w-5 text-navy-500" />
+                      <DollarSign className="h-5 w-5 text-brand-primary" />
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
               {/* Budget Progress */}
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
-                <CardHeader className="pb-3 flex-shrink-0 border-b border-navy-100/30">
+              <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                <CardHeader className="pb-3 flex-shrink-0 border-b border-primary-100/30">
                   <CardTitle className="text-sm text-slate-900 font-semibold">Budget Overview</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -696,7 +696,7 @@ export function MobileOperationsPage() {
                 <h3 className="text-sm font-semibold mb-2">Events with Budget ({budgetData.eventsWithBudget})</h3>
                 {eventsLoading ? (
                   <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+                    <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
                   </div>
                 ) : (() => {
                   const eventsWithBudget = events.filter(e => e.budget_amount && parseFloat(String(e.budget_amount)) > 0);
@@ -709,7 +709,7 @@ export function MobileOperationsPage() {
                   const budgetEventsEnd = Math.min(budgetEventsPage * budgetEventsPerPage, budgetEventsTotal);
 
                   return eventsWithBudget.length === 0 ? (
-                    <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+                    <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
                       <CardContent className="p-4 text-center">
                         <p className="text-sm text-slate-700">No events with budgets</p>
                       </CardContent>
@@ -718,7 +718,7 @@ export function MobileOperationsPage() {
                     <>
                       <div className="space-y-2">
                         {paginatedBudgetEvents.map((event) => (
-                          <Card key={event.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                          <Card key={event.id} className="p-3 bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                             <div className="flex items-center justify-between">
                               <div className="flex-1 min-w-0">
                                 <h4 className="font-medium text-sm truncate text-slate-900">{event.title}</h4>
@@ -748,7 +748,7 @@ export function MobileOperationsPage() {
                               size="sm"
                               onClick={() => setBudgetEventsPage(prev => Math.max(1, prev - 1))}
                               disabled={budgetEventsPage === 1 || eventsLoading}
-                              className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <ChevronLeft className="h-3.5 w-3.5 mr-1" />
                               Previous
@@ -764,7 +764,7 @@ export function MobileOperationsPage() {
                               size="sm"
                               onClick={() => setBudgetEventsPage(prev => Math.min(budgetEventsTotalPages, prev + 1))}
                               disabled={budgetEventsPage === budgetEventsTotalPages || eventsLoading}
-                              className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               Next
                               <ChevronRight className="h-3.5 w-3.5 ml-1" />
@@ -781,8 +781,8 @@ export function MobileOperationsPage() {
                                   onClick={() => setBudgetEventsPage(page)}
                                   className={`h-8 w-8 p-0 text-xs rounded-full transition-all duration-300 ${
                                     budgetEventsPage === page
-                                      ? 'bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20'
-                                      : 'bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900'
+                                      ? 'bg-brand-primary text-white hover:bg-brand-primary-hover shadow-lg shadow-navy-100/20'
+                                      : 'bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900'
                                   }`}
                                   disabled={eventsLoading}
                                 >

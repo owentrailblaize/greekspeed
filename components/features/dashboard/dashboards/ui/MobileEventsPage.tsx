@@ -147,7 +147,7 @@ export function MobileEventsPage() {
       <div className="min-h-screen bg-gray-50 pt-4 pb-20 px-4">
         <div className="max-w-md mx-auto">
           <div className="text-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-navy-600 mx-auto mb-2" />
+            <Loader2 className="h-6 w-6 animate-spin text-brand-primary mx-auto mb-2" />
             <p className="text-gray-500 text-sm">Loading...</p>
           </div>
         </div>
@@ -177,7 +177,7 @@ export function MobileEventsPage() {
               variant="outline" 
               size="sm" 
               onClick={() => fetchEvents()}
-              className="text-navy-600 border-navy-600 hover:bg-navy-50"
+              className="text-brand-primary border-brand-primary hover:bg-primary-50"
             >
               Retry
             </Button>
@@ -194,7 +194,7 @@ export function MobileEventsPage() {
       <div className="max-w-md mx-auto">
         {/* Header */}
         <div className="flex items-center space-x-2 mb-6">
-          <Calendar className="h-6 w-6 text-navy-600" />
+          <Calendar className="h-6 w-6 text-brand-primary" />
           <h1 className="text-xl font-semibold text-gray-900">Events</h1>
         </div>
 
@@ -213,14 +213,14 @@ export function MobileEventsPage() {
                   onClick={() => setActiveFilter(filter.id)}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                     isActive 
-                      ? 'bg-blue-600 text-white' 
+                      ? 'bg-brand-accent text-white' 
                       : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
                   <span>{filter.label}</span>
                   <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                    isActive ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
+                    isActive ? 'bg-accent-500 text-white' : 'bg-gray-100 text-gray-600'
                   }`}>
                     {count}
                   </span>

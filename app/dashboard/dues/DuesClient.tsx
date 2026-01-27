@@ -220,7 +220,7 @@ export default function DuesClient() {
       case 'required': return 'bg-yellow-100 text-yellow-800';
       case 'overdue': return 'bg-red-100 text-red-800';
       case 'exempt': return 'bg-gray-100 text-gray-800';
-      case 'waived': return 'bg-blue-100 text-blue-800';
+      case 'waived': return 'bg-accent-100 text-accent-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -254,7 +254,7 @@ export default function DuesClient() {
           {/* Desktop Layout */}
           <div className="hidden sm:flex items-center justify-between">
             <div>
-              <h1 className="text-navy-900 font-semibold mb-2">Membership Dues</h1>
+              <h1 className="text-primary-900 font-semibold mb-2">Membership Dues</h1>
               <p className="text-gray-600 hidden sm:block">
                 Manage your membership payments and view benefits
               </p>
@@ -287,7 +287,7 @@ export default function DuesClient() {
           {/* Mobile Layout */}
           <div className="sm:hidden">
             <div className="mb-4">
-              <h1 className="text-navy-900 font-semibold mb-2 text-2xl">Membership Dues</h1>
+              <h1 className="text-primary-900 font-semibold mb-2 text-2xl">Membership Dues</h1>
             </div>
             <div className="flex items-center justify-between">
               <div>
@@ -331,24 +331,24 @@ export default function DuesClient() {
           {/* Left Column - Reorder the cards */}
           <div className="lg:col-span-2 space-y-6">
             {/* Current Status Card - Keep at top */}
-            <Card className="bg-gradient-to-br from-navy-50 to-blue-50 border-navy-200">
+            <Card className="bg-gradient-to-br from-primary-50 to-accent-50 border-primary-200">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center space-x-2">
-                    <Calendar className="h-5 w-5 text-navy-600" />
+                    <Calendar className="h-5 w-5 text-brand-primary" />
                     <span>Current Dues Status</span>
                   </CardTitle>
-                  <Clock className="h-5 w-5 text-navy-500" />
+                  <Clock className="h-5 w-5 text-brand-primary" />
                 </div>
               </CardHeader>
               <CardContent>
                 {currentAssignment ? (
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <p className="text-2xl font-semibold text-navy-900">
+                      <p className="text-2xl font-semibold text-primary-900">
                         ${(currentAssignment.amount_due - currentAssignment.amount_paid).toFixed(2)}
                       </p>
-                      <p className="text-navy-600">Due on {new Date(currentAssignment.cycle.due_date).toLocaleDateString()}</p>
+                      <p className="text-brand-primary">Due on {new Date(currentAssignment.cycle.due_date).toLocaleDateString()}</p>
                       {currentAssignment.cycle.allow_payment_plans && (
                         <p className="text-sm text-gray-600">Payment plans available</p>
                       )}
@@ -357,7 +357,7 @@ export default function DuesClient() {
                       <Button 
                         onClick={() => handlePayDues(currentAssignment.id, false)}
                         disabled={processingPayment}
-                        className="bg-navy-600 hover:bg-navy-700"
+                        className="bg-brand-primary hover:bg-brand-primary-hover"
                       >
                         <CreditCard className="h-4 w-4 mr-2" /> Pay Now
                       </Button>
@@ -387,7 +387,7 @@ export default function DuesClient() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <CreditCard className="h-5 w-5 text-navy-600" />
+                    <CreditCard className="h-5 w-5 text-brand-primary" />
                     <span>Payment History</span>
                   </div>
                   <Button variant="outline" size="sm">
@@ -451,7 +451,7 @@ export default function DuesClient() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <DollarSign className="h-5 w-5 text-navy-600" />
+                  <DollarSign className="h-5 w-5 text-brand-primary" />
                   <span>Payment Information</span>
                 </CardTitle>
               </CardHeader>
@@ -462,7 +462,7 @@ export default function DuesClient() {
                       <p className="font-medium">Payment Methods</p>
                       <p className="text-sm text-gray-600">Credit/Debit Cards via Stripe</p>
                     </div>
-                    <CreditCard className="h-5 w-5 text-navy-600" />
+                    <CreditCard className="h-5 w-5 text-brand-primary" />
                   </div>
                   
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -503,8 +503,8 @@ export default function DuesClient() {
                       transition={{ delay: index * 0.1 }}
                     >
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-navy-100 rounded-lg flex items-center justify-center">
-                          <benefit.icon className="h-4 w-4 text-navy-600" />
+                        <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                          <benefit.icon className="h-4 w-4 text-brand-primary" />
                         </div>
                       </div>
                       <div className="flex-1">
@@ -525,7 +525,7 @@ export default function DuesClient() {
             </Card>
 
             {/* Support - Keep this */}
-            <Card className="bg-gradient-to-br from-blue-50 to-navy-50">
+            <Card className="bg-gradient-to-br from-accent-50 to-primary-50">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <h3 className="font-medium mb-2">Need Help?</h3>
@@ -549,24 +549,24 @@ export default function DuesClient() {
       {/* Mobile Layout - Cardless */}
       <div className="sm:hidden px-4 py-6">
         {/* Current Dues Status Card - Keep as card */}
-        <Card className="bg-gradient-to-br from-navy-50 to-blue-50 border-navy-200 mb-6">
+        <Card className="bg-gradient-to-br from-primary-50 to-accent-50 border-primary-200 mb-6">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-navy-600" />
+                <Calendar className="h-5 w-5 text-brand-primary" />
                 <span>Current Dues Status</span>
               </CardTitle>
-              <Clock className="h-5 w-5 text-navy-500" />
+              <Clock className="h-5 w-5 text-brand-primary" />
             </div>
           </CardHeader>
           <CardContent>
             {currentAssignment ? (
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-2xl font-semibold text-navy-900">
+                  <p className="text-2xl font-semibold text-primary-900">
                     ${(currentAssignment.amount_due - currentAssignment.amount_paid).toFixed(2)}
                   </p>
-                  <p className="text-navy-600">Due on {new Date(currentAssignment.cycle.due_date).toLocaleDateString()}</p>
+                  <p className="text-brand-primary">Due on {new Date(currentAssignment.cycle.due_date).toLocaleDateString()}</p>
                   {currentAssignment.cycle.allow_payment_plans && (
                     <p className="text-sm text-gray-600">Payment plans available</p>
                   )}
@@ -575,7 +575,7 @@ export default function DuesClient() {
                   <Button 
                     onClick={() => handlePayDues(currentAssignment.id, false)}
                     disabled={processingPayment}
-                    className="bg-navy-600 hover:bg-navy-700"
+                    className="bg-brand-primary hover:bg-brand-primary-hover"
                   >
                     <CreditCard className="h-4 w-4 mr-2" /> Pay Now
                   </Button>
@@ -604,7 +604,7 @@ export default function DuesClient() {
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
-              <CreditCard className="h-5 w-5 text-navy-600" />
+              <CreditCard className="h-5 w-5 text-brand-primary" />
               <h2 className="text-lg font-semibold text-gray-900">Payment History</h2>
             </div>
             <Button variant="outline" size="sm">
@@ -668,7 +668,7 @@ export default function DuesClient() {
         {/* Payment Information - Cardless */}
         <div className="mb-6">
           <div className="flex items-center space-x-2 mb-4">
-            <DollarSign className="h-5 w-5 text-navy-600" />
+            <DollarSign className="h-5 w-5 text-brand-primary" />
             <h2 className="text-lg font-semibold text-gray-900">Payment Information</h2>
           </div>
           
@@ -679,7 +679,7 @@ export default function DuesClient() {
                   <p className="font-medium">Payment Methods</p>
                   <p className="text-sm text-gray-600">Credit/Debit Cards via Stripe</p>
                 </div>
-                <CreditCard className="h-5 w-5 text-navy-600" />
+                <CreditCard className="h-5 w-5 text-brand-primary" />
               </div>
             </div>
             
@@ -716,8 +716,8 @@ export default function DuesClient() {
               >
                 <div className="flex items-start space-x-3">
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-navy-100 rounded-lg flex items-center justify-center">
-                      <benefit.icon className="h-4 w-4 text-navy-600" />
+                    <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                      <benefit.icon className="h-4 w-4 text-brand-primary" />
                     </div>
                   </div>
                   <div className="flex-1">

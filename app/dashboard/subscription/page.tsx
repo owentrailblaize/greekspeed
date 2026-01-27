@@ -108,7 +108,7 @@ export default function SubscriptionPage() {
       case 'active':
         return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" />Active</Badge>;
       case 'trialing':
-        return <Badge className="bg-blue-100 text-blue-800"><Calendar className="w-3 h-3 mr-1" />Trial</Badge>;
+        return <Badge className="bg-accent-100 text-accent-800"><Calendar className="w-3 h-3 mr-1" />Trial</Badge>;
       case 'canceled':
         return <Badge className="bg-red-100 text-red-800"><XCircle className="w-3 h-3 mr-1" />Canceled</Badge>;
       case 'paused':

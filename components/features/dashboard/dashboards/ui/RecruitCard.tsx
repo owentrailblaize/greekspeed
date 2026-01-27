@@ -7,21 +7,21 @@ import type { Recruit, RecruitStage } from '@/types/recruitment';
 import { cn } from '@/lib/utils';
 
 const STAGE_COLORS: Record<RecruitStage, string> = {
-  'New': 'bg-blue-50 text-blue-700 border-blue-200',
+  'New': 'bg-accent-50 text-accent-700 border-accent-200',
   'Contacted': 'bg-slate-100 text-slate-700 border-slate-300',
-  'Event Invite': 'bg-navy-50 text-navy-700 border-navy-200',
+  'Event Invite': 'bg-primary-50 text-brand-primary-hover border-primary-200',
   'Bid Given': 'bg-gray-100 text-gray-700 border-gray-300',
-  'Accepted': 'bg-blue-100 text-blue-800 border-blue-300',
+  'Accepted': 'bg-accent-100 text-accent-800 border-blue-300',
   'Declined': 'bg-red-100 text-red-800 border-red-200',
 };
 
 // Stage background colors for star badge
 const STAGE_BG_COLORS: Record<RecruitStage, string> = {
-  'New': 'bg-blue-500',
+  'New': 'bg-accent-500',
   'Contacted': 'bg-slate-500',
-  'Event Invite': 'bg-navy-500',
+  'Event Invite': 'bg-brand-primary',
   'Bid Given': 'bg-gray-500',
-  'Accepted': 'bg-blue-600',
+  'Accepted': 'bg-brand-accent',
   'Declined': 'bg-red-500',
 };
 
@@ -178,7 +178,7 @@ export function RecruitCard({
         <div className="mb-4 flex justify-center relative z-10">
           <div className="relative group-hover:animate-pulse">
             <div className="h-28 w-28 overflow-hidden rounded-full bg-white p-1 shadow-[inset_6px_6px_12px_rgba(0,0,0,0.1),inset_-6px_-6px_12px_rgba(255,255,255,0.9)] transition-all duration-500 group-hover:shadow-[inset_8px_8px_16px_rgba(0,0,0,0.15),inset_-8px_-8px_16px_rgba(255,255,255,1)] group-hover:scale-110">
-              <div className="h-full w-full rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
+              <div className="h-full w-full rounded-full bg-gradient-to-br from-brand-primary to-brand-primary flex items-center justify-center">
                 <User className="h-12 w-12 text-white" />
               </div>
             </div>
@@ -189,7 +189,7 @@ export function RecruitCard({
 
         {/* Profile Info */}
         <div className="text-center relative z-10 transition-transform duration-300 group-hover:-translate-y-1 flex-1 flex flex-col justify-center">
-          <h3 className="text-lg font-semibold text-gray-900 transition-colors duration-300 group-hover:text-blue-600 mb-1">
+          <h3 className="text-lg font-semibold text-gray-900 transition-colors duration-300 group-hover:text-brand-accent mb-1">
             {recruit.name}
           </h3>
           <p className="text-sm text-gray-500 transition-colors duration-300 group-hover:text-gray-700">
@@ -202,7 +202,7 @@ export function RecruitCard({
         <div className="mt-6 flex gap-2 relative z-10">
           <button
             onClick={handleEditClick}
-            className="flex-1 rounded-full bg-white py-4 text-sm font-medium text-blue-600 shadow-[6px_6px_12px_rgba(0,0,0,0.1),-6px_-6px_12px_rgba(255,255,255,0.9)] transition-all duration-300 hover:shadow-[2px_2px_4px_rgba(0,0,0,0.05),-2px_-2px_4px_rgba(255,255,255,0.8)] hover:scale-95 active:scale-90 group-hover:bg-blue-50"
+            className="flex-1 rounded-full bg-white py-4 text-sm font-medium text-brand-accent shadow-[6px_6px_12px_rgba(0,0,0,0.1),-6px_-6px_12px_rgba(255,255,255,0.9)] transition-all duration-300 hover:shadow-[2px_2px_4px_rgba(0,0,0,0.05),-2px_-2px_4px_rgba(255,255,255,0.8)] hover:scale-95 active:scale-90 group-hover:bg-accent-50"
           >
             <Edit className="mx-auto h-4 w-4 transition-transform duration-300 hover:scale-110" />
           </button>
@@ -219,7 +219,7 @@ export function RecruitCard({
         </div>
 
         {/* Animated border on hover */}
-        <div className="absolute inset-0 rounded-3xl border border-blue-200 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+        <div className="absolute inset-0 rounded-3xl border border-accent-200 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
       </div>
     </div>
   );

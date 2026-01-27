@@ -48,7 +48,7 @@ export function ViewChapterModal({ isOpen, onClose, chapter }: ViewChapterModalP
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center space-x-2">
-              <Building2 className="h-5 w-5 text-blue-600" />
+              <Building2 className="h-5 w-5 text-brand-accent" />
               <span>Chapter Details: {chapter.name}</span>
             </CardTitle>
             <Button

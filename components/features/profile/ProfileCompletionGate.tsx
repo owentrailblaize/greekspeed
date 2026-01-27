@@ -348,22 +348,22 @@ export function ProfileCompletionGate({
                   )}
 
                   {/* Benefits Section - Simplified */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 hidden sm:block">
-                    <h4 className="font-medium text-sm text-blue-900 mb-2">
+                  <div className="bg-accent-50 border border-accent-200 rounded-lg p-4 mb-4 hidden sm:block">
+                    <h4 className="font-medium text-sm text-accent-900 mb-2">
                       {currentProfile?.role === 'alumni' ? 'Why Complete Your Professional Profile?' : 'Why Complete Your Profile?'}
                     </h4>
                     <div className="space-y-2">
                       {currentProfile?.role === 'alumni' ? (
                         <>
                           <div className="flex items-start space-x-2">
-                            <Building2 className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                            <p className="text-sm text-blue-800">
+                            <Building2 className="h-4 w-4 text-brand-accent mt-0.5 flex-shrink-0" />
+                            <p className="text-sm text-accent-800">
                               Help other alumni find you by industry and company
                             </p>
                           </div>
                           <div className="flex items-start space-x-2">
-                            <Briefcase className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                            <p className="text-sm text-blue-800">
+                            <Briefcase className="h-4 w-4 text-brand-accent mt-0.5 flex-shrink-0" />
+                            <p className="text-sm text-accent-800">
                               Enable professional networking and career opportunities
                             </p>
                           </div>
@@ -371,14 +371,14 @@ export function ProfileCompletionGate({
                       ) : (
                         <>
                           <div className="flex items-start space-x-2">
-                            <User className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                            <p className="text-sm text-blue-800">
+                            <User className="h-4 w-4 text-brand-accent mt-0.5 flex-shrink-0" />
+                            <p className="text-sm text-accent-800">
                               Improve your visibility in the chapter network
                             </p>
                           </div>
                           <div className="flex items-start space-x-2">
-                            <Phone className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                            <p className="text-sm text-blue-800">
+                            <Phone className="h-4 w-4 text-brand-accent mt-0.5 flex-shrink-0" />
+                            <p className="text-sm text-accent-800">
                               Enable direct communication with other members
                             </p>
                           </div>
@@ -399,7 +399,7 @@ export function ProfileCompletionGate({
               <div className="flex space-x-2">
                 <Button
                   onClick={handleEditProfile}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 text-sm font-medium flex-1"
+                  className="bg-brand-accent hover:bg-accent-700 text-white px-4 py-2.5 text-sm font-medium flex-1"
                   size="sm"
                 >
                   <User className="h-4 w-4 mr-2" />

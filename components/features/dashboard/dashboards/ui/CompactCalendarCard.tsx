@@ -160,7 +160,7 @@ export function CompactCalendarCard() {
               {dayEvents.slice(0, 3).map((event, index) => (
                 <div
                   key={event.id}
-                  className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full cursor-pointer hover:scale-125 transition-transform bg-blue-500"
+                  className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full cursor-pointer hover:scale-125 transition-transform bg-accent-500"
                   onMouseEnter={(e) => handleEventHover(event, e)}
                   onMouseLeave={handleEventLeave}
                   title={event.title}
@@ -180,8 +180,8 @@ export function CompactCalendarCard() {
         {/* Calendar Title - Now inside the calendar */}
         <div className="flex items-center justify-center p-2 border-b border-gray-200">
           <div className="flex items-center space-x-2">
-            <Calendar className="h-4 w-4 text-navy-600" />
-            <span className="font-semibold text-sm text-navy-600">Calendar</span>
+            <Calendar className="h-4 w-4 text-brand-primary" />
+            <span className="font-semibold text-sm text-brand-primary">Calendar</span>
           </div>
         </div>
 
@@ -228,8 +228,8 @@ export function CompactCalendarCard() {
       <div className="bg-white rounded-lg border border-gray-200 w-full">
         <div className="flex items-center justify-center p-2 border-b border-gray-200">
           <div className="flex items-center space-x-2">
-            <Calendar className="h-4 w-4 text-navy-600" />
-            <span className="font-semibold text-sm text-navy-600">Calendar</span>
+            <Calendar className="h-4 w-4 text-brand-primary" />
+            <span className="font-semibold text-sm text-brand-primary">Calendar</span>
           </div>
         </div>
         <div className="text-center py-8">
@@ -244,8 +244,8 @@ export function CompactCalendarCard() {
       <div className="bg-white rounded-lg border border-gray-200 w-full">
         <div className="flex items-center justify-center p-2 border-b border-gray-200">
           <div className="flex items-center space-x-2">
-            <Calendar className="h-4 w-4 text-navy-600" />
-            <span className="font-semibold text-sm text-navy-600">Calendar</span>
+            <Calendar className="h-4 w-4 text-brand-primary" />
+            <span className="font-semibold text-sm text-brand-primary">Calendar</span>
           </div>
         </div>
         <div className="text-center py-8">
@@ -254,7 +254,7 @@ export function CompactCalendarCard() {
             variant="outline" 
             size="sm" 
             onClick={() => fetchEvents()}
-            className="text-navy-600 border-navy-600 hover:bg-navy-50 h-8"
+            className="text-brand-primary border-brand-primary hover:bg-primary-50 h-8"
           >
             Retry
           </Button>

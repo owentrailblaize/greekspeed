@@ -33,8 +33,8 @@ export function MessagesMainChat({
       <div className="flex-1 bg-white flex flex-col items-center justify-center p-8 h-full">
         <div className="text-center max-w-md">
           {/* Welcome Icon */}
-          <div className="w-20 h-20 bg-navy-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <MessageSquare className="h-10 w-10 text-navy-600" />
+          <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <MessageSquare className="h-10 w-10 text-brand-primary" />
           </div>
           
           {/* Welcome Text */}
@@ -58,7 +58,7 @@ export function MessagesMainChat({
                 </p>
                 <Button 
                   onClick={() => window.location.href = '/dashboard/alumni'}
-                  className="bg-navy-600 hover:bg-navy-700 text-white"
+                  className="bg-brand-primary hover:bg-brand-primary-hover text-white"
                 >
                   <Users className="h-4 w-4 mr-2" />
                   Browse Alumni

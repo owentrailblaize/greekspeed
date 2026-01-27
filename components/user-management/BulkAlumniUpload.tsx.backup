@@ -1,0 +1,446 @@
+'use client';
+
+import { useState, useRef } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { 
+  Upload, 
+  FileSpreadsheet, 
+  Users, 
+  CheckCircle, 
+  AlertCircle, 
+  Download,
+  Eye,
+  Lock,
+  X
+} from 'lucide-react';
+
+interface UploadResult {
+  total: number;
+  successful: number;
+  failed: number;
+  errors: Array<{ email: string; error: string }>;
+  createdUsers: Array<any>;
+  skipped: Array<any>;
+}
+
+interface BulkAlumniUploadProps {
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) {
+  const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [results, setResults] = useState<UploadResult | null>(null);
+  const [showPasswords, setShowPasswords] = useState(false);
+  const [options, setOptions] = useState({
+    generatePasswords: true,
+    defaultPassword: 'Welcome2024!',
+    sendWelcomeEmails: false,
+    batchSize: 100
+  });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    // Selected file
+    if (selectedFile && selectedFile.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+      setFile(selectedFile);
+      setResults(null);
+    } else {
+      alert('Please select a valid Excel file (.xlsx)');
+    }
+  };
+
+  const parseExcelFile = async (file: File): Promise<any[]> => {
+    const ExcelJS = (await import('exceljs')).default;
+    
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const buffer = e.target?.result as ArrayBuffer;
+          const workbook = new ExcelJS.Workbook();
+          await workbook.xlsx.load(buffer);
+          
+          const worksheet = workbook.worksheets[0];
+          const jsonData: any[] = [];
+          
+          worksheet.eachRow((row, rowNumber) => {
+            if (rowNumber === 1) return; // Skip header row
+            
+            const rowData: any = {};
+            row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+              const headerCell = worksheet.getRow(1).getCell(colNumber);
+              const header = headerCell.value?.toString().toLowerCase().replace(/\s+/g, '_') || '';
+              rowData[header] = cell.value;
+            });
+            
+            if (rowData.email && rowData.first_name && rowData.last_name) {
+              jsonData.push({
+                email: rowData.email || rowData.email_address,
+                first_name: rowData.first_name || rowData.firstname,
+                last_name: rowData.last_name || rowData.lastname,
+                chapter: rowData.chapter,
+                industry: rowData.industry,
+                graduation_year: rowData.graduation_year,
+                company: rowData.company,
+                job_title: rowData.job_title,
+                phone: rowData.phone,
+                location: rowData.location,
+                description: rowData.description,
+                pledge_class: rowData.pledge_class,
+                major: rowData.major,
+                hometown: rowData.hometown
+              });
+            }
+          });
+          
+          resolve(jsonData);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
+  const downloadTemplate = () => {
+    const template = [
+      ['email', 'first_name', 'last_name', 'chapter', 'industry', 'graduation_year', 'company', 'job_title', 'phone', 'location', 'description', 'pledge_class', 'major', 'hometown'],
+      ['john.doe@example.com', 'John', 'Doe', 'Sigma Chi', 'Technology', '2020', 'Microsoft', 'Software Engineer', '(555) 123-4567', 'Seattle, WA', 'Passionate about technology', 'Fall 2016', 'Computer Science', 'Seattle, WA']
+    ];
+
+    const csvContent = template.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'alumni_bulk_upload_template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleUpload = async () => {
+    if (!file) return;
+
+    // Starting upload process...
+    setIsUploading(true);
+    setProgress(0);
+    setResults(null);
+
+    try {
+      // Parsing Excel file...
+      const alumniData = await parseExcelFile(file);
+      
+      if (alumniData.length === 0) {
+        alert('No valid data found in the Excel file');
+        setIsUploading(false);
+        return;
+      }
+
+      // Parsed alumni records
+      // Sending request to API...
+
+      const response = await fetch('/api/alumni/bulk-upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          alumniData,
+          options
+        }),
+      });
+
+      // Received response
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      // API result
+      setResults(result.results);
+      setProgress(100);
+
+      // Auto-download Excel file with email/password pairs if passwords were generated OR default password used
+      if (result.results.createdUsers.length > 0) {
+        // Auto-downloading Excel file with credentials...
+        downloadCredentialsExcel(result.results.createdUsers);
+      }
+
+    } catch (error) {
+      console.error('❌ Upload error:', error);
+      alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // New function to download Excel file with credentials
+  const downloadCredentialsExcel = (createdUsers: any[]) => {
+    // Filter users that have passwords (newly created users)
+    const usersWithPasswords = createdUsers.filter(user => user.password);
+    
+    if (usersWithPasswords.length === 0) {
+      // No users with passwords to download
+      return;
+    }
+
+    // Create Excel data
+    const excelData = [
+      ['Email', 'Password'], // Header row
+      ...usersWithPasswords.map(user => [user.email, user.password])
+    ];
+
+    // Convert to CSV format (Excel can open CSV files)
+    const csvContent = excelData.map(row => 
+      row.map(cell => `"${cell}"`).join(',')
+    ).join('\n');
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `alumni_credentials_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    // Downloaded credentials for users
+  };
+
+  const downloadResults = () => {
+    if (!results) return;
+
+    const csvContent = [
+      ['email', 'status', 'error', 'password'],
+      ...results.createdUsers.map((user: any) => [
+        user.email,
+        'success',
+        '',
+        user.password || 'N/A' // Always show actual passwords, not 'Hidden'
+      ]),
+      ...results.errors.map((error: any) => [
+        error.email,
+        'failed',
+        error.error,
+        ''
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `alumni_upload_results_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center space-x-2">
+              <Users className="h-5 w-5 text-blue-600" />
+              <span>Bulk Alumni Upload</span>
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="h-8 w-8 p-0 hover:bg-gray-100"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* File Upload */}
+          <div className="space-y-4">
+            <Label htmlFor="file-upload">Select Excel File</Label>
+            <div className="flex items-center gap-4">
+              <Input
+                id="file-upload"
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileChange}
+                disabled={isUploading}
+              />
+              <Button
+                variant="outline"
+                onClick={downloadTemplate}
+                disabled={isUploading}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Template
+              </Button>
+            </div>
+            {file && (
+              <div className="flex items-center gap-2 text-sm text-green-600">
+                <CheckCircle className="h-4 w-4" />
+                {file.name} selected ({Math.round(file.size / 1024)} KB)
+              </div>
+            )}
+          </div>
+
+          {/* Upload Options */}
+          <div className="space-y-4">
+            <Label>Upload Options</Label>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="generate-passwords"
+                checked={options.generatePasswords}
+                onCheckedChange={(checked) => 
+                  setOptions(prev => ({ ...prev, generatePasswords: !!checked }))
+                }
+              />
+              <Label htmlFor="generate-passwords">Generate secure passwords</Label>
+            </div>
+            {!options.generatePasswords && (
+              <div className="space-y-2">
+                <Label htmlFor="default-password">Default Password</Label>
+                <Input
+                  id="default-password"
+                  type="text"
+                  value={options.defaultPassword}
+                  onChange={(e) => setOptions(prev => ({ ...prev, defaultPassword: e.target.value }))}
+                  placeholder="Enter default password for all users"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Upload Button */}
+          <Button
+            onClick={() => {
+              // Button clicked!
+              handleUpload();
+            }}
+            disabled={!file || isUploading}
+            className="w-full"
+            size="lg"
+          >
+            {isUploading ? (
+              <>
+                <Upload className="h-4 w-4 mr-2 animate-pulse" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4 mr-2" />
+                Start Bulk Upload
+              </>
+            )}
+          </Button>
+
+          {/* Loading Spinner */}
+          {isUploading && (
+            <div className="flex flex-col items-center justify-center py-8 space-y-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <p className="text-sm text-gray-600">Processing alumni upload...</p>
+            </div>
+          )}
+
+          {/* Results */}
+          {results && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Upload Results</h3>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowPasswords(!showPasswords)}
+                  >
+                    {showPasswords ? <Lock className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                    {showPasswords ? 'Hide' : 'Show'} Passwords
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={downloadResults}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Results
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <Alert>
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>{results.successful}</strong> successful
+                  </AlertDescription>
+                </Alert>
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>{results.failed}</strong> failed
+                  </AlertDescription>
+                </Alert>
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>{results.skipped?.length || 0}</strong> skipped
+                  </AlertDescription>
+                </Alert>
+              </div>
+
+              {results.errors.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Errors ({results.errors.length})</Label>
+                  <div className="max-h-40 overflow-y-auto space-y-1">
+                    {results.errors.map((error, index) => (
+                      <div key={index} className="text-sm text-red-600 p-2 bg-red-50 rounded">
+                        <strong>{error.email}:</strong> {error.error}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {results.createdUsers.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Created Users ({results.createdUsers.length})</Label>
+                  <div className="max-h-40 overflow-y-auto space-y-1">
+                    {results.createdUsers.map((user, index) => (
+                      <div key={index} className="text-sm text-green-600 p-2 bg-green-50 rounded">
+                        <strong>{user.email}</strong>
+                        {showPasswords && user.password && ` - Password: ${user.password}`}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Close Button */}
+              <div className="flex justify-end pt-4">
+                <Button onClick={onClose} variant="outline">
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

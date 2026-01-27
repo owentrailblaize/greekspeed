@@ -91,7 +91,7 @@ export default function ContactPage() {
       
       <div className="pt-16">
         {/* Hero Section - Apollo Style */}
-        <section className="relative py-20 bg-gradient-to-br from-navy-50 via-white to-blue-50/30">
+        <section className="relative py-20 bg-gradient-to-br from-primary-50 via-white to-accent-50/30">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               {/* Left Side - Promotional Text */}
@@ -141,7 +141,7 @@ export default function ContactPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       disabled={isSubmitting}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-navy-500 text-base disabled:bg-gray-100"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary text-base disabled:bg-gray-100"
                       placeholder="your-chapter@university.edu"
                     />
                   </div>
@@ -149,7 +149,7 @@ export default function ContactPage() {
                   <Button 
                     type="submit" 
                     disabled={isSubmitting}
-                    className="w-full bg-navy-600 hover:bg-navy-700 text-white py-3 text-lg font-medium rounded-lg disabled:opacity-50"
+                    className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white py-3 text-lg font-medium rounded-lg disabled:opacity-50"
                   >
                     {isSubmitting ? 'Sending...' : 'Get In Touch'}
                   </Button>
@@ -158,7 +158,7 @@ export default function ContactPage() {
                 <p className="text-xs text-gray-500 mt-4">
                   By submitting this form, you will receive information, tips, and promotions from Trailblaize. 
                   To learn more, see our{' '}
-                  <a href="/privacy" className="text-navy-600 hover:underline">
+                  <a href="/privacy" className="text-brand-primary hover:underline">
                     Privacy Policy
                   </a>.
                 </p>
@@ -179,8 +179,8 @@ export default function ContactPage() {
                     <CardContent className="p-0">
                       <div className="flex flex-col items-center">
                         {/* Icon */}
-                        <div className="w-12 h-12 bg-navy-100 rounded-lg flex items-center justify-center mb-4">
-                          <IconComponent className="h-6 w-6 text-navy-600" />
+                        <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
+                          <IconComponent className="h-6 w-6 text-brand-primary" />
                         </div>
                         
                         {/* Content */}
@@ -219,7 +219,7 @@ export default function ContactPage() {
                   <div key={index} className="border-b border-gray-200 last:border-b-0">
                     <button
                       onClick={() => toggleFAQ(index)}
-                      className="w-full text-left py-6 flex items-center justify-between hover:text-navy-600 transition-colors"
+                      className="w-full text-left py-6 flex items-center justify-between hover:text-brand-primary transition-colors"
                     >
                       <span className="text-lg font-medium text-gray-900 pr-4">
                         {faq.question}

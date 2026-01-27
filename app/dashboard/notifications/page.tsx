@@ -94,7 +94,7 @@ export default function NotificationsPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
           <p className="text-gray-600">Loading notifications...</p>
         </div>
       </div>
@@ -106,7 +106,7 @@ export default function NotificationsPage() {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-navy-900">Notifications</h1>
+          <h1 className="text-2xl font-bold text-primary-900">Notifications</h1>
           <p className="text-gray-600">Manage your connections and stay updated on important activities</p>
         </div>
       </div>

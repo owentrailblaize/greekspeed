@@ -66,11 +66,11 @@ export interface ColorShades {
  * Used as fallback when no chapter branding is configured
  */
 export const DEFAULT_BRANDING_THEME: BrandingTheme = {
-  primaryColor: '#2346e0',
-  primaryColorHover: '#1833b5',
-  accentColor: '#4568ff',
-  accentColorLight: '#7090ff',
-  focusColor: '#3b82f6',
+  primaryColor: '#000000',           // Black (primary)
+  primaryColorHover: '#1a1a1a',      // text-900 (hover)
+  accentColor: '#aa263c',            // accent-600 (red accent)
+  accentColorLight: '#f6d5db',       // accent-100 (light red)
+  focusColor: '#0000004D',           // Black with 30% opacity
   primaryLogo: '/logo.png',
   secondaryLogo: null,
   logoAltText: 'Trailblaize',

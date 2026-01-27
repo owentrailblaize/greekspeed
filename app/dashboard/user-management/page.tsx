@@ -48,11 +48,11 @@ export default function UserManagementPage() {
                 <ArrowLeft className="h-4 w-4" />
                 <span>Dashboard</span>
               </Button>
-              <h1 className="text-3xl font-bold text-navy-900">User Management</h1>
+              <h1 className="text-3xl font-bold text-primary-900">User Management</h1>
               <p className="text-gray-600">Manage users, profiles, chapters, and alumni</p>
             </div>
             <div className="flex items-center space-x-3">
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+              <Badge variant="secondary" className="bg-accent-100 text-accent-800">
                 Developer Access
               </Badge>
             </div>

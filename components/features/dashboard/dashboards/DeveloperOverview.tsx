@@ -154,11 +154,11 @@ export function DeveloperOverview() {
           {/* Developer Tools Grid - Three Cards */}
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* User Management Card */}
-            <Card className="hover:shadow-lg transition-all duration-200 border-2 border-blue-100 hover:border-blue-200">
+            <Card className="hover:shadow-lg transition-all duration-200 border-2 border-accent-100 hover:border-accent-200">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center space-x-3 text-xl">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Users className="h-6 w-6 text-blue-600" />
+                  <div className="w-12 h-12 bg-accent-100 rounded-full flex items-center justify-center">
+                    <Users className="h-6 w-6 text-brand-accent" />
                   </div>
                   <div>
                     <span className="text-gray-900">User Management</span>
@@ -173,15 +173,15 @@ export function DeveloperOverview() {
                   {/* Feature List */}
                   <div className="flex flex-wrap items-center justify-center gap-3">
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <UserCheck className="h-4 w-4 text-navy-500" />
+                      <UserCheck className="h-4 w-4 text-brand-primary" />
                       <span>Create & Delete Users</span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Shield className="h-4 w-4 text-navy-500" />
+                      <Shield className="h-4 w-4 text-brand-primary" />
                       <span>Alumni Management</span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Users className="h-4 w-4 text-navy-500" />
+                      <Users className="h-4 w-4 text-brand-primary" />
                       <span>Chapter Assignment</span>
                     </div>
                   </div>
@@ -189,7 +189,7 @@ export function DeveloperOverview() {
                   {/* Action Button */}
                   <div className="pt-2">
                     <Button 
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full" 
+                      className="w-full bg-brand-accent hover:bg-accent-700 text-white rounded-full" 
                       onClick={() => window.location.href = '/dashboard/user-management'}
                     >
                       <span>Access User Management</span>
@@ -201,11 +201,11 @@ export function DeveloperOverview() {
             </Card>
 
             {/* Feature Flags Management Card */}
-            <Card className="hover:shadow-lg transition-all duration-200 border-2 border-blue-100 hover:border-blue-200">
+            <Card className="hover:shadow-lg transition-all duration-200 border-2 border-accent-100 hover:border-accent-200">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center space-x-3 text-xl">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Settings className="h-6 w-6 text-blue-600" />
+                  <div className="w-12 h-12 bg-accent-100 rounded-full flex items-center justify-center">
+                    <Settings className="h-6 w-6 text-brand-accent" />
                   </div>
                   <div>
                     <span className="text-gray-900">Feature Flags</span>
@@ -220,15 +220,15 @@ export function DeveloperOverview() {
                   {/* Feature List */}
                   <div className="flex flex-wrap items-center justify-center gap-3">
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Settings className="h-4 w-4 text-navy-500" />
+                      <Settings className="h-4 w-4 text-brand-primary" />
                       <span>Financial Tools</span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Settings className="h-4 w-4 text-navy-500" />
+                      <Settings className="h-4 w-4 text-brand-primary" />
                       <span>Recruitment CRM</span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Settings className="h-4 w-4 text-navy-500" />
+                      <Settings className="h-4 w-4 text-brand-primary" />
                       <span>Events Management</span>
                     </div>
                   </div>
@@ -236,7 +236,7 @@ export function DeveloperOverview() {
                   {/* Action Button */}
                   <div className="pt-2">
                     <Button 
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full" 
+                      className="w-full bg-brand-accent hover:bg-accent-700 text-white rounded-full" 
                       onClick={() => window.location.href = '/dashboard/feature-flags'}
                     >
                       <span>Manage Feature Flags</span>
@@ -248,11 +248,11 @@ export function DeveloperOverview() {
             </Card>
 
             {/* Branding Management Card */}
-            <Card className="hover:shadow-lg transition-all duration-200 border-2 border-blue-100 hover:border-blue-200">
+            <Card className="hover:shadow-lg transition-all duration-200 border-2 border-accent-100 hover:border-accent-200">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center space-x-3 text-xl">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Palette className="h-6 w-6 text-blue-600" />
+                  <div className="w-12 h-12 bg-accent-100 rounded-full flex items-center justify-center">
+                    <Palette className="h-6 w-6 text-brand-accent" />
                   </div>
                   <div>
                     <span className="text-gray-900">Branding Management</span>
@@ -267,15 +267,15 @@ export function DeveloperOverview() {
                   {/* Feature List */}
                   <div className="flex flex-wrap items-center justify-center gap-3">
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Palette className="h-4 w-4 text-navy-500" />
+                      <Palette className="h-4 w-4 text-brand-primary" />
                       <span>Logo Upload</span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Palette className="h-4 w-4 text-navy-500" />
+                      <Palette className="h-4 w-4 text-brand-primary" />
                       <span>Color Customization</span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Shield className="h-4 w-4 text-navy-500" />
+                      <Shield className="h-4 w-4 text-brand-primary" />
                       <span>Live Preview</span>
                     </div>
                   </div>
@@ -283,7 +283,7 @@ export function DeveloperOverview() {
                   {/* Action Button */}
                   <div className="pt-2">
                     <Button 
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full" 
+                      className="w-full bg-brand-accent hover:bg-accent-700 text-white rounded-full" 
                       onClick={() => window.location.href = '/dashboard/developer/branding'}
                     >
                       <span>Manage Branding</span>

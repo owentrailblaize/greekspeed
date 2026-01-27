@@ -442,7 +442,7 @@ export function MobileNetworkPage() {
       <div className="min-h-screen bg-gray-50 pt-4 pb-20 px-4">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-navy-600" />
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary" />
             <span className="ml-2 text-gray-600">Loading network...</span>
           </div>
         </div>
@@ -472,7 +472,7 @@ export function MobileNetworkPage() {
             className={cn(
               "flex-1 py-3 text-sm font-medium border-b-2 transition-colors",
               activeTab === 'grow'
-                ? "border-blue-600 text-blue-600"
+                ? "border-brand-accent text-brand-accent"
                 : "border-transparent text-gray-600 hover:text-gray-900"
             )}
           >
@@ -483,7 +483,7 @@ export function MobileNetworkPage() {
             className={cn(
               "flex-1 py-3 text-sm font-medium border-b-2 transition-colors",
               activeTab === 'catchup'
-                ? "border-blue-600 text-blue-600"
+                ? "border-brand-accent text-brand-accent"
                 : "border-transparent text-gray-600 hover:text-gray-900"
             )}
           >
@@ -522,7 +522,7 @@ export function MobileNetworkPage() {
                               onClick={(e) => e.stopPropagation()}
                             />
                           ) : (
-                            <div className="w-12 h-12 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold flex-shrink-0">
+                            <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center text-brand-primary text-sm font-semibold flex-shrink-0">
                               {partner.avatar ? (
                                 <img 
                                   src={partner.avatar} 
@@ -569,7 +569,7 @@ export function MobileNetworkPage() {
                           <button
                             onClick={() => handleConnectionAction(connection.id, 'accept')}
                             disabled={processingId === connection.id}
-                            className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center hover:bg-blue-700 transition-colors disabled:opacity-50"
+                            className="w-8 h-8 rounded-full bg-brand-accent flex items-center justify-center hover:bg-accent-700 transition-colors disabled:opacity-50"
                           >
                             {processingId === connection.id ? (
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
@@ -633,7 +633,7 @@ export function MobileNetworkPage() {
                                 onClick={(e) => e.stopPropagation()}
                               />
                             ) : (
-                              <div className="w-12 h-12 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold flex-shrink-0">
+                              <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center text-brand-primary text-sm font-semibold flex-shrink-0">
                                 {partner.avatar ? (
                                   <img 
                                     src={partner.avatar} 
@@ -695,7 +695,7 @@ export function MobileNetworkPage() {
                           <Button
                             variant="outline"
                             onClick={() => router.push('/dashboard/network/manage?filter=recently_connected')}
-                            className="w-full text-blue-600 border-blue-600 hover:bg-blue-50"
+                            className="w-full text-brand-accent border-brand-accent hover:bg-accent-50"
                           >
                             View All in Manage Network
                           </Button>
@@ -708,7 +708,7 @@ export function MobileNetworkPage() {
                               onClick={() => setRecentlyConnectedLimit(prev => 
                                 Math.min(prev + LOAD_MORE_INCREMENT, recentlyConnected.length)
                               )}
-                              className="rounded-full flex-1 text-blue-600 border-blue-600 hover:bg-blue-50"
+                              className="rounded-full flex-1 text-brand-accent border-brand-accent hover:bg-accent-50"
                             >
                               Load More ({remainingRecentlyConnected} remaining)
                             </Button>
@@ -765,7 +765,7 @@ export function MobileNetworkPage() {
                                 onClick={(e) => e.stopPropagation()}
                               />
                             ) : (
-                              <div className="w-12 h-12 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold flex-shrink-0">
+                              <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center text-brand-primary text-sm font-semibold flex-shrink-0">
                                 {partner.avatar ? (
                                   <img 
                                     src={partner.avatar} 
@@ -799,7 +799,7 @@ export function MobileNetworkPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleMessage(connection.id)}
-                            className="rounded-full text-blue-600 border-blue-600 hover:bg-blue-50 text-xs px-3 h-8 shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-navy-500/30"
+                            className="rounded-full text-brand-accent border-brand-accent hover:bg-accent-50 text-xs px-3 h-8 shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-brand-primary/30"
                           >
                             <MessageCircle className="h-3 w-3 mr-1" />
                             Say hi
@@ -824,7 +824,7 @@ export function MobileNetworkPage() {
                           <Button
                             variant="outline"
                             onClick={() => router.push('/dashboard/network/manage?filter=reconnect')}
-                            className="w-full text-blue-600 border-blue-600 hover:bg-blue-50"
+                            className="w-full text-brand-accent border-brand-accent hover:bg-accent-50"
                           >
                             View All in Manage Network
                           </Button>
@@ -837,7 +837,7 @@ export function MobileNetworkPage() {
                               onClick={() => setReconnectLimit(prev => 
                                 Math.min(prev + LOAD_MORE_INCREMENT, reconnectConnections.length)
                               )}
-                              className="flex-1 text-blue-600 border-blue-600 hover:bg-blue-50"
+                              className="flex-1 text-brand-accent border-brand-accent hover:bg-accent-50"
                             >
                               Load More ({remainingReconnect} remaining)
                             </Button>

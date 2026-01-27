@@ -417,7 +417,7 @@ export function ChapterBrandingList({ className }: ChapterBrandingListProps) {
                                       variant="outline"
                                       size="sm"
                                       onClick={() => handleView(chapter.branding as BrandingRecord)}
-                                      className="hover:bg-blue-50 hover:text-blue-600"
+                                      className="hover:bg-accent-50 hover:text-brand-accent"
                                       title="View Branding"
                                     >
                                       <Eye className="h-4 w-4" />

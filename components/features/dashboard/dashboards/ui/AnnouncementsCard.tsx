@@ -23,7 +23,7 @@ const getAnnouncementTypeConfig = (type: string) => {
     case 'urgent':
       return { icon: AlertTriangle, color: 'text-red-600', bgColor: 'bg-red-100' };
     case 'event':
-      return { icon: Calendar, color: 'text-blue-600', bgColor: 'bg-blue-100' };
+      return { icon: Calendar, color: 'text-brand-accent', bgColor: 'bg-accent-100' };
     case 'academic':
       return { icon: GraduationCap, color: 'text-green-600', bgColor: 'bg-green-100' };
     default:
@@ -39,7 +39,7 @@ const getPriorityIcon = (priority: string) => {
     case 'high':
       return { icon: TrendingUp, color: 'text-orange-600' };
     case 'normal':
-      return { icon: Minus, color: 'text-blue-600' };
+      return { icon: Minus, color: 'text-brand-accent' };
     case 'low':
       return { icon: Minus, color: 'text-gray-600' };
     default:
@@ -119,7 +119,7 @@ export function AnnouncementsCard() {
     return (
       <div 
         key={announcement.id} 
-        className={`p-3 border border-gray-200 rounded-lg hover:border-navy-300 hover:shadow-sm transition-all duration-200 bg-white ${isInModal ? 'mb-3' : ''}`}
+        className={`p-3 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-sm transition-all duration-200 bg-white ${isInModal ? 'mb-3' : ''}`}
       >
         <div className="flex items-start space-x-3">
           {/* Type icon */}
@@ -156,7 +156,7 @@ export function AnnouncementsCard() {
                 variant="outline"
                 onClick={() => handleMarkAsRead(announcement.id)}
                 disabled={markingAsRead === announcement.id}
-                className="text-navy-600 border-navy-600 hover:bg-navy-50 h-6 px-2 shrink-0"
+                className="text-brand-primary border-brand-primary hover:bg-primary-50 h-6 px-2 shrink-0"
                 title="Mark as read"
               >
                 {markingAsRead === announcement.id ? (
@@ -177,13 +177,13 @@ export function AnnouncementsCard() {
       <Card className="bg-white shadow-sm border border-gray-200">
         <CardHeader className="pb-3 border-b border-gray-100">
           <CardTitle className="text-lg font-semibold flex items-center space-x-2">
-            <MessageSquare className="h-5 w-5 text-navy-600" />
+            <MessageSquare className="h-5 w-5 text-brand-primary" />
             <span className="text-gray-900">Chapter Announcements</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-navy-600 mb-2"></div>
+            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary mb-2"></div>
             <p className="text-gray-500 text-sm">Loading announcements...</p>
           </div>
         </CardContent>
@@ -196,7 +196,7 @@ export function AnnouncementsCard() {
       <Card className="bg-white shadow-sm border border-gray-200">
         <CardHeader className="pb-3 border-b border-gray-100">
           <CardTitle className="text-lg font-semibold flex items-center space-x-2">
-            <MessageSquare className="h-5 w-5 text-navy-600" />
+            <MessageSquare className="h-5 w-5 text-brand-primary" />
             <span className="text-gray-900">Chapter Announcements</span>
           </CardTitle>
         </CardHeader>
@@ -219,7 +219,7 @@ export function AnnouncementsCard() {
         <CardHeader className="pb-3 border-b border-gray-100">
           <CardTitle className="text-lg font-semibold flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <MessageSquare className="h-5 w-5 text-navy-600" />
+              <MessageSquare className="h-5 w-5 text-brand-primary" />
               <span className="text-gray-900">Announcements</span>
             </div>
             {announcements.length > 0 && (
@@ -239,7 +239,7 @@ export function AnnouncementsCard() {
             <div className="pt-3 border-t border-gray-200 mt-3">
               <Button 
                 variant="outline" 
-                className="w-full text-slate-600 border-gray-400 hover:bg-navy-50 h-8"
+                className="w-full text-slate-600 border-gray-400 hover:bg-primary-50 h-8"
                 onClick={() => setIsViewAllOpen(true)}
               >
                 <Eye className="h-4 w-4 mr-2" />
@@ -255,10 +255,10 @@ export function AnnouncementsCard() {
         <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
-              <MessageSquare className="h-5 w-5 text-navy-600" />
+              <MessageSquare className="h-5 w-5 text-brand-primary" />
               <span>All Announcements</span>
               {announcements.length > 0 && (
-                <Badge variant="secondary" className="ml-2 bg-navy-100 text-navy-800">
+                <Badge variant="secondary" className="ml-2 bg-primary-100 text-primary-800">
                   {announcements.length}
                 </Badge>
               )}
@@ -279,7 +279,7 @@ export function AnnouncementsCard() {
           <div className="pt-4 border-t border-gray-100 mt-4 flex justify-end">
             <Button 
               variant="outline" 
-              className="text-navy-600 border-navy-600 hover:bg-navy-50"
+              className="text-brand-primary border-brand-primary hover:bg-primary-50"
               onClick={refresh}
             >
               Refresh Announcements

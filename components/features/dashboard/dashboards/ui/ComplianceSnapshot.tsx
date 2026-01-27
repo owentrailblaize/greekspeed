@@ -20,7 +20,7 @@ export function ComplianceSnapshot() {
     <Card className="bg-white">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center space-x-2">
-          <Shield className="h-5 w-5 text-navy-600" />
+          <Shield className="h-5 w-5 text-brand-primary" />
           <span>Compliance Status</span>
         </CardTitle>
       </CardHeader>
@@ -62,14 +62,14 @@ export function ComplianceSnapshot() {
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
-                className="bg-navy-600 h-2 rounded-full transition-all duration-300"
+                className="bg-brand-primary h-2 rounded-full transition-all duration-300"
                 style={{ width: `${completionPercentage}%` }}
               ></div>
             </div>
           </div>
           
           <div className="pt-2 border-t border-gray-100">
-            <Button variant="outline" className="w-full text-navy-600 border-navy-600 hover:bg-navy-50">
+            <Button variant="outline" className="w-full text-brand-primary border-brand-primary hover:bg-primary-50">
               View Checklist
             </Button>
           </div>

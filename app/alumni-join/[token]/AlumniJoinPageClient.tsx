@@ -164,7 +164,7 @@ export default function AlumniJoinPageClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-accent-50 flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
           <CardContent className="p-6">
             <div className="flex flex-col items-center space-y-4">
@@ -182,7 +182,7 @@ export default function AlumniJoinPageClient() {
 
   if (error || !invitation) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-accent-50 flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 text-red-600">
@@ -217,7 +217,7 @@ export default function AlumniJoinPageClient() {
 
   if (signupSuccess && !invitation.approval_mode) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-accent-50 flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 text-green-600">
@@ -252,7 +252,7 @@ export default function AlumniJoinPageClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-accent-50 to-purple-50 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -261,7 +261,7 @@ export default function AlumniJoinPageClient() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center space-x-2">
-              <Users className="h-5 w-5 text-blue-600" />
+              <Users className="h-5 w-5 text-brand-accent" />
               <span>Join {invitation.chapter_name}</span>
             </CardTitle>
           </CardHeader>
@@ -321,7 +321,7 @@ export default function AlumniJoinPageClient() {
               <Button
                 onClick={handleStartJoin}
                 disabled={linkedInLoading}
-                className="w-full h-11 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm hover:shadow-md transition-all duration-200"
+                className="w-full h-11 rounded-full bg-brand-accent hover:bg-accent-700 text-white font-medium shadow-sm hover:shadow-md transition-all duration-200"
               >
                 <Mail className="h-4 w-4 mr-2" />
                 Continue with Email

@@ -56,7 +56,7 @@ export function AllDocumentsModal({ isOpen, onClose, documents }: AllDocumentsMo
     
     if (fileType.includes('pdf')) return <FileText className="h-5 w-5 sm:h-4 sm:w-4 text-red-600" />;
     if (fileType.includes('spreadsheet') || fileType.includes('excel')) return <FileText className="h-5 w-5 sm:h-4 sm:w-4 text-green-600" />;
-    if (fileType.includes('word')) return <FileText className="h-5 w-5 sm:h-4 sm:w-4 text-blue-600" />;
+    if (fileType.includes('word')) return <FileText className="h-5 w-5 sm:h-4 sm:w-4 text-brand-accent" />;
     
     return <FileText className="h-5 w-5 sm:h-4 sm:w-4" />;
   };
@@ -98,7 +98,7 @@ export function AllDocumentsModal({ isOpen, onClose, documents }: AllDocumentsMo
       legal: 'bg-purple-100 text-purple-800',
       finance: 'bg-green-100 text-green-800',
       safety: 'bg-red-100 text-red-800',
-      policy: 'bg-blue-100 text-blue-800',
+      policy: 'bg-accent-100 text-accent-800',
       general: 'bg-gray-100 text-gray-800'
     };
     return colors[category] || colors.general;
@@ -155,7 +155,7 @@ export function AllDocumentsModal({ isOpen, onClose, documents }: AllDocumentsMo
         <div className="bg-white rounded-xl shadow-2xl w-full max-w-[95vw] sm:max-w-6xl max-h-[90vh] flex flex-col relative">
           {/* Header */}
           <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
-            <h3 className="text-xl sm:text-2xl font-bold text-navy-900">All Chapter Documents</h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-primary-900">All Chapter Documents</h3>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"

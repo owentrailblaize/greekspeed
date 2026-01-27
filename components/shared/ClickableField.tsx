@@ -41,7 +41,7 @@ export function ClickableField({
     <>
       <button
         onClick={handleClick}
-        className={`underline decoration-dotted underline-offset-2 hover:decoration-solid hover:text-blue-600 transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 bg-transparent border-none p-0 m-0 ${getTextAlignClass()} ${className}`}
+        className={`underline decoration-dotted underline-offset-2 hover:decoration-solid hover:text-brand-accent transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-1 bg-transparent border-none p-0 m-0 ${getTextAlignClass()} ${className}`}
       >
         {value}
       </button>

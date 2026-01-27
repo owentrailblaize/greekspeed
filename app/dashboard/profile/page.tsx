@@ -176,7 +176,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-accent-50/20">
         <div className="max-w-7xl mx-auto px-6 py-10">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
@@ -194,7 +194,7 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-accent-50/20">
         <div className="max-w-7xl mx-auto px-6 py-10">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Profile</h1>
@@ -261,7 +261,7 @@ export default function ProfilePage() {
     return (
       <div
         key={connection.id}
-        className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-navy-300 transition-colors"
+        className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-primary-300 transition-colors"
       >
         <div className="flex items-center space-x-3 flex-1 min-w-0">
           <UserAvatar
@@ -288,7 +288,7 @@ export default function ProfilePage() {
           <Button
             size="sm"
             variant="outline"
-            className="text-navy-600 border-navy-300 hover:bg-navy-50 px-2 sm:px-3"
+            className="text-brand-primary border-primary-300 hover:bg-primary-50 px-2 sm:px-3"
             onClick={() => handleMessageClick(connection.id)}
           >
             <MessageCircle className="w-4 h-4 sm:mr-2" />
@@ -336,24 +336,24 @@ export default function ProfilePage() {
       </div>
 
       {/* Desktop Layout - Keep Existing */}
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 hidden sm:block pb-20 sm:pb-0">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-accent-50/20 hidden sm:block pb-20 sm:pb-0">
       <div className="max-w-full mx-auto px-6 py-6">
         {/* Profile Completion Toast - Dismissible */}
         {completion && completion.percentage < 100 && !isCompletionDismissed && (
           <div className="mb-6 relative">
-            <div className="p-4 bg-white rounded-lg border border-navy-200 shadow-md flex items-center justify-between gap-4 animate-in slide-in-from-top-2 duration-300">
+            <div className="p-4 bg-white rounded-lg border border-primary-200 shadow-md flex items-center justify-between gap-4 animate-in slide-in-from-top-2 duration-300">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3">
                   <div className="flex-shrink-0">
-                    <Badge className="bg-navy-600 text-white">
+                    <Badge className="bg-brand-primary text-white">
                       {completion.percentage}% Complete
                     </Badge>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-navy-900">
+                    <p className="text-sm font-medium text-primary-900">
                       Profile Completion: {completion.percentage}%
                     </p>
-                    <p className="text-xs text-navy-600 mt-0.5 truncate">
+                    <p className="text-xs text-brand-primary mt-0.5 truncate">
                       Complete your profile to unlock full features and improve your visibility in the network
                     </p>
                   </div>
@@ -373,7 +373,7 @@ export default function ProfilePage() {
         {/* Banner Header Section */}
         <div className="relative mb-8 rounded-xl overflow-hidden shadow-xl sm:shadow-slate-300/60">
           {/* Banner Image - Placeholder for now */}
-          <div className="w-full h-48 bg-gradient-to-r from-navy-600 via-blue-400 to-blue-100 flex items-center justify-center overflow-hidden">
+          <div className="w-full h-48 bg-gradient-to-r from-brand-primary via-accent-400 to-accent-100 flex items-center justify-center overflow-hidden">
             {profile?.banner_url ? (
               <img 
                 src={profile.banner_url} 
@@ -436,14 +436,14 @@ export default function ProfilePage() {
           <div className="absolute right-4 sm:right-8 bottom-4 flex items-center space-x-3">
             <Button 
               size="sm" 
-              className="w-10 h-10 rounded-full bg-navy-600 hover:bg-navy-700"
+              className="w-10 h-10 rounded-full bg-brand-primary hover:bg-brand-primary-hover"
               onClick={openEditProfileModal}
               title="Edit Profile"
             >
               <Edit className="w-4 h-4" />
             </Button>
             <Link href="/dashboard/messages">
-              <Button size="sm" className="w-10 h-10 rounded-full bg-navy-600 hover:bg-navy-700">
+              <Button size="sm" className="w-10 h-10 rounded-full bg-brand-primary hover:bg-brand-primary-hover">
                 <MessageCircle className="w-4 h-4" />
               </Button>
             </Link>
@@ -463,7 +463,7 @@ export default function ProfilePage() {
                   .filter(field => field.required || field.value) // Only show required fields or fields with values
                   .map((field) => (
                     <div key={field.label} className="flex items-start space-x-3 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
-                      <div className="w-5 h-5 mt-0.5 text-navy-500 flex-shrink-0">
+                      <div className="w-5 h-5 mt-0.5 text-brand-primary flex-shrink-0">
                         <field.icon className="w-5 h-5" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -493,7 +493,7 @@ export default function ProfilePage() {
                           onClick={() => setActiveTab('connections')}
                           className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                             activeTab === 'connections'
-                              ? 'bg-navy-600 text-white'
+                              ? 'bg-brand-primary text-white'
                               : ' text-gray-700 hover:bg-gray-200'
                           }`}
                         >
@@ -503,7 +503,7 @@ export default function ProfilePage() {
                           onClick={() => setActiveTab('posts')}
                           className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                             activeTab === 'posts'
-                              ? 'bg-navy-600 text-white'
+                              ? 'bg-brand-primary text-white'
                               : ' text-gray-700 hover:bg-gray-200'
                           }`}
                         >
@@ -522,7 +522,7 @@ export default function ProfilePage() {
                   <TabsContent value="connections" className="mt-4 space-y-4">
                     {connectionsLoading ? (
                       <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600 mx-auto mb-4"></div>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary mx-auto mb-4"></div>
                         <p className="text-gray-500">Loading connections...</p>
                       </div>
                     ) : sortedConnections.length > 0 ? (
@@ -552,7 +552,7 @@ export default function ProfilePage() {
                   <TabsContent value="posts" className="mt-4">
                     {postsLoading ? (
                       <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600 mx-auto mb-4"></div>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary mx-auto mb-4"></div>
                         <p className="text-gray-500">Loading your posts...</p>
                       </div>
                     ) : userPosts.length > 0 ? (
@@ -562,7 +562,7 @@ export default function ProfilePage() {
                             <CardContent className="p-4 sm:p-6">
                               {/* Post Header */}
                               <div className="flex items-start space-x-3 sm:space-x-4 mb-4 sm:mb-3">
-                              <div className="w-12 h-12 sm:w-10 sm:h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
+                              <div className="w-12 h-12 sm:w-10 sm:h-10 bg-primary-100 rounded-full flex items-center justify-center text-brand-primary text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
                                 {post.author?.avatar_url ? (
                                   <ImageWithFallback
                                     src={post.author.avatar_url}
@@ -581,7 +581,7 @@ export default function ProfilePage() {
                                     <h4 className="font-medium text-gray-900 text-base sm:text-sm break-words">
                                       {post.author?.full_name || 'Unknown User'}
                                     </h4>
-                                    <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                    <Badge className="bg-accent-100 text-accent-800 text-xs">
                                       {post.post_type.replace('_', ' ')}
                                     </Badge>
                                   </div>

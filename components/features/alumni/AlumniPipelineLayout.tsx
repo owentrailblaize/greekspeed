@@ -164,7 +164,7 @@ export function AlumniPipelineLayout({
                 <div className="p-4 border-b border-gray-200 bg-gray-50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <Filter className="h-5 w-5 text-navy-600 flex-shrink-0" />
+                      <Filter className="h-5 w-5 text-brand-primary flex-shrink-0" />
                       {!sidebarCollapsed && (
                         <motion.h3 
                           initial={{ opacity: 0 }}

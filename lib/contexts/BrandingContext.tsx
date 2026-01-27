@@ -44,11 +44,17 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
 
     const root = document.documentElement;
     
+    // Core brand colors
     root.style.setProperty('--brand-primary', theme.primaryColor);
     root.style.setProperty('--brand-primary-hover', theme.primaryColorHover);
     root.style.setProperty('--brand-accent', theme.accentColor);
     root.style.setProperty('--brand-accent-light', theme.accentColorLight);
     root.style.setProperty('--brand-focus', theme.focusColor);
+    
+    // New semantic variables (can be customized per chapter)
+    root.style.setProperty('--brand-text', theme.primaryColor);
+    root.style.setProperty('--brand-background', '#ffffff');
+    root.style.setProperty('--brand-secondary', theme.accentColorLight);
   };
 
   /**
@@ -65,6 +71,9 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     root.style.setProperty('--brand-accent', DEFAULT_BRANDING_THEME.accentColor);
     root.style.setProperty('--brand-accent-light', DEFAULT_BRANDING_THEME.accentColorLight);
     root.style.setProperty('--brand-focus', DEFAULT_BRANDING_THEME.focusColor);
+    root.style.setProperty('--brand-text', DEFAULT_BRANDING_THEME.primaryColor);
+    root.style.setProperty('--brand-background', '#ffffff');
+    root.style.setProperty('--brand-secondary', DEFAULT_BRANDING_THEME.accentColorLight);
   };
 
   // Inject CSS variables when branding changes

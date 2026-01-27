@@ -138,7 +138,7 @@ export function ConnectionSelector({
             placeholder="Type a name or multiple names"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-navy-300"
+            className="pl-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-primary-300"
           />
         </div>
       </div>
@@ -171,7 +171,7 @@ export function ConnectionSelector({
                   key={connection.id}
                   className={`px-4 py-3 cursor-pointer transition-colors ${
                     isSelected 
-                      ? 'bg-navy-50 border-r-2 border-navy-600' 
+                      ? 'bg-primary-50 border-r-2 border-brand-primary' 
                       : 'hover:bg-gray-50'
                   }`}
                   onClick={() => onConnectionSelect(connection.id)}
@@ -213,13 +213,13 @@ export function ConnectionSelector({
                               userId={otherUser.id}
                               fullName={otherUser.full_name}
                               className={`font-medium truncate ${
-                                isSelected ? 'text-navy-900' : 'text-gray-900'
+                                isSelected ? 'text-primary-900' : 'text-gray-900'
                               }`}
                               onClick={(e) => e.stopPropagation()}
                             />
                           ) : (
                             <h3 className={`font-medium truncate ${
-                              isSelected ? 'text-navy-900' : 'text-gray-900'
+                              isSelected ? 'text-primary-900' : 'text-gray-900'
                             }`}>
                               {otherUser.full_name}
                             </h3>

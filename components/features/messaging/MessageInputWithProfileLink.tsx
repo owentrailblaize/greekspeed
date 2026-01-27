@@ -194,7 +194,7 @@ export function MessageInputWithProfileLink({
     <div className="flex-shrink-0 border-t border-gray-200 bg-white p-4">
       {/* Profile Link Preview */}
       {profileInfo && message.includes(profileLink) && (
-        <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="mb-3 p-3 bg-accent-50 border border-accent-200 rounded-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3 flex-1 min-w-0">
               {profileInfo.avatarUrl ? (
@@ -256,7 +256,7 @@ export function MessageInputWithProfileLink({
             onKeyPress={handleKeyPress}
             placeholder={placeholder}
             disabled={disabled || isSending}
-            className={`w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-transparent resize-none ${borderRadiusClass} transition-all duration-200 ${
+            className={`w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent resize-none ${borderRadiusClass} transition-all duration-200 ${
               isExpanded ? 'min-h-[80px]' : 'min-h-[44px]'
             } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
             style={{
@@ -270,7 +270,7 @@ export function MessageInputWithProfileLink({
         <Button
           onClick={handleSend}
           disabled={disabled || isSending || !message.trim()}
-          className={`flex-shrink-0 ${borderRadiusClass} bg-navy-600 hover:bg-navy-700 text-white h-[44px] w-[44px] p-0 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200`}
+          className={`flex-shrink-0 ${borderRadiusClass} bg-brand-primary hover:bg-brand-primary-hover text-white h-[44px] w-[44px] p-0 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200`}
         >
           {isSending ? (
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />

@@ -126,7 +126,7 @@ export function PostCard({
             href={cleanUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-700 hover:underline break-all"
+            className="text-brand-accent hover:text-accent-700 hover:underline break-all"
             onClick={(e) => e.stopPropagation()}
           >
             {part}
@@ -343,7 +343,7 @@ export function PostCard({
                   onClick={(e) => e.stopPropagation()}
                 />
               ) : (
-                <div className="h-11 w-11 bg-navy-100/80 rounded-full flex items-center justify-center text-navy-700 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
+                <div className="h-11 w-11 bg-primary-100/80 rounded-full flex items-center justify-center text-brand-primary-hover text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
                   {post.author?.first_name?.charAt(0) || 'U'}
                 </div>
               )}
@@ -384,7 +384,7 @@ export function PostCard({
             <div className="rounded-2xl bg-gray-50/30 border border-gray-100/50 p-4 space-y-3">
               {renderPostContent(
                 'text-gray-700 text-sm leading-relaxed',
-                'text-xs font-medium text-navy-600 hover:text-navy-700 transition-colors'
+                'text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors'
               )}
               {/* Display images - support both single (backward compat) and multiple */}
               {(() => {
@@ -474,7 +474,7 @@ export function PostCard({
                 onClick={(e) => { e.stopPropagation(); setIsCommentModalOpen(true); }}
                 className="gap-2 rounded-full px-3 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
               >
-                <MessageCircle className="h-4 w-4 text-blue-500" />
+                <MessageCircle className="h-4 w-4 text-accent-500" />
                 <span>{commentCountLabel}</span>
               </Button>
             </div>
@@ -503,7 +503,7 @@ export function PostCard({
                   onClick={(e) => e.stopPropagation()}
                 />
               ) : (
-                <div className="h-12 w-12 sm:h-11 sm:w-11 bg-navy-100/80 rounded-full flex items-center justify-center text-navy-700 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
+                <div className="h-12 w-12 sm:h-11 sm:w-11 bg-primary-100/80 rounded-full flex items-center justify-center text-brand-primary-hover text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
                   {post.author?.first_name?.charAt(0) || 'U'}
                 </div>
               )}
@@ -550,7 +550,7 @@ export function PostCard({
             <div className="rounded-2xl bg-gray-50/30 border border-gray-200/80 p-4 sm:p-5 space-y-3">
               {renderPostContent(
                 'text-gray-700 text-base sm:text-[0.95rem] leading-relaxed',
-                'text-xs font-medium text-navy-600 hover:text-navy-700 transition-colors'
+                'text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors'
               )}
               {/* Display images - support both single (backward compat) and multiple */}
               {(() => {
@@ -640,7 +640,7 @@ export function PostCard({
                 onClick={(e) => { e.stopPropagation(); setIsCommentModalOpen(true); }}
                 className="gap-2 rounded-full px-3 py-2 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
               >
-                <MessageCircle className="h-4 w-4 text-blue-500" />
+                <MessageCircle className="h-4 w-4 text-accent-500" />
                 <span className="whitespace-nowrap">{commentCountLabel}</span>
               </Button>
             </div>
