@@ -59,68 +59,335 @@ interface ProfileUpdatePromptModalProps {
   isMobile?: boolean;
 }
 
-// Template generator function
+interface TemplateOption {
+  id: string;
+  content: string;
+  label?: string;
+}
+
+// Priority order for change types (higher = more significant)
+const CHANGE_PRIORITY: Record<DetectedChange['type'], number> = {
+  'role_transition': 10,
+  'member_status_change': 9,
+  'company_change': 8,
+  'career_update': 7,
+  'location_change': 6,
+  'industry_change': 5,
+  'academic_update': 3,
+  'major_change': 2,
+  'minor_change': 2,
+  'grad_year_change': 2,
+  'gpa_change': 1,
+  'hometown_change': 1,
+};
+
+// Helper: Check if a value is truly "new" (no oldValue or oldValue was empty/ignored)
+function isNewValue(change: DetectedChange): boolean {
+  return !change.oldValue || 
+         change.oldValue === 'Not Specified' || 
+         change.oldValue.trim() === '';
+}
+
+// Helper: Get the most significant change from multiple changes
+function getPrimaryChange(changes: DetectedChange[]): DetectedChange | null {
+  if (changes.length === 0) return null;
+  if (changes.length === 1) return changes[0];
+  
+  // Sort by priority, then by order in array
+  return [...changes].sort((a, b) => {
+    const priorityDiff = (CHANGE_PRIORITY[b.type] || 0) - (CHANGE_PRIORITY[a.type] || 0);
+    if (priorityDiff !== 0) return priorityDiff;
+    return 0; // Keep original order for ties
+  })[0];
+}
+
+// Helper: Generate combined career template (handles company + title + industry together)
+function generateCombinedCareerTemplate(changes: DetectedChange[]): string {
+  const company = changes.find(c => c.field === 'company')?.newValue;
+  const title = changes.find(c => c.field === 'job_title')?.newValue;
+  const industry = changes.find(c => c.field === 'industry')?.newValue;
+  
+  const companyChange = changes.find(c => c.field === 'company');
+  const titleChange = changes.find(c => c.field === 'job_title');
+  const industryChange = changes.find(c => c.field === 'industry');
+  
+  const isNewCompany = companyChange ? isNewValue(companyChange) : false;
+  const isNewTitle = titleChange ? isNewValue(titleChange) : false;
+  const isNewIndustry = industryChange ? isNewValue(industryChange) : false;
+  
+  // All three changed = major career move
+  if (company && title && industry && isNewCompany && isNewTitle && isNewIndustry) {
+    return `Excited to share that I've joined ${company} as a ${title} in the ${industry} industry! This is a new chapter I'm really looking forward to. 🎉`;
+  }
+  
+  // Company + Title (most common)
+  if (company && title) {
+    if (isNewCompany && isNewTitle) {
+      return `Just started a new role as ${title} at ${company}!${industry ? ` Excited to be working in ${industry}.` : ''} 🚀`;
+    } else if (isNewCompany) {
+      return `Now working at ${company} as a ${title}!${industry ? ` Continuing in ${industry}.` : ''} 💼`;
+    } else {
+      return `Updated my role to ${title} at ${company}.${industry ? ` Still in ${industry}.` : ''} 📈`;
+    }
+  }
+  
+  // Company only
+  if (company) {
+    return isNewCompany 
+      ? `Just joined ${company}!${title ? ` Excited to continue as ${title}.` : ''} 🎉`
+      : `Updated my company to ${company}.${title ? ` Still serving as ${title}.` : ''} 💼`;
+  }
+  
+  // Title only
+  if (title) {
+    return isNewTitle
+      ? `Excited to share that I'm now a ${title}!${company ? ` at ${company}.` : ''} 🚀`
+      : `Updated my title to ${title}.${company ? ` Still at ${company}.` : ''} 📈`;
+  }
+  
+  // Industry only (be careful - don't say "transitioning" if just updating)
+  if (industry) {
+    return isNewIndustry
+      ? `Transitioning to ${industry}! Looking forward to this new chapter. 📊`
+      : `Updated my industry to ${industry}. Continuing to grow in this space! 💼`;
+  }
+  
+  return 'Just updated my career information! 📈';
+}
+
+// Generate multiple template options for user to choose from
+function generateTemplateOptions(changes: DetectedChange[]): TemplateOption[] {
+  const primaryChange = getPrimaryChange(changes);
+  if (!primaryChange) return [];
+  
+  const options: TemplateOption[] = [];
+  
+  // Handle combined career updates first
+  const hasCareerFields = changes.some(c => 
+    c.field === 'company' || c.field === 'job_title' || c.field === 'industry'
+  );
+  
+  if (hasCareerFields && (primaryChange.type === 'career_update' || primaryChange.type === 'company_change')) {
+    const company = changes.find(c => c.field === 'company')?.newValue;
+    const title = changes.find(c => c.field === 'job_title')?.newValue;
+    const industry = changes.find(c => c.field === 'industry')?.newValue;
+    const companyChange = changes.find(c => c.field === 'company');
+    const isNewCompany = companyChange ? isNewValue(companyChange) : false;
+    
+    if (company && title) {
+      // Option 1: Casual
+      options.push({
+        id: 'casual',
+        content: isNewCompany 
+          ? `Just joined ${company} as a ${title}! 🎉`
+          : `Now working at ${company} as a ${title}! 💼`,
+        label: 'Casual'
+      });
+      
+      // Option 2: Professional
+      options.push({
+        id: 'professional',
+        content: isNewCompany
+          ? `Excited to announce my new role as ${title} at ${company}!${industry ? ` Looking forward to contributing to the ${industry} industry.` : ''}`
+          : `I'm now serving as ${title} at ${company}.${industry ? ` Continuing to work in ${industry}.` : ''}`,
+        label: 'Professional'
+      });
+      
+      // Option 3: Brief (only if new)
+      if (isNewCompany) {
+        options.push({
+          id: 'brief',
+          content: `New role: ${title} @ ${company} 🚀`,
+          label: 'Brief'
+        });
+      }
+    }
+  }
+  
+  // Industry change
+  else if (primaryChange.type === 'industry_change') {
+    const isNew = isNewValue(primaryChange);
+    options.push({
+      id: 'transition',
+      content: isNew
+        ? `Transitioning to ${primaryChange.newValue}! Looking forward to this new chapter. 📊`
+        : `Now working in ${primaryChange.newValue}. Excited to continue growing in this space! 💼`,
+      label: isNew ? 'Transition' : 'Update'
+    });
+    options.push({
+      id: 'casual',
+      content: `Updated my industry to ${primaryChange.newValue}! 🎯`,
+      label: 'Casual'
+    });
+  }
+  
+  // Location change
+  else if (primaryChange.type === 'location_change') {
+    const isNew = isNewValue(primaryChange);
+    options.push({
+      id: 'moved',
+      content: isNew
+        ? `Just moved to ${primaryChange.newValue}! 🗺️ Excited to explore this new city.`
+        : `Updated my location to ${primaryChange.newValue}! 📍`,
+      label: isNew ? 'Moved' : 'Updated'
+    });
+    options.push({
+      id: 'brief',
+      content: `Now in ${primaryChange.newValue}! 🏙️`,
+      label: 'Brief'
+    });
+  }
+  
+  // Role transition
+  else if (primaryChange.type === 'role_transition') {
+    if (primaryChange.newValue === 'alumni') {
+      options.push({
+        id: 'excited',
+        content: `Excited to announce I've graduated and joined the alumni network! 🎓✨`,
+        label: 'Excited'
+      });
+      options.push({
+        id: 'casual',
+        content: `Just graduated and became an alum! 🎓`,
+        label: 'Casual'
+      });
+    } else {
+      options.push({
+        id: 'default',
+        content: generatePostTemplate(changes),
+        label: 'Default'
+      });
+    }
+  }
+  
+  // Academic updates
+  else if (primaryChange.type === 'academic_update' || primaryChange.type === 'major_change') {
+    const major = changes.find(c => c.field === 'major')?.newValue;
+    const minor = changes.find(c => c.field === 'minor')?.newValue;
+    
+    if (major) {
+      const isNew = isNewValue(changes.find(c => c.field === 'major')!);
+      options.push({
+        id: 'excited',
+        content: isNew
+          ? `Changed my major to ${major}!${minor ? ` Also added ${minor} as my minor!` : ''} Excited for this new academic path! 📖`
+          : `Updated my major to ${major}.${minor ? ` Minor: ${minor}.` : ''} 📚`,
+        label: isNew ? 'Excited' : 'Update'
+      });
+      options.push({
+        id: 'brief',
+        content: `New major: ${major}${minor ? ` + ${minor} minor` : ''}! 🎓`,
+        label: 'Brief'
+      });
+    }
+  }
+  
+  // Fallback: at least one option using the main template generator
+  if (options.length === 0) {
+    options.push({
+      id: 'default',
+      content: generatePostTemplate(changes),
+      label: 'Default'
+    });
+  }
+  
+  return options;
+}
+
+// Template generator function (improved with context awareness)
 function generatePostTemplate(changes: DetectedChange[]): string {
   if (changes.length === 0) return '';
   
-  const change = changes[0]; // Primary change (we'll enhance this later)
+  const primaryChange = getPrimaryChange(changes);
+  if (!primaryChange) return 'Just updated my profile! 🎉';
   
-  switch (change.type) {
-    case 'company_change':
+  // Handle combined career updates first
+  const hasCareerFields = changes.some(c => 
+    c.field === 'company' || c.field === 'job_title' || c.field === 'industry'
+  );
+  
+  if (hasCareerFields && (primaryChange.type === 'career_update' || primaryChange.type === 'company_change')) {
+    return generateCombinedCareerTemplate(changes);
+  }
+  
+  // Handle other change types with context awareness
+  switch (primaryChange.type) {
+    case 'industry_change': {
+      const isNew = isNewValue(primaryChange);
+      return isNew
+        ? `Transitioning to ${primaryChange.newValue}! Looking forward to this new chapter. 📊`
+        : `Updated my industry to ${primaryChange.newValue}. Continuing to grow in this space! 💼`;
+    }
+    
+    case 'location_change': {
+      const isNew = isNewValue(primaryChange);
+      return isNew
+        ? `Just moved to ${primaryChange.newValue}! 🗺️ Excited to explore this new city.`
+        : `Updated my location to ${primaryChange.newValue}! 📍`;
+    }
+    
+    case 'company_change': {
       const jobTitle = changes.find(c => c.field === 'job_title')?.newValue;
-      if (jobTitle && change.newValue) {
-        return `Just joined ${change.newValue} as a ${jobTitle}! 🎉`;
+      const isNew = isNewValue(primaryChange);
+      
+      if (jobTitle && primaryChange.newValue) {
+        return isNew
+          ? `Just joined ${primaryChange.newValue} as a ${jobTitle}! 🎉`
+          : `Now working at ${primaryChange.newValue} as a ${jobTitle}! 💼`;
       }
-      return change.newValue ? `Excited to start a new role at ${change.newValue}! 🚀` : '';
-    
-    case 'career_update':
-      const company = changes.find(c => c.field === 'company')?.newValue;
-      const title = changes.find(c => c.field === 'job_title')?.newValue;
-      if (company && title) {
-        return `Just joined ${company} as a ${title}! 🎉`;
-      }
-      if (title) {
-        return `Excited to share that I'm now a ${title}! 🚀`;
-      }
-      return 'Just updated my career information! 📈';
-    
-    case 'industry_change':
-      return change.newValue 
-        ? `Transitioning to ${change.newValue}! Looking forward to this new chapter. 📊`
+      return primaryChange.newValue 
+        ? (isNew 
+            ? `Excited to start a new role at ${primaryChange.newValue}! 🚀`
+            : `Updated my company to ${primaryChange.newValue}. 💼`)
         : '';
+    }
     
-    case 'role_transition':
-      if (change.newValue === 'alumni') {
+    case 'role_transition': {
+      if (primaryChange.newValue === 'alumni') {
         return `Excited to announce I've graduated and joined the alumni network! 🎓✨`;
       }
-      if (change.newValue === 'active_member') {
+      if (primaryChange.newValue === 'active_member') {
         return `I'm excited to be an active member this term and keep contributing to the chapter. 💙`;
       }
-      return `Just updated my role to ${change.newValue}. Looking forward to what's next!`;
+      return `Just updated my role to ${primaryChange.newValue}. Looking forward to what's next!`;
+    }
 
-    case 'member_status_change':
-      if (change.newValue === 'graduated') {
+    case 'member_status_change': {
+      if (primaryChange.newValue === 'graduated') {
         return `I've officially graduated and transitioned to a new chapter beyond campus. 🎓`;
       }
-      if (change.newValue === 'inactive') {
+      if (primaryChange.newValue === 'inactive') {
         return `My member status has changed, but I'm still grateful for my time with the chapter.`;
       }
-      return `My member status is now ${change.newValue}.`;
+      return `My member status is now ${primaryChange.newValue}.`;
+    }
     
-    case 'academic_update':
+    case 'academic_update': {
       const major = changes.find(c => c.field === 'major')?.newValue;
       const minor = changes.find(c => c.field === 'minor')?.newValue;
       const gradYear = changes.find(c => c.field === 'grad_year')?.newValue;
       const gpa = changes.find(c => c.field === 'gpa')?.newValue;
       
       if (major && minor) {
-        return `Switched my major to ${major} with a minor in ${minor}! 📚`;
+        const majorChange = changes.find(c => c.field === 'major');
+        const isNewMajor = majorChange ? isNewValue(majorChange) : false;
+        return isNewMajor
+          ? `Switched my major to ${major} with a minor in ${minor}! 📚`
+          : `Updated my major to ${major} and minor to ${minor}. 📖`;
       }
       if (major) {
-        return `Changed my major to ${major}! Excited for this new academic path! 📖`;
+        const majorChange = changes.find(c => c.field === 'major');
+        const isNewMajor = majorChange ? isNewValue(majorChange) : false;
+        return isNewMajor
+          ? `Changed my major to ${major}! Excited for this new academic path! 📖`
+          : `Updated my major to ${major}. 📚`;
       }
       if (minor) {
-        return `Added ${minor} as my minor! 🎓`;
+        const minorChange = changes.find(c => c.field === 'minor');
+        const isNewMinor = minorChange ? isNewValue(minorChange) : false;
+        return isNewMinor
+          ? `Added ${minor} as my minor! 🎓`
+          : `Updated my minor to ${minor}. 📚`;
       }
       if (gradYear) {
         return `Updated my graduation year to ${gradYear}! Can't wait to graduate! 🎓`;
@@ -129,36 +396,46 @@ function generatePostTemplate(changes: DetectedChange[]): string {
         return `Just updated my GPA to ${gpa}! 📊`;
       }
       return 'Just updated my academic information! 📚';
+    }
     
-    case 'major_change':
-      return change.newValue 
-        ? `Changed my major to ${change.newValue}! Excited for this new academic path! 📖`
+    case 'major_change': {
+      const isNew = isNewValue(primaryChange);
+      return primaryChange.newValue 
+        ? (isNew
+            ? `Changed my major to ${primaryChange.newValue}! Excited for this new academic path! 📖`
+            : `Updated my major to ${primaryChange.newValue}. 📚`)
         : '';
+    }
     
-    case 'minor_change':
-      return change.newValue
-        ? `Added ${change.newValue} as my minor! 🎓`
+    case 'minor_change': {
+      const isNew = isNewValue(primaryChange);
+      return primaryChange.newValue
+        ? (isNew
+            ? `Added ${primaryChange.newValue} as my minor! 🎓`
+            : `Updated my minor to ${primaryChange.newValue}. 📚`)
         : '';
+    }
     
-    case 'grad_year_change':
-      return change.newValue
-        ? `Updated my graduation year to ${change.newValue}! Can't wait to graduate! 🎓`
+    case 'grad_year_change': {
+      return primaryChange.newValue
+        ? `Updated my graduation year to ${primaryChange.newValue}! Can't wait to graduate! 🎓`
         : '';
+    }
     
-    case 'gpa_change':
-      return change.newValue
-        ? `Just updated my GPA to ${change.newValue}! 📊`
+    case 'gpa_change': {
+      return primaryChange.newValue
+        ? `Just updated my GPA to ${primaryChange.newValue}! 📊`
         : '';
+    }
     
-    case 'location_change':
-      return change.newValue
-        ? `Moved to ${change.newValue}! 🗺️`
+    case 'hometown_change': {
+      const isNew = isNewValue(primaryChange);
+      return primaryChange.newValue
+        ? (isNew
+            ? `Updated my hometown to ${primaryChange.newValue}! 🏠`
+            : `My hometown is ${primaryChange.newValue}. 🏡`)
         : '';
-    
-    case 'hometown_change':
-      return change.newValue
-        ? `Updated my hometown to ${change.newValue}! 🏠`
-        : '';
+    }
     
     default:
       return 'Just updated my profile! 🎉';
@@ -207,13 +484,21 @@ export function ProfileUpdatePromptModal({
   const [error, setError] = useState<string | null>(null);
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const [preferredTemplateType, setPreferredTemplateType] = useState<string | undefined>(undefined);
+  const [templateOptions, setTemplateOptions] = useState<TemplateOption[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('default');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Generate and set initial template when modal opens
   useEffect(() => {
     if (isOpen && detectedChanges.length > 0) {
-      const template = initialTemplate || generatePostTemplate(detectedChanges);
+      // Generate template options
+      const options = generateTemplateOptions(detectedChanges);
+      setTemplateOptions(options);
+      
+      // Use initial template if provided, otherwise use first option
+      const template = initialTemplate || (options.length > 0 ? options[0].content : generatePostTemplate(detectedChanges));
       setContent(template);
+      setSelectedTemplateId(options.length > 0 ? options[0].id : 'default');
       setError(null);
       
       // Auto-focus textarea after a brief delay
@@ -234,6 +519,8 @@ export function ProfileUpdatePromptModal({
       setIsSubmitting(false);
       setDontShowAgain(false);
       setPreferredTemplateType(undefined);
+      setTemplateOptions([]);
+      setSelectedTemplateId('default');
     }
   }, [isOpen]);
 
@@ -275,7 +562,7 @@ export function ProfileUpdatePromptModal({
     onClose();
   };
 
-  const primaryChange = detectedChanges[0];
+  const primaryChange = getPrimaryChange(detectedChanges);
   const hasMultipleChanges = detectedChanges.length > 1;
 
   const contentBody = (
@@ -357,9 +644,31 @@ export function ProfileUpdatePromptModal({
           </Card>
 
           <div>
-            <label htmlFor="post-content" className="block text-sm font-medium text-slate-700 mb-2">
-              Edit your post
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label htmlFor="post-content" className="block text-sm font-medium text-slate-700">
+                Edit your post
+              </label>
+              {templateOptions.length > 1 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {templateOptions.map((option) => (
+                    <Button
+                      key={option.id}
+                      type="button"
+                      variant={selectedTemplateId === option.id ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        setSelectedTemplateId(option.id);
+                        setContent(option.content);
+                        setError(null);
+                      }}
+                      className="h-7 px-2.5 text-xs rounded-full"
+                    >
+                      {option.label || option.id}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
             <Textarea
               ref={textareaRef}
               id="post-content"
