@@ -47,6 +47,12 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
     }
   };
 
+  // Edit later to take to section on page
+  const handleRequestDemo = () => {
+    setMobileMenuOpen(false);
+    window.open('mailto:support@trailblaize.com?subject=Request a Demo', '_blank');
+  };
+
   return (
     <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
       scrolled 
@@ -66,103 +72,92 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          {!hideNavigation && (
-            <div className="hidden md:flex items-center space-x-10">
-              {[
-                { id: "features", label: "Features" },
-                { id: "pricing", label: "Pricing" },
-                { id: "about", label: "About Us" },
-              ].map(({ id, label }) => (
-                <button
-                  key={id}
-                  onClick={() => scrollToSection(id)}
-                  className={`text-sm font-semibold transition-all duration-300 relative py-2 ${
-                    activeSection === id 
-                      ? "text-brand-primary" 
-                      : "text-gray-600 hover:text-brand-primary"
-                  }`}
-                >
-                  {label}
-                  {activeSection === id && (
-                    <motion.div
-                      layoutId="activeIndicator"
-                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-primary to-brand-accent rounded-full"
-                      initial={false}
-                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                </button>
-              ))}
-              {/* Dashboard link for authenticated users */}
-              {user && (
-                <Link 
-                  href="/dashboard" 
-                  className="text-sm font-semibold text-gray-600 hover:text-brand-primary transition-colors py-2"
-                >
-                  Dashboard
-                </Link>
-              )}
-            </div>
-          )}
+          {/* Right Side: Navigation + Auth Button */}
+          <div className="hidden md:flex items-center gap-24 ml-auto">
+            {/* Desktop Navigation */}
+            {!hideNavigation && (
+              <div className="flex items-center space-x-24">
+                {[
+                  { id: "about", label: "About Us" },
+                  { id: "pricing", label: "Pricing" },
+                  { id: "features", label: "Features" },
+                  { id: "demo", label: "Request a Demo", isAction: true },
+                ].map(({ id, label, isAction }) => (
+                  isAction ? (
+                    <button
+                      key={id}
+                      onClick={handleRequestDemo}
+                      className="text-sm font-medium font-sans text-slate-950 hover:text-slate-900 transition-colors py-2"
+                    >
+                      {label}
+                    </button>
+                  ) : (
+                    <button
+                      key={id}
+                      onClick={() => scrollToSection(id)}
+                      className="text-sm font-medium font-sans text-slate-950 hover:text-slate-900 transition-colors py-2"
+                    >
+                      {label}
+                    </button>
+                  )
+                ))}
+                {/* Dashboard link for authenticated users */}
+                {user && (
+                  <Link 
+                    href="/dashboard" 
+                    className="text-sm font-semibold font-sans text-gray-600 hover:text-gray-900 transition-colors py-2"
+                  >
+                    Dashboard
+                  </Link>
+                )}
+              </div>
+            )}
 
-          {/* Auth Buttons */}
-          <div className="hidden md:flex items-center space-x-3">
-            {!user ? (
-              <>
+            {/* Auth Button - Only Log In */}
+            <div className="flex items-center">
+              {!user ? (
                 <Link href="/sign-in">
                   <Button 
-                    variant="outline" 
                     className="
-                      border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900
-                      rounded-full
+                      w-36
+                      px-4 py-3
+                      bg-black 
+                      hover:bg-gray-900 
+                      rounded-xl
+                      inline-flex
+                      justify-center
+                      items-center
+                      gap-2
+                      text-white 
+                      text-base
                       font-medium
-                      shadow-sm hover:shadow-md
+                      font-sans
+                      leading-6
                       transition-all duration-200
-                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-focus
-                      px-5
+                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
                     "
                     size="sm"
                   >
                     Log In
                   </Button>
                 </Link>
-                <Link href="/sign-up">
+              ) : (
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <User className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm font-medium font-sans text-gray-700">{user.email?.split('@')[0]}</span>
+                  </div>
                   <Button 
-                    className="
-                      bg-brand-primary 
-                      hover:bg-brand-primary-hover 
-                      text-white 
-                      rounded-full font-medium
-                      border border-white/30 
-                      shadow-[0_4px_14px_0_rgba(30,50,100,0.39)] 
-                      hover:shadow-[0_6px_20px_0_rgba(30,50,100,0.5)]
-                      transition-all duration-200
-                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-focus
-                      px-6
-                    "
+                    variant="ghost" 
+                    onClick={() => signOut()} 
+                    className="hover:text-gray-900 hover:bg-gray-100/50 font-sans"
                     size="sm"
                   >
-                    Sign Up
+                    Sign Out
                   </Button>
-                </Link>
-              </>
-            ) : (
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <User className="h-4 w-4 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-700">{user.email?.split('@')[0]}</span>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => signOut()} 
-                  className="hover:text-brand-primary hover:bg-gray-100/50"
-                  size="sm"
-                >
-                  Sign Out
-                </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
@@ -187,72 +182,65 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
             className="md:hidden bg-white/95 backdrop-blur-xl border-t border-gray-200"
           >
             <div className="px-6 py-5 space-y-1">
-              {/* Mobile Navigation - Always show on mobile, even if hideNavigation is true */}
+              {/* Mobile Navigation */}
               <>
                 {[
-                  { id: "features", label: "Features" },
-                  { id: "pricing", label: "Pricing" },
                   { id: "about", label: "About Us" },
-                ].map(({ id, label }) => (
-                  <button 
-                    key={id} 
-                    onClick={() => scrollToSection(id)} 
-                    className={`block w-full text-left py-3 px-4 rounded-lg transition-all font-medium ${
-                      activeSection === id
-                        ? "text-brand-primary bg-brand-primary/10 shadow-sm"
-                        : "text-gray-700 hover:text-brand-primary hover:bg-gray-50"
-                    }`}
-                  >
-                    {label}
-                  </button>
+                  { id: "pricing", label: "Pricing" },
+                  { id: "features", label: "Features" },
+                  { id: "demo", label: "Request a Demo", isAction: true },
+                ].map(({ id, label, isAction }) => (
+                  isAction ? (
+                    <button 
+                      key={id} 
+                      onClick={handleRequestDemo} 
+                      className="block w-full text-left py-3 px-4 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
+                    >
+                      {label}
+                    </button>
+                  ) : (
+                    <button 
+                      key={id} 
+                      onClick={() => scrollToSection(id)} 
+                      className="block w-full text-left py-3 px-4 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
+                    >
+                      {label}
+                    </button>
+                  )
                 ))}
                 {user && (
                   <Link 
                     href="/dashboard" 
-                    className="block w-full text-left py-3 px-4 rounded-lg text-gray-700 hover:text-brand-primary hover:bg-gray-50 transition-all font-medium"
+                    className="block w-full text-left py-3 px-4 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
                   >
                     Dashboard
                   </Link>
                 )}
               </>
               {!user ? (
-                <div className="pt-4 border-t border-gray-200 mt-4 space-y-4">
-                  <div className="flex justify-center">
-                    <Link href="/sign-in">
-                      <Button 
-                        variant="outline"
-                        className="
-                          border border-gray-200 bg-white text-brand-primary hover:bg-gray-50
-                          rounded-full
-                          font-medium
-                          shadow-sm hover:shadow-md
-                          transition-all duration-200
-                          focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-focus
-                          px-10 min-w-[140px] md:px-4 md:min-w-0
-                          md:justify-start
-                          md:w-full
-                        "
-                        size="lg"
-                      >
-                        Log In
-                      </Button>
-                    </Link>
-                  </div>
-                  <Link href="/sign-up" className="block mt-3 md:mt-0">
+                <div className="pt-4 border-t border-gray-200 mt-4">
+                  <Link href="/sign-in" className="block">
                     <Button 
                       className="
-                        w-full
-                        bg-brand-primary hover:bg-brand-primary-hover
+                        w-36
+                        px-4 py-3
+                        bg-black hover:bg-gray-900
+                        rounded-xl
+                        inline-flex
+                        justify-center
+                        items-center
+                        gap-2
                         text-white 
-                        rounded-full
+                        text-base
                         font-medium
-                        shadow-sm hover:shadow-md
+                        font-sans
+                        leading-6
                         transition-all duration-200
-                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-focus
+                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
                       "
                       size="lg"
                     >
-                      Sign Up
+                      Log In
                     </Button>
                   </Link>
                 </div>
@@ -260,7 +248,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
                 <div className="pt-4 border-t border-gray-200 mt-4">
                   <div className="flex items-center gap-3 mb-3 px-4 py-2 rounded-lg bg-gray-50">
                     <User className="h-5 w-5 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">{user.email}</span>
+                    <span className="text-sm font-medium font-sans text-gray-700">{user.email}</span>
                   </div>
                   <Button 
                     variant="ghost" 
