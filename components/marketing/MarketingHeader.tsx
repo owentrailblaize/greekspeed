@@ -181,7 +181,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
             transition={{ duration: 0.2, ease: "easeInOut" }}
             className="md:hidden bg-white/95 backdrop-blur-xl border-t border-gray-200"
           >
-            <div className="px-6 py-5 space-y-1">
+            <div className="px-6 py-5 space-y-1 flex flex-col items-center">
               {/* Mobile Navigation */}
               <>
                 {[
@@ -194,7 +194,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
                     <button 
                       key={id} 
                       onClick={handleRequestDemo} 
-                      className="block w-full text-left py-3 px-4 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
+                      className="block w-full text-center py-3 px-4 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
                     >
                       {label}
                     </button>
@@ -202,7 +202,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
                     <button 
                       key={id} 
                       onClick={() => scrollToSection(id)} 
-                      className="block w-full text-left py-3 px-4 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
+                      className="block w-full text-center py-3 px-4 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
                     >
                       {label}
                     </button>
@@ -211,14 +211,14 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
                 {user && (
                   <Link 
                     href="/dashboard" 
-                    className="block w-full text-left py-3 px-4 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
+                    className="block w-full text-center py-3 px-4 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
                   >
                     Dashboard
                   </Link>
                 )}
               </>
               {!user ? (
-                <div className="pt-4 border-t border-gray-200 mt-4">
+                <div className="pt-4 border-t border-gray-200 mt-4 flex justify-center w-full">
                   <Link href="/sign-in" className="block">
                     <Button 
                       className="
@@ -245,14 +245,14 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
                   </Link>
                 </div>
               ) : (
-                <div className="pt-4 border-t border-gray-200 mt-4">
+                <div className="pt-4 border-t border-gray-200 mt-4 flex flex-col items-center w-full">
                   <div className="flex items-center gap-3 mb-3 px-4 py-2 rounded-lg bg-gray-50">
                     <User className="h-5 w-5 text-gray-600" />
                     <span className="text-sm font-medium font-sans text-gray-700">{user.email}</span>
                   </div>
                   <Button 
                     variant="ghost" 
-                    className="w-full justify-start hover:bg-gray-50" 
+                    className="w-full justify-center hover:bg-gray-50" 
                     onClick={() => signOut()}
                     size="lg"
                   >

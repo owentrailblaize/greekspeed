@@ -105,6 +105,7 @@ const pricingPlans = [
 
 export function LandingPage() {
   const [activeSection, setActiveSection] = useState("home");
+  const [activePricingCard, setActivePricingCard] = useState<number | null>(1); // Start with middle card (index 1)
   const { user } = useAuth();
 
   // Handle hash navigation on page load
@@ -301,31 +302,31 @@ export function LandingPage() {
             viewport={{ once: true }}
             className="flex justify-center"
           >
-            <div className="w-full max-w-[800px] min-w-[640px] p-8 bg-white rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/10 flex flex-col justify-end items-center gap-6 overflow-hidden" style={{ boxShadow: '0px 6px 12px 0px rgba(0,0,0,0.03), 0px 4px 8px 0px rgba(0,0,0,0.02), -8px 12px 24px 0px rgba(0,0,0,0.08)' }}>  
-              <div className="self-stretch flex justify-center items-center gap-4">
-                <div className="flex-1 flex justify-start items-start gap-4">
+            <div className="w-full max-w-[800px] min-w-0 md:min-w-[640px] p-4 md:p-8 bg-white rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/10 flex flex-col justify-end items-center gap-4 md:gap-6 overflow-hidden" style={{ boxShadow: '0px 6px 12px 0px rgba(0,0,0,0.03), 0px 4px 8px 0px rgba(0,0,0,0.02), -8px 12px 24px 0px rgba(0,0,0,0.08)' }}>  
+              <div className="self-stretch flex flex-col md:flex-row justify-center items-center gap-3 md:gap-4">
+                <div className="flex-1 flex flex-col md:flex-row justify-center md:justify-start items-center md:items-start gap-3 md:gap-4 w-full">
                   <img 
-                    className="w-12 h-12 rounded-lg" 
+                    className="w-12 h-12 rounded-lg flex-shrink-0" 
                     src="/screenshots/Artboard 21.png" 
                     alt="Nick Siebert"
                   />
-                  <div className="flex-1 flex flex-col justify-start items-start gap-1">
-                    <div className="self-stretch text-center text-black text-base font-semibold font-sans leading-6">
+                  <div className="flex-1 flex flex-col justify-center md:justify-start items-center md:items-start gap-1 w-full">
+                    <div className="self-stretch text-center md:text-left text-black text-sm md:text-base font-semibold font-sans leading-6">
                       Nick Siebert
                     </div>
-                    <div className="self-stretch text-center text-black/60 text-base font-medium font-sans leading-6">
+                    <div className="self-stretch text-center md:text-left text-black/60 text-xs md:text-base font-medium font-sans leading-5 md:leading-6">
                       Chapter President of Sigma Chi at Ole Miss
                     </div>
                   </div>
                 </div>
                 <img 
-                  className="w-12 h-8" 
+                  className="w-10 h-6 md:w-12 md:h-8 flex-shrink-0" 
                   src={"/screenshots/quote.png"} 
                   alt="Decorative"
                 />
               </div>
-              <div className="w-full max-w-[736px] text-left text-black text-lg font-medium font-sans leading-7">
-                Trailblaize turned our chapter email list into an interactive network. <br/>
+              <div className="w-full max-w-full md:max-w-[736px] text-center md:text-left text-black text-base md:text-lg font-medium font-sans leading-6 md:leading-7 px-2 md:px-0">
+                Trailblaize turned our chapter email list into an interactive network. <br className="hidden md:block"/>
                 Members and alumni have landed jobs, internships, and even deal flow across generations of our fraternity, while staying connected to the chapter.
               </div>
             </div>
@@ -355,7 +356,99 @@ export function LandingPage() {
           </motion.div>
 
           {/* Pricing Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
+          {/* Mobile: Overlapping Cards */}
+          <div className="md:hidden relative h-[500px] mb-8 px-4">
+            {pricingPlans.map((plan, index) => {
+              const isActive = activePricingCard === index;
+              // Calculate z-index: active card on top, others based on distance from middle
+              const zIndex = isActive ? 50 : 40 - Math.abs(index - 1) * 5;
+              // Calculate translateX: offset cards horizontally so edges are visible
+              const translateX = isActive ? 0 : (index - 1) * -20; // Left card goes left, right card goes right
+              // Calculate translateY: active card at top, others slightly offset
+              const translateY = isActive ? 0 : Math.abs(index - 1) * 20;
+              // Scale: active card full size, others slightly smaller
+              const scale = isActive ? 1 : 0.90;
+              
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  className="absolute inset-x-4"
+                  style={{
+                    zIndex,
+                    transform: `translateX(${translateX}px) translateY(${translateY}px) scale(${scale})`,
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  }}
+                  onClick={() => setActivePricingCard(index)}
+                >
+                  <Card className={`h-full bg-white border cursor-pointer ${
+                    plan.popular 
+                      ? "border-gray-300 shadow-lg" 
+                      : "border-gray-200 shadow-sm"
+                  } transition-all duration-300 ${isActive ? 'shadow-xl' : ''}`}>
+                    <CardContent className="p-4 h-full flex flex-col">
+                      {/* Title */}
+                      <div className="mb-3">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1 font-sans">
+                          {plan.name}
+                        </h3>
+                        <p className="text-xs text-gray-600 font-sans">{plan.description}</p>
+                      </div>
+
+                      {/* Price */}
+                      <div className="mb-4">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-2xl font-bold text-gray-900 font-sans">{plan.price}</span>
+                          {plan.period && (
+                            <span className="text-sm text-gray-600 font-sans">{plan.period}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Features */}
+                      <div className="space-y-2 mb-6 flex-grow">
+                        {plan.features.map((feature, idx) => (
+                          <div key={idx} className="flex items-start space-x-2">
+                            <Check className="h-4 w-4 flex-shrink-0 text-gray-600 mt-0.5" />
+                            <span className="text-xs text-gray-700 font-sans leading-relaxed">{feature}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* CTA Button */}
+                      <Button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          plan.buttonAction();
+                        }}
+                        className={`
+                          w-full
+                          ${plan.popular
+                            ? "bg-black hover:bg-gray-900 text-white rounded-xl"
+                            : "bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 rounded-xl"
+                          }
+                          font-medium
+                          shadow-sm hover:shadow-md
+                          transition-all duration-200
+                          focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
+                          px-3 py-2
+                          text-xs
+                        `}
+                      >
+                        {plan.buttonText}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
+          
+          {/* Desktop: Grid Layout (unchanged) */}
+          <div className="hidden md:grid md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
             {pricingPlans.map((plan, index) => (
               <motion.div
                 key={index}

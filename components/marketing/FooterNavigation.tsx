@@ -25,7 +25,8 @@ export function FooterNavigation() {
         onClick={() => scrollToSection('about')}
         className="text-sm text-gray-600 hover:text-gray-900 font-sans transition-colors"
       >
-        About Us
+        <span className="block md:hidden">About</span>
+        <span className="hidden md:inline">About Us</span>
       </button>
       <button 
         onClick={() => scrollToSection('features')}
@@ -45,7 +46,7 @@ export function FooterNavigation() {
 
 export function FooterSocialLinks() {
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-4 mb-6 md:mb-0">
       <a 
         href="https://instagram.com/trailblaize" 
         target="_blank" 
