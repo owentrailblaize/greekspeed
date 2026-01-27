@@ -14,11 +14,11 @@ import type { Recruit, RecruitStage, UpdateRecruitRequest } from '@/types/recrui
 import { cn } from '@/lib/utils';
 
 const STAGE_COLORS: Record<RecruitStage, string> = {
-  'New': 'bg-blue-50 text-blue-700 border-blue-200',
+  'New': 'bg-accent-50 text-accent-700 border-accent-200',
   'Contacted': 'bg-slate-100 text-slate-700 border-slate-300',
-  'Event Invite': 'bg-navy-50 text-navy-700 border-navy-200',
+  'Event Invite': 'bg-primary-50 text-brand-primary-hover border-primary-200',
   'Bid Given': 'bg-gray-100 text-gray-700 border-gray-300',
-  'Accepted': 'bg-blue-100 text-blue-800 border-blue-300',
+  'Accepted': 'bg-accent-100 text-accent-800 border-blue-300',
   'Declined': 'bg-red-100 text-red-800 border-red-200',
 };
 
@@ -222,7 +222,7 @@ export function RecruitDetailSheet({
                 <Label className="text-xs text-gray-500 uppercase">Phone</Label>
                 <a
                   href={`tel:${recruit.phone_number.replace(/\D/g, '')}`}
-                  className="flex items-center space-x-2 text-base text-blue-600 hover:text-blue-700 mt-1"
+                  className="flex items-center space-x-2 text-base text-brand-accent hover:text-accent-700 mt-1"
                 >
                   <Phone className="h-4 w-4" />
                   <span>{formatPhoneNumber(recruit.phone_number.replace(/\D/g, ''))}</span>
@@ -313,7 +313,7 @@ export function RecruitDetailSheet({
             size="sm"
             onClick={handleSave}
             disabled={loading || !hasChanges}
-            className="flex-1 bg-navy-600 hover:bg-navy-700 rounded-full"
+            className="flex-1 bg-brand-primary hover:bg-brand-primary-hover rounded-full"
           >
             {loading ? (
               <>

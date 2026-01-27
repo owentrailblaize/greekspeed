@@ -189,7 +189,7 @@ export default function FeatureFlagsPage() {
                 <ArrowLeft className="h-4 w-4" />
                 <span>Dashboard</span>
               </Button>
-              <h1 className="text-3xl font-bold text-navy-900">Feature Flags Management</h1>
+              <h1 className="text-3xl font-bold text-primary-900">Feature Flags Management</h1>
               <p className="text-gray-600">Enable or disable features for specific chapters</p>
             </div>
           </div>

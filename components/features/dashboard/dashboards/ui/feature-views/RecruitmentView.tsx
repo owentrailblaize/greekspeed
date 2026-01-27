@@ -37,11 +37,11 @@ interface RecruitsResponse {
 }
 
 const STAGE_COLORS: Record<RecruitStage, string> = {
-  'New': 'bg-blue-50 text-blue-700 border-blue-200',
+  'New': 'bg-accent-50 text-accent-700 border-accent-200',
   'Contacted': 'bg-slate-100 text-slate-700 border-slate-300',
-  'Event Invite': 'bg-navy-50 text-navy-700 border-navy-200',
+  'Event Invite': 'bg-primary-50 text-brand-primary-hover border-primary-200',
   'Bid Given': 'bg-gray-100 text-gray-700 border-gray-300',
-  'Accepted': 'bg-blue-100 text-blue-800 border-blue-300',
+  'Accepted': 'bg-accent-100 text-accent-800 border-blue-300',
   'Declined': 'bg-red-100 text-red-800 border-red-200',
 };
 
@@ -606,7 +606,7 @@ export function RecruitmentView() {
                                     href={`https://instagram.com/${recruit.instagram_handle}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center space-x-1 text-blue-600 hover:text-blue-800"
+                                    className="flex items-center space-x-1 text-brand-accent hover:text-accent-800"
                                   >
                                     <Instagram className="h-3 w-3" />
                                     <span>@{recruit.instagram_handle}</span>

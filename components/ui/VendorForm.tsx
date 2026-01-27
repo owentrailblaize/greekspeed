@@ -109,7 +109,7 @@ export function VendorForm({ vendor, onSubmit, onCancel, loading = false, isMobi
       )}>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2 text-lg">
-            <Building2 className="h-5 w-5 text-navy-600" />
+            <Building2 className="h-5 w-5 text-brand-primary" />
             <span>{vendor ? 'Edit Vendor' : 'Add New Vendor'}</span>
           </CardTitle>
           {isMobile && (
@@ -291,7 +291,7 @@ export function VendorForm({ vendor, onSubmit, onCancel, loading = false, isMobi
               variant="outline"
               onClick={onCancel}
               disabled={loading}
-              className="w-full rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+              className="w-full rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
             >
               Cancel
             </Button>

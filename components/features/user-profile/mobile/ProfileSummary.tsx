@@ -189,11 +189,11 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
           <Button
             onClick={() => handleConnectionAction('connect')}
             disabled={isLoading}
-            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium"
+            className="w-full border border-brand-primary text-brand-primary bg-white hover:bg-primary-50 transition-colors duration-200 rounded-full font-medium"
             variant="outline"
           >
             {isLoading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b border-navy-600 mr-2" />
+              <div className="animate-spin rounded-full h-4 w-4 border-b border-brand-primary mr-2" />
             ) : (
               <Users className="h-4 w-4 mr-2" />
             )}
@@ -274,7 +274,7 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
           variant="outline"
           size="sm"
           onClick={handleShareProfile}
-          className="absolute top-10 left-3 h-10 w-10 p-0 bg-white/90 hover:bg-white border-navy-600 text-navy-600 rounded-full shadow-sm flex items-center justify-center z-20"
+          className="absolute top-10 left-3 h-10 w-10 p-0 bg-white/90 hover:bg-white border-brand-primary text-brand-primary rounded-full shadow-sm flex items-center justify-center z-20"
           title="Share this profile with someone"
         >
           <Share2 className="h-4 w-4" />
@@ -296,7 +296,7 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
                 className="w-full h-full object-cover" 
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
+              <div className="w-full h-full bg-gradient-to-br from-brand-primary to-brand-primary flex items-center justify-center">
                 <span className="text-white font-medium text-2xl">
                   {profile.first_name?.[0] || ''}{profile.last_name?.[0] || ''}
                 </span>
@@ -310,7 +310,7 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
           <div className="flex items-center justify-center gap-2 mb-1 flex-wrap">
             <h2 className="text-2xl font-bold text-gray-900">{profile.full_name}</h2>
             {isAlumni && alumni.verified && (
-              <Badge className="bg-blue-500 text-white text-xs">✓</Badge>
+              <Badge className="bg-accent-500 text-white text-xs">✓</Badge>
             )}
             {isAlumni && alumni.isActivelyHiring && (
               <Badge className="bg-gradient-to-r from-gray-600 to-gray-700 text-white text-xs">
@@ -367,7 +367,7 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
             className={cn(
               "flex-1 rounded-full",
               canSendEmail()
-                ? "border-navy-600 text-navy-600 hover:bg-navy-50" 
+                ? "border-brand-primary text-brand-primary hover:bg-primary-50" 
                 : "text-gray-400 border-gray-200"
             )}
             variant={canSendEmail() ? "outline" : "ghost"}
@@ -384,7 +384,7 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
             className={cn(
               "flex-1 rounded-full",
               canSendMessage() 
-                ? "border-navy-600 text-navy-600 hover:bg-navy-50" 
+                ? "border-brand-primary text-brand-primary hover:bg-primary-50" 
                 : "text-gray-400 border-gray-200"
             )}
             variant={canSendMessage() ? "outline" : "ghost"}

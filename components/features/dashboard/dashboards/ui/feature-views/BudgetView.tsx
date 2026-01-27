@@ -195,55 +195,55 @@ export function BudgetView() {
     <div className="space-y-6">
       {/* Summary Cards - Top Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+        <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-navy-700">Total Budget Allocated</p>
-                <p className="text-xl md:text-2xl font-semibold text-navy-900">
+                <p className="text-sm font-medium text-brand-primary-hover">Total Budget Allocated</p>
+                <p className="text-xl md:text-2xl font-semibold text-primary-900">
                   ${budgetData.totalAllocated.toLocaleString()}
                 </p>
               </div>
-              <DollarSign className="h-6 w-6 md:h-8 md:w-8 text-navy-500" />
+              <DollarSign className="h-6 w-6 md:h-8 md:w-8 text-brand-primary" />
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+        <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-navy-700">Events with Budgets</p>
-                <p className="text-xl md:text-2xl font-semibold text-navy-900">
+                <p className="text-sm font-medium text-brand-primary-hover">Events with Budgets</p>
+                <p className="text-xl md:text-2xl font-semibold text-primary-900">
                   {budgetData.eventsWithBudget.length}
                 </p>
               </div>
-              <Calendar className="h-6 w-6 md:h-8 md:w-8 text-navy-500" />
+              <Calendar className="h-6 w-6 md:h-8 md:w-8 text-brand-primary" />
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+        <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-navy-700">Total Events</p>
-                <p className="text-xl md:text-2xl font-semibold text-navy-900">
+                <p className="text-sm font-medium text-brand-primary-hover">Total Events</p>
+                <p className="text-xl md:text-2xl font-semibold text-primary-900">
                   {events?.length || 0}
                 </p>
               </div>
-              <Users className="h-6 w-6 md:h-8 md:w-8 text-navy-500" />
+              <Users className="h-6 w-6 md:h-8 md:w-8 text-brand-primary" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Budget Overview Card */}
-      <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-        <CardHeader className="pb-2 md:pb-2 border-b border-navy-100/30">
+      <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
+        <CardHeader className="pb-2 md:pb-2 border-b border-primary-100/30">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center text-lg md:text-xl text-navy-900">
-              <DollarSign className="h-5 w-5 mr-2 text-navy-600" />
+            <CardTitle className="flex items-center text-lg md:text-xl text-primary-900">
+              <DollarSign className="h-5 w-5 mr-2 text-brand-primary" />
               Budget Overview
             </CardTitle>
             {canEdit && (
@@ -251,7 +251,7 @@ export function BudgetView() {
                 variant="ghost"
                 size="sm"
                 onClick={handleEditClick}
-                className="rounded-full h-8 px-2 text-gray-600 hover:text-navy-900 hover:bg-gray-100"
+                className="rounded-full h-8 px-2 text-gray-600 hover:text-primary-900 hover:bg-gray-100"
               >
                 <Edit2 className="h-4 w-4 mr-1" />
                 Edit Budget
@@ -321,7 +321,7 @@ export function BudgetView() {
               variant="outline"
               onClick={() => setShowEditDialog(false)}
               disabled={saving}
-              className="rounded-full bg-white/80 backdrop-blur-md border border-grey-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+              className="rounded-full bg-white/80 backdrop-blur-md border border-grey-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
             >
               <X className="h-4 w-4 mr-2" />
               Cancel
@@ -329,7 +329,7 @@ export function BudgetView() {
             <Button
               onClick={handleSaveBudget}
               disabled={saving || !editBudgetValue || parseFloat(editBudgetValue) < 0}
-              className="text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-navy-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+              className="text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-primary-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
             >
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Saving...' : 'Save Changes'}
@@ -339,8 +339,8 @@ export function BudgetView() {
       </Dialog>
 
       {/* All Events Budget Summary */}
-      <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-        <CardHeader className="pb-2 md:pb-6 border-b border-navy-100/30">
+      <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
+        <CardHeader className="pb-2 md:pb-6 border-b border-primary-100/30">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg md:text-xl">All Events Budget Summary</CardTitle>
             <div className="flex items-center space-x-4">
@@ -368,7 +368,7 @@ export function BudgetView() {
                         onClick={() => setCurrentPage(page)}
                         className={`h-8 w-8 p-0 text-xs flex-shrink-0 ${
                           currentPage === page
-                            ? 'bg-navy-600 text-white hover:bg-navy-700'
+                            ? 'bg-brand-primary text-white hover:bg-brand-primary-hover'
                             : 'hover:bg-gray-50'
                         }`}
                       >

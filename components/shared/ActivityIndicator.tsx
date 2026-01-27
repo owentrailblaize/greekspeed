@@ -27,7 +27,7 @@ export function ActivityIndicator({
     if (diffHours < 1) {
       return { status: 'hot' as const, color: 'bg-green-500', text: 'Active Now', timeAgo: 'Active Now', isOnline: true }
     } else if (diffHours < 24) {
-      return { status: 'warm' as const, color: 'bg-blue-500', text: 'Recently Active', timeAgo: 'Recently Active', isOnline: false }
+      return { status: 'warm' as const, color: 'bg-accent-500', text: 'Recently Active', timeAgo: 'Recently Active', isOnline: false }
     } else {
       return { status: 'cold' as const, color: 'bg-gray-400', text: 'Not Active', timeAgo: 'Not Active', isOnline: false }
     }
@@ -84,7 +84,7 @@ export function ActivityBadge({ lastActiveAt, className = '' }: ActivityBadgePro
     if (diffHours < 1) {
       return { status: 'hot', color: 'bg-green-500', text: 'Active Now', timeAgo: 'Active Now' }
     } else if (diffHours < 24) {
-      return { status: 'warm', color: 'bg-blue-500', text: 'Recently Active', timeAgo: 'Recently Active' }
+      return { status: 'warm', color: 'bg-accent-500', text: 'Recently Active', timeAgo: 'Recently Active' }
     } else {
       return { status: 'cold', color: 'bg-gray-400', text: 'Not Active', timeAgo: 'Not Active' }
     }
@@ -94,7 +94,7 @@ export function ActivityBadge({ lastActiveAt, className = '' }: ActivityBadgePro
   
   const badgeColors = {
     hot: 'bg-green-100 text-green-800 border-green-200',
-    warm: 'bg-blue-100 text-blue-800 border-blue-200',
+    warm: 'bg-accent-100 text-accent-800 border-accent-200',
     cold: 'bg-gray-100 text-gray-600 border-gray-200'
   } as const;
   
@@ -125,7 +125,7 @@ export function ActivityStatusText({ lastActiveAt, className = '' }: ActivitySta
     if (diffHours < 1) {
       return { status: 'hot' as const, color: 'bg-green-500', text: 'Active Now', timeAgo: 'Active Now', isOnline: true }
     } else if (diffHours < 24) {
-      return { status: 'warm' as const, color: 'bg-blue-500', text: 'Recently Active', timeAgo: 'Recently Active', isOnline: false }
+      return { status: 'warm' as const, color: 'bg-accent-500', text: 'Recently Active', timeAgo: 'Recently Active', isOnline: false }
     } else {
       return { status: 'cold' as const, color: 'bg-gray-400', text: 'Not Active', timeAgo: 'Not Active', isOnline: false }
     }
@@ -134,7 +134,7 @@ export function ActivityStatusText({ lastActiveAt, className = '' }: ActivitySta
   const getActivityColor = (status: 'hot' | 'warm' | 'cold') => {
     const colors = {
       hot: 'text-green-600',
-      warm: 'text-blue-600',
+      warm: 'text-brand-accent',
       cold: 'text-gray-500'
     }
     return colors[status]

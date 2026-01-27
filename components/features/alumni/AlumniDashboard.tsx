@@ -168,7 +168,7 @@ export function AlumniDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-accent-50/20">
       {/* Mobile Header with Collapse Functionality */}
       <div className="sm:hidden bg-white/95 backdrop-blur-lg border-b border-gray-200 shadow-sm">
         <div className="px-4 py-3">
@@ -219,13 +219,13 @@ export function AlumniDashboard() {
                       onClick={() => handleTabClick(t.id, t.disabled)}
                       disabled={t.disabled}
                       className={cn(
-                        'text-sm font-medium px-3 py-2 rounded-full transition-all duration-200 flex items-center shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300',
+                        'text-sm font-medium px-3 py-2 rounded-full transition-all duration-200 flex items-center shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-200',
                         t.disabled 
                           ? "opacity-60 cursor-not-allowed text-gray-400 bg-gray-50" 
                           : active === t.id 
-                            ? "bg-sky-50 text-sky-700 font-medium hover:bg-sky-100 hover:shadow-md" 
+                            ? "bg-slate-200 text-white font-medium hover:bg-slate-100-hover hover:shadow-md" 
                             : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm"
-                      )}
+                        )}
                     >
                       {/* Mobile: Short text, Desktop: Full text */}
                       <span className="sm:hidden">
@@ -255,13 +255,13 @@ export function AlumniDashboard() {
               onClick={() => handleTabClick(t.id, t.disabled)}
               disabled={t.disabled}
               className={cn(
-                'text-sm font-medium px-4 py-2 rounded-full transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300',
+                'text-sm font-medium px-4 py-2 rounded-full transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-200',
                 t.disabled 
                   ? "opacity-60 cursor-not-allowed text-gray-400 bg-gray-50" 
                   : active === t.id 
-                    ? "bg-sky-50 text-sky-700 font-medium hover:bg-sky-100 hover:shadow-md" 
+                    ? "bg-slate-100 text-slate-950 font-medium hover:bg-slate-100-hover hover:shadow-md" 
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm"
-              )}
+                )}
             >
               {t.label}
               {t.disabled && (

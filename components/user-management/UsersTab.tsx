@@ -244,7 +244,7 @@ export function UsersTab({
               variant="outline" 
               size="sm"
               onClick={() => openViewModal(user)}
-              className="hover:bg-blue-50 hover:text-blue-600"
+              className="hover:bg-accent-50 hover:text-brand-accent"
             >
               <Eye className="h-4 w-4" />
             </Button>

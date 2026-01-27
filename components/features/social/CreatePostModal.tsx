@@ -232,7 +232,7 @@ export function CreatePostModal({
           </DialogHeader>
 
           <div className="flex items-start gap-4 sm:gap-3 mt-4">
-            <div className="w-12 h-12 sm:w-11 sm:w-11 bg-navy-100/70 rounded-full flex items-center justify-center text-navy-700 text-base sm:text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+            <div className="w-12 h-12 sm:w-11 sm:w-11 bg-primary-100/70 rounded-full flex items-center justify-center text-brand-primary-hover text-base sm:text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
               {userAvatar ? (
                 <ImageWithFallback 
                   src={userAvatar} 
@@ -266,7 +266,7 @@ export function CreatePostModal({
                 setContent(nextValue);
                 setPostType(determinePostType(nextValue, imageUrls));
               }}
-              className="min-h-[120px] sm:min-h-[100px] resize-none rounded-2xl border border-transparent bg-slate-50/80 p-5 text-base sm:text-lg text-slate-800 placeholder:text-slate-400 focus:border-navy-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-200 transition"
+              className="min-h-[120px] sm:min-h-[100px] resize-none rounded-2xl border border-transparent bg-slate-50/80 p-5 text-base sm:text-lg text-slate-800 placeholder:text-slate-400 focus:border-primary-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 transition"
             />
 
             {/* Error message */}

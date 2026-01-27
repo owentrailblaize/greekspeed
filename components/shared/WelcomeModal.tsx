@@ -61,7 +61,7 @@ export function WelcomeModal({ profile, onClose }: WelcomeModalProps) {
         <Card className="border-0 shadow-none h-full flex flex-col">
           <CardHeader className="relative pb-2 md:pb-3 flex-shrink-0">
             <div className="flex items-center justify-center mb-2 md:mb-3">
-              <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-r from-accent-500 to-purple-600 rounded-full flex items-center justify-center">
                 <Sparkles className="h-5 w-5 md:h-7 md:w-7 text-white" />
               </div>
             </div>
@@ -92,8 +92,8 @@ export function WelcomeModal({ profile, onClose }: WelcomeModalProps) {
                   transition={{ delay: index * 0.1 }}
                   className="flex flex-col items-center text-center p-2 rounded-lg bg-gray-50"
                 >
-                  <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-100 rounded-lg flex items-center justify-center mb-1 md:mb-2">
-                    <feature.icon className="h-3 w-3 md:h-4 md:w-4 text-blue-600" />
+                  <div className="w-6 h-6 md:w-8 md:h-8 bg-accent-100 rounded-lg flex items-center justify-center mb-1 md:mb-2">
+                    <feature.icon className="h-3 w-3 md:h-4 md:w-4 text-brand-accent" />
                   </div>
                   <div className="space-y-0.5">
                     <h4 className="font-medium text-xs text-gray-900 leading-tight">
@@ -108,12 +108,12 @@ export function WelcomeModal({ profile, onClose }: WelcomeModalProps) {
             </div>
 
             {/* Get Started Section - Compact */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 md:p-3 mb-3 md:mb-4">
+            <div className="bg-accent-50 border border-accent-200 rounded-lg p-2 md:p-3 mb-3 md:mb-4">
               <div className="flex items-start space-x-2">
-                <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-brand-accent mt-0.5 flex-shrink-0" />
                 <div>
-                  <h4 className="font-medium text-xs md:text-sm text-blue-900 mb-0.5">Get Started</h4>
-                  <p className="text-xs text-blue-800 leading-relaxed">
+                  <h4 className="font-medium text-xs md:text-sm text-accent-900 mb-0.5">Get Started</h4>
+                  <p className="text-xs text-accent-800 leading-relaxed">
                     Complete your profile to unlock all features and connect with other members. 
                     You can always update your information later.
                   </p>
@@ -125,7 +125,7 @@ export function WelcomeModal({ profile, onClose }: WelcomeModalProps) {
             <div className="flex justify-center mt-auto">
               <Button
                 onClick={handleClose}
-                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 md:px-6 md:py-2 text-xs md:text-sm font-medium"
+                className="bg-brand-accent hover:bg-accent-700 px-4 py-2 md:px-6 md:py-2 text-xs md:text-sm font-medium"
                 size="sm"
               >
                 Let's Get Started!

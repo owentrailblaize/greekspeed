@@ -35,12 +35,12 @@ export const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
         className={cn(
           "flex cursor-pointer items-center justify-between px-3 py-2 text-sm",
           "hover:bg-gray-50 transition-colors",
-          isSelected && "bg-navy-50 text-navy-900"
+          isSelected && "bg-primary-50 text-primary-900"
         )}
         {...props}
       >
         <span>{children}</span>
-        {isSelected && <Check className="h-4 w-4 text-navy-600 flex-shrink-0" />}
+        {isSelected && <Check className="h-4 w-4 text-brand-primary flex-shrink-0" />}
       </div>
     );
   }
@@ -263,7 +263,7 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
             onClick={() => setIsOpen(!isOpen)}
             className={cn(
               "flex h-9 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm",
-              "focus:border-navy-500 focus:outline-none focus:ring-1 focus:ring-navy-500",
+              "focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary",
               "hover:border-gray-400 transition-colors"
             )}
           >

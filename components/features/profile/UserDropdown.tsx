@@ -204,17 +204,17 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
         >
           {/* Profile Completion Banner */}
           {completionPercent < 100 && (
-            <div className="mb-3 p-3 bg-navy-50 rounded-lg border border-navy-200">
+            <div className="mb-3 p-3 bg-primary-50 rounded-lg border border-primary-200">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-navy-900">
+                  <p className="text-sm font-medium text-primary-900">
                     Complete your profile ({completionPercent}%)
                   </p>
-                  <p className="text-xs text-navy-600 mt-1">
+                  <p className="text-xs text-brand-primary mt-1">
                     Add missing information to unlock full features
                   </p>
                 </div>
-                <ChevronRight className="h-4 w-4 text-navy-600" />
+                <ChevronRight className="h-4 w-4 text-brand-primary" />
               </div>
             </div>
           )}
@@ -230,7 +230,7 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
                   className={`flex items-center space-x-3 px-3 py-2 text-sm rounded-md transition-colors relative cursor-pointer ${
                     item.locked 
                       ? 'text-gray-400 cursor-not-allowed hover:bg-gray-50' 
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-navy-700'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-brand-primary-hover'
                   }`}
                 >
                   <Icon className={`w-4 ${item.locked ? 'text-gray-400' : 'text-gray-500'}`} />
@@ -346,17 +346,17 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
           <div className="p-4">
             {/* Profile Completion Banner */}
             {completionPercent < 100 && (
-              <div className="mb-4 p-3 bg-navy-50 rounded-lg border border-navy-200">
+              <div className="mb-4 p-3 bg-primary-50 rounded-lg border border-primary-200">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-navy-900">
+                    <p className="text-sm font-medium text-primary-900">
                       Complete your profile ({completionPercent}%)
                     </p>
-                    <p className="text-xs text-navy-600 mt-1">
+                    <p className="text-xs text-brand-primary mt-1">
                       Add missing information to unlock full features
                     </p>
                   </div>
-                  <ChevronRight className="h-4 w-4 text-navy-600" />
+                  <ChevronRight className="h-4 w-4 text-brand-primary" />
                 </div>
               </div>
             )}
@@ -372,7 +372,7 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
                     className={`flex items-center space-x-3 px-3 py-3 text-sm rounded-md transition-colors relative w-full text-left ${
                       item.locked 
                         ? 'text-gray-400 cursor-not-allowed' 
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-navy-700'
+                        : 'text-gray-700 hover:bg-gray-50 hover:text-brand-primary-hover'
                     }`}
                   >
                     <Icon className={`w-4 ${item.locked ? 'text-gray-400' : 'text-gray-500'}`} />
@@ -444,7 +444,7 @@ export function UserDropdown({ user, completionPercent, hasUnread, unreadCount =
       <div className="md:hidden">
         <button
           onClick={() => setIsMobileMenuOpen(true)}
-          className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2"
+          className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2"
         >
           <UserAvatar
             user={{

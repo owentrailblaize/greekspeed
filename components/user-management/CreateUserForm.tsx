@@ -164,9 +164,9 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
               </p>
             </div>
 
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h3 className="font-medium text-blue-800 mb-2">Next Steps:</h3>
-              <p className="text-sm text-blue-700">
+            <div className="bg-accent-50 p-4 rounded-lg">
+              <h3 className="font-medium text-accent-800 mb-2">Next Steps:</h3>
+              <p className="text-sm text-accent-700">
                 The user can now sign in with their email and this temporary password. 
                 They will be guided through the onboarding process to complete their profile.
               </p>
@@ -370,15 +370,15 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
               </div>
 
               {formData.is_developer && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="bg-accent-50 border border-accent-200 rounded-lg p-3">
                   <div className="flex items-start space-x-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="w-2 h-2 bg-accent-500 rounded-full mt-2 flex-shrink-0"></div>
                     <div>
-                      <p className="text-sm font-medium text-blue-800">Full Developer Access</p>
-                      <p className="text-xs text-blue-600 mt-1">
+                      <p className="text-sm font-medium text-accent-800">Full Developer Access</p>
+                      <p className="text-xs text-brand-accent mt-1">
                         This user will have access to all developer permissions.
                       </p>
-                      <p className="text-xs text-blue-600 mt-1">
+                      <p className="text-xs text-brand-accent mt-1">
                         Role automatically set to "Admin / Executive" for developer access.
                       </p>
                     </div>
@@ -398,7 +398,7 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
               onClick={onClose} 
               className={cn(
                 "flex-1",
-                isMobile && "rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                isMobile && "rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
               )}
               disabled={loading}
             >
@@ -408,7 +408,7 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
               onClick={handleSubmit} 
               className={cn(
                 "flex-1",
-                isMobile && "rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                isMobile && "rounded-full bg-brand-primary text-white hover:bg-brand-primary-hover shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               )}
               disabled={loading}
             >

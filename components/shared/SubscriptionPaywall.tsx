@@ -191,7 +191,7 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent"></div>
       </div>
     );
   }
@@ -211,11 +211,11 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
             </h1>
             
             {userChapter && (
-              <div className="bg-blue-50 rounded-lg p-3 mb-4">
-                <h2 className="text-base font-semibold text-blue-900 mb-1">
+              <div className="bg-accent-50 rounded-lg p-3 mb-4">
+                <h2 className="text-base font-semibold text-accent-900 mb-1">
                   {userChapter.national_fraternity} - {userChapter.chapter_name}
                 </h2>
-                <p className="text-blue-700 text-xs">
+                <p className="text-accent-700 text-xs">
                   {userChapter.name}
                 </p>
               </div>
@@ -226,8 +226,8 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
               Only one admin payment unlocks access for all chapter members.
             </p>
             
-            <div className="bg-blue-50 rounded-lg p-4 mb-4">
-              <h2 className="text-lg font-semibold text-blue-900 mb-3">Chapter Benefits:</h2>
+            <div className="bg-accent-50 rounded-lg p-4 mb-4">
+              <h2 className="text-lg font-semibold text-accent-900 mb-3">Chapter Benefits:</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                 <div className="flex items-center">
                   <span className="text-green-500 mr-2">✓</span>
@@ -252,7 +252,7 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
               {/* Pricing Section */}
               <div className="text-center sm:text-left">
-                <div className="text-3xl font-bold text-blue-600">$25.00</div>
+                <div className="text-3xl font-bold text-brand-accent">$25.00</div>
                 <div className="text-gray-500 text-sm">per month per chapter</div>
               </div>
 
@@ -265,7 +265,7 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
                     className={`w-full sm:w-auto font-semibold py-2 px-6 rounded-lg transition duration-200 ${
                       isLoading 
                         ? 'bg-gray-400 cursor-not-allowed' 
-                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                        : 'bg-brand-accent hover:bg-accent-700 text-white'
                     }`}
                   >
                     {isLoading ? (

@@ -35,7 +35,7 @@ export function ContentNavigationTabs({
               className={cn(
                 "flex-1 relative py-3 px-4 text-sm font-medium transition-colors flex items-center justify-center gap-1.5",
                 isActive
-                  ? 'text-navy-600'
+                  ? 'text-brand-primary'
                   : 'text-gray-500 hover:text-gray-700',
                 isDisabled && 'opacity-60 cursor-not-allowed'
               )}
@@ -47,7 +47,7 @@ export function ContentNavigationTabs({
               {isActive && (
                 <motion.div
                   layoutId="activeTabIndicator"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-navy-600"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-primary"
                   initial={false}
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 />

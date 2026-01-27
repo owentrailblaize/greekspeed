@@ -51,7 +51,7 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
               placeholder="Search alumni..."
               value={filters.searchTerm}
               onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
-              className="pl-10 bg-white border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+              className="pl-10 bg-white border-gray-300 focus:border-brand-primary focus:ring-brand-primary"
             />
           </div>
         </div>
@@ -153,37 +153,37 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
             </span>
             <div className="flex flex-wrap gap-2">
               {filters.state && (
-                <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
+                <Badge variant="outline" className="text-xs bg-primary-50 border-primary-200 text-brand-primary-hover">
                   State: {getStateNameByCode(filters.state) || filters.state}
                   <X 
-                    className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
+                    className="h-3 w-3 ml-1 cursor-pointer hover:text-primary-900" 
                     onClick={() => handleFilterChange('state', '')}
                   />
                 </Badge>
               )}
               {filters.graduationYear && (
-                <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
+                <Badge variant="outline" className="text-xs bg-primary-50 border-primary-200 text-brand-primary-hover">
                   Year: {filters.graduationYear}
                   <X 
-                    className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
+                    className="h-3 w-3 ml-1 cursor-pointer hover:text-primary-900" 
                     onClick={() => handleFilterChange('graduationYear', '')}
                   />
                 </Badge>
               )}
               {filters.industry && (
-                <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
+                <Badge variant="outline" className="text-xs bg-primary-50 border-primary-200 text-brand-primary-hover">
                   Industry: {filters.industry}
                   <X 
-                    className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
+                    className="h-3 w-3 ml-1 cursor-pointer hover:text-primary-900" 
                     onClick={() => handleFilterChange('industry', '')}
                   />
                 </Badge>
               )}
               {filters.activelyHiring && (
-                <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
+                <Badge variant="outline" className="text-xs bg-primary-50 border-primary-200 text-brand-primary-hover">
                   Actively Hiring
                   <X 
-                    className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
+                    className="h-3 w-3 ml-1 cursor-pointer hover:text-primary-900" 
                     onClick={() => handleFilterChange('activelyHiring', false)}
                   />
                 </Badge>
@@ -218,7 +218,7 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
               placeholder="Search"
               value={filters.searchTerm}
               onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
-              className="pl-10 bg-white border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+              className="pl-10 bg-white border-gray-300 focus:border-brand-primary focus:ring-brand-primary"
             />
           </div>
           
@@ -320,37 +320,37 @@ export function AlumniFilterBar({ filters, onFiltersChange, onClearFilters, isSi
               Active filters ({activeFilterCount}):
             </span>
             {filters.state && (
-              <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
+              <Badge variant="outline" className="text-xs bg-primary-50 border-primary-200 text-brand-primary-hover">
                 State: {getStateNameByCode(filters.state) || filters.state}
                 <X 
-                  className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
+                  className="h-3 w-3 ml-1 cursor-pointer hover:text-primary-900" 
                   onClick={() => handleFilterChange('state', '')}
                 />
               </Badge>
             )}
             {filters.graduationYear && (
-              <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
+              <Badge variant="outline" className="text-xs bg-primary-50 border-primary-200 text-brand-primary-hover">
                 Year: {filters.graduationYear}
                 <X 
-                  className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
+                  className="h-3 w-3 ml-1 cursor-pointer hover:text-primary-900" 
                   onClick={() => handleFilterChange('graduationYear', '')}
                 />
               </Badge>
             )}
             {filters.industry && (
-              <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
+              <Badge variant="outline" className="text-xs bg-primary-50 border-primary-200 text-brand-primary-hover">
                 Industry: {filters.industry}
                 <X 
-                  className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
+                  className="h-3 w-3 ml-1 cursor-pointer hover:text-primary-900" 
                   onClick={() => handleFilterChange('industry', '')}
                 />
               </Badge>
             )}
             {filters.activelyHiring && (
-              <Badge variant="outline" className="text-xs bg-navy-50 border-navy-200 text-navy-700">
+              <Badge variant="outline" className="text-xs bg-primary-50 border-primary-200 text-brand-primary-hover">
                 Actively Hiring
                 <X 
-                  className="h-3 w-3 ml-1 cursor-pointer hover:text-navy-900" 
+                  className="h-3 w-3 ml-1 cursor-pointer hover:text-primary-900" 
                   onClick={() => handleFilterChange('activelyHiring', false)}
                 />
               </Badge>

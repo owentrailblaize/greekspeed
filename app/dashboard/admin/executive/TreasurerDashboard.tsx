@@ -472,7 +472,7 @@ export function TreasurerDashboard() {
       case "paid": return "bg-green-100 text-green-800";
       case "required": return "bg-yellow-100 text-yellow-800";
       case "exempt": return "bg-gray-100 text-gray-800";
-      case "waived": return "bg-blue-100 text-blue-800";
+      case "waived": return "bg-accent-100 text-accent-800";
       case "reduced": return "bg-orange-100 text-orange-800";
       default: return "bg-gray-100 text-gray-800";
     }
@@ -488,7 +488,7 @@ export function TreasurerDashboard() {
       label: 'Bulk Assign Dues',
       icon: Users,
       onClick: () => setShowBulkAssignDues(true),
-      className: 'w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-navy-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300',
+      className: 'w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-primary-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300',
       variant: 'outline',
     },
     {
@@ -496,7 +496,7 @@ export function TreasurerDashboard() {
       label: 'Assign Dues',
       icon: UserPlus,
       onClick: () => setShowAssignDues(true),
-      className: 'w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-navy-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300',
+      className: 'w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-primary-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300',
       variant: 'outline',
     },
     {
@@ -504,7 +504,7 @@ export function TreasurerDashboard() {
       label: 'Create Dues Cycle',
       icon: Plus,
       onClick: () => setShowCreateCycle(true),
-      className: 'w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-navy-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300',
+      className: 'w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-primary-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300',
       variant: 'outline',
     },
     {
@@ -512,7 +512,7 @@ export function TreasurerDashboard() {
       label: 'Export Financial Report',
       icon: Download,
       onClick: () => exportDuesToCSV(assignments, `financial-report-${new Date().toISOString().split('T')[0]}.csv`),
-      className: 'w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-navy-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300',
+      className: 'w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-primary-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300',
       variant: 'outline',
     },
   ];
@@ -534,14 +534,14 @@ export function TreasurerDashboard() {
           transition={{ delay: 0.1 }}
           className="hidden md:block"
         >
-          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+          <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-navy-700 text-sm font-medium">Total Collected</p>
-                  <p className="text-2xl font-semibold text-navy-900">${financialOverview.totalCollected.toLocaleString()}</p>
+                  <p className="text-brand-primary-hover text-sm font-medium">Total Collected</p>
+                  <p className="text-2xl font-semibold text-primary-900">${financialOverview.totalCollected.toLocaleString()}</p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-navy-500" />
+                <CheckCircle className="h-8 w-8 text-brand-primary" />
               </div>
             </CardContent>
           </Card>
@@ -553,14 +553,14 @@ export function TreasurerDashboard() {
           transition={{ delay: 0.2 }}
           className="hidden md:block"
         >
-          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+          <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-navy-700 text-sm font-medium">Outstanding</p>
-                  <p className="text-2xl font-semibold text-navy-900">${financialOverview.totalOutstanding.toLocaleString()}</p>
+                  <p className="text-brand-primary-hover text-sm font-medium">Outstanding</p>
+                  <p className="text-2xl font-semibold text-primary-900">${financialOverview.totalOutstanding.toLocaleString()}</p>
                 </div>
-                <AlertTriangle className="h-8 w-8 text-navy-500" />
+                <AlertTriangle className="h-8 w-8 text-brand-primary" />
               </div>
             </CardContent>
           </Card>
@@ -572,14 +572,14 @@ export function TreasurerDashboard() {
           transition={{ delay: 0.3 }}
           className="hidden md:block"
         >
-          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+          <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-navy-700 text-sm font-medium">Collection Rate</p>
-                  <p className="text-2xl font-semibold text-navy-900">{financialOverview.collectionRate.toFixed(1)}%</p>
+                  <p className="text-brand-primary-hover text-sm font-medium">Collection Rate</p>
+                  <p className="text-2xl font-semibold text-primary-900">{financialOverview.collectionRate.toFixed(1)}%</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-navy-500" />
+                <TrendingUp className="h-8 w-8 text-brand-primary" />
               </div>
             </CardContent>
           </Card>
@@ -595,34 +595,34 @@ export function TreasurerDashboard() {
           className="grid grid-cols-3 gap-2"
         >
           {/* Total Collected */}
-          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+          <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
             <CardContent className="p-2">
               <div className="flex flex-col items-center text-center space-y-1">
-                <CheckCircle className="h-5 w-5 text-navy-500" />
-                <p className="text-base font-semibold text-navy-900">${financialOverview.totalCollected.toLocaleString()}</p>
-                <p className="text-navy-700 text-xs font-medium">Collected</p>
+                <CheckCircle className="h-5 w-5 text-brand-primary" />
+                <p className="text-base font-semibold text-primary-900">${financialOverview.totalCollected.toLocaleString()}</p>
+                <p className="text-brand-primary-hover text-xs font-medium">Collected</p>
               </div>
             </CardContent>
           </Card>
 
           {/* Outstanding */}
-          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+          <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
             <CardContent className="p-2">
               <div className="flex flex-col items-center text-center space-y-1">
-                <AlertTriangle className="h-5 w-5 text-navy-500" />
-                <p className="text-base font-semibold text-navy-900">${financialOverview.totalOutstanding.toLocaleString()}</p>
-                <p className="text-navy-700 text-xs font-medium">Outstanding</p>
+                <AlertTriangle className="h-5 w-5 text-brand-primary" />
+                <p className="text-base font-semibold text-primary-900">${financialOverview.totalOutstanding.toLocaleString()}</p>
+                <p className="text-brand-primary-hover text-xs font-medium">Outstanding</p>
               </div>
             </CardContent>
           </Card>
 
           {/* Collection Rate */}
-          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+          <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
             <CardContent className="p-2">
               <div className="flex flex-col items-center text-center space-y-1">
-                <TrendingUp className="h-5 w-5 text-navy-500" />
-                <p className="text-base font-semibold text-navy-900">{financialOverview.collectionRate.toFixed(1)}%</p>
-                <p className="text-navy-700 text-xs font-medium">Rate</p>
+                <TrendingUp className="h-5 w-5 text-brand-primary" />
+                <p className="text-base font-semibold text-primary-900">{financialOverview.collectionRate.toFixed(1)}%</p>
+                <p className="text-brand-primary-hover text-xs font-medium">Rate</p>
               </div>
             </CardContent>
           </Card>
@@ -641,7 +641,7 @@ export function TreasurerDashboard() {
               onClick={() => setSelectedTab(tab.value)}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                 selectedTab === tab.value
-                  ? "bg-white text-navy-600 shadow-sm"
+                  ? "bg-white text-brand-primary shadow-sm"
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
@@ -655,9 +655,9 @@ export function TreasurerDashboard() {
       {selectedTab === "overview" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Desktop Layout - Dues Collection Progress (2/3 width) */}
-          <Card className="hidden lg:block lg:col-span-2 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-            <CardHeader className="border-b border-navy-100/30">
-              <CardTitle className="text-navy-900">Dues Collection Progress</CardTitle>
+          <Card className="hidden lg:block lg:col-span-2 bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
+            <CardHeader className="border-b border-primary-100/30">
+              <CardTitle className="text-primary-900">Dues Collection Progress</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -699,9 +699,9 @@ export function TreasurerDashboard() {
           </div>
 
           {/* Mobile Layout - Dues Collection Progress */}
-          <Card className="lg:hidden bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-            <CardHeader className="pb-2 border-b border-navy-100/30">
-              <CardTitle className="text-navy-900">Dues Collection Progress</CardTitle>
+          <Card className="lg:hidden bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
+            <CardHeader className="pb-2 border-b border-primary-100/30">
+              <CardTitle className="text-primary-900">Dues Collection Progress</CardTitle>
             </CardHeader>
             <CardContent className="pt-2">
               <div className="space-y-3">
@@ -747,11 +747,11 @@ export function TreasurerDashboard() {
       )}
 
       {selectedTab === "members" && (
-        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-          <CardHeader className="pb-2 sm:pb-6 border-b border-navy-100/30">
+        <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
+          <CardHeader className="pb-2 sm:pb-6 border-b border-primary-100/30">
             {/* Desktop Layout */}
             <div className="hidden sm:flex justify-between items-center">
-              <CardTitle className="text-navy-900">All Chapter Members ({chapterMembers.length})</CardTitle>
+              <CardTitle className="text-primary-900">All Chapter Members ({chapterMembers.length})</CardTitle>
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-600">
                   {chapterMembers.length} {chapterMembers.length === 1 ? 'member' : 'members'}
@@ -777,7 +777,7 @@ export function TreasurerDashboard() {
                           onClick={() => setCurrentPage(page)}
                           className={`h-8 w-8 p-0 text-xs flex-shrink-0 ${
                             currentPage === page
-                              ? 'bg-navy-600 text-white hover:bg-navy-700'
+                              ? 'bg-brand-primary text-white hover:bg-brand-primary-hover'
                               : 'hover:bg-gray-50'
                           }`}
                         >
@@ -812,7 +812,7 @@ export function TreasurerDashboard() {
 
             {/* Mobile Layout */}
             <div className="sm:hidden">
-              <CardTitle className="text-lg mb-3 text-navy-900">All Chapter Members ({chapterMembers.length})</CardTitle>
+              <CardTitle className="text-lg mb-3 text-primary-900">All Chapter Members ({chapterMembers.length})</CardTitle>
               <div className="flex space-x-2">
                 <Button 
                   onClick={() => setShowBulkAssignDues(true)} 
@@ -936,7 +936,7 @@ export function TreasurerDashboard() {
                                     onClick={() => setCurrentPage(page)}
                                     className={`h-8 w-8 p-0 text-xs flex-shrink-0 ${
                                       currentPage === page
-                                        ? 'bg-navy-600 text-white hover:bg-navy-700'
+                                        ? 'bg-brand-primary text-white hover:bg-brand-primary-hover'
                                         : 'hover:bg-gray-50'
                                     }`}
                                   >
@@ -1038,7 +1038,7 @@ export function TreasurerDashboard() {
                                     onClick={() => setCurrentPage(page)}
                                     className={`h-8 w-8 p-0 text-xs flex-shrink-0 ${
                                       currentPage === page
-                                        ? 'bg-navy-600 text-white hover:bg-navy-700'
+                                        ? 'bg-brand-primary text-white hover:bg-brand-primary-hover'
                                         : 'hover:bg-gray-50'
                                     }`}
                                   >
@@ -1117,14 +1117,14 @@ export function TreasurerDashboard() {
                 type="button"
                 variant="outline"
                 onClick={() => setShowCreateCycle(false)}
-                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+                className="rounded-full bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
               >
                 Cancel
               </Button>
               <Button
                 type="button"
                 onClick={handleCreateCycle}
-                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+                className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
               >
                 Create Cycle
               </Button>
@@ -1157,7 +1157,7 @@ export function TreasurerDashboard() {
                   </h3>
                   <button
                     onClick={() => setShowAssignDues(false)}
-                    className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 p-1"
+                    className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 p-1"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -1193,7 +1193,7 @@ export function TreasurerDashboard() {
                       value={newAssignment.amount}
                       onChange={(e) => setNewAssignment({ ...newAssignment, amount: parseFloat(e.target.value) || 0 })}
                       placeholder="150.00"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 text-sm h-9"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary text-sm h-9"
                     />
                   </div>
                   <div>
@@ -1220,7 +1220,7 @@ export function TreasurerDashboard() {
                       value={newAssignment.notes}
                       onChange={(e) => setNewAssignment({ ...newAssignment, notes: e.target.value })}
                       placeholder="Optional notes about this assignment"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 text-sm"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary text-sm"
                     />
                   </div>
                 </div>
@@ -1233,14 +1233,14 @@ export function TreasurerDashboard() {
                     type="button"
                     variant="outline"
                     onClick={() => setShowAssignDues(false)}
-                    className="rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+                    className="rounded-full bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
                   >
                     Cancel
                   </Button>
                   <Button
                     type="button"
                     onClick={handleAssignDues}
-                    className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+                    className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
                   >
                     Assign Dues
                   </Button>
@@ -1276,7 +1276,7 @@ export function TreasurerDashboard() {
                   </h3>
                   <button
                     onClick={() => setShowBulkAssignDues(false)}
-                    className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 p-1"
+                    className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 p-1"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -1310,7 +1310,7 @@ export function TreasurerDashboard() {
                                   checked={bulkAssignment.selectedMembers.length === chapterMembers.length}
                                   onCheckedChange={handleSelectAllMembers}
                                   indeterminate={bulkAssignment.selectedMembers.length > 0 && bulkAssignment.selectedMembers.length < chapterMembers.length}
-                                  className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
+                                  className="data-[state=checked]:bg-brand-primary data-[state=checked]:border-brand-primary"
                                 />
                               </div>
                             </TableHead>
@@ -1327,7 +1327,7 @@ export function TreasurerDashboard() {
                             <TableRow 
                               key={member.id} 
                               className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
-                                bulkAssignment.selectedMembers.includes(member.id) ? 'bg-navy-50 border-navy-200' : ''
+                                bulkAssignment.selectedMembers.includes(member.id) ? 'bg-primary-50 border-primary-200' : ''
                               }`}
                             >
                               {/* Checkbox Column */}
@@ -1336,7 +1336,7 @@ export function TreasurerDashboard() {
                                   <Checkbox
                                     checked={bulkAssignment.selectedMembers.includes(member.id)}
                                     onCheckedChange={(checked) => handleMemberSelection(member.id, checked as boolean)}
-                                    className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
+                                    className="data-[state=checked]:bg-brand-primary data-[state=checked]:border-brand-primary"
                                   />
                                 </div>
                               </TableCell>
@@ -1345,7 +1345,7 @@ export function TreasurerDashboard() {
                               <TableCell className="bg-white border-r border-gray-200">
                                 <div className="flex items-start space-x-3">
                                   {/* Avatar */}
-                                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center flex-shrink-0">
+                                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-primary to-brand-primary flex items-center justify-center flex-shrink-0">
                                     <span className="text-white text-sm font-medium">
                                       {member.full_name?.[0] || ''}{member.full_name?.split(' ')[1]?.[0] || ''}
                                     </span>
@@ -1409,7 +1409,7 @@ export function TreasurerDashboard() {
                         value={bulkAssignment.amount}
                         onChange={(e) => setBulkAssignment({ ...bulkAssignment, amount: parseFloat(e.target.value) || 0 })}
                         placeholder="150.00"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 text-sm h-9"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary text-sm h-9"
                       />
                     </div>
                     <div>
@@ -1437,7 +1437,7 @@ export function TreasurerDashboard() {
                         value={bulkAssignment.notes}
                         onChange={(e) => setBulkAssignment({ ...bulkAssignment, notes: e.target.value })}
                         placeholder="Optional notes about this assignment"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-navy-500 focus:ring-navy-500 text-sm"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary text-sm"
                       />
                     </div>
                   </div>
@@ -1455,7 +1455,7 @@ export function TreasurerDashboard() {
                       type="button"
                       variant="outline"
                       onClick={() => setShowBulkAssignDues(false)}
-                      className="rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+                      className="rounded-full bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
                     >
                       Cancel
                     </Button>
@@ -1463,7 +1463,7 @@ export function TreasurerDashboard() {
                       type="button"
                       onClick={handleBulkAssignDues}
                       disabled={bulkAssignment.selectedMembers.length === 0 || !bulkAssignment.cycleId}
-                      className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Assign Dues to {bulkAssignment.selectedMembers.length} Members
                     </Button>
@@ -1532,14 +1532,14 @@ export function TreasurerDashboard() {
                   type="button"
                   variant="outline"
                   onClick={() => setShowEditAssignment(false)}
-                  className="rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+                  className="rounded-full bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="button"
                   onClick={handleEditAssignment}
-                  className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+                  className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
                 >
                   Update Assignment
                 </Button>

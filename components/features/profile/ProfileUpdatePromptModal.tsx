@@ -285,7 +285,7 @@ export function ProfileUpdatePromptModal({
         <div className="flex flex-row items-start justify-between pb-2">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-10 h-10 rounded-full bg-navy-100/70 flex items-center justify-center text-navy-700">
+              <div className="w-10 h-10 rounded-full bg-primary-100/70 flex items-center justify-center text-brand-primary-hover">
                 {primaryChange ? getChangeIcon(primaryChange.type) : <Sparkles className="h-5 w-5" />}
               </div>
               <h2 className="text-xl font-semibold tracking-tight text-slate-900">
@@ -303,7 +303,7 @@ export function ProfileUpdatePromptModal({
       <div className="flex-1 overflow-y-auto min-h-0 px-6 sm:px-8 py-4 sm:py-6">
         <div className="space-y-4">
           <div className="flex items-start gap-3 mb-4">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 bg-navy-100/70 rounded-full flex items-center justify-center text-navy-700 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 bg-primary-100/70 rounded-full flex items-center justify-center text-brand-primary-hover text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
               {userProfile.avatar_url ? (
                 <ImageWithFallback
                   src={userProfile.avatar_url}
@@ -369,7 +369,7 @@ export function ProfileUpdatePromptModal({
                 setContent(e.target.value);
                 setError(null);
               }}
-              className="min-h-[120px] sm:min-h-[100px] resize-none rounded-2xl border border-slate-200 bg-slate-50/80 p-5 text-base sm:text-lg text-slate-800 placeholder:text-slate-400 focus:border-navy-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-200 transition"
+              className="min-h-[120px] sm:min-h-[100px] resize-none rounded-2xl border border-slate-200 bg-slate-50/80 p-5 text-base sm:text-lg text-slate-800 placeholder:text-slate-400 focus:border-primary-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 transition"
             />
             <p className="text-xs text-slate-500 mt-2">{content.length} characters</p>
           </div>

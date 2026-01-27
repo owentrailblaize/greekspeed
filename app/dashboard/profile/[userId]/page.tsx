@@ -136,7 +136,7 @@ export default function UserProfilePage() {
       <div className="min-h-screen bg-white sm:hidden pb-20">
         {/* Error state with back button */}
         <div className="relative">
-          <div className="h-32 bg-gradient-to-r from-navy-100 via-blue-100 to-blue-50 relative">
+          <div className="h-32 bg-gradient-to-r from-primary-100 via-accent-100 to-accent-50 relative">
             {/* Back Button - Positioned in top-left of banner */}
             <button
               onClick={handleClose}

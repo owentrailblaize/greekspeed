@@ -40,7 +40,7 @@ export function AlumniDetailSheet({ alumni, isOpen, onClose }: AlumniDetailSheet
           <SheetTitle className="flex items-center space-x-2">
             <span>Alumni Profile</span>
             {alumni.verified && (
-              <Badge className="bg-blue-500 text-white">✓ Verified</Badge>
+              <Badge className="bg-accent-500 text-white">✓ Verified</Badge>
             )}
           </SheetTitle>
         </SheetHeader>
@@ -58,7 +58,7 @@ export function AlumniDetailSheet({ alumni, isOpen, onClose }: AlumniDetailSheet
                   className="w-full h-full object-cover" 
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
+                <div className="w-full h-full bg-gradient-to-br from-brand-primary to-brand-primary flex items-center justify-center">
                   <span className="text-white font-medium text-lg">
                     {alumni.firstName[0]}{alumni.lastName[0]}
                   </span>

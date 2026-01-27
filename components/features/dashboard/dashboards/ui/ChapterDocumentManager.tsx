@@ -340,7 +340,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
     
     if (fileType.includes('pdf')) return <FileText className="h-4 w-4 text-red-600" />;
     if (fileType.includes('spreadsheet') || fileType.includes('excel')) return <FileText className="h-4 w-4 text-green-600" />;
-    if (fileType.includes('word')) return <FileText className="h-4 w-4 text-blue-600" />;
+    if (fileType.includes('word')) return <FileText className="h-4 w-4 text-brand-accent" />;
     
     return <FileText className="h-4 w-4" />;
   };
@@ -382,7 +382,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
       legal: 'bg-purple-100 text-purple-800',
       finance: 'bg-green-100 text-green-800',
       safety: 'bg-red-100 text-red-800',
-      policy: 'bg-blue-100 text-blue-800',
+      policy: 'bg-accent-100 text-accent-800',
       general: 'bg-gray-100 text-gray-800'
     };
     return colors[category] || colors.general;
@@ -522,16 +522,16 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
 
   if (loading) {
     return (
-      <Card className={`bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 ${className || ''}`}>
-        <CardHeader className="pb-3 border-b border-navy-100/30">
-          <CardTitle className="text-lg flex items-center space-x-2 text-navy-900">
-            <FileText className="h-5 w-5 text-navy-600" />
+      <Card className={`bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 ${className || ''}`}>
+        <CardHeader className="pb-3 border-b border-primary-100/30">
+          <CardTitle className="text-lg flex items-center space-x-2 text-primary-900">
+            <FileText className="h-5 w-5 text-brand-primary" />
             <span>Chapter Documents</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+            <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
             <span className="ml-2 text-gray-600">Loading documents...</span>
           </div>
         </CardContent>
@@ -543,10 +543,10 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
     <div className={className}>
       {/* Desktop Layout - Preserved */}
       <div className="hidden md:block">
-        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-          <CardHeader className="pb-3 border-b border-navy-100/30">
-            <CardTitle className="text-lg flex items-center space-x-2 text-navy-900">
-              <FileText className="h-5 w-5 text-navy-600" />
+        <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
+          <CardHeader className="pb-3 border-b border-primary-100/30">
+            <CardTitle className="text-lg flex items-center space-x-2 text-primary-900">
+              <FileText className="h-5 w-5 text-brand-primary" />
               <span>Chapter Documents</span>
             </CardTitle>
           </CardHeader>
@@ -580,7 +580,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
             <div className="mb-4 flex items-center justify-between gap-4">
               <Button 
                 onClick={handleUpload}
-                className="flex-1 rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                className="flex-1 rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Upload New Document
@@ -608,7 +608,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                         onClick={() => setCurrentPage(page)}
                         className={`h-8 w-8 p-0 text-xs flex-shrink-0 ${
                           currentPage === page
-                            ? 'bg-navy-600 text-white hover:bg-navy-700'
+                            ? 'bg-brand-primary text-white hover:bg-brand-primary-hover'
                             : 'hover:bg-gray-50'
                         }`}
                       >
@@ -749,10 +749,10 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
 
       {/* Mobile Layout */}
       <div className="md:hidden">
-        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-          <CardHeader className="pb-3 border-b border-navy-100/30">
-            <CardTitle className="text-lg flex items-center space-x-2 text-navy-900">
-              <FileText className="h-5 w-5 text-navy-600" />
+        <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
+          <CardHeader className="pb-3 border-b border-primary-100/30">
+            <CardTitle className="text-lg flex items-center space-x-2 text-primary-900">
+              <FileText className="h-5 w-5 text-brand-primary" />
               <span>Chapter Documents</span>
             </CardTitle>
           </CardHeader>
@@ -784,7 +784,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                     onClick={() => setActiveTab(tab.value)}
                     className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
                       activeTab === tab.value
-                        ? 'bg-navy-600 text-white'
+                        ? 'bg-brand-primary text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
@@ -798,7 +798,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
             <div className="mb-4 space-y-3">
               <Button 
                 onClick={handleUpload}
-                className="w-full rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                className="w-full rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Upload New Document
@@ -916,7 +916,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl md:max-h-[90vh] max-h-[85vh] flex flex-col">
             {/* Persistent Header */}
             <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 flex-shrink-0">
-              <h3 className="text-lg md:text-2xl font-bold text-navy-900">New Document</h3>
+              <h3 className="text-lg md:text-2xl font-bold text-primary-900">New Document</h3>
               <button
                 onClick={() => setShowUploadModal(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -1017,7 +1017,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                       onChange={(e) => setUploadFormData(prev => ({ ...prev, description: e.target.value }))}
                       placeholder="Brief description of the document"
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -1133,7 +1133,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
               <Button
                 type="submit"
                 disabled={!selectedFile || !uploadFormData.title.trim() || uploading}
-                className="bg-navy-600 hover:bg-navy-700"
+                className="bg-brand-primary hover:bg-brand-primary-hover"
                 onClick={handleUploadSubmit}
               >
                 {uploading ? (

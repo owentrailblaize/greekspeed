@@ -372,7 +372,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                   {eventsManagementEnabled && (
                     <Button 
                       variant="outline" 
-                      className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                      className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                       onClick={() => {
                         handleScheduleMeeting();
                         setShowQuickActionsModal(false);
@@ -384,7 +384,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                   )}
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                    className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                     onClick={() => {
                       handleSendMessage();
                       setShowQuickActionsModal(false);
@@ -395,7 +395,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                    className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                     onClick={() => {
                       router.push('/dashboard?tool=operations&tab=members');
                       setShowQuickActionsModal(false);
@@ -406,7 +406,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                    className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                     onClick={() => {
                       router.push('/dashboard?tool=invites&tab=invitations');
                       setShowQuickActionsModal(false);
@@ -419,7 +419,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                     <>
                       <Button 
                         variant="outline" 
-                        className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                        className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                         onClick={() => {
                           handleAddRecruit();
                           setShowQuickActionsModal(false);
@@ -430,7 +430,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                       </Button>
                       <Button 
                         variant="outline" 
-                        className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                        className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                         onClick={() => {
                           router.push('/dashboard?tool=tasks&tab=recruits');
                           setShowQuickActionsModal(false);

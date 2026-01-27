@@ -297,7 +297,7 @@ export function TasksView() {
         </div>
         <Button 
           onClick={() => setShowTaskModal(true)}
-          className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+          className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
         >
           <Plus className="h-4 w-4 mr-2" />
           Create Task
@@ -306,67 +306,67 @@ export function TasksView() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+        <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-navy-700 text-sm font-medium mb-1">Total Tasks</p>
-                <p className="text-2xl font-semibold text-navy-900">
+                <p className="text-brand-primary-hover text-sm font-medium mb-1">Total Tasks</p>
+                <p className="text-2xl font-semibold text-primary-900">
                   {loading ? '...' : taskStats.total}
                 </p>
               </div>
-              <Settings className="h-8 w-8 text-navy-500" />
+              <Settings className="h-8 w-8 text-brand-primary" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+        <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-navy-700 text-sm font-medium mb-1">Completed</p>
-                <p className="text-2xl font-semibold text-navy-900">
+                <p className="text-brand-primary-hover text-sm font-medium mb-1">Completed</p>
+                <p className="text-2xl font-semibold text-primary-900">
                   {loading ? '...' : taskStats.completed}
                 </p>
               </div>
-              <CheckCircle className="h-8 w-8 text-navy-500" />
+              <CheckCircle className="h-8 w-8 text-brand-primary" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+        <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-navy-700 text-sm font-medium mb-1">Pending</p>
-                <p className="text-2xl font-semibold text-navy-900">
+                <p className="text-brand-primary-hover text-sm font-medium mb-1">Pending</p>
+                <p className="text-2xl font-semibold text-primary-900">
                   {loading ? '...' : taskStats.pending}
                 </p>
               </div>
-              <Clock className="h-8 w-8 text-navy-500" />
+              <Clock className="h-8 w-8 text-brand-primary" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+        <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-navy-700 text-sm font-medium mb-1">Compliance</p>
-                <p className="text-2xl font-semibold text-navy-900">
+                <p className="text-brand-primary-hover text-sm font-medium mb-1">Compliance</p>
+                <p className="text-2xl font-semibold text-primary-900">
                   {loading ? '...' : `${taskStats.compliance}%`}
                 </p>
               </div>
-              <UserCheck className="h-8 w-8 text-navy-500" />
+              <UserCheck className="h-8 w-8 text-brand-primary" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Task Completion Progress */}
-      <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-        <CardHeader className="border-b border-navy-100/30">
-          <CardTitle className="text-navy-900">Task Completion Progress</CardTitle>
+      <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
+        <CardHeader className="border-b border-primary-100/30">
+          <CardTitle className="text-primary-900">Task Completion Progress</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -400,11 +400,11 @@ export function TasksView() {
       </Card>
 
       {/* Member Task Tracking Table */}
-      <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-        <CardHeader className="pb-2 border-b border-navy-100/30">
+      <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
+        <CardHeader className="pb-2 border-b border-primary-100/30">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center text-navy-900">
-              <Settings className="h-5 w-5 mr-2 text-navy-600" />
+            <CardTitle className="flex items-center text-primary-900">
+              <Settings className="h-5 w-5 mr-2 text-brand-primary" />
               Member Task Tracking
             </CardTitle>
             <div className="flex items-center space-x-4">
@@ -432,7 +432,7 @@ export function TasksView() {
                         onClick={() => setCurrentPage(page)}
                         className={`h-8 w-8 p-0 text-xs flex-shrink-0 ${
                           currentPage === page
-                            ? 'bg-navy-600 text-white hover:bg-navy-700'
+                            ? 'bg-brand-primary text-white hover:bg-brand-primary-hover'
                             : 'hover:bg-gray-50'
                         }`}
                       >

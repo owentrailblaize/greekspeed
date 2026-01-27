@@ -189,11 +189,11 @@ export function ActivelyHiringPage() {
         <div className="w-full">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Briefcase className="h-6 w-6 text-navy-600" />
-              <h1 className="text-navy-900 font-medium text-lg">Actively Hiring</h1>
+              <Briefcase className="h-6 w-6 text-brand-primary" />
+              <h1 className="text-primary-900 font-medium text-lg">Actively Hiring</h1>
             </div>
             {canPostJob() && (
-              <Button className="bg-navy-600 hover:bg-navy-700 text-white">
+              <Button className="bg-brand-primary hover:bg-brand-primary-hover text-white">
                 Post Job Opening
               </Button>
             )}
@@ -211,7 +211,7 @@ export function ActivelyHiringPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input 
                 placeholder="Search jobs" 
-                className="pl-10 bg-white border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+                className="pl-10 bg-white border-gray-300 focus:border-brand-primary focus:ring-brand-primary"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -277,12 +277,12 @@ export function ActivelyHiringPage() {
               <div
                 key={job.id}
                 className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                  selectedJob?.id === job.id ? "bg-blue-50 border-l-4 border-l-blue-500" : ""
+                  selectedJob?.id === job.id ? "bg-accent-50 border-l-4 border-l-accent-500" : ""
                 }`}
                 onClick={() => handleJobSelection(job)}
               >
                 <div className="flex items-start space-x-3">
-                  <div className="w-10 h-10 bg-navy-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-brand-primary rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="text-white text-sm font-medium">{job.companyLogo}</span>
                   </div>
                   
@@ -315,7 +315,7 @@ export function ActivelyHiringPage() {
                     {/* Alumni Hiring Section */}
                     {job.connectedAlumni && job.connectedAlumni.length > 0 && (
                       <div 
-                        className="mt-2 p-2 bg-blue-50 rounded-md border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
+                        className="mt-2 p-2 bg-accent-50 rounded-md border border-accent-200 cursor-pointer hover:bg-accent-100 transition-colors"
                         onClick={(e) => {
                           e.stopPropagation(); // Prevent job selection
                           handleJobSelection(job); // Use the new handler
@@ -332,22 +332,22 @@ export function ActivelyHiringPage() {
                         }}
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-medium text-blue-800">
+                          <span className="text-xs font-medium text-accent-800">
                             {job.connectedAlumni.length} Alumni Hiring
                           </span>
-                          <Users className="h-3 w-3 text-blue-600" />
+                          <Users className="h-3 w-3 text-brand-accent" />
                         </div>
                         <div className="flex items-center space-x-6">
                           {job.connectedAlumni.slice(0, 2).map((alumni) => (
                             <div key={alumni.id} className="flex items-center space-x-1">
-                              <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                              <div className="w-6 h-6 bg-brand-accent rounded-full flex items-center justify-center">
                                 <span className="text-white text-xs font-medium">{alumni.avatar}</span>
                               </div>
-                              <span className="text-xs text-blue-700">{alumni.name}</span>
+                              <span className="text-xs text-accent-700">{alumni.name}</span>
                             </div>
                           ))}
                           {job.connectedAlumni.length > 2 && (
-                            <span className="text-xs text-blue-600">
+                            <span className="text-xs text-brand-accent">
                               +{job.connectedAlumni.length - 2} more
                             </span>
                           )}
@@ -372,7 +372,7 @@ export function ActivelyHiringPage() {
                         </Badge>
                       )}
                       {job.isPromoted && (
-                        <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                        <Badge variant="secondary" className="text-xs bg-accent-100 text-accent-800">
                           Promoted
                         </Badge>
                       )}
@@ -399,7 +399,7 @@ export function ActivelyHiringPage() {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
                 {/* Company Header */}
                 <div className="flex items-center space-x-4 mb-6">
-                  <div className="w-16 h-16 bg-navy-600 rounded-lg flex items-center justify-center">
+                  <div className="w-16 h-16 bg-brand-primary rounded-lg flex items-center justify-center">
                     <span className="text-white text-xl font-medium">{selectedJob.companyLogo}</span>
                   </div>
                   <div>
@@ -523,7 +523,7 @@ export function ActivelyHiringPage() {
                       <Card key={alumni.id} className="hover:shadow-md transition-shadow">
                         <CardContent className="p-4">
                           <div className="flex items-start space-x-3">
-                            <div className="w-12 h-12 bg-navy-600 rounded-full flex items-center justify-center flex-shrink-0">
+                            <div className="w-12 h-12 bg-brand-primary rounded-full flex items-center justify-center flex-shrink-0">
                               <span className="text-white text-sm font-medium">{alumni.avatar}</span>
                             </div>
                             
@@ -544,7 +544,7 @@ export function ActivelyHiringPage() {
                                     Message
                                   </Button>
                                 ) : (
-                                  <Button size="sm" className="w-full bg-navy-600 hover:bg-navy-700 text-white">
+                                  <Button size="sm" className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white">
                                     Connect
                                   </Button>
                                 )}

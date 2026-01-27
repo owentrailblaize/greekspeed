@@ -254,7 +254,7 @@ export function OperationsFeed() {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'event': return 'bg-blue-100 text-blue-800';
+      case 'event': return 'bg-accent-100 text-accent-800';
       case 'payment': return 'bg-green-100 text-green-800';
       case 'task': return 'bg-purple-100 text-purple-800';
       case 'document': return 'bg-orange-100 text-orange-800';
@@ -289,7 +289,7 @@ export function OperationsFeed() {
     const IconComponent = item.icon;
     return (
       <div key={item.id} className="flex items-start space-x-3 p-2 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-        <div className="w-6 h-6 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 shrink-0">
+        <div className="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center text-brand-primary shrink-0">
           <IconComponent className="h-3 w-3" />
         </div>
         
@@ -317,7 +317,7 @@ export function OperationsFeed() {
       <Card className="bg-white">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center space-x-2">
-            <Clock className="h-5 w-5 text-navy-600" />
+            <Clock className="h-5 w-5 text-brand-primary" />
             <span>Operations Feed</span>
           </CardTitle>
         </CardHeader>
@@ -338,7 +338,7 @@ export function OperationsFeed() {
     <Card className="bg-white">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center space-x-2">
-          <Clock className="h-5 w-5 text-navy-600" />
+          <Clock className="h-5 w-5 text-brand-primary" />
           <span>Operations Feed</span>
         </CardTitle>
       </CardHeader>
@@ -360,7 +360,7 @@ export function OperationsFeed() {
           <div className="flex space-x-2">
             {/* Refresh Button - Square with icon only */}
             <button 
-              className="w-8 h-8 border border-navy-600 rounded-md flex items-center justify-center text-navy-600 hover:bg-navy-50 hover:text-navy-700 transition-colors"
+              className="w-8 h-8 border border-brand-primary rounded-md flex items-center justify-center text-brand-primary hover:bg-primary-50 hover:text-brand-primary-hover transition-colors"
               onClick={fetchRecentActivities}
             >
               <RefreshCw className="h-4 w-4" />
@@ -372,7 +372,7 @@ export function OperationsFeed() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  className="flex-1 h-10 rounded-full text-navy-600 border-navy-600 bg-white hover:bg-navy-50 font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-300"
+                  className="flex-1 h-10 rounded-full text-brand-primary border-brand-primary bg-white hover:bg-primary-50 font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-300"
                   onClick={() => {
                     setModalOpen(true);
                     fetchAllActivities();
@@ -385,7 +385,7 @@ export function OperationsFeed() {
               <DialogContent className="rounded-lg max-h-[80vh] overflow-hidden bg-white sm:max-w-2xl max-w-[calc(100vw-2rem)] mx-auto sm:mx-0">
                 <DialogHeader>
                   <DialogTitle className="flex items-center space-x-2">
-                    <Clock className="h-5 w-5 text-navy-600" />
+                    <Clock className="h-5 w-5 text-brand-primary" />
                     <span>All Chapter Activity</span>
                   </DialogTitle>
                 </DialogHeader>

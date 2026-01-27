@@ -216,16 +216,16 @@ export function MembersView() {
   return (
     <div className="space-y-6">
       {/* Main Card Container - All content inline */}
-      <Card className="w-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-        <CardHeader className="pb-4 border-b border-navy-100/30">
+      <Card className="w-full bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
+        <CardHeader className="pb-4 border-b border-primary-100/30">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-2xl font-semibold text-navy-900">Members</CardTitle>
+              <CardTitle className="text-2xl font-semibold text-primary-900">Members</CardTitle>
               <p className="text-sm text-gray-600 mt-1">Manage chapter members</p>
             </div>
             <Button 
               onClick={() => setShowAddMemberModal(true)}
-              className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+              className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Member
@@ -247,14 +247,14 @@ export function MembersView() {
           {/* Users Table - Simplified since card wrapper is removed */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium text-navy-900">
+              <h3 className="text-lg font-medium text-primary-900">
                 Chapter Members ({totalUsers.toLocaleString()})
               </h3>
             </div>
             {loading ? (
               <div className="flex items-center justify-center py-16">
                 <div
-                  className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-blue-600"
+                  className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-brand-accent"
                   aria-label="Loading"
                 />
               </div>
@@ -283,7 +283,7 @@ export function MembersView() {
                                       variant="outline" 
                                       size="sm"
                                       onClick={() => openViewModal(u)}
-                                      className="hover:bg-blue-50 hover:text-blue-600"
+                                      className="hover:bg-accent-50 hover:text-brand-accent"
                                       title="View user details"
                                     >
                                       <Eye className="h-4 w-4" />

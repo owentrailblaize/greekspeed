@@ -77,7 +77,7 @@ export function ClickableAvatar({
     <div
       onClick={handleClick}
       className={cn(
-        'rounded-full bg-navy-100 flex items-center justify-center text-navy-700 font-semibold shrink-0 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity',
+        'rounded-full bg-primary-100 flex items-center justify-center text-brand-primary-hover font-semibold shrink-0 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity',
         sizeClasses[size],
         className
       )}

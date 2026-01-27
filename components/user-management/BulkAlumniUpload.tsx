@@ -257,7 +257,7 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center space-x-2">
-              <Users className="h-5 w-5 text-blue-600" />
+              <Users className="h-5 w-5 text-brand-accent" />
               <span>Bulk Alumni Upload</span>
             </CardTitle>
             <Button
@@ -353,7 +353,7 @@ export function BulkAlumniUpload({ onClose, onSuccess }: BulkAlumniUploadProps) 
           {/* Loading Spinner */}
           {isUploading && (
             <div className="flex flex-col items-center justify-center py-8 space-y-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent"></div>
               <p className="text-sm text-gray-600">Processing alumni upload...</p>
             </div>
           )}

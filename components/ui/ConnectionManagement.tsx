@@ -98,7 +98,7 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
       <Card className={className}>
         <CardContent className="p-6">
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-navy-600" />
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary" />
             <span className="ml-2 text-gray-600">Loading connections...</span>
           </div>
         </CardContent>
@@ -110,7 +110,7 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
     <Card className={className}>
       <CardHeader className={isMobile ? 'pb-3' : 'pb-4'}>
         <CardTitle className={`${textSize} flex items-center space-x-2`}>
-          <Users className={`${iconSize} text-navy-600`} />
+          <Users className={`${iconSize} text-brand-primary`} />
           <span>Connection Management</span>
         </CardTitle>
       </CardHeader>
@@ -188,7 +188,7 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                             className={avatarSize}
                           />
                         ) : (
-                          <div className={`${avatarSize} bg-navy-100 rounded-full flex items-center justify-center text-navy-600 ${textSize} font-semibold`}>
+                          <div className={`${avatarSize} bg-primary-100 rounded-full flex items-center justify-center text-brand-primary ${textSize} font-semibold`}>
                             {partner.avatar ? (
                               <img 
                                 src={partner.avatar} 
@@ -227,7 +227,7 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                           size="sm"
                           onClick={() => handleConnectionAction(connection.id, 'accept')}
                           disabled={processingId === connection.id}
-                          className={`bg-navy-600 hover:bg-navy-700 text-white rounded-full font-medium shadow-sm ${buttonSize}`}
+                          className={`bg-brand-primary hover:bg-brand-primary-hover text-white rounded-full font-medium shadow-sm ${buttonSize}`}
                         >
                           {processingId === connection.id ? (
                             <div className={`animate-spin rounded-full ${iconSize} border-b border-white`} />
@@ -290,7 +290,7 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                             className={avatarSize}
                           />
                         ) : (
-                          <div className={`${avatarSize} bg-navy-100 rounded-full flex items-center justify-center text-navy-600 ${textSize} font-semibold`}>
+                          <div className={`${avatarSize} bg-primary-100 rounded-full flex items-center justify-center text-brand-primary ${textSize} font-semibold`}>
                             {partner.avatar ? (
                               <img 
                                 src={partner.avatar} 
@@ -357,7 +357,7 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                             className={avatarSize}
                           />
                         ) : (
-                          <div className={`${avatarSize} bg-navy-100 rounded-full flex items-center justify-center text-navy-600 ${textSize} font-semibold`}>
+                          <div className={`${avatarSize} bg-primary-100 rounded-full flex items-center justify-center text-brand-primary ${textSize} font-semibold`}>
                             {partner.avatar ? (
                               <img 
                                 src={partner.avatar} 
@@ -424,7 +424,7 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                             className={avatarSize}
                           />
                         ) : (
-                          <div className={`${avatarSize} bg-navy-100 rounded-full flex items-center justify-center text-navy-600 ${textSize} font-semibold`}>
+                          <div className={`${avatarSize} bg-primary-100 rounded-full flex items-center justify-center text-brand-primary ${textSize} font-semibold`}>
                             {partner.avatar ? (
                               <img 
                                 src={partner.avatar} 

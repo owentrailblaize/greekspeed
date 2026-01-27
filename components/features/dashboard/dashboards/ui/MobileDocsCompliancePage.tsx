@@ -136,7 +136,7 @@ export function MobileDocsCompliancePage() {
     
     if (fileType.includes('pdf')) return <FileText className="h-4 w-4 text-red-600" />;
     if (fileType.includes('spreadsheet') || fileType.includes('excel')) return <FileText className="h-4 w-4 text-green-600" />;
-    if (fileType.includes('word')) return <FileText className="h-4 w-4 text-blue-600" />;
+    if (fileType.includes('word')) return <FileText className="h-4 w-4 text-brand-accent" />;
     
     return <FileText className="h-4 w-4" />;
   };
@@ -166,7 +166,7 @@ export function MobileDocsCompliancePage() {
       legal: 'bg-purple-100 text-purple-800',
       finance: 'bg-green-100 text-green-800',
       safety: 'bg-red-100 text-red-800',
-      policy: 'bg-blue-100 text-blue-800',
+      policy: 'bg-accent-100 text-accent-800',
       general: 'bg-gray-100 text-gray-800'
     };
     return colors[category] || colors.general;
@@ -268,7 +268,7 @@ export function MobileDocsCompliancePage() {
       <div className="max-w-md mx-auto">
         {/* Header */}
         <div className="flex items-center space-x-2 mb-6">
-          <FileText className="h-6 w-6 text-navy-600" />
+          <FileText className="h-6 w-6 text-brand-primary" />
           <h1 className="text-xl font-semibold text-gray-900">Documents & Compliance</h1>
         </div>
 
@@ -283,13 +283,13 @@ export function MobileDocsCompliancePage() {
                   onClick={() => setActiveFilter(filter.id)}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                     isActive 
-                      ? 'bg-blue-600 text-white' 
+                      ? 'bg-brand-accent text-white' 
                       : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                   }`}
                 >
                   <span>{filter.label}</span>
                   <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                    isActive ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
+                    isActive ? 'bg-accent-500 text-white' : 'bg-gray-100 text-gray-600'
                   }`}>
                     {filter.count}
                   </span>

@@ -118,7 +118,7 @@ export function AboutTab({ profile, isLoggedIn = false, canSeeFullProfile = fals
                         href={userData.linkedin_url} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-700 underline inline-flex items-center gap-1"
+                        className="text-brand-accent hover:text-accent-700 underline inline-flex items-center gap-1"
                       >
                         View Profile
                         <ExternalLink className="h-3 w-3" />
@@ -165,9 +165,9 @@ export function AboutTab({ profile, isLoggedIn = false, canSeeFullProfile = fals
           {/* Contact Section - Locked for non-logged-in */}
           <div className="relative pb-6 border-b border-gray-200">
             {!isLoggedIn && (
-              <div className="absolute top-0 right-0 flex items-center gap-1 bg-blue-50/85 border border-blue-300 px-3 py-1 rounded-full shadow-sm z-10">
-                <Lock className="h-4 w-4 text-blue-600" />
-                <span className="text-xs font-medium text-blue-600">Sign in required</span>
+              <div className="absolute top-0 right-0 flex items-center gap-1 bg-accent-50/85 border border-blue-300 px-3 py-1 rounded-full shadow-sm z-10">
+                <Lock className="h-4 w-4 text-brand-accent" />
+                <span className="text-xs font-medium text-brand-accent">Sign in required</span>
               </div>
             )}
             <div className={cn(!isLoggedIn && "opacity-60")}>
@@ -202,9 +202,9 @@ export function AboutTab({ profile, isLoggedIn = false, canSeeFullProfile = fals
           {!isAlumni && (
             <div className="relative pb-6 border-b border-gray-200">
               {!isLoggedIn && (
-              <div className="absolute top-0 right-0 flex items-center gap-1 bg-blue-50/85 border border-blue-300 px-2 py-1 rounded-full shadow-sm z-10">
-                  <Lock className="h-4 w-4 text-blue-600" />
-                  <span className="text-xs font-medium text-blue-600">Sign in required</span>
+              <div className="absolute top-0 right-0 flex items-center gap-1 bg-accent-50/85 border border-blue-300 px-2 py-1 rounded-full shadow-sm z-10">
+                  <Lock className="h-4 w-4 text-brand-accent" />
+                  <span className="text-xs font-medium text-brand-accent">Sign in required</span>
                 </div>
               )}
               <div className={cn(!isLoggedIn && "opacity-60")}>
@@ -261,9 +261,9 @@ export function AboutTab({ profile, isLoggedIn = false, canSeeFullProfile = fals
           {isAlumni && (
             <div className="relative pb-6 border-b border-gray-200">
               {!isLoggedIn && (
-                <div className="absolute top-0 right-0 flex items-center gap-1 bg-blue-50/85 border border-blue-300 px-3 py-1 rounded-full shadow-sm z-10">
-                  <Lock className="h-4 w-4 text-blue-600" />
-                  <span className="text-xs font-medium text-blue-600">Sign in required</span>
+                <div className="absolute top-0 right-0 flex items-center gap-1 bg-accent-50/85 border border-blue-300 px-3 py-1 rounded-full shadow-sm z-10">
+                  <Lock className="h-4 w-4 text-brand-accent" />
+                  <span className="text-xs font-medium text-brand-accent">Sign in required</span>
                 </div>
               )}
               <div className={cn(!isLoggedIn && "opacity-60")}>

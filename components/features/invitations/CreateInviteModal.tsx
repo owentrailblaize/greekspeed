@@ -95,7 +95,7 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
         {/* Invitation Type */}
         <div className="space-y-2">
           <Label className="flex items-center space-x-2">
-            <Users className="h-4 w-4 text-blue-600" />
+            <Users className="h-4 w-4 text-brand-accent" />
             <span>Invitation Type</span>
           </Label>
           <div className="grid grid-cols-2 gap-4">
@@ -107,7 +107,7 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
                 value="active_member"
                 checked={formData.invitation_type === 'active_member'}
                 onChange={(e) => setFormData(prev => ({ ...prev, invitation_type: e.target.value as 'active_member' | 'alumni' }))}
-                className="text-blue-600"
+                className="text-brand-accent"
               />
               <Label htmlFor="active_member" className="text-sm">
                 Active Member
@@ -206,15 +206,15 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
         {/* Email Uniqueness Info */}
         <div className="space-y-2">
           <Label className="flex items-center space-x-2">
-            <CheckCircle className="h-4 w-4 text-blue-600" />
+            <CheckCircle className="h-4 w-4 text-brand-accent" />
             <span>Email Uniqueness</span>
           </Label>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="bg-accent-50 border border-accent-200 rounded-lg p-4">
             <div className="flex items-start space-x-2">
-              <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+              <CheckCircle className="h-5 w-5 text-brand-accent mt-0.5" />
               <div>
-                <h4 className="font-medium text-blue-900">One Account Per Email</h4>
-                <p className="text-sm text-blue-800 mt-1">
+                <h4 className="font-medium text-accent-900">One Account Per Email</h4>
+                <p className="text-sm text-accent-800 mt-1">
                   Each email address can only create one account across the entire system. If someone tries to use an email that already has an account, they'll be prompted to sign in instead.
                 </p>
               </div>
@@ -263,13 +263,13 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
               variant="outline"
               onClick={onClose}
               disabled={loading}
-              className="rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-full bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
             >
               {loading ? (
@@ -294,7 +294,7 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
               variant="outline"
               onClick={onClose}
               disabled={loading}
-              className="w-full rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-12 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </Button>
@@ -302,7 +302,7 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
               type="submit"
               form="invite-form"
               disabled={loading}
-              className="w-full rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-12 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="flex items-center space-x-2">

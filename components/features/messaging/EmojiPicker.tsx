@@ -39,7 +39,7 @@ export function EmojiPicker({
           size="sm"
           disabled={disabled}
           className={cn(
-            "inline-flex items-center justify-center gap-0 text-gray-400 hover:text-navy-600 hover:bg-navy-50 p-2 h-10 w-10",
+            "inline-flex items-center justify-center gap-0 text-gray-400 hover:text-brand-primary hover:bg-primary-50 p-2 h-10 w-10",
             label ? "w-auto px-4" : "",
             buttonClassName,
           )}
@@ -61,7 +61,7 @@ export function EmojiPicker({
           className="isolate flex h-[368px] w-fit flex-col bg-white"
           onEmojiSelect={({ emoji }) => handleEmojiSelect(emoji)}
         >
-          <FrimousseEmojiPicker.Search className="z-10 mx-2 mt-2 appearance-none rounded-md bg-gray-100 px-2.5 py-2 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-transparent" />
+          <FrimousseEmojiPicker.Search className="z-10 mx-2 mt-2 appearance-none rounded-md bg-gray-100 px-2.5 py-2 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent" />
           <FrimousseEmojiPicker.Viewport className="relative flex-1 outline-hidden">
             <FrimousseEmojiPicker.Loading className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
               Loading…
@@ -87,7 +87,7 @@ export function EmojiPicker({
                 ),
                 Emoji: ({ emoji, ...props }) => (
                   <button
-                    className="flex size-8 items-center justify-center rounded-md text-lg hover:bg-navy-50 data-[active]:bg-navy-100 transition-colors"
+                    className="flex size-8 items-center justify-center rounded-md text-lg hover:bg-primary-50 data-[active]:bg-primary-100 transition-colors"
                     {...props}
                   >
                     {emoji.emoji}

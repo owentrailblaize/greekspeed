@@ -468,7 +468,7 @@ export default function SettingsPage() {
   // Loading state with responsive design
   if (profileLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-accent-50/20">
         {/* Desktop Loading */}
         <div className="hidden lg:block">
           <div className="flex gap-6 py-6">
@@ -514,7 +514,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-accent-50/20">
       {/* Desktop Layout - Unchanged */}
       <div className="hidden lg:block">
         <div className="flex gap-6 py-6">
@@ -543,7 +543,7 @@ export default function SettingsPage() {
                         onClick={() => !item.locked && setActiveSection(item.id)}
                         className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-all duration-200 ${
                           activeSection === item.id
-                            ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                            ? 'bg-accent-50 text-accent-700 border border-accent-200 shadow-sm'
                             : item.locked
                             ? 'text-gray-400 cursor-not-allowed opacity-50'
                             : 'text-gray-700 hover:bg-gray-50 hover:shadow-sm'
@@ -552,7 +552,7 @@ export default function SettingsPage() {
                       >
                         <div className="flex items-center space-x-3">
                           <Icon className={`w-5 h-5 flex-shrink-0 ${
-                            activeSection === item.id ? 'text-blue-600' : 'text-gray-500'
+                            activeSection === item.id ? 'text-brand-accent' : 'text-gray-500'
                           }`} />
                           <div>
                             <div className="font-medium text-sm">{item.label}</div>
@@ -631,7 +631,7 @@ export default function SettingsPage() {
                     onClick={() => !item.locked && handleMobileSectionSelect(item.id)}
                     className={`w-full flex items-center justify-between p-3 rounded-xl text-left transition-colors ${
                       activeSection === item.id
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                        ? 'bg-accent-50 text-accent-700 border border-accent-200'
                         : item.locked
                         ? 'text-gray-400 cursor-not-allowed opacity-50'
                         : 'text-gray-700 hover:bg-gray-50'

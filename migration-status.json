@@ -1,0 +1,308 @@
+{
+  "timestamp": "2026-01-27T14:51:25.125Z",
+  "stats": {
+    "totalFiles": 397,
+    "filesWithNavy": 40,
+    "filesWithBlue": 13,
+    "filesWithHardcoded": 0,
+    "totalNavyUsages": 315,
+    "totalBlueUsages": 24,
+    "totalHardcodedUsages": 0
+  },
+  "filesNeedingUpdate": [
+    {
+      "file": "app\\(auth)\\sign-in\\[[...sign-in]]\\page.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "app\\(auth)\\sign-up\\[[...sign-up]]\\page.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "app\\(marketing)\\privacy\\page.tsx",
+      "hasNavy": false,
+      "hasBlue": true,
+      "hasHardcoded": false
+    },
+    {
+      "file": "app\\(marketing)\\sms-terms\\page.tsx",
+      "hasNavy": false,
+      "hasBlue": true,
+      "hasHardcoded": false
+    },
+    {
+      "file": "app\\(marketing)\\terms\\page.tsx",
+      "hasNavy": false,
+      "hasBlue": true,
+      "hasHardcoded": false
+    },
+    {
+      "file": "app\\dashboard\\admin\\executive\\TreasurerDashboard.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "app\\dashboard\\DashboardPageClient.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\alumni\\ActivelyHiringPage.tsx",
+      "hasNavy": false,
+      "hasBlue": true,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\alumni\\EditAlumniProfileModal.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\DashboardOverview.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\AdminOverview.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\ChapterDocumentManager.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\DocsCompliancePanel.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\feature-views\\BudgetView.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\feature-views\\EventsView.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\feature-views\\MembersView.tsx",
+      "hasNavy": true,
+      "hasBlue": true,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\feature-views\\OverviewView.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\feature-views\\RecruitmentView.tsx",
+      "hasNavy": false,
+      "hasBlue": true,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\feature-views\\TasksView.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\feature-views\\VendorsView.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\MobileAdminTasksPage.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\MobileAnnouncementsPage.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\MobileCalendarPage.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\MobileEventsVendorsPage.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\MobileOperationsPage.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\OperationsFeed.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\QuickActions.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\RecruitCard.tsx",
+      "hasNavy": false,
+      "hasBlue": true,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\RecruitDetailSheet.tsx",
+      "hasNavy": false,
+      "hasBlue": true,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\SendAnnouncementButton.tsx",
+      "hasNavy": true,
+      "hasBlue": true,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\SocialFeed.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\dashboard\\dashboards\\ui\\TasksPanel.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\invitations\\CreateInviteModal.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\invitations\\InviteManagement.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\invitations\\InviteSettings.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\join\\AlumniJoinForm.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\join\\JoinForm.tsx",
+      "hasNavy": true,
+      "hasBlue": true,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\messaging\\MessageInput.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\profile\\EditProfileModal.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\profile\\ProfileUpdatePromptModal.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\recruitment\\AddRecruitForm.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\social\\CommentModal.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\social\\CreatePostModal.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\features\\user-profile\\mobile\\AboutTab.tsx",
+      "hasNavy": false,
+      "hasBlue": true,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\marketing\\LandingPage.tsx",
+      "hasNavy": true,
+      "hasBlue": true,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\ui\\EventForm.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\ui\\VendorForm.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\user-management\\CreateUserForm.tsx",
+      "hasNavy": true,
+      "hasBlue": false,
+      "hasHardcoded": false
+    },
+    {
+      "file": "components\\user-management\\UsersTable.tsx",
+      "hasNavy": false,
+      "hasBlue": true,
+      "hasHardcoded": false
+    }
+  ]
+}

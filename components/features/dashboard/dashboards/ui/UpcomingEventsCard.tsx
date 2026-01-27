@@ -152,13 +152,13 @@ export function UpcomingEventsCard() {
       <Card className="bg-white shadow-sm border border-gray-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-semibold flex items-center space-x-2">
-            <Calendar className="h-5 w-5 text-navy-600" />
+            <Calendar className="h-5 w-5 text-brand-primary" />
             <span className="text-gray-900">Upcoming Events</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-navy-600 mb-2"></div>
+            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary mb-2"></div>
             <p className="text-gray-500 text-sm">Loading events...</p>
           </div>
         </CardContent>
@@ -171,7 +171,7 @@ export function UpcomingEventsCard() {
       <Card className="bg-white shadow-sm border border-gray-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-semibold flex items-center space-x-2">
-            <Calendar className="h-5 w-5 text-navy-600" />
+            <Calendar className="h-5 w-5 text-brand-primary" />
             <span className="text-gray-900">Upcoming Events</span>
           </CardTitle>
         </CardHeader>
@@ -183,7 +183,7 @@ export function UpcomingEventsCard() {
               variant="outline" 
               size="sm" 
               onClick={() => fetchEvents()}
-              className="text-navy-600 border-navy-600 hover:bg-navy-50"
+              className="text-brand-primary border-brand-primary hover:bg-primary-50"
             >
               Retry
             </Button>
@@ -198,7 +198,7 @@ export function UpcomingEventsCard() {
       <Card className="bg-white shadow-sm border border-gray-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-semibold flex items-center space-x-2">
-            <Calendar className="h-5 w-5 text-navy-600" />
+            <Calendar className="h-5 w-5 text-brand-primary" />
             <span className="text-gray-900">Upcoming Events</span>
           </CardTitle>
         </CardHeader>
@@ -221,7 +221,7 @@ export function UpcomingEventsCard() {
           <CardHeader className="pb-3 border-b border-gray-100">
             <CardTitle className="text-lg font-semibold flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-navy-600" />
+                <Calendar className="h-5 w-5 text-brand-primary" />
                 <span className="text-gray-900">Upcoming Events</span>
               </div>
               {events.length > 0 && (
@@ -236,7 +236,7 @@ export function UpcomingEventsCard() {
               {currentEvents.map((event) => (
                 <div 
                   key={event.id} 
-                  className="group p-3 border border-gray-200 rounded-lg hover:border-navy-300 hover:shadow-sm transition-all duration-200 bg-white"
+                  className="group p-3 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-sm transition-all duration-200 bg-white"
                 >
                   {/* Title */}
                   <h4 className="font-semibold text-gray-900 text-sm mb-2 break-words leading-tight">
@@ -246,11 +246,11 @@ export function UpcomingEventsCard() {
                   {/* Date/Time and Location on same row */}
                   <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 mb-2">
                     <div className="flex items-center space-x-1.5">
-                      <Clock className="h-3.5 w-3.5 text-navy-600 flex-shrink-0" />
+                      <Clock className="h-3.5 w-3.5 text-brand-primary flex-shrink-0" />
                       <span className="break-words">{formatEventDateTime(event.start_time)}</span>
                     </div>
                     <div className="flex items-center space-x-1.5">
-                      <MapPin className="h-3.5 w-3.5 text-navy-600 flex-shrink-0" />
+                      <MapPin className="h-3.5 w-3.5 text-brand-primary flex-shrink-0" />
                       <span className="break-words">{event.location || 'Location TBD'}</span>
                     </div>
                   </div>
@@ -258,7 +258,7 @@ export function UpcomingEventsCard() {
                   {/* Attendees and RSVP buttons on same row */}
                   <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100 flex-nowrap min-w-0">
                     <div className="flex items-center space-x-1.5 text-xs text-gray-600 flex-shrink-0">
-                      <Users className="h-3.5 w-3.5 text-navy-600 flex-shrink-0" />
+                      <Users className="h-3.5 w-3.5 text-brand-primary flex-shrink-0" />
                       <span className="font-medium whitespace-nowrap">{event.attendee_count || 0} going</span>
                     </div>
                     
@@ -269,7 +269,7 @@ export function UpcomingEventsCard() {
                         onClick={() => handleRSVP(event.id, 'attending')}
                         className={`h-6 px-2 rounded-full text-xs font-medium transition-all ${
                           getRSVPButtonVariant(event.id, 'attending') === 'default'
-                            ? 'bg-navy-600 hover:bg-navy-700 text-white'
+                            ? 'bg-brand-primary hover:bg-brand-primary-hover text-white'
                             : 'hover:bg-green-50'
                         }`}
                         title="Going"
@@ -283,8 +283,8 @@ export function UpcomingEventsCard() {
                         onClick={() => handleRSVP(event.id, 'maybe')}
                         className={`h-6 px-2 rounded-full text-xs font-medium transition-all ${
                           getRSVPButtonVariant(event.id, 'maybe') === 'default'
-                            ? 'bg-navy-600 hover:bg-navy-700 text-white'
-                            : 'hover:bg-navy-50'
+                            ? 'bg-brand-primary hover:bg-brand-primary-hover text-white'
+                            : 'hover:bg-primary-50'
                         }`}
                         title="Maybe"
                       >
@@ -335,7 +335,7 @@ export function UpcomingEventsCard() {
                           onClick={() => setCurrentPage(page)}
                           className={`h-8 w-8 p-0 text-xs flex-shrink-0 ${
                             currentPage === page
-                              ? 'bg-navy-600 text-white hover:bg-navy-700'
+                              ? 'bg-brand-primary text-white hover:bg-brand-primary-hover'
                               : 'hover:bg-gray-50'
                           }`}
                         >
@@ -367,7 +367,7 @@ export function UpcomingEventsCard() {
           <CardHeader className="pb-3 border-b border-gray-100">
             <CardTitle className="text-lg font-semibold flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-navy-600" />
+                <Calendar className="h-5 w-5 text-brand-primary" />
                 <span className="text-gray-900">Upcoming Events</span>
               </div>
               {events.length > 0 && (
@@ -382,7 +382,7 @@ export function UpcomingEventsCard() {
               {currentEvents.map((event) => (
                 <div 
                   key={event.id} 
-                  className="p-3 border border-gray-200 rounded-lg hover:border-navy-300 transition-colors bg-gradient-to-br from-white to-gray-50/50"
+                  className="p-3 border border-gray-200 rounded-lg hover:border-primary-300 transition-colors bg-gradient-to-br from-white to-gray-50/50"
                 >
                   <h4 className="font-semibold text-gray-900 text-sm mb-2 break-words leading-tight">
                     {event.title}
@@ -390,15 +390,15 @@ export function UpcomingEventsCard() {
                   
                   <div className="space-y-1.5 text-xs text-gray-600 mb-3">
                     <div className="flex items-start space-x-2">
-                      <Clock className="h-3.5 w-3.5 mt-0.5 text-navy-600 flex-shrink-0" />
+                      <Clock className="h-3.5 w-3.5 mt-0.5 text-brand-primary flex-shrink-0" />
                       <span className="break-words">{formatEventDateTime(event.start_time)}</span>
                     </div>
                     <div className="flex items-start space-x-2">
-                      <MapPin className="h-3.5 w-3.5 mt-0.5 text-navy-600 flex-shrink-0" />
+                      <MapPin className="h-3.5 w-3.5 mt-0.5 text-brand-primary flex-shrink-0" />
                       <span className="break-words">{event.location || 'Location TBD'}</span>
                     </div>
                     <div className="flex items-start space-x-2">
-                      <Users className="h-3.5 w-3.5 mt-0.5 text-navy-600 flex-shrink-0" />
+                      <Users className="h-3.5 w-3.5 mt-0.5 text-brand-primary flex-shrink-0" />
                       <span className="font-medium">{event.attendee_count || 0} going</span>
                     </div>
                   </div>
@@ -410,7 +410,7 @@ export function UpcomingEventsCard() {
                       onClick={() => handleRSVP(event.id, 'attending')}
                       className={`flex-1 h-7 text-xs font-medium ${
                         getRSVPButtonVariant(event.id, 'attending') === 'default'
-                          ? 'bg-navy-600 hover:bg-navy-700'
+                          ? 'bg-brand-primary hover:bg-brand-primary-hover'
                           : ''
                       }`}
                     >
@@ -423,7 +423,7 @@ export function UpcomingEventsCard() {
                       onClick={() => handleRSVP(event.id, 'maybe')}
                       className={`flex-1 h-7 text-xs font-medium ${
                         getRSVPButtonVariant(event.id, 'maybe') === 'default'
-                          ? 'bg-navy-600 hover:bg-navy-700'
+                          ? 'bg-brand-primary hover:bg-brand-primary-hover'
                           : ''
                       }`}
                     >
@@ -475,7 +475,7 @@ export function UpcomingEventsCard() {
                           onClick={() => setCurrentPage(page)}
                           className={`h-7 w-7 p-0 text-xs ${
                             currentPage === page
-                              ? 'bg-navy-600 text-white'
+                              ? 'bg-brand-primary text-white'
                               : ''
                           }`}
                         >

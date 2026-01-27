@@ -119,14 +119,14 @@ export function UsernameInput({
             'pr-10',
             hasError && 'border-red-500 focus:border-red-500 focus:ring-red-500',
             availabilityState === 'available' && 'border-green-500 focus:border-green-500',
-            availabilityState === 'checking' && 'border-blue-500'
+            availabilityState === 'checking' && 'border-accent-500'
           )}
           disabled={disabled || isChecking}
           maxLength={50}
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2">
           {isChecking && (
-            <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
+            <Loader2 className="h-4 w-4 text-accent-500 animate-spin" />
           )}
           {!isChecking && availabilityState === 'available' && (
             <CheckCircle2 className="h-4 w-4 text-green-500" />

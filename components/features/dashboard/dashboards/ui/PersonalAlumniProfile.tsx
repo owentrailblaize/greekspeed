@@ -216,7 +216,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
         <Card className="bg-white">
           <CardContent className="p-6">
             <div className="flex items-center justify-center">
-              <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+              <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
               <span className="ml-2 text-gray-600">Loading profile...</span>
             </div>
           </CardContent>
@@ -268,7 +268,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
       <>
         <div className="h-screen w-screen bg-white -m-4">
           {/* Header with backdrop and avatar */}
-          <div className="relative h-32 bg-gradient-to-r from-navy-600 via-blue-400 to-blue-100">
+          <div className="relative h-32 bg-gradient-to-r from-brand-primary via-accent-400 to-accent-100">
             {alumniData.banner_url ? (
               <img 
                 src={alumniData.banner_url} 
@@ -276,7 +276,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-r from-navy-600 via-blue-400 to-blue-100" />
+              <div className="w-full h-full bg-gradient-to-r from-brand-primary via-accent-400 to-accent-100" />
             )}
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
               <div className="w-20 h-20 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center overflow-hidden">
@@ -289,7 +289,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-navy-600 font-bold text-xl">
+                  <span className="text-brand-primary font-bold text-xl">
                     {getInitials(alumniData.full_name)}
                   </span>
                 )}
@@ -306,12 +306,12 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
               </h3>
               
               <div className="flex items-center justify-center mb-3">
-                <Badge className="bg-blue-100 text-blue-800 text-sm px-3 py-1">
+                <Badge className="bg-accent-100 text-accent-800 text-sm px-3 py-1">
                   {alumniData.graduation_year}
                 </Badge>
               </div>
 
-              <p className="text-base text-blue-600 font-medium mb-4">
+              <p className="text-base text-brand-accent font-medium mb-4">
                 {alumniData.chapter}
               </p>
 
@@ -366,7 +366,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
                     href={alumniData.linkedin_url} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 truncate"
+                    className="text-brand-accent hover:text-accent-800 truncate"
                   >
                     LinkedIn Profile
                   </a>
@@ -395,7 +395,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
             <Button 
               onClick={handleEditProfile}
               variant="outline" 
-              className="w-full text-navy-600 border-navy-600 hover:bg-navy-50 h-12 text-base"
+              className="w-full text-brand-primary border-brand-primary hover:bg-primary-50 h-12 text-base"
             >
               <Edit3 className="h-5 w-5 mr-2" />
               Edit Profile
@@ -423,7 +423,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
       <div className="sticky top-6">
         <Card className="bg-white overflow-hidden">
           {/* Header with backdrop and avatar */}
-          <div className="relative h-24 bg-gradient-to-r from-navy-600 via-blue-400 to-blue-100">
+          <div className="relative h-24 bg-gradient-to-r from-brand-primary via-accent-400 to-accent-100">
             {alumniData.banner_url ? (
               <img 
                 src={alumniData.banner_url} 
@@ -431,7 +431,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-r from-navy-600 via-blue-400 to-blue-100" />
+              <div className="w-full h-full bg-gradient-to-r from-brand-primary via-accent-400 to-accent-100" />
             )}
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
               <div className="w-16 h-16 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center overflow-hidden">
@@ -444,7 +444,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-navy-600 font-bold text-lg">
+                  <span className="text-brand-primary font-bold text-lg">
                     {getInitials(alumniData.full_name)}
                   </span>
                 )}
@@ -460,12 +460,12 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
               </h3>
               
               <div className="flex items-center justify-center mb-2">
-                <Badge className="bg-blue-100 text-blue-800 text-xs">
+                <Badge className="bg-accent-100 text-accent-800 text-xs">
                   {alumniData.graduation_year}
                 </Badge>
               </div>
 
-              <p className="text-sm text-blue-600 font-medium mb-3">
+              <p className="text-sm text-brand-accent font-medium mb-3">
                 {alumniData.chapter}
               </p>
 
@@ -520,7 +520,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
                     href={alumniData.linkedin_url} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 truncate"
+                    className="text-brand-accent hover:text-accent-800 truncate"
                   >
                     LinkedIn Profile
                   </a>
@@ -549,7 +549,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
             <Button 
               onClick={handleEditProfile}
               variant="outline" 
-              className="w-full text-navy-600 border-navy-600 hover:bg-navy-50"
+              className="w-full text-brand-primary border-brand-primary hover:bg-primary-50"
               size="sm"
             >
               <Edit3 className="h-4 w-4 mr-2" />

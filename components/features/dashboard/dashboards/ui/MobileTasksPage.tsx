@@ -95,7 +95,7 @@ export function MobileTasksPage() {
       <div className="min-h-screen bg-gray-50 pt-4 pb-20 px-4">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+            <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
             <span className="ml-2 text-gray-600">Loading tasks...</span>
           </div>
         </div>
@@ -112,7 +112,7 @@ export function MobileTasksPage() {
             <p className="text-sm">{error}</p>
             <Button 
               onClick={() => loadMyTasks()} 
-              className="mt-3 bg-navy-600 hover:bg-navy-700"
+              className="mt-3 bg-brand-primary hover:bg-brand-primary-hover"
             >
               Try Again
             </Button>
@@ -127,7 +127,7 @@ export function MobileTasksPage() {
       <div className="max-w-md mx-auto">
         {/* Header */}
         <div className="flex items-center space-x-2 mb-6">
-          <ListTodo className="h-6 w-6 text-navy-600" />
+          <ListTodo className="h-6 w-6 text-brand-primary" />
           <h1 className="text-xl font-semibold text-gray-900">My Tasks</h1>
         </div>
 
@@ -141,7 +141,7 @@ export function MobileTasksPage() {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3">
                 <div 
-                  className="bg-navy-600 h-3 rounded-full transition-all duration-300"
+                  className="bg-brand-primary h-3 rounded-full transition-all duration-300"
                   style={{ width: `${progressPercentage}%` }}
                 ></div>
               </div>
@@ -191,7 +191,7 @@ export function MobileTasksPage() {
                       <span className={`inline-block px-2 py-0.5 text-xs rounded-full ${
                         task.priority === 'urgent' ? 'bg-red-100 text-red-800' :
                         task.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-                        task.priority === 'medium' ? 'bg-blue-100 text-blue-800' :
+                        task.priority === 'medium' ? 'bg-accent-100 text-accent-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
                         {task.priority}

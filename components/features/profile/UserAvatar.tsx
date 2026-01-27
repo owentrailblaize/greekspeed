@@ -91,7 +91,7 @@ export function UserAvatar({
             stroke="currentColor"
             strokeWidth="1.5"
             fill="none"
-            className="text-navy-500 transition-all duration-300 ease-in-out"
+            className="text-brand-primary transition-all duration-300 ease-in-out"
             strokeDasharray={strokeDasharray}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"

@@ -146,7 +146,7 @@ export function DocsCompliancePanel() {
     
     if (fileType.includes('pdf')) return <FileText className="h-4 w-4 text-red-600" />;
     if (fileType.includes('spreadsheet') || fileType.includes('excel')) return <FileText className="h-4 w-4 text-green-600" />;
-    if (fileType.includes('word')) return <FileText className="h-4 w-4 text-blue-600" />;
+    if (fileType.includes('word')) return <FileText className="h-4 w-4 text-brand-accent" />;
     
     return <FileText className="h-4 w-4" />;
   };
@@ -188,7 +188,7 @@ export function DocsCompliancePanel() {
       legal: 'bg-purple-100 text-purple-800',
       finance: 'bg-green-100 text-green-800',
       safety: 'bg-red-100 text-red-800',
-      policy: 'bg-blue-100 text-blue-800',
+      policy: 'bg-accent-100 text-accent-800',
       general: 'bg-gray-100 text-gray-800'
     };
     return colors[category] || colors.general;
@@ -234,13 +234,13 @@ export function DocsCompliancePanel() {
       <Card className="bg-white">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center space-x-2">
-            <FileText className="h-5 w-5 text-navy-600" />
+            <FileText className="h-5 w-5 text-brand-primary" />
             <span>Documents</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-navy-600"></div>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary"></div>
             <span className="ml-2 text-gray-600">Loading documents...</span>
           </div>
         </CardContent>
@@ -253,7 +253,7 @@ export function DocsCompliancePanel() {
       <Card className="bg-white">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center space-x-2">
-            <FileText className="h-5 w-5 text-navy-600" />
+            <FileText className="h-5 w-5 text-brand-primary" />
             <span>Documents</span>
           </CardTitle>
         </CardHeader>
@@ -325,7 +325,7 @@ export function DocsCompliancePanel() {
           <Button 
             onClick={() => setShowAllDocumentsModal(true)}
             variant="outline"
-            className="w-full h-10 rounded-full text-navy-600 border-navy-600 bg-white hover:bg-navy-50 font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-300 mt-4"
+            className="w-full h-10 rounded-full text-brand-primary border-brand-primary bg-white hover:bg-primary-50 font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-300 mt-4"
           >
              All Documents
           </Button>

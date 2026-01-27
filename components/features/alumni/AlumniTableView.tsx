@@ -192,7 +192,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
             size="sm"
             onClick={() => handleConnectionAction(alumniId, 'connect')}
             disabled={isLoading}
-            className="h-8 bg-navy-600 hover:bg-navy-700 text-white text-xs"
+            className="h-8 bg-brand-primary hover:bg-brand-primary-hover text-white text-xs"
           >
             {isLoading ? (
               <div className="animate-spin rounded-full h-3 w-3 border-b border-white mr-2" />
@@ -394,8 +394,8 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
       return <ArrowUpDown className="h-4 w-4 text-gray-400" />;
     }
     return sortDirection === 'asc' ? 
-      <ChevronUp className="h-4 w-4 text-navy-600" /> : 
-      <ChevronDown className="h-4 w-4 text-navy-600" />;
+      <ChevronUp className="h-4 w-4 text-brand-primary" /> : 
+      <ChevronDown className="h-4 w-4 text-brand-primary" />;
   };
 
   const formatDate = (dateString?: string) => {
@@ -415,16 +415,16 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
     if (selectedAlumni.length === 0) return null;
     
     return (
-      <div className="px-4 py-2 bg-navy-50 border-b border-navy-200">
+      <div className="px-4 py-2 bg-primary-50 border-b border-primary-200">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-navy-700">
+          <span className="text-sm text-brand-primary-hover">
             {selectedAlumni.length} of {alumni.length} alumni selected
           </span>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onSelectionChange([])}
-            className="text-navy-600 hover:text-navy-700"
+            className="text-brand-primary hover:text-brand-primary-hover"
           >
             Clear selection
           </Button>
@@ -459,7 +459,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                        checked={isAllSelected}
                        onCheckedChange={handleSelectAll}
                        indeterminate={isIndeterminate}
-                       className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
+                       className="data-[state=checked]:bg-brand-primary data-[state=checked]:border-brand-primary"
                      />
                    </div>
                  </TableHead>
@@ -592,7 +592,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
-                    selectedAlumni.includes(alumni.id) ? 'bg-navy-50 border-navy-200' : ''
+                    selectedAlumni.includes(alumni.id) ? 'bg-primary-50 border-primary-200' : ''
                   }`}
                 >
                                      {/* Checkbox Column */}
@@ -604,7 +604,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                        <Checkbox
                          checked={selectedAlumni.includes(alumni.id)}
                          onCheckedChange={(checked) => handleSelectAlumni(alumni.id, checked as boolean)}
-                         className="data-[state=checked]:bg-navy-600 data-[state=checked]:border-navy-600"
+                         className="data-[state=checked]:bg-brand-primary data-[state=checked]:border-brand-primary"
                        />
                      </div>
                    </TableCell>
@@ -612,7 +612,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                   <TableCell className="bg-white border-r border-gray-200">
                     <div className="flex items-start space-x-3">
                       {/* Avatar - Fixed width with proper image support */}
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-primary to-brand-primary flex items-center justify-center flex-shrink-0 overflow-hidden">
                         {alumni.avatar ? (
                           <ImageWithFallback 
                             src={alumni.avatar} 
@@ -633,7 +633,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                         {/* Name Container - Reduced padding */}
                         <div className="flex-1 min-w-0">
                           <span 
-                            className="font-medium text-gray-900 underline cursor-pointer hover:text-navy-600 transition-colors break-words whitespace-nowrap"
+                            className="font-medium text-gray-900 underline cursor-pointer hover:text-brand-primary transition-colors break-words whitespace-nowrap"
                             onClick={() => handleAlumniNameClick(alumni)}
                           >
                             {alumni.fullName}
@@ -651,7 +651,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                         {/* Verification Badge - Fixed position */}
                         <div className="flex-shrink-0">
                           {alumni.verified && (
-                            <Badge className="bg-navy-600 text-white text-xs px-1">✓</Badge>
+                            <Badge className="bg-brand-primary text-white text-xs px-1">✓</Badge>
                           )}
                         </div>
                       </div>
@@ -680,7 +680,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                       <ClickableField 
                         value={alumni.company} 
                         entityType="company" 
-                        className="text-gray-900 hover:text-blue-600 text-sm text-left"
+                        className="text-gray-900 hover:text-brand-accent text-sm text-left"
                       />
                     </div>
                   </TableCell>
@@ -698,7 +698,7 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
                       <ClickableField 
                         value={getChapterName(alumni.chapter)} 
                         entityType="chapter"
-                        className="text-gray-900 hover:text-blue-600 text-sm text-left"
+                        className="text-gray-900 hover:text-brand-accent text-sm text-left"
                       />
                     </div>
                   </TableCell>

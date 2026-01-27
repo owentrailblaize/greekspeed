@@ -19,7 +19,7 @@ const getAnnouncementTypeConfig = (type: string) => {
     case 'urgent':
       return { icon: AlertTriangle, color: 'text-red-600', bgColor: 'bg-red-100' };
     case 'event':
-      return { icon: Calendar, color: 'text-blue-600', bgColor: 'bg-blue-100' };
+      return { icon: Calendar, color: 'text-brand-accent', bgColor: 'bg-accent-100' };
     case 'academic':
       return { icon: GraduationCap, color: 'text-green-600', bgColor: 'bg-green-100' };
     default:
@@ -162,7 +162,7 @@ export function MobileAnnouncementsPage() {
       case 'completed': return 'bg-green-100 text-green-800';
       case 'overdue': return 'bg-red-100 text-red-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'in_progress': return 'bg-accent-100 text-accent-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -205,7 +205,7 @@ export function MobileAnnouncementsPage() {
       <div className="min-h-screen bg-gray-50 pt-4 pb-20 px-4">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+            <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
             <span className="ml-2 text-gray-600">Loading...</span>
           </div>
         </div>
@@ -230,7 +230,7 @@ export function MobileAnnouncementsPage() {
                 <Loader2 className="h-6 w-6 animate-spin text-slate-600" />
               </div>
             ) : filteredTasks.length === 0 ? (
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+              <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
                 <CardContent className="p-8 text-center">
                   <ListTodo className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-slate-700 text-lg mb-2">
@@ -254,13 +254,13 @@ export function MobileAnnouncementsPage() {
                           onClick={() => setTaskFilter(filter.id)}
                           className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
                             isActive 
-                              ? 'bg-blue-600 text-white' 
+                              ? 'bg-brand-accent text-white' 
                               : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                           }`}
                         >
                           <span>{filter.label}</span>
                           <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                            isActive ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
+                            isActive ? 'bg-accent-500 text-white' : 'bg-gray-100 text-gray-600'
                           }`}>
                             {filter.count}
                           </span>
@@ -273,7 +273,7 @@ export function MobileAnnouncementsPage() {
                 {/* Tasks List */}
                 <div className="space-y-2">
                   {filteredTasks.map((task) => (
-                    <Card key={task.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                    <Card key={task.id} className="p-3 bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                       <div className="space-y-2">
                         <div className="flex justify-between items-start">
                           <h3 className="font-medium text-slate-900 text-sm flex-1">{task.title}</h3>
@@ -312,7 +312,7 @@ export function MobileAnnouncementsPage() {
                           <Button
                             size="sm"
                             onClick={() => handleMarkTaskComplete(task.id, task.status)}
-                            className="h-7 px-3 text-xs flex-1 rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                            className="h-7 px-3 text-xs flex-1 rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                             variant="outline"
                           >
                             <Check className="h-3 w-3 mr-1" />
@@ -344,13 +344,13 @@ export function MobileAnnouncementsPage() {
                       onClick={() => setNewsTypeFilter(filter.id)}
                       className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
                         isActive 
-                          ? 'bg-blue-600 text-white' 
+                          ? 'bg-brand-accent text-white' 
                           : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                       }`}
                     >
                       <span>{filter.label}</span>
                       <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                        isActive ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
+                        isActive ? 'bg-accent-500 text-white' : 'bg-gray-100 text-gray-600'
                       }`}>
                         {count}
                       </span>
@@ -362,7 +362,7 @@ export function MobileAnnouncementsPage() {
 
             {/* Announcements List */}
             {filteredAnnouncements.length === 0 ? (
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+              <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
                 <CardContent className="p-8 text-center">
                   <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-slate-700 text-lg mb-2">No new announcements</p>
@@ -376,7 +376,7 @@ export function MobileAnnouncementsPage() {
                   const TypeIcon = typeConfig.icon;
                   
                   return (
-                    <Card key={announcement.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                    <Card key={announcement.id} className="p-3 bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                       <div className="flex items-start space-x-3">
                         {/* Type icon */}
                         <div className={`w-8 h-8 ${typeConfig.bgColor} rounded-full flex items-center justify-center shrink-0`}>
@@ -411,7 +411,7 @@ export function MobileAnnouncementsPage() {
                               size="sm" 
                               variant="outline"
                               onClick={() => handleMarkAsRead(announcement.id)}
-                              className="h-7 px-3 text-xs w-full rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                              className="h-7 px-3 text-xs w-full rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                             >
                               Mark Read
                             </Button>

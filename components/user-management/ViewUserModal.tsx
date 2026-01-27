@@ -142,11 +142,11 @@ export function ViewUserModal({ isOpen, onClose, user }: ViewUserModalProps) {
           <Button
             onClick={() => handleConnectionAction('connect')}
             disabled={isLoading}
-            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-10"
+            className="w-full border border-brand-primary text-brand-primary bg-white hover:bg-primary-50 transition-colors duration-200 rounded-full font-medium h-10"
             variant="outline"
           >
             {isLoading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b border-navy-600 mr-2" />
+              <div className="animate-spin rounded-full h-4 w-4 border-b border-brand-primary mr-2" />
             ) : (
               <UserPlus className="h-4 w-4 mr-2" />
             )}
@@ -224,7 +224,7 @@ export function ViewUserModal({ isOpen, onClose, user }: ViewUserModalProps) {
         {/* Profile Header with Integrated Close Button */}
         <div className="relative flex-shrink-0">
           {/* Background Banner */}
-          <div className="h-20 bg-gradient-to-r from-navy-100 to-blue-100 rounded-t-xl" />
+          <div className="h-20 bg-gradient-to-r from-primary-100 to-accent-100 rounded-t-xl" />
           
           {/* Close Button - Positioned in top-right corner */}
           <Button
@@ -250,7 +250,7 @@ export function ViewUserModal({ isOpen, onClose, user }: ViewUserModalProps) {
                     className="w-full h-full object-cover" 
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
+                  <div className="w-full h-full bg-gradient-to-br from-brand-primary to-brand-primary flex items-center justify-center">
                     <span className="text-white font-medium text-lg">
                       {user.first_name?.[0] || ''}{user.last_name?.[0] || ''}
                     </span>
@@ -264,7 +264,7 @@ export function ViewUserModal({ isOpen, onClose, user }: ViewUserModalProps) {
               <div className="flex items-center justify-center gap-2 mb-1">
                 <h2 className="text-xl font-semibold text-gray-900">{user.full_name}</h2>
                 {user.role === 'admin' && (
-                  <Badge className="bg-blue-500 text-white text-xs">✓</Badge>
+                  <Badge className="bg-accent-500 text-white text-xs">✓</Badge>
                 )}
               </div>
               {user.chapter_role && (
@@ -311,7 +311,7 @@ export function ViewUserModal({ isOpen, onClose, user }: ViewUserModalProps) {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <span className="text-gray-500">Phone</span>
                     <span className="text-gray-900">
-                      <a href={`tel:${user.phone.replace(/\D/g, '')}`} className="hover:text-navy-700 transition-colors">
+                      <a href={`tel:${user.phone.replace(/\D/g, '')}`} className="hover:text-brand-primary-hover transition-colors">
                         {user.phone}
                       </a>
                     </span>
@@ -389,7 +389,7 @@ export function ViewUserModal({ isOpen, onClose, user }: ViewUserModalProps) {
               className={cn(
                 "flex-1",
                 canSendMessage() 
-                  ? "border-navy-600 text-navy-600 hover:bg-navy-50" 
+                  ? "border-brand-primary text-brand-primary hover:bg-primary-50" 
                   : "text-gray-400 border-gray-200"
               )}
               variant={canSendMessage() ? "outline" : "ghost"}

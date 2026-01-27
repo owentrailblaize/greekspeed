@@ -182,7 +182,7 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-2 md:p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-accent-50 flex items-center justify-center p-2 md:p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -457,12 +457,12 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
               </div>
 
               {/* Chapter Info */}
-              <div className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 rounded-lg p-1.5 md:p-2">
+              <div className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 rounded-lg p-1.5 md:p-2">
                 <div className="flex flex-col md:flex-row md:items-center md:space-x-2 space-y-1 md:space-y-0">
-                  <h4 className="font-medium text-navy-900 text-sm">You're joining as alumni:</h4>
+                  <h4 className="font-medium text-primary-900 text-sm">You're joining as alumni:</h4>
                   <div className="flex items-center space-x-2">
-                    <Users className="h-3 w-3 md:h-4 md:w-4 text-navy-600" />
-                    <span className="text-navy-800 text-sm">{invitation.chapter_name}</span>
+                    <Users className="h-3 w-3 md:h-4 md:w-4 text-brand-primary" />
+                    <span className="text-primary-800 text-sm">{invitation.chapter_name}</span>
                   </div>
                 </div>
               </div>
@@ -477,7 +477,7 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="rounded-full w-full bg-blue-600 hover:bg-blue-700 h-8 md:h-9"
+                className="rounded-full w-full bg-brand-accent hover:bg-accent-700 h-8 md:h-9"
                 disabled={loading}
               >
                 {loading ? (

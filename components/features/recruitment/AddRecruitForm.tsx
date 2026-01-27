@@ -209,7 +209,7 @@ export function AddRecruitForm({ onSuccess, onCancel, variant = 'inline' }: AddR
         ? "w-full flex flex-col shadow-none border-0 h-full min-h-0 bg-transparent" // Remove rounded-none, let parent handle it
         : "max-w-3xl mx-auto flex flex-col", // Desktop/inline: keep max-width and centering
       variant === 'modal' && !isMobile
-        ? "border border-navy-200 shadow-lg shadow-navy-200 max-h-[90vh] rounded-lg bg-white"
+        ? "border border-primary-200 shadow-lg shadow-navy-200 max-h-[90vh] rounded-lg bg-white"
         : variant !== 'modal'
         ? "bg-white border shadow-sm"
         : ""
@@ -220,7 +220,7 @@ export function AddRecruitForm({ onSuccess, onCancel, variant = 'inline' }: AddR
       )}>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-3 text-xl">
-            <UserPlus className="h-6 w-6 text-navy-600" />
+            <UserPlus className="h-6 w-6 text-brand-primary" />
             <span>Add New Recruit</span>
           </CardTitle>
           {variant === 'modal' && (
@@ -373,7 +373,7 @@ export function AddRecruitForm({ onSuccess, onCancel, variant = 'inline' }: AddR
                     variant="outline"
                     onClick={onCancel}
                     disabled={loading}
-                    className="flex-1 rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                    className="flex-1 rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                   >
                     Cancel
                   </Button>
@@ -382,7 +382,7 @@ export function AddRecruitForm({ onSuccess, onCancel, variant = 'inline' }: AddR
                   type="submit"
                   form="recruit-form"
                   disabled={loading}
-                  className="flex-1 rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 rounded-full bg-brand-primary text-white hover:bg-brand-primary-hover shadow-lg shadow-navy-100/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <div className="flex items-center space-x-2">
@@ -420,7 +420,7 @@ export function AddRecruitForm({ onSuccess, onCancel, variant = 'inline' }: AddR
                   type="submit"
                   className={cn(
                     onCancel ? "flex-1" : "w-full",
-                    "h-10 rounded-full bg-navy-600 hover:bg-navy-700 shadow-lg shadow-navy-200"
+                    "h-10 rounded-full bg-brand-primary hover:bg-brand-primary-hover shadow-lg shadow-navy-200"
                   )}
                   disabled={loading}
                 >

@@ -303,7 +303,7 @@ export function MobileEventsVendorsPage() {
                   setEditingEvent(null);
                   setShowEventForm(true);
                 }}
-                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 w-full md:w-auto transition-all duration-300"
+                className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 w-full md:w-auto transition-all duration-300"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Create Event
@@ -311,33 +311,33 @@ export function MobileEventsVendorsPage() {
 
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-3">
-                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+                <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-slate-700 font-medium mb-1">Total Events</p>
                         <p className="text-xl font-semibold text-slate-900">{budgetStats.totalEvents}</p>
                       </div>
-                      <Calendar className="h-5 w-5 text-navy-500" />
+                      <Calendar className="h-5 w-5 text-brand-primary" />
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+                <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-slate-700 font-medium mb-1">With Budget</p>
                         <p className="text-xl font-semibold text-slate-900">{budgetStats.eventsWithBudget}</p>
                       </div>
-                      <DollarSign className="h-5 w-5 text-navy-500" />
+                      <DollarSign className="h-5 w-5 text-brand-primary" />
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
               {/* Budget Overview */}
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
-                <CardHeader className="pb-3 flex-shrink-0 border-b border-navy-100/30">
+              <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                <CardHeader className="pb-3 flex-shrink-0 border-b border-primary-100/30">
                   <CardTitle className="text-sm text-slate-900 font-semibold">Budget Overview</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -361,17 +361,17 @@ export function MobileEventsVendorsPage() {
               {/* Events List */}
               {eventsLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+                  <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
                 </div>
               ) : eventsError ? (
-                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+                <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
                   <CardContent className="p-4 text-center">
                     <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
                     <p className="text-sm text-red-500">Error loading events</p>
                   </CardContent>
                 </Card>
               ) : sortedEvents.length === 0 ? (
-                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+                <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
                   <CardContent className="p-4 text-center">
                     <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                     <p className="text-gray-500 mb-2">No events found</p>
@@ -382,7 +382,7 @@ export function MobileEventsVendorsPage() {
                         setShowEventForm(true);
                       }}
                       size="sm"
-                      className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                      className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                     >
                       Create First Event
                     </Button>
@@ -392,7 +392,7 @@ export function MobileEventsVendorsPage() {
                 <>
                   <div className="space-y-2">
                     {paginatedEvents.map((event) => (
-                      <Card key={event.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                      <Card key={event.id} className="p-3 bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                         <div className="space-y-2">
                           <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0">
@@ -413,7 +413,7 @@ export function MobileEventsVendorsPage() {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => handleEditEvent(event)}
-                                className="h-8 w-8 p-0 text-navy-700 hover:text-navy-900 hover:bg-navy-50"
+                                className="h-8 w-8 p-0 text-brand-primary-hover hover:text-primary-900 hover:bg-primary-50"
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -429,7 +429,7 @@ export function MobileEventsVendorsPage() {
                           </div>
                           <div className="flex items-center space-x-2">
                             {event.budget_amount && (
-                              <Badge variant="outline" className="text-xs border-navy-200 text-slate-700">
+                              <Badge variant="outline" className="text-xs border-primary-200 text-slate-700">
                                 <DollarSign className="h-3 w-3 mr-1" />
                                 ${parseFloat(String(event.budget_amount)).toLocaleString()}
                               </Badge>
@@ -465,7 +465,7 @@ export function MobileEventsVendorsPage() {
                           size="sm"
                           onClick={() => setEventsPage(prev => Math.max(1, prev - 1))}
                           disabled={eventsPage === 1 || eventsLoading}
-                          className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <ChevronLeft className="h-3.5 w-3.5 mr-1" />
                           Previous
@@ -481,7 +481,7 @@ export function MobileEventsVendorsPage() {
                           size="sm"
                           onClick={() => setEventsPage(prev => Math.min(eventsTotalPages, prev + 1))}
                           disabled={eventsPage === eventsTotalPages || eventsLoading}
-                          className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Next
                           <ChevronRight className="h-3.5 w-3.5 ml-1" />
@@ -498,8 +498,8 @@ export function MobileEventsVendorsPage() {
                               onClick={() => setEventsPage(page)}
                               className={`h-8 w-8 p-0 text-xs rounded-full transition-all duration-300 ${
                                 eventsPage === page
-                                  ? 'bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20'
-                                  : 'bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900'
+                                  ? 'bg-brand-primary text-white hover:bg-brand-primary-hover shadow-lg shadow-navy-100/20'
+                                  : 'bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900'
                               }`}
                               disabled={eventsLoading}
                             >
@@ -523,21 +523,21 @@ export function MobileEventsVendorsPage() {
                 setEditingVendor(null);
                 setShowVendorForm(true);
               }}
-              className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 w-full md:w-auto transition-all duration-300"
+              className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 w-full md:w-auto transition-all duration-300"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Vendor
             </Button>
 
             {/* Stats */}
-            <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+            <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-slate-700 font-medium mb-1">Total Vendors</p>
                     <p className="text-xl font-semibold text-slate-900">{vendors.length}</p>
                   </div>
-                  <Building2 className="h-5 w-5 text-navy-500" />
+                  <Building2 className="h-5 w-5 text-brand-primary" />
                 </div>
               </CardContent>
             </Card>
@@ -545,17 +545,17 @@ export function MobileEventsVendorsPage() {
             {/* Vendors List */}
             {vendorsLoading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+                <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
               </div>
             ) : vendorsError ? (
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+              <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
                 <CardContent className="p-4 text-center">
                   <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
                   <p className="text-sm text-red-500">Error loading vendors</p>
                 </CardContent>
               </Card>
             ) : vendors.length === 0 ? (
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+              <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
                 <CardContent className="p-4 text-center">
                   <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-500 mb-2">No vendors found</p>
@@ -563,7 +563,7 @@ export function MobileEventsVendorsPage() {
                     variant="outline" 
                     onClick={() => setShowVendorForm(true)}
                     size="sm"
-                    className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                    className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                   >
                     Add First Vendor
                   </Button>
@@ -573,12 +573,12 @@ export function MobileEventsVendorsPage() {
               <>
                 <div className="space-y-2">
                   {paginatedVendors.map((vendor) => (
-                    <Card key={vendor.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                    <Card key={vendor.id} className="p-3 bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                       <div className="space-y-2">
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
                             <h3 className="font-medium text-sm truncate text-slate-900">{vendor.name}</h3>
-                            <Badge variant="secondary" className="text-xs mt-1 border-navy-200 text-slate-700">
+                            <Badge variant="secondary" className="text-xs mt-1 border-primary-200 text-slate-700">
                               {vendor.type}
                             </Badge>
                             {vendor.rating && (
@@ -593,7 +593,7 @@ export function MobileEventsVendorsPage() {
                               size="sm"
                               variant="ghost"
                               onClick={() => handleEditVendor(vendor)}
-                              className="h-8 w-8 p-0 text-navy-700 hover:text-navy-900 hover:bg-navy-50"
+                              className="h-8 w-8 p-0 text-brand-primary-hover hover:text-primary-900 hover:bg-primary-50"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -644,7 +644,7 @@ export function MobileEventsVendorsPage() {
                         size="sm"
                         onClick={() => setVendorsPage(prev => Math.max(1, prev - 1))}
                         disabled={vendorsPage === 1 || vendorsLoading}
-                        className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ChevronLeft className="h-3.5 w-3.5 mr-1" />
                         Previous
@@ -660,7 +660,7 @@ export function MobileEventsVendorsPage() {
                         size="sm"
                         onClick={() => setVendorsPage(prev => Math.min(vendorsTotalPages, prev + 1))}
                         disabled={vendorsPage === vendorsTotalPages || vendorsLoading}
-                        className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="h-8 px-3 text-xs rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Next
                         <ChevronRight className="h-3.5 w-3.5 ml-1" />
@@ -677,8 +677,8 @@ export function MobileEventsVendorsPage() {
                             onClick={() => setVendorsPage(page)}
                             className={`h-8 w-8 p-0 text-xs rounded-full transition-all duration-300 ${
                               vendorsPage === page
-                                ? 'bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20'
-                                : 'bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900'
+                                ? 'bg-brand-primary text-white hover:bg-brand-primary-hover shadow-lg shadow-navy-100/20'
+                                : 'bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900'
                             }`}
                             disabled={vendorsLoading}
                           >

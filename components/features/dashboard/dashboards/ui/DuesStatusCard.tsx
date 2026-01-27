@@ -75,7 +75,7 @@ export function DuesStatusCard() {
       case 'required': return 'bg-yellow-100 text-yellow-800';
       case 'overdue': return 'bg-red-100 text-red-800';
       case 'exempt': return 'bg-gray-100 text-gray-800';
-      case 'waived': return 'bg-blue-100 text-blue-800';
+      case 'waived': return 'bg-accent-100 text-accent-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -113,7 +113,7 @@ export function DuesStatusCard() {
       <Card className="bg-white">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center space-x-2">
-            <DollarSign className="h-5 w-5 text-navy-600" />
+            <DollarSign className="h-5 w-5 text-brand-primary" />
             <span>Dues Status</span>
           </CardTitle>
         </CardHeader>
@@ -131,7 +131,7 @@ export function DuesStatusCard() {
       <Card className="bg-white">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center space-x-2">
-            <DollarSign className="h-5 w-5 text-navy-600" />
+            <DollarSign className="h-5 w-5 text-brand-primary" />
             <span>Dues Status</span>
           </CardTitle>
         </CardHeader>
@@ -142,7 +142,7 @@ export function DuesStatusCard() {
               variant="outline" 
               size="sm" 
               onClick={loadDuesAssignments}
-              className="text-navy-600 border-navy-600 hover:bg-navy-50 h-8"
+              className="text-brand-primary border-brand-primary hover:bg-primary-50 h-8"
             >
               Retry
             </Button>
@@ -156,7 +156,7 @@ export function DuesStatusCard() {
     <Card className="bg-white">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center space-x-2">
-          <DollarSign className="h-5 w-5 text-navy-600" />
+          <DollarSign className="h-5 w-5 text-brand-primary" />
           <span>Dues Status</span>
         </CardTitle>
       </CardHeader>
@@ -210,7 +210,7 @@ export function DuesStatusCard() {
               
               <Button 
                 onClick={handlePayNow}
-                className="w-full bg-navy-600 hover:bg-navy-700 h-12 sm:h-10"
+                className="w-full bg-brand-primary hover:bg-brand-primary-hover h-12 sm:h-10"
               >
                 <span className="text-base sm:text-sm">Pay Now</span>
                 <Calendar className="h-4 w-4 sm:h-3 sm:w-3 ml-2" />
