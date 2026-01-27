@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { Invitation, InvitationUsage, InvitationValidationResult } from '@/types/invitations';
+import { getBaseUrl } from '@/lib/utils/urlUtils';
 
 /**
  * Generate a secure random token for invitations
@@ -246,7 +247,9 @@ export async function getInvitationStats(chapterId: string): Promise<{
  * Generate invitation URL
  */
 export function generateInvitationUrl(token: string, invitationType?: string, baseUrl?: string): string {
-  const base = baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  // If baseUrl is explicitly provided, use it (for server-side with specific requirements)
+  // Otherwise, use getBaseUrl() which detects browser vs server environment
+  const base = baseUrl || getBaseUrl();
 
   // Route to alumni join page for alumni invitations
   if (invitationType === 'alumni') {

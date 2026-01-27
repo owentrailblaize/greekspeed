@@ -12,6 +12,7 @@ import { toast } from 'react-toastify';
 import { supabase } from '@/lib/supabase/client';
 import { Checkbox } from '@/components/ui/checkbox';
 import { industries } from '@/lib/alumniConstants';
+import { getGraduationYears } from '@/lib/alumniConstants';
 
 interface AlumniJoinFormProps {
   invitation: Invitation;
@@ -42,7 +43,7 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const currentYear = new Date().getFullYear();
-  const graduationYears = Array.from({ length: 50 }, (_, i) => currentYear - i);
+  const graduationYears = getGraduationYears();
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};

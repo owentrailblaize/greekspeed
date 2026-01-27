@@ -10,6 +10,7 @@ import { InviteSettings } from './InviteSettings';
 import { InvitationWithUsage } from '@/types/invitations';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'react-toastify';
+import { generateInvitationUrl } from '@/lib/utils/invitationUtils';
 
 interface InviteManagementProps {
   chapterId: string;
@@ -168,7 +169,8 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
     }
   };
 
-  const handleCopyLink = (url: string) => {
+  const handleCopyLink = (invitation: InvitationWithUsage) => {
+    const url = generateInvitationUrl(invitation.token, invitation.invitation_type);
     navigator.clipboard.writeText(url);
     toast.success('Invitation link copied to clipboard!');
   };
@@ -301,7 +303,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => invitation.invitation_url && handleCopyLink(invitation.invitation_url)}
+                    onClick={() => handleCopyLink(invitation)}
                     title="Copy invitation link"
                   >
                     <Copy className="h-4 w-4" />
@@ -376,7 +378,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => invitation.invitation_url && handleCopyLink(invitation.invitation_url)}
+                  onClick={() => handleCopyLink(invitation)}
                   title="Copy invitation link"
                   className="p-2"
                 >

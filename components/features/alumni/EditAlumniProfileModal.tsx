@@ -16,7 +16,7 @@ import { supabase } from '@/lib/supabase/client';
 import { trackActivity, ActivityTypes } from '@/lib/utils/activityUtils';
 import { useProfileUpdateDetection } from '@/lib/hooks/useProfileUpdateDetection';
 import type { DetectedChange } from '@/components/features/profile/ProfileUpdatePromptModal';
-import { industries } from '@/lib/alumniConstants';
+import { getGraduationYears, industries } from '@/lib/alumniConstants';
 import { Select, SelectItem } from '@/components/ui/select';
 import { UsernameInput } from '@/components/features/profile/UsernameInput';
 import { generateProfileSlug } from '@/lib/utils/usernameUtils';
@@ -613,6 +613,8 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
 
   const isMobile = variant === 'mobile';
 
+  const graduationYears = getGraduationYears();
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
       <div className={`bg-white ${isMobile ? 'rounded-t-2xl rounded-b-none w-full flex flex-col' : 'rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]'} ${isMobile ? 'max-h-[85dvh] mt-[15dvh] pb-[env(safe-area-inset-bottom)]' : ''}`}>
@@ -797,13 +799,17 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
                   
                   <div>
                     <Label htmlFor="graduation_year">Graduation Year</Label>
-                    <Input
-                      id="graduation_year"
+                    <Select
                       value={formData.graduation_year}
-                      onChange={(e) => handleInputChange('graduation_year', e.target.value)}
-                      className="mt-1"
-                      placeholder="2024"
-                    />
+                      onValueChange={(value) => handleInputChange('graduation_year', value)}
+                      placeholder="Select graduation year"
+                    >
+                      {graduationYears.map((year) => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </Select>
                   </div>
                 </div>
               </div>

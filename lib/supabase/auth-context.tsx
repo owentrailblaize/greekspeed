@@ -218,11 +218,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             : data.user.email?.split('@')[0] || 'User';
           
           const normalizedRole = profileData?.role
-          ? (profileData.role.toLowerCase() === 'alumni' ? 'alumni' : profileData.role.toLowerCase())
-          : null;
+            ? (profileData.role.toLowerCase() === 'alumni' ? 'alumni' : profileData.role.toLowerCase())
+            : null;
 
           // Generate username
           const username = await generateUniqueUsername(
+            supabase,
             profileData?.firstName || null,
             profileData?.lastName || null,
             data.user.id
@@ -257,8 +258,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } else if (profileData?.role?.toLowerCase() === 'alumni') {
             try {
               const cleanPhone = profileData?.phone 
-              ? profileData.phone.replace(/\D/g, '') 
-              : null;
+                ? profileData.phone.replace(/\D/g, '') 
+                : null;
 
               const { error: alumniError } = await supabase
                 .from('alumni')

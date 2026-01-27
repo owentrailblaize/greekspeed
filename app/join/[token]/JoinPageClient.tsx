@@ -2,11 +2,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { AlertCircle, Users, Shield, Calendar, CheckCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Users, Shield, Calendar, CheckCircle, Loader2, Linkedin, Mail } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { JoinForm } from '@/components/features/join/JoinForm';
 import { Invitation } from '@/types/invitations';
+import { supabase } from '@/lib/supabase/client';
+import { toast } from 'react-toastify';
 
 export default function JoinPageClient() {
   const params = useParams();
@@ -17,10 +19,22 @@ export default function JoinPageClient() {
   const [showJoinForm, setShowJoinForm] = useState(false);
   const [showApprovalPending, setShowApprovalPending] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
+  const [linkedInLoading, setLinkedInLoading] = useState(false);
+  const [linkedInIconError, setLinkedInIconError] = useState(false);
 
   const token = params.token as string;
 
   useEffect(() => {
+    // Check for OAuth callback errors
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorParam = urlParams.get('error');
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam));
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+      return;
+    }
+
     const validateInvitation = async () => {
       try {
         setLoading(true);
@@ -94,6 +108,58 @@ export default function JoinPageClient() {
 
   const handleStartJoin = () => {
     setShowJoinForm(true);
+  };
+
+  const handleLinkedInSignUp = async () => {
+    if (!invitation) return;
+    
+    try {
+      setLinkedInLoading(true);
+      setError(null);
+      
+      // Set flag and store invitation token to indicate OAuth redirect is happening
+      sessionStorage.setItem('oauth_redirect', 'true');
+      sessionStorage.setItem('invitation_token', invitation.token);
+      sessionStorage.setItem('invitation_type', 'active_member');
+
+      console.log('Initiating LinkedIn OAuth with invitation:', {
+        token: invitation.token,
+        type: 'active_member',
+        chapter_id: invitation.chapter_id,
+        chapter_name: invitation.chapter_name
+      });
+
+      // Use Supabase's queryParams option (more reliable than URL query params)
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'linkedin_oidc',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'openid profile email',
+          queryParams: {
+            invitation_token: invitation.token,
+            invitation_type: 'active_member',
+          },
+        },
+      });
+        
+      if (error) {
+        console.error('LinkedIn sign-up error:', error);
+        sessionStorage.removeItem('oauth_redirect');
+        sessionStorage.removeItem('invitation_token');
+        sessionStorage.removeItem('invitation_type');
+        setError('LinkedIn sign-up failed. Please try again.');
+        toast.error('LinkedIn sign-up failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('LinkedIn sign-up exception:', error);
+      sessionStorage.removeItem('oauth_redirect');
+      sessionStorage.removeItem('invitation_token');
+      sessionStorage.removeItem('invitation_type');
+      setError('LinkedIn sign-up failed. Please try again.');
+      toast.error('LinkedIn sign-up failed. Please try again.');
+    } finally {
+      setLinkedInLoading(false);
+    }
   };
 
   if (loading) {
@@ -184,48 +250,17 @@ export default function JoinPageClient() {
         className="max-w-2xl w-full"
       >
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-2">
             <CardTitle className="flex items-center space-x-2">
               <span>Join {invitation.chapter_name}</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-2 pt-2">
             <div>
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 mb-2">
                 You've been invited to join {invitation.chapter_name} as an active member. 
                 Create your account to get started.
               </p>
-            </div>
-
-            {/* Invitation Details */}
-            <div className="border-t pt-4">
-              <h3 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
-                <Shield className="h-4 w-4" />
-                <span>Invitation Details</span>
-              </h3>
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex items-center space-x-2">
-                  <Users className="h-4 w-4" />
-                  <span>
-                    {invitation.usage_count} {invitation.usage_count === 1 ? 'person has' : 'people have'} already joined
-                    {invitation.max_uses && ` (${invitation.max_uses} max)`}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Shield className="h-4 w-4" />
-                  <span>
-                    {invitation.approval_mode === 'auto' ? 'Auto-approved membership' : 'Requires admin approval'}
-                  </span>
-                </div>
-                {invitation.expires_at && (
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>
-                      Expires {new Date(invitation.expires_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                )}
-              </div>
             </div>
 
             {invitation.single_use && (
@@ -236,12 +271,50 @@ export default function JoinPageClient() {
               </div>
             )}
 
-            <div className="flex space-x-3">
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
+            {/* Divider */}
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-gray-500">Or</span>
+              </div>
+            </div>
+
+            {/* Authentication Options */}
+            <div className="space-y-3">
+              <Button
+                onClick={handleLinkedInSignUp}
+                disabled={linkedInLoading}
+                className="w-full h-11 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-4 text-sm shadow-sm hover:shadow-md transition-all duration-200 bg-white"
+              >
+                {linkedInIconError ? (
+                  <Linkedin className="h-5 w-5 mr-3 text-gray-600" />
+                ) : (
+                  <img
+                    src="/linkedin-icon.png"
+                    alt="LinkedIn"
+                    className="w-5 h-5 mr-3"
+                    onError={() => setLinkedInIconError(true)}
+                  />
+                )}
+                {linkedInLoading ? 'Connecting...' : 'Continue with LinkedIn'}
+              </Button>
+
               <Button
                 onClick={handleStartJoin}
-                className="rounded-full flex-1 bg-blue-600 hover:bg-blue-700"
+                disabled={linkedInLoading}
+                className="w-full h-11 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm hover:shadow-md transition-all duration-200"
               >
-                Create Account
+                <Mail className="h-4 w-4 mr-2" />
+                Continue with Email
               </Button>
             </div>
           </CardContent>

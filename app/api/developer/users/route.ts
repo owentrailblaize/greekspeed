@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate username and slug
-    const username = await generateUniqueUsername(firstName, lastName);
+    const username = await generateUniqueUsername(supabase, firstName, lastName, authData.user.id);
     const profileSlug = generateProfileSlug(username);
 
     // Then, create the profile record

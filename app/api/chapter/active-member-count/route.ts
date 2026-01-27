@@ -15,12 +15,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Chapter ID is required' }, { status: 400 });
     }
 
-    // Count only active members
+    // Count active members (role = 'active_member' or 'admin', but NOT 'alumni')
+    // Note: We use 'role' field, not 'member_status', because alumni have role='alumni' but member_status='active'
     const { count, error } = await supabase
       .from('profiles')
       .select('*', { count: 'exact', head: true })
       .eq('chapter_id', chapterId)
-      .eq('member_status', 'active');
+      .in('role', ['active_member', 'admin']);
 
     if (error) {
       console.error('Error counting active members:', error);
