@@ -270,7 +270,7 @@ export function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             viewport={{ once: true }}
-            className="text-center"
+            className="text-center mb-12 md:mb-16"
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-normal mb-6 instrument-serif-regular text-gray-900">
               Alumni Relationship Management At Scale
@@ -278,6 +278,44 @@ export function LandingPage() {
             <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed font-sans">
               Trailblaize turns out-dated spreadsheets and email lists into an interactive community.
             </p>
+          </motion.div>
+
+          {/* Testimonial Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            viewport={{ once: true }}
+            className="flex justify-center"
+          >
+            <div className="w-full max-w-[800px] min-w-[640px] p-8 bg-white rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/10 flex flex-col justify-end items-center gap-6 overflow-hidden" style={{ boxShadow: '0px 6px 12px 0px rgba(0,0,0,0.03), 0px 4px 8px 0px rgba(0,0,0,0.02), -8px 12px 24px 0px rgba(0,0,0,0.08)' }}>  
+              <div className="self-stretch flex justify-center items-center gap-4">
+                <div className="flex-1 flex justify-start items-start gap-4">
+                  <img 
+                    className="w-12 h-12 rounded-lg" 
+                    src="/screenshots/Artboard 21.png" 
+                    alt="Nick Siebert"
+                  />
+                  <div className="flex-1 flex flex-col justify-start items-start gap-1">
+                    <div className="self-stretch text-center text-black text-base font-semibold font-sans leading-6">
+                      Nick Siebert
+                    </div>
+                    <div className="self-stretch text-center text-black/60 text-base font-medium font-sans leading-6">
+                      Chapter President of Sigma Chi at Ole Miss
+                    </div>
+                  </div>
+                </div>
+                <img 
+                  className="w-12 h-8" 
+                  src={"/screenshots/quote.png"} 
+                  alt="Decorative"
+                />
+              </div>
+              <div className="w-full max-w-[736px] text-center text-black text-lg font-medium font-sans leading-7">
+                Trailblaize turned our chapter email list into an interactive network. <br/>
+                Members and alumni have landed jobs, internships, and even deal flow across generations of our fraternity, while staying connected to the chapter.
+              </div>
+            </div>
           </motion.div>
         </div>
       </section>
@@ -627,14 +665,15 @@ export function LandingPage() {
             </div>
           </motion.div>
 
-          {/* Two Column Layout */}
+          {/* Mission Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-            {/* Left Column - Mission */}
+            {/* Mission Content */}
             <motion.div 
               initial={{ opacity: 0, x: -30 }} 
               whileInView={{ opacity: 1, x: 0 }} 
               transition={{ duration: 0.8 }} 
               viewport={{ once: true }}
+              className="md:col-span-2"
             >
               <div className="mb-6">
                 <h3 className="text-3xl font-bold text-gray-900 mb-4">Our Mission</h3>
@@ -647,43 +686,6 @@ export function LandingPage() {
                 <div className="flex items-center gap-2 text-gray-600">
                   <div className="w-2 h-2 rounded-full bg-green-500"></div>
                   <span>Available Now</span>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Right Column - Testimonial Card */}
-            <motion.div 
-              initial={{ opacity: 0, x: 30 }} 
-              whileInView={{ opacity: 1, x: 0 }} 
-              transition={{ duration: 0.8 }} 
-              viewport={{ once: true }}
-            >
-              <div className="relative overflow-hidden rounded-2xl p-8 border border-blue-200/40
-                bg-blue-50/50 backdrop-blur-xl
-                shadow-[0_8px_32px_rgba(59,130,246,0.15),inset_0_1px_0_rgba(255,255,255,0.6),inset_0_-1px_0_rgba(147,197,253,0.2)]
-                hover:shadow-[0_12px_40px_rgba(59,130,246,0.2),inset_0_1px_0_rgba(255,255,255,0.7)]
-                transition-all duration-300">
-                
-                {/* Optional: Add a blue gradient overlay for more tint */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 via-white/0 to-navy-400/10 pointer-events-none"></div>
-                
-                <div className="relative z-10">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-16 h-16 bg-blue-100/50 backdrop-blur-sm rounded-xl flex items-center justify-center border border-blue-200/30">
-                      <Star className="h-8 w-8 text-blue-600" />
-                    </div>
-                    <div>
-                      <div className="text-gray-900 font-semibold text-lg">Nick Siebert</div>
-                      <div className="text-blue-700 text-sm">Sigma Chi Eta</div>
-                    </div>
-                  </div>
-                  <blockquote className="text-lg text-gray-800 leading-relaxed mb-6">
-                    "Trailblaize has completely transformed how we manage our chapter. The alumni connections alone have been game-changing."
-                  </blockquote>
-                  <div className="flex items-center gap-2 text-sm text-blue-700">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>Verified Chapter Leader</span>
-                  </div>
                 </div>
               </div>
             </motion.div>
