@@ -367,8 +367,8 @@ export function LandingPage() {
                   viewport={{ once: true }}
                   className="relative flex-shrink-0 group"
                   style={{
-                    width: '85%',
-                    marginLeft: index > 0 ? '-15%' : '0',
+                    width: '80%',
+                    marginLeft: index === 0 ? '0' : index === 1 ? '-60%' : '-60%',
                     zIndex: 30,
                   }}
                   onMouseEnter={(e) => {
