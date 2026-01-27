@@ -60,38 +60,51 @@ const features = [
 
 const pricingPlans = [
   {
-    name: "Premium",
-    monthlyPrice: "$5",
-    yearlyPrice: "$36", // assuming yearly pricing
-    period: "per member",
-    description: "Full access for active members",
+    name: "Free - The Network",
+    price: "$0",
+    period: "/ month",
+    description: "For individuals",
     features: [
-      "Alumni Network Access",
-      "Basic Profile",
-      "Chapter Directory",
-      "Dues Management"
+      "Build a verified alumni profile",
+      "Grow your network",
+      "Maintain lifelong affiliation"
     ],
+    buttonText: "Request Access",
+    buttonAction: () => window.open('mailto:support@trailblaize.com?subject=Request Access', '_blank'),
+    popular: false,
+  },
+  {
+    name: "Own the Chapter",
+    price: "$299",
+    period: "/ month",
+    description: "For chapter leaders",
+    features: [
+      "Claim your chapter's digital home",
+      "Member & alumni management",
+      "Protect your chapter's legacy"
+    ],
+    buttonText: "Book a demo",
+    buttonAction: () => window.open('mailto:support@trailblaize.com?subject=Book a Demo', '_blank'),
     popular: true,
   },
   {
-    name: "Executive",
-    monthlyPrice: "Contact for pricing",
-    yearlyPrice: "Contact for pricing",
+    name: "Enterprise",
+    price: "Contact Us",
     period: "",
-    description: "Complete administrative suite",
+    description: "For national organizations",
     features: [
-      "Executive Dashboard",
-      "Chapter Analytics",
-      "Chapter Management",
-      "Custom Reporting",
+      "Own the network at scale",
+      "All chapters, one system",
+      "Long-term institutional value"
     ],
+    buttonText: "Contact Us",
+    buttonAction: () => window.open('mailto:support@trailblaize.com?subject=Enterprise Inquiry', '_blank'),
     popular: false,
   },
 ];
 
 export function LandingPage() {
   const [activeSection, setActiveSection] = useState("home");
-  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
   const { user } = useAuth();
 
   // Handle hash navigation on page load
@@ -311,7 +324,7 @@ export function LandingPage() {
                   alt="Decorative"
                 />
               </div>
-              <div className="w-full max-w-[736px] text-center text-black text-lg font-medium font-sans leading-7">
+              <div className="w-full max-w-[736px] text-left text-black text-lg font-medium font-sans leading-7">
                 Trailblaize turned our chapter email list into an interactive network. <br/>
                 Members and alumni have landed jobs, internships, and even deal flow across generations of our fraternity, while staying connected to the chapter.
               </div>
@@ -456,152 +469,92 @@ export function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-10 bg-gradient-to-tl from-slate-200 to-white">
-        {/* Decorative gradient overlays */}
-        <div className="absolute left-0 top-0 w-1/4 h-full bg-gradient-to-r from-blue-500/10 to-transparent pointer-events-none"></div>
-        <div className="absolute right-0 top-0 w-1/4 h-full bg-gradient-to-l from-navy-500/10 to-transparent pointer-events-none"></div>
-        
-        <div className="max-w-7xl mx-auto px-6 relative">
+      <section id="pricing" className="py-16 md:py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-center mb-12 max-w-xl mx-auto"
+            className="text-center mb-12"
           >
-            <h2 className="text-4xl md:text-5xl font-mdeium text-black mb-6">
-              Choose the Plan That's Right for You
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-normal mb-6 instrument-serif-regular text-gray-900">
+              Simple Pricing that Scales With Your Community.
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Streamline your chapter operations with powerful management tools and features. Upgrade to Executive for complete administrative control.
+            <p className="text-lg md:text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed font-sans">
+              Joining Trailblaize is free. Groups pay to own, customize, and manage their space on the platform. Subscriptions are billed to admins and executive leaders.
             </p>
           </motion.div>
 
-          {/* Billing Toggle */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            viewport={{ once: true }}
-            className="flex justify-center mb-12"
-          >
-            <div className="inline-flex bg-gray-800 rounded-full p-1 border border-gray-700">
-              <button
-                onClick={() => setBillingPeriod("monthly")}
-                className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
-                  billingPeriod === "monthly"
-                    ? "bg-navy-600 text-white"
-                    : "text-gray-400 hover:text-gray-200"
-                }`}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setBillingPeriod("yearly")}
-                className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
-                  billingPeriod === "yearly"
-                    ? "bg-navy-600 text-white"
-                    : "text-gray-400 hover:text-gray-200"
-                }`}
-              >
-                Yearly
-              </button>
-            </div>
-          </motion.div>
-
           {/* Pricing Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            {pricingPlans.map((plan, index) => {
-              const price = billingPeriod === "monthly" ? plan.monthlyPrice : plan.yearlyPrice;
-              
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  className={`relative ${plan.popular ? "md:scale-105 z-10" : ""}`}
-                >
-                  <Card className={`h-full bg-white border-2 ${
-                    plan.popular 
-                      ? "border-blue-500 shadow-xl hover:shadow-2xl" 
-                      : "border-gray-200 hover:border-gray-300 shadow-lg hover:shadow-xl"
-                  } transition-all duration-300 relative`}>
-                    <CardContent className="p-8 h-full flex flex-col">
-                      {/* Popular Badge */}
-                      {plan.popular && (
-                        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                          <Badge className="bg-blue-600 text-white px-4 py-1">
-                            Most Popular
-                          </Badge>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
+            {pricingPlans.map((plan, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="relative"
+              >
+                <Card className={`h-full bg-white border ${
+                  plan.popular 
+                    ? "border-gray-300 shadow-lg" 
+                    : "border-gray-200 shadow-sm hover:shadow-md"
+                } transition-all duration-300 relative`}>
+                  <CardContent className="p-6 md:p-8 h-full flex flex-col">
+                    {/* Title */}
+                    <div className="mb-4">
+                      <h3 className="text-xl md:text-2xl font-semibold text-gray-900 mb-2 font-sans">
+                        {plan.name}
+                      </h3>
+                      <p className="text-sm md:text-base text-gray-600 font-sans">{plan.description}</p>
+                    </div>
+
+                    {/* Price */}
+                    <div className="mb-6">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl md:text-4xl font-bold text-gray-900 font-sans">{plan.price}</span>
+                        {plan.period && (
+                          <span className="text-base md:text-lg text-gray-600 font-sans">{plan.period}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Features */}
+                    <div className="space-y-3 md:space-y-4 mb-8 flex-grow">
+                      {plan.features.map((feature, idx) => (
+                        <div key={idx} className="flex items-start space-x-3">
+                          <Check className="h-5 w-5 flex-shrink-0 text-gray-600 mt-0.5" />
+                          <span className="text-sm md:text-base text-gray-700 font-sans leading-relaxed">{feature}</span>
                         </div>
-                      )}
+                      ))}
+                    </div>
 
-                      {/* Title */}
-                      <div className="mb-3">
-                        <h3 className={`text-xl font-bold mb-2 ${
-                          plan.popular ? "text-blue-600" : "text-gray-900"
-                        }`}>
-                          {plan.name}
-                        </h3>
-                        <p className="text-gray-600">{plan.description}</p>
-                      </div>
-
-                      {/* Price */}
-                      <div className="mb-8">
-                        <div className="flex items-baseline gap-3">
-                          <span className="text-4xl font-bold text-gray-900">{price}</span>
-                          <div className="flex flex-col">
-                            {plan.period && (
-                              <span className="text-gray-600">/{plan.period}</span>
-                            )}
-                            {billingPeriod === "yearly" && plan.period && (
-                              <span className="text-sm text-gray-500">billed yearly</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Features */}
-                      <div className="space-y-4 mb-8 flex-grow">
-                        <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                          What's included
-                        </p>
-                        {plan.features.map((feature, idx) => (
-                          <div key={idx} className="flex items-center space-x-3">
-                            <Check className={`h-5 w-5 flex-shrink-0 ${
-                              plan.popular ? "text-blue-600" : "text-green-600"
-                            }`} />
-                            <span className="text-gray-700">{feature}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* CTA Button - pushed to bottom with mt-auto */}
-                      <Button className={`
+                    {/* CTA Button */}
+                    <Button 
+                      onClick={plan.buttonAction}
+                      className={`
                         w-full
                         ${plan.popular
-                          ? "bg-blue-600 hover:bg-blue-700 text-white"
-                          : "bg-gray-900 hover:bg-gray-800 text-white"
+                          ? "bg-black hover:bg-gray-900 text-white rounded-xl"
+                          : "bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 rounded-xl"
                         }
-                        rounded-full
                         font-medium
                         shadow-sm hover:shadow-md
                         transition-all duration-200
-                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300
-                        px-4 py-2 md:px-6 md:py-4
-                        text-sm md:text-lg
-                      `}>
-                        {plan.name === "Executive" ? "Contact Sales" : "Subscribe"}
-                        <ArrowRight className="ml-1.5 md:ml-2 h-4 w-4 md:h-5 md:w-5" />
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
+                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
+                        px-4 py-3
+                        text-sm md:text-base
+                      `}
+                    >
+                      {plan.buttonText}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
