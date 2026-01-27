@@ -67,6 +67,9 @@ const pricingPlans = [
     features: [
       "Build a verified alumni profile",
       "Grow your network",
+      "Find and reconnect with alumni",
+      "Message, connect, and engage",
+      "Access career opportunities",
       "Maintain lifelong affiliation"
     ],
     buttonText: "Request Access",
@@ -81,7 +84,10 @@ const pricingPlans = [
     features: [
       "Claim your chapter's digital home",
       "Member & alumni management",
-      "Protect your chapter's legacy"
+      "Central system of record",
+      "Events & communications tools",
+      "Engagement insights & analytics",
+      "Protect your chapter’s legacy"
     ],
     buttonText: "Book a demo",
     buttonAction: () => window.open('mailto:support@trailblaize.com?subject=Book a Demo', '_blank'),
@@ -95,6 +101,9 @@ const pricingPlans = [
     features: [
       "Own the network at scale",
       "All chapters, one system",
+      "Alumni activation at scale",
+      "Standardized infrastructure",
+      "Membership analytics & insights",
       "Long-term institutional value"
     ],
     buttonText: "Contact Us",
