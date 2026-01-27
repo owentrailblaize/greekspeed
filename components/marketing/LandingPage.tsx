@@ -427,7 +427,7 @@ export function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 md:py-24 bg-white">
+      <section className="py-10 md:py-24 bg-white">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <motion.div 
             initial={{ opacity: 0, y: 30 }} 
