@@ -79,3 +79,16 @@ textarea {
 /* CSS variables will be dynamically injected by BrandingContext */
 /* When branding loads, these values will be updated via JavaScript */
 /* No need for [data-chapter-branding] selector - injected directly on :root */
+
+/* Instrument Serif Font Classes */
+.instrument-serif-regular {
+  font-family: "Instrument Serif", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.instrument-serif-regular-italic {
+  font-family: "Instrument Serif", serif;
+  font-weight: 400;
+  font-style: italic;
+}

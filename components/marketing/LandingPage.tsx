@@ -114,39 +114,9 @@ export function LandingPage() {
       <MarketingHeader activeSection={activeSection} onSectionChange={setActiveSection} />
 
       {/* Hero Section */}
-      <section id="home" className="relative pt-28 md:pt-24 pb-4 md:pb-8 overflow-hidden">
-        {/* Background - make sure it covers full height */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white to-navy-50/30">
-          <div className="absolute inset-0 bg-white/50 md:bg-white/30"></div>
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
-          className="relative w-full h-full"
-        >
-          {/* Top Left Icon */}
-          <div className="absolute left-64 top-1/4 hidden lg:block opacity-20">
-            <HeroIcon className="w-48 h-48 rotate-6" />
-          </div>
-        </motion.div>
-        
+      <section id="home" className="relative pt-28 md:pt-32 pb-8 md:pb-12 overflow-hidden bg-white">
         <div className="relative max-w-6xl mx-auto px-6">
           <div className="text-center">
-            {/* Badge/Tagline */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="mt-4 md:mt-0"
-            >
-              <Badge className="mb-4 bg-blue-50 text-navy-700 border-blue-200 hover:bg-blue-100 transition-colors">
-                <Star className="w-3 h-3 mr-2" />
-                The Future of Chapter Management
-              </Badge>
-            </motion.div>
-
             {/* Main Headline */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -154,12 +124,10 @@ export function LandingPage() {
               transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
               className="mb-6"
             >
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-4">
-                <span className="text-gray-900">Where Alumni</span>
+              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-normal tracking-tight mb-6 instrument-serif-regular text-gray-900">
+                The Alumni Network
                 <br />
-                <span className="bg-gradient-to-r from-navy-600 via-blue-600 to-blue-500 bg-clip-text text-transparent">
-                  Networks Thrive
-                </span>
+                for every organization.
               </h1>
             </motion.div>
 
@@ -170,8 +138,8 @@ export function LandingPage() {
               transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
               className="mb-10"
             >
-              <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed px-4">
-                Streamline your chapter operations, connect with alumni, and manage finances with our comprehensive platform designed for modern fraternity and sorority management.
+              <p className="text-lg sm:text-xl md:text-2xl text-gray-600 leading-relaxed font-sans whitespace-normal md:whitespace-nowrap md:max-w-none">
+                A shared social network where organizations own their alumni community.
               </p>
             </motion.div>
 
@@ -180,24 +148,48 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-              className="flex flex-row items-center justify-center gap-4 mb-8 md:mb-12 px-4"
+              className="flex flex-row items-center justify-center gap-4 mb-12 md:mb-16 px-4"
             >
-              <Link href="/sign-up">
-                <Button 
-                  size="lg" 
-                  className="bg-brand-primary hover:bg-brand-primary-hover text-white px-4 py-2 md:px-6 md:py-4 text-sm md:text-lg rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 group whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300"
-                >
-                  Get Started
-                  <ArrowRight className="ml-1.5 md:ml-2 h-4 w-4 md:h-5 md:w-5 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
+              <Button 
+                size="lg" 
+                className="
+                  bg-black 
+                  hover:bg-gray-900 
+                  text-white 
+                  px-6 py-3 
+                  text-base 
+                  font-medium 
+                  font-sans
+                  rounded-xl
+                  transition-all duration-200 
+                  whitespace-nowrap 
+                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
+                "
+                onClick={() => window.open('mailto:support@trailblaize.com?subject=Request a Demo', '_blank')}
+              >
+                Request a Demo
+              </Button>
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 px-4 py-2 md:px-6 md:py-4 text-sm md:text-lg rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300"
-                onClick={() => window.open('mailto:support@trailblaize.com?subject=Learn More About Trailblaize')}
+                className="
+                  border border-black 
+                  bg-white 
+                  text-black 
+                  hover:bg-gray-50 
+                  hover:border-gray-800
+                  px-6 py-3 
+                  text-base 
+                  font-medium 
+                  font-sans
+                  rounded-xl
+                  transition-all duration-200 
+                  whitespace-nowrap 
+                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
+                "
+                onClick={() => window.location.href = '/sign-up'}
               >
-                Learn More
+                Join the Network
               </Button>
             </motion.div>
 

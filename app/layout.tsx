@@ -32,6 +32,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <html lang="en">
         <head>
           <meta name="viewport" content="width=device-width, initial-scale=1" />
+          {/* Google Fonts - Instrument Serif */}
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
           {/* Force browser to use PNG favicon - better quality than ICO */}
           <link rel="icon" type="image/png" sizes="32x32" href="/icon-32x32.png" />
           <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
