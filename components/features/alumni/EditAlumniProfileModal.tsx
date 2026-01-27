@@ -17,6 +17,7 @@ import { trackActivity, ActivityTypes } from '@/lib/utils/activityUtils';
 import { useProfileUpdateDetection } from '@/lib/hooks/useProfileUpdateDetection';
 import type { DetectedChange } from '@/components/features/profile/ProfileUpdatePromptModal';
 import { getGraduationYears, industries } from '@/lib/alumniConstants';
+import { queueProfileUpdatePrompt } from '@/lib/utils/profileUpdatePromptQueue';
 import { Select, SelectItem } from '@/components/ui/select';
 import { UsernameInput } from '@/components/features/profile/UsernameInput';
 import { generateProfileSlug } from '@/lib/utils/usernameUtils';
@@ -218,6 +219,18 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
       clearBaseline();
     }
   }, [isOpen, clearBaseline]);
+
+  // Set baseline for change detection when modal opens
+  useEffect(() => {
+    if (isOpen && profile && alumniData) {
+      setBaseline({
+        role: profile.role || null,
+        job_title: alumniData.job_title || null,
+        company: alumniData.company || null,
+        industry: alumniData.industry || null,
+      });
+    }
+  }, [isOpen, profile, alumniData, setBaseline]);
 
   // Validation functions - same as original
   const validateEmail = (email: string): boolean => {
@@ -567,9 +580,6 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
       console.log('🔍 Baseline values (before save):', baselineValues);
       console.log('🔍 Values being passed to detectChanges:', valuesToDetect);
       
-      // Set the baseline in the hook using the values we captured
-      setBaseline(baselineValues);
-      
       const changes = detectChanges(valuesToDetect);
       
       console.log('🔍 Detected changes:', changes);
@@ -577,17 +587,18 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
       console.log('🔍 Should show prompt?', changes.length > 0 && profile?.chapter_id);
 
       if (changes.length > 0 && profile?.chapter_id) {
-        console.log('✅ Calling callback with detected changes');
-        // Call the callback with detected changes, then close the modal
-        onProfileUpdatedWithChanges?.(changes);
+        console.log('✅ Queueing prompt for detected changes');
+        // Queue the prompt in localStorage instead of calling callback directly
+        queueProfileUpdatePrompt(profile.id, changes);
         setLoading(false);
-        onClose();
+        onClose(); // Close modal normally
         return;
       } else {
         console.log('❌ Not showing prompt - changes:', changes.length, 'chapter_id:', profile?.chapter_id);
       }
 
       // No changes detected, close normally
+      setLoading(false);
       onClose();
     } catch (error) {
       console.error('Error updating alumni profile:', error);
