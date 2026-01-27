@@ -6,6 +6,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        'instrument-serif': ['"Instrument Serif"', 'serif'],
+      },
       colors: {
         navy: {
           50: "#f6f8ff",
