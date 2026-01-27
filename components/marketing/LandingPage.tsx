@@ -137,8 +137,50 @@ export function LandingPage() {
       <MarketingHeader activeSection={activeSection} onSectionChange={setActiveSection} />
 
       {/* Hero Section */}
-      <section id="home" className="relative pt-28 md:pt-32 pb-8 md:pb-12 overflow-hidden bg-white">
-        <div className="relative max-w-6xl mx-auto px-6">
+      <section id="home" className="relative pt-28 md:pt-32 pb-8 md:pb-12 overflow-hidden" style={{ backgroundColor: '#1E1E1E' }}>
+        {/* Gradient Overlay Background */}
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Large dark red/maroon gradient - center-left */}
+          <div 
+            className="absolute w-[600px] h-[600px] md:w-[800px] md:h-[800px] -left-[200px] top-0 opacity-40 blur-3xl"
+            style={{
+              background: 'radial-gradient(circle, rgba(139, 0, 0, 0.6) 0%, rgba(69, 0, 0, 0.8) 50%, transparent 70%)',
+            }}
+          />
+          
+          {/* Navy blue gradient - below red */}
+          <div 
+            className="absolute w-[500px] h-[500px] md:w-[700px] md:h-[700px] -left-[100px] top-[200px] md:top-[300px] opacity-30 blur-3xl"
+            style={{
+              background: 'radial-gradient(circle, rgba(23, 37, 84, 0.5) 0%, rgba(10, 18, 51, 0.7) 50%, transparent 70%)',
+            }}
+          />
+          
+          {/* Red to navy blend - center */}
+          <div 
+            className="absolute w-[400px] h-[400px] md:w-[600px] md:h-[600px] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-25 blur-3xl"
+            style={{
+              background: 'radial-gradient(circle, rgba(139, 0, 0, 0.4) 0%, rgba(23, 37, 84, 0.5) 50%, transparent 70%)',
+            }}
+          />
+          
+          {/* Smaller accent gradients */}
+          <div 
+            className="absolute w-[300px] h-[300px] right-[10%] top-[20%] opacity-20 blur-2xl"
+            style={{
+              background: 'radial-gradient(circle, rgba(139, 0, 0, 0.5) 0%, rgba(23, 37, 84, 0.4) 100%)',
+            }}
+          />
+          
+          <div 
+            className="absolute w-[250px] h-[250px] left-[15%] bottom-[10%] opacity-20 blur-2xl"
+            style={{
+              background: 'radial-gradient(circle, rgba(23, 37, 84, 0.5) 0%, rgba(139, 0, 0, 0.3) 100%)',
+            }}
+          />
+        </div>
+
+        <div className="relative max-w-6xl mx-auto px-6 z-10">
           <div className="text-center">
             {/* Main Headline */}
             <motion.div
@@ -147,7 +189,7 @@ export function LandingPage() {
               transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
               className="mb-6"
             >
-              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-normal tracking-tight mb-6 instrument-serif-regular text-gray-900">
+              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-normal tracking-tight mb-6 instrument-serif-regular text-white">
                 The Alumni Network
                 <br />
                 for every organization.
@@ -161,7 +203,7 @@ export function LandingPage() {
               transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
               className="mb-10"
             >
-              <p className="text-lg sm:text-xl md:text-2xl text-gray-600 leading-relaxed font-sans whitespace-normal md:whitespace-nowrap md:max-w-none">
+              <p className="text-lg sm:text-xl md:text-2xl text-gray-300 leading-relaxed font-sans whitespace-normal md:whitespace-nowrap md:max-w-none">
                 A shared social network where organizations own their alumni community.
               </p>
             </motion.div>
@@ -176,9 +218,9 @@ export function LandingPage() {
               <Button 
                 size="lg" 
                 className="
-                  bg-black 
-                  hover:bg-gray-900 
-                  text-white 
+                  bg-white 
+                  hover:bg-gray-100 
+                  text-black 
                   px-6 py-3 
                   text-base 
                   font-medium 
@@ -186,7 +228,7 @@ export function LandingPage() {
                   rounded-xl
                   transition-all duration-200 
                   whitespace-nowrap 
-                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
+                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white
                 "
                 onClick={() => window.open('mailto:support@trailblaize.com?subject=Request a Demo', '_blank')}
               >
@@ -196,11 +238,11 @@ export function LandingPage() {
                 size="lg" 
                 variant="outline" 
                 className="
-                  border border-black 
-                  bg-white 
-                  text-black 
-                  hover:bg-gray-50 
-                  hover:border-gray-800
+                  border border-white/30 
+                  bg-transparent 
+                  text-white 
+                  hover:bg-white/10 
+                  hover:border-white/50
                   px-6 py-3 
                   text-base 
                   font-medium 
@@ -208,7 +250,7 @@ export function LandingPage() {
                   rounded-xl
                   transition-all duration-200 
                   whitespace-nowrap 
-                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
+                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white
                 "
                 onClick={() => window.location.href = '/sign-up'}
               >

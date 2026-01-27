@@ -48,7 +48,7 @@ export function FooterSocialLinks() {
   return (
     <div className="flex items-center gap-4 mb-6 md:mb-0">
       <a 
-        href="https://instagram.com/trailblaize" 
+        href="https://www.instagram.com/trailblaizeus/" 
         target="_blank" 
         rel="noopener noreferrer"
         className="transition-colors"
@@ -58,7 +58,7 @@ export function FooterSocialLinks() {
         <Instagram className="w-5 h-5" />
       </a>
       <a 
-        href="https://linkedin.com/company/trailblaize" 
+        href="https://www.linkedin.com/company/trailblaize-us/" 
         target="_blank" 
         rel="noopener noreferrer"
         className="transition-colors"
