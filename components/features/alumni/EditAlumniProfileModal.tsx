@@ -228,6 +228,8 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         job_title: alumniData.job_title || null,
         company: alumniData.company || null,
         industry: alumniData.industry || null,
+        location: alumniData.location || null,
+        hometown: alumniData.hometown || null,
       });
     }
   }, [isOpen, profile, alumniData, setBaseline]);
@@ -489,6 +491,8 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         job_title: alumniData?.job_title || null,
         company: alumniData?.company || null,
         industry: alumniData?.industry || null,
+        location: alumniData?.location || null,
+        hometown: alumniData?.hometown || null,
       };
 
       // Update alumni table only
@@ -575,6 +579,8 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         job_title: formData.job_title?.trim() || null,
         company: formData.company?.trim() || null,
         industry: formData.industry?.trim() || null,
+        location: formData.location?.trim() || null,
+        hometown: formData.hometown?.trim() || null,
       };
       
       console.log('🔍 Baseline values (before save):', baselineValues);
