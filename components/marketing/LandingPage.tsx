@@ -220,24 +220,21 @@ export function LandingPage() {
             viewport={{ once: true }}
             className="mb-6 md:mb-8"
           >
-            <div className="flex flex-col lg:flex-row items-start justify-between gap-6 lg:items-center">
-              <div className="flex-1">
-                <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 leading-tight">
-                  Built for
-                  <br />
-                  <span className="bg-gradient-to-r from-navy-600 via-blue-600 to-blue-500 bg-clip-text text-transparent">
-                    Greek Life.
-                  </span>
-                </h2>
-                <p className="text-lg text-gray-600 max-w-2xl leading-relaxed">
-                  Unlock the full potential of your chapter with our comprehensive platform. Manage operations, connect alumni, and strengthen your community—all in one place.
-                </p>
-              </div>
-              {/* Graphic on the right */}
-              <div className="hidden lg:block lg:flex-shrink-0">
-                <div className="w-64 h-64 relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <HeroIcon className="w-full h-full opacity-10" />
+            <div className="w-full max-w-[800px] min-w-0 md:min-w-[640px] p-4 md:p-8 bg-white rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/10 flex flex-col justify-end items-center gap-4 md:gap-6 overflow-hidden" style={{ boxShadow: '0px 6px 12px 0px rgba(0,0,0,0.03), 0px 4px 8px 0px rgba(0,0,0,0.02), -8px 12px 24px 0px rgba(0,0,0,0.08)' }}>  
+              <div className="self-stretch flex flex-col md:flex-row justify-center items-center gap-3 md:gap-4">
+                <div className="flex-1 flex flex-col md:flex-row justify-center md:justify-start items-center md:items-start gap-3 md:gap-4 w-full">
+                  <img 
+                    className="w-12 h-12 rounded-lg flex-shrink-0" 
+                    src="/screenshots/Artboard 21.png" 
+                    alt="Tonquin Stovall"
+                  />
+                  <div className="flex-1 flex flex-col justify-center md:justify-start items-center md:items-start gap-1 w-full">
+                    <div className="self-stretch text-center md:text-left text-black text-sm md:text-base font-semibold font-sans leading-6">
+                      Tonquin Stovall
+                    </div>
+                    <div className="self-stretch text-center md:text-left text-black/60 text-xs md:text-base font-medium font-sans leading-5 md:leading-6">
+                      Graduate of the University of Mississippi
+                    </div>
                   </div>
                 </div>
               </div>
