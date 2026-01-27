@@ -345,7 +345,7 @@ export function LandingPage() {
       
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-16 md:py-24 bg-white">
+      <section id="pricing" className="py-8 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           {/* Header */}
           <motion.div
@@ -353,7 +353,7 @@ export function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-4 md:md-12"
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-normal mb-6 instrument-serif-regular text-gray-900">
               Simple Pricing that Scales With Your Community.
@@ -365,7 +365,7 @@ export function LandingPage() {
 
           {/* Pricing Cards */}
           {/* Mobile: Side-by-side Overlapping Cards */}
-          <div className="md:hidden mb-8 px-4">
+          <div className="md:hidden mb-0 px-4">
             <div className="flex items-center justify-center relative overflow-visible" style={{ minHeight: '450px' }}>
               {pricingPlans.map((plan, index) => (
                 <motion.div
