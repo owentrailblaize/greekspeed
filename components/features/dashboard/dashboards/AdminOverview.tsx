@@ -253,8 +253,30 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
           {renderMobileContent()}
         </div>
 
-        {/* Desktop Layout: Three Column Grid (Preserved) */}
-        <div className="hidden sm:grid sm:grid-cols-12 sm:gap-6">
+        {/* Tablet Layout (sm to lg): Two Column - Feed + Right Sidebar */}
+        <div className="hidden sm:grid lg:hidden grid-cols-12 gap-4">
+          {/* Main Content - Social Feed (takes ~70%) */}
+          <div className="col-span-8">
+            <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
+          </div>
+
+          {/* Right Sidebar - Events & Key Info (~30%) */}
+          <div className="col-span-4">
+            <div className="space-y-4">
+              <FeatureGuard flagName="events_management_enabled">
+                <UpcomingEventsCard />
+              </FeatureGuard>
+              {chapterId && <TasksPanel chapterId={chapterId} />}
+              {/* Include DuesStatusCard on tablet since left sidebar is hidden */}
+              <FeatureGuard flagName="financial_tools_enabled">
+                <DuesStatusCard />
+              </FeatureGuard>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Layout (lg+): Three Column Grid */}
+        <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6">
           {/* Left Column - 3 columns wide */}
           <div className="col-span-3 space-y-6">
             <FeatureGuard flagName="financial_tools_enabled">

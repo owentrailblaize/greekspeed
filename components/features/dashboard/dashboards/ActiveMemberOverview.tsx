@@ -175,11 +175,33 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
           {renderMobileContent()}
         </div>
 
+        {/* Tablet Layout (sm to lg): Two Column - Feed + Right Sidebar */}
+        <div className="hidden sm:grid lg:hidden grid-cols-12 gap-4">
+          {/* Main Content - Social Feed (takes ~70%) */}
+          <div className="col-span-8">
+            <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
+          </div>
+
+          {/* Right Sidebar - Events & Key Info (~30%) */}
+          <div className="col-span-4">
+            <div className="space-y-4">
+              <FeatureGuard flagName="events_management_enabled">
+                <UpcomingEventsCard />
+              </FeatureGuard>
+              <FeatureGuard flagName="financial_tools_enabled">
+                <DuesStatusCard />
+              </FeatureGuard>
+              {/* Important: Announcements visible on tablet since left sidebar is hidden */}
+              <AnnouncementsCard />
+            </div>
+          </div>
+        </div>
+
         {/* Desktop Layout: Three Column Grid (Preserved) */}
-        <div className="hidden sm:grid sm:grid-cols-12 sm:gap-6">
+        <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6">
           {/* Left Sidebar - Dues, Tasks, Calendar & Documents */}
           <div className="col-span-3">
-            <div className="top-6 space-y-6">
+            <div className="space-y-6">
               <AnnouncementsCard />
               <MyTasksCard />
               <FeatureGuard flagName="events_management_enabled">

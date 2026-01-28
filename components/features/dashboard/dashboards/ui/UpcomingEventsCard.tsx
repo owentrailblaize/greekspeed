@@ -226,7 +226,7 @@ export function UpcomingEventsCard() {
               </div>
               {events.length > 0 && (
                 <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                  {events.length} {events.length === 1 ? 'event' : 'events'}
+                  {events.length}<span className="hidden lg:inline"> {events.length === 1 ? 'event' : 'events'}</span>
                 </span>
               )}
             </CardTitle>
@@ -253,61 +253,55 @@ export function UpcomingEventsCard() {
                       <MapPin className="h-3.5 w-3.5 text-brand-primary flex-shrink-0" />
                       <span className="break-words">{event.location || 'Location TBD'}</span>
                     </div>
+                    <div className="flex items-center space-x-1.5">
+                      <Users className="h-3.5 w-3.5 text-brand-primary flex-shrink-0" />
+                      <span className="font-medium">{event.attendee_count || 0} going</span>
+                    </div>
                   </div>
                   
-                  {/* Attendees and RSVP buttons on same row */}
-                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100 flex-nowrap min-w-0">
-                    <div className="flex items-center space-x-1.5 text-xs text-gray-600 flex-shrink-0">
-                      <Users className="h-3.5 w-3.5 text-brand-primary flex-shrink-0" />
-                      <span className="font-medium whitespace-nowrap">{event.attendee_count || 0} going</span>
-                    </div>
-                    
-                    <div className="flex items-center space-x-1 flex-shrink-0">
+                  {/* Attendees and RSVP buttons - More responsive */}
+                  <div className="flex items-center gap-1">
                       <Button 
                         size="sm" 
                         variant={getRSVPButtonVariant(event.id, 'attending')}
                         onClick={() => handleRSVP(event.id, 'attending')}
-                        className={`h-6 px-2 rounded-full text-xs font-medium transition-all ${
+                        className={`h-6 w-6 p-0 rounded-full text-xs font-medium transition-all ${
                           getRSVPButtonVariant(event.id, 'attending') === 'default'
                             ? 'bg-brand-primary hover:bg-brand-primary-hover text-white'
                             : 'hover:bg-green-50'
                         }`}
                         title="Going"
                       >
-                        <Users className="h-3 w-3 mr-1" />
-                        Going
+                        <Users className="h-3 w-3" />
                       </Button>
                       <Button 
                         size="sm" 
                         variant={getRSVPButtonVariant(event.id, 'maybe')}
                         onClick={() => handleRSVP(event.id, 'maybe')}
-                        className={`h-6 px-2 rounded-full text-xs font-medium transition-all ${
+                        className={`h-6 w-6 p-0 rounded-full text-xs font-medium transition-all ${
                           getRSVPButtonVariant(event.id, 'maybe') === 'default'
                             ? 'bg-brand-primary hover:bg-brand-primary-hover text-white'
                             : 'hover:bg-primary-50'
                         }`}
                         title="Maybe"
                       >
-                        <HelpCircle className="h-3 w-3 mr-1" />
-                        Maybe
+                        <HelpCircle className="h-3 w-3" />
                       </Button>
                       <Button 
                         size="sm" 
                         variant={getRSVPButtonVariant(event.id, 'not_attending')}
                         onClick={() => handleRSVP(event.id, 'not_attending')}
-                        className={`h-6 px-2 rounded-full text-xs font-medium transition-all ${
+                        className={`h-6 w-6 p-0 rounded-full text-xs font-medium transition-all ${
                           getRSVPButtonVariant(event.id, 'not_attending') === 'default'
                             ? 'bg-red-600 hover:bg-red-700 text-white'
                             : 'hover:bg-red-50'
                         }`}
                         title="Not Going"
                       >
-                        <X className="h-3 w-3 mr-1" />
-                        No
+                        <X className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
-                </div>
               ))}
             </div>
             
@@ -397,52 +391,54 @@ export function UpcomingEventsCard() {
                       <MapPin className="h-3.5 w-3.5 mt-0.5 text-brand-primary flex-shrink-0" />
                       <span className="break-words">{event.location || 'Location TBD'}</span>
                     </div>
-                    <div className="flex items-start space-x-2">
-                      <Users className="h-3.5 w-3.5 mt-0.5 text-brand-primary flex-shrink-0" />
-                      <span className="font-medium">{event.attendee_count || 0} going</span>
-                    </div>
                   </div>
                   
-                  <div className="flex space-x-1.5 pt-2 border-t border-gray-100">
-                    <Button 
-                      size="sm" 
-                      variant={getRSVPButtonVariant(event.id, 'attending')}
-                      onClick={() => handleRSVP(event.id, 'attending')}
-                      className={`flex-1 h-7 text-xs font-medium ${
-                        getRSVPButtonVariant(event.id, 'attending') === 'default'
-                          ? 'bg-brand-primary hover:bg-brand-primary-hover'
-                          : ''
-                      }`}
-                    >
-                      <Users className="h-3 w-3 mr-1" />
-                      Going
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant={getRSVPButtonVariant(event.id, 'maybe')}
-                      onClick={() => handleRSVP(event.id, 'maybe')}
-                      className={`flex-1 h-7 text-xs font-medium ${
-                        getRSVPButtonVariant(event.id, 'maybe') === 'default'
-                          ? 'bg-brand-primary hover:bg-brand-primary-hover'
-                          : ''
-                      }`}
-                    >
-                      <HelpCircle className="h-3 w-3 mr-1" />
-                      Maybe
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant={getRSVPButtonVariant(event.id, 'not_attending')}
-                      onClick={() => handleRSVP(event.id, 'not_attending')}
-                      className={`flex-1 h-7 text-xs font-medium ${
-                        getRSVPButtonVariant(event.id, 'not_attending') === 'default'
-                          ? 'bg-red-600 hover:bg-red-700'
-                          : ''
-                      }`}
-                    >
-                      <X className="h-3 w-3 mr-1" />
-                      No
-                    </Button>
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                    <div className="flex items-center space-x-1.5 text-xs text-gray-600">
+                      <Users className="h-3.5 w-3.5 text-brand-primary flex-shrink-0" />
+                      <span className="font-medium">{event.attendee_count || 0} going</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button 
+                        size="sm" 
+                        variant={getRSVPButtonVariant(event.id, 'attending')}
+                        onClick={() => handleRSVP(event.id, 'attending')}
+                        className={`h-6 w-6 p-0 rounded-full text-xs font-medium transition-all ${
+                          getRSVPButtonVariant(event.id, 'attending') === 'default'
+                            ? 'bg-brand-primary hover:bg-brand-primary-hover text-white'
+                            : 'hover:bg-green-50'
+                        }`}
+                        title="Going"
+                      >
+                        <Users className="h-3 w-3" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant={getRSVPButtonVariant(event.id, 'maybe')}
+                        onClick={() => handleRSVP(event.id, 'maybe')}
+                        className={`h-6 w-6 p-0 rounded-full text-xs font-medium transition-all ${
+                          getRSVPButtonVariant(event.id, 'maybe') === 'default'
+                            ? 'bg-brand-primary hover:bg-brand-primary-hover text-white'
+                            : 'hover:bg-primary-50'
+                        }`}
+                        title="Maybe"
+                      >
+                        <HelpCircle className="h-3 w-3" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant={getRSVPButtonVariant(event.id, 'not_attending')}
+                        onClick={() => handleRSVP(event.id, 'not_attending')}
+                        className={`h-6 w-6 p-0 rounded-full text-xs font-medium transition-all ${
+                          getRSVPButtonVariant(event.id, 'not_attending') === 'default'
+                            ? 'bg-red-600 hover:bg-red-700 text-white'
+                            : 'hover:bg-red-50'
+                        }`}
+                        title="Not Going"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
