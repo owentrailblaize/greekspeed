@@ -20,7 +20,7 @@ import {
   saveProfileUpdatePrefs,
   type ProfileUpdatePrefs,
 } from '@/lib/utils/profileUpdatePreferences';
-import { getPendingPrompt, clearPendingPrompt } from '@/lib/utils/profileUpdatePromptQueue';
+import { getPendingPrompt, clearPendingPrompt, queueProfileUpdatePrompt } from '@/lib/utils/profileUpdatePromptQueue';
 
 export default function DashboardLayout({
   children,
@@ -100,6 +100,12 @@ function EditProfileModalWrapper() {
     // Respect user preference: "don't show again"
     const prefs = getProfileUpdatePrefs(profile.id);
     if (prefs.dontShowAgain) {
+      return;
+    }
+
+    // If the edit modal is still open, queue and let the existing effect show it after close
+    if (isEditProfileModalOpen) {
+      queueProfileUpdatePrompt(profile.id, changes);
       return;
     }
     

@@ -90,7 +90,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
   const { openEditProfileModal, closeEditProfileModal } = useModal();
 
   // Initialize profile update detection hook
-  const { detectChanges, setBaseline, clearBaseline } = useProfileUpdateDetection({
+  const { detectChanges, setBaseline, clearBaseline, getBaseline } = useProfileUpdateDetection({
     ignoreNotSpecified: true,
   });
 
@@ -203,15 +203,19 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
   useEffect(() => {
     if (isOpen && profile) {
       if (profile.role === 'alumni' && alumniData) {
-        setBaseline({
+        const alumniBaseline = {
           role: profile.role || null,
           job_title: alumniData.job_title || null,
           company: alumniData.company || null,
           industry: alumniData.industry || null,
-        });
+          location: alumniData.location || null,
+          hometown: alumniData.hometown || null,
+        };
+        console.log('🔍 [Alumni] Setting baseline when modal opens:', alumniBaseline);
+        setBaseline(alumniBaseline);
       } else {
         // Set baseline for active members with academic/profile fields
-        setBaseline({
+        const activeBaseline = {
           role: profile.role || null,
           major: profile.major || null,
           minor: profile.minor || null,
@@ -219,7 +223,9 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
           gpa: profile.gpa?.toString() || null,
           location: profile.location || null,
           hometown: profile.hometown || null,
-        });
+        };
+        console.log('🔍 [Active Member] Setting baseline when modal opens:', activeBaseline);
+        setBaseline(activeBaseline);
       }
     } else if (!isOpen) {
       clearBaseline();
@@ -515,6 +521,35 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
           location: profile.location || null,
           hometown: profile.hometown || null,
         };
+      
+      const valuesToDetect =
+      profile?.role === 'alumni'
+        ? {
+            role: profile.role || null,
+            job_title: formData.job_title?.trim() || null,
+            company: formData.company?.trim() || null,
+            industry: formData.industry?.trim() || null,
+            location: formData.location?.trim() || null,
+            hometown: formData.hometown?.trim() || null,
+          }
+        : {
+            role: profile.role || null,
+            major: formData.major?.trim() || null,
+            minor: formData.minor?.trim() || null,
+            grad_year: formData.grad_year ? String(formData.grad_year).trim() : null,
+            gpa: formData.gpa ? String(formData.gpa).trim() : null,
+            location: formData.location?.trim() || null,
+            hometown: formData.hometown?.trim() || null,
+          };
+      
+      // Guarantee baseline exists
+      if (!getBaseline()) {
+        setBaseline(baselineValues);
+      }
+      
+      const changesForPrompt = detectChanges(valuesToDetect);
+      console.log('🔍 [Pre-Save] valuesToDetect:', valuesToDetect);
+      console.log('🔍 [Pre-Save] changesForPrompt:', changesForPrompt);
 
       // Update profile data - only include fields that exist in profiles table
       const profileUpdates: any = {
@@ -623,19 +658,19 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
           industry: formData.industry?.trim() || null,
         });
         
-        if (changes.length > 0 && profile?.chapter_id) {
-          // Call the callback with detected changes, then close the modal
-          onProfileUpdatedWithChanges?.(changes);
+        if (changesForPrompt.length > 0 && profile?.chapter_id) {
+          onProfileUpdatedWithChanges?.(changesForPrompt);
           setLoading(false);
           onClose();
           return;
         }
       } else {
+        // Verify baseline is set
+        const currentBaseline = getBaseline();
+        console.log('🔍 [Active Member] Current baseline from hook:', currentBaseline);
+        console.log('🔍 [Active Member] Baseline values captured at start:', baselineValues);
 
-        setBaseline(baselineValues);
-
-        // Detect changes for active members
-        const changes = detectChanges({
+        const valuesToDetect = {
           role: profile.role || null,
           major: formData.major?.trim() || null,
           minor: formData.minor?.trim() || null,
@@ -643,14 +678,24 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
           gpa: formData.gpa ? String(formData.gpa).trim() : null,
           location: formData.location?.trim() || null,
           hometown: formData.hometown?.trim() || null,
-        });
-        
-        if (changes.length > 0 && profile?.chapter_id) {
-          // Call the callback with detected changes, then close the modal
-          onProfileUpdatedWithChanges?.(changes);
+        };
+
+        console.log('🔍 [Active Member] Values being passed to detectChanges:', valuesToDetect);
+
+        const changes = detectChanges(valuesToDetect);
+
+        console.log('🔍 [Active Member] Detected changes:', changes);
+        console.log('🔍 [Active Member] Profile chapter_id:', profile?.chapter_id);
+        console.log('🔍 [Active Member] Should show prompt?', changes.length > 0 && profile?.chapter_id);
+
+        if (changesForPrompt.length > 0 && profile?.chapter_id) {
+          console.log('✅ [Active Member] Calling callback with detected changes');
+          onProfileUpdatedWithChanges?.(changesForPrompt);
           setLoading(false);
           onClose();
           return;
+        } else {
+          console.log('❌ [Active Member] Not showing prompt - changes:', changesForPrompt.length, 'chapter_id:', profile?.chapter_id);
         }
       }
       
