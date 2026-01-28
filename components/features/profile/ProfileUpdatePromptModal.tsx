@@ -23,7 +23,8 @@ export interface DetectedChange {
     | 'grad_year_change'
     | 'gpa_change'
     | 'location_change'
-    | 'hometown_change';
+    | 'hometown_change'
+    | 'welcome_introduction';
   oldValue?: string;
   newValue: string;
   field:
@@ -37,7 +38,8 @@ export interface DetectedChange {
     | 'grad_year'
     | 'gpa'
     | 'location'
-    | 'hometown';
+    | 'hometown'
+    | 'introduction';
 }
 
 interface ProfileUpdatePromptModalProps {
@@ -67,6 +69,7 @@ interface TemplateOption {
 
 // Priority order for change types (higher = more significant)
 const CHANGE_PRIORITY: Record<DetectedChange['type'], number> = {
+  'welcome_introduction': 11,
   'role_transition': 10,
   'member_status_change': 9,
   'company_change': 8,
@@ -161,6 +164,27 @@ function generateTemplateOptions(changes: DetectedChange[]): TemplateOption[] {
   if (!primaryChange) return [];
   
   const options: TemplateOption[] = [];
+  
+  // Handle welcome introduction first (highest priority)
+  if (primaryChange.type === 'welcome_introduction') {
+    const chapter = primaryChange.newValue || 'the chapter';
+    options.push({
+      id: 'excited',
+      content: `Just joined ${chapter}! Would love to connect with new members. 👋`,
+      label: 'Excited'
+    });
+    options.push({
+      id: 'professional',
+      content: `Hello ${chapter}! Looking forward to getting to know the community being a strong contributor.`,
+      label: 'Professional'
+    });
+    options.push({
+      id: 'brief',
+      content: `I just joined the chapter and would love to connect with new members. 😊`,
+      label: 'Brief'
+    });
+    return options;
+  }
   
   // Handle combined career updates first
   const hasCareerFields = changes.some(c => 

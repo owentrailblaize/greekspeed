@@ -7,6 +7,8 @@ import { DashboardOverview } from '@/components/features/dashboard/DashboardOver
 import { useRouter } from 'next/navigation';
 import { WelcomeModal } from '@/components/shared/WelcomeModal';
 import type { SocialFeedInitialData } from '@/components/features/dashboard/dashboards/ui/SocialFeed';
+import { queueProfileUpdatePrompt } from '@/lib/utils/profileUpdatePromptQueue';
+import type { DetectedChange } from '@/components/features/profile/ProfileUpdatePromptModal';
 
 type DashboardPageClientProps = {
   initialFeed?: SocialFeedInitialData | null;
@@ -24,6 +26,20 @@ export default function DashboardPageClient({
 
   const isOAuthUser = user?.app_metadata?.provider &&
     user?.app_metadata?.provider !== 'email';
+
+  // Handler for sharing an introduction post from welcome modal
+  const handleShareIntroduction = () => {
+    if (!profile?.id) return;
+    
+    const introductionChange: DetectedChange = {
+      type: 'welcome_introduction',
+      field: 'introduction',
+      newValue: profile.chapter || 'the chapter',
+    };
+    
+    // Queue the introduction prompt - will be picked up by layout.tsx
+    queueProfileUpdatePrompt(profile.id, [introductionChange]);
+  };
 
   useEffect(() => {
     if (authLoading || profileLoading) return;
@@ -99,7 +115,11 @@ export default function DashboardPageClient({
       />
 
       {showWelcomeModal && profile && (
-        <WelcomeModal profile={profile} onClose={() => setShowWelcomeModal(false)} />
+        <WelcomeModal 
+          profile={profile} 
+          onClose={() => setShowWelcomeModal(false)}
+          onShareIntroduction={handleShareIntroduction}
+        />
       )}
     </div>
   );
