@@ -9,6 +9,7 @@ import { WelcomeModal } from '@/components/shared/WelcomeModal';
 import type { SocialFeedInitialData } from '@/components/features/dashboard/dashboards/ui/SocialFeed';
 import { queueProfileUpdatePrompt } from '@/lib/utils/profileUpdatePromptQueue';
 import type { DetectedChange } from '@/components/features/profile/ProfileUpdatePromptModal';
+import { useModal } from '@/lib/contexts/ModalContext';
 
 type DashboardPageClientProps = {
   initialFeed?: SocialFeedInitialData | null;
@@ -23,7 +24,7 @@ export default function DashboardPageClient({
   const { profile, isDeveloper, loading: profileLoading } = useProfile();
   const router = useRouter();
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-
+  const { openEditProfileModal } = useModal();
   const isOAuthUser = user?.app_metadata?.provider &&
     user?.app_metadata?.provider !== 'email';
 
@@ -119,6 +120,7 @@ export default function DashboardPageClient({
           profile={profile} 
           onClose={() => setShowWelcomeModal(false)}
           onShareIntroduction={handleShareIntroduction}
+          onEditProfile={openEditProfileModal}
         />
       )}
     </div>

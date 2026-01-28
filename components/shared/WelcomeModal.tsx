@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Users, Calendar, MessageSquare, Shield, CheckCircle, Sparkles } from 'lucide-react';
+import { X, Users, Calendar, MessageSquare, Shield, CheckCircle, Sparkles, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProfileService } from '@/lib/services/profileService';
@@ -11,9 +11,10 @@ interface WelcomeModalProps {
   profile: any;
   onClose: () => void;
   onShareIntroduction?: () => void;
+  onEditProfile?: () => void;
 }
 
-export function WelcomeModal({ profile, onClose, onShareIntroduction }: WelcomeModalProps) {
+export function WelcomeModal({ profile, onClose, onShareIntroduction, onEditProfile }: WelcomeModalProps) {
   const [isClosing, setIsClosing] = useState(false);
 
   const handleClose = async () => {
@@ -45,6 +46,26 @@ export function WelcomeModal({ profile, onClose, onShareIntroduction }: WelcomeM
     if (onShareIntroduction) {
       setTimeout(() => {
         onShareIntroduction();
+      }, 300);
+    }
+  };
+
+  const handleEditProfile = async () => {
+    setIsClosing(true);
+    
+    // Mark welcome as seen in the database
+    try {
+      await ProfileService.updateProfile({ welcome_seen: true });
+    } catch (error) {
+      console.error('Error updating welcome_seen:', error);
+    }
+    
+    onClose();
+    
+    // Open edit profile modal after a short delay
+    if (onEditProfile) {
+      setTimeout(() => {
+        onEditProfile();
       }, 300);
     }
   };
@@ -144,8 +165,17 @@ export function WelcomeModal({ profile, onClose, onShareIntroduction }: WelcomeM
             <div className="bg-accent-50 border border-accent-200 rounded-lg p-2 md:p-3 mb-3 md:mb-4">
               <div className="flex items-start space-x-2">
                 <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-brand-accent mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="font-medium text-xs md:text-sm text-accent-900 mb-0.5">Get Started</h4>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <h4 className="font-medium text-xs md:text-sm text-accent-900">Get Started</h4>
+                    <Button
+                      onClick={handleEditProfile}
+                      variant="ghost"
+                      className="p-0 h-auto text-[10px] md:text-xs text-brand-accent hover:text-accent-700 hover:bg-transparent font-medium"
+                    >
+                      Complete profile <ArrowRight className="h-3 w-3 ml-0.5" />
+                    </Button>
+                  </div>
                   <p className="text-xs text-accent-800 leading-relaxed">
                     Complete your profile to unlock all features and connect with other members. 
                     You can always update your information later.
