@@ -557,6 +557,24 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         }
       }
 
+      // ===== COMPUTE CHANGES BEFORE any async operations that might close modal =====
+      const valuesToDetect = {
+        role: profile.role || null,
+        job_title: formData.job_title?.trim() || null,
+        company: formData.company?.trim() || null,
+        industry: formData.industry?.trim() || null,
+        location: formData.location?.trim() || null,
+        hometown: formData.hometown?.trim() || null,
+      };
+      
+      console.log('🔍 [Pre-Save] Baseline values:', baselineValues);
+      console.log('🔍 [Pre-Save] Values to detect:', valuesToDetect);
+      console.log('🔍 [Pre-Save] Current baseline from hook:', getBaseline());
+      
+      const changesForPrompt = detectChanges(valuesToDetect);
+      console.log('🔍 [Pre-Save] changesForPrompt:', changesForPrompt);
+      // ===== END: Change detection computed before save =====
+
       await onUpdate(profileUpdates);
 
       // Track activity
@@ -572,35 +590,20 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
       // Clear saved form data on successful save
       clearFormDataFromStorage();
       
-      // Detect changes for profile update prompt
-      // Use the baselineValues we captured at the start (before save)
-      const valuesToDetect = {
-        role: profile.role || null,
-        job_title: formData.job_title?.trim() || null,
-        company: formData.company?.trim() || null,
-        industry: formData.industry?.trim() || null,
-        location: formData.location?.trim() || null,
-        hometown: formData.hometown?.trim() || null,
-      };
-      
-      console.log('🔍 Baseline values (before save):', baselineValues);
-      console.log('🔍 Values being passed to detectChanges:', valuesToDetect);
-      
-      const changes = detectChanges(valuesToDetect);
-      
-      console.log('🔍 Detected changes:', changes);
+      // Use pre-computed changes (baseline may be cleared by now due to modal close)
+      console.log('🔍 Detected changes:', changesForPrompt);
       console.log('🔍 Profile chapter_id:', profile?.chapter_id);
-      console.log('🔍 Should show prompt?', changes.length > 0 && profile?.chapter_id);
+      console.log('🔍 Should show prompt?', changesForPrompt.length > 0 && profile?.chapter_id);
 
-      if (changes.length > 0 && profile?.chapter_id) {
+      if (changesForPrompt.length > 0 && profile?.chapter_id) {
         console.log('✅ Queueing prompt for detected changes');
         // Queue the prompt in localStorage instead of calling callback directly
-        queueProfileUpdatePrompt(profile.id, changes);
+        queueProfileUpdatePrompt(profile.id, changesForPrompt);
         setLoading(false);
         onClose(); // Close modal normally
         return;
       } else {
-        console.log('❌ Not showing prompt - changes:', changes.length, 'chapter_id:', profile?.chapter_id);
+        console.log('❌ Not showing prompt - changes:', changesForPrompt.length, 'chapter_id:', profile?.chapter_id);
       }
 
       // No changes detected, close normally
