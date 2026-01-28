@@ -17,7 +17,8 @@ import {
   Phone,
   ArrowLeft,
   ArrowUpRight,
-  Trash2
+  Trash2,
+  Upload
 } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useAuth } from '@/lib/supabase/auth-context';
@@ -25,6 +26,7 @@ import type { Recruit, RecruitStage, UpdateRecruitRequest } from '@/types/recrui
 import { FeatureGuard } from '@/components/shared/FeatureGuard';
 import { useRouter, usePathname } from 'next/navigation';
 import { Textarea } from '@/components/ui/textarea';
+import { BulkRecruitImport } from '@/components/features/recruitment/BulkRecruitImport';
 
 interface RecruitsResponse {
   data: Recruit[];
@@ -149,6 +151,7 @@ export function RecruitmentView() {
   } | null>(null);
   const [savingRecruitId, setSavingRecruitId] = useState<string | null>(null);
   const [deletingRecruitId, setDeletingRecruitId] = useState<string | null>(null);
+  const [showBulkImport, setShowBulkImport] = useState(false);
 
   // Check if we're on the standalone recruitment page
   const isStandalonePage = pathname === '/mychapter/recruitment';
@@ -398,9 +401,22 @@ export function RecruitmentView() {
             <h2 className="text-2xl font-bold text-gray-900">Recruitment CRM</h2>
             <p className="text-gray-600 mt-1">Manage and track potential recruits</p>
           </div>
-          {/* Only show View Full Page button when NOT on standalone page (i.e., in exec dashboard) */}
-          {!isStandalonePage && (
-            <div>
+          {/* Action buttons */}
+          <div className="flex items-center space-x-2">
+            {/* Import button - available on standalone page */}
+            {isStandalonePage && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowBulkImport(true)}
+                className="flex items-center space-x-2 rounded-full"
+              >
+                <Upload className="h-4 w-4" />
+                <span>Import</span>
+              </Button>
+            )}
+            {/* Only show View Full Page button when NOT on standalone page (i.e., in exec dashboard) */}
+            {!isStandalonePage && (
               <Button
                 variant="outline"
                 size="sm"
@@ -410,8 +426,8 @@ export function RecruitmentView() {
                 <span>View Full Page</span>
                 <ArrowUpRight className="h-4 w-4" />
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Show loading skeleton immediately when loading or when profile is not yet available */}
@@ -745,6 +761,16 @@ export function RecruitmentView() {
           </div>
         )}
       </div>
+
+      {/* Bulk Import Modal */}
+      {showBulkImport && (
+        <BulkRecruitImport
+          onClose={() => setShowBulkImport(false)}
+          onSuccess={() => {
+            fetchRecruits();
+          }}
+        />
+      )}
     </FeatureGuard>
   );
 }

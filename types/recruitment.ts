@@ -44,3 +44,54 @@ export interface RecruitFilters {
   search?: string;
   submitted_by?: string;
 }
+
+// Bulk Import Types
+export interface BulkRecruitImportOptions {
+  skipDuplicates?: boolean;
+  batchSize?: number;
+}
+
+export interface BulkRecruitImportRequest {
+  recruits: CreateRecruitRequest[];
+  options?: BulkRecruitImportOptions;
+}
+
+export interface BulkRecruitImportError {
+  row: number;
+  name: string;
+  error: string;
+}
+
+export interface BulkRecruitImportDuplicate {
+  row: number;
+  name: string;
+  existingId: string;
+  reason: string;
+}
+
+export interface BulkRecruitImportResult {
+  total: number;
+  successful: number;
+  failed: number;
+  duplicates: number;
+  errors: BulkRecruitImportError[];
+  createdRecruits: Array<{ id: string; name: string }>;
+  skippedDuplicates: BulkRecruitImportDuplicate[];
+}
+
+export interface ColumnMapping {
+  name: string | null;
+  hometown: string | null;
+  phone_number: string | null;
+  instagram_handle: string | null;
+  notes: string | null;
+}
+
+// Common column name mappings for auto-detection
+export const COLUMN_NAME_MAPPINGS: Record<keyof ColumnMapping, string[]> = {
+  name: ['name', 'full_name', 'fullname', 'recruit_name', 'recruit', 'first_name', 'firstname'],
+  hometown: ['hometown', 'home_town', 'city', 'location', 'from', 'origin'],
+  phone_number: ['phone', 'phone_number', 'phonenumber', 'cell', 'mobile', 'telephone', 'contact'],
+  instagram_handle: ['instagram', 'instagram_handle', 'ig', 'ig_handle', 'insta', 'social'],
+  notes: ['notes', 'note', 'comments', 'comment', 'description', 'info', 'details'],
+};
