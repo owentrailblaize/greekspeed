@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Clock, Users, HelpCircle, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
-import { Event } from '@/types/events';
+import { Event, RSVPStatus } from '@/types/events';
 import { parseRawTime } from '@/lib/utils/timezoneUtils';
+import { EventDetailModal } from '@/components/features/events/EventDetailModal';
+import { EventActionsMenu } from '@/components/features/events/EventActionsMenu';
 
 export function UpcomingEventsCard() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -17,6 +19,10 @@ export function UpcomingEventsCard() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const eventsPerPage = 3;
+  
+  // Modal state
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
@@ -236,10 +242,19 @@ export function UpcomingEventsCard() {
               {currentEvents.map((event) => (
                 <div 
                   key={event.id} 
-                  className="group p-3 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-sm transition-all duration-200 bg-white"
+                  className="group relative p-3 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-sm transition-all duration-200 bg-white cursor-pointer"
+                  onClick={() => {
+                    setSelectedEvent(event);
+                    setShowDetailModal(true);
+                  }}
                 >
+                  {/* Actions Menu - Top Right */}
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                    <EventActionsMenu event={event} />
+                  </div>
+
                   {/* Title */}
-                  <h4 className="font-semibold text-gray-900 text-sm mb-2 break-words leading-tight">
+                  <h4 className="font-semibold text-gray-900 text-sm mb-2 break-words leading-tight pr-6">
                     {event.title}
                   </h4>
                   
@@ -259,8 +274,8 @@ export function UpcomingEventsCard() {
                     </div>
                   </div>
                   
-                  {/* Attendees and RSVP buttons - More responsive */}
-                  <div className="flex items-center gap-1">
+                  {/* RSVP buttons */}
+                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                       <Button 
                         size="sm" 
                         variant={getRSVPButtonVariant(event.id, 'attending')}
@@ -376,9 +391,18 @@ export function UpcomingEventsCard() {
               {currentEvents.map((event) => (
                 <div 
                   key={event.id} 
-                  className="p-3 border border-gray-200 rounded-lg hover:border-primary-300 transition-colors bg-gradient-to-br from-white to-gray-50/50"
+                  className="relative p-3 border border-gray-200 rounded-lg hover:border-primary-300 transition-colors bg-gradient-to-br from-white to-gray-50/50 cursor-pointer"
+                  onClick={() => {
+                    setSelectedEvent(event);
+                    setShowDetailModal(true);
+                  }}
                 >
-                  <h4 className="font-semibold text-gray-900 text-sm mb-2 break-words leading-tight">
+                  {/* Actions Menu - Top Right */}
+                  <div className="absolute top-2 right-2" onClick={(e) => e.stopPropagation()}>
+                    <EventActionsMenu event={event} />
+                  </div>
+
+                  <h4 className="font-semibold text-gray-900 text-sm mb-2 break-words leading-tight pr-6">
                     {event.title}
                   </h4>
                   
@@ -393,7 +417,7 @@ export function UpcomingEventsCard() {
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center space-x-1.5 text-xs text-gray-600">
                       <Users className="h-3.5 w-3.5 text-brand-primary flex-shrink-0" />
                       <span className="font-medium">{event.attendee_count || 0} going</span>
@@ -496,6 +520,22 @@ export function UpcomingEventsCard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Event Detail Modal */}
+      {selectedEvent && (
+        <EventDetailModal
+          event={selectedEvent}
+          isOpen={showDetailModal}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedEvent(null);
+          }}
+          currentUserRsvp={rsvpStatuses[selectedEvent.id] || null}
+          onRsvpChange={(eventId, status) => {
+            handleRSVP(eventId, status);
+          }}
+        />
+      )}
     </>
   );
 }
