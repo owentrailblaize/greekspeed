@@ -9,7 +9,7 @@ import { MoreHorizontal, Edit, Trash2, Check, X, User } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import ImageWithFallback from '@/components/figma/ImageWithFallback';
 import { useRouter } from 'next/navigation';
-
+import { Calendar, MapPin } from 'lucide-react';
 interface MessageListProps {
   messages: Message[];
   loading: boolean;
@@ -143,6 +143,19 @@ export function MessageList({
     );
   };
 
+  const getEventUrlFromContent = (content: string) => {
+    // Match /event/{uuid} URLs
+    const eventUrlPattern = /https?:\/\/[^\s]*\/event\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+    const match = content.match(eventUrlPattern);
+    if (match) {
+      return {
+        fullUrl: match[0],
+        eventId: match[1]
+      };
+    }
+    return null;
+  };
+
   // Add debug logging (remove after fixing)
   useEffect(() => {
     if (messages.length > 0) {
@@ -216,6 +229,33 @@ export function MessageList({
   };
 
   const messageGroups = groupMessagesByDate(messages);
+
+  // Add event card render function
+  const renderEventLink = (eventUrl: string, eventId: string, isOwnMessage: boolean) => {
+    return (
+      <a 
+        href={eventUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`block mt-2 p-3 rounded-lg border cursor-pointer transition-colors ${
+          isOwnMessage 
+            ? 'bg-accent-50 border-accent-200 hover:bg-accent-100'
+            : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-lg bg-brand-primary/10 flex items-center justify-center flex-shrink-0">
+            <Calendar className="w-5 h-5 text-brand-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900">View Event</p>
+            <p className="text-xs text-gray-500">Click to open event details</p>
+          </div>
+        </div>
+      </a>
+    );
+  };
 
   if (loading && messages.length === 0) {
     return (

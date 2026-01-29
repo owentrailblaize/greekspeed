@@ -121,10 +121,12 @@ export function downloadICSFile(event: CalendarEvent): void {
 
 /**
  * Copy event link to clipboard
+ * @deprecated Use copyEventLinkToClipboard from eventLinkUtils.ts instead for better URL generation
  */
 export async function copyEventLink(eventId: string): Promise<boolean> {
   try {
-    const url = `${window.location.origin}/dashboard/events/${eventId}`;
+    // Use the new public event URL format
+    const url = `${window.location.origin}/event/${eventId}`;
     await navigator.clipboard.writeText(url);
     return true;
   } catch (error) {
@@ -135,9 +137,11 @@ export async function copyEventLink(eventId: string): Promise<boolean> {
 
 /**
  * Share event using Web Share API (mobile) or copy to clipboard (desktop)
+ * @deprecated Use ShareEventDrawer for in-app sharing or copyEventLinkToClipboard for simple link copying
  */
 export async function shareEvent(event: CalendarEvent & { id: string }): Promise<boolean> {
-  const url = `${window.location.origin}/dashboard/events/${event.id}`;
+  // Use the new public event URL format
+  const url = `${window.location.origin}/event/${event.id}`;
   const shareData = {
     title: event.title,
     text: `${event.title}${event.location ? ` at ${event.location}` : ''}`,

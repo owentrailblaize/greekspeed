@@ -213,7 +213,7 @@ export function EventDetailModal({
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden">
+      <div className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-start justify-between p-4 border-b border-gray-200">
           <div className="flex-1 pr-8">
@@ -307,7 +307,7 @@ export function EventDetailModal({
         </div>
 
         {/* Footer - RSVP Buttons */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
+        <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-gray-50">
           <p className="text-xs text-gray-500 mb-3 text-center">Your Response</p>
           <div className="flex gap-2">
             <Button
