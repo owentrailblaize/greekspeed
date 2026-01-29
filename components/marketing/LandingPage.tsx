@@ -316,11 +316,11 @@ export function LandingPage() {
                   <img 
                     className="w-12 h-12 rounded-lg flex-shrink-0" 
                     src="/screenshots/Artboard 21.png" 
-                    alt="Tonquin Stovall"
+                    alt="Walker Cobb"
                   />
                   <div className="flex-1 flex flex-col justify-center md:justify-start items-center md:items-start gap-1 w-full">
                     <div className="self-stretch text-center md:text-left text-black text-sm md:text-base font-semibold font-sans leading-6">
-                      Tonquin Stovall
+                      Walker Cobb
                     </div>
                     <div className="self-stretch text-center md:text-left text-black/60 text-xs md:text-base font-medium font-sans leading-5 md:leading-6">
                       Graduate of the University of Mississippi
