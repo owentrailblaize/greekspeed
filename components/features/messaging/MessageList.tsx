@@ -117,18 +117,18 @@ export function MessageList({
     return (
       <div
         className={`${standalone ? '' : 'mt-2'} p-3 rounded-lg border cursor-pointer transition-colors ${isOwnMessage
-            ? standalone
-              ? 'bg-accent-50 border-accent-200 hover:bg-accent-100' // More visible when standalone
-              : 'bg-white/10 border-white/20 hover:bg-white/20' // Original transparent for inside bubble
-            : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+          ? standalone
+            ? 'bg-accent-50 border-accent-200 hover:bg-accent-100' // More visible when standalone
+            : 'bg-white/10 border-white/20 hover:bg-white/20' // Original transparent for inside bubble
+          : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
           }`}
         onClick={() => handleProfileClick(profileMetadata.shared_profile_id, profileMetadata.shared_profile_type)}
       >
         <div className="flex items-center space-x-3">
           {profileMetadata.shared_profile_avatar ? (
             <div className={`w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 ${isOwnMessage && standalone
-                ? 'border-accent-200'
-                : 'border-white/20'
+              ? 'border-accent-200'
+              : 'border-white/20'
               }`}>
               <ImageWithFallback
                 src={profileMetadata.shared_profile_avatar}
@@ -145,18 +145,18 @@ export function MessageList({
           )}
           <div className="flex-1 min-w-0">
             <p className={`text-sm font-medium truncate ${isOwnMessage && standalone
-                ? 'text-gray-900' // Dark text for light background
-                : isOwnMessage
-                  ? 'text-white' // White text for transparent background
-                  : 'text-gray-900'
+              ? 'text-gray-900' // Dark text for light background
+              : isOwnMessage
+                ? 'text-white' // White text for transparent background
+                : 'text-gray-900'
               }`}>
               {profileMetadata.shared_profile_name}
             </p>
             <p className={`text-xs capitalize ${isOwnMessage && standalone
-                ? 'text-gray-500' // Gray text for light background
-                : isOwnMessage
-                  ? 'text-white/70' // Transparent white for transparent background
-                  : 'text-gray-500'
+              ? 'text-gray-500' // Gray text for light background
+              : isOwnMessage
+                ? 'text-white/70' // Transparent white for transparent background
+                : 'text-gray-500'
               }`}>
               {profileMetadata.shared_profile_type}
             </p>
@@ -183,10 +183,10 @@ export function MessageList({
     return (
       <div
         className={`${standalone ? '' : 'mt-2'} p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md ${isOwnMessage
-            ? standalone
-              ? 'bg-gradient-to-br from-accent-50 to-white border-accent-200 hover:border-accent-300'
-              : 'bg-white/10 border-white/20 hover:bg-white/20'
-            : 'bg-gradient-to-br from-gray-50 to-white border-gray-200 hover:border-gray-300'
+          ? standalone
+            ? 'bg-gradient-to-br from-accent-50 to-white border-accent-200 hover:border-accent-300'
+            : 'bg-white/10 border-white/20 hover:bg-white/20'
+          : 'bg-gradient-to-br from-gray-50 to-white border-gray-200 hover:border-gray-300'
           }`}
         onClick={() => router.push(`/event/${metadata.shared_event_id}`)}
       >
@@ -326,8 +326,8 @@ export function MessageList({
         target="_blank"
         rel="noopener noreferrer"
         className={`block mt-2 p-3 rounded-lg border cursor-pointer transition-colors ${isOwnMessage
-            ? 'bg-accent-50 border-accent-200 hover:bg-accent-100'
-            : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+          ? 'bg-accent-50 border-accent-200 hover:bg-accent-100'
+          : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
           }`}
         onClick={(e) => e.stopPropagation()}
       >

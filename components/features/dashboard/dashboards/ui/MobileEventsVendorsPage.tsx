@@ -13,7 +13,7 @@ import { useEvents } from '@/lib/hooks/useEvents';
 import { useVendors } from '@/lib/hooks/useVendors';
 import { EventForm } from '@/components/ui/EventForm';
 import { VendorForm } from '@/components/ui/VendorForm';
-import { Event, CreateEventRequest, UpdateEventRequest } from '@/types/events';
+import { Event, CreateEventRequest, UpdateEventRequest, RSVPStatus } from '@/types/events';
 import { VendorContact, CreateVendorRequest, UpdateVendorRequest } from '@/types/vendors';
 import { InviteManagement } from '@/components/features/invitations/InviteManagement';
 import { createPortal } from 'react-dom';
@@ -21,6 +21,8 @@ import { toast } from 'react-toastify';
 import { cn } from '@/lib/utils';
 import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 import { useSearchParams } from 'next/navigation';
+import { EventActionsMenu } from '@/components/features/events/EventActionsMenu';
+import { EventDetailModal } from '@/components/features/events/EventDetailModal';
 
 export function MobileEventsVendorsPage() {
   const { profile } = useProfile();
@@ -46,6 +48,9 @@ export function MobileEventsVendorsPage() {
   const [showEventForm, setShowEventForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [isSubmittingEvent, setIsSubmittingEvent] = useState(false);
+  const [selectedEventForModal, setSelectedEventForModal] = useState<Event | null>(null);
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [rsvpStatuses, setRsvpStatuses] = useState<Record<string, 'attending' | 'maybe' | 'not_attending'>>({});
   const { 
     events, 
     loading: eventsLoading, 
@@ -123,6 +128,38 @@ export function MobileEventsVendorsPage() {
   const handleEditEvent = (event: Event) => {
     setEditingEvent(event);
     setShowEventForm(true);
+  };
+
+  // Handle event click to open detail modal
+  const handleEventClick = (event: Event) => {
+    setSelectedEventForModal(event);
+    setIsEventModalOpen(true);
+  };
+
+  // Handle RSVP from modal (admin might need this for testing/viewing)
+  const handleModalRsvpChange = async (eventId: string, status: RSVPStatus) => {
+    if (!profile?.id) return;
+    
+    try {
+      const response = await fetch(`/api/events/${eventId}/rsvp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status,
+          user_id: profile.id,
+        }),
+      });
+
+      if (response.ok) {
+        setRsvpStatuses(prev => ({ ...prev, [eventId]: status as 'attending' | 'maybe' | 'not_attending' }));
+        toast.success(`RSVP updated`);
+      }
+    } catch (error) {
+      console.error('Error submitting RSVP:', error);
+      toast.error('Failed to update RSVP');
+    }
   };
 
   const handleDeleteEvent = async (eventId: string) => {
@@ -392,7 +429,11 @@ export function MobileEventsVendorsPage() {
                 <>
                   <div className="space-y-2">
                     {paginatedEvents.map((event) => (
-                      <Card key={event.id} className="p-3 bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                      <Card 
+                        key={event.id} 
+                        className="p-3 bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 cursor-pointer"
+                        onClick={() => handleEventClick(event)}
+                      >
                         <div className="space-y-2">
                           <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0">
@@ -408,7 +449,8 @@ export function MobileEventsVendorsPage() {
                                 </div>
                               )}
                             </div>
-                            <div className="flex items-center space-x-1 ml-2">
+                            <div className="flex items-center space-x-1 ml-2" onClick={(e) => e.stopPropagation()}>
+                              <EventActionsMenu event={event} />
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -837,6 +879,20 @@ export function MobileEventsVendorsPage() {
             )}
           </div>,
           document.body
+        )}
+
+        {/* Event Detail Modal */}
+        {selectedEventForModal && (
+          <EventDetailModal
+            event={selectedEventForModal}
+            isOpen={isEventModalOpen}
+            onClose={() => {
+              setIsEventModalOpen(false);
+              setSelectedEventForModal(null);
+            }}
+            currentUserRsvp={rsvpStatuses[selectedEventForModal.id] || null}
+            onRsvpChange={handleModalRsvpChange}
+          />
         )}
       </div>
     </div>
