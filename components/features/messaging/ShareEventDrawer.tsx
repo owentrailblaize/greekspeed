@@ -100,9 +100,12 @@ export function ShareEventDrawer({
     if (!selectedConnectionId) return;
     
     try {
-      // Send all messages as 'text' type for now
-      // Event links are included in the content and will be rendered as clickable links
-      await sendMessage(content, 'text');
+      // Send event messages with proper type and metadata
+      if (messageType === 'event' && metadata) {
+        await sendMessage(content, 'event', metadata);
+      } else {
+        await sendMessage(content, 'text');
+      }
     } catch (error) {
       console.error('Failed to send message:', error);
       throw error;

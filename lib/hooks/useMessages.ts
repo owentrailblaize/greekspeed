@@ -18,8 +18,8 @@ export interface Message {
   connection_id: string;
   sender_id: string;
   content: string;
-  message_type: 'text' | 'image' | 'file' | 'link' | 'profile';
-  metadata?: Record<string, unknown> | ProfileMessageMetadata;
+  message_type: 'text' | 'image' | 'file' | 'link' | 'profile' | 'event';
+  metadata?: Record<string, unknown> | ProfileMessageMetadata | EventMessageMetadata;
   created_at: string;
   updated_at: string;
   sender: {
@@ -38,6 +38,14 @@ export interface MessageResponse {
   hasMore: boolean;
 }
 
+export interface EventMessageMetadata {
+  shared_event_id: string;
+  shared_event_title: string;
+  shared_event_location?: string;
+  shared_event_start_time: string;
+  [key: string]: unknown;
+}
+
 export function useMessages(connectionId: string | null) {
   const { user, session } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -47,40 +55,40 @@ export function useMessages(connectionId: string | null) {
   const [page, setPage] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
-  
+
   const realtimeChannel = useRef<RealtimeChannel | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchMessages = useCallback(async (pageNum: number = 1, before?: string) => {
     if (!connectionId || !user) return;
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
       const params = new URLSearchParams({
         connectionId,
         page: pageNum.toString(),
         limit: '50'
       });
-      
+
       if (before) {
         params.append('before', before);
       }
-      
+
       // Add authentication header
       const response = await fetch(`/api/messages?${params}`, {
         headers: {
           'Authorization': `Bearer ${session?.access_token}`
         }
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch messages');
       }
-      
+
       const data: MessageResponse = await response.json();
-      
+
       if (pageNum === 1) {
         // First page: set messages directly (they're already in ascending order)
         setMessages(data.messages || []);
@@ -89,7 +97,7 @@ export function useMessages(connectionId: string | null) {
         // The 'before' parameter gets messages after the oldest message we have
         setMessages(prev => [...prev, ...(data.messages || [])]);
       }
-      
+
       setPage(data.page);
       setHasMore(data.hasMore);
     } catch (err) {
@@ -99,9 +107,9 @@ export function useMessages(connectionId: string | null) {
     }
   }, [connectionId, user, session]);
 
-  const sendMessage = async (content: string, messageType: 'text' | 'image' | 'file' | 'link' | 'profile' = 'text', metadata?: Record<string, unknown>) => {
+  const sendMessage = async (content: string, messageType: 'text' | 'image' | 'file' | 'link' | 'profile' | 'event' = 'text', metadata?: Record<string, unknown> | ProfileMessageMetadata | EventMessageMetadata) => {
     if (!connectionId || !user || !content.trim()) return;
-    
+
     try {
       // Optimistic update
       const optimisticMessage: Message = {
@@ -121,9 +129,9 @@ export function useMessages(connectionId: string | null) {
           avatar_url: user.user_metadata?.avatar_url || null,
         }
       };
-      
+
       setMessages(prev => [...prev, optimisticMessage]);
-      
+
       // Add authentication header to POST request
       const requestPayload = {
         connectionId,
@@ -131,24 +139,24 @@ export function useMessages(connectionId: string | null) {
         messageType,
         metadata
       };
-      
+
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/9b79d5f7-95d0-4f63-a221-cc92278c376d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useMessages.ts:128',message:'Sending API request',data:{connectionId,content:content.trim().substring(0,50),messageType,metadata,hasMetadata:!!metadata,metadataKeys:metadata?Object.keys(metadata):[],hasSession:!!session,hasAccessToken:!!session?.access_token,requestPayload},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7242/ingest/9b79d5f7-95d0-4f63-a221-cc92278c376d', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:128', message: 'Sending API request', data: { connectionId, content: content.trim().substring(0, 50), messageType, metadata, hasMetadata: !!metadata, metadataKeys: metadata ? Object.keys(metadata) : [], hasSession: !!session, hasAccessToken: !!session?.access_token, requestPayload }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
       // #endregion
-      
+
       const response = await fetch('/api/messages', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.access_token}`
         },
         body: JSON.stringify(requestPayload)
       });
-      
+
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/9b79d5f7-95d0-4f63-a221-cc92278c376d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useMessages.ts:142',message:'API response received',data:{status:response.status,statusText:response.statusText,ok:response.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7242/ingest/9b79d5f7-95d0-4f63-a221-cc92278c376d', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:142', message: 'API response received', data: { status: response.status, statusText: response.statusText, ok: response.ok }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
       // #endregion
-      
+
       if (!response.ok) {
         // Try to get the error message from the response
         let errorMessage = 'Failed to send message';
@@ -166,14 +174,14 @@ export function useMessages(connectionId: string | null) {
         });
         throw new Error(errorMessage);
       }
-      
+
       const { message } = await response.json();
-      
+
       // Replace optimistic message with real message
-      setMessages(prev => prev.map(msg => 
+      setMessages(prev => prev.map(msg =>
         msg.id === optimisticMessage.id ? message : msg
       ));
-      
+
       return message;
     } catch (err) {
       // Remove optimistic message on error
@@ -185,24 +193,24 @@ export function useMessages(connectionId: string | null) {
 
   const editMessage = async (messageId: string, newContent: string) => {
     if (!user || !newContent.trim()) return;
-    
+
     try {
       const response = await fetch(`/api/messages/${messageId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: newContent.trim() })
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to edit message');
       }
-      
+
       const { message } = await response.json();
-      
-      setMessages(prev => prev.map(msg => 
+
+      setMessages(prev => prev.map(msg =>
         msg.id === messageId ? message : msg
       ));
-      
+
       return message;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to edit message');
@@ -212,16 +220,16 @@ export function useMessages(connectionId: string | null) {
 
   const deleteMessage = async (messageId: string) => {
     if (!user) return;
-    
+
     try {
       const response = await fetch(`/api/messages/${messageId}`, {
         method: 'DELETE'
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to delete message');
       }
-      
+
       setMessages(prev => prev.filter(msg => msg.id !== messageId));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete message');
@@ -239,7 +247,7 @@ export function useMessages(connectionId: string | null) {
 
   const markAsRead = useCallback(async (messageId: string) => {
     if (!user) return;
-    
+
     try {
       await fetch(`/api/messages/${messageId}/read`, {
         method: 'POST',
@@ -256,7 +264,7 @@ export function useMessages(connectionId: string | null) {
   // Add function to mark all unread messages in a connection as read
   const markAllAsRead = useCallback(async () => {
     if (!user || !connectionId) return;
-    
+
     try {
       await fetch('/api/messages/mark-all-read', {
         method: 'POST',
@@ -276,9 +284,9 @@ export function useMessages(connectionId: string | null) {
 
   const sendTypingIndicator = useCallback(() => {
     if (!connectionId || !user) return;
-    
+
     setIsTyping(true);
-    
+
     // Send typing indicator via realtime
     if (realtimeChannel.current) {
       realtimeChannel.current.send({
@@ -287,12 +295,12 @@ export function useMessages(connectionId: string | null) {
         payload: { userId: user.id, connectionId, isTyping: true }
       });
     }
-    
+
     // Clear typing indicator after delay
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
-    
+
     typingTimeoutRef.current = setTimeout(() => {
       setIsTyping(false);
       if (realtimeChannel.current) {
@@ -308,7 +316,7 @@ export function useMessages(connectionId: string | null) {
   // Setup realtime subscription
   useEffect(() => {
     if (!connectionId || !user) return;
-    
+
     // Subscribe to messages for this connection
     realtimeChannel.current = supabase
       .channel(`messages:${connectionId}`)
@@ -332,7 +340,7 @@ export function useMessages(connectionId: string | null) {
         filter: `connection_id=eq.${connectionId}`
       }, (payload) => {
         const updatedMessage = payload.new as Message;
-        setMessages(prev => prev.map(msg => 
+        setMessages(prev => prev.map(msg =>
           msg.id === updatedMessage.id ? updatedMessage : msg
         ));
       })
@@ -385,7 +393,7 @@ export function useMessages(connectionId: string | null) {
       const timer = setTimeout(() => {
         markAllAsRead();
       }, 500);
-      
+
       return () => clearTimeout(timer);
     }
   }, [connectionId, user, messages.length, markAllAsRead]);

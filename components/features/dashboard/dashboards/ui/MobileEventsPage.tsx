@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Clock, Users, HelpCircle, X, Filter, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, HelpCircle, X, Filter, Loader2, MoreVertical } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
-import { Event } from '@/types/events';
+import { Event, RSVPStatus } from '@/types/events';
 import { parseRawTime } from '@/lib/utils/timezoneUtils';
 import { useFeatureRedirect } from '@/lib/hooks/useFeatureRedirect';
+import { EventDetailModal } from '@/components/features/events/EventDetailModal';
+import { EventActionsMenu } from '@/components/features/events/EventActionsMenu';
 
 type EventFilter = 'all' | 'attending' | 'maybe' | 'not_attending';
 
@@ -23,6 +25,8 @@ export function MobileEventsPage() {
   const [error, setError] = useState<string | null>(null);
   const [rsvpStatuses, setRsvpStatuses] = useState<Record<string, 'attending' | 'maybe' | 'not_attending'>>({});
   const [activeFilter, setActiveFilter] = useState<EventFilter>('all');
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
@@ -141,6 +145,17 @@ export function MobileEventsPage() {
     { id: 'not_attending' as EventFilter, label: 'Not Going', icon: X }
   ];
 
+  // Handle opening event detail modal
+  const handleEventClick = (event: Event) => {
+    setSelectedEvent(event);
+    setIsModalOpen(true);
+  };
+
+  // Handle RSVP change from modal
+  const handleModalRsvpChange = async (eventId: string, status: RSVPStatus) => {
+    await handleRSVP(eventId, status as 'attending' | 'maybe' | 'not_attending');
+  };
+
   // Show loading state while checking feature flag
   if (flagLoading) {
     return (
@@ -246,9 +261,15 @@ export function MobileEventsPage() {
             {filteredEvents.map((event, index) => (
               <div 
                 key={event.id} 
-                className={`px-4 py-4 ${index !== filteredEvents.length - 1 ? 'border-b border-gray-100' : ''}`}
+                className={`px-4 py-4 cursor-pointer hover:bg-gray-50 transition-colors ${index !== filteredEvents.length - 1 ? 'border-b border-gray-100' : ''}`}
+                onClick={() => handleEventClick(event)}
               >
-                <h4 className="font-medium text-gray-900 text-sm mb-2 break-words">{event.title}</h4>
+                <div className="flex items-start justify-between mb-2">
+                  <h4 className="font-medium text-gray-900 text-sm break-words flex-1 pr-2">{event.title}</h4>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <EventActionsMenu event={event} />
+                  </div>
+                </div>
                 
                 <div className="space-y-1 text-xs text-gray-600 mb-3">
                   <div className="flex items-center space-x-2">
@@ -270,7 +291,7 @@ export function MobileEventsPage() {
                 )}
                 
                 {/* RSVP Buttons */}
-                <div className="flex space-x-1">
+                <div className="flex space-x-1" onClick={(e) => e.stopPropagation()}>
                   <Button 
                     size="sm" 
                     variant={getRSVPButtonVariant(event.id, 'attending')}
@@ -304,6 +325,20 @@ export function MobileEventsPage() {
           </div>
         )}
       </div>
+
+      {/* Event Detail Modal */}
+      {selectedEvent && (
+        <EventDetailModal
+          event={selectedEvent}
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedEvent(null);
+          }}
+          currentUserRsvp={rsvpStatuses[selectedEvent.id] || null}
+          onRsvpChange={handleModalRsvpChange}
+        />
+      )}
     </div>
   );
 }

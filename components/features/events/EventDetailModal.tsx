@@ -1,12 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { X, Calendar, MapPin, Clock, Users, HelpCircle, UserX, ChevronDown, ChevronUp } from 'lucide-react';
+import { Drawer } from 'vaul';
+import { X, MapPin, Clock, Users, HelpCircle, UserX, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Event, RSVPStatus } from '@/types/events';
-import { parseRawTime } from '@/lib/utils/timezoneUtils';
 import { EventActionsMenu } from './EventActionsMenu';
 
 interface Attendee {
@@ -38,7 +36,7 @@ interface EventDetailModalProps {
 
 function AttendeeAvatar({ attendee, size = 'md' }: { attendee: Attendee; size?: 'sm' | 'md' }) {
   const sizeClasses = size === 'sm' ? 'h-6 w-6 text-xs' : 'h-8 w-8 text-sm';
-  
+
   if (attendee.avatar_url) {
     return (
       <img
@@ -51,7 +49,7 @@ function AttendeeAvatar({ attendee, size = 'md' }: { attendee: Attendee; size?: 
   }
 
   const initials = `${attendee.first_name?.[0] || ''}${attendee.last_name?.[0] || ''}`.toUpperCase();
-  
+
   return (
     <div
       className={`${sizeClasses} rounded-full bg-brand-primary text-white flex items-center justify-center font-medium border-2 border-white shadow-sm`}
@@ -62,21 +60,21 @@ function AttendeeAvatar({ attendee, size = 'md' }: { attendee: Attendee; size?: 
   );
 }
 
-function AttendeeSection({ 
-  title, 
-  attendees, 
-  icon: Icon, 
+function AttendeeSection({
+  title,
+  attendees,
+  icon: Icon,
   iconColor,
-  defaultExpanded = false 
-}: { 
-  title: string; 
-  attendees: Attendee[]; 
+  defaultExpanded = false
+}: {
+  title: string;
+  attendees: Attendee[];
   icon: any;
   iconColor: string;
   defaultExpanded?: boolean;
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
-  
+
   if (attendees.length === 0) return null;
 
   return (
@@ -98,7 +96,7 @@ function AttendeeSection({
           <ChevronDown className="h-4 w-4 text-gray-400" />
         )}
       </button>
-      
+
       {expanded && (
         <div className="p-3 space-y-2 max-h-40 overflow-y-auto">
           {attendees.map((attendee) => (
@@ -124,11 +122,14 @@ export function EventDetailModal({
 }: EventDetailModalProps) {
   const [attendeeData, setAttendeeData] = useState<AttendeeData | null>(null);
   const [loadingAttendees, setLoadingAttendees] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
+  // Detect mobile
   useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   // Fetch attendees when modal opens
@@ -156,14 +157,14 @@ export function EventDetailModal({
   const formatEventDate = (startTime: string, endTime: string): string => {
     const start = new Date(startTime);
     const end = new Date(endTime);
-    
+
     const dateOptions: Intl.DateTimeFormatOptions = {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     };
-    
+
     const timeOptions: Intl.DateTimeFormatOptions = {
       hour: 'numeric',
       minute: '2-digit',
@@ -183,7 +184,7 @@ export function EventDetailModal({
 
   const getRsvpButtonClass = (status: RSVPStatus) => {
     const isActive = currentUserRsvp === status;
-    
+
     switch (status) {
       case 'attending':
         return isActive
@@ -202,144 +203,168 @@ export function EventDetailModal({
     }
   };
 
-  if (!isOpen || !mounted) return null;
-
   const modalContent = (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-      />
+    <>
+      {/* Mobile drag handle */}
+      {isMobile && (
+        <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-zinc-300 mt-3 mb-2" />
+      )}
 
-      {/* Modal */}
-      <div className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-start justify-between p-4 border-b border-gray-200">
-          <div className="flex-1 pr-8">
-            <h2 className="text-xl font-semibold text-gray-900 leading-tight">
-              {event.title}
-            </h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <EventActionsMenu event={event} />
-            <button
-              onClick={onClose}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <X className="h-5 w-5 text-gray-500" />
-            </button>
-          </div>
+      {/* Header */}
+      <div className="flex items-start justify-between p-4 border-b border-gray-200">
+        <div className="flex-1 pr-8">
+          <h2 className="text-xl font-semibold text-gray-900 leading-tight">
+            {event.title}
+          </h2>
+        </div>
+        <div className="flex items-center gap-2">
+          <EventActionsMenu event={event} />
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X className="h-5 w-5 text-gray-500" />
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 p-4 overflow-y-auto space-y-4">
+        {/* Date & Time */}
+        <div className="flex items-start gap-3 text-sm text-gray-600">
+          <Clock className="h-5 w-5 text-brand-primary flex-shrink-0 mt-0.5" />
+          <span>{formatEventDate(event.start_time, event.end_time)}</span>
         </div>
 
-        {/* Content */}
-        <div className="p-4 overflow-y-auto max-h-[calc(90vh-180px)] space-y-4">
-          {/* Date & Time */}
+        {/* Location */}
+        {event.location && (
           <div className="flex items-start gap-3 text-sm text-gray-600">
-            <Clock className="h-5 w-5 text-brand-primary flex-shrink-0 mt-0.5" />
-            <span>{formatEventDate(event.start_time, event.end_time)}</span>
+            <MapPin className="h-5 w-5 text-brand-primary flex-shrink-0 mt-0.5" />
+            <span>{event.location}</span>
           </div>
+        )}
 
-          {/* Location */}
-          {event.location && (
-            <div className="flex items-start gap-3 text-sm text-gray-600">
-              <MapPin className="h-5 w-5 text-brand-primary flex-shrink-0 mt-0.5" />
-              <span>{event.location}</span>
-            </div>
-          )}
-
-          {/* Description */}
-          {event.description && (
-            <div className="pt-2">
-              <h3 className="text-sm font-medium text-gray-900 mb-2">About this event</h3>
-              <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">
-                {event.description}
-              </p>
-            </div>
-          )}
-
-          {/* Attendees Section */}
+        {/* Description */}
+        {event.description && (
           <div className="pt-2">
-            <h3 className="text-sm font-medium text-gray-900 mb-3">
-              Responses
-              {attendeeData && (
-                <span className="font-normal text-gray-500 ml-2">
-                  ({attendeeData.counts.attending + attendeeData.counts.maybe + attendeeData.counts.not_attending} total)
-                </span>
-              )}
-            </h3>
+            <h3 className="text-sm font-medium text-gray-900 mb-2">About this event</h3>
+            <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">
+              {event.description}
+            </p>
+          </div>
+        )}
 
-            {loadingAttendees ? (
-              <div className="flex items-center justify-center py-4">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary"></div>
-              </div>
-            ) : attendeeData ? (
-              <div className="space-y-2">
-                <AttendeeSection
-                  title="Going"
-                  attendees={attendeeData.attending}
-                  icon={Users}
-                  iconColor="text-green-600"
-                  defaultExpanded={true}
-                />
-                <AttendeeSection
-                  title="Maybe"
-                  attendees={attendeeData.maybe}
-                  icon={HelpCircle}
-                  iconColor="text-amber-500"
-                />
-                <AttendeeSection
-                  title="Not Going"
-                  attendees={attendeeData.not_attending}
-                  icon={UserX}
-                  iconColor="text-red-500"
-                />
-                {attendeeData.counts.attending === 0 && 
-                 attendeeData.counts.maybe === 0 && 
-                 attendeeData.counts.not_attending === 0 && (
+        {/* Attendees Section */}
+        <div className="pt-2">
+          <h3 className="text-sm font-medium text-gray-900 mb-3">
+            Responses
+            {attendeeData && (
+              <span className="font-normal text-gray-500 ml-2">
+                ({attendeeData.counts.attending + attendeeData.counts.maybe + attendeeData.counts.not_attending} total)
+              </span>
+            )}
+          </h3>
+
+          {loadingAttendees ? (
+            <div className="flex items-center justify-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary"></div>
+            </div>
+          ) : attendeeData ? (
+            <div className="space-y-2">
+              <AttendeeSection
+                title="Going"
+                attendees={attendeeData.attending}
+                icon={Users}
+                iconColor="text-green-600"
+                defaultExpanded={true}
+              />
+              <AttendeeSection
+                title="Maybe"
+                attendees={attendeeData.maybe}
+                icon={HelpCircle}
+                iconColor="text-amber-500"
+              />
+              <AttendeeSection
+                title="Not Going"
+                attendees={attendeeData.not_attending}
+                icon={UserX}
+                iconColor="text-red-500"
+              />
+              {attendeeData.counts.attending === 0 &&
+                attendeeData.counts.maybe === 0 &&
+                attendeeData.counts.not_attending === 0 && (
                   <p className="text-sm text-gray-500 text-center py-4">
                     No responses yet. Be the first to RSVP!
                   </p>
                 )}
-              </div>
-            ) : null}
-          </div>
-        </div>
-
-        {/* Footer - RSVP Buttons */}
-        <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-gray-50">
-          <p className="text-xs text-gray-500 mb-3 text-center">Your Response</p>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => handleRsvp('attending')}
-              className={`flex-1 h-10 border rounded-full transition-all ${getRsvpButtonClass('attending')}`}
-              variant="outline"
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Going
-            </Button>
-            <Button
-              onClick={() => handleRsvp('maybe')}
-              className={`flex-1 h-10 border rounded-full transition-all ${getRsvpButtonClass('maybe')}`}
-              variant="outline"
-            >
-              <HelpCircle className="h-4 w-4 mr-2" />
-              Maybe
-            </Button>
-            <Button
-              onClick={() => handleRsvp('not_attending')}
-              className={`flex-1 h-10 border rounded-full transition-all ${getRsvpButtonClass('not_attending')}`}
-              variant="outline"
-            >
-              <X className="h-4 w-4 mr-2" />
-              Can't Go
-            </Button>
-          </div>
+            </div>
+          ) : null}
         </div>
       </div>
-    </div>
+
+      {/* Footer - RSVP Buttons */}
+      <div className={`flex-shrink-0 p-4 border-t border-gray-200 bg-gray-50 ${isMobile ? 'pb-[calc(1rem+env(safe-area-inset-bottom))]' : ''}`}>
+        <p className="text-xs text-gray-500 mb-3 text-center">Your Response</p>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => handleRsvp('attending')}
+            className={`flex-1 ${isMobile ? 'h-9 text-xs' : 'h-10'} border rounded-full transition-all ${getRsvpButtonClass('attending')}`}
+            variant="outline"
+          >
+            <Users className={`${isMobile ? 'h-3.5 w-3.5 mr-1' : 'h-4 w-4 mr-2'}`} />
+            Going
+          </Button>
+          <Button
+            onClick={() => handleRsvp('maybe')}
+            className={`flex-1 ${isMobile ? 'h-9 text-xs' : 'h-10'} border rounded-full transition-all ${getRsvpButtonClass('maybe')}`}
+            variant="outline"
+          >
+            <HelpCircle className={`${isMobile ? 'h-3.5 w-3.5 mr-1' : 'h-4 w-4 mr-2'}`} />
+            Maybe
+          </Button>
+          <Button
+            onClick={() => handleRsvp('not_attending')}
+            className={`flex-1 ${isMobile ? 'h-9 text-xs' : 'h-10'} border rounded-full transition-all ${getRsvpButtonClass('not_attending')}`}
+            variant="outline"
+          >
+            <X className={`${isMobile ? 'h-3.5 w-3.5 mr-1' : 'h-4 w-4 mr-2'}`} />
+            {isMobile ? 'No' : "Can't Go"}
+          </Button>
+        </div>
+      </div>
+    </>
   );
 
-  return createPortal(modalContent, document.body);
-}
+  return (
+    <Drawer.Root
+      open={isOpen}
+      onOpenChange={(open) => !open && onClose()}
+      direction="bottom"
+      modal={true}
+      dismissible={true}
+    >
+      <Drawer.Portal>
+        {/* Overlay */}
+        <Drawer.Overlay
+          className="fixed inset-0 z-[9999] bg-black/40 transition-opacity"
+        />
 
+        {/* Drawer Content */}
+        <Drawer.Content
+          className={`
+            bg-white flex flex-col z-[10000]
+            fixed bottom-0 left-0 right-0
+            ${isMobile
+              ? 'h-[85vh] max-h-[85vh] rounded-t-[20px]'
+              : 'max-w-lg mx-auto h-[80vh] max-h-[80vh] rounded-t-[20px]'
+            }
+            shadow-2xl border border-gray-200
+            outline-none
+          `}
+        >
+          {modalContent}
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
+  );
+}

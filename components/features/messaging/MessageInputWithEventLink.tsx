@@ -20,10 +20,10 @@ interface MessageInputWithEventLinkProps {
   onEventLinkRemove?: () => void;
 }
 
-export function MessageInputWithEventLink({ 
-  onSendMessage, 
-  onTyping, 
-  disabled = false, 
+export function MessageInputWithEventLink({
+  onSendMessage,
+  onTyping,
+  disabled = false,
   placeholder = "Type a message...",
   eventLink,
   eventInfo,
@@ -34,7 +34,7 @@ export function MessageInputWithEventLink({
   const [isExpanded, setIsExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   const MAX_HEIGHT_MOBILE = 180;
   const MAX_HEIGHT_DESKTOP = 150;
 
@@ -69,12 +69,27 @@ export function MessageInputWithEventLink({
   const handleSend = async () => {
     const finalMessage = message.trim();
     if (!finalMessage || isSending || disabled) return;
-    
+
     setIsSending(true);
     try {
-      // Send as regular text message - the event link will be clickable
-      await onSendMessage(finalMessage, 'text');
-      
+      // Check if message contains event link
+      if (eventInfo && finalMessage.includes(eventLink)) {
+        // Send as event message type with metadata
+        await onSendMessage(
+          finalMessage,
+          'event',
+          {
+            shared_event_id: eventInfo.id,
+            shared_event_title: eventInfo.title,
+            shared_event_location: eventInfo.location,
+            shared_event_start_time: eventInfo.start_time
+          }
+        );
+      } else {
+        // Send as regular text message
+        await onSendMessage(finalMessage, 'text');
+      }
+
       setMessage('');
       setIsExpanded(false);
       if (textareaRef.current) {
@@ -96,34 +111,34 @@ export function MessageInputWithEventLink({
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const inputValue = e.target.value;
-    
+
     if (inputValue.length > 1000) {
       return;
     }
-    
+
     setMessage(inputValue);
-    
+
     const textarea = e.target;
     const isMobile = window.innerWidth < 768;
     const maxHeight = isMobile ? MAX_HEIGHT_MOBILE : MAX_HEIGHT_DESKTOP;
-    
+
     textarea.style.height = 'auto';
     const scrollHeight = textarea.scrollHeight;
     const newHeight = Math.min(scrollHeight, maxHeight);
-    
+
     textarea.style.height = `${newHeight}px`;
-    
+
     const shouldExpand = scrollHeight > 80;
     setIsExpanded(shouldExpand);
-    
+
     if (scrollHeight > maxHeight) {
       textarea.style.overflowY = 'auto';
     } else {
       textarea.style.overflowY = 'hidden';
     }
-    
+
     onTyping();
-    
+
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
@@ -136,13 +151,13 @@ export function MessageInputWithEventLink({
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const newMessage = message.slice(0, start) + emoji + message.slice(end);
-    
+
     setMessage(newMessage);
-    
+
     const event = new Event('input', { bubbles: true });
     Object.defineProperty(event, 'target', { value: textarea, enumerable: true });
     textarea.dispatchEvent(event);
-    
+
     setTimeout(() => {
       textarea.focus();
       const newCursorPosition = start + emoji.length;
@@ -168,12 +183,12 @@ export function MessageInputWithEventLink({
     };
   }, []);
 
-  const borderRadiusClass = isExpanded 
-    ? 'rounded-2xl' 
+  const borderRadiusClass = isExpanded
+    ? 'rounded-2xl'
     : 'rounded-full';
 
-  const containerAlignClass = isExpanded 
-    ? 'items-start' 
+  const containerAlignClass = isExpanded
+    ? 'items-start'
     : 'items-center';
 
   return (
@@ -231,9 +246,8 @@ export function MessageInputWithEventLink({
             onKeyPress={handleKeyPress}
             placeholder={placeholder}
             disabled={disabled || isSending}
-            className={`w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent resize-none ${borderRadiusClass} transition-all duration-200 ${
-              isExpanded ? 'min-h-[80px]' : 'min-h-[44px]'
-            } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent resize-none ${borderRadiusClass} transition-all duration-200 ${isExpanded ? 'min-h-[80px]' : 'min-h-[44px]'
+              } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
             style={{
               maxHeight: `${window.innerWidth < 768 ? MAX_HEIGHT_MOBILE : MAX_HEIGHT_DESKTOP}px`,
               overflowY: isExpanded ? 'auto' : 'hidden'
