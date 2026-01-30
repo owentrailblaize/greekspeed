@@ -158,8 +158,7 @@ export function UpcomingEventsCard() {
       <Card className="bg-white shadow-sm border border-gray-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-semibold flex items-center space-x-2">
-            <Calendar className="h-5 w-5 text-brand-primary" />
-            <span className="text-gray-900">Upcoming Events</span>
+            <span className="text-gray-900">Events</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
@@ -177,8 +176,7 @@ export function UpcomingEventsCard() {
       <Card className="bg-white shadow-sm border border-gray-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-semibold flex items-center space-x-2">
-            <Calendar className="h-5 w-5 text-brand-primary" />
-            <span className="text-gray-900">Upcoming Events</span>
+            <span className="text-gray-900">Events</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
@@ -204,8 +202,7 @@ export function UpcomingEventsCard() {
       <Card className="bg-white shadow-sm border border-gray-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-semibold flex items-center space-x-2">
-            <Calendar className="h-5 w-5 text-brand-primary" />
-            <span className="text-gray-900">Upcoming Events</span>
+            <span className="text-gray-900">Events</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
@@ -227,8 +224,7 @@ export function UpcomingEventsCard() {
           <CardHeader className="pb-3 border-b border-gray-100">
             <CardTitle className="text-lg font-semibold flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-brand-primary" />
-                <span className="text-gray-900">Upcoming Events</span>
+                <span className="text-gray-900">Events</span>
               </div>
               {events.length > 0 && (
                 <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
@@ -376,8 +372,7 @@ export function UpcomingEventsCard() {
           <CardHeader className="pb-3 border-b border-gray-100">
             <CardTitle className="text-lg font-semibold flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-brand-primary" />
-                <span className="text-gray-900">Upcoming Events</span>
+                <span className="text-gray-900">Events</span>
               </div>
               {events.length > 0 && (
                 <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
