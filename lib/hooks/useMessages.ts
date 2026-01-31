@@ -58,6 +58,10 @@ export function useMessages(connectionId: string | null) {
 
   const realtimeChannel = useRef<RealtimeChannel | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const sendingRef = useRef<boolean>(false);
+  const sentMessageIdsRef = useRef<Set<string>>(new Set());
+  const optimisticMessageIdsRef = useRef<Set<string>>(new Set());
+  const pendingSendsRef = useRef<Set<string>>(new Set());
 
   const fetchMessages = useCallback(async (pageNum: number = 1, before?: string) => {
     if (!connectionId || !user) return;
@@ -110,15 +114,35 @@ export function useMessages(connectionId: string | null) {
   const sendMessage = async (content: string, messageType: 'text' | 'image' | 'file' | 'link' | 'profile' | 'event' = 'text', metadata?: Record<string, unknown> | ProfileMessageMetadata | EventMessageMetadata) => {
     if (!connectionId || !user || !content.trim()) return;
 
+    // CRITICAL: Create a unique content key for deduplication
+    const contentKey = `${content.trim()}_${messageType}_${JSON.stringify(metadata || {})}`;
+
+    // CRITICAL: Atomic check-and-set using content key (prevents StrictMode duplicates)
+    if (pendingSendsRef.current.has(contentKey)) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:118', message: 'sendMessage blocked - duplicate content key', data: { contentKey, connectionId, pendingKeys: Array.from(pendingSendsRef.current) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'E' }) }).catch(() => { });
+      // #endregion
+      return;
+    }
+
+    // Atomically add to pending sends BEFORE any async operations
+    pendingSendsRef.current.add(contentKey);
+
+    // Also set the general sending flag for backward compatibility
+    sendingRef.current = true;
+
     // #region agent log
     const sendMessageId = `sendMsg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:110', message: 'sendMessage function called', data: { sendMessageId, connectionId, userId: user.id, contentLength: content.trim().length, contentPreview: content.trim().substring(0, 30), messageType, hasMetadata: !!metadata }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
+    fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:127', message: 'sendMessage function called', data: { sendMessageId, connectionId, userId: user.id, contentLength: content.trim().length, contentPreview: content.trim().substring(0, 30), messageType, hasMetadata: !!metadata, contentKey }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
     // #endregion
 
+    // Generate optimistic message ID with content key to ensure uniqueness (declare outside try for catch access)
+    const optimisticId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    let optimisticMessage: Message;
+
     try {
-      // Optimistic update
-      const optimisticMessage: Message = {
-        id: `temp-${Date.now()}`,
+      optimisticMessage = {
+        id: optimisticId,
         connection_id: connectionId,
         sender_id: user.id,
         content: content.trim(),
@@ -135,14 +159,38 @@ export function useMessages(connectionId: string | null) {
         }
       };
 
+      // Track optimistic message ID
+      optimisticMessageIdsRef.current.add(optimisticMessage.id);
+
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:133', message: 'Adding optimistic message to state', data: { sendMessageId, optimisticMessageId: optimisticMessage.id, currentMessagesCount: messages.length }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'D' }) }).catch(() => { });
+      fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:156', message: 'Adding optimistic message to state', data: { sendMessageId, optimisticMessageId: optimisticMessage.id, currentMessagesCount: messages.length, optimisticIds: Array.from(optimisticMessageIdsRef.current), contentKey }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'D' }) }).catch(() => { });
       // #endregion
 
       setMessages(prev => {
+        // CRITICAL: Check ref FIRST - this persists across React StrictMode double-calls
+        if (optimisticMessageIdsRef.current.has(optimisticMessage.id)) {
+          // Check if it's already in state
+          const optimisticExists = prev.some(m => m.id === optimisticMessage.id);
+          if (optimisticExists) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:162', message: 'Optimistic message already tracked and in state, skipping (StrictMode protection)', data: { sendMessageId, optimisticMessageId: optimisticMessage.id, prevCount: prev.length, contentKey }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'D' }) }).catch(() => { });
+            // #endregion
+            return prev;
+          }
+        }
+
+        // Also check if it exists in prev (defensive)
+        const optimisticExists = prev.some(m => m.id === optimisticMessage.id);
+        if (optimisticExists) {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:170', message: 'Optimistic message already exists in state, skipping', data: { sendMessageId, optimisticMessageId: optimisticMessage.id, prevCount: prev.length, contentKey }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'D' }) }).catch(() => { });
+          // #endregion
+          return prev;
+        }
+
         const newMessages = [...prev, optimisticMessage];
         // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:136', message: 'Optimistic message added to state', data: { sendMessageId, optimisticMessageId: optimisticMessage.id, newMessagesCount: newMessages.length, prevCount: prev.length }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'D' }) }).catch(() => { });
+        fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:177', message: 'Optimistic message added to state', data: { sendMessageId, optimisticMessageId: optimisticMessage.id, newMessagesCount: newMessages.length, prevCount: prev.length, contentKey }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'D' }) }).catch(() => { });
         // #endregion
         return newMessages;
       });
@@ -192,25 +240,108 @@ export function useMessages(connectionId: string | null) {
 
       const { message } = await response.json();
 
+      // CRITICAL: Track sent message ID to prevent duplicates
+      if (message?.id) {
+        sentMessageIdsRef.current.add(message.id);
+        // Clean up old IDs after 5 minutes to prevent memory leak
+        setTimeout(() => {
+          sentMessageIdsRef.current.delete(message.id);
+        }, 5 * 60 * 1000);
+      }
+
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:178', message: 'Received message from API', data: { sendMessageId, messageId: message?.id, optimisticMessageId: optimisticMessage.id, messageContentPreview: message?.content?.substring(0, 30) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
+      fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:196', message: 'Received message from API', data: { sendMessageId, messageId: message?.id, optimisticMessageId: optimisticMessage.id, messageContentPreview: message?.content?.substring(0, 30), trackedMessageIds: Array.from(sentMessageIdsRef.current) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
       // #endregion
 
       // Replace optimistic message with real message
       setMessages(prev => {
+        const hasOptimistic = prev.some(m => m.id === optimisticMessage.id);
+        const hasRealMessage = prev.some(m => m.id === message.id);
+        const messageIds = prev.map(m => m.id);
+
+        // CRITICAL: Check if we've already processed this replacement (StrictMode protection)
+        // If the real message already exists and optimistic is still tracked, we're in a duplicate call
+        if (hasRealMessage && optimisticMessageIdsRef.current.has(optimisticMessage.id)) {
+          // Already replaced in a previous StrictMode call - just clean up
+          optimisticMessageIdsRef.current.delete(optimisticMessage.id);
+          const finalMessages = prev.filter(msg => msg.id !== optimisticMessage.id);
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:236', message: 'Replacement already processed (StrictMode protection)', data: { sendMessageId, messageId: message?.id, optimisticMessageId: optimisticMessage.id, prevCount: prev.length }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
+          // #endregion
+          return finalMessages;
+        }
+
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:241', message: 'Before replacing optimistic message', data: { sendMessageId, messageId: message?.id, optimisticMessageId: optimisticMessage.id, prevCount: prev.length, hasOptimistic, hasRealMessage, messageIds }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
+        // #endregion
+
+        // If real message already exists (e.g., from realtime), just remove the optimistic one
+        if (hasRealMessage) {
+          // Remove from tracking
+          optimisticMessageIdsRef.current.delete(optimisticMessage.id);
+          const finalMessages = prev.filter(msg => msg.id !== optimisticMessage.id);
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:250', message: 'Real message already exists, removing optimistic only', data: { sendMessageId, messageId: message?.id, optimisticMessageId: optimisticMessage.id, prevCount: prev.length, finalCount: finalMessages.length }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
+          // #endregion
+          return finalMessages;
+        }
+
+        // If optimistic doesn't exist, don't replace (already handled)
+        if (!hasOptimistic) {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:260', message: 'Optimistic message not found, skipping replacement', data: { sendMessageId, messageId: message?.id, optimisticMessageId: optimisticMessage.id, prevCount: prev.length }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
+          // #endregion
+          return prev;
+        }
+
+        // Otherwise, replace optimistic with real message
         const updatedMessages = prev.map(msg =>
           msg.id === optimisticMessage.id ? message : msg
         );
+
+        // CRITICAL: Ensure no duplicates by ID (defensive check)
+        const seenIds = new Set<string>();
+        const finalMessages = updatedMessages.filter(msg => {
+          if (seenIds.has(msg.id)) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:275', message: 'Duplicate message filtered out during replacement', data: { sendMessageId, duplicateMessageId: msg.id }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
+            // #endregion
+            return false;
+          }
+          seenIds.add(msg.id);
+          return true;
+        });
+
+        // Remove optimistic message from tracking AFTER successful replacement
+        optimisticMessageIdsRef.current.delete(optimisticMessage.id);
+
         // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:183', message: 'Replacing optimistic message with real message', data: { sendMessageId, messageId: message?.id, optimisticMessageId: optimisticMessage.id, prevCount: prev.length, updatedCount: updatedMessages.length, hasOptimisticInPrev: prev.some(m => m.id === optimisticMessage.id) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
+        fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:288', message: 'After replacing optimistic message', data: { sendMessageId, messageId: message?.id, optimisticMessageId: optimisticMessage.id, prevCount: prev.length, updatedCount: updatedMessages.length, finalCount: finalMessages.length, finalMessageIds: finalMessages.map(m => m.id) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
         // #endregion
-        return updatedMessages;
+
+        return finalMessages;
       });
 
+      // Remove from pending sends and reset flags
+      pendingSendsRef.current.delete(contentKey);
+      sendingRef.current = false;
       return message;
     } catch (err) {
-      // Remove optimistic message on error
-      setMessages(prev => prev.filter(msg => !msg.id.startsWith('temp-')));
+      // Remove from pending sends on error
+      pendingSendsRef.current.delete(contentKey);
+      sendingRef.current = false;
+      // Remove optimistic message on error using the optimisticId we tracked
+      const optimisticIdToRemove = optimisticId;
+      setMessages(prev => {
+        const filtered = prev.filter(msg => {
+          if (msg.id === optimisticIdToRemove) {
+            optimisticMessageIdsRef.current.delete(msg.id);
+            return false;
+          }
+          return true;
+        });
+        return filtered;
+      });
       setError(err instanceof Error ? err.message : 'Failed to send message');
       throw err;
     }
@@ -353,27 +484,45 @@ export function useMessages(connectionId: string | null) {
       }, (payload) => {
         const newMessage = payload.new as Message;
         // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:328', message: 'Realtime INSERT event received', data: { messageId: newMessage.id, senderId: newMessage.sender_id, currentUserId: user.id, isOwnMessage: newMessage.sender_id === user.id, connectionId: newMessage.connection_id, contentPreview: newMessage.content?.substring(0, 30) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
+        fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:388', message: 'Realtime INSERT event received', data: { messageId: newMessage.id, senderId: newMessage.sender_id, currentUserId: user.id, senderIdType: typeof newMessage.sender_id, userIdType: typeof user.id, senderIdsMatch: String(newMessage.sender_id) === String(user.id), connectionId: newMessage.connection_id, contentPreview: newMessage.content?.substring(0, 30) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
         // #endregion
-        
-        if (newMessage.sender_id !== user.id) {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:331', message: 'Adding message from realtime (not own)', data: { messageId: newMessage.id, currentMessagesCount: messages.length }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
-          // #endregion
-          
-          setMessages(prev => {
-            const newMessages = [...prev, newMessage];
+
+        // CRITICAL FIX: Use strict string comparison to ensure proper matching
+        const isOwnMessage = String(newMessage.sender_id) === String(user.id);
+
+        // CRITICAL: Always check for duplicates FIRST, regardless of sender
+        setMessages(prev => {
+          // Check if message already exists in state
+          const messageExists = prev.some(m => m.id === newMessage.id);
+          // Check if this is a message we just sent (tracked in ref)
+          const isTrackedMessage = sentMessageIdsRef.current.has(newMessage.id);
+
+          if (messageExists || isTrackedMessage) {
             // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:335', message: 'Message added from realtime', data: { messageId: newMessage.id, prevCount: prev.length, newMessagesCount: newMessages.length }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
+            fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:399', message: 'Duplicate message prevented from realtime', data: { messageId: newMessage.id, isOwnMessage, messageExists, isTrackedMessage, prevCount: prev.length, trackedIds: Array.from(sentMessageIdsRef.current) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
             // #endregion
-            return newMessages;
-          });
-          // Mark as read if we're actively viewing
-          markAsRead(newMessage.id);
-        } else {
+            return prev; // Message already exists or was just sent, don't add it
+          }
+
+          // Only add if it's not our own message (we already have it from API response)
+          if (isOwnMessage) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:408', message: 'Realtime INSERT ignored (own message)', data: { messageId: newMessage.id, senderId: newMessage.sender_id, currentUserId: user.id, senderIdType: typeof newMessage.sender_id, userIdType: typeof user.id }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
+            // #endregion
+            return prev; // Don't add own messages from realtime
+          }
+
+          // It's not our message and doesn't exist - add it
+          const newMessages = [...prev, newMessage];
           // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:343', message: 'Realtime INSERT ignored (own message)', data: { messageId: newMessage.id, senderId: newMessage.sender_id, currentUserId: user.id }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
+          fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'useMessages.ts:416', message: 'Message added from realtime', data: { messageId: newMessage.id, prevCount: prev.length, newMessagesCount: newMessages.length }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
           // #endregion
+          return newMessages;
+        });
+
+        // Mark as read if we're actively viewing (only for non-own messages)
+        if (!isOwnMessage) {
+          markAsRead(newMessage.id);
         }
       })
       .on('postgres_changes', {

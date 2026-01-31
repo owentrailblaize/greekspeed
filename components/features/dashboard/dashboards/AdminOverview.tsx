@@ -314,12 +314,11 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
       {activeMobileTab === 'home' && (
         <div
           onClick={() => setShowQuickActionsModal(true)}
-          className="fixed bottom-40 right-4 z-40 h-14 w-14 rounded-full sm:hidden flex items-center justify-center cursor-pointer group"
+          className="fixed bottom-40 right-4 z-40 h-14 w-14 rounded-full sm:hidden flex items-center justify-center cursor-pointer group bg-brand-primary hover:bg-brand-primary-hover transition-colors"
           style={{
-            background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%)',
             boxShadow: `
-              0 8px 16px rgba(30, 64, 175, 0.5),
-              0 4px 8px rgba(30, 64, 175, 0.4),
+              0 8px 16px rgba(0, 0, 0, 0.25),
+              0 4px 8px rgba(0, 0, 0, 0.15),
               inset 0 1px 0 rgba(255, 255, 255, 0.3),
               inset 0 -1px 0 rgba(0, 0, 0, 0.2)
             `,

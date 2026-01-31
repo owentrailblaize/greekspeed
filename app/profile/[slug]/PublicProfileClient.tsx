@@ -290,11 +290,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                 <p className="text-xs text-gray-600 mt-0.5">View full profiles and message members</p>
               </div>
               <Link href="/sign-up">
-                <Button size="sm" className="hover:bg-brand-primary-hover text-white rounded-full"
-                style={{
-                  background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%)'
-                }}
-                >
+                <Button size="sm" className="bg-brand-primary hover:bg-brand-primary-hover text-white rounded-full">
                   Sign Up
                 </Button>
               </Link>
@@ -635,16 +631,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                 </div>
                 <Link href="/sign-up">
                   <Button
-                    className="text-white px-6 rounded-full transition-transform duration-200 hover:scale-60 hover:shadow-lg"
-                    style={{
-                      background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%)',
-                    }}
-                    onMouseEnter={e => {
-                      e.currentTarget.style.background = 'linear-gradient(120deg, #2563eb 0%, #1e40af 100%)';
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.background = 'linear-gradient(135deg, #1e40af 0%, #2563eb 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%)';
-                    }}
+                    className="text-white px-6 rounded-full transition-transform duration-200 hover:scale-105 hover:shadow-lg bg-brand-primary hover:bg-brand-primary-hover"
                   >
                     Join
                   </Button>

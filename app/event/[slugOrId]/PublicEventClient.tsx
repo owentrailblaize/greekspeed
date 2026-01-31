@@ -311,10 +311,7 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
               <Link href="/sign-up">
                 <Button
                   size="sm"
-                  className="text-white rounded-full"
-                  style={{
-                    background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%)'
-                  }}
+                  className="text-white rounded-full bg-brand-primary hover:bg-brand-primary-hover"
                 >
                   Sign Up
                 </Button>
@@ -882,10 +879,7 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
                       </Link>
                       <Link href="/sign-up">
                         <Button
-                          className="text-white rounded-full px-6"
-                          style={{
-                            background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%)'
-                          }}
+                          className="text-white rounded-full px-6 bg-brand-primary hover:bg-brand-primary-hover"
                         >
                           Join Free
                         </Button>

@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     
     // #region agent log
     const apiRequestId = `api_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'route.ts:79', message: 'POST /api/messages - Request received', data: { apiRequestId, connectionId: body.connectionId, content: body.content?.substring(0, 50), messageType: body.messageType, metadata: body.metadata, hasMetadata: !!body.metadata }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
+    fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'route.ts:82', message: 'POST /api/messages - Request received', data: { apiRequestId, connectionId: body.connectionId, content: body.content?.substring(0, 50), messageType: body.messageType, metadata: body.metadata, hasMetadata: !!body.metadata }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
     console.log('[DEBUG] POST /api/messages - Request body:', JSON.stringify({connectionId: body.connectionId, content: body.content?.substring(0, 50), messageType: body.messageType, metadata: body.metadata, hasMetadata: !!body.metadata}, null, 2));
     // #endregion
     
@@ -299,6 +299,7 @@ export async function POST(request: NextRequest) {
     };
     
     // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'route.ts:303', message: 'Inserting message into database', data: { apiRequestId, insertData: {...insertData, content: insertData.content.substring(0, 50)} }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
     console.log('[DEBUG] POST /api/messages - Inserting message:', JSON.stringify({...insertData, content: insertData.content.substring(0, 50), metadata: JSON.stringify(metadata)}, null, 2));
     // #endregion
     
@@ -321,6 +322,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'route.ts:322', message: 'Message creation error', data: { apiRequestId, error: error.message, code: error.code, details: error.details, hint: error.hint }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
       console.error('[DEBUG] POST /api/messages - Message creation error:', JSON.stringify({error: error.message, code: error.code, details: error.details, hint: error.hint, insertData: {...insertData, content: insertData.content.substring(0, 50)}}, null, 2));
       // #endregion
       console.error('Message creation error:', error);
@@ -328,6 +330,7 @@ export async function POST(request: NextRequest) {
     }
     
     // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'route.ts:330', message: 'Message created successfully in database', data: { apiRequestId, messageId: message?.id, connectionId, messageType, senderId: message?.sender_id, contentPreview: message?.content?.substring(0, 30) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
     console.log('[DEBUG] POST /api/messages - Message created successfully:', { messageId: message?.id, connectionId, messageType });
     // #endregion
 
