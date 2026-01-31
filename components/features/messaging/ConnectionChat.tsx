@@ -103,15 +103,31 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
   }, [connections, connectionId, user]);
 
   const handleSendMessage = async (content: string) => {
+    // #region agent log
+    const handleSendId = `handle_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'ConnectionChat.tsx:105', message: 'handleSendMessage called', data: { handleSendId, contentLength: content.length, contentPreview: content.substring(0, 30), connectionId, connectionStatus: connection?.status }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'B' }) }).catch(() => { });
+    // #endregion
+    
     try {
       // Check connection status before sending
       if (connection && connection.status !== 'accepted') {
         throw new Error('This connection request has not been accepted yet. Please wait for the other person to accept your connection request.');
       }
       
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'ConnectionChat.tsx:112', message: 'Calling sendMessage from hook', data: { handleSendId, contentPreview: content.substring(0, 30) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'B' }) }).catch(() => { });
+      // #endregion
+      
       await sendMessage(content);
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'ConnectionChat.tsx:115', message: 'sendMessage completed', data: { handleSendId }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'B' }) }).catch(() => { });
+      // #endregion
     } catch (error) {
       console.error('Failed to send message:', error);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'ConnectionChat.tsx:120', message: 'handleSendMessage error', data: { handleSendId, error: error instanceof Error ? error.message : 'Unknown error' }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'B' }) }).catch(() => { });
+      // #endregion
       // Show user-friendly error message
       const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
       // You could show a toast notification here with errorMessage

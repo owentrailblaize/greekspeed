@@ -31,9 +31,23 @@ export function MessageInput({
   const handleSend = async () => {
     if (!message.trim() || isSending || disabled) return;
     
+    // #region agent log
+    const sendId = `send_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'MessageInput.tsx:31', message: 'handleSend called', data: { sendId, messageLength: message.trim().length, isSending, disabled, messagePreview: message.trim().substring(0, 30) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'C' }) }).catch(() => { });
+    // #endregion
+    
     setIsSending(true);
     try {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'MessageInput.tsx:38', message: 'Calling onSendMessage', data: { sendId, messagePreview: message.trim().substring(0, 30) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'C' }) }).catch(() => { });
+      // #endregion
+      
       await onSendMessage(message.trim());
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'MessageInput.tsx:43', message: 'onSendMessage completed', data: { sendId }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'C' }) }).catch(() => { });
+      // #endregion
+      
       setMessage('');
       setIsExpanded(false);
       // Reset textarea height
@@ -42,6 +56,9 @@ export function MessageInput({
       }
     } catch (error) {
       console.error('Failed to send message:', error);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'MessageInput.tsx:52', message: 'handleSend error', data: { sendId, error: error instanceof Error ? error.message : 'Unknown error' }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'C' }) }).catch(() => { });
+      // #endregion
     } finally {
       setIsSending(false);
     }
@@ -50,6 +67,9 @@ export function MessageInput({
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'MessageInput.tsx:50', message: 'Enter key pressed, calling handleSend', data: { key: e.key, shiftKey: e.shiftKey }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'C' }) }).catch(() => { });
+      // #endregion
       handleSend();
     }
   };

@@ -84,7 +84,8 @@ export function EventActionsMenu({ event, onClose }: EventActionsMenuProps) {
 
   return (
     <>
-      <div className="relative" ref={menuRef}>
+      {/* Add isolate and z-50 when open to fix stacking on mobile */}
+      <div className={`relative ${isOpen ? 'z-50 isolate' : ''}`} ref={menuRef}>
         <Button
           variant="ghost"
           size="sm"
@@ -99,7 +100,7 @@ export function EventActionsMenu({ event, onClose }: EventActionsMenuProps) {
         </Button>
 
         {isOpen && (
-          <div 
+          <div
             className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[9999]"
             onClick={(e) => e.stopPropagation()}
           >
@@ -117,31 +118,38 @@ export function EventActionsMenu({ event, onClose }: EventActionsMenuProps) {
               </button>
 
               {showCalendarSubmenu && (
-                <div className="absolute right-full top-0 mr-1 w-44 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[10000]">
+                <div className="
+                  absolute w-44 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[10000]
+                  /* Mobile: position below the button */
+                  left-0 top-full mt-1
+                  /* Desktop: position to the left */
+                  md:left-auto md:right-full md:top-0 md:mt-0 md:mr-1
+                ">
                   <button
                     onClick={handleAddToGoogleCalendar}
                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
+                    {/* ... existing Google Calendar button content ... */}
                     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M19.5 22h-15A2.5 2.5 0 0 1 2 19.5v-15A2.5 2.5 0 0 1 4.5 2h15A2.5 2.5 0 0 1 22 4.5v15a2.5 2.5 0 0 1-2.5 2.5zM9 18h6v-5H9v5zm0-6h6V7H9v5z"/>
+                      <path d="M19.5 22h-15A2.5 2.5 0 0 1 2 19.5v-15A2.5 2.5 0 0 1 4.5 2h15A2.5 2.5 0 0 1 22 4.5v15a2.5 2.5 0 0 1-2.5 2.5zM9 18h6v-5H9v5zm0-6h6V7H9v5z" />
                     </svg>
-                    Google Calendar
+                    Google
                   </button>
                   <button
                     onClick={handleAddToOutlookCalendar}
                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M21.17 2.06A2 2 0 0 0 19 2H5a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V4a2 2 0 0 0-.83-1.94zM17 11h-4v4h-2v-4H7V9h4V5h2v4h4v2z"/>
+                      <path d="M21.17 2.06A2 2 0 0 0 19 2H5a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V4a2 2 0 0 0-.83-1.94zM17 11h-4v4h-2v-4H7V9h4V5h2v4h4v2z" />
                     </svg>
-                    Outlook Calendar
+                    Outlook
                   </button>
                   <button
                     onClick={handleDownloadICS}
                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     <Download className="h-4 w-4" />
-                    Download .ics file
+                    Download
                   </button>
                 </div>
               )}

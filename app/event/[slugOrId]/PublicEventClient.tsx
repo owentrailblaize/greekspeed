@@ -591,7 +591,7 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
         )}
 
         {/* Main Content - Single Column Full Width */}
-        <main className={`w-full ${!isLoggedIn && !dismissedModal ? 'pt-24' : ''}`}>
+        <main className={`w-full ${!isLoggedIn ? (dismissedModal ? 'pt-16' : 'pt-24') : ''}`}>
           <div className="bg-white shadow-sm border border-gray-200 overflow-hidden">
             {/* Event Header */}
             <div className="bg-gradient-to-br from-brand-primary via-brand-primary-hover to-brand-accent p-8 text-white relative">
