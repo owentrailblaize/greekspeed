@@ -48,7 +48,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
   const [showEventModal, setShowEventModal] = useState(false);
   const [showAddRecruitModal, setShowAddRecruitModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false); // Add this line
-  
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
@@ -59,7 +59,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 640); // sm breakpoint
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -75,7 +75,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
   useEffect(() => {
     const tool = searchParams.get('tool');
     const tab = searchParams.get('tab');
-    
+
     if (tool === 'tasks') {
       setActiveMobileTab('tasks');
       // If tab=recruits is in query, we'll handle it in MobileAdminTasksPage
@@ -193,7 +193,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
   // Remove the manual tab configuration - MobileBottomNavigation will auto-detect role
 
   // Check if user is an executive member
-  const isExecutiveMember = profile?.role === 'admin' || 
+  const isExecutiveMember = profile?.role === 'admin' ||
     (profile?.chapter_role && EXECUTIVE_ROLES.includes(profile.chapter_role as any));
 
   const renderMobileContent = () => {
@@ -271,6 +271,8 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
               <FeatureGuard flagName="financial_tools_enabled">
                 <DuesStatusCard />
               </FeatureGuard>
+              {/* Add DocsCompliancePanel for tablet view */}
+              <DocsCompliancePanel />
             </div>
           </div>
         </div>
@@ -284,12 +286,12 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
             </FeatureGuard>
             <OperationsFeed />
           </div>
-          
+
           {/* Center Column - 6 columns wide */}
           <div className="col-span-6 space-y-6">
             <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
           </div>
-          
+
           {/* Right Column - 3 columns wide */}
           <div className="col-span-3 space-y-6">
             <FeatureGuard flagName="events_management_enabled">
@@ -305,8 +307,8 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
       </div>
 
       {/* Mobile Bottom Navigation - Auto-configures based on admin role */}
-      <MobileBottomNavigation 
-        activeTab={activeMobileTab} 
+      <MobileBottomNavigation
+        activeTab={activeMobileTab}
         onTabChange={setActiveMobileTab}
       />
 
@@ -329,17 +331,17 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
           title="Quick Actions"
         >
           {/* Inner glow effect */}
-          <div 
+          <div
             className="absolute inset-0 rounded-full opacity-40"
             style={{
               background: 'radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent 70%)',
             }}
           />
           {/* Icon */}
-          <svg 
-            className="h-6 w-6 text-white relative z-10 drop-shadow-lg transition-transform duration-200 group-hover:scale-110" 
-            fill="none" 
-            stroke="currentColor" 
+          <svg
+            className="h-6 w-6 text-white relative z-10 drop-shadow-lg transition-transform duration-200 group-hover:scale-110"
+            fill="none"
+            stroke="currentColor"
             viewBox="0 0 24 24"
             style={{
               filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4))',
@@ -348,7 +350,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
           {/* Hover shine effect */}
-          <div 
+          <div
             className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             style={{
               background: 'radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.3), transparent 60%)',
@@ -361,16 +363,16 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
       {showQuickActionsModal && (
         <div className={cn(
           "fixed inset-0 z-[9999]",
-          isMobile 
+          isMobile
             ? "flex items-end justify-center p-0 sm:hidden"
             : "hidden sm:flex items-center justify-center p-4"
         )}>
           {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
-            onClick={() => setShowQuickActionsModal(false)} 
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => setShowQuickActionsModal(false)}
           />
-          
+
           {/* Mobile: Bottom Drawer - EDIT HERE FOR UPDATE LATER */}
           {isMobile && (
             <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none pb-[calc(36px+env(safe-area-inset-bottom))]">
@@ -386,13 +388,13 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                   </svg>
                 </button>
               </div>
-              
+
               {/* Content - Scrollable */}
               <div className="flex-1 overflow-y-auto p-4 pb-[calc(40px+env(safe-area-inset-bottom))]">
                 <div className="space-y-3">
                   {eventsManagementEnabled && (
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                       onClick={() => {
                         handleScheduleMeeting();
@@ -403,8 +405,8 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                       Create Event
                     </Button>
                   )}
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                     onClick={() => {
                       handleSendMessage();
@@ -414,8 +416,8 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                     <MessageSquare className="h-4 w-4 mr-2" />
                     Send Message
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                     onClick={() => {
                       router.push('/dashboard?tool=operations&tab=members');
@@ -425,8 +427,8 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                     <Users className="h-4 w-4 mr-2" />
                     Manage Members
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                     onClick={() => {
                       router.push('/dashboard?tool=invites&tab=invitations');
@@ -438,8 +440,8 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                   </Button>
                   {recruitmentCrmEnabled && (
                     <>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                         onClick={() => {
                           handleAddRecruit();
@@ -449,8 +451,8 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                         <UserPlus className="h-4 w-4 mr-2" />
                         Add Recruit
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                         onClick={() => {
                           router.push('/dashboard?tool=tasks&tab=recruits');
@@ -485,8 +487,8 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                 {/* Quick Actions Content */}
                 <div className="space-y-3">
                   {eventsManagementEnabled && (
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full justify-start"
                       onClick={() => {
                         handleScheduleMeeting();
@@ -497,8 +499,8 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                       Create Event
                     </Button>
                   )}
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full justify-start"
                     onClick={() => {
                       handleSendMessage();
@@ -508,19 +510,19 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                     <MessageSquare className="h-4 w-4 mr-2" />
                     Send Message
                   </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start"
-                      onClick={() => {
-                        router.push('/dashboard?tool=operations&tab=members');
-                        setShowQuickActionsModal(false);
-                      }}
-                    >
-                      <Users className="h-4 w-4 mr-2" />
-                      Manage Members
-                    </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => {
+                      router.push('/dashboard?tool=operations&tab=members');
+                      setShowQuickActionsModal(false);
+                    }}
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Manage Members
+                  </Button>
+                  <Button
+                    variant="outline"
                     className="w-full justify-start"
                     onClick={() => {
                       router.push('/dashboard?tool=invites&tab=invitations');
@@ -532,8 +534,8 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                   </Button>
                   {recruitmentCrmEnabled && (
                     <>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="w-full justify-start"
                         onClick={() => {
                           handleAddRecruit();
@@ -543,8 +545,8 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                         <UserPlus className="h-4 w-4 mr-2" />
                         Add Recruit
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="w-full justify-start"
                         onClick={() => {
                           router.push('/dashboard?tool=tasks&tab=recruits');
@@ -567,21 +569,21 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
       {showAddRecruitModal && recruitmentCrmEnabled && createPortal(
         <div className={cn(
           "fixed inset-0 z-[9999]",
-          isMobile 
+          isMobile
             ? "flex items-end justify-center p-0 sm:hidden"
             : "hidden sm:flex items-center justify-center p-4"
         )}>
           {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
-            onClick={handleRecruitCancel} 
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={handleRecruitCancel}
           />
-          
+
           {/* Mobile: Bottom Drawer with Rounded Top */}
           {isMobile && (
             <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[90vh] rounded-t-2xl rounded-b-none overflow-hidden"> {/* Add overflow-hidden */}
               <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-                <AddRecruitForm 
+                <AddRecruitForm
                   variant="modal"
                   onSuccess={handleRecruitSuccess}
                   onCancel={handleRecruitCancel}
@@ -589,12 +591,12 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
               </div>
             </div>
           )}
-          
+
           {/* Desktop: Centered Modal */}
           {!isMobile && (
             <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
               <div className="overflow-y-auto max-h-[90vh] p-6">
-                <AddRecruitForm 
+                <AddRecruitForm
                   variant="modal"
                   onSuccess={handleRecruitSuccess}
                   onCancel={handleRecruitCancel}
@@ -610,18 +612,18 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
       {showEventModal && eventsManagementEnabled && typeof window !== 'undefined' && createPortal(
         <div className={cn(
           "fixed inset-0 z-[10000]",
-          isMobile 
+          isMobile
             ? "flex items-end justify-center p-0"
             : "flex items-center justify-center p-4"
         )}>
           {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={() => {
               setShowEventModal(false);
             }}
           />
-          
+
           {/* Mobile: Bottom Drawer */}
           {isMobile && (
             <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[80vh] mt-[50vh] rounded-t-2xl rounded-b-none overflow-hidden">
