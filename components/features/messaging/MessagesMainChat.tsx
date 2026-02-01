@@ -36,7 +36,7 @@ export function MessagesMainChat({
           <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-6">
             <MessageSquare className="h-10 w-10 text-brand-primary" />
           </div>
-          
+
           {/* Welcome Text */}
           <h2 className="text-2xl font-bold text-gray-900 mb-3">
             Welcome to Messages
@@ -44,7 +44,7 @@ export function MessagesMainChat({
           <p className="text-gray-600 mb-6">
             Select a connection from the sidebar to start chatting, or browse alumni to make new connections.
           </p>
-          
+
           {/* Quick Actions */}
           <div className="space-y-3">
             {connections.length > 0 ? (
@@ -56,9 +56,9 @@ export function MessagesMainChat({
                 <p className="text-sm text-gray-500 mb-4">
                   No connections yet. Start building your network!
                 </p>
-                <Button 
+                <Button
                   onClick={() => window.location.href = '/dashboard/alumni'}
-                  className="bg-brand-primary hover:bg-brand-primary-hover text-white"
+                  className="bg-brand-primary hover:bg-brand-primary-hover text-white rounded-full"
                 >
                   <Users className="h-4 w-4 mr-2" />
                   Browse Alumni
@@ -75,8 +75,8 @@ export function MessagesMainChat({
   return (
     // 🔴 FIXED: Use h-full instead of h-full min-h-0
     <div className="flex-1 bg-white flex flex-col h-full">
-      <ConnectionChat 
-        connectionId={selectedConnectionId} 
+      <ConnectionChat
+        connectionId={selectedConnectionId}
         onBack={onBack}
         className="flex-1"
       />

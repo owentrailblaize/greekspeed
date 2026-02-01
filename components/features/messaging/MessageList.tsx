@@ -293,10 +293,20 @@ export function MessageList({
   };
 
   const groupMessagesByDate = (messages: Message[]) => {
+    // CRITICAL: Deduplicate messages by ID first (defensive measure)
+    const seenIds = new Set<string>();
+    const uniqueMessages = messages.filter(message => {
+      if (seenIds.has(message.id)) {
+        return false; // Skip duplicate
+      }
+      seenIds.add(message.id);
+      return true;
+    });
+
     // Messages are already in ascending order from API, so we can group directly
     const groups: { [key: string]: Message[] } = {};
 
-    messages.forEach(message => {
+    uniqueMessages.forEach(message => {
       const date = new Date(message.created_at).toDateString();
       if (!groups[date]) {
         groups[date] = [];
@@ -478,34 +488,38 @@ export function MessageList({
                           </div>
                         ) : (
                           (() => {
-                            const { hasText: hasProfileText, text: profileText, isProfileOnly } = getProfileMessageContent(message);
-                            const { hasText: hasEventText, text: eventText, isEventOnly } = getEventMessageContent(message);
                             const isProfileMessage = message.message_type === 'profile' && message.metadata;
                             const isEventMessage = message.message_type === 'event' && message.metadata;
 
-                            // Determine what text to show (remove URL from event/profile messages)
-                            const hasText = isEventMessage ? hasEventText : hasProfileText;
-                            const text = isEventMessage ? eventText : profileText;
+                            // Only extract text for profile/event messages
+                            const { hasText: hasProfileText, text: profileText, isProfileOnly } = isProfileMessage
+                              ? getProfileMessageContent(message)
+                              : { hasText: false, text: '', isProfileOnly: false };
+
+                            const { hasText: hasEventText, text: eventText, isEventOnly } = isEventMessage
+                              ? getEventMessageContent(message)
+                              : { hasText: false, text: '', isEventOnly: false };
+
+                            // Determine what to show
+                            const showText = isEventMessage ? hasEventText : (isProfileMessage ? hasProfileText : !!message.content);
+                            const textContent = isEventMessage ? eventText : (isProfileMessage ? profileText : message.content || '');
 
                             return (
                               <>
-                                {/* Case 1: Event message with no text - just show card */}
-                                {isEventOnly ? (
+                                {/* Event-only or Profile-only: show card only */}
+                                {(isEventOnly || isProfileOnly) ? (
                                   <div className="relative group min-w-0 max-w-full">
-                                    {renderEventMessage(message.metadata as EventMessageMetadata, false, true)}
-                                  </div>
-                                ) : isProfileOnly ? (
-                                  <div className="relative group min-w-0 max-w-full">
-                                    {renderProfileMessage(message.metadata as ProfileMessageMetadata, false, true)}
+                                    {isEventOnly && renderEventMessage(message.metadata as EventMessageMetadata, false, true)}
+                                    {isProfileOnly && renderProfileMessage(message.metadata as ProfileMessageMetadata, false, true)}
                                   </div>
                                 ) : (
                                   <>
-                                    {/* Has text - show text in bubble */}
-                                    {hasText && (
+                                    {/* Show text bubble if there's text content */}
+                                    {showText && textContent && (
                                       <div className="relative group min-w-0 max-w-full">
                                         <div className="bg-white border border-gray-200 text-gray-900 px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
                                           <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                                            {text}
+                                            {textContent}
                                           </p>
                                         </div>
                                       </div>
@@ -520,16 +534,6 @@ export function MessageList({
                                     {isProfileMessage && (
                                       <div className="relative group min-w-0 max-w-full mt-2">
                                         {renderProfileMessage(message.metadata as ProfileMessageMetadata, false, true)}
-                                      </div>
-                                    )}
-                                    {/* Regular message (not profile or event) */}
-                                    {!isProfileMessage && !isEventMessage && message.content && (
-                                      <div className="relative group min-w-0 max-w-full">
-                                        <div className="bg-white border border-gray-200 text-gray-900 px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
-                                          <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                                            {message.content}
-                                          </p>
-                                        </div>
                                       </div>
                                     )}
                                   </>
@@ -586,56 +590,30 @@ export function MessageList({
                           </div>
                         ) : (
                           (() => {
-                            const { hasText: hasProfileText, text: profileText, isProfileOnly } = getProfileMessageContent(message);
-                            const { hasText: hasEventText, text: eventText, isEventOnly } = getEventMessageContent(message);
                             const isProfileMessage = message.message_type === 'profile' && message.metadata;
                             const isEventMessage = message.message_type === 'event' && message.metadata;
 
-                            // Determine what text to show (remove URL from event/profile messages)
-                            const hasText = isEventMessage ? hasEventText : hasProfileText;
-                            const text = isEventMessage ? eventText : profileText;
+                            // Only extract text for profile/event messages
+                            const { hasText: hasProfileText, text: profileText, isProfileOnly } = isProfileMessage
+                              ? getProfileMessageContent(message)
+                              : { hasText: false, text: '', isProfileOnly: false };
+
+                            const { hasText: hasEventText, text: eventText, isEventOnly } = isEventMessage
+                              ? getEventMessageContent(message)
+                              : { hasText: false, text: '', isEventOnly: false };
+
+                            // Determine what to show
+                            const showText = isEventMessage ? hasEventText : (isProfileMessage ? hasProfileText : !!message.content);
+                            const textContent = isEventMessage ? eventText : (isProfileMessage ? profileText : message.content || '');
 
                             return (
                               <>
-                                {/* Case 1: Event message with no text - just show card */}
-                                {isEventOnly ? (
+                                {/* Event-only or Profile-only: show card only */}
+                                {(isEventOnly || isProfileOnly) ? (
                                   <div className="relative group min-w-0 max-w-full">
-                                    {renderEventMessage(message.metadata as EventMessageMetadata, true, true)}
-                                    {/* Message actions menu for event-only messages */}
-                                    <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={() => setShowMenuFor(showMenuFor === message.id ? null : message.id)}
-                                        className="h-6 w-6 p-0 bg-white/90 hover:bg-white shadow-sm"
-                                      >
-                                        <MoreHorizontal className="w-3 h-3" />
-                                      </Button>
-
-                                      {showMenuFor === message.id && (
-                                        <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10">
-                                          <button
-                                            onClick={() => handleEdit(message)}
-                                            className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
-                                          >
-                                            <Edit className="w-3 h-3 mr-2" />
-                                            Edit
-                                          </button>
-                                          <button
-                                            onClick={() => handleDelete(message.id)}
-                                            className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
-                                          >
-                                            <Trash2 className="w-3 h-3 mr-2" />
-                                            Delete
-                                          </button>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                ) : isProfileOnly ? (
-                                  <div className="relative group min-w-0 max-w-full">
-                                    {renderProfileMessage(message.metadata as ProfileMessageMetadata, true, true)}
-                                    {/* Message actions menu for profile-only messages */}
+                                    {isEventOnly && renderEventMessage(message.metadata as EventMessageMetadata, true, true)}
+                                    {isProfileOnly && renderProfileMessage(message.metadata as ProfileMessageMetadata, true, true)}
+                                    {/* Message actions menu for event/profile-only messages */}
                                     <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                       <Button
                                         size="sm"
@@ -668,12 +646,12 @@ export function MessageList({
                                   </div>
                                 ) : (
                                   <>
-                                    {/* Has text - show text in bubble */}
-                                    {hasText && (
+                                    {/* Show text bubble if there's text content - SINGLE RENDER POINT */}
+                                    {showText && textContent && (
                                       <div className="relative group min-w-0 max-w-full">
                                         <div className="bg-brand-primary text-white px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
                                           <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                                            {text}
+                                            {textContent}
                                           </p>
                                         </div>
                                         {/* Message actions menu */}
@@ -718,46 +696,6 @@ export function MessageList({
                                     {isProfileMessage && (
                                       <div className="relative group min-w-0 max-w-full mt-2">
                                         {renderProfileMessage(message.metadata as ProfileMessageMetadata, true, true)}
-                                      </div>
-                                    )}
-                                    {/* Regular message (not profile or event) */}
-                                    {!isProfileMessage && !isEventMessage && message.content && (
-                                      <div className="relative group min-w-0 max-w-full">
-                                        <div className="bg-brand-primary text-white px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
-                                          <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                                            {message.content}
-                                          </p>
-                                        </div>
-                                        {/* Message actions menu */}
-                                        <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                          <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => setShowMenuFor(showMenuFor === message.id ? null : message.id)}
-                                            className="h-6 w-6 p-0 bg-white/90 hover:bg-white shadow-sm"
-                                          >
-                                            <MoreHorizontal className="w-3 h-3" />
-                                          </Button>
-
-                                          {showMenuFor === message.id && (
-                                            <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10">
-                                              <button
-                                                onClick={() => handleEdit(message)}
-                                                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
-                                              >
-                                                <Edit className="w-3 h-3 mr-2" />
-                                                Edit
-                                              </button>
-                                              <button
-                                                onClick={() => handleDelete(message.id)}
-                                                className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
-                                              >
-                                                <Trash2 className="w-3 h-3 mr-2" />
-                                                Delete
-                                              </button>
-                                            </div>
-                                          )}
-                                        </div>
                                       </div>
                                     )}
                                   </>
