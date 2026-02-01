@@ -22,7 +22,7 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
   const searchParams = useSearchParams();
   const router = useRouter();
   const [hasSharedProfile, setHasSharedProfile] = useState(false);
-  
+
   // State declarations must come before useEffect hooks that reference them
   const [connection, setConnection] = useState<Connection | null>(null);
   const [otherUser, setOtherUser] = useState<{
@@ -59,13 +59,13 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
   useEffect(() => {
     const shareProfileId = searchParams.get('shareProfile');
     const profileType = searchParams.get('profileType');
-    
+
     if (shareProfileId && profileType && connection && connection.status === 'accepted' && !hasSharedProfile && !loading) {
       const shareProfile = async () => {
         try {
           // Determine profile type ('member' or 'alumni')
           const messageType = profileType === 'alumni' ? 'alumni' : 'member';
-          
+
           await sendMessage(
             `Check out this profile!`,
             'profile',
@@ -74,7 +74,7 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
               shared_profile_type: messageType
             }
           );
-          
+
           setHasSharedProfile(true);
           // Clean up URL params after sharing
           router.replace('/dashboard/messages');
@@ -82,7 +82,7 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
           console.error('Failed to share profile:', error);
         }
       };
-      
+
       shareProfile();
     }
   }, [searchParams, connection, connectionId, hasSharedProfile, loading, sendMessage, router]);
@@ -93,7 +93,7 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
       const foundConnection = connections.find(conn => conn.id === connectionId);
       if (foundConnection) {
         setConnection(foundConnection);
-        
+
         // Determine which user is the other person
         const isRequester = foundConnection.requester_id === user.id;
         const otherUserData = isRequester ? foundConnection.recipient : foundConnection.requester;
@@ -103,31 +103,15 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
   }, [connections, connectionId, user]);
 
   const handleSendMessage = async (content: string) => {
-    // #region agent log
-    const handleSendId = `handle_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'ConnectionChat.tsx:105', message: 'handleSendMessage called', data: { handleSendId, contentLength: content.length, contentPreview: content.substring(0, 30), connectionId, connectionStatus: connection?.status }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'B' }) }).catch(() => { });
-    // #endregion
-    
     try {
       // Check connection status before sending
       if (connection && connection.status !== 'accepted') {
         throw new Error('This connection request has not been accepted yet. Please wait for the other person to accept your connection request.');
       }
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'ConnectionChat.tsx:112', message: 'Calling sendMessage from hook', data: { handleSendId, contentPreview: content.substring(0, 30) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'B' }) }).catch(() => { });
-      // #endregion
-      
+
       await sendMessage(content);
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'ConnectionChat.tsx:115', message: 'sendMessage completed', data: { handleSendId }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'B' }) }).catch(() => { });
-      // #endregion
     } catch (error) {
       console.error('Failed to send message:', error);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'ConnectionChat.tsx:120', message: 'handleSendMessage error', data: { handleSendId, error: error instanceof Error ? error.message : 'Unknown error' }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'B' }) }).catch(() => { });
-      // #endregion
       // Show user-friendly error message
       const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
       // You could show a toast notification here with errorMessage
@@ -157,15 +141,6 @@ export function ConnectionChat({ connectionId, onBack, className = '' }: Connect
   const handleLoadMore = () => {
     loadMore();
   };
-
-  // Add debug logging (remove after fixing)
-  useEffect(() => {
-    if (messages.length > 0) {
-      console.log('Message sender data:', messages[0].sender);
-      console.log('Avatar URL:', messages[0].sender?.avatar_url);
-    }
-  }, [messages]);
-
 
   if (error) {
     return (

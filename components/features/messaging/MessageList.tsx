@@ -244,14 +244,6 @@ export function MessageList({
     return null;
   };
 
-  // Add debug logging (remove after fixing)
-  useEffect(() => {
-    if (messages.length > 0) {
-      console.log('Message sender data:', messages[0].sender);
-      console.log('Avatar URL:', messages[0].sender?.avatar_url);
-    }
-  }, [messages]);
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
