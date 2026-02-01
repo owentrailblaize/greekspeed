@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'react-toastify';
+import { DocumentDetailDrawer } from './DocumentDetailDrawer';
 
 // Use the same interface as DocsCompliancePanel
 interface ChapterDocument {
@@ -31,6 +32,8 @@ export function MobileDocsCompliancePage() {
   const [documents, setDocuments] = useState<ChapterDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<'all' | 'current' | 'expired' | 'pending' | 'missing'>('all');
+  const [selectedDocument, setSelectedDocument] = useState<ChapterDocument | null>(null);
+  const [showDetailDrawer, setShowDetailDrawer] = useState(false);
   
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
@@ -318,7 +321,11 @@ export function MobileDocsCompliancePage() {
               return (
                 <div 
                   key={doc.id} 
-                  className={`px-4 py-4 ${index !== filteredDocuments.length - 1 ? 'border-b border-gray-100' : ''}`}
+                  className={`px-4 py-4 cursor-pointer hover:bg-gray-50 transition-colors ${index !== filteredDocuments.length - 1 ? 'border-b border-gray-100' : ''}`}
+                  onClick={() => {
+                    setSelectedDocument(doc);
+                    setShowDetailDrawer(true);
+                  }}
                 >
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0">
@@ -352,7 +359,7 @@ export function MobileDocsCompliancePage() {
                         </div>
                       </div>
                       
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
                         <Button 
                           size="sm" 
                           variant="outline" 
@@ -378,6 +385,21 @@ export function MobileDocsCompliancePage() {
               );
             })}
           </div>
+        )}
+
+        {/* Document Detail Drawer */}
+        {selectedDocument && (
+          <DocumentDetailDrawer
+            doc={selectedDocument}
+            isOpen={showDetailDrawer}
+            onClose={() => {
+              setShowDetailDrawer(false);
+              setSelectedDocument(null);
+            }}
+            onDelete={(deletedId) => {
+              setDocuments(prev => prev.filter(d => d.id !== deletedId));
+            }}
+          />
         )}
       </div>
     </div>

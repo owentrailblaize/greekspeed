@@ -346,6 +346,9 @@ export function DocsCompliancePanel() {
         isOpen={showAllDocumentsModal}
         onClose={() => setShowAllDocumentsModal(false)}
         documents={documents}
+        onDocumentDeleted={(deletedId) => {
+          setDocuments(prev => prev.filter(d => d.id !== deletedId));
+        }}
       />
 
       {/* Document Detail Drawer */}
@@ -356,6 +359,9 @@ export function DocsCompliancePanel() {
           onClose={() => {
             setShowDetailDrawer(false);
             setSelectedDocument(null);
+          }}
+          onDelete={(deletedId) => {
+            setDocuments(prev => prev.filter(d => d.id !== deletedId));
           }}
         />
       )}

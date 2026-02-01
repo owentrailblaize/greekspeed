@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { Drawer } from 'vaul';
-import { X, FileText, Download, Eye, Edit, Trash2, Lock, User, Calendar, Shield, Clock, HardDrive } from 'lucide-react';
+import { X, FileText, Download, Eye, Trash2, User, Calendar, Shield, Clock, HardDrive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'react-toastify';
 import { createPortal } from 'react-dom';
+import { useProfile } from '@/lib/contexts/ProfileContext';
+import { documentUploadService } from '@/lib/services/documentUploadService';
 
 interface ChapterDocument {
   id: string;
@@ -30,15 +32,23 @@ interface DocumentDetailDrawerProps {
   doc: ChapterDocument;
   isOpen: boolean;
   onClose: () => void;
+  onDelete?: (documentId: string) => void;
 }
 
 export function DocumentDetailDrawer({
   doc,
   isOpen,
   onClose,
+  onDelete,
 }: DocumentDetailDrawerProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { profile } = useProfile();
+
+  // Check if current user is the document owner
+  const isOwner = profile?.id === doc.owner_id;
 
   useEffect(() => {
     const checkMobile = () => {
@@ -133,12 +143,23 @@ export function DocumentDetailDrawer({
     }
   };
 
-  const handleEditDocument = () => {
-    toast.info('Document editing is currently locked. This feature will be available soon!');
-  };
+  const handleDeleteDocument = async () => {
+    if (!confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
+      return;
+    }
 
-  const handleDeleteDocument = () => {
-    toast.info('Document deletion is currently locked. This feature will be available soon!');
+    try {
+      setIsDeleting(true);
+      await documentUploadService.deleteDocument(doc.id);
+      toast.success('Document deleted successfully!');
+      onDelete?.(doc.id);
+      onClose();
+    } catch (error: any) {
+      console.error('Delete error:', error);
+      toast.error(error.message || 'Failed to delete document');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const drawerContent = (
@@ -258,6 +279,27 @@ export function DocumentDetailDrawer({
             <Eye className="h-4 w-4 mr-2" />
             View
           </Button>
+          {/* Only show delete button if user is the document owner */}
+          {isOwner && (
+            <Button
+              onClick={handleDeleteDocument}
+              variant="outline"
+              className="flex-1 rounded-full text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </div>
     </div>

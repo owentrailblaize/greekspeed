@@ -31,9 +31,10 @@ interface AllDocumentsModalProps {
   isOpen: boolean;
   onClose: () => void;
   documents: ChapterDocument[];
+  onDocumentDeleted?: (documentId: string) => void;
 }
 
-export function AllDocumentsModal({ isOpen, onClose, documents }: AllDocumentsModalProps) {
+export function AllDocumentsModal({ isOpen, onClose, documents, onDocumentDeleted }: AllDocumentsModalProps) {
   const [mounted, setMounted] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<ChapterDocument | null>(null);
   const [showDetailDrawer, setShowDetailDrawer] = useState(false);
@@ -243,15 +244,7 @@ export function AllDocumentsModal({ isOpen, onClose, documents }: AllDocumentsMo
                             className="flex items-center justify-center sm:justify-end gap-3 sm:gap-2 sm:ml-4"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDownload(doc)}
-                              title="Download Document"
-                              className="h-10 w-10 sm:h-8 sm:w-8 p-0"
-                            >
-                              <Download className="h-5 w-5 sm:h-4 sm:w-4" />
-                            </Button>
+
                             <div className="relative">
                               <Button
                                 variant="ghost"
@@ -293,6 +286,9 @@ export function AllDocumentsModal({ isOpen, onClose, documents }: AllDocumentsMo
           onClose={() => {
             setShowDetailDrawer(false);
             setSelectedDocument(null);
+          }}
+          onDelete={(deletedId) => {
+            onDocumentDeleted?.(deletedId);
           }}
         />
       )}
