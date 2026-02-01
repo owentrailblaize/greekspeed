@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'react-toastify';
 import { AllDocumentsModal } from './AllDocumentsModal';
+import { DocumentDetailDrawer } from './DocumentDetailDrawer';
 
 // Use the same interface as ChapterDocumentManager
 interface ChapterDocument {
@@ -32,6 +33,8 @@ export function DocsCompliancePanel() {
   const [documents, setDocuments] = useState<ChapterDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAllDocumentsModal, setShowAllDocumentsModal] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<ChapterDocument | null>(null);
+  const [showDetailDrawer, setShowDetailDrawer] = useState(false);
 
   // Load documents on component mount (limit to 3)
   useEffect(() => {
@@ -268,13 +271,20 @@ export function DocsCompliancePanel() {
               documents.map((doc) => (
                 <div
                   key={doc.id}
-                  className="p-2 sm:p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors relative"
+                  className="p-2 sm:p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors relative cursor-pointer"
+                  onClick={() => {
+                    setSelectedDocument(doc);
+                    setShowDetailDrawer(true);
+                  }}
                 >
                   {/* Download Button - Absolutely positioned top right */}
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDownload(doc)}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent drawer from opening
+                      handleDownload(doc);
+                    }}
                     title="Download Document"
                     className="absolute top-2 right-2 sm:top-3 sm:right-3 h-6 w-6 sm:h-7 sm:w-auto px-2 flex-shrink-0 z-10"
                   >
@@ -337,6 +347,18 @@ export function DocsCompliancePanel() {
         onClose={() => setShowAllDocumentsModal(false)}
         documents={documents}
       />
+
+      {/* Document Detail Drawer */}
+      {selectedDocument && (
+        <DocumentDetailDrawer
+          doc={selectedDocument}
+          isOpen={showDetailDrawer}
+          onClose={() => {
+            setShowDetailDrawer(false);
+            setSelectedDocument(null);
+          }}
+        />
+      )}
     </>
   );
 } 
