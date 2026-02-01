@@ -123,12 +123,11 @@ export function SendAnnouncementButton() {
       {/* Modern Minimalistic Widget */}
       <button
         onClick={() => setShowModal(true)}
-        className="w-full group relative overflow-hidden rounded-full sm:hidden transition-all duration-300"
+        className="w-full group relative overflow-hidden rounded-full sm:hidden transition-all duration-300 bg-brand-primary hover:bg-brand-primary-hover"
         style={{
-          background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%)',
           boxShadow: `
-            0 8px 16px rgba(30, 64, 175, 0.5),
-            0 4px 8px rgba(30, 64, 175, 0.4),
+            0 8px 16px rgba(0, 0, 0, 0.25),
+            0 4px 8px rgba(0, 0, 0, 0.15),
             inset 0 1px 0 rgba(255, 255, 255, 0.3),
             inset 0 -1px 0 rgba(0, 0, 0, 0.2)
           `,
@@ -172,7 +171,7 @@ export function SendAnnouncementButton() {
       {/* Desktop version - keep original styling */}
       <button
         onClick={() => setShowModal(true)}
-        className="hidden sm:block w-full group relative overflow-hidden rounded-full bg-gradient-to-r from-brand-primary to-brand-accent hover:from-navy-700 hover:to-blue-700 transition-all duration-300 shadow-md hover:shadow-lg active:scale-[0.98]"
+        className="hidden sm:block w-full group relative overflow-hidden rounded-full bg-gradient-to-r from-brand-primary to-brand-accent hover:from-brand-primary-hover hover:to-brand-accent transition-all duration-300 shadow-md hover:shadow-lg active:scale-[0.98]"
       >
         {/* Subtle shimmer effect on hover */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
@@ -297,7 +296,7 @@ export function SendAnnouncementButton() {
               {/* Footer */}
               <div className="flex flex-col space-y-2 flex-shrink-0 border-t border-gray-200 p-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
                 <Button 
-                  className="w-full rounded-full bg-gradient-to-r from-brand-primary to-brand-accent hover:from-navy-700 hover:to-blue-700 shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full rounded-full bg-gradient-to-r from-brand-primary to-brand-accent hover:from-brand-primary-hover hover:to-brand-accent shadow-lg shadow-brand-primary/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleSendAnnouncement}
                   disabled={isSubmitting || announcementsLoading}
                 >
@@ -418,7 +417,7 @@ export function SendAnnouncementButton() {
               {/* Footer */}
               <div className="flex flex-row-reverse gap-3 flex-shrink-0 border-t border-gray-200 p-6">
                 <Button 
-                  className="rounded-full bg-gradient-to-r from-brand-primary to-brand-accent hover:from-navy-700 hover:to-blue-700 shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-full bg-gradient-to-r from-brand-primary to-brand-accent hover:from-brand-primary-hover hover:to-brand-accent shadow-lg shadow-brand-primary/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleSendAnnouncement}
                   disabled={isSubmitting || announcementsLoading}
                 >
