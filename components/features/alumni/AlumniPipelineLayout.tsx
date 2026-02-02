@@ -143,7 +143,7 @@ export function AlumniPipelineLayout({
   const displayAlumni = alumni;
 
   return (
-    <div className="flex min-h-screen md:h-screen bg-gray-50 md:overflow-hidden">
+    <div className="flex min-h-[100dvh] md:h-screen bg-gray-50 md:overflow-hidden">
       {/* Collapsible Sidebar */}
       <div className="flex">
         {/* Main Sidebar */}
@@ -317,7 +317,7 @@ export function AlumniPipelineLayout({
             <div className="h-full flex flex-col relative">
               {/* Scrollable cards container */}
               {/* Updated: Add bottom padding to account for bottom nav + safe area on mobile */}
-              <div className="flex-1 md:overflow-y-auto p-2 sm:p-6 pb-[calc(80px+env(safe-area-inset-bottom))] sm:pb-20">
+              <div className="flex-1 md:overflow-y-auto p-2 sm:p-6 pb-[calc(120px+env(safe-area-inset-bottom))] sm:pb-20">
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                   {displayAlumni.map((alumniItem: Alumni, index: number) => (
                     <motion.div
