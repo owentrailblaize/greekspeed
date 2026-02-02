@@ -22,9 +22,10 @@ interface EventActionsMenuProps {
     end_time: string;
   };
   onClose?: () => void;
+  hideOnMobile?: boolean;
 }
 
-export function EventActionsMenu({ event, onClose }: EventActionsMenuProps) {
+export function EventActionsMenu({ event, onClose, hideOnMobile = false }: EventActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showCalendarSubmenu, setShowCalendarSubmenu] = useState(false);
   const [shareDrawerOpen, setShareDrawerOpen] = useState(false);
@@ -85,7 +86,7 @@ export function EventActionsMenu({ event, onClose }: EventActionsMenuProps) {
   return (
     <>
       {/* Add isolate and z-50 when open to fix stacking on mobile */}
-      <div className={`relative ${isOpen ? 'z-50 isolate' : ''}`} ref={menuRef}>
+      <div className={`relative ${isOpen ? 'z-[9998] isolate' : ''} ${hideOnMobile ? 'hidden md:block' : ''}`} ref={menuRef}>
         <Button
           variant="ghost"
           size="sm"

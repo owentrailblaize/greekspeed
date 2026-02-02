@@ -246,7 +246,7 @@ export function UpcomingEventsCard() {
                 >
                   {/* Actions Menu - Top Right */}
                   <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                    <EventActionsMenu event={event} />
+                    <EventActionsMenu event={event} hideOnMobile />
                   </div>
 
                   {/* Title */}
@@ -394,7 +394,7 @@ export function UpcomingEventsCard() {
                 >
                   {/* Actions Menu - Top Right */}
                   <div className="absolute top-2 right-2" onClick={(e) => e.stopPropagation()}>
-                    <EventActionsMenu event={event} />
+                    <EventActionsMenu event={event} hideOnMobile />
                   </div>
 
                   <h4 className="font-semibold text-gray-900 text-sm mb-2 break-words leading-tight pr-6">
