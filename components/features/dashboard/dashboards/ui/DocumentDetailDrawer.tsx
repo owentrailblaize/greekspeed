@@ -42,7 +42,6 @@ export function DocumentDetailDrawer({
   onDelete,
 }: DocumentDetailDrawerProps) {
   const [isMobile, setIsMobile] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { profile } = useProfile();
@@ -135,12 +134,8 @@ export function DocumentDetailDrawer({
       return;
     }
 
-    if (isPreviewableType(doc.file_type)) {
-      setShowPreview(true); // Open in-app preview
-    } else {
-      // For non-previewable types, open in new tab
-      window.open(doc.file_url, '_blank', 'noopener,noreferrer');
-    }
+    // Open in new tab
+    window.open(doc.file_url, '_blank', 'noopener,noreferrer');
   };
 
   const handleDeleteDocument = async () => {
@@ -332,46 +327,6 @@ export function DocumentDetailDrawer({
           </Drawer.Content>
         </Drawer.Portal>
       </Drawer.Root>
-
-      {/* Document Preview Modal */}
-      {showPreview && doc.file_url && createPortal(
-        <div className="fixed inset-0 z-[10001] bg-black/80 flex items-center justify-center p-4">
-          <div className="relative max-w-4xl w-full max-h-[90vh] bg-white rounded-lg overflow-hidden">
-            {/* Close button */}
-            <button
-              onClick={() => setShowPreview(false)}
-              className="absolute top-3 right-3 z-10 p-2 bg-white/90 hover:bg-white rounded-full shadow-md transition-colors"
-            >
-              <X className="h-5 w-5 text-gray-700" />
-            </button>
-
-            {/* Title bar */}
-            <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
-              <h3 className="text-sm font-medium text-gray-900 truncate pr-10">{doc.title}</h3>
-            </div>
-
-            {/* Preview content */}
-            <div className="bg-gray-50">
-              {doc.file_type?.includes('pdf') ? (
-                <iframe
-                  src={doc.file_url}
-                  className="w-full h-[80vh]"
-                  title={doc.title}
-                />
-              ) : (
-                <div className="flex items-center justify-center p-4 bg-gray-900">
-                  <img
-                    src={doc.file_url}
-                    alt={doc.title}
-                    className="max-w-full max-h-[80vh] object-contain"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
     </>
   );
 }

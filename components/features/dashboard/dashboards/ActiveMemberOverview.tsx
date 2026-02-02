@@ -202,11 +202,11 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
           {/* Left Sidebar - Dues, Tasks, Calendar & Documents */}
           <div className="col-span-3">
             <div className="space-y-6">
+              <FeatureGuard flagName="financial_tools_enabled">
+                <DuesStatusCard />
+              </FeatureGuard>
               <AnnouncementsCard />
               <MyTasksCard />
-              <FeatureGuard flagName="events_management_enabled">
-                <CompactCalendarCard />
-              </FeatureGuard>
             </div>
           </div>
 
@@ -219,10 +219,10 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
           <div className="col-span-3">
             <div className="space-y-6">
               <FeatureGuard flagName="events_management_enabled">
-                <UpcomingEventsCard />
+                <CompactCalendarCard />
               </FeatureGuard>
-              <FeatureGuard flagName="financial_tools_enabled">
-                <DuesStatusCard />
+              <FeatureGuard flagName="events_management_enabled">
+                <UpcomingEventsCard />
               </FeatureGuard>
             </div>
           </div>

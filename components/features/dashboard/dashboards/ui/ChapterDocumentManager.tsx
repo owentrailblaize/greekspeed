@@ -13,9 +13,6 @@ import {
   Search, 
   Filter, 
   Download, 
-  Eye, 
-  Edit, 
-  Trash2, 
   Plus, 
   FolderOpen,
   Calendar,
@@ -26,7 +23,6 @@ import {
   Clock,
   Loader2,
   X,
-  Lock,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -35,6 +31,7 @@ import { Label } from '@/components/ui/label';
 import { documentUploadService, DocumentUploadData } from '@/lib/services/documentUploadService';
 import { toast } from 'react-toastify';
 import { supabase } from '@/lib/supabase/client'; // Fixed import path
+import { DocumentDetailDrawer } from './DocumentDetailDrawer';
 
 // Mock data structure that matches your future database schema
 interface ChapterDocument {
@@ -97,6 +94,10 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  
+  // Document detail drawer state
+  const [selectedDocument, setSelectedDocument] = useState<ChapterDocument | null>(null);
+  const [showDetailDrawer, setShowDetailDrawer] = useState(false);
 
   // Load documents on component mount
   useEffect(() => {
@@ -205,110 +206,6 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
 
   const handleUpload = () => {
     setShowUploadModal(true);
-  };
-
-  const handleEditDocument = (doc: ChapterDocument) => {
-    // Functionality is locked - show toast message
-    toast.info('Document editing is currently locked. This feature will be available soon!');
-    
-    // TODO: Implement edit functionality
-    // Edit document
-  };
-
-  const handleDeleteDocument = async (documentId: string) => {
-    if (!confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      const docToDelete = documents.find(doc => doc.id === documentId);
-      if (!docToDelete) {
-        toast.error('Document not found');
-        return;
-      }
-
-      // Deleting document
-
-      // Debug storage access
-      // Testing storage access...
-      
-      // Test 1: List root directory
-      const { data: rootList, error: rootError } = await supabase.storage
-        .from('chapter-documents')
-        .list('', { limit: 100 });
-      // Root listing
-      
-      // Test 2: List specific chapter directory
-      const { data: chapterList, error: chapterError } = await supabase.storage
-        .from('chapter-documents')
-        .list('Sigma Chi Eta (Ole Miss)', { limit: 100 });
-      // Chapter listing
-      
-      // Test 3: Check if file exists
-      const { data: fileExists, error: fileError } = await supabase.storage
-        .from('chapter-documents')
-        .list('Sigma Chi Eta (Ole Miss)/governance', { limit: 100 });
-      // Governance listing
-
-      // FIRST: List what's actually in the bucket to debug
-      const { data: bucketContents, error: listError } = await supabase.storage
-        .from('chapter-documents')
-        .list('', { limit: 100 });
-
-      if (listError) {
-        console.error('❌ Error listing bucket:', listError);
-      } else {
-        // Actual bucket contents
-      }
-
-      // SECOND: Try to delete with the exact path
-      if (docToDelete.storage_path) {
-        const pathsToTry = [
-          docToDelete.storage_path, // Original: "Sigma Chi Eta (Ole Miss)/governance/..."
-          docToDelete.storage_path.replace(/^chapter-documents\//, ''), // Remove bucket prefix if present
-          docToDelete.storage_path.split('/').slice(1).join('/') // Remove first segment
-        ];
-
-        // Trying different path formats
-
-        for (const path of pathsToTry) {
-          // Attempting to delete with path
-          
-          const { error: storageError } = await supabase.storage
-            .from('chapter-documents')
-            .remove([path]);
-
-          if (!storageError) {
-            // Successfully deleted with path
-            break;
-          } else {
-            // Failed with path
-          }
-        }
-      }
-
-      // Then delete from database
-      const { error: dbError } = await supabase
-        .from('documents')
-        .delete()
-        .eq('id', documentId);
-
-      if (dbError) {
-        console.error('❌ Database deletion error:', dbError);
-        toast.error('Failed to delete document record');
-        return;
-      }
-
-      // Database record deleted successfully
-
-      // Remove from local state
-      setDocuments(prev => prev.filter(doc => doc.id !== documentId));
-      toast.success('Document deleted successfully!');
-
-    } catch (error) {
-      console.error('❌ Error deleting document:', error);
-      toast.error('Failed to delete document');
-    }
   };
 
   const handleDownload = async (doc: ChapterDocument) => {
@@ -647,7 +544,11 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                 paginatedDocuments.map((doc) => (
                   <div
                     key={doc.id}
-                    className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={() => {
+                      setSelectedDocument(doc);
+                      setShowDetailDrawer(true);
+                    }}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
@@ -699,8 +600,8 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                         </div>
                       </div>
 
-                      {/* Action Buttons */}
-                      <div className="flex items-center gap-2 ml-4">
+                      {/* Action Buttons - Download only */}
+                      <div className="flex items-center gap-2 ml-4" onClick={(e) => e.stopPropagation()}>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -708,26 +609,6 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                           title="Download Document"
                         >
                           <Download className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditDocument(doc)}
-                          title="Document editing is locked - coming soon!"
-                          className="opacity-60 cursor-not-allowed"
-                          disabled
-                        >
-                          <Edit className="h-4 w-4" />
-                          <Lock className="h-3 w-3 ml-1 text-gray-400" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteDocument(doc.id)}
-                          title="Delete Document"
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -845,7 +726,11 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                 paginatedDocuments.map((doc) => (
                   <div
                     key={doc.id}
-                    className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={() => {
+                      setSelectedDocument(doc);
+                      setShowDetailDrawer(true);
+                    }}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -856,15 +741,17 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                       </div>
                       
                       {/* Download Button - Top Right */}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDownload(doc)}
-                        title="Download Document"
-                        className="h-7 px-2 ml-2 flex-shrink-0"
-                      >
-                        <Download className="h-3 w-3" />
-                      </Button>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownload(doc)}
+                          title="Download Document"
+                          className="h-7 px-2 ml-2 flex-shrink-0"
+                        >
+                          <Download className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
                     
                     {/* Metadata in a single row */}
@@ -1151,6 +1038,21 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
             </div>
           </div>
         </div>
+      )}
+
+      {/* Document Detail Drawer */}
+      {selectedDocument && (
+        <DocumentDetailDrawer
+          doc={selectedDocument}
+          isOpen={showDetailDrawer}
+          onClose={() => {
+            setShowDetailDrawer(false);
+            setSelectedDocument(null);
+          }}
+          onDelete={(deletedId) => {
+            setDocuments(prev => prev.filter(d => d.id !== deletedId));
+          }}
+        />
       )}
     </div>
   );

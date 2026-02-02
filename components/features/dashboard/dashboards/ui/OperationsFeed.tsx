@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Clock, Users, DollarSign, FileText, Megaphone, CheckCircle, Calendar, RefreshCw } from 'lucide-react';
+import { Clock, DollarSign, FileText, Megaphone, CheckCircle, Calendar } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { createClient } from '@supabase/supabase-js';
 import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
@@ -41,6 +41,13 @@ export function OperationsFeed() {
   useEffect(() => {
     if (profile?.chapter_id) {
       fetchRecentActivities();
+    
+      // Poll for updates every 60 seconds
+      const interval = setInterval(() => {
+        fetchRecentActivities();
+      }, 60000); // 60 seconds
+
+      return () => clearInterval(interval);
     }
   }, [profile?.chapter_id]);
 
@@ -278,7 +285,7 @@ export function OperationsFeed() {
     const now = new Date();
     const date = new Date(dateString);
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+
     if (diffInMinutes < 1) return 'Just now';
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
@@ -288,24 +295,23 @@ export function OperationsFeed() {
   const renderActivityItem = (item: ActivityItem) => {
     const IconComponent = item.icon;
     return (
-      <div key={item.id} className="flex items-start space-x-3 p-2 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+      <div key={item.id} className="flex items-start space-x-3 p-2 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors overflow-hidden">
         <div className="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center text-brand-primary shrink-0">
           <IconComponent className="h-3 w-3" />
         </div>
-        
-        <div className="flex-1 min-w-0">
+
+        <div className="flex-1 min-w-0 overflow-hidden">
           <div className="flex items-center space-x-2 mb-1">
-            <h4 className="font-medium text-gray-900 text-sm whitespace-nowrap">{item.title}</h4>
-            <IconComponent className="h-3 w-3 text-gray-500" />
+            <h4 className="font-medium text-gray-900 text-sm truncate">{item.title}</h4>
           </div>
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-gray-600 flex-1 truncate mr-2">{item.meta}</p>
-            <div className="flex items-center space-x-2 text-xs text-gray-500 shrink-0">
-              <span>{formatTimeAgo(item.createdAt)}</span>
-              {item.user && (
-                <span>by {item.user.full_name || `${item.user.first_name} ${item.user.last_name}`}</span>
-              )}
-            </div>
+          <p className="text-xs text-gray-600 truncate mb-1">{item.meta}</p>
+          <div className="flex items-center text-xs text-gray-500">
+            <span className="shrink-0">{formatTimeAgo(item.createdAt)}</span>
+            {item.user && (
+              <span className="truncate ml-2">
+                by {item.user.full_name || `${item.user.first_name} ${item.user.last_name}`}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -354,74 +360,63 @@ export function OperationsFeed() {
             activities.map(renderActivityItem)
           )}
         </div>
-        
+
         <div className="pt-4 border-t border-gray-100">
-          {/* Refresh and View All buttons on same row */}
-          <div className="flex space-x-2">
-            {/* Refresh Button - Square with icon only */}
-            <button 
-              className="w-8 h-8 border border-brand-primary rounded-md flex items-center justify-center text-brand-primary hover:bg-primary-50 hover:text-brand-primary-hover transition-colors"
-              onClick={fetchRecentActivities}
-            >
-              <RefreshCw className="h-4 w-4" />
-            </button>
+          {/* View All Activities Modal Button */}
+          <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full h-10 rounded-full text-brand-primary border-brand-primary bg-white hover:bg-primary-50 font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-300"
+                onClick={() => {
+                  setModalOpen(true);
+                  fetchAllActivities();
+                }}
+              >
+                <Clock className="h-4 w-4 mr-2" />
+                View All
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="rounded-lg max-h-[80vh] overflow-hidden bg-white sm:max-w-2xl max-w-[calc(100vw-2rem)] mx-auto sm:mx-0">
+              <DialogHeader>
+                <DialogTitle className="flex items-center space-x-2">
+                  <Clock className="h-5 w-5 text-brand-primary" />
+                  <span>All Chapter Activity</span>
+                </DialogTitle>
+              </DialogHeader>
 
-            {/* View All Activities Modal Button - Takes remaining space */}
-            <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex-1 h-10 rounded-full text-brand-primary border-brand-primary bg-white hover:bg-primary-50 font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-300"
-                  onClick={() => {
-                    setModalOpen(true);
-                    fetchAllActivities();
-                  }}
-                >
-                  <Clock className="h-4 w-4 mr-2" />
-                  View All
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="rounded-lg max-h-[80vh] overflow-hidden bg-white sm:max-w-2xl max-w-[calc(100vw-2rem)] mx-auto sm:mx-0">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center space-x-2">
-                    <Clock className="h-5 w-5 text-brand-primary" />
-                    <span>All Chapter Activity</span>
-                  </DialogTitle>
-                </DialogHeader>
-                
-                <div className="overflow-y-auto max-h-[60vh]">
-                  {modalLoading ? (
-                    <div className="space-y-4">
-                      {[...Array(5)].map((_, i) => (
-                        <div key={i} className="animate-pulse">
-                          <div className="h-16 bg-gray-200 rounded-lg"></div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {allActivities.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                          <Clock className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                          <p>No activity found</p>
-                        </div>
-                      ) : (
-                        allActivities.map(renderActivityItem)
-                      )}
-                    </div>
-                  )}
-                </div>
+              <div className="overflow-y-auto max-h-[60vh]">
+                {modalLoading ? (
+                  <div className="space-y-4">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="animate-pulse">
+                        <div className="h-16 bg-gray-200 rounded-lg"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {allActivities.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <Clock className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                        <p>No activity found</p>
+                      </div>
+                    ) : (
+                      allActivities.map(renderActivityItem)
+                    )}
+                  </div>
+                )}
+              </div>
 
-                {/* Footer with activity count */}
-                <div className="border-t border-gray-200 pt-3 mt-4">
-                  <p className="text-center text-sm text-gray-500">
-                    Showing {allActivities.length} of {allActivities.length} activities
-                  </p>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+              {/* Footer with activity count */}
+              <div className="border-t border-gray-200 pt-3 mt-4">
+                <p className="text-center text-sm text-gray-500">
+                  Showing {allActivities.length} of {allActivities.length} activities
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </CardContent>
     </Card>
