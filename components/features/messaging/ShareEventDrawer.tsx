@@ -77,8 +77,8 @@ export function ShareEventDrawer({
   const selectedConnection = connections.find(conn => conn.id === selectedConnectionId);
   const otherUser = selectedConnection
     ? (selectedConnection.requester_id === user?.id
-        ? selectedConnection.recipient
-        : selectedConnection.requester)
+      ? selectedConnection.recipient
+      : selectedConnection.requester)
     : null;
 
   // Filter to only accepted connections
@@ -98,7 +98,7 @@ export function ShareEventDrawer({
     metadata?: Record<string, unknown>
   ) => {
     if (!selectedConnectionId) return;
-    
+
     try {
       // Send event messages with proper type and metadata
       if (messageType === 'event' && metadata) {
@@ -141,8 +141,8 @@ export function ShareEventDrawer({
   };
 
   return (
-    <Drawer.Root 
-      open={isOpen} 
+    <Drawer.Root
+      open={isOpen}
       onOpenChange={(open) => !open && onClose()}
       direction="bottom"
       modal={isMobile}
@@ -150,12 +150,12 @@ export function ShareEventDrawer({
     >
       <Drawer.Portal>
         {/* Overlay */}
-        <Drawer.Overlay 
+        <Drawer.Overlay
           className={`
             fixed inset-0 z-[10002] 
             ${isMobile ? 'bg-black/40' : 'bg-black/5'} 
             transition-opacity
-          `} 
+          `}
         />
 
         {/* Drawer Content */}
@@ -163,8 +163,8 @@ export function ShareEventDrawer({
           className={`
             bg-white flex flex-col rounded-t-[10px] z-[10003]
             fixed bottom-0
-            ${isMobile 
-              ? 'left-0 right-0 h-[85vh] max-h-[85vh]' 
+            ${isMobile
+              ? 'left-0 right-0 max-h-[70vh]'
               : 'right-4 left-auto w-[450px] h-[600px] max-h-[calc(100vh-2rem)] rounded-lg'
             }
             shadow-2xl border border-gray-200

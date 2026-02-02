@@ -1,16 +1,17 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectItem } from '@/components/ui/select';
-import { 
-  Search, 
-  Loader2, 
-  ChevronLeft, 
+import {
+  Search,
+  Loader2,
+  ChevronLeft,
   ChevronRight,
   UserPlus,
   Instagram,
@@ -26,6 +27,7 @@ import type { Recruit, RecruitStage, UpdateRecruitRequest } from '@/types/recrui
 import { FeatureGuard } from '@/components/shared/FeatureGuard';
 import { useRouter, usePathname } from 'next/navigation';
 import { Textarea } from '@/components/ui/textarea';
+import { AddRecruitForm } from '@/components/features/recruitment/AddRecruitForm';
 import { BulkRecruitImport } from '@/components/features/recruitment/BulkRecruitImport';
 
 interface RecruitsResponse {
@@ -57,15 +59,15 @@ const STAGE_OPTIONS: RecruitStage[] = [
 ];
 
 // Editable Textarea component with auto-resize
-function EditableTextarea({ 
-  value, 
-  onChange, 
-  placeholder, 
-  disabled 
-}: { 
-  value: string; 
-  onChange: (value: string) => void; 
-  placeholder?: string; 
+function EditableTextarea({
+  value,
+  onChange,
+  placeholder,
+  disabled
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
   disabled?: boolean;
 }) {
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
@@ -142,7 +144,7 @@ export function RecruitmentView() {
     total: 0,
     totalPages: 0,
   });
-  
+
   // Inline editing state
   const [editingRecruitId, setEditingRecruitId] = useState<string | null>(null);
   const [editingData, setEditingData] = useState<{
@@ -152,6 +154,7 @@ export function RecruitmentView() {
   const [savingRecruitId, setSavingRecruitId] = useState<string | null>(null);
   const [deletingRecruitId, setDeletingRecruitId] = useState<string | null>(null);
   const [showBulkImport, setShowBulkImport] = useState(false);
+  const [showAddRecruitModal, setShowAddRecruitModal] = useState(false);
 
   // Check if we're on the standalone recruitment page
   const isStandalonePage = pathname === '/mychapter/recruitment';
@@ -281,7 +284,7 @@ export function RecruitmentView() {
 
       // Build update payload with only changed fields
       const updatePayload: UpdateRecruitRequest = {};
-      
+
       if (editingData.stage !== recruit.stage) {
         updatePayload.stage = editingData.stage;
       }
@@ -313,12 +316,12 @@ export function RecruitmentView() {
       }
 
       const updatedRecruit: Recruit = await response.json();
-      
+
       // Update local state
       setRecruits(prevRecruits =>
         prevRecruits.map(r => r.id === recruitId ? updatedRecruit : r)
       );
-      
+
       // Exit edit mode
       setEditingRecruitId(null);
       setEditingData(null);
@@ -363,7 +366,7 @@ export function RecruitmentView() {
 
       // Remove from local state
       setRecruits(prevRecruits => prevRecruits.filter(r => r.id !== recruitId));
-      
+
       // If we were editing this recruit, exit edit mode
       if (editingRecruitId === recruitId) {
         setEditingRecruitId(null);
@@ -375,6 +378,18 @@ export function RecruitmentView() {
     } finally {
       setDeletingRecruitId(null);
     }
+  };
+
+  // Handle add recruit success
+  const handleRecruitSuccess = (recruit: Recruit) => {
+    setShowAddRecruitModal(false);
+    // Refresh the recruits list
+    fetchRecruits();
+  };
+
+  // Handle add recruit cancel
+  const handleRecruitCancel = () => {
+    setShowAddRecruitModal(false);
   };
 
   // Filter out "Accepted" recruits from display
@@ -403,6 +418,17 @@ export function RecruitmentView() {
           </div>
           {/* Action buttons */}
           <div className="flex items-center space-x-2">
+            {/* Add Recruit button - available on standalone page */}
+            {isStandalonePage && (
+              <Button
+                size="sm"
+                onClick={() => setShowAddRecruitModal(true)}
+                className="flex items-center space-x-2 rounded-full bg-brand-primary hover:bg-brand-primary-hover"
+              >
+                <UserPlus className="h-4 w-4" />
+                <span>Add Recruit</span>
+              </Button>
+            )}
             {/* Import button - available on standalone page */}
             {isStandalonePage && (
               <Button
@@ -415,7 +441,7 @@ export function RecruitmentView() {
                 <span>Import</span>
               </Button>
             )}
-            {/* Only show View Full Page button when NOT on standalone page (i.e., in exec dashboard) */}
+            {/* View Full Page button when NOT on standalone page */}
             {!isStandalonePage && (
               <Button
                 variant="outline"
@@ -483,11 +509,11 @@ export function RecruitmentView() {
                       onValueChange={(value) => setSelectedStage(value as RecruitStage | 'all')}
                       placeholder="Filter by stage"
                     >
-                        {STAGE_OPTIONS.map((stage) => (
+                      {STAGE_OPTIONS.map((stage) => (
                         <SelectItem key={stage} value={stage}>
-                            {stage}
+                          {stage}
                         </SelectItem>
-                        ))}
+                      ))}
                     </Select>
                   </div>
                 </div>
@@ -499,16 +525,16 @@ export function RecruitmentView() {
               {/* Table Header */}
               <div className="px-6 py-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {loading ? (
-                        <span className="inline-flex items-center">
-                          Recruits
-                          <Loader2 className="h-4 w-4 animate-spin text-gray-400 ml-2" />
-                        </span>
-                      ) : (
-                        `Recruits (${visibleRecruits.length}${visibleRecruits.length !== pagination.total ? ` of ${pagination.total}` : ''})`
-                      )}
-                    </h3>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {loading ? (
+                      <span className="inline-flex items-center">
+                        Recruits
+                        <Loader2 className="h-4 w-4 animate-spin text-gray-400 ml-2" />
+                      </span>
+                    ) : (
+                      `Recruits (${visibleRecruits.length}${visibleRecruits.length !== pagination.total ? ` of ${pagination.total}` : ''})`
+                    )}
+                  </h3>
                   {/* Save/Cancel buttons - only show when editing */}
                   {editingRecruitId && (
                     <div className="flex items-center space-x-2">
@@ -592,11 +618,11 @@ export function RecruitmentView() {
                         {visibleRecruits.map((recruit) => {
                           const isEditing = editingRecruitId === recruit.id;
                           const isSaving = savingRecruitId === recruit.id;
-                          const currentStage = isEditing && editingData 
-                            ? editingData.stage 
+                          const currentStage = isEditing && editingData
+                            ? editingData.stage
                             : recruit.stage;
-                          const currentNotes = isEditing && editingData 
-                            ? editingData.notes 
+                          const currentNotes = isEditing && editingData
+                            ? editingData.notes
                             : (recruit.notes || '');
 
                           return (
@@ -770,6 +796,20 @@ export function RecruitmentView() {
             fetchRecruits();
           }}
         />
+      )}
+
+      {/* Add Recruit Modal */}
+      {showAddRecruitModal && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center bg-black/50">
+          <div className="w-full sm:max-w-2xl max-h-[90vh]">
+            <AddRecruitForm
+              variant="modal"
+              onSuccess={handleRecruitSuccess}
+              onCancel={handleRecruitCancel}
+            />
+          </div>
+        </div>,
+        document.body
       )}
     </FeatureGuard>
   );
