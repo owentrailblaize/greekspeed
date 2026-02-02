@@ -450,7 +450,7 @@ export function MobileEventsVendorsPage() {
                               )}
                             </div>
                             <div className="flex items-center space-x-1 ml-2" onClick={(e) => e.stopPropagation()}>
-                              <EventActionsMenu event={event} />
+                              <EventActionsMenu event={event} hideOnMobile />
                               <Button
                                 size="sm"
                                 variant="ghost"

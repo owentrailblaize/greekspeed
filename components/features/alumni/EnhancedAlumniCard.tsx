@@ -20,14 +20,14 @@ const getChapterName = (chapterId: string, isMobile: boolean = false): string =>
     "b25a4acf-59f0-46d4-bb5c-d41fda5b3252": "Phi Delta Theta Mississippi Alpha (Ole Miss)",
     "ff740e3f-c45c-4728-a5d5-22088c19d847": "Kappa Sigma Delta-Xi (Ole Miss)"
   };
-  
+
   const fullName = chapterMap[chapterId] || chapterId;
-  
+
   // For mobile, remove parenthetical information to save space
   if (isMobile) {
     return fullName.replace(/\s*\([^)]*\)/g, '');
   }
-  
+
   return fullName;
 };
 
@@ -40,15 +40,15 @@ interface EnhancedAlumniCardProps {
 function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProps) {
   const { user } = useAuth();
   const router = useRouter();
-  const { 
-    sendConnectionRequest, 
-    updateConnectionStatus, 
-    cancelConnectionRequest, 
+  const {
+    sendConnectionRequest,
+    updateConnectionStatus,
+    cancelConnectionRequest,
     getConnectionStatus,
     getConnectionId
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
-  
+
   // Use mutual connections from alumni prop (already calculated by API)
   const mutualConnections = alumni.mutualConnections || [];
   const mutualConnectionsCount = alumni.mutualConnectionsCount || 0;
@@ -57,9 +57,9 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel', e: React.MouseEvent) => {
     // Stop event propagation to prevent card click from triggering
     e.stopPropagation();
-    
+
     if (!user || user.id === alumni.id) return;
-    
+
     setConnectionLoading(true);
     try {
       switch (action) {
@@ -102,7 +102,7 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
 
   const renderConnectionButton = () => {
     if (!user || user.id === alumni.id) return null;
-    
+
     if (!alumni.hasProfile) {
       return (
         <Button
@@ -115,7 +115,7 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
         </Button>
       );
     }
-    
+
     const status = getConnectionStatus(alumni.id);
     const isLoading = connectionLoading;
 
@@ -136,7 +136,7 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
             Connect
           </Button>
         );
-      
+
       case 'pending_sent':
         return (
           <Button
@@ -153,7 +153,7 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
             Requested
           </Button>
         );
-    
+
       case 'accepted':
         return (
           <Button
@@ -167,7 +167,25 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
             Connected
           </Button>
         );
-      
+
+      case 'pending_received':
+        return (
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              // Open profile modal to see full request
+              if (onClick) onClick(alumni);
+            }}
+            className="w-full border border-green-500 text-green-600 bg-green-50 hover:bg-green-100 transition-colors duration-200 rounded-full font-medium h-8 sm:h-10 flex items-center justify-center text-xs sm:text-sm"
+            variant="outline"
+          >
+            <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            <span className="text-[12px] sm:text-sm leading-tight sm:leading-normal whitespace-nowrap truncate">
+              View
+            </span>
+          </Button>
+        );
+
       default:
         return null;
     }
@@ -183,10 +201,10 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
     if (!value) return false;
     if (typeof value === 'string') {
       const trimmed = value.trim();
-      return trimmed !== "" && 
-             trimmed !== "Not specified" && 
-             trimmed !== "N/A" && 
-             trimmed !== "Unknown";
+      return trimmed !== "" &&
+        trimmed !== "Not specified" &&
+        trimmed !== "N/A" &&
+        trimmed !== "Unknown";
     }
     return true;
   };
@@ -199,12 +217,12 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
           <div className="flex justify-center mb-2 sm:mb-3">
             <div className="w-16 h-16 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden relative">
               {alumni.avatar ? (
-                <ImageWithFallback 
-                  src={alumni.avatar} 
-                  alt={alumni.fullName} 
-                  width={64} 
-                  height={64} 
-                  className="w-full h-full object-cover" 
+                <ImageWithFallback
+                  src={alumni.avatar}
+                  alt={alumni.fullName}
+                  width={64}
+                  height={64}
+                  className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-brand-primary to-brand-primary flex items-center justify-center">
@@ -222,8 +240,8 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
               <h3 className="font-semibold text-gray-900 text-xs sm:text-lg leading-tight truncate">
                 {alumni.fullName}
               </h3>
-              <ActivityIndicator 
-                lastActiveAt={alumni.lastActiveAt} 
+              <ActivityIndicator
+                lastActiveAt={alumni.lastActiveAt}
                 size="sm"
               />
             </div>
@@ -246,10 +264,10 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
             {isValidField(alumni.company) && (
               <div className="flex items-center justify-center space-x-2 text-gray-500 text-xs sm:text-sm">
                 <Building2 className="h-3 w-3" />
-                <ClickableField 
-                  value={alumni.company} 
-                  entityType="company" 
-                  className="text-gray-500 hover:text-brand-accent text-center "
+                <ClickableField
+                  value={alumni.company}
+                  entityType="company"
+                  className="text-gray-500 hover:text-brand-accent text-center truncate max-w-[200px]"
                 />
               </div>
             )}
@@ -268,24 +286,15 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
             )}
           </div>
 
-          {/* PURPLE BOX: Tags (Industry and Graduation Year) - Fixed height */}
+          {/* Tags (Industry and Graduation Year) - Fixed height */}
           <div className="hidden sm:flex flex-wrap justify-center gap-2 mb-4 h-8 items-center">
             {/* Industry - Show on desktop only */}
             {isValidField(alumni.industry) && (
-              <Badge 
-                variant="secondary" 
+              <Badge
+                variant="secondary"
                 className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1"
               >
                 {alumni.industry}
-              </Badge>
-            )}
-            {/* Graduation Year - Show on desktop only */}
-            {isValidField(alumni.graduationYear) && (
-              <Badge 
-                variant="secondary" 
-                className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-1"
-              >
-                {alumni.graduationYear}
               </Badge>
             )}
             {/* Show placeholder when no tags to maintain consistent spacing - desktop only */}
@@ -306,12 +315,12 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
                   {mutualConnections.slice(0, 3).map((c, i) => (
                     <div key={c.id || `mutual-${i}`} className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200 relative z-10" style={{ zIndex: 10 - i }}>
                       {c.avatar ? (
-                        <ImageWithFallback 
-                          src={c.avatar} 
-                          alt={c.name || 'Unknown'} 
-                          width={24} 
-                          height={24} 
-                          className="w-full h-full object-cover" 
+                        <ImageWithFallback
+                          src={c.avatar}
+                          alt={c.name || 'Unknown'}
+                          width={24}
+                          height={24}
+                          className="w-full h-full object-cover"
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
@@ -328,14 +337,14 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
                 </div>
                 {/* Mobile: Show "+X other" below avatars */}
                 <span className="text-xs text-gray-600 leading-tight sm:hidden">
-                  {mutualConnectionsCount > 1 
+                  {mutualConnectionsCount > 1
                     ? `+${mutualConnectionsCount - 1} other`
                     : '1 connection'
                   }
                 </span>
                 {/* Desktop: Show full text next to avatars */}
                 <span className="text-xs sm:text-sm text-gray-600 leading-tight hidden sm:block">
-                  {mutualConnectionsCount > 1 
+                  {mutualConnectionsCount > 1
                     ? `+${mutualConnectionsCount - 1} other connections`
                     : '1 connection'
                   }

@@ -433,7 +433,7 @@ export function MobileCalendarPage() {
                         <div className="flex items-start justify-between">
                           <h4 className="font-medium text-slate-900 text-sm break-words flex-1 pr-2">{event.title}</h4>
                           <div onClick={(e) => e.stopPropagation()}>
-                            <EventActionsMenu event={event} />
+                            <EventActionsMenu event={event} hideOnMobile />
                           </div>
                         </div>
                         
