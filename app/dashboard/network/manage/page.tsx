@@ -151,7 +151,7 @@ export default function ManageConnectionsPage() {
       <div className="min-h-screen bg-gray-50 pt-4 pb-20 px-4">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-navy-600" />
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary" />
             <span className="ml-2 text-gray-600">Loading connections...</span>
           </div>
         </div>
@@ -246,7 +246,7 @@ export default function ManageConnectionsPage() {
                           className="w-12 h-12 flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-12 h-12 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold flex-shrink-0">
+                        <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center text-brand-primary text-sm font-semibold flex-shrink-0">
                           {partner.avatar ? (
                             <img 
                               src={partner.avatar} 

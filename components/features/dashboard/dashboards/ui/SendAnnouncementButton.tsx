@@ -123,12 +123,11 @@ export function SendAnnouncementButton() {
       {/* Modern Minimalistic Widget */}
       <button
         onClick={() => setShowModal(true)}
-        className="w-full group relative overflow-hidden rounded-full sm:hidden transition-all duration-300"
+        className="w-full group relative overflow-hidden rounded-full sm:hidden transition-all duration-300 bg-brand-primary hover:bg-brand-primary-hover"
         style={{
-          background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%)',
           boxShadow: `
-            0 8px 16px rgba(30, 64, 175, 0.5),
-            0 4px 8px rgba(30, 64, 175, 0.4),
+            0 8px 16px rgba(0, 0, 0, 0.25),
+            0 4px 8px rgba(0, 0, 0, 0.15),
             inset 0 1px 0 rgba(255, 255, 255, 0.3),
             inset 0 -1px 0 rgba(0, 0, 0, 0.2)
           `,
@@ -172,7 +171,7 @@ export function SendAnnouncementButton() {
       {/* Desktop version - keep original styling */}
       <button
         onClick={() => setShowModal(true)}
-        className="hidden sm:block w-full group relative overflow-hidden rounded-full bg-gradient-to-r from-navy-600 to-blue-600 hover:from-navy-700 hover:to-blue-700 transition-all duration-300 shadow-md hover:shadow-lg active:scale-[0.98]"
+        className="hidden sm:block w-full group relative overflow-hidden rounded-full bg-gradient-to-r from-brand-primary to-brand-accent hover:from-brand-primary-hover hover:to-brand-accent transition-all duration-300 shadow-md hover:shadow-lg active:scale-[0.98]"
       >
         {/* Subtle shimmer effect on hover */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
@@ -198,7 +197,7 @@ export function SendAnnouncementButton() {
           <div className="fixed inset-0 z-[9999] sm:hidden flex items-end justify-center p-0">
             <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none pb-[env(safe-area-inset-bottom)]">
               {/* Header with gradient */}
-              <div className="relative bg-gradient-to-r from-navy-600 to-blue-600 p-4 flex-shrink-0">
+              <div className="relative bg-gradient-to-r from-brand-primary to-brand-accent p-4 flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -222,7 +221,7 @@ export function SendAnnouncementButton() {
                     placeholder="Announcement title..."
                     value={announcementTitle}
                     onChange={(e) => setAnnouncementTitle(e.target.value)}
-                    className="w-full border-gray-200 focus:border-navy-500 focus:ring-navy-500"
+                    className="w-full border-gray-200 focus:border-brand-primary focus:ring-brand-primary"
                   />
                   <Select 
                     value={announcementType} 
@@ -239,7 +238,7 @@ export function SendAnnouncementButton() {
                   placeholder="Write a chapter announcement..."
                   value={announcement}
                   onChange={(e) => setAnnouncement(e.target.value)}
-                  className="min-h-[120px] w-full border-gray-200 focus:border-navy-500 focus:ring-navy-500 resize-none"
+                  className="min-h-[120px] w-full border-gray-200 focus:border-brand-primary focus:ring-brand-primary resize-none"
                 />
                 
                 <div className="space-y-3">
@@ -297,7 +296,7 @@ export function SendAnnouncementButton() {
               {/* Footer */}
               <div className="flex flex-col space-y-2 flex-shrink-0 border-t border-gray-200 p-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
                 <Button 
-                  className="w-full rounded-full bg-gradient-to-r from-navy-600 to-blue-600 hover:from-navy-700 hover:to-blue-700 shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full rounded-full bg-gradient-to-r from-brand-primary to-brand-accent hover:from-brand-primary-hover hover:to-brand-accent shadow-lg shadow-brand-primary/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleSendAnnouncement}
                   disabled={isSubmitting || announcementsLoading}
                 >
@@ -306,7 +305,7 @@ export function SendAnnouncementButton() {
                 </Button>
                 <Button 
                   variant="outline"
-                  className="w-full rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                  className="w-full rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                   onClick={() => setShowModal(false)}
                 >
                   Cancel
@@ -319,7 +318,7 @@ export function SendAnnouncementButton() {
           <div className="hidden sm:flex fixed inset-0 z-[9999] items-center justify-center p-4">
             <div className="relative bg-white shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl overflow-hidden">
               {/* Header with gradient */}
-              <div className="relative bg-gradient-to-r from-navy-600 to-blue-600 p-6 flex-shrink-0">
+              <div className="relative bg-gradient-to-r from-brand-primary to-brand-accent p-6 flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -343,7 +342,7 @@ export function SendAnnouncementButton() {
                     placeholder="Announcement title..."
                     value={announcementTitle}
                     onChange={(e) => setAnnouncementTitle(e.target.value)}
-                    className="w-full border-gray-200 focus:border-navy-500 focus:ring-navy-500"
+                    className="w-full border-gray-200 focus:border-brand-primary focus:ring-brand-primary"
                   />
                   <Select 
                     value={announcementType} 
@@ -360,7 +359,7 @@ export function SendAnnouncementButton() {
                   placeholder="Write a chapter announcement..."
                   value={announcement}
                   onChange={(e) => setAnnouncement(e.target.value)}
-                  className="min-h-[150px] w-full border-gray-200 focus:border-navy-500 focus:ring-navy-500 resize-none"
+                  className="min-h-[150px] w-full border-gray-200 focus:border-brand-primary focus:ring-brand-primary resize-none"
                 />
                 
                 <div className="space-y-4">
@@ -418,7 +417,7 @@ export function SendAnnouncementButton() {
               {/* Footer */}
               <div className="flex flex-row-reverse gap-3 flex-shrink-0 border-t border-gray-200 p-6">
                 <Button 
-                  className="rounded-full bg-gradient-to-r from-navy-600 to-blue-600 hover:from-navy-700 hover:to-blue-700 shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-full bg-gradient-to-r from-brand-primary to-brand-accent hover:from-brand-primary-hover hover:to-brand-accent shadow-lg shadow-brand-primary/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleSendAnnouncement}
                   disabled={isSubmitting || announcementsLoading}
                 >
@@ -427,7 +426,7 @@ export function SendAnnouncementButton() {
                 </Button>
                 <Button 
                   variant="outline"
-                  className="rounded-full bg-white border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                  className="rounded-full bg-white border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                   onClick={() => setShowModal(false)}
                 >
                   Cancel

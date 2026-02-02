@@ -283,25 +283,25 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
             label: 'Total Members', 
             value: loadingCounts ? null : (memberCount ?? 0), 
             icon: Users, 
-            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
-            textColor: 'text-navy-700',
-            iconColor: 'text-navy-500'
+            color: 'bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-brand-primary-hover',
+            iconColor: 'text-brand-primary'
           },
           { 
             label: 'Active Members', 
             value: loadingCounts ? null : (activeMemberCount ?? 0), 
             icon: CheckCircle, 
-            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
-            textColor: 'text-navy-700',
-            iconColor: 'text-navy-500'
+            color: 'bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-brand-primary-hover',
+            iconColor: 'text-brand-primary'
           },
           { 
             label: 'Alumni', 
             value: loadingCounts ? null : (alumniCount ?? 0), 
             icon: Crown, 
-            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
-            textColor: 'text-navy-700',
-            iconColor: 'text-navy-500'
+            color: 'bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-brand-primary-hover',
+            iconColor: 'text-brand-primary'
           },
         ];
       
@@ -311,33 +311,33 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
             label: 'Total Tasks', 
             value: totalTasks, 
             icon: Settings, 
-            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
-            textColor: 'text-navy-700',
-            iconColor: 'text-navy-500'
+            color: 'bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-brand-primary-hover',
+            iconColor: 'text-brand-primary'
           },
           { 
             label: 'Completed', 
             value: completedTasks, 
             icon: CheckCircle, 
-            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
-            textColor: 'text-navy-700',
-            iconColor: 'text-navy-500'
+            color: 'bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-brand-primary-hover',
+            iconColor: 'text-brand-primary'
           },
           { 
             label: 'Pending', 
             value: pendingTasks, 
             icon: Clock, 
-            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
-            textColor: 'text-navy-700',
-            iconColor: 'text-navy-500'
+            color: 'bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-brand-primary-hover',
+            iconColor: 'text-brand-primary'
           },
           { 
             label: 'Compliance', 
             value: `${compliance}%`, 
             icon: UserCheck, 
-            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
-            textColor: 'text-navy-700',
-            iconColor: 'text-navy-500'
+            color: 'bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-brand-primary-hover',
+            iconColor: 'text-brand-primary'
           },
         ];
       
@@ -347,33 +347,33 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
             label: 'Event Budget', 
             value: `$${eventBudget.toLocaleString()}`, 
             icon: DollarSign, 
-            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
-            textColor: 'text-navy-700',
-            iconColor: 'text-navy-500'
+            color: 'bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-brand-primary-hover',
+            iconColor: 'text-brand-primary'
           },
           { 
             label: 'Upcoming Events', 
             value: upcomingEvents, 
             icon: Calendar, 
-            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
-            textColor: 'text-navy-700',
-            iconColor: 'text-navy-500'
+            color: 'bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-brand-primary-hover',
+            iconColor: 'text-brand-primary'
           },
           { 
             label: 'Total Attendees', 
             value: totalAttendees, 
             icon: Users, 
-            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
-            textColor: 'text-navy-700',
-            iconColor: 'text-navy-500'
+            color: 'bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-brand-primary-hover',
+            iconColor: 'text-brand-primary'
           },
           { 
             label: 'Vendor Contacts', 
             value: vendorCount, 
             icon: BookOpen, 
-            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
-            textColor: 'text-navy-700',
-            iconColor: 'text-navy-500'
+            color: 'bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-brand-primary-hover',
+            iconColor: 'text-brand-primary'
           },
         ];
       
@@ -383,17 +383,17 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
             label: 'Total Members', 
             value: loadingCounts ? null : (memberCount ?? 0), 
             icon: Users, 
-            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
-            textColor: 'text-navy-700',
-            iconColor: 'text-navy-500'
+            color: 'bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-brand-primary-hover',
+            iconColor: 'text-brand-primary'
           },
           { 
             label: 'Active Members', 
             value: loadingCounts ? null : (activeMemberCount ?? 0), 
             icon: CheckCircle, 
-            color: 'bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20', 
-            textColor: 'text-navy-700',
-            iconColor: 'text-navy-500'
+            color: 'bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20', 
+            textColor: 'text-brand-primary-hover',
+            iconColor: 'text-brand-primary'
           },
         ];
       
@@ -460,7 +460,7 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
                     <p className={`${stat.textColor} text-sm font-medium mb-1`}>{stat.label}</p>
                     {stat.value === null ? (
                       <div className="flex items-center space-x-2">
-                        <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+                        <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
                       </div>
                     ) : (
                       <p className={`text-2xl font-semibold ${stat.textColor.replace('700', '900')}`}>
@@ -479,11 +479,11 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
       {/* Announcements and Quick Actions - Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 max-h-[500px]">
         {/* Announcements Card - Left side, 3/4 width */}
-        <Card className="w-full lg:col-span-3 flex flex-col max-h-[500px] bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-          <CardHeader className="pb-3 flex-shrink-0 border-b border-navy-100/30">
+        <Card className="w-full lg:col-span-3 flex flex-col max-h-[500px] bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
+          <CardHeader className="pb-3 flex-shrink-0 border-b border-primary-100/30">
             <CardTitle className="flex items-center space-x-2">
-              <Megaphone className="h-5 w-5 text-navy-600" />
-              <span className="text-navy-900">Chapter Announcements</span>
+              <Megaphone className="h-5 w-5 text-brand-primary" />
+              <span className="text-primary-900">Chapter Announcements</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 flex-1 overflow-y-auto">
@@ -563,7 +563,7 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
               </div>
               
               <Button 
-                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 w-full md:w-auto transition-all duration-300"
+                className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 w-full md:w-auto transition-all duration-300"
                 onClick={handleSendAnnouncement}
                 disabled={isSubmitting || announcementsLoading}
               >
@@ -575,9 +575,9 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
         </Card>
 
         {/* Quick Actions - Right side, 1/4 width */}
-        <Card className="w-full lg:col-span-1 flex flex-col max-h-[500px] bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-          <CardHeader className="pb-3 flex-shrink-0 border-b border-navy-100/30">
-            <CardTitle className="text-lg font-semibold text-navy-900">Quick Actions</CardTitle>
+        <Card className="w-full lg:col-span-1 flex flex-col max-h-[500px] bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
+          <CardHeader className="pb-3 flex-shrink-0 border-b border-primary-100/30">
+            <CardTitle className="text-lg font-semibold text-primary-900">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="p-6 flex-1 overflow-y-auto">
             <div className="space-y-3">
@@ -587,7 +587,7 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
                   <Button
                     key={action.id}
                     variant="outline"
-                    className="w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-navy-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                    className="w-full justify-start text-sm whitespace-nowrap rounded-full bg-white/80 backdrop-blur-md border border-primary-300/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                     onClick={action.onClick}
                   >
                     <Icon className="h-4 w-4 mr-2 flex-shrink-0" />

@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Clock, Users, DollarSign, FileText, Megaphone, CheckCircle, Calendar, RefreshCw } from 'lucide-react';
+import { Drawer } from 'vaul';
+import { Clock, DollarSign, FileText, Megaphone, CheckCircle, Calendar, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { createClient } from '@supabase/supabase-js';
 import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
@@ -29,18 +28,32 @@ interface ActivityItem {
   };
 }
 
+// Pagination constants
+const ITEMS_PER_PAGE = 15;
+
 export function OperationsFeed() {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [allActivities, setAllActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalLoading, setModalLoading] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerLoading, setDrawerLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalFetched, setTotalFetched] = useState(0);
   const { profile } = useProfile();
   const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
+  const [totalItems, setTotalItems] = useState(0);
 
   useEffect(() => {
     if (profile?.chapter_id) {
       fetchRecentActivities();
+
+      // Poll for updates every 60 seconds
+      const interval = setInterval(() => {
+        fetchRecentActivities();
+      }, 60000); // 60 seconds
+
+      return () => clearInterval(interval);
     }
   }, [profile?.chapter_id]);
 
@@ -61,24 +74,63 @@ export function OperationsFeed() {
     }
   };
 
-  // Fetch ALL activities for the modal
-  const fetchAllActivities = async () => {
+  // Fetch activities for the drawer with pagination
+  const fetchActivitiesForDrawer = async (page: number = 1) => {
     if (!profile?.chapter_id) return;
 
     try {
-      setModalLoading(true);
-      const activities = await fetchActivitiesFromDatabase(50); // Get more for modal
-      setAllActivities(activities);
+      setDrawerLoading(true);
+      // Fetch all activities to get total count (could optimize with server-side pagination)
+      const allData = await fetchActivitiesFromDatabase(100);
+
+      // Calculate pagination
+      const total = allData.length;
+      const startIndex = (page - 1) * ITEMS_PER_PAGE;
+      const endIndex = startIndex + ITEMS_PER_PAGE;
+      const pageData = allData.slice(startIndex, endIndex);
+
+      setTotalItems(total);
+      setAllActivities(pageData);
+      setCurrentPage(page);
     } catch (error) {
-      console.error('Error fetching all activities:', error);
+      console.error('Error fetching activities:', error);
     } finally {
-      setModalLoading(false);
+      setDrawerLoading(false);
+    }
+  };
+
+  // Handle opening the drawer
+  const handleOpenDrawer = () => {
+    setDrawerOpen(true);
+    setCurrentPage(1);
+    setAllActivities([]);
+    fetchActivitiesForDrawer(1);
+  };
+
+  // Pagination handlers
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      fetchActivitiesForDrawer(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      fetchActivitiesForDrawer(currentPage + 1);
     }
   };
 
   // Core function to fetch activities from database
+  // Core function to fetch activities from database
   const fetchActivitiesFromDatabase = async (limit: number): Promise<ActivityItem[]> => {
     if (!profile?.chapter_id) return [];
+
+    // Calculate date 2 months ago for filtering
+    const twoMonthsAgo = new Date();
+    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+    const twoMonthsAgoISO = twoMonthsAgo.toISOString();
 
     // Build fetch promises - conditionally include events
     const fetchPromises = [
@@ -88,6 +140,7 @@ export function OperationsFeed() {
           .from('events')
           .select('id, title, created_at, created_by')
           .eq('chapter_id', profile.chapter_id)
+          .gte('created_at', twoMonthsAgoISO)  // <-- ADD THIS
           .order('created_at', { ascending: false })
           .limit(limit)
       ] : [Promise.resolve({ data: null, error: null })]),
@@ -96,10 +149,11 @@ export function OperationsFeed() {
       supabase
         .from('announcements')
         .select(`
-          id, title, created_at, sender_id,
-          sender:profiles!sender_id(full_name, first_name, last_name)
-        `)
+        id, title, created_at, sender_id,
+        sender:profiles!sender_id(full_name, first_name, last_name)
+      `)
         .eq('chapter_id', profile.chapter_id)
+        .gte('created_at', twoMonthsAgoISO)  // <-- ADD THIS
         .order('created_at', { ascending: false })
         .limit(limit),
 
@@ -107,10 +161,11 @@ export function OperationsFeed() {
       supabase
         .from('tasks')
         .select(`
-          id, title, status, created_at, assigned_by,
-          assigner:profiles!assigned_by(full_name, first_name, last_name)
-        `)
+        id, title, status, created_at, assigned_by,
+        assigner:profiles!assigned_by(full_name, first_name, last_name)
+      `)
         .eq('chapter_id', profile.chapter_id)
+        .gte('created_at', twoMonthsAgoISO)  // <-- ADD THIS
         .order('created_at', { ascending: false })
         .limit(limit),
 
@@ -118,10 +173,11 @@ export function OperationsFeed() {
       supabase
         .from('documents')
         .select(`
-          id, title, created_at, owner_id,
-          owner:profiles!owner_id(full_name, first_name, last_name)
-        `)
+        id, title, created_at, owner_id,
+        owner:profiles!owner_id(full_name, first_name, last_name)
+      `)
         .eq('chapter_id', profile.chapter_id)
+        .gte('created_at', twoMonthsAgoISO)  // <-- ADD THIS
         .order('created_at', { ascending: false })
         .limit(limit),
 
@@ -129,12 +185,13 @@ export function OperationsFeed() {
       supabase
         .from('dues_assignments')
         .select(`
-          id, status, amount_paid, updated_at, user_id,
-          user:profiles!user_id(full_name, first_name, last_name),
-          cycle:dues_cycles(name)
-        `)
+        id, status, amount_paid, updated_at, user_id,
+        user:profiles!user_id(full_name, first_name, last_name),
+        cycle:dues_cycles(name)
+      `)
         .eq('cycle.chapter_id', profile.chapter_id)
         .eq('status', 'paid')
+        .gte('updated_at', twoMonthsAgoISO)  // <-- ADD THIS (uses updated_at for payments)
         .order('updated_at', { ascending: false })
         .limit(limit)
     ];
@@ -254,7 +311,7 @@ export function OperationsFeed() {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'event': return 'bg-blue-100 text-blue-800';
+      case 'event': return 'bg-accent-100 text-accent-800';
       case 'payment': return 'bg-green-100 text-green-800';
       case 'task': return 'bg-purple-100 text-purple-800';
       case 'document': return 'bg-orange-100 text-orange-800';
@@ -278,7 +335,7 @@ export function OperationsFeed() {
     const now = new Date();
     const date = new Date(dateString);
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+
     if (diffInMinutes < 1) return 'Just now';
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
@@ -288,24 +345,23 @@ export function OperationsFeed() {
   const renderActivityItem = (item: ActivityItem) => {
     const IconComponent = item.icon;
     return (
-      <div key={item.id} className="flex items-start space-x-3 p-2 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-        <div className="w-6 h-6 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 shrink-0">
+      <div key={item.id} className="flex items-start space-x-3 p-2 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors overflow-hidden">
+        <div className="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center text-brand-primary shrink-0">
           <IconComponent className="h-3 w-3" />
         </div>
-        
-        <div className="flex-1 min-w-0">
+
+        <div className="flex-1 min-w-0 overflow-hidden">
           <div className="flex items-center space-x-2 mb-1">
-            <h4 className="font-medium text-gray-900 text-sm whitespace-nowrap">{item.title}</h4>
-            <IconComponent className="h-3 w-3 text-gray-500" />
+            <h4 className="font-medium text-gray-900 text-sm truncate">{item.title}</h4>
           </div>
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-gray-600 flex-1 truncate mr-2">{item.meta}</p>
-            <div className="flex items-center space-x-2 text-xs text-gray-500 shrink-0">
-              <span>{formatTimeAgo(item.createdAt)}</span>
-              {item.user && (
-                <span>by {item.user.full_name || `${item.user.first_name} ${item.user.last_name}`}</span>
-              )}
-            </div>
+          <p className="text-xs text-gray-600 truncate mb-1">{item.meta}</p>
+          <div className="flex items-center text-xs text-gray-500">
+            <span className="shrink-0">{formatTimeAgo(item.createdAt)}</span>
+            {item.user && (
+              <span className="truncate ml-2">
+                by {item.user.full_name || `${item.user.first_name} ${item.user.last_name}`}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -317,7 +373,7 @@ export function OperationsFeed() {
       <Card className="bg-white">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center space-x-2">
-            <Clock className="h-5 w-5 text-navy-600" />
+            <Clock className="h-5 w-5 text-brand-primary" />
             <span>Operations Feed</span>
           </CardTitle>
         </CardHeader>
@@ -338,7 +394,7 @@ export function OperationsFeed() {
     <Card className="bg-white">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center space-x-2">
-          <Clock className="h-5 w-5 text-navy-600" />
+          <Clock className="h-5 w-5 text-brand-primary" />
           <span>Operations Feed</span>
         </CardTitle>
       </CardHeader>
@@ -354,74 +410,104 @@ export function OperationsFeed() {
             activities.map(renderActivityItem)
           )}
         </div>
-        
-        <div className="pt-4 border-t border-gray-100">
-          {/* Refresh and View All buttons on same row */}
-          <div className="flex space-x-2">
-            {/* Refresh Button - Square with icon only */}
-            <button 
-              className="w-8 h-8 border border-navy-600 rounded-md flex items-center justify-center text-navy-600 hover:bg-navy-50 hover:text-navy-700 transition-colors"
-              onClick={fetchRecentActivities}
-            >
-              <RefreshCw className="h-4 w-4" />
-            </button>
 
-            {/* View All Activities Modal Button - Takes remaining space */}
-            <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex-1 h-10 rounded-full text-navy-600 border-navy-600 bg-white hover:bg-navy-50 font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-300"
-                  onClick={() => {
-                    setModalOpen(true);
-                    fetchAllActivities();
-                  }}
-                >
-                  <Clock className="h-4 w-4 mr-2" />
-                  View All
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="rounded-lg max-h-[80vh] overflow-hidden bg-white sm:max-w-2xl max-w-[calc(100vw-2rem)] mx-auto sm:mx-0">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center space-x-2">
-                    <Clock className="h-5 w-5 text-navy-600" />
-                    <span>All Chapter Activity</span>
-                  </DialogTitle>
-                </DialogHeader>
-                
-                <div className="overflow-y-auto max-h-[60vh]">
-                  {modalLoading ? (
-                    <div className="space-y-4">
+        <div className="pt-4 border-t border-gray-100">
+          {/* View All Activities Drawer Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full h-10 rounded-full text-brand-primary border-brand-primary bg-white hover:bg-primary-50 font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-300"
+            onClick={handleOpenDrawer}
+          >
+            <Clock className="h-4 w-4 mr-2" />
+            View All
+          </Button>
+
+          {/* Activity Drawer */}
+          <Drawer.Root open={drawerOpen} onOpenChange={setDrawerOpen}>
+            <Drawer.Portal>
+              <Drawer.Overlay className="fixed inset-0 z-[9999] bg-black/40" />
+              <Drawer.Content className="fixed bottom-0 left-0 right-0 z-[10000] bg-white rounded-t-[20px] max-h-[85vh] max-w-lg mx-auto flex flex-col outline-none">
+                {/* Drawer Handle */}
+                <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 my-3" />
+
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 pb-3 border-b border-gray-200">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-5 w-5 text-brand-primary" />
+                    <h3 className="text-lg font-semibold text-gray-900">All Chapter Activity</h3>
+                  </div>
+                  <button
+                    onClick={() => setDrawerOpen(false)}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <X className="h-5 w-5 text-gray-500" />
+                  </button>
+                </div>
+
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto p-4">
+                  {drawerLoading && allActivities.length === 0 ? (
+                    <div className="space-y-3">
                       {[...Array(5)].map((_, i) => (
-                        <div key={i} className="animate-pulse">
-                          <div className="h-16 bg-gray-200 rounded-lg"></div>
-                        </div>
+                        <div key={i} className="animate-pulse h-16 bg-gray-200 rounded-lg" />
                       ))}
                     </div>
+                  ) : allActivities.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">
+                      <Clock className="h-10 w-10 mx-auto mb-3 text-gray-400" />
+                      <p className="text-base">No activity found</p>
+                      <p className="text-sm text-gray-400 mt-1">Activities will appear here as they happen</p>
+                    </div>
                   ) : (
-                    <div className="space-y-4">
-                      {allActivities.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                          <Clock className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                          <p>No activity found</p>
-                        </div>
-                      ) : (
-                        allActivities.map(renderActivityItem)
-                      )}
+                    <div className="space-y-3">
+                      {allActivities.map(renderActivityItem)}
                     </div>
                   )}
                 </div>
 
-                {/* Footer with activity count */}
-                <div className="border-t border-gray-200 pt-3 mt-4">
-                  <p className="text-center text-sm text-gray-500">
-                    Showing {allActivities.length} of {allActivities.length} activities
+                {/* Footer with Pagination */}
+                <div className="border-t border-gray-200 p-4 flex-shrink-0 space-y-3">
+                  {/* Item count */}
+                  <p className="text-center text-xs text-gray-500">
+                    Showing {allActivities.length > 0 ? ((currentPage - 1) * ITEMS_PER_PAGE + 1) : 0} to {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} of {totalItems} activities
                   </p>
+
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center space-x-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handlePreviousPage}
+                        disabled={currentPage === 1 || drawerLoading}
+                        className="h-8 px-3 text-xs rounded-full"
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                        Previous
+                      </Button>
+                      <div className="flex items-center space-x-1">
+                        <span className="text-xs text-gray-600">Page</span>
+                        <span className="text-xs font-medium">{currentPage}</span>
+                        <span className="text-xs text-gray-600">of</span>
+                        <span className="text-xs font-medium">{totalPages}</span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleNextPage}
+                        disabled={currentPage === totalPages || drawerLoading}
+                        className="h-8 px-3 text-xs rounded-full"
+                      >
+                        Next
+                        <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+              </Drawer.Content>
+            </Drawer.Portal>
+          </Drawer.Root>
         </div>
       </CardContent>
     </Card>

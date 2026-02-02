@@ -366,7 +366,7 @@ export function ChangePasswordForm({
         <div className="text-center mb-4">
           <a 
             href="/auth/forgot-password" 
-            className="text-sm text-navy-600 hover:text-navy-700 underline"
+            className="text-sm text-brand-primary hover:text-brand-primary-hover underline"
           >
             Forgot your password?
           </a>

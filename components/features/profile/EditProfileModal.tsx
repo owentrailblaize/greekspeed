@@ -90,7 +90,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
   const { openEditProfileModal, closeEditProfileModal } = useModal();
 
   // Initialize profile update detection hook
-  const { detectChanges, setBaseline, clearBaseline } = useProfileUpdateDetection({
+  const { detectChanges, setBaseline, clearBaseline, getBaseline } = useProfileUpdateDetection({
     ignoreNotSpecified: true,
   });
 
@@ -203,15 +203,19 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
   useEffect(() => {
     if (isOpen && profile) {
       if (profile.role === 'alumni' && alumniData) {
-        setBaseline({
+        const alumniBaseline = {
           role: profile.role || null,
           job_title: alumniData.job_title || null,
           company: alumniData.company || null,
           industry: alumniData.industry || null,
-        });
+          location: alumniData.location || null,
+          hometown: alumniData.hometown || null,
+        };
+        console.log('🔍 [Alumni] Setting baseline when modal opens:', alumniBaseline);
+        setBaseline(alumniBaseline);
       } else {
         // Set baseline for active members with academic/profile fields
-        setBaseline({
+        const activeBaseline = {
           role: profile.role || null,
           major: profile.major || null,
           minor: profile.minor || null,
@@ -219,7 +223,9 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
           gpa: profile.gpa?.toString() || null,
           location: profile.location || null,
           hometown: profile.hometown || null,
-        });
+        };
+        console.log('🔍 [Active Member] Setting baseline when modal opens:', activeBaseline);
+        setBaseline(activeBaseline);
       }
     } else if (!isOpen) {
       clearBaseline();
@@ -515,6 +521,35 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
           location: profile.location || null,
           hometown: profile.hometown || null,
         };
+      
+      const valuesToDetect =
+      profile?.role === 'alumni'
+        ? {
+            role: profile.role || null,
+            job_title: formData.job_title?.trim() || null,
+            company: formData.company?.trim() || null,
+            industry: formData.industry?.trim() || null,
+            location: formData.location?.trim() || null,
+            hometown: formData.hometown?.trim() || null,
+          }
+        : {
+            role: profile.role || null,
+            major: formData.major?.trim() || null,
+            minor: formData.minor?.trim() || null,
+            grad_year: formData.grad_year ? String(formData.grad_year).trim() : null,
+            gpa: formData.gpa ? String(formData.gpa).trim() : null,
+            location: formData.location?.trim() || null,
+            hometown: formData.hometown?.trim() || null,
+          };
+      
+      // Guarantee baseline exists
+      if (!getBaseline()) {
+        setBaseline(baselineValues);
+      }
+      
+      const changesForPrompt = detectChanges(valuesToDetect);
+      console.log('🔍 [Pre-Save] valuesToDetect:', valuesToDetect);
+      console.log('🔍 [Pre-Save] changesForPrompt:', changesForPrompt);
 
       // Update profile data - only include fields that exist in profiles table
       const profileUpdates: any = {
@@ -623,19 +658,19 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
           industry: formData.industry?.trim() || null,
         });
         
-        if (changes.length > 0 && profile?.chapter_id) {
-          // Call the callback with detected changes, then close the modal
-          onProfileUpdatedWithChanges?.(changes);
+        if (changesForPrompt.length > 0 && profile?.chapter_id) {
+          onProfileUpdatedWithChanges?.(changesForPrompt);
           setLoading(false);
           onClose();
           return;
         }
       } else {
+        // Verify baseline is set
+        const currentBaseline = getBaseline();
+        console.log('🔍 [Active Member] Current baseline from hook:', currentBaseline);
+        console.log('🔍 [Active Member] Baseline values captured at start:', baselineValues);
 
-        setBaseline(baselineValues);
-
-        // Detect changes for active members
-        const changes = detectChanges({
+        const valuesToDetect = {
           role: profile.role || null,
           major: formData.major?.trim() || null,
           minor: formData.minor?.trim() || null,
@@ -643,14 +678,24 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
           gpa: formData.gpa ? String(formData.gpa).trim() : null,
           location: formData.location?.trim() || null,
           hometown: formData.hometown?.trim() || null,
-        });
-        
-        if (changes.length > 0 && profile?.chapter_id) {
-          // Call the callback with detected changes, then close the modal
-          onProfileUpdatedWithChanges?.(changes);
+        };
+
+        console.log('🔍 [Active Member] Values being passed to detectChanges:', valuesToDetect);
+
+        const changes = detectChanges(valuesToDetect);
+
+        console.log('🔍 [Active Member] Detected changes:', changes);
+        console.log('🔍 [Active Member] Profile chapter_id:', profile?.chapter_id);
+        console.log('🔍 [Active Member] Should show prompt?', changes.length > 0 && profile?.chapter_id);
+
+        if (changesForPrompt.length > 0 && profile?.chapter_id) {
+          console.log('✅ [Active Member] Calling callback with detected changes');
+          onProfileUpdatedWithChanges?.(changesForPrompt);
           setLoading(false);
           onClose();
           return;
+        } else {
+          console.log('❌ [Active Member] Not showing prompt - changes:', changesForPrompt.length, 'chapter_id:', profile?.chapter_id);
         }
       }
       
@@ -688,7 +733,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
         {/* Enhanced Header with Unsaved Changes Indicator */}
         <div className={`flex items-center justify-between border-b border-gray-200 flex-shrink-0 ${isMobile ? 'p-4' : 'p-6'}`}>
           <div className="flex items-center gap-3">
-            <h2 className={`font-bold text-navy-900 ${isMobile ? 'text-xl' : 'text-2xl'}`}>Edit Profile</h2>
+            <h2 className={`font-bold text-primary-900 ${isMobile ? 'text-xl' : 'text-2xl'}`}>Edit Profile</h2>
           </div>
           <button
             onClick={handleClose}
@@ -705,7 +750,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
             <div className={`relative ${isMobile ? 'h-32' : 'h-64'} overflow-hidden rounded-lg`}>
               {/* Banner Section - Make it clickable */}
               <div 
-                className="absolute inset-0 bg-gradient-to-r from-navy-600 via-blue-400 to-blue-100 flex items-center justify-center text-white cursor-pointer group rounded-lg"
+                className="absolute inset-0 bg-gradient-to-r from-brand-primary via-accent-400 to-accent-100 flex items-center justify-center text-white cursor-pointer group rounded-lg"
                 onClick={() => document.getElementById('banner-upload')?.click()}
               >
                   {/* Show actual banner if it exists */}
@@ -764,7 +809,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                     </div>
                     
                     {/* Upload Icon Overlay */}
-                    <div className={`absolute -bottom-1 -right-1 ${isMobile ? 'w-6 h-6' : 'w-7 h-7'} bg-navy-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-navy-700 transition-colors shadow-md`}>
+                    <div className={`absolute -bottom-1 -right-1 ${isMobile ? 'w-6 h-6' : 'w-7 h-7'} bg-brand-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-brand-primary-hover transition-colors shadow-md`}>
                       {avatarUploading ? (
                         <div className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} border-2 border-white border-t-transparent rounded-full animate-spin`} />
                       ) : (
@@ -804,8 +849,8 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
             <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200 mt-4' : 'space-y-4'}`}>
               {!isMobile && (
                 <div className="flex items-center gap-2 mb-3">
-                  <User className="w-5 h-5 text-navy-600" />
-                  <h3 className="text-lg font-semibold text-navy-600">Personal Information</h3>
+                  <User className="w-5 h-5 text-brand-primary" />
+                  <h3 className="text-lg font-semibold text-brand-primary">Personal Information</h3>
                 </div>
               )}
               <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
@@ -903,8 +948,8 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                 <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
                   {!isMobile && (
                     <div className="flex items-center gap-2 mb-3">
-                      <Briefcase className="w-5 h-5 text-navy-600" />
-                      <h3 className="text-lg font-semibold text-navy-600">Professional Information</h3>
+                      <Briefcase className="w-5 h-5 text-brand-primary" />
+                      <h3 className="text-lg font-semibold text-brand-primary">Professional Information</h3>
                       <Badge variant="secondary" className="text-xs">Alumni</Badge>
                     </div>
                   )}
@@ -971,8 +1016,8 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                 <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
                   {!isMobile && (
                     <div className="flex items-center gap-2 mb-3">
-                      <HelpCircle className="w-5 h-5 text-navy-600" />
-                      <h3 className="text-lg font-semibold text-navy-600">Additional Information</h3>
+                      <HelpCircle className="w-5 h-5 text-brand-primary" />
+                      <h3 className="text-lg font-semibold text-brand-primary">Additional Information</h3>
                       <Badge variant="secondary" className="text-xs">Optional</Badge>
                     </div>
                   )}
@@ -997,8 +1042,8 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
             <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
               {!isMobile && (
                 <div className="flex items-center gap-2 mb-3">
-                  <Building className="w-5 h-5 text-navy-600" />
-                  <h3 className="text-lg font-semibold text-navy-600">Chapter & Role</h3>
+                  <Building className="w-5 h-5 text-brand-primary" />
+                  <h3 className="text-lg font-semibold text-brand-primary">Chapter & Role</h3>
                 </div>
               )}
               <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
@@ -1038,8 +1083,8 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
               <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
                 {!isMobile && (
                   <div className="flex items-center gap-2 mb-3">
-                    <GraduationCap className="w-5 h-5 text-navy-600" />
-                    <h3 className="text-lg font-semibold text-navy-600">Academic Information</h3>
+                    <GraduationCap className="w-5 h-5 text-brand-primary" />
+                    <h3 className="text-lg font-semibold text-brand-primary">Academic Information</h3>
                   </div>
                 )}
                 <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
@@ -1102,8 +1147,8 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
             <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
               {!isMobile && (
                 <div className="flex items-center gap-2 mb-3">
-                  <Phone className="w-5 h-5 text-navy-600" />
-                  <h3 className="text-lg font-semibold text-navy-600">Contact & Location</h3>
+                  <Phone className="w-5 h-5 text-brand-primary" />
+                  <h3 className="text-lg font-semibold text-brand-primary">Contact & Location</h3>
                 </div>
               )}
               <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
@@ -1177,8 +1222,8 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
             <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
               {!isMobile && (
                 <div className="flex items-center gap-2 mb-3">
-                  <FileText className="w-5 h-5 text-navy-600" />
-                  <h3 className="text-lg font-semibold text-navy-600">Bio</h3>
+                  <FileText className="w-5 h-5 text-brand-primary" />
+                  <h3 className="text-lg font-semibold text-brand-primary">Bio</h3>
                   <Badge variant="secondary" className="text-xs">Optional</Badge>
                 </div>
               )}
@@ -1221,7 +1266,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                   handleClose();
                 }
               }}
-              className={`flex-1 rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300`}
+              className={`flex-1 rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300`}
             >
               Cancel
             </Button>
@@ -1239,7 +1284,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                   handleSubmit(syntheticEvent);
                 }
               }}
-              className={`flex-1 rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
+              className={`flex-1 rounded-full bg-brand-primary text-white hover:bg-brand-primary-hover shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </Button>

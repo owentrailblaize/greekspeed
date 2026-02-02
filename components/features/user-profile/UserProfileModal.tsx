@@ -60,7 +60,7 @@ export function UserProfileModal({ profile, isOpen, onClose, loading = false, er
           <div className="p-8">
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <Loader2 className="h-12 w-12 text-navy-600 mx-auto mb-4 animate-spin" />
+                <Loader2 className="h-12 w-12 text-brand-primary mx-auto mb-4 animate-spin" />
                 <p className="text-gray-600 font-medium">Loading profile...</p>
               </div>
             </div>

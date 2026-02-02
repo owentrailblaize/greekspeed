@@ -175,16 +175,38 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
           {renderMobileContent()}
         </div>
 
+        {/* Tablet Layout (sm to lg): Two Column - Feed + Right Sidebar */}
+        <div className="hidden sm:grid lg:hidden grid-cols-12 gap-4">
+          {/* Main Content - Social Feed (takes ~70%) */}
+          <div className="col-span-8">
+            <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
+          </div>
+
+          {/* Right Sidebar - Events & Key Info (~30%) */}
+          <div className="col-span-4">
+            <div className="space-y-4">
+              <FeatureGuard flagName="events_management_enabled">
+                <UpcomingEventsCard />
+              </FeatureGuard>
+              <FeatureGuard flagName="financial_tools_enabled">
+                <DuesStatusCard />
+              </FeatureGuard>
+              {/* Important: Announcements visible on tablet since left sidebar is hidden */}
+              <AnnouncementsCard />
+            </div>
+          </div>
+        </div>
+
         {/* Desktop Layout: Three Column Grid (Preserved) */}
-        <div className="hidden sm:grid sm:grid-cols-12 sm:gap-6">
+        <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6">
           {/* Left Sidebar - Dues, Tasks, Calendar & Documents */}
           <div className="col-span-3">
-            <div className="top-6 space-y-6">
+            <div className="space-y-6">
+              <FeatureGuard flagName="financial_tools_enabled">
+                <DuesStatusCard />
+              </FeatureGuard>
               <AnnouncementsCard />
               <MyTasksCard />
-              <FeatureGuard flagName="events_management_enabled">
-                <CompactCalendarCard />
-              </FeatureGuard>
             </div>
           </div>
 
@@ -197,10 +219,10 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
           <div className="col-span-3">
             <div className="space-y-6">
               <FeatureGuard flagName="events_management_enabled">
-                <UpcomingEventsCard />
+                <CompactCalendarCard />
               </FeatureGuard>
-              <FeatureGuard flagName="financial_tools_enabled">
-                <DuesStatusCard />
+              <FeatureGuard flagName="events_management_enabled">
+                <UpcomingEventsCard />
               </FeatureGuard>
             </div>
           </div>
@@ -217,12 +239,11 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
       {activeMobileTab === 'home' && recruitmentCrmEnabled && (
         <div
           onClick={handleAddRecruit}
-          className="fixed bottom-40 right-4 z-40 h-14 w-14 rounded-full sm:hidden flex items-center justify-center cursor-pointer group"
+          className="fixed bottom-40 right-4 z-40 h-14 w-14 rounded-full sm:hidden flex items-center justify-center cursor-pointer group bg-brand-primary hover:bg-brand-primary-hover transition-colors"
           style={{
-            background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%)',
             boxShadow: `
-              0 8px 16px rgba(30, 64, 175, 0.5),
-              0 4px 8px rgba(30, 64, 175, 0.4),
+              0 8px 16px rgba(0, 0, 0, 0.25),
+              0 4px 8px rgba(0, 0, 0, 0.15),
               inset 0 1px 0 rgba(255, 255, 255, 0.3),
               inset 0 -1px 0 rgba(0, 0, 0, 0.2)
             `,
@@ -314,7 +335,7 @@ export function ActiveMemberOverview({ initialFeed, fallbackChapterId }: ActiveM
       fallback={
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary mx-auto mb-4"></div>
             <p className="text-gray-600">Loading...</p>
           </div>
         </div>

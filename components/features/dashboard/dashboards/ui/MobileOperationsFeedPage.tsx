@@ -231,7 +231,7 @@ export function MobileOperationsFeedPage() {
   // Helper functions from OperationsFeed
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'event': return 'bg-blue-100 text-blue-800';
+      case 'event': return 'bg-accent-100 text-accent-800';
       case 'payment': return 'bg-green-100 text-green-800';
       case 'task': return 'bg-purple-100 text-purple-800';
       case 'document': return 'bg-orange-100 text-orange-800';
@@ -316,7 +316,7 @@ export function MobileOperationsFeedPage() {
       <div className="max-w-md mx-auto">
         {/* Header */}
         <div className="flex items-center space-x-2 mb-6">
-          <Activity className="h-6 w-6 text-navy-600" />
+          <Activity className="h-6 w-6 text-brand-primary" />
           <h1 className="text-xl font-semibold text-gray-900">Operations Feed</h1>
         </div>
 
@@ -331,13 +331,13 @@ export function MobileOperationsFeedPage() {
                   onClick={() => setActiveFilter(filter.id)}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                     isActive 
-                      ? 'bg-blue-600 text-white' 
+                      ? 'bg-brand-accent text-white' 
                       : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                   }`}
                 >
                   <span>{filter.label}</span>
                   <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                    isActive ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
+                    isActive ? 'bg-accent-500 text-white' : 'bg-gray-100 text-gray-600'
                   }`}>
                     {filter.count}
                   </span>
@@ -370,7 +370,7 @@ export function MobileOperationsFeedPage() {
                 >
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0">
-                      <TypeIcon className="h-5 w-5 text-navy-600" />
+                      <TypeIcon className="h-5 w-5 text-brand-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between mb-1">

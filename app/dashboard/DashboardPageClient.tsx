@@ -7,6 +7,9 @@ import { DashboardOverview } from '@/components/features/dashboard/DashboardOver
 import { useRouter } from 'next/navigation';
 import { WelcomeModal } from '@/components/shared/WelcomeModal';
 import type { SocialFeedInitialData } from '@/components/features/dashboard/dashboards/ui/SocialFeed';
+import { queueProfileUpdatePrompt } from '@/lib/utils/profileUpdatePromptQueue';
+import type { DetectedChange } from '@/components/features/profile/ProfileUpdatePromptModal';
+import { useModal } from '@/lib/contexts/ModalContext';
 
 type DashboardPageClientProps = {
   initialFeed?: SocialFeedInitialData | null;
@@ -21,9 +24,23 @@ export default function DashboardPageClient({
   const { profile, isDeveloper, loading: profileLoading } = useProfile();
   const router = useRouter();
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-
+  const { openEditProfileModal } = useModal();
   const isOAuthUser = user?.app_metadata?.provider &&
     user?.app_metadata?.provider !== 'email';
+
+  // Handler for sharing an introduction post from welcome modal
+  const handleShareIntroduction = () => {
+    if (!profile?.id) return;
+    
+    const introductionChange: DetectedChange = {
+      type: 'welcome_introduction',
+      field: 'introduction',
+      newValue: profile.chapter || 'the chapter',
+    };
+    
+    // Queue the introduction prompt - will be picked up by layout.tsx
+    queueProfileUpdatePrompt(profile.id, [introductionChange]);
+  };
 
   useEffect(() => {
     if (authLoading || profileLoading) return;
@@ -62,7 +79,7 @@ export default function DashboardPageClient({
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-navy-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-brand-primary mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">Loading dashboard...</p>
         </div>
       </div>
@@ -82,7 +99,7 @@ export default function DashboardPageClient({
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-navy-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-brand-primary mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">Loading dashboard...</p>
         </div>
       </div>
@@ -99,7 +116,12 @@ export default function DashboardPageClient({
       />
 
       {showWelcomeModal && profile && (
-        <WelcomeModal profile={profile} onClose={() => setShowWelcomeModal(false)} />
+        <WelcomeModal 
+          profile={profile} 
+          onClose={() => setShowWelcomeModal(false)}
+          onShareIntroduction={handleShareIntroduction}
+          onEditProfile={openEditProfileModal}
+        />
       )}
     </div>
   );

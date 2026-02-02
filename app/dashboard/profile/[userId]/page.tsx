@@ -136,16 +136,15 @@ export default function UserProfilePage() {
       <div className="min-h-screen bg-white sm:hidden pb-20">
         {/* Error state with back button */}
         <div className="relative">
-          <div className="h-32 bg-gradient-to-r from-navy-100 via-blue-100 to-blue-50 relative">
+          <div className="h-32 bg-gradient-to-r from-primary-100 via-accent-100 to-accent-50 relative">
             {/* Back Button - Positioned in top-left of banner */}
             <button
               onClick={handleClose}
-              className="absolute top-3 left-3 z-10 h-10 w-10 rounded-full flex items-center justify-center cursor-pointer group"
+              className="absolute top-3 left-3 z-10 h-10 w-10 rounded-full flex items-center justify-center cursor-pointer group bg-brand-primary hover:bg-brand-primary-hover transition-colors"
               style={{
-                background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%)',
                 boxShadow: `
-                  0 6px 12px rgba(30, 64, 175, 0.4),
-                  0 2px 4px rgba(30, 64, 175, 0.3),
+                  0 6px 12px rgba(0, 0, 0, 0.2),
+                  0 2px 4px rgba(0, 0, 0, 0.15),
                   inset 0 1px 0 rgba(255, 255, 255, 0.3),
                   inset 0 -1px 0 rgba(0, 0, 0, 0.2)
                 `,

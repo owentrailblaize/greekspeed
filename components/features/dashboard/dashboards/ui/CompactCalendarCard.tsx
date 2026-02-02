@@ -15,7 +15,7 @@ export function CompactCalendarCard() {
   const [hoveredEvent, setHoveredEvent] = useState<Event | null>(null);
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0, placement: 'bottom-right' });
-  
+
   const popupRef = useRef<HTMLDivElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
   const { profile } = useProfile();
@@ -25,10 +25,10 @@ export function CompactCalendarCard() {
   const calculatePopupPosition = useCallback((mouseX: number, mouseY: number) => {
     if (!popupRef.current) {
       // Fallback position if popup isn't rendered yet
-      return { 
-        x: Math.min(mouseX + 10, window.innerWidth - 340), 
-        y: Math.max(mouseY - 10, 10), 
-        placement: 'bottom-right' 
+      return {
+        x: Math.min(mouseX + 10, window.innerWidth - 340),
+        y: Math.max(mouseY - 10, 10),
+        placement: 'bottom-right'
       };
     }
 
@@ -36,31 +36,31 @@ export function CompactCalendarCard() {
     const popupRect = popup.getBoundingClientRect();
     const popupWidth = popupRect.width;
     const popupHeight = popupRect.height;
-    
+
     const padding = 16; // Safe padding from viewport edges
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    
+
     let x = mouseX + 10;
     let y = mouseY - 10;
     let placement = 'bottom-right';
-    
+
     // Check horizontal overflow - flip to left side if needed
     if (x + popupWidth > viewportWidth - padding) {
       x = mouseX - popupWidth - 10;
       placement = 'bottom-left';
     }
-    
+
     // Check vertical overflow - flip to top if needed
     if (y - popupHeight < padding) {
       y = mouseY + 10;
       placement = placement === 'bottom-right' ? 'top-right' : 'top-left';
     }
-    
+
     // Final boundary checks to ensure popup stays within viewport
     x = Math.max(padding, Math.min(x, viewportWidth - popupWidth - padding));
     y = Math.max(padding, Math.min(y, viewportHeight - popupHeight - padding));
-    
+
     return { x, y, placement };
   }, []);
 
@@ -75,17 +75,17 @@ export function CompactCalendarCard() {
   // Fetch events for the calendar - ONLY for this chapter
   const fetchEvents = async () => {
     if (!chapterId) return;
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
       // CompactCalendarCard - Fetching events for chapter
       const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=all`);
       if (!response.ok) {
         throw new Error('Failed to fetch events');
       }
-      
+
       const data = await response.json();
       // CompactCalendarCard - Fetched events
       setEvents(data);
@@ -113,8 +113,8 @@ export function CompactCalendarCard() {
     return events.filter(event => {
       const eventDate = new Date(event.start_time);
       return eventDate.getDate() === date.getDate() &&
-             eventDate.getMonth() === date.getMonth() &&
-             eventDate.getFullYear() === date.getFullYear();
+        eventDate.getMonth() === date.getMonth() &&
+        eventDate.getFullYear() === date.getFullYear();
     });
   };
 
@@ -153,14 +153,14 @@ export function CompactCalendarCard() {
           <div className={`text-xs font-medium mb-1 ${isToday ? 'text-orange-600' : 'text-gray-900'}`}>
             {day}
           </div>
-          
+
           {/* Event dots positioned near the date number - all blue */}
           {dayEvents.length > 0 && (
             <div className="absolute top-1 right-1 flex space-x-0.5">
               {dayEvents.slice(0, 3).map((event, index) => (
                 <div
                   key={event.id}
-                  className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full cursor-pointer hover:scale-125 transition-transform bg-blue-500"
+                  className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full cursor-pointer hover:scale-125 transition-transform bg-accent-500"
                   onMouseEnter={(e) => handleEventHover(event, e)}
                   onMouseLeave={handleEventLeave}
                   title={event.title}
@@ -177,14 +177,6 @@ export function CompactCalendarCard() {
 
     return (
       <div ref={calendarRef} className="bg-white rounded-lg border border-gray-200 w-full relative">
-        {/* Calendar Title - Now inside the calendar */}
-        <div className="flex items-center justify-center p-2 border-b border-gray-200">
-          <div className="flex items-center space-x-2">
-            <Calendar className="h-4 w-4 text-navy-600" />
-            <span className="font-semibold text-sm text-navy-600">Calendar</span>
-          </div>
-        </div>
-
         {/* Month/Year Header with Navigation */}
         <div className="flex items-center justify-between p-2 border-b border-gray-200">
           <h3 className="font-semibold text-sm">
@@ -228,8 +220,8 @@ export function CompactCalendarCard() {
       <div className="bg-white rounded-lg border border-gray-200 w-full">
         <div className="flex items-center justify-center p-2 border-b border-gray-200">
           <div className="flex items-center space-x-2">
-            <Calendar className="h-4 w-4 text-navy-600" />
-            <span className="font-semibold text-sm text-navy-600">Calendar</span>
+            <Calendar className="h-4 w-4 text-brand-primary" />
+            <span className="font-semibold text-sm text-brand-primary">Calendar</span>
           </div>
         </div>
         <div className="text-center py-8">
@@ -244,17 +236,17 @@ export function CompactCalendarCard() {
       <div className="bg-white rounded-lg border border-gray-200 w-full">
         <div className="flex items-center justify-center p-2 border-b border-gray-200">
           <div className="flex items-center space-x-2">
-            <Calendar className="h-4 w-4 text-navy-600" />
-            <span className="font-semibold text-sm text-navy-600">Calendar</span>
+            <Calendar className="h-4 w-4 text-brand-primary" />
+            <span className="font-semibold text-sm text-brand-primary">Calendar</span>
           </div>
         </div>
         <div className="text-center py-8">
           <p className="text-red-500 text-sm mb-2">Error loading calendar</p>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => fetchEvents()}
-            className="text-navy-600 border-navy-600 hover:bg-navy-50 h-8"
+            className="text-brand-primary border-brand-primary hover:bg-primary-50 h-8"
           >
             Retry
           </Button>
@@ -266,23 +258,23 @@ export function CompactCalendarCard() {
   return (
     <>
       {renderCompactCalendar()}
-      
+
       {/* Event Hover Popup - Rendered outside calendar container for better positioning */}
       {hoveredEvent && (
-        <div 
+        <div
           ref={popupRef}
           className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 max-w-xs pointer-events-none transition-all duration-150 ease-out"
           style={{
             left: `${popupPosition.x}px`,
             top: `${popupPosition.y}px`,
-            transform: popupPosition.placement.includes('bottom') 
-              ? 'translateY(-100%)' 
+            transform: popupPosition.placement.includes('bottom')
+              ? 'translateY(-100%)'
               : 'translateY(0)'
           }}
         >
           <div className="space-y-2">
             <h4 className="font-semibold text-sm text-gray-900">{hoveredEvent.title}</h4>
-            
+
             <div className="space-y-1 text-xs text-gray-600">
               <div className="flex items-center space-x-2">
                 <Clock className="h-3 w-3" />
@@ -299,7 +291,7 @@ export function CompactCalendarCard() {
                 <span>{hoveredEvent.attendee_count || 0} attending</span>
               </div>
             </div>
-            
+
             {hoveredEvent.description && (
               <p className="text-xs text-gray-500 mt-2 line-clamp-2">
                 {hoveredEvent.description}

@@ -234,7 +234,7 @@ export default function ProfileCompletePage() {
         <CardContent className="p-0">
           <div className="flex min-h-[500px]">
             {/* Left Column - Introduction - Hidden on mobile, centered on desktop */}
-            <div className="hidden lg:block w-full lg:w-1/2 bg-gradient-to-br from-navy-50 to-blue-50 p-4 lg:p-6 flex flex-col justify-center items-center">
+            <div className="hidden lg:block w-full lg:w-1/2 bg-gradient-to-br from-primary-50 to-accent-50 p-4 lg:p-6 flex flex-col justify-center items-center">
               <div className="text-center max-w-sm">
                 <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">
                   Complete Your Profile
@@ -245,16 +245,16 @@ export default function ProfileCompletePage() {
                 
                 {/* Network Visualization - Centered */}
                 <div className="relative w-40 h-40 mx-auto">
-                  <div className="absolute inset-0 bg-gradient-to-br from-navy-200 to-blue-200 rounded-full opacity-20"></div>
-                  <div className="absolute inset-4 bg-gradient-to-br from-navy-300 to-blue-300 rounded-full opacity-30"></div>
-                  <div className="absolute inset-8 bg-gradient-to-br from-navy-400 to-blue-400 rounded-full opacity-40"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary-200 to-accent-200 rounded-full opacity-20"></div>
+                  <div className="absolute inset-4 bg-gradient-to-br from-primary-300 to-accent-300 rounded-full opacity-30"></div>
+                  <div className="absolute inset-8 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full opacity-40"></div>
                   
                   {/* Network Nodes - Restored size */}
-                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-white rounded-full border-2 border-navy-500 shadow-lg"></div>
-                  <div className="absolute top-12 left-8 w-6 h-6 bg-white rounded-full border-2 border-navy-400 shadow-md"></div>
-                  <div className="absolute top-16 right-12 w-7 h-7 bg-white rounded-full border-2 border-navy-500 shadow-md"></div>
-                  <div className="absolute bottom-20 left-16 w-5 h-5 bg-white rounded-full border-2 border-navy-400 shadow-md"></div>
-                  <div className="absolute bottom-8 right-8 w-6 h-6 bg-white rounded-full border-2 border-navy-500 shadow-md"></div>
+                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-white rounded-full border-2 border-brand-primary shadow-lg"></div>
+                  <div className="absolute top-12 left-8 w-6 h-6 bg-white rounded-full border-2 border-primary-400 shadow-md"></div>
+                  <div className="absolute top-16 right-12 w-7 h-7 bg-white rounded-full border-2 border-brand-primary shadow-md"></div>
+                  <div className="absolute bottom-20 left-16 w-5 h-5 bg-white rounded-full border-2 border-primary-400 shadow-md"></div>
+                  <div className="absolute bottom-8 right-8 w-6 h-6 bg-white rounded-full border-2 border-brand-primary shadow-md"></div>
                   
                   {/* Connection Lines */}
                   <svg className="absolute inset-0 w-full h-full" viewBox="0 0 160 160">
@@ -283,15 +283,15 @@ export default function ProfileCompletePage() {
 
                 {/* Information Banner - Compact - Conditional based on invitation */}
                 {!hasInvitation && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
+                  <div className="bg-accent-50 border border-accent-200 rounded-lg p-2 mb-3">
                     <div className="flex items-start space-x-2">
-                      <Info className="h-3 w-3 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <Info className="h-3 w-3 text-brand-accent mt-0.5 flex-shrink-0" />
                       <div>
-                        <h3 className="font-medium text-blue-900 text-xs mb-1">Alumni Profile Only</h3>
-                        <p className="text-xs text-blue-800 mb-1">
+                        <h3 className="font-medium text-accent-900 text-xs mb-1">Alumni Profile Only</h3>
+                        <p className="text-xs text-accent-800 mb-1">
                           This profile completion is for alumni only. Active members must be invited by chapter administrators.
                         </p>
-                        <div className="flex items-center space-x-1 text-xs text-blue-700">
+                        <div className="flex items-center space-x-1 text-xs text-accent-700">
                           <Users className="h-3 w-3" />
                           <span>Need to join as an active member? Contact your chapter admin for an invitation.</span>
                         </div>
@@ -315,7 +315,7 @@ export default function ProfileCompletePage() {
                           onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
                           required
                           disabled={loading}
-                          className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
+                          className="h-7 border-gray-300 focus:border-brand-primary focus:ring-brand-primary text-sm"
                         />
                       </div>
                       <div className="space-y-1">
@@ -328,7 +328,7 @@ export default function ProfileCompletePage() {
                           onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
                           required
                           disabled={loading}
-                          className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
+                          className="h-7 border-gray-300 focus:border-brand-primary focus:ring-brand-primary text-sm"
                         />
                       </div>
                     </div>
@@ -344,7 +344,7 @@ export default function ProfileCompletePage() {
                         onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                         required
                         disabled={loading}
-                        className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
+                        className="h-7 border-gray-300 focus:border-brand-primary focus:ring-brand-primary text-sm"
                       />
                     </div>
 
@@ -371,8 +371,8 @@ export default function ProfileCompletePage() {
                         </Select>
                       </div>
                       {invitationLoading && (
-                        <p className="text-xs text-blue-600 flex items-center">
-                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
+                        <p className="text-xs text-brand-accent flex items-center">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-brand-accent mr-2"></div>
                           Loading your invitation data...
                         </p>
                       )}
@@ -404,8 +404,8 @@ export default function ProfileCompletePage() {
                         </Select>
                       </div>
                       {invitationLoading && (
-                        <p className="text-xs text-blue-600 flex items-center">
-                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
+                        <p className="text-xs text-brand-accent flex items-center">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-brand-accent mr-2"></div>
                           Auto-populating from invitation...
                         </p>
                       )}
@@ -427,7 +427,7 @@ export default function ProfileCompletePage() {
                     <div className="mt-1">
                       <Button
                         type="submit"
-                        className="w-full h-7 bg-navy-600 hover:bg-navy-700 text-white font-medium text-sm rounded-full"
+                        className="w-full h-7 bg-brand-primary hover:bg-brand-primary-hover text-white font-medium text-sm rounded-full"
                         disabled={loading}
                       >
                         {loading ? (

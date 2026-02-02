@@ -7,10 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, Users, HelpCircle, X, Loader2 } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
-import { Event } from '@/types/events';
+import { Event, RSVPStatus } from '@/types/events';
 import { parseRawTime } from '@/lib/utils/timezoneUtils';
 import { toast } from 'react-toastify';
 import { useFeatureRedirect } from '@/lib/hooks/useFeatureRedirect';
+import { EventDetailModal } from '@/components/features/events/EventDetailModal';
+import { EventActionsMenu } from '@/components/features/events/EventActionsMenu';
 
 const MAX_DESCRIPTION_CHARS = 150;
 
@@ -31,6 +33,8 @@ export function MobileCalendarPage() {
   const [rsvpStatuses, setRsvpStatuses] = useState<Record<string, 'attending' | 'maybe' | 'not_attending'>>({});
   const [activeFilter, setActiveFilter] = useState<EventFilter>('all');
   const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
@@ -201,6 +205,17 @@ export function MobileCalendarPage() {
     }));
   };
 
+  // Handle opening event detail modal
+  const handleEventClick = (event: Event) => {
+    setSelectedEvent(event);
+    setIsModalOpen(true);
+  };
+
+  // Handle RSVP change from modal
+  const handleModalRsvpChange = async (eventId: string, status: RSVPStatus) => {
+    await handleRSVP(eventId, status as 'attending' | 'maybe' | 'not_attending');
+  };
+
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(calendarDate);
     const firstDay = getFirstDayOfMonth(calendarDate);
@@ -238,7 +253,7 @@ export function MobileCalendarPage() {
               {dayEvents.slice(0, 3).map((event, index) => (
                 <div
                   key={event.id}
-                  className="w-2 h-2 rounded-full bg-blue-500"
+                  className="w-2 h-2 rounded-full bg-accent-500"
                   title={event.title}
                 />
               ))}
@@ -298,7 +313,7 @@ export function MobileCalendarPage() {
       <div className="min-h-screen bg-gray-50 pt-4 pb-20 px-4">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+            <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
             <span className="ml-2 text-gray-600">Loading...</span>
           </div>
         </div>
@@ -311,7 +326,7 @@ export function MobileCalendarPage() {
       <div className="min-h-screen bg-gray-50 pt-4 pb-20 px-4">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+            <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
             <span className="ml-2 text-gray-600">Loading calendar...</span>
           </div>
         </div>
@@ -329,7 +344,7 @@ export function MobileCalendarPage() {
               variant="outline" 
               size="sm" 
               onClick={() => fetchEvents()}
-              className="text-navy-600 border-navy-600 hover:bg-navy-50"
+              className="text-brand-primary border-brand-primary hover:bg-primary-50"
             >
               Retry
             </Button>
@@ -361,7 +376,7 @@ export function MobileCalendarPage() {
                 <Loader2 className="h-6 w-6 animate-spin text-slate-600" />
               </div>
             ) : filteredEvents.length === 0 ? (
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+              <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
                 <CardContent className="p-8 text-center">
                   <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-slate-700 text-lg mb-2">
@@ -389,14 +404,14 @@ export function MobileCalendarPage() {
                           onClick={() => setActiveFilter(filter.id)}
                           className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
                             isActive 
-                              ? 'bg-blue-600 text-white' 
+                              ? 'bg-brand-accent text-white' 
                               : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                           }`}
                         >
                           <Icon className="h-4 w-4" />
                           <span>{filter.label}</span>
                           <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                            isActive ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
+                            isActive ? 'bg-accent-500 text-white' : 'bg-gray-100 text-gray-600'
                           }`}>
                             {count}
                           </span>
@@ -409,9 +424,18 @@ export function MobileCalendarPage() {
                 {/* Events List */}
                 <div className="space-y-2">
                   {filteredEvents.map((event) => (
-                    <Card key={event.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                    <Card 
+                      key={event.id} 
+                      className="p-3 bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 cursor-pointer"
+                      onClick={() => handleEventClick(event)}
+                    >
                       <div className="space-y-2">
-                        <h4 className="font-medium text-slate-900 text-sm break-words">{event.title}</h4>
+                        <div className="flex items-start justify-between">
+                          <h4 className="font-medium text-slate-900 text-sm break-words flex-1 pr-2">{event.title}</h4>
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <EventActionsMenu event={event} />
+                          </div>
+                        </div>
                         
                         <div className="space-y-1 text-xs text-slate-700">
                           <div className="flex items-center space-x-2">
@@ -433,15 +457,18 @@ export function MobileCalendarPage() {
                           const isExpanded = expandedDescriptions[event.id] || false;
                           
                           return (
-                            <div className="space-y-1">
+                            <div className="space-y-1" onClick={(e) => e.stopPropagation()}>
                               <p className="text-xs text-slate-600 break-words whitespace-pre-wrap">
                                 {displayText}
                               </p>
                               {shouldTruncate && (
                                 <button
                                   type="button"
-                                  onClick={() => toggleDescription(event.id)}
-                                  className="text-xs text-navy-600 hover:text-navy-700 font-medium transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleDescription(event.id);
+                                  }}
+                                  className="text-xs text-brand-primary hover:text-brand-primary-hover font-medium transition-colors"
                                 >
                                   {isExpanded ? 'View less' : 'View more'}
                                 </button>
@@ -451,15 +478,15 @@ export function MobileCalendarPage() {
                         })()}
                         
                         {/* RSVP Buttons */}
-                        <div className="flex space-x-1 pt-2 border-t border-gray-100">
+                        <div className="flex space-x-1 pt-2 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
                           <Button 
                             size="sm" 
                             variant={getRSVPButtonVariant(event.id, 'attending') === 'default' ? 'default' : 'outline'}
                             onClick={() => handleRSVP(event.id, 'attending')}
                             className={`h-7 px-3 text-xs flex-1 rounded-full transition-all duration-300 ${
                               getRSVPButtonVariant(event.id, 'attending') === 'default'
-                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                : 'bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900'
+                                ? 'bg-brand-accent hover:bg-accent-700 text-white'
+                                : 'bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900'
                             }`}
                             title="Going"
                           >
@@ -472,8 +499,8 @@ export function MobileCalendarPage() {
                             onClick={() => handleRSVP(event.id, 'maybe')}
                             className={`h-7 px-3 text-xs flex-1 rounded-full transition-all duration-300 ${
                               getRSVPButtonVariant(event.id, 'maybe') === 'default'
-                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                : 'bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900'
+                                ? 'bg-brand-accent hover:bg-accent-700 text-white'
+                                : 'bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900'
                             }`}
                             title="Maybe"
                           >
@@ -486,8 +513,8 @@ export function MobileCalendarPage() {
                             onClick={() => handleRSVP(event.id, 'not_attending')}
                             className={`h-7 px-3 text-xs flex-1 rounded-full transition-all duration-300 ${
                               getRSVPButtonVariant(event.id, 'not_attending') === 'default'
-                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                : 'bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900'
+                                ? 'bg-brand-accent hover:bg-accent-700 text-white'
+                                : 'bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900'
                             }`}
                             title="Not Going"
                           >
@@ -504,6 +531,20 @@ export function MobileCalendarPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Event Detail Modal */}
+      {selectedEvent && (
+        <EventDetailModal
+          event={selectedEvent}
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedEvent(null);
+          }}
+          currentUserRsvp={rsvpStatuses[selectedEvent.id] || null}
+          onRsvpChange={handleModalRsvpChange}
+        />
+      )}
     </div>
   );
 }

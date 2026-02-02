@@ -118,7 +118,7 @@ export default function SignInPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -130,7 +130,7 @@ export default function SignInPage() {
     return (
 <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-navy-600 mx-auto mb-4"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-brand-primary mx-auto mb-4"></div>
         <p className="text-gray-600 font-medium">Redirecting to dashboard...</p>
       </div>
     </div>
@@ -159,7 +159,7 @@ export default function SignInPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={loading || googleLoading || linkedInLoading}
-                  className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+                  className="h-11 border-gray-300 focus:border-brand-primary focus:ring-brand-primary"
                 />
               </div>
               <div>
@@ -170,7 +170,7 @@ export default function SignInPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={loading || googleLoading || linkedInLoading}
-                  className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+                  className="h-11 border-gray-300 focus:border-brand-primary focus:ring-brand-primary"
                 />
               </div>
               
@@ -179,7 +179,7 @@ export default function SignInPage() {
                 <button
                   type="button"
                   onClick={handleForgotPassword}
-                  className="text-sm text-navy-600 hover:text-navy-700"
+                  className="text-sm text-brand-primary hover:text-brand-primary-hover"
                 >
                   Forgot Password?
                 </button>
@@ -242,7 +242,7 @@ export default function SignInPage() {
             {/* Sign Up Link */}
             <div className="text-sm text-gray-600 mt-4 text-center">
               Don't have an account?{' '}
-              <Link href="/sign-up" className="text-navy-600 hover:text-navy-700 font-medium">
+              <Link href="/sign-up" className="text-brand-primary hover:text-brand-primary-hover font-medium">
                 Sign Up
               </Link>
             </div>
@@ -250,11 +250,11 @@ export default function SignInPage() {
             {/* Terms */}
             <p className="text-sm text-gray-600 mt-4 text-center">
               By clicking continue, you agree to our{' '}
-              <Link href="/terms" className="text-navy-600 hover:text-navy-700 underline">
+              <Link href="/terms" className="text-brand-primary hover:text-brand-primary-hover underline">
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="/privacy" className="text-navy-600 hover:text-navy-700 underline">
+              <Link href="/privacy" className="text-brand-primary hover:text-brand-primary-hover underline">
                 Privacy Policy
               </Link>
             </p>
@@ -278,7 +278,7 @@ export default function SignInPage() {
         <div className="w-full max-w-5xl shadow-xl border-0">
           <div className="flex min-h-[500px]">
             {/* Left Column - Promotional Content */}
-            <div className="hidden lg:block w-full lg:w-1/2 bg-gradient-to-br from-navy-50 to-blue-50 p-8 flex flex-col justify-center">
+            <div className="hidden lg:block w-full lg:w-1/2 bg-gradient-to-br from-primary-50 to-accent-50 p-8 flex flex-col justify-center">
               <div className="text-center lg:text-left">
                 <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
                   Welcome to Trailblaize
@@ -289,16 +289,16 @@ export default function SignInPage() {
                 
                 {/* Network Visualization - Smaller */}
                 <div className="relative w-48 h-48 mx-auto lg:mx-0">
-                  <div className="absolute inset-0 bg-gradient-to-br from-navy-200 to-blue-200 rounded-full opacity-20"></div>
-                  <div className="absolute inset-4 bg-gradient-to-br from-navy-300 to-blue-300 rounded-full opacity-30"></div>
-                  <div className="absolute inset-8 bg-gradient-to-br from-navy-400 to-blue-400 rounded-full opacity-40"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary-200 to-accent-200 rounded-full opacity-20"></div>
+                  <div className="absolute inset-4 bg-gradient-to-br from-primary-300 to-accent-300 rounded-full opacity-30"></div>
+                  <div className="absolute inset-8 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full opacity-40"></div>
                   
                   {/* Network Nodes */}
-                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-6 h-6 bg-white rounded-full border-2 border-navy-500 shadow-lg"></div>
-                  <div className="absolute top-10 left-6 w-5 h-5 bg-white rounded-full border-2 border-navy-400 shadow-md"></div>
-                  <div className="absolute top-14 right-10 w-6 h-6 bg-white rounded-full border-2 border-navy-500 shadow-md"></div>
-                  <div className="absolute bottom-16 left-12 w-4 h-4 bg-white rounded-full border-2 border-navy-400 shadow-md"></div>
-                  <div className="absolute bottom-6 right-6 w-5 h-5 bg-white rounded-full border-2 border-navy-500 shadow-md"></div>
+                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-6 h-6 bg-white rounded-full border-2 border-brand-primary shadow-lg"></div>
+                  <div className="absolute top-10 left-6 w-5 h-5 bg-white rounded-full border-2 border-primary-400 shadow-md"></div>
+                  <div className="absolute top-14 right-10 w-6 h-6 bg-white rounded-full border-2 border-brand-primary shadow-md"></div>
+                  <div className="absolute bottom-16 left-12 w-4 h-4 bg-white rounded-full border-2 border-primary-400 shadow-md"></div>
+                  <div className="absolute bottom-6 right-6 w-5 h-5 bg-white rounded-full border-2 border-brand-primary shadow-md"></div>
                   
                   {/* Connection Lines */}
                   <svg className="absolute inset-0 w-full h-full" viewBox="0 0 192 192">
@@ -313,10 +313,10 @@ export default function SignInPage() {
                 <div className="mt-6 text-center lg:text-left">
                   <p className="text-sm text-gray-600 mb-3">Trusted by 1000+ fraternity members</p>
                   <div className="flex items-center justify-center lg:justify-start space-x-3">
-                    <div className="w-6 h-6 bg-navy-600 rounded-lg flex items-center justify-center">
+                    <div className="w-6 h-6 bg-brand-primary rounded-lg flex items-center justify-center">
                       <Star className="h-4 w-4 text-white" />
                     </div>
-                    <div className="w-6 h-6 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <div className="w-6 h-6 bg-brand-accent rounded-lg flex items-center justify-center">
                       <Star className="h-4 w-4 text-white" />
                     </div>
                     <div className="w-6 h-6 bg-green-600 rounded-lg flex items-center justify-center">
@@ -345,7 +345,7 @@ export default function SignInPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       disabled={loading || googleLoading || linkedInLoading}
-                      className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+                      className="h-11 border-gray-300 focus:border-brand-primary focus:ring-brand-primary"
                     />
                   </div>
                   <div>
@@ -356,7 +356,7 @@ export default function SignInPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       disabled={loading || googleLoading || linkedInLoading}
-                      className="h-11 border-gray-300 focus:border-navy-500 focus:ring-navy-500"
+                      className="h-11 border-gray-300 focus:border-brand-primary focus:ring-brand-primary"
                     />
                   </div>
                   
@@ -365,7 +365,7 @@ export default function SignInPage() {
                     <button
                       type="button"
                       onClick={handleForgotPassword}
-                      className="text-sm text-navy-600 hover:text-navy-700"
+                      className="text-sm text-brand-primary hover:text-brand-primary-hover"
                     >
                       Forgot Password?
                     </button>
@@ -428,7 +428,7 @@ export default function SignInPage() {
                 {/* Sign Up Link */}
                 <div className="text-sm text-gray-600 mt-4">
                   Don't have an account?{' '}
-                  <Link href="/sign-up" className="text-navy-600 hover:text-navy-700 font-medium">
+                  <Link href="/sign-up" className="text-brand-primary hover:text-brand-primary-hover font-medium">
                     Sign Up
                   </Link>
                 </div>
@@ -436,11 +436,11 @@ export default function SignInPage() {
                 {/* Terms */}
                 <p className="text-sm text-gray-600 mt-4 text-center">
                   By clicking continue, you agree to our{' '}
-                  <Link href="/terms" className="text-navy-600 hover:text-navy-700 underline">
+                  <Link href="/terms" className="text-brand-primary hover:text-brand-primary-hover underline">
                     Terms of Service
                   </Link>{' '}
                   and{' '}
-                  <Link href="/privacy" className="text-navy-600 hover:text-navy-700 underline">
+                  <Link href="/privacy" className="text-brand-primary hover:text-brand-primary-hover underline">
                     Privacy Policy
                   </Link>
                 </p>

@@ -180,7 +180,7 @@ export default function SignUpPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
           <p className="text-gray-600">Completing authentication...</p>
         </div>
       </div>
@@ -191,7 +191,7 @@ export default function SignUpPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-navy-600 mx-auto mb-4"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-brand-primary mx-auto mb-4"></div>
         <p className="text-gray-600 font-medium">Redirecting to dashboard...</p>
       </div>
     </div>
@@ -275,15 +275,15 @@ export default function SignUpPage() {
                 </button>
 
                 {/* Information Banner - Compact */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
+                <div className="bg-accent-50 border border-accent-200 rounded-lg p-2 mb-3">
                   <div className="flex items-start space-x-2">
-                    <Info className="h-3 w-3 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <Info className="h-3 w-3 text-brand-accent mt-0.5 flex-shrink-0" />
                     <div>
-                      <h3 className="font-medium text-blue-900 text-xs mb-1">Alumni Signup Only</h3>
-                      <p className="text-xs text-blue-800 mb-1">
+                      <h3 className="font-medium text-accent-900 text-xs mb-1">Alumni Signup Only</h3>
+                      <p className="text-xs text-accent-800 mb-1">
                         This signup form is for alumni only. Active members must be invited by chapter administrators.
                       </p>
-                      <div className="flex items-center space-x-1 text-xs text-blue-700">
+                      <div className="flex items-center space-x-1 text-xs text-accent-700">
                         <Users className="h-3 w-3" />
                         <span>Need to join as an active member? Contact your chapter admin for an invitation.</span>
                       </div>
@@ -305,7 +305,7 @@ export default function SignUpPage() {
                             onChange={(e) => setFirstName(e.target.value)}
                             required
                             disabled={loading}
-                            className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
+                            className="h-7 border-gray-300 focus:border-brand-primary focus:ring-brand-primary text-sm"
                           />
                         </div>
                         <div className="space-y-1">
@@ -318,7 +318,7 @@ export default function SignUpPage() {
                             onChange={(e) => setLastName(e.target.value)}
                             required
                             disabled={loading}
-                            className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
+                            className="h-7 border-gray-300 focus:border-brand-primary focus:ring-brand-primary text-sm"
                           />
                         </div>
                       </div>
@@ -334,7 +334,7 @@ export default function SignUpPage() {
                           onChange={(e) => setEmail(e.target.value)}
                           required
                           disabled={loading}
-                          className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
+                          className="h-7 border-gray-300 focus:border-brand-primary focus:ring-brand-primary text-sm"
                         />
                       </div>
 
@@ -349,7 +349,7 @@ export default function SignUpPage() {
                           onChange={(e) => setPassword(e.target.value)}
                           required
                           disabled={loading}
-                          className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
+                          className="h-7 border-gray-300 focus:border-brand-primary focus:ring-brand-primary text-sm"
                         />
                       </div>
 
@@ -365,7 +365,7 @@ export default function SignUpPage() {
                           value={phoneNumber}
                           onChange={handlePhoneChange}
                           disabled={loading}
-                          className={`h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm ${
+                          className={`h-7 border-gray-300 focus:border-brand-primary focus:ring-brand-primary text-sm ${
                             phoneNumber && !isValidPhoneNumber(phoneNumber) 
                               ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
                               : ''
@@ -476,13 +476,13 @@ export default function SignUpPage() {
                     <div className="mt-2">
                       <p className="text-xs text-gray-500 text-center mb-1">
                         By proceeding, you agree to our{' '}
-                        <Link href="/terms" className="text-navy-600 hover:text-navy-700 underline">
+                        <Link href="/terms" className="text-brand-primary hover:text-brand-primary-hover underline">
                           Terms of Service
                         </Link>
                       </p>
                       <p className="text-xs text-gray-600 text-center">
                         Already have an account?{' '}
-                        <Link href="/sign-in" className="text-navy-600 hover:text-navy-700 font-medium">
+                        <Link href="/sign-in" className="text-brand-primary hover:text-brand-primary-hover font-medium">
                           Sign in
                         </Link>
                       </p>
@@ -510,7 +510,7 @@ export default function SignUpPage() {
           <CardContent className="p-0">
             <div className="flex">
               {/* Left Column - Introduction */}
-              <div className="w-full lg:w-1/2 bg-gradient-to-br from-navy-50 to-blue-50 p-4 lg:p-6 flex flex-col justify-center items-center min-h-[500px]">
+              <div className="w-full lg:w-1/2 bg-gradient-to-br from-primary-50 to-accent-50 p-4 lg:p-6 flex flex-col justify-center items-center min-h-[500px]">
                 <div className="text-center max-w-sm">
                   <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">
                     Welcome to Trailblaize
@@ -521,16 +521,16 @@ export default function SignUpPage() {
                   
                   {/* Network Visualization - Centered */}
                   <div className="relative w-40 h-40 mx-auto">
-                    <div className="absolute inset-0 bg-gradient-to-br from-navy-200 to-blue-200 rounded-full opacity-20"></div>
-                    <div className="absolute inset-4 bg-gradient-to-br from-navy-300 to-blue-300 rounded-full opacity-30"></div>
-                    <div className="absolute inset-8 bg-gradient-to-br from-navy-400 to-blue-400 rounded-full opacity-40"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary-200 to-accent-200 rounded-full opacity-20"></div>
+                    <div className="absolute inset-4 bg-gradient-to-br from-primary-300 to-accent-300 rounded-full opacity-30"></div>
+                    <div className="absolute inset-8 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full opacity-40"></div>
                     
                     {/* Network Nodes - Restored size */}
-                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-white rounded-full border-2 border-navy-500 shadow-lg"></div>
-                    <div className="absolute top-12 left-8 w-6 h-6 bg-white rounded-full border-2 border-navy-400 shadow-md"></div>
-                    <div className="absolute top-16 right-12 w-7 h-7 bg-white rounded-full border-2 border-navy-500 shadow-md"></div>
-                    <div className="absolute bottom-20 left-16 w-5 h-5 bg-white rounded-full border-2 border-navy-400 shadow-md"></div>
-                    <div className="absolute bottom-8 right-8 w-6 h-6 bg-white rounded-full border-2 border-navy-500 shadow-md"></div>
+                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-white rounded-full border-2 border-brand-primary shadow-lg"></div>
+                    <div className="absolute top-12 left-8 w-6 h-6 bg-white rounded-full border-2 border-primary-400 shadow-md"></div>
+                    <div className="absolute top-16 right-12 w-7 h-7 bg-white rounded-full border-2 border-brand-primary shadow-md"></div>
+                    <div className="absolute bottom-20 left-16 w-5 h-5 bg-white rounded-full border-2 border-primary-400 shadow-md"></div>
+                    <div className="absolute bottom-8 right-8 w-6 h-6 bg-white rounded-full border-2 border-brand-primary shadow-md"></div>
                     
                     {/* Connection Lines */}
                     <svg className="absolute inset-0 w-full h-full" viewBox="0 0 160 160">
@@ -616,15 +616,15 @@ export default function SignUpPage() {
                       </button>
 
                       {/* Information Banner - Compact */}
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
+                      <div className="bg-accent-50 border border-accent-200 rounded-lg p-2 mb-3">
                         <div className="flex items-start space-x-2">
-                          <Info className="h-3 w-3 text-blue-600 mt-0.5 flex-shrink-0" />
+                          <Info className="h-3 w-3 text-brand-accent mt-0.5 flex-shrink-0" />
                           <div>
-                            <h3 className="font-medium text-blue-900 text-xs mb-1">Alumni Signup Only</h3>
-                            <p className="text-xs text-blue-800 mb-1">
+                            <h3 className="font-medium text-accent-900 text-xs mb-1">Alumni Signup Only</h3>
+                            <p className="text-xs text-accent-800 mb-1">
                               This signup form is for alumni only. Active members must be invited by chapter administrators.
                             </p>
-                            <div className="flex items-center space-x-1 text-xs text-blue-700">
+                            <div className="flex items-center space-x-1 text-xs text-accent-700">
                               <Users className="h-3 w-3" />
                               <span>Need to join as an active member? Contact your chapter admin for an invitation.</span>
                             </div>
@@ -645,7 +645,7 @@ export default function SignUpPage() {
                               onChange={(e) => setFirstName(e.target.value)}
                               required
                               disabled={loading}
-                              className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
+                              className="h-7 border-gray-300 focus:border-brand-primary focus:ring-brand-primary text-sm"
                             />
                           </div>
                           <div className="space-y-1">
@@ -658,7 +658,7 @@ export default function SignUpPage() {
                               onChange={(e) => setLastName(e.target.value)}
                               required
                               disabled={loading}
-                              className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
+                              className="h-7 border-gray-300 focus:border-brand-primary focus:ring-brand-primary text-sm"
                             />
                           </div>
                         </div>
@@ -674,7 +674,7 @@ export default function SignUpPage() {
                             onChange={(e) => setEmail(e.target.value)}
                             required
                             disabled={loading}
-                            className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
+                            className="h-7 border-gray-300 focus:border-brand-primary focus:ring-brand-primary text-sm"
                           />
                         </div>
 
@@ -689,7 +689,7 @@ export default function SignUpPage() {
                             onChange={(e) => setPassword(e.target.value)}
                             required
                             disabled={loading}
-                            className="h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm"
+                            className="h-7 border-gray-300 focus:border-brand-primary focus:ring-brand-primary text-sm"
                           />
                         </div>
 
@@ -705,7 +705,7 @@ export default function SignUpPage() {
                             value={phoneNumber}
                             onChange={handlePhoneChange}
                             disabled={loading}
-                            className={`h-7 border-gray-300 focus:border-navy-500 focus:ring-navy-500 text-sm ${
+                            className={`h-7 border-gray-300 focus:border-brand-primary focus:ring-brand-primary text-sm ${
                               phoneNumber && !isValidPhoneNumber(phoneNumber) 
                                 ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
                                 : ''
@@ -816,13 +816,13 @@ export default function SignUpPage() {
                       <div className="mt-2">
                         <p className="text-xs text-gray-500 text-center mb-1">
                           By proceeding, you agree to our{' '}
-                          <Link href="/terms" className="text-navy-600 hover:text-navy-700 underline">
+                          <Link href="/terms" className="text-brand-primary hover:text-brand-primary-hover underline">
                             Terms of Service
                           </Link>
                         </p>
                         <p className="text-xs text-gray-600 text-center">
                           Already have an account?{' '}
-                          <Link href="/sign-in" className="text-navy-600 hover:text-navy-700 font-medium">
+                          <Link href="/sign-in" className="text-brand-primary hover:text-brand-primary-hover font-medium">
                             Sign in
                           </Link>
                         </p>

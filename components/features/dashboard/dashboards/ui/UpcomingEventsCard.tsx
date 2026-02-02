@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Clock, Users, HelpCircle, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
-import { Event } from '@/types/events';
+import { Event, RSVPStatus } from '@/types/events';
 import { parseRawTime } from '@/lib/utils/timezoneUtils';
+import { EventDetailModal } from '@/components/features/events/EventDetailModal';
+import { EventActionsMenu } from '@/components/features/events/EventActionsMenu';
 
 export function UpcomingEventsCard() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -17,6 +19,10 @@ export function UpcomingEventsCard() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const eventsPerPage = 3;
+  
+  // Modal state
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
@@ -152,13 +158,12 @@ export function UpcomingEventsCard() {
       <Card className="bg-white shadow-sm border border-gray-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-semibold flex items-center space-x-2">
-            <Calendar className="h-5 w-5 text-navy-600" />
-            <span className="text-gray-900">Upcoming Events</span>
+            <span className="text-gray-900">Events</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-navy-600 mb-2"></div>
+            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary mb-2"></div>
             <p className="text-gray-500 text-sm">Loading events...</p>
           </div>
         </CardContent>
@@ -171,8 +176,7 @@ export function UpcomingEventsCard() {
       <Card className="bg-white shadow-sm border border-gray-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-semibold flex items-center space-x-2">
-            <Calendar className="h-5 w-5 text-navy-600" />
-            <span className="text-gray-900">Upcoming Events</span>
+            <span className="text-gray-900">Events</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
@@ -183,7 +187,7 @@ export function UpcomingEventsCard() {
               variant="outline" 
               size="sm" 
               onClick={() => fetchEvents()}
-              className="text-navy-600 border-navy-600 hover:bg-navy-50"
+              className="text-brand-primary border-brand-primary hover:bg-primary-50"
             >
               Retry
             </Button>
@@ -198,8 +202,7 @@ export function UpcomingEventsCard() {
       <Card className="bg-white shadow-sm border border-gray-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-semibold flex items-center space-x-2">
-            <Calendar className="h-5 w-5 text-navy-600" />
-            <span className="text-gray-900">Upcoming Events</span>
+            <span className="text-gray-900">Events</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
@@ -221,12 +224,11 @@ export function UpcomingEventsCard() {
           <CardHeader className="pb-3 border-b border-gray-100">
             <CardTitle className="text-lg font-semibold flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-navy-600" />
-                <span className="text-gray-900">Upcoming Events</span>
+                <span className="text-gray-900">Events</span>
               </div>
               {events.length > 0 && (
                 <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                  {events.length} {events.length === 1 ? 'event' : 'events'}
+                  {events.length}<span className="hidden lg:inline"> {events.length === 1 ? 'event' : 'events'}</span>
                 </span>
               )}
             </CardTitle>
@@ -236,78 +238,81 @@ export function UpcomingEventsCard() {
               {currentEvents.map((event) => (
                 <div 
                   key={event.id} 
-                  className="group p-3 border border-gray-200 rounded-lg hover:border-navy-300 hover:shadow-sm transition-all duration-200 bg-white"
+                  className="group relative p-3 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-sm transition-all duration-200 bg-white cursor-pointer"
+                  onClick={() => {
+                    setSelectedEvent(event);
+                    setShowDetailModal(true);
+                  }}
                 >
+                  {/* Actions Menu - Top Right */}
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                    <EventActionsMenu event={event} />
+                  </div>
+
                   {/* Title */}
-                  <h4 className="font-semibold text-gray-900 text-sm mb-2 break-words leading-tight">
+                  <h4 className="font-semibold text-gray-900 text-sm mb-2 break-words leading-tight pr-6">
                     {event.title}
                   </h4>
                   
                   {/* Date/Time and Location on same row */}
                   <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 mb-2">
                     <div className="flex items-center space-x-1.5">
-                      <Clock className="h-3.5 w-3.5 text-navy-600 flex-shrink-0" />
+                      <Clock className="h-3.5 w-3.5 text-brand-primary flex-shrink-0" />
                       <span className="break-words">{formatEventDateTime(event.start_time)}</span>
                     </div>
                     <div className="flex items-center space-x-1.5">
-                      <MapPin className="h-3.5 w-3.5 text-navy-600 flex-shrink-0" />
+                      <MapPin className="h-3.5 w-3.5 text-brand-primary flex-shrink-0" />
                       <span className="break-words">{event.location || 'Location TBD'}</span>
+                    </div>
+                    <div className="flex items-center space-x-1.5">
+                      <Users className="h-3.5 w-3.5 text-brand-primary flex-shrink-0" />
+                      <span className="font-medium">{event.attendee_count || 0} going</span>
                     </div>
                   </div>
                   
-                  {/* Attendees and RSVP buttons on same row */}
-                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100 flex-nowrap min-w-0">
-                    <div className="flex items-center space-x-1.5 text-xs text-gray-600 flex-shrink-0">
-                      <Users className="h-3.5 w-3.5 text-navy-600 flex-shrink-0" />
-                      <span className="font-medium whitespace-nowrap">{event.attendee_count || 0} going</span>
-                    </div>
-                    
-                    <div className="flex items-center space-x-1 flex-shrink-0">
+                  {/* RSVP buttons */}
+                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                       <Button 
                         size="sm" 
                         variant={getRSVPButtonVariant(event.id, 'attending')}
                         onClick={() => handleRSVP(event.id, 'attending')}
-                        className={`h-6 px-2 rounded-full text-xs font-medium transition-all ${
+                        className={`h-6 w-6 p-0 rounded-full text-xs font-medium transition-all ${
                           getRSVPButtonVariant(event.id, 'attending') === 'default'
-                            ? 'bg-navy-600 hover:bg-navy-700 text-white'
+                            ? 'bg-brand-primary hover:bg-brand-primary-hover text-white'
                             : 'hover:bg-green-50'
                         }`}
                         title="Going"
                       >
-                        <Users className="h-3 w-3 mr-1" />
-                        Going
+                        <Users className="h-3 w-3" />
                       </Button>
                       <Button 
                         size="sm" 
                         variant={getRSVPButtonVariant(event.id, 'maybe')}
                         onClick={() => handleRSVP(event.id, 'maybe')}
-                        className={`h-6 px-2 rounded-full text-xs font-medium transition-all ${
+                        className={`h-6 w-6 p-0 rounded-full text-xs font-medium transition-all ${
                           getRSVPButtonVariant(event.id, 'maybe') === 'default'
-                            ? 'bg-navy-600 hover:bg-navy-700 text-white'
-                            : 'hover:bg-navy-50'
+                            ? 'bg-brand-primary hover:bg-brand-primary-hover text-white'
+                            : 'hover:bg-primary-50'
                         }`}
                         title="Maybe"
                       >
-                        <HelpCircle className="h-3 w-3 mr-1" />
-                        Maybe
+                        <HelpCircle className="h-3 w-3" />
                       </Button>
                       <Button 
                         size="sm" 
                         variant={getRSVPButtonVariant(event.id, 'not_attending')}
                         onClick={() => handleRSVP(event.id, 'not_attending')}
-                        className={`h-6 px-2 rounded-full text-xs font-medium transition-all ${
+                        className={`h-6 w-6 p-0 rounded-full text-xs font-medium transition-all ${
                           getRSVPButtonVariant(event.id, 'not_attending') === 'default'
                             ? 'bg-red-600 hover:bg-red-700 text-white'
                             : 'hover:bg-red-50'
                         }`}
                         title="Not Going"
                       >
-                        <X className="h-3 w-3 mr-1" />
-                        No
+                        <X className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
-                </div>
               ))}
             </div>
             
@@ -335,7 +340,7 @@ export function UpcomingEventsCard() {
                           onClick={() => setCurrentPage(page)}
                           className={`h-8 w-8 p-0 text-xs flex-shrink-0 ${
                             currentPage === page
-                              ? 'bg-navy-600 text-white hover:bg-navy-700'
+                              ? 'bg-brand-primary text-white hover:bg-brand-primary-hover'
                               : 'hover:bg-gray-50'
                           }`}
                         >
@@ -367,8 +372,7 @@ export function UpcomingEventsCard() {
           <CardHeader className="pb-3 border-b border-gray-100">
             <CardTitle className="text-lg font-semibold flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-navy-600" />
-                <span className="text-gray-900">Upcoming Events</span>
+                <span className="text-gray-900">Events</span>
               </div>
               {events.length > 0 && (
                 <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
@@ -382,67 +386,78 @@ export function UpcomingEventsCard() {
               {currentEvents.map((event) => (
                 <div 
                   key={event.id} 
-                  className="p-3 border border-gray-200 rounded-lg hover:border-navy-300 transition-colors bg-gradient-to-br from-white to-gray-50/50"
+                  className="relative p-3 border border-gray-200 rounded-lg hover:border-primary-300 transition-colors bg-gradient-to-br from-white to-gray-50/50 cursor-pointer"
+                  onClick={() => {
+                    setSelectedEvent(event);
+                    setShowDetailModal(true);
+                  }}
                 >
-                  <h4 className="font-semibold text-gray-900 text-sm mb-2 break-words leading-tight">
+                  {/* Actions Menu - Top Right */}
+                  <div className="absolute top-2 right-2" onClick={(e) => e.stopPropagation()}>
+                    <EventActionsMenu event={event} />
+                  </div>
+
+                  <h4 className="font-semibold text-gray-900 text-sm mb-2 break-words leading-tight pr-6">
                     {event.title}
                   </h4>
                   
                   <div className="space-y-1.5 text-xs text-gray-600 mb-3">
                     <div className="flex items-start space-x-2">
-                      <Clock className="h-3.5 w-3.5 mt-0.5 text-navy-600 flex-shrink-0" />
+                      <Clock className="h-3.5 w-3.5 mt-0.5 text-brand-primary flex-shrink-0" />
                       <span className="break-words">{formatEventDateTime(event.start_time)}</span>
                     </div>
                     <div className="flex items-start space-x-2">
-                      <MapPin className="h-3.5 w-3.5 mt-0.5 text-navy-600 flex-shrink-0" />
+                      <MapPin className="h-3.5 w-3.5 mt-0.5 text-brand-primary flex-shrink-0" />
                       <span className="break-words">{event.location || 'Location TBD'}</span>
-                    </div>
-                    <div className="flex items-start space-x-2">
-                      <Users className="h-3.5 w-3.5 mt-0.5 text-navy-600 flex-shrink-0" />
-                      <span className="font-medium">{event.attendee_count || 0} going</span>
                     </div>
                   </div>
                   
-                  <div className="flex space-x-1.5 pt-2 border-t border-gray-100">
-                    <Button 
-                      size="sm" 
-                      variant={getRSVPButtonVariant(event.id, 'attending')}
-                      onClick={() => handleRSVP(event.id, 'attending')}
-                      className={`flex-1 h-7 text-xs font-medium ${
-                        getRSVPButtonVariant(event.id, 'attending') === 'default'
-                          ? 'bg-navy-600 hover:bg-navy-700'
-                          : ''
-                      }`}
-                    >
-                      <Users className="h-3 w-3 mr-1" />
-                      Going
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant={getRSVPButtonVariant(event.id, 'maybe')}
-                      onClick={() => handleRSVP(event.id, 'maybe')}
-                      className={`flex-1 h-7 text-xs font-medium ${
-                        getRSVPButtonVariant(event.id, 'maybe') === 'default'
-                          ? 'bg-navy-600 hover:bg-navy-700'
-                          : ''
-                      }`}
-                    >
-                      <HelpCircle className="h-3 w-3 mr-1" />
-                      Maybe
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant={getRSVPButtonVariant(event.id, 'not_attending')}
-                      onClick={() => handleRSVP(event.id, 'not_attending')}
-                      className={`flex-1 h-7 text-xs font-medium ${
-                        getRSVPButtonVariant(event.id, 'not_attending') === 'default'
-                          ? 'bg-red-600 hover:bg-red-700'
-                          : ''
-                      }`}
-                    >
-                      <X className="h-3 w-3 mr-1" />
-                      No
-                    </Button>
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center space-x-1.5 text-xs text-gray-600">
+                      <Users className="h-3.5 w-3.5 text-brand-primary flex-shrink-0" />
+                      <span className="font-medium">{event.attendee_count || 0} going</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button 
+                        size="sm" 
+                        variant={getRSVPButtonVariant(event.id, 'attending')}
+                        onClick={() => handleRSVP(event.id, 'attending')}
+                        className={`h-6 w-6 p-0 rounded-full text-xs font-medium transition-all ${
+                          getRSVPButtonVariant(event.id, 'attending') === 'default'
+                            ? 'bg-brand-primary hover:bg-brand-primary-hover text-white'
+                            : 'hover:bg-green-50'
+                        }`}
+                        title="Going"
+                      >
+                        <Users className="h-3 w-3" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant={getRSVPButtonVariant(event.id, 'maybe')}
+                        onClick={() => handleRSVP(event.id, 'maybe')}
+                        className={`h-6 w-6 p-0 rounded-full text-xs font-medium transition-all ${
+                          getRSVPButtonVariant(event.id, 'maybe') === 'default'
+                            ? 'bg-brand-primary hover:bg-brand-primary-hover text-white'
+                            : 'hover:bg-primary-50'
+                        }`}
+                        title="Maybe"
+                      >
+                        <HelpCircle className="h-3 w-3" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant={getRSVPButtonVariant(event.id, 'not_attending')}
+                        onClick={() => handleRSVP(event.id, 'not_attending')}
+                        className={`h-6 w-6 p-0 rounded-full text-xs font-medium transition-all ${
+                          getRSVPButtonVariant(event.id, 'not_attending') === 'default'
+                            ? 'bg-red-600 hover:bg-red-700 text-white'
+                            : 'hover:bg-red-50'
+                        }`}
+                        title="Not Going"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -475,7 +490,7 @@ export function UpcomingEventsCard() {
                           onClick={() => setCurrentPage(page)}
                           className={`h-7 w-7 p-0 text-xs ${
                             currentPage === page
-                              ? 'bg-navy-600 text-white'
+                              ? 'bg-brand-primary text-white'
                               : ''
                           }`}
                         >
@@ -500,6 +515,22 @@ export function UpcomingEventsCard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Event Detail Modal */}
+      {selectedEvent && (
+        <EventDetailModal
+          event={selectedEvent}
+          isOpen={showDetailModal}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedEvent(null);
+          }}
+          currentUserRsvp={rsvpStatuses[selectedEvent.id] || null}
+          onRsvpChange={(eventId, status) => {
+            handleRSVP(eventId, status);
+          }}
+        />
+      )}
     </>
   );
 }

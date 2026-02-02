@@ -30,7 +30,7 @@ export default function SMSTermsPage() {
               href="https://developers.google.com/terms/api-services-user-data-policy" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-blue-600 hover:underline font-semibold"
+              className="text-brand-accent hover:underline font-semibold"
             >
               Google API Services User Data Policy
             </a>
@@ -103,7 +103,7 @@ export default function SMSTermsPage() {
 
           <h2 className="text-2xl font-bold text-gray-900 pt-4 pb-2">7. Privacy Policy</h2>
           <p>
-            Your privacy is important to us. Our collection and use of your phone number and message data is governed by our Privacy Policy, which you can view at <a href="/privacy" className="text-blue-600 hover:underline">trailblaize.net/privacy</a>. By participating in our SMS program, you agree to the terms of our Privacy Policy.
+            Your privacy is important to us. Our collection and use of your phone number and message data is governed by our Privacy Policy, which you can view at <a href="/privacy" className="text-brand-accent hover:underline">trailblaize.net/privacy</a>. By participating in our SMS program, you agree to the terms of our Privacy Policy.
           </p>
 
           <h2 className="text-2xl font-bold text-gray-900 pt-4 pb-2">8. Message Delivery</h2>
@@ -122,7 +122,7 @@ export default function SMSTermsPage() {
             <strong>Trailblaize, Inc.</strong><br />
             1111B South Governors Avenue<br />
             Dover, DE 19904<br />
-            Email: <a href="mailto:support@trailblaize.net" className="text-blue-600 hover:underline">support@trailblaize.net</a><br />
+            Email: <a href="mailto:support@trailblaize.net" className="text-brand-accent hover:underline">support@trailblaize.net</a><br />
             SMS Support: Reply "HELP" to any message
           </p>
         </div>

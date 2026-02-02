@@ -31,8 +31,8 @@ export function Checkbox({ className, checked, onCheckedChange, indeterminate, .
         className={cn(
           "h-4 w-4 rounded border border-gray-300 transition-colors cursor-pointer select-none",
           checked || indeterminate
-            ? "bg-navy-600 border-navy-600"
-            : "bg-white hover:border-navy-400",
+            ? "bg-brand-primary border-brand-primary"
+            : "bg-white hover:border-primary-400",
           className
         )}
         onClick={(e) => {

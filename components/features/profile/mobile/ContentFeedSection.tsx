@@ -41,7 +41,7 @@ export function ContentFeedSection({
     if (postsLoading) {
       return (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
         </div>
       );
     }
@@ -64,7 +64,7 @@ export function ContentFeedSection({
           <div key={post.id} className="p-4 bg-white">
             {/* Post Header */}
             <div className="flex items-start gap-3 mb-3">
-              <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
+              <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-brand-primary text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
                 {post.author?.avatar_url ? (
                   <ImageWithFallback
                     src={post.author.avatar_url}
@@ -143,7 +143,7 @@ export function ContentFeedSection({
     if (connectionsLoading) {
       return (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
         </div>
       );
     }
@@ -195,7 +195,7 @@ export function ContentFeedSection({
               <Button
                 size="sm"
                 variant="outline"
-                className="text-navy-600 border-navy-300 hover:bg-navy-50 shrink-0"
+                className="text-brand-primary border-primary-300 hover:bg-primary-50 shrink-0"
                 onClick={() => onMessageClick(connection.id)}
               >
                 <MessageCircle className="w-4 h-4 mr-2" />

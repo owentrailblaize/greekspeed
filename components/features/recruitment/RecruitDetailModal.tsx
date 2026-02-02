@@ -21,7 +21,7 @@ interface RecruitDetailModalProps {
 }
 
 const STAGE_COLORS: Record<RecruitStage, string> = {
-  'New': 'bg-blue-100 text-blue-800 border-blue-200',
+  'New': 'bg-accent-100 text-accent-800 border-accent-200',
   'Contacted': 'bg-yellow-100 text-yellow-800 border-yellow-200',
   'Event Invite': 'bg-purple-100 text-purple-800 border-purple-200',
   'Bid Given': 'bg-orange-100 text-orange-800 border-orange-200',
@@ -325,7 +325,7 @@ export function RecruitDetailModal({ recruit, isOpen, onClose, onUpdate }: Recru
                     href={`https://instagram.com/${recruit.instagram_handle}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center space-x-1 text-blue-600 hover:text-blue-800"
+                    className="flex items-center space-x-1 text-brand-accent hover:text-accent-800"
                   >
                     <Instagram className="h-4 w-4" />
                     <span>@{recruit.instagram_handle}</span>

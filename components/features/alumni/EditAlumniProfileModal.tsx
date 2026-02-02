@@ -17,6 +17,7 @@ import { trackActivity, ActivityTypes } from '@/lib/utils/activityUtils';
 import { useProfileUpdateDetection } from '@/lib/hooks/useProfileUpdateDetection';
 import type { DetectedChange } from '@/components/features/profile/ProfileUpdatePromptModal';
 import { getGraduationYears, industries } from '@/lib/alumniConstants';
+import { queueProfileUpdatePrompt } from '@/lib/utils/profileUpdatePromptQueue';
 import { Select, SelectItem } from '@/components/ui/select';
 import { UsernameInput } from '@/components/features/profile/UsernameInput';
 import { generateProfileSlug } from '@/lib/utils/usernameUtils';
@@ -218,6 +219,20 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
       clearBaseline();
     }
   }, [isOpen, clearBaseline]);
+
+  // Set baseline for change detection when modal opens
+  useEffect(() => {
+    if (isOpen && profile && alumniData) {
+      setBaseline({
+        role: profile.role || null,
+        job_title: alumniData.job_title || null,
+        company: alumniData.company || null,
+        industry: alumniData.industry || null,
+        location: alumniData.location || null,
+        hometown: alumniData.hometown || null,
+      });
+    }
+  }, [isOpen, profile, alumniData, setBaseline]);
 
   // Validation functions - same as original
   const validateEmail = (email: string): boolean => {
@@ -476,6 +491,8 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         job_title: alumniData?.job_title || null,
         company: alumniData?.company || null,
         industry: alumniData?.industry || null,
+        location: alumniData?.location || null,
+        hometown: alumniData?.hometown || null,
       };
 
       // Update alumni table only
@@ -540,6 +557,24 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         }
       }
 
+      // ===== COMPUTE CHANGES BEFORE any async operations that might close modal =====
+      const valuesToDetect = {
+        role: profile.role || null,
+        job_title: formData.job_title?.trim() || null,
+        company: formData.company?.trim() || null,
+        industry: formData.industry?.trim() || null,
+        location: formData.location?.trim() || null,
+        hometown: formData.hometown?.trim() || null,
+      };
+      
+      console.log('🔍 [Pre-Save] Baseline values:', baselineValues);
+      console.log('🔍 [Pre-Save] Values to detect:', valuesToDetect);
+      console.log('🔍 [Pre-Save] Current baseline from hook:', getBaseline());
+      
+      const changesForPrompt = detectChanges(valuesToDetect);
+      console.log('🔍 [Pre-Save] changesForPrompt:', changesForPrompt);
+      // ===== END: Change detection computed before save =====
+
       await onUpdate(profileUpdates);
 
       // Track activity
@@ -555,39 +590,24 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
       // Clear saved form data on successful save
       clearFormDataFromStorage();
       
-      // Detect changes for profile update prompt
-      // Use the baselineValues we captured at the start (before save)
-      const valuesToDetect = {
-        role: profile.role || null,
-        job_title: formData.job_title?.trim() || null,
-        company: formData.company?.trim() || null,
-        industry: formData.industry?.trim() || null,
-      };
-      
-      console.log('🔍 Baseline values (before save):', baselineValues);
-      console.log('🔍 Values being passed to detectChanges:', valuesToDetect);
-      
-      // Set the baseline in the hook using the values we captured
-      setBaseline(baselineValues);
-      
-      const changes = detectChanges(valuesToDetect);
-      
-      console.log('🔍 Detected changes:', changes);
+      // Use pre-computed changes (baseline may be cleared by now due to modal close)
+      console.log('🔍 Detected changes:', changesForPrompt);
       console.log('🔍 Profile chapter_id:', profile?.chapter_id);
-      console.log('🔍 Should show prompt?', changes.length > 0 && profile?.chapter_id);
+      console.log('🔍 Should show prompt?', changesForPrompt.length > 0 && profile?.chapter_id);
 
-      if (changes.length > 0 && profile?.chapter_id) {
-        console.log('✅ Calling callback with detected changes');
-        // Call the callback with detected changes, then close the modal
-        onProfileUpdatedWithChanges?.(changes);
+      if (changesForPrompt.length > 0 && profile?.chapter_id) {
+        console.log('✅ Queueing prompt for detected changes');
+        // Queue the prompt in localStorage instead of calling callback directly
+        queueProfileUpdatePrompt(profile.id, changesForPrompt);
         setLoading(false);
-        onClose();
+        onClose(); // Close modal normally
         return;
       } else {
-        console.log('❌ Not showing prompt - changes:', changes.length, 'chapter_id:', profile?.chapter_id);
+        console.log('❌ Not showing prompt - changes:', changesForPrompt.length, 'chapter_id:', profile?.chapter_id);
       }
 
       // No changes detected, close normally
+      setLoading(false);
       onClose();
     } catch (error) {
       console.error('Error updating alumni profile:', error);
@@ -621,7 +641,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
         {/* Header - same as original */}
         <div className={`flex items-center justify-between border-b border-gray-200 flex-shrink-0 ${isMobile ? 'p-4' : 'p-6'}`}>
           <div className="flex items-center gap-3">
-            <h2 className={`font-bold text-navy-900 ${isMobile ? 'text-xl' : 'text-2xl'}`}>Edit Profile</h2>
+            <h2 className={`font-bold text-primary-900 ${isMobile ? 'text-xl' : 'text-2xl'}`}>Edit Profile</h2>
           </div>
           <button
             onClick={handleClose}
@@ -639,7 +659,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
               <CardContent className={`relative ${isMobile ? 'h-32' : 'h-64'} p-0 overflow-hidden`}>
                 {/* Banner Section */}
                 <div 
-                  className="absolute inset-0 bg-gradient-to-r from-navy-600 via-blue-400 to-blue-100 flex items-center justify-center text-white cursor-pointer group rounded-lg"
+                  className="absolute inset-0 bg-gradient-to-r from-brand-primary via-accent-400 to-accent-100 flex items-center justify-center text-white cursor-pointer group rounded-lg"
                   onClick={() => document.getElementById('banner-upload')?.click()}
                 >
                   {bannerPreview || profile?.banner_url ? (
@@ -695,7 +715,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
                       )}
                     </div>
                     
-                    <div className={`absolute -bottom-1 -right-1 ${isMobile ? 'w-6 h-6' : 'w-7 h-7'} bg-navy-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-navy-700 transition-colors shadow-md`}>
+                    <div className={`absolute -bottom-1 -right-1 ${isMobile ? 'w-6 h-6' : 'w-7 h-7'} bg-brand-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-brand-primary-hover transition-colors shadow-md`}>
                       {avatarUploading ? (
                         <div className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} border-2 border-white border-t-transparent rounded-full animate-spin`} />
                       ) : (
@@ -727,8 +747,8 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
             <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200 mt-4' : 'space-y-4'}`}>
               {!isMobile && (
                 <div className="flex items-center gap-2 mb-3">
-                  <User className="w-5 h-5 text-navy-600" />
-                  <h3 className="text-lg font-semibold text-navy-600">Personal Information</h3>
+                  <User className="w-5 h-5 text-brand-primary" />
+                  <h3 className="text-lg font-semibold text-brand-primary">Personal Information</h3>
                 </div>
               )}
               <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
@@ -819,8 +839,8 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
             <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
               {!isMobile && (
                 <div className="flex items-center gap-2 mb-3">
-                  <Briefcase className="w-5 h-5 text-navy-600" />
-                  <h3 className="text-lg font-semibold text-navy-600">Professional Information</h3>
+                  <Briefcase className="w-5 h-5 text-brand-primary" />
+                  <h3 className="text-lg font-semibold text-brand-primary">Professional Information</h3>
                   <Badge variant="secondary" className="text-xs">Alumni</Badge>
                 </div>
               )}
@@ -882,8 +902,8 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
             <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
               {!isMobile && (
                 <div className="flex items-center gap-2 mb-3">
-                  <Phone className="w-5 h-5 text-navy-600" />
-                  <h3 className="text-lg font-semibold text-navy-600">Contact & Location</h3>
+                  <Phone className="w-5 h-5 text-brand-primary" />
+                  <h3 className="text-lg font-semibold text-brand-primary">Contact & Location</h3>
                 </div>
               )}
               <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
@@ -999,8 +1019,8 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
             <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
               {!isMobile && (
                 <div className="flex items-center gap-2 mb-3">
-                  <HelpCircle className="w-5 h-5 text-navy-600" />
-                  <h3 className="text-lg font-semibold text-navy-600">Additional Information</h3>
+                  <HelpCircle className="w-5 h-5 text-brand-primary" />
+                  <h3 className="text-lg font-semibold text-brand-primary">Additional Information</h3>
                   <Badge variant="secondary" className="text-xs">Optional</Badge>
                 </div>
               )}
@@ -1034,8 +1054,8 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
             <div className={`${isMobile ? 'space-y-3 pt-4 border-t border-gray-200' : 'space-y-4'}`}>
               {!isMobile && (
                 <div className="flex items-center gap-2 mb-3">
-                  <Building className="w-5 h-5 text-navy-600" />
-                  <h3 className="text-lg font-semibold text-navy-600">Chapter & Role</h3>
+                  <Building className="w-5 h-5 text-brand-primary" />
+                  <h3 className="text-lg font-semibold text-brand-primary">Chapter & Role</h3>
                 </div>
               )}
               <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
@@ -1079,7 +1099,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
               type="button"
               variant="outline"
               onClick={handleCancel}
-              className={`rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300`}
+              className={`rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300`}
             >
               Cancel
             </Button>
@@ -1097,7 +1117,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
                   handleSubmit(syntheticEvent);
                 }  
               }}
-              className={`rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
+              className={`rounded-full bg-brand-primary text-white hover:bg-brand-primary-hover shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </Button>

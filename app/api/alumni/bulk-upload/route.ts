@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { generateSimplePassword } from '@/lib/utils/passwordGenerator';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -141,7 +142,7 @@ async function processAlumniRecordSimple(
     }
 
     // Step 2: Create auth user with retry logic
-    const password = options.generatePasswords ? generateSecurePassword() : options.defaultPassword;
+    const password = options.generatePasswords ? generateSimplePassword() : options.defaultPassword;
     
     let authUser = null;
     let authError = null;
@@ -401,13 +402,4 @@ async function getChapterIdFromName(supabase: any, chapterName: string): Promise
     .single();
   
   return chapter?.id || null;
-}
-
-function generateSecurePassword(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-  let password = '';
-  for (let i = 0; i < 12; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return password;
 }

@@ -25,6 +25,7 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import type { Recruit, RecruitStage } from '@/types/recruitment';
 import { RecruitCard } from './RecruitCard';
 import { RecruitDetailSheet } from './RecruitDetailSheet';
+import { DocumentDetailDrawer } from './DocumentDetailDrawer';
 
 interface ChapterDocument {
   id: string;
@@ -89,6 +90,8 @@ export function MobileAdminTasksPage() {
   });
   const [docsPage, setDocsPage] = useState(1);
   const docsPerPage = 6;
+  const [selectedDocument, setSelectedDocument] = useState<ChapterDocument | null>(null);
+  const [showDocDetailDrawer, setShowDocDetailDrawer] = useState(false);
 
   // Recruits state
   const [recruits, setRecruits] = useState<Recruit[]>([]);
@@ -596,7 +599,7 @@ export function MobileAdminTasksPage() {
     switch (status) {
       case 'completed': return <CheckSquare className="h-4 w-4 text-green-600" />;
       case 'pending': return <Clock className="h-4 w-4 text-yellow-600" />;
-      case 'in_progress': return <Clock className="h-4 w-4 text-blue-600" />;
+      case 'in_progress': return <Clock className="h-4 w-4 text-brand-accent" />;
       case 'overdue': return <AlertCircle className="h-4 w-4 text-red-600" />;
       default: return <Clock className="h-4 w-4 text-gray-600" />;
     }
@@ -608,7 +611,7 @@ export function MobileAdminTasksPage() {
 
       case 'overdue': return 'bg-red-100 text-red-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'in_progress': return 'bg-accent-100 text-accent-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -644,7 +647,7 @@ export function MobileAdminTasksPage() {
     if (!fileType) return <FileText className="h-4 w-4" />;
     if (fileType.includes('pdf')) return <FileText className="h-4 w-4 text-red-600" />;
     if (fileType.includes('spreadsheet') || fileType.includes('excel')) return <FileText className="h-4 w-4 text-green-600" />;
-    if (fileType.includes('word')) return <FileText className="h-4 w-4 text-blue-600" />;
+    if (fileType.includes('word')) return <FileText className="h-4 w-4 text-brand-accent" />;
     return <FileText className="h-4 w-4" />;
   };
 
@@ -734,7 +737,7 @@ export function MobileAdminTasksPage() {
           <Button 
 
               onClick={() => setIsTaskModalOpen(true)}
-              className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 w-full md:w-auto transition-all duration-300"
+              className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 w-full md:w-auto transition-all duration-300"
           >
             <Plus className="h-4 w-4 mr-2" />
             Create New Task
@@ -751,13 +754,13 @@ export function MobileAdminTasksPage() {
                   onClick={() => setActiveFilter(filter.id)}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
                     isActive 
-                      ? 'bg-blue-600 text-white' 
+                      ? 'bg-brand-accent text-white' 
                       : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                   }`}
                 >
                   <span>{filter.label}</span>
                   <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                    isActive ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
+                    isActive ? 'bg-accent-500 text-white' : 'bg-gray-100 text-gray-600'
                   }`}>
                     {filter.count}
                   </span>
@@ -774,7 +777,7 @@ export function MobileAdminTasksPage() {
                 <Loader2 className="h-6 w-6 animate-spin text-slate-600" />
               </div>
             ) : filteredTasks.length === 0 ? (
-          <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+          <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
             <CardContent className="p-8 text-center">
             <CheckSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-slate-700 text-lg mb-2">
@@ -790,7 +793,7 @@ export function MobileAdminTasksPage() {
               <>
                 <div className="space-y-2">
                   {paginatedTasks.map((task) => (
-                    <Card key={task.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                    <Card key={task.id} className="p-3 bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
                       <div className="space-y-2">
                         <div className="flex justify-between items-start">
                           <h3 className="font-medium text-slate-900 text-sm flex-1">{task.title}</h3>
@@ -819,7 +822,7 @@ export function MobileAdminTasksPage() {
                     {task.description.length > MAX_DESCRIPTION_LENGTH && (
                       <button
                         onClick={() => handleToggleDescription(task.id)}
-                        className="mt-1 text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1 transition-colors"
+                        className="mt-1 text-xs text-brand-accent hover:text-accent-700 font-medium flex items-center space-x-1 transition-colors"
                       >
                         <span>{expandedTaskId === task.id ? 'Show less' : 'Show more'}</span>
                         {expandedTaskId === task.id ? (
@@ -855,7 +858,7 @@ export function MobileAdminTasksPage() {
                             <Button
                               size="sm"
                               onClick={() => handleMarkComplete(task.id)}
-                              className="h-7 px-3 text-xs flex-1 rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                              className="h-7 px-3 text-xs flex-1 rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                               variant="outline"
                             >
                               <Check className="h-3 w-3 mr-1" />
@@ -866,7 +869,7 @@ export function MobileAdminTasksPage() {
                               <Button
                                 size="sm"
                                 onClick={() => handleUnassign(task.id)}
-                                className="h-7 px-3 text-xs flex-1 rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                                className="h-7 px-3 text-xs flex-1 rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                                 variant="outline"
                               >
                                 <UserMinus className="h-3 w-3 mr-1" />
@@ -933,7 +936,7 @@ export function MobileAdminTasksPage() {
                             onClick={() => setTasksPage(page)}
                             className={`h-8 w-8 p-0 text-xs ${
                               tasksPage === page
-                                ? 'bg-navy-600 text-white hover:bg-navy-700'
+                                ? 'bg-brand-primary text-white hover:bg-brand-primary-hover'
                                 : 'hover:bg-gray-50'
                             }`}
                             disabled={tasksLoading}
@@ -954,21 +957,21 @@ export function MobileAdminTasksPage() {
             {/* Upload Button */}
             <Button 
               onClick={() => setShowUploadModal(true)}
-              className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 w-full md:w-auto transition-all duration-300"
+              className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 w-full md:w-auto transition-all duration-300"
             >
               <Upload className="h-4 w-4 mr-2" />
               Upload Document
             </Button>
 
             {/* Stats */}
-            <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
+            <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:scale-[1.02] hover:bg-white/90">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-slate-700 font-medium mb-1">Total Documents</p>
                     <p className="text-xl font-semibold text-slate-900">{documents.length}</p>
                   </div>
-                  <FileText className="h-5 w-5 text-navy-500" />
+                  <FileText className="h-5 w-5 text-brand-primary" />
                 </div>
               </CardContent>
             </Card>
@@ -976,10 +979,10 @@ export function MobileAdminTasksPage() {
             {/* Documents List */}
             {docsLoading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+                <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
               </div>
             ) : documents.length === 0 ? (
-              <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+              <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
                 <CardContent className="p-4 text-center">
                   <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                   <p className="text-slate-700 mb-2">No documents found</p>
@@ -987,7 +990,7 @@ export function MobileAdminTasksPage() {
                     variant="outline" 
                     onClick={() => setShowUploadModal(true)}
                     size="sm"
-                    className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                    className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                   >
                     Upload First Document
                     </Button>
@@ -998,7 +1001,14 @@ export function MobileAdminTasksPage() {
               <>
                 <div className="space-y-2">
                   {paginatedDocs.map((doc) => (
-                    <Card key={doc.id} className="p-3 bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                    <Card
+                      key={doc.id}
+                      className="p-3 bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 cursor-pointer"
+                      onClick={() => {
+                        setSelectedDocument(doc);
+                        setShowDocDetailDrawer(true);
+                      }}
+                    >
                       <div className="space-y-2">
                         <div className="flex items-start justify-between">
                           <div className="flex items-start space-x-2 flex-1 min-w-0">
@@ -1027,8 +1037,11 @@ export function MobileAdminTasksPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleDownload(doc)}
-                            className="h-7 px-2 text-navy-700 hover:text-navy-900 hover:bg-navy-50"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent card click
+                              handleDownload(doc);
+                            }}
+                            className="h-7 px-2 text-brand-primary-hover hover:text-primary-900 hover:bg-primary-50"
                           >
                             <Download className="h-3 w-3" />
                           </Button>
@@ -1082,18 +1095,34 @@ export function MobileAdminTasksPage() {
                             onClick={() => setDocsPage(page)}
                             className={`h-8 w-8 p-0 text-xs ${
                               docsPage === page
-                                ? 'bg-navy-600 text-white hover:bg-navy-700'
+                                ? 'bg-brand-primary text-white hover:bg-brand-primary-hover'
                                 : 'hover:bg-gray-50'
                             }`}
                             disabled={docsLoading}
                           >
                             {page}
                           </Button>
-            ))}
-          </div>
-        )}
-
+                        ))}
+                      </div>
+                    )}
                   </div>
+                )}
+
+                {/* Document Detail Drawer */}
+                {selectedDocument && (
+                  <DocumentDetailDrawer
+                    doc={selectedDocument}
+                    isOpen={showDocDetailDrawer}
+                    onClose={() => {
+                      setShowDocDetailDrawer(false);
+                      setSelectedDocument(null);
+                    }}
+                    onDelete={(deletedId) => {
+                      setDocuments(prev => prev.filter(d => d.id !== deletedId));
+                      setShowDocDetailDrawer(false);
+                      setSelectedDocument(null);
+                    }}
+                  />
                 )}
               </>
             )}
@@ -1105,7 +1134,7 @@ export function MobileAdminTasksPage() {
               {/* Header Section */}
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
-                  <UserPlus className="h-5 w-5 text-navy-600" />
+                  <UserPlus className="h-5 w-5 text-brand-primary" />
                   <h2 className="text-lg font-semibold text-gray-900">Manage Recruits</h2>
                 </div>
 
@@ -1136,14 +1165,14 @@ export function MobileAdminTasksPage() {
                         className={cn(
                           "flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0",
                           isActive
-                            ? 'bg-blue-600 text-white'
+                            ? 'bg-brand-accent text-white'
                             : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                         )}
                       >
                         <span>{stage === 'all' ? 'All' : stage}</span>
                         <span className={cn(
                           "text-xs px-1.5 py-0.5 rounded-full",
-                          isActive ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
+                          isActive ? 'bg-accent-500 text-white' : 'bg-gray-100 text-gray-600'
                         )}>
                           {count}
                         </span>
@@ -1161,10 +1190,10 @@ export function MobileAdminTasksPage() {
               {/* Swipeable Card Stack */}
               {recruitsLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+                  <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
                 </div>
               ) : recruits.length === 0 ? (
-                <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
+                <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
                   <CardContent className="p-8 text-center">
                     <UserPlus className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-slate-700 text-lg mb-2">No recruits found</p>
@@ -1265,7 +1294,7 @@ export function MobileAdminTasksPage() {
                             className={cn(
                               "h-2 rounded-full transition-all flex-shrink-0",
                               idx === currentRecruitIndex
-                                ? "w-8 bg-navy-600"
+                                ? "w-8 bg-brand-primary"
                                 : "w-2 bg-gray-300"
                             )}
                           />
@@ -1438,14 +1467,14 @@ export function MobileAdminTasksPage() {
                       visibility: ['chapter_all'],
                     });
                   }}
-                  className="flex-1 rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                  className="flex-1 rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleUploadDocument}
                   disabled={!selectedFile || !uploadFormData.title || uploading}
-                  className="flex-1 rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 rounded-full bg-brand-primary text-white hover:bg-brand-primary-hover shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {uploading ? (
                     <>

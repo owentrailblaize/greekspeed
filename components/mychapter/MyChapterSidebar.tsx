@@ -130,7 +130,7 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
                 <div className="p-4 border-b border-gray-200 bg-gray-50 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <Users className="h-5 w-5 text-navy-600 flex-shrink-0" />
+                      <Users className="h-5 w-5 text-brand-primary flex-shrink-0" />
                       {!sidebarCollapsed && (
                         <motion.h3 
                           initial={{ opacity: 0 }}
@@ -182,9 +182,9 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
                               item.locked 
                                 ? 'opacity-60 cursor-not-allowed' 
                                 : activeSection === item.id 
-                                  ? 'bg-[#DEEBFE] text-white hover:bg-[#c9dfff]' 
+                                  ? 'bg-slate-200 text-white hover:bg-slate-100-hover' 
                                   : 'hover:bg-gray-50'
-                            }`}
+                              }`}
                             onClick={() => !item.locked && onNavigate(item.id)}
                             disabled={item.locked}
                             title={item.label}
@@ -206,7 +206,7 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
                             placeholder="Search by name, major, or interests..."
                             value={searchTerm}
                             onChange={(e) => onSearchChange(e.target.value)}
-                            className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:ring-navy-500 focus:border-navy-500 text-sm"
+                            className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:ring-brand-primary focus:border-brand-primary text-sm"
                           />
                           <svg className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -224,7 +224,7 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
                               item.locked 
                                 ? 'opacity-60 cursor-not-allowed' 
                                 : activeSection === item.id 
-                                  ? 'bg-[#DEEBFE] text-white hover:bg-[#c9dfff]' 
+                                  ? 'bg-slate-200 text-white hover:bg-slate-100-hover' 
                                   : 'hover:bg-gray-50'
                             }`}
                             onClick={() => !item.locked && onNavigate(item.id)}
@@ -271,7 +271,7 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="w-full rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 border-navy-300 hover:bg-gray-50"
+                              className="w-full rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 border-primary-300 hover:bg-gray-50"
                               onClick={() => setShowAddMemberForm(true)}
                             >
                               <UserPlus className="h-4 w-4 mr-2" />
@@ -280,7 +280,7 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="w-full rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 border-navy-300 hover:bg-gray-50"
+                              className="w-full rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 border-primary-300 hover:bg-gray-50"
                               onClick={() => setShowCreateEventForm(true)}
                             >
                               <Calendar className="h-4 w-4 mr-2" />
@@ -298,7 +298,7 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="w-full rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 border-navy-300 hover:bg-gray-50"
+                              className="w-full rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 border-primary-300 hover:bg-gray-50"
                               onClick={() => router.push('/mychapter/recruitment')}
                             >
                               <Settings className="h-4 w-4 mr-2" />
@@ -318,7 +318,7 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="w-full rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 border-navy-300 hover:bg-gray-50"
+                              className="w-full rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 border-primary-300 hover:bg-gray-50"
                               onClick={() => setShowAddRecruitModal(true)}
                             >
                               <UserPlus className="h-4 w-4 mr-2" />

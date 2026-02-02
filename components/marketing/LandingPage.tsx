@@ -22,8 +22,8 @@ const features = [
     description: "Connect with thousands of alumni across industries with our LinkedIn-style platform. Build meaningful relationships that last.",
     mobileDescription: "Connect with thousands of alumni across industries.",
     highlights: ["Alumni Pipeline", "Actively Hiring", "Chapter Directory"],
-    color: "from-blue-500 to-blue-600",
-    bgColor: "bg-blue-50",
+    color: "from-accent-500 to-brand-accent",
+    bgColor: "bg-accent-50",
     delay: 0.1,
   },
   {
@@ -52,8 +52,8 @@ const features = [
     description: "Organize and manage chapter events with ease. Track RSVPs, manage vendors, and keep everyone informed about what's happening.",
     mobileDescription: "Organize and manage chapter events with ease.",
     highlights: ["Event Planning", "Vendor Management", "RSVP Tracking"],
-    color: "from-navy-500 to-navy-600",
-    bgColor: "bg-navy-50",
+    color: "from-brand-primary to-brand-primary",
+    bgColor: "bg-primary-50",
     delay: 0.4,
   },
 ];
@@ -323,7 +323,7 @@ export function LandingPage() {
                       Walker Cobb
                     </div>
                     <div className="self-stretch text-center md:text-left text-black/60 text-xs md:text-base font-medium font-sans leading-5 md:leading-6">
-                      Chapter President of Sigma Chi at Ole Miss
+                      Graduate of the University of Mississippi
                     </div>
                   </div>
                 </div>

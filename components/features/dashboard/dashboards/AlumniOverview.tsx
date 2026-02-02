@@ -313,14 +313,14 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
               <Card className="bg-white">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center space-x-2">
-                    <Users className="h-5 w-5 text-navy-600" />
+                    <Users className="h-5 w-5 text-brand-primary" />
                     <span>Networking Spotlight</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
                   {membersLoading ? (
                     <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-navy-600 mx-auto mb-2"></div>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary mx-auto mb-2"></div>
                       <p className="text-xs text-gray-500">Loading members...</p>
                     </div>
                   ) : networkingSpotlight.length > 0 ? (
@@ -340,7 +340,7 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
                                 className="w-10 h-10 shrink-0"
                               />
                             ) : (
-                              <div className="w-10 h-10 bg-navy-100 rounded-full flex items-center justify-center text-navy-600 text-sm font-semibold shrink-0">
+                              <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-brand-primary text-sm font-semibold shrink-0">
                                 {member.full_name?.charAt(0) || member.first_name?.charAt(0) || 'U'}
                               </div>
                             )}
@@ -360,7 +360,7 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
                                   </h4>
                                 )}
                                 {member.role === 'alumni' && (
-                                  <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                  <Badge className="bg-accent-100 text-accent-800 text-xs">
                                     Alumni
                                   </Badge>
                                 )}
@@ -385,10 +385,10 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
                                   variant="outline"
                                   onClick={() => handleConnect(member)}
                                   disabled={connectionLoading === member.id}
-                                  className="text-navy-600 border-navy-600 hover:bg-navy-50 text-xs h-7 px-2 !rounded-full"
+                                  className="text-brand-primary border-brand-primary hover:bg-primary-50 text-xs h-7 px-2 !rounded-full"
                                 >
                                   {connectionLoading === member.id ? (
-                                    <div className="w-3 h-3 border border-navy-600 border-t-transparent rounded-full animate-spin" />
+                                    <div className="w-3 h-3 border border-brand-primary border-t-transparent rounded-full animate-spin" />
                                   ) : (
                                     <>
                                       <UserPlus className="w-3 h-3 mr-1" />
@@ -413,7 +413,7 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
                   <div className="pt-4 border-t border-gray-100">
                     <Button 
                       variant="outline" 
-                      className="w-full text-navy-600 border-navy-600 hover:bg-navy-50"
+                      className="w-full text-brand-primary border-brand-primary hover:bg-primary-50"
                       onClick={handleBrowseMore}
                     >
                       Browse More Profiles

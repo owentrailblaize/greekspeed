@@ -144,11 +144,11 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
           <Button
             onClick={() => handleConnectionAction('connect')}
             disabled={isLoading}
-            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium"
+            className="w-full border border-brand-primary text-brand-primary bg-white hover:bg-primary-50 transition-colors duration-200 rounded-full font-medium"
             variant="outline"
           >
             {isLoading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b border-navy-600 mr-2" />
+              <div className="animate-spin rounded-full h-4 w-4 border-b border-brand-primary mr-2" />
             ) : (
               <Users className="h-4 w-4 mr-2" />
             )}
@@ -223,7 +223,7 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
       {/* Profile Header with Integrated Close Button */}
       <div className="relative">
         {/* Background Banner */}
-        <div className="h-20 bg-gradient-to-r from-navy-100 to-blue-100 rounded-t-xl" />
+        <div className="h-20 bg-gradient-to-r from-primary-100 to-accent-100 rounded-t-xl" />
         
         {/* Close Button - Only show if not hidden */}
         {!hideCloseButton && (
@@ -243,7 +243,7 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
             variant="outline"
             size="sm"
             onClick={handleShareProfile}
-            className="absolute top-16 left-3 h-10 w-10 p-0 bg-white/90 hover:bg-white border-navy-600 text-navy-600 rounded-full shadow-sm flex items-center justify-center z-20"
+            className="absolute top-16 left-3 h-10 w-10 p-0 bg-white/90 hover:bg-white border-brand-primary text-brand-primary rounded-full shadow-sm flex items-center justify-center z-20"
             title="Share this profile with someone"
           >
             <Share2 className="h-4 w-4" />
@@ -275,7 +275,7 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
                   className="w-full h-full object-cover" 
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
+                <div className="w-full h-full bg-gradient-to-br from-brand-primary to-brand-primary flex items-center justify-center">
                   <span className="text-white font-medium text-lg">
                     {profile.first_name?.[0] || ''}{profile.last_name?.[0] || ''}
                   </span>
@@ -393,7 +393,7 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
             className={cn(
               "flex-1 rounded-full",
               canSendEmail()
-                ? "border-navy-600 text-navy-600 hover:bg-navy-50" 
+                ? "border-brand-primary text-brand-primary hover:bg-primary-50" 
                 : "text-gray-400 border-gray-200"
             )}
             variant={canSendEmail() ? "outline" : "ghost"}
@@ -411,7 +411,7 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
             className={cn(
               "flex-1 rounded-full",
               canSendMessage() 
-                ? "border-navy-600 text-navy-600 hover:bg-navy-50" 
+                ? "border-brand-primary text-brand-primary hover:bg-primary-50" 
                 : "text-gray-400 border-gray-200"
             )}
             variant={canSendMessage() ? "outline" : "ghost"}

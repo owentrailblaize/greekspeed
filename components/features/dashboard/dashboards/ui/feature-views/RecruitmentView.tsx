@@ -1,23 +1,25 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectItem } from '@/components/ui/select';
-import { 
-  Search, 
-  Loader2, 
-  ChevronLeft, 
+import {
+  Search,
+  Loader2,
+  ChevronLeft,
   ChevronRight,
   UserPlus,
   Instagram,
   Phone,
   ArrowLeft,
   ArrowUpRight,
-  Trash2
+  Trash2,
+  Upload
 } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useAuth } from '@/lib/supabase/auth-context';
@@ -25,6 +27,8 @@ import type { Recruit, RecruitStage, UpdateRecruitRequest } from '@/types/recrui
 import { FeatureGuard } from '@/components/shared/FeatureGuard';
 import { useRouter, usePathname } from 'next/navigation';
 import { Textarea } from '@/components/ui/textarea';
+import { AddRecruitForm } from '@/components/features/recruitment/AddRecruitForm';
+import { BulkRecruitImport } from '@/components/features/recruitment/BulkRecruitImport';
 
 interface RecruitsResponse {
   data: Recruit[];
@@ -37,11 +41,11 @@ interface RecruitsResponse {
 }
 
 const STAGE_COLORS: Record<RecruitStage, string> = {
-  'New': 'bg-blue-50 text-blue-700 border-blue-200',
+  'New': 'bg-accent-50 text-accent-700 border-accent-200',
   'Contacted': 'bg-slate-100 text-slate-700 border-slate-300',
-  'Event Invite': 'bg-navy-50 text-navy-700 border-navy-200',
+  'Event Invite': 'bg-primary-50 text-brand-primary-hover border-primary-200',
   'Bid Given': 'bg-gray-100 text-gray-700 border-gray-300',
-  'Accepted': 'bg-blue-100 text-blue-800 border-blue-300',
+  'Accepted': 'bg-accent-100 text-accent-800 border-blue-300',
   'Declined': 'bg-red-100 text-red-800 border-red-200',
 };
 
@@ -55,15 +59,15 @@ const STAGE_OPTIONS: RecruitStage[] = [
 ];
 
 // Editable Textarea component with auto-resize
-function EditableTextarea({ 
-  value, 
-  onChange, 
-  placeholder, 
-  disabled 
-}: { 
-  value: string; 
-  onChange: (value: string) => void; 
-  placeholder?: string; 
+function EditableTextarea({
+  value,
+  onChange,
+  placeholder,
+  disabled
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
   disabled?: boolean;
 }) {
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
@@ -140,7 +144,7 @@ export function RecruitmentView() {
     total: 0,
     totalPages: 0,
   });
-  
+
   // Inline editing state
   const [editingRecruitId, setEditingRecruitId] = useState<string | null>(null);
   const [editingData, setEditingData] = useState<{
@@ -149,6 +153,8 @@ export function RecruitmentView() {
   } | null>(null);
   const [savingRecruitId, setSavingRecruitId] = useState<string | null>(null);
   const [deletingRecruitId, setDeletingRecruitId] = useState<string | null>(null);
+  const [showBulkImport, setShowBulkImport] = useState(false);
+  const [showAddRecruitModal, setShowAddRecruitModal] = useState(false);
 
   // Check if we're on the standalone recruitment page
   const isStandalonePage = pathname === '/mychapter/recruitment';
@@ -278,7 +284,7 @@ export function RecruitmentView() {
 
       // Build update payload with only changed fields
       const updatePayload: UpdateRecruitRequest = {};
-      
+
       if (editingData.stage !== recruit.stage) {
         updatePayload.stage = editingData.stage;
       }
@@ -310,12 +316,12 @@ export function RecruitmentView() {
       }
 
       const updatedRecruit: Recruit = await response.json();
-      
+
       // Update local state
       setRecruits(prevRecruits =>
         prevRecruits.map(r => r.id === recruitId ? updatedRecruit : r)
       );
-      
+
       // Exit edit mode
       setEditingRecruitId(null);
       setEditingData(null);
@@ -360,7 +366,7 @@ export function RecruitmentView() {
 
       // Remove from local state
       setRecruits(prevRecruits => prevRecruits.filter(r => r.id !== recruitId));
-      
+
       // If we were editing this recruit, exit edit mode
       if (editingRecruitId === recruitId) {
         setEditingRecruitId(null);
@@ -372,6 +378,18 @@ export function RecruitmentView() {
     } finally {
       setDeletingRecruitId(null);
     }
+  };
+
+  // Handle add recruit success
+  const handleRecruitSuccess = (recruit: Recruit) => {
+    setShowAddRecruitModal(false);
+    // Refresh the recruits list
+    fetchRecruits();
+  };
+
+  // Handle add recruit cancel
+  const handleRecruitCancel = () => {
+    setShowAddRecruitModal(false);
   };
 
   // Filter out "Accepted" recruits from display
@@ -398,9 +416,33 @@ export function RecruitmentView() {
             <h2 className="text-2xl font-bold text-gray-900">Recruitment CRM</h2>
             <p className="text-gray-600 mt-1">Manage and track potential recruits</p>
           </div>
-          {/* Only show View Full Page button when NOT on standalone page (i.e., in exec dashboard) */}
-          {!isStandalonePage && (
-            <div>
+          {/* Action buttons */}
+          <div className="flex items-center space-x-2">
+            {/* Add Recruit button - available on standalone page */}
+            {isStandalonePage && (
+              <Button
+                size="sm"
+                onClick={() => setShowAddRecruitModal(true)}
+                className="flex items-center space-x-2 rounded-full bg-brand-primary hover:bg-brand-primary-hover"
+              >
+                <UserPlus className="h-4 w-4" />
+                <span>Add Recruit</span>
+              </Button>
+            )}
+            {/* Import button - available on standalone page */}
+            {isStandalonePage && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowBulkImport(true)}
+                className="flex items-center space-x-2 rounded-full"
+              >
+                <Upload className="h-4 w-4" />
+                <span>Import</span>
+              </Button>
+            )}
+            {/* View Full Page button when NOT on standalone page */}
+            {!isStandalonePage && (
               <Button
                 variant="outline"
                 size="sm"
@@ -410,8 +452,8 @@ export function RecruitmentView() {
                 <span>View Full Page</span>
                 <ArrowUpRight className="h-4 w-4" />
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Show loading skeleton immediately when loading or when profile is not yet available */}
@@ -467,11 +509,11 @@ export function RecruitmentView() {
                       onValueChange={(value) => setSelectedStage(value as RecruitStage | 'all')}
                       placeholder="Filter by stage"
                     >
-                        {STAGE_OPTIONS.map((stage) => (
+                      {STAGE_OPTIONS.map((stage) => (
                         <SelectItem key={stage} value={stage}>
-                            {stage}
+                          {stage}
                         </SelectItem>
-                        ))}
+                      ))}
                     </Select>
                   </div>
                 </div>
@@ -483,16 +525,16 @@ export function RecruitmentView() {
               {/* Table Header */}
               <div className="px-6 py-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {loading ? (
-                        <span className="inline-flex items-center">
-                          Recruits
-                          <Loader2 className="h-4 w-4 animate-spin text-gray-400 ml-2" />
-                        </span>
-                      ) : (
-                        `Recruits (${visibleRecruits.length}${visibleRecruits.length !== pagination.total ? ` of ${pagination.total}` : ''})`
-                      )}
-                    </h3>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {loading ? (
+                      <span className="inline-flex items-center">
+                        Recruits
+                        <Loader2 className="h-4 w-4 animate-spin text-gray-400 ml-2" />
+                      </span>
+                    ) : (
+                      `Recruits (${visibleRecruits.length}${visibleRecruits.length !== pagination.total ? ` of ${pagination.total}` : ''})`
+                    )}
+                  </h3>
                   {/* Save/Cancel buttons - only show when editing */}
                   {editingRecruitId && (
                     <div className="flex items-center space-x-2">
@@ -576,11 +618,11 @@ export function RecruitmentView() {
                         {visibleRecruits.map((recruit) => {
                           const isEditing = editingRecruitId === recruit.id;
                           const isSaving = savingRecruitId === recruit.id;
-                          const currentStage = isEditing && editingData 
-                            ? editingData.stage 
+                          const currentStage = isEditing && editingData
+                            ? editingData.stage
                             : recruit.stage;
-                          const currentNotes = isEditing && editingData 
-                            ? editingData.notes 
+                          const currentNotes = isEditing && editingData
+                            ? editingData.notes
                             : (recruit.notes || '');
 
                           return (
@@ -606,7 +648,7 @@ export function RecruitmentView() {
                                     href={`https://instagram.com/${recruit.instagram_handle}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center space-x-1 text-blue-600 hover:text-blue-800"
+                                    className="flex items-center space-x-1 text-brand-accent hover:text-accent-800"
                                   >
                                     <Instagram className="h-3 w-3" />
                                     <span>@{recruit.instagram_handle}</span>
@@ -745,6 +787,30 @@ export function RecruitmentView() {
           </div>
         )}
       </div>
+
+      {/* Bulk Import Modal */}
+      {showBulkImport && (
+        <BulkRecruitImport
+          onClose={() => setShowBulkImport(false)}
+          onSuccess={() => {
+            fetchRecruits();
+          }}
+        />
+      )}
+
+      {/* Add Recruit Modal */}
+      {showAddRecruitModal && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center bg-black/50">
+          <div className="w-full sm:max-w-2xl max-h-[90vh]">
+            <AddRecruitForm
+              variant="modal"
+              onSuccess={handleRecruitSuccess}
+              onCancel={handleRecruitCancel}
+            />
+          </div>
+        </div>,
+        document.body
+      )}
     </FeatureGuard>
   );
 }

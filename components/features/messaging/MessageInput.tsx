@@ -23,6 +23,8 @@ export function MessageInput({
   const [isExpanded, setIsExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSentContentRef = useRef<string>('');
+  const lastSentTimeRef = useRef<number>(0);
   
   // Max height for mobile (larger) and desktop
   const MAX_HEIGHT_MOBILE = 180; // Increased for mobile
@@ -31,9 +33,22 @@ export function MessageInput({
   const handleSend = async () => {
     if (!message.trim() || isSending || disabled) return;
     
+    const trimmedMessage = message.trim();
+    const now = Date.now();
+    
+    // CRITICAL: Prevent duplicate sends within 2 seconds with same content
+    if (lastSentContentRef.current === trimmedMessage && (now - lastSentTimeRef.current) < 2000) {
+      return;
+    }
+    
+    // Track this send attempt
+    lastSentContentRef.current = trimmedMessage;
+    lastSentTimeRef.current = now;
+    
     setIsSending(true);
     try {
-      await onSendMessage(message.trim());
+      await onSendMessage(trimmedMessage);
+      
       setMessage('');
       setIsExpanded(false);
       // Reset textarea height
@@ -182,7 +197,7 @@ export function MessageInput({
 
         {/* Message input container - dynamically styled based on expansion */}
         <div className="flex-1 relative min-w-0">
-          <div className={`${borderRadiusClass} bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 transition-all duration-300 flex ${isExpanded ? 'items-start' : 'items-center'} px-3 md:px-4 ${isExpanded ? 'py-1.5 md:py-2' : 'py-1'}`}>
+          <div className={`${borderRadiusClass} bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 transition-all duration-300 flex ${isExpanded ? 'items-start' : 'items-center'} px-3 md:px-4 ${isExpanded ? 'py-1.5 md:py-2' : 'py-1'}`}>
             <textarea
               ref={textareaRef}
               value={message}
@@ -213,10 +228,10 @@ export function MessageInput({
           <Button
             onClick={handleSend}
             disabled={!message.trim() || isSending || disabled}
-            className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 px-3 md:px-4 py-1.5 md:py-2 font-medium h-9 md:h-10 min-w-[60px] md:min-w-[80px] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/80 flex items-center justify-center gap-1.5"
+            className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 px-3 md:px-4 py-1.5 md:py-2 font-medium h-9 md:h-10 min-w-[60px] md:min-w-[80px] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/80 flex items-center justify-center gap-1.5"
           >
             {isSending ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-navy-600" />
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-primary" />
             ) : (
               <>
                 <Send className="h-4 w-4" />

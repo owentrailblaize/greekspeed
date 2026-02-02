@@ -205,7 +205,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
     if (invitation.invitation_type === 'alumni') {
       return <Badge variant="outline" className="text-purple-600 border-purple-600">Alumni</Badge>;
     }
-    return <Badge variant="outline" className="text-blue-600 border-blue-600">Active Member</Badge>;
+    return <Badge variant="outline" className="text-brand-accent border-brand-accent">Active Member</Badge>;
   };
 
   const filteredInvitations = invitations;
@@ -226,7 +226,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
           </p>
           <Button
             onClick={() => setShowCreateModal(true)}
-            className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="h-4 w-4 mr-2" />
             Create Invitation
@@ -290,7 +290,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
                         variant="ghost"
                         size="sm"
                         onClick={() => setShowUsageModal(invitation)}
-                        className="text-blue-600 hover:text-blue-700 p-0 h-auto text-sm"
+                        className="text-brand-accent hover:text-accent-700 p-0 h-auto text-sm"
                       >
                         <Table className="h-4 w-4 mr-1" />
                         View all {invitation.usage.length} usage records
@@ -365,7 +365,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowUsageModal(invitation)}
-                    className="text-blue-600 hover:text-blue-700 p-0 h-auto text-xs"
+                    className="text-brand-accent hover:text-accent-700 p-0 h-auto text-xs"
                   >
                     <Table className="h-3 w-3 mr-1" />
                     View all {invitation.usage.length} usage records
@@ -412,10 +412,10 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
 
   if (loading) {
     return (
-      <Card className={`${className} bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20`}>
+      <Card className={`${className} bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20`}>
         <CardContent className="p-6">
           <div className="flex flex-col items-center space-y-4">
-            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+            <Loader2 className="h-6 w-6 animate-spin text-brand-accent" />
             <div className="text-center">
               <h3 className="text-sm font-medium text-gray-900">Loading Invitations</h3>
               <p className="text-xs text-gray-600">Fetching your invitation data...</p>
@@ -429,11 +429,11 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
   return (
     <div className={className}>
       {/* Desktop: Use Card wrapper */}
-      <Card className="hidden md:block bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-        <CardHeader className="pb-4 border-b border-navy-100/30">
+      <Card className="hidden md:block bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
+        <CardHeader className="pb-4 border-b border-primary-100/30">
           {/* Desktop Layout */}
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center space-x-2 text-navy-900">
+            <CardTitle className="flex items-center space-x-2 text-primary-900">
               <Users className="h-5 w-5 text-purple-600" />
               <span>Manage Invites</span>
             </CardTitle>
@@ -449,7 +449,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
               </Button>
               <Button
                 onClick={() => setShowCreateModal(true)}
-                className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-9"
+                className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-9"
                 size="sm"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -468,8 +468,8 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
         {/* Mobile Header */}
         <div className="px-4 pb-4 border-b border-gray-200">
           <div className="flex items-center space-x-3 mb-3">
-            <Users className="h-6 w-6 text-blue-600 flex-shrink-0" />
-            <h2 className="text-lg font-semibold text-navy-900 whitespace-nowrap overflow-hidden text-ellipsis">
+            <Users className="h-6 w-6 text-brand-accent flex-shrink-0" />
+            <h2 className="text-lg font-semibold text-primary-900 whitespace-nowrap overflow-hidden text-ellipsis">
               Invitation Management
             </h2>
           </div>
@@ -485,7 +485,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
             </Button>
             <Button
               onClick={() => setShowCreateModal(true)}
-              className="rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-9 flex-1"
+              className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-9 flex-1"
               size="sm"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -581,7 +581,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
             <div className="flex justify-end p-6 border-t flex-shrink-0">
               <Button 
                 onClick={() => setShowUsageModal(null)} 
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-brand-accent hover:bg-accent-700"
                 size="sm"
               >
                 Close

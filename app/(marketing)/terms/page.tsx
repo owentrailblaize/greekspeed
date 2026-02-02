@@ -30,7 +30,7 @@ export default function TermsOfServicePage() {
               href="https://developers.google.com/terms/api-services-user-data-policy" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-blue-600 hover:underline font-semibold"
+              className="text-brand-accent hover:underline font-semibold"
             >
               Google API Services User Data Policy
             </a>
@@ -94,7 +94,7 @@ export default function TermsOfServicePage() {
             <strong>Trailblaize, Inc.</strong><br />
             1111B South Governors Avenue<br />
             Dover, DE 19904<br />
-            <a href="mailto:support@trailblaize.net" className="text-blue-600 hover:underline">support@trailblaize.net</a>
+            <a href="mailto:support@trailblaize.net" className="text-brand-accent hover:underline">support@trailblaize.net</a>
           </p>
         </div>
       </div>

@@ -15,12 +15,12 @@ import { ProfileUpdatePromptModal } from '@/components/features/profile/ProfileU
 import type { DetectedChange } from '@/components/features/profile/ProfileUpdatePromptModal';
 import { useAuth } from '@/lib/supabase/auth-context';
 import type { CreatePostRequest } from '@/types/posts';
-import { isPromptInCooldown, recordPromptShown } from '@/lib/utils/profileUpdateCooldown';
 import {
   getProfileUpdatePrefs,
   saveProfileUpdatePrefs,
   type ProfileUpdatePrefs,
 } from '@/lib/utils/profileUpdatePreferences';
+import { getPendingPrompt, clearPendingPrompt, queueProfileUpdatePrompt } from '@/lib/utils/profileUpdatePromptQueue';
 
 export default function DashboardLayout({
   children,
@@ -93,69 +93,6 @@ function EditProfileModalWrapper() {
     }
   };
 
-  // Detect role/member_status transitions coming from outside the edit modals (e.g. admin changes),
-  // using localStorage to persist the last-seen values across sessions.
-  useEffect(() => {
-    if (!profile?.id || typeof window === 'undefined') return;
-
-    const userId = profile.id;
-    const currentRole = profile.role || null;
-    const currentStatus = (profile as any).member_status || null;
-
-    const STORAGE_KEY = `profile-last-seen-role-status-${userId}`;
-
-    type Stored = { role?: string | null; member_status?: string | null };
-
-    let stored: Stored | null = null;
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        stored = JSON.parse(raw) as Stored;
-      }
-    } catch (e) {
-      console.error('Error reading last-seen role/status from storage', e);
-      stored = null;
-    }
-
-    const prevRole = stored?.role ?? null;
-    const prevStatus = stored?.member_status ?? null;
-
-    const changes: DetectedChange[] = [];
-
-    // Detect role transition
-    if (prevRole !== null && prevRole !== currentRole && currentRole) {
-      changes.push({
-        type: 'role_transition',
-        field: 'role',
-        oldValue: prevRole || undefined,
-        newValue: currentRole,
-      });
-    }
-
-    // Detect member_status change
-    if (prevStatus !== null && prevStatus !== currentStatus && currentStatus) {
-      changes.push({
-        type: 'member_status_change',
-        field: 'member_status',
-        oldValue: prevStatus || undefined,
-        newValue: currentStatus,
-      });
-    }
-
-    // Always update stored baseline to current values
-    try {
-      const toStore: Stored = { role: currentRole, member_status: currentStatus };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
-    } catch (e) {
-      console.error('Error writing last-seen role/status to storage', e);
-    }
-
-    if (changes.length === 0) return;
-
-    // Reuse the existing cooldown + prompt pipeline
-    handleProfileUpdatedWithChanges(changes);
-  }, [profile?.id, profile?.role, (profile as any)?.member_status]);
-
   // Handler for when profile is updated with detected changes
   const handleProfileUpdatedWithChanges = (changes: DetectedChange[]) => {
     if (!profile?.id) return;
@@ -165,21 +102,89 @@ function EditProfileModalWrapper() {
     if (prefs.dontShowAgain) {
       return;
     }
-    
-    // Check if prompt is in cooldown period
-    if (isPromptInCooldown(profile.id)) {
-      // Skip showing prompt - within cooldown period
+
+    // If the edit modal is still open, queue and let the existing effect show it after close
+    if (isEditProfileModalOpen) {
+      queueProfileUpdatePrompt(profile.id, changes);
       return;
     }
-    
-    // Record that we're showing this prompt (starts cooldown)
-    recordPromptShown(profile.id);
     
     // Show the prompt
     setDetectedChanges(changes);
     setShowUpdatePrompt(true);
   };
 
+  // Detect role/member_status transitions coming from outside the edit modals (e.g. admin changes),
+  // using localStorage to persist the last-seen values across sessions.
+  useEffect(() => {
+    if (!profile?.id || typeof window === 'undefined') return;
+
+    let timeoutId: NodeJS.Timeout | null = null;
+    let storageListener: ((e: StorageEvent) => void) | null = null;
+    let customEventListener: EventListener | null = null;
+
+    const checkAndShowPrompt = () => {
+      // Don't show if edit modal is open
+      if (isEditProfileModalOpen) {
+        return;
+      }
+
+      const pending = getPendingPrompt(profile.id);
+      if (pending && pending.changes.length > 0) {
+        console.log('📬 Found pending prompt, showing after short delay...');
+        
+        // Reduced delay: 2 seconds after modal closes
+        timeoutId = setTimeout(() => {
+          // Double-check edit modal is still closed
+          if (!isEditProfileModalOpen) {
+            handleProfileUpdatedWithChanges(pending.changes);
+            clearPendingPrompt(profile.id);
+          }
+        }, 2000); // 2 second delay
+      }
+    };
+
+    // Check immediately on mount and when modal closes
+    checkAndShowPrompt();
+
+    // Listen for custom event (same-tab detection)
+    customEventListener = ((e: Event) => {
+      const customEvent = e as CustomEvent<{ userId: string; changes: any[] }>;
+      if (customEvent.detail?.userId === profile.id) {
+        console.log('📬 Custom event detected - prompt queued');
+        // Small delay to ensure modal is closed
+        setTimeout(checkAndShowPrompt, 500);
+      }
+    });
+
+    window.addEventListener('profileUpdatePromptQueued', customEventListener);
+
+    // Also listen for storage events (cross-tab detection)
+    storageListener = (e: StorageEvent) => {
+      if (e.key === `profile-update-prompt-queue-${profile.id}` && e.newValue) {
+        console.log('📬 Storage event detected - prompt queued');
+        setTimeout(checkAndShowPrompt, 500);
+      }
+    };
+
+    window.addEventListener('storage', storageListener);
+
+    // Also check periodically (every 1 second) when modal is closed
+    const intervalId = setInterval(() => {
+      if (!isEditProfileModalOpen) {
+        checkAndShowPrompt();
+      }
+    }, 1000);
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (storageListener) window.removeEventListener('storage', storageListener);
+      if (customEventListener) window.removeEventListener('profileUpdatePromptQueued', customEventListener);
+      clearInterval(intervalId);
+    };
+  }, [profile?.id, isEditProfileModalOpen, handleProfileUpdatedWithChanges]);
+
+  
   // Handler for updating user prompt preferences from the modal
   const handleUpdatePromptPrefs = (prefs: ProfileUpdatePrefs) => {
     if (!profile?.id) return;
@@ -222,15 +227,17 @@ function EditProfileModalWrapper() {
       throw new Error(error?.error ?? 'Failed to create post');
     }
 
-    // Post created successfully - close prompt modal
+    // Post created successfully - close prompt modal AND edit modal
     setShowUpdatePrompt(false);
     setDetectedChanges([]);
+    closeEditProfileModal(); // Close the edit modal
   };
 
   // Handle skip from prompt modal
   const handleSkipPost = () => {
     setShowUpdatePrompt(false);
     setDetectedChanges([]);
+    closeEditProfileModal(); // Close the edit modal
   };
 
   if (!profile) return null;

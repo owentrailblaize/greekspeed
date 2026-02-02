@@ -13,9 +13,6 @@ import {
   Search, 
   Filter, 
   Download, 
-  Eye, 
-  Edit, 
-  Trash2, 
   Plus, 
   FolderOpen,
   Calendar,
@@ -26,7 +23,6 @@ import {
   Clock,
   Loader2,
   X,
-  Lock,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -35,6 +31,7 @@ import { Label } from '@/components/ui/label';
 import { documentUploadService, DocumentUploadData } from '@/lib/services/documentUploadService';
 import { toast } from 'react-toastify';
 import { supabase } from '@/lib/supabase/client'; // Fixed import path
+import { DocumentDetailDrawer } from './DocumentDetailDrawer';
 
 // Mock data structure that matches your future database schema
 interface ChapterDocument {
@@ -97,6 +94,10 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  
+  // Document detail drawer state
+  const [selectedDocument, setSelectedDocument] = useState<ChapterDocument | null>(null);
+  const [showDetailDrawer, setShowDetailDrawer] = useState(false);
 
   // Load documents on component mount
   useEffect(() => {
@@ -207,110 +208,6 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
     setShowUploadModal(true);
   };
 
-  const handleEditDocument = (doc: ChapterDocument) => {
-    // Functionality is locked - show toast message
-    toast.info('Document editing is currently locked. This feature will be available soon!');
-    
-    // TODO: Implement edit functionality
-    // Edit document
-  };
-
-  const handleDeleteDocument = async (documentId: string) => {
-    if (!confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      const docToDelete = documents.find(doc => doc.id === documentId);
-      if (!docToDelete) {
-        toast.error('Document not found');
-        return;
-      }
-
-      // Deleting document
-
-      // Debug storage access
-      // Testing storage access...
-      
-      // Test 1: List root directory
-      const { data: rootList, error: rootError } = await supabase.storage
-        .from('chapter-documents')
-        .list('', { limit: 100 });
-      // Root listing
-      
-      // Test 2: List specific chapter directory
-      const { data: chapterList, error: chapterError } = await supabase.storage
-        .from('chapter-documents')
-        .list('Sigma Chi Eta (Ole Miss)', { limit: 100 });
-      // Chapter listing
-      
-      // Test 3: Check if file exists
-      const { data: fileExists, error: fileError } = await supabase.storage
-        .from('chapter-documents')
-        .list('Sigma Chi Eta (Ole Miss)/governance', { limit: 100 });
-      // Governance listing
-
-      // FIRST: List what's actually in the bucket to debug
-      const { data: bucketContents, error: listError } = await supabase.storage
-        .from('chapter-documents')
-        .list('', { limit: 100 });
-
-      if (listError) {
-        console.error('❌ Error listing bucket:', listError);
-      } else {
-        // Actual bucket contents
-      }
-
-      // SECOND: Try to delete with the exact path
-      if (docToDelete.storage_path) {
-        const pathsToTry = [
-          docToDelete.storage_path, // Original: "Sigma Chi Eta (Ole Miss)/governance/..."
-          docToDelete.storage_path.replace(/^chapter-documents\//, ''), // Remove bucket prefix if present
-          docToDelete.storage_path.split('/').slice(1).join('/') // Remove first segment
-        ];
-
-        // Trying different path formats
-
-        for (const path of pathsToTry) {
-          // Attempting to delete with path
-          
-          const { error: storageError } = await supabase.storage
-            .from('chapter-documents')
-            .remove([path]);
-
-          if (!storageError) {
-            // Successfully deleted with path
-            break;
-          } else {
-            // Failed with path
-          }
-        }
-      }
-
-      // Then delete from database
-      const { error: dbError } = await supabase
-        .from('documents')
-        .delete()
-        .eq('id', documentId);
-
-      if (dbError) {
-        console.error('❌ Database deletion error:', dbError);
-        toast.error('Failed to delete document record');
-        return;
-      }
-
-      // Database record deleted successfully
-
-      // Remove from local state
-      setDocuments(prev => prev.filter(doc => doc.id !== documentId));
-      toast.success('Document deleted successfully!');
-
-    } catch (error) {
-      console.error('❌ Error deleting document:', error);
-      toast.error('Failed to delete document');
-    }
-  };
-
   const handleDownload = async (doc: ChapterDocument) => {
     try {
       if (doc.file_url) {
@@ -340,7 +237,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
     
     if (fileType.includes('pdf')) return <FileText className="h-4 w-4 text-red-600" />;
     if (fileType.includes('spreadsheet') || fileType.includes('excel')) return <FileText className="h-4 w-4 text-green-600" />;
-    if (fileType.includes('word')) return <FileText className="h-4 w-4 text-blue-600" />;
+    if (fileType.includes('word')) return <FileText className="h-4 w-4 text-brand-accent" />;
     
     return <FileText className="h-4 w-4" />;
   };
@@ -382,7 +279,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
       legal: 'bg-purple-100 text-purple-800',
       finance: 'bg-green-100 text-green-800',
       safety: 'bg-red-100 text-red-800',
-      policy: 'bg-blue-100 text-blue-800',
+      policy: 'bg-accent-100 text-accent-800',
       general: 'bg-gray-100 text-gray-800'
     };
     return colors[category] || colors.general;
@@ -522,16 +419,16 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
 
   if (loading) {
     return (
-      <Card className={`bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 ${className || ''}`}>
-        <CardHeader className="pb-3 border-b border-navy-100/30">
-          <CardTitle className="text-lg flex items-center space-x-2 text-navy-900">
-            <FileText className="h-5 w-5 text-navy-600" />
+      <Card className={`bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 ${className || ''}`}>
+        <CardHeader className="pb-3 border-b border-primary-100/30">
+          <CardTitle className="text-lg flex items-center space-x-2 text-primary-900">
+            <FileText className="h-5 w-5 text-brand-primary" />
             <span>Chapter Documents</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+            <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
             <span className="ml-2 text-gray-600">Loading documents...</span>
           </div>
         </CardContent>
@@ -543,10 +440,10 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
     <div className={className}>
       {/* Desktop Layout - Preserved */}
       <div className="hidden md:block">
-        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-          <CardHeader className="pb-3 border-b border-navy-100/30">
-            <CardTitle className="text-lg flex items-center space-x-2 text-navy-900">
-              <FileText className="h-5 w-5 text-navy-600" />
+        <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
+          <CardHeader className="pb-3 border-b border-primary-100/30">
+            <CardTitle className="text-lg flex items-center space-x-2 text-primary-900">
+              <FileText className="h-5 w-5 text-brand-primary" />
               <span>Chapter Documents</span>
             </CardTitle>
           </CardHeader>
@@ -580,7 +477,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
             <div className="mb-4 flex items-center justify-between gap-4">
               <Button 
                 onClick={handleUpload}
-                className="flex-1 rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                className="flex-1 rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Upload New Document
@@ -608,7 +505,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                         onClick={() => setCurrentPage(page)}
                         className={`h-8 w-8 p-0 text-xs flex-shrink-0 ${
                           currentPage === page
-                            ? 'bg-navy-600 text-white hover:bg-navy-700'
+                            ? 'bg-brand-primary text-white hover:bg-brand-primary-hover'
                             : 'hover:bg-gray-50'
                         }`}
                       >
@@ -647,7 +544,11 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                 paginatedDocuments.map((doc) => (
                   <div
                     key={doc.id}
-                    className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={() => {
+                      setSelectedDocument(doc);
+                      setShowDetailDrawer(true);
+                    }}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
@@ -699,8 +600,8 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                         </div>
                       </div>
 
-                      {/* Action Buttons */}
-                      <div className="flex items-center gap-2 ml-4">
+                      {/* Action Buttons - Download only */}
+                      <div className="flex items-center gap-2 ml-4" onClick={(e) => e.stopPropagation()}>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -708,26 +609,6 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                           title="Download Document"
                         >
                           <Download className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditDocument(doc)}
-                          title="Document editing is locked - coming soon!"
-                          className="opacity-60 cursor-not-allowed"
-                          disabled
-                        >
-                          <Edit className="h-4 w-4" />
-                          <Lock className="h-3 w-3 ml-1 text-gray-400" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteDocument(doc.id)}
-                          title="Delete Document"
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -749,10 +630,10 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
 
       {/* Mobile Layout */}
       <div className="md:hidden">
-        <Card className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20">
-          <CardHeader className="pb-3 border-b border-navy-100/30">
-            <CardTitle className="text-lg flex items-center space-x-2 text-navy-900">
-              <FileText className="h-5 w-5 text-navy-600" />
+        <Card className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20">
+          <CardHeader className="pb-3 border-b border-primary-100/30">
+            <CardTitle className="text-lg flex items-center space-x-2 text-primary-900">
+              <FileText className="h-5 w-5 text-brand-primary" />
               <span>Chapter Documents</span>
             </CardTitle>
           </CardHeader>
@@ -784,7 +665,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                     onClick={() => setActiveTab(tab.value)}
                     className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
                       activeTab === tab.value
-                        ? 'bg-navy-600 text-white'
+                        ? 'bg-brand-primary text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
@@ -798,7 +679,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
             <div className="mb-4 space-y-3">
               <Button 
                 onClick={handleUpload}
-                className="w-full rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+                className="w-full rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Upload New Document
@@ -845,7 +726,11 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                 paginatedDocuments.map((doc) => (
                   <div
                     key={doc.id}
-                    className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={() => {
+                      setSelectedDocument(doc);
+                      setShowDetailDrawer(true);
+                    }}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -856,15 +741,17 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                       </div>
                       
                       {/* Download Button - Top Right */}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDownload(doc)}
-                        title="Download Document"
-                        className="h-7 px-2 ml-2 flex-shrink-0"
-                      >
-                        <Download className="h-3 w-3" />
-                      </Button>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownload(doc)}
+                          title="Download Document"
+                          className="h-7 px-2 ml-2 flex-shrink-0"
+                        >
+                          <Download className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
                     
                     {/* Metadata in a single row */}
@@ -916,7 +803,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl md:max-h-[90vh] max-h-[85vh] flex flex-col">
             {/* Persistent Header */}
             <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 flex-shrink-0">
-              <h3 className="text-lg md:text-2xl font-bold text-navy-900">New Document</h3>
+              <h3 className="text-lg md:text-2xl font-bold text-primary-900">New Document</h3>
               <button
                 onClick={() => setShowUploadModal(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -1017,7 +904,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
                       onChange={(e) => setUploadFormData(prev => ({ ...prev, description: e.target.value }))}
                       placeholder="Brief description of the document"
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -1133,7 +1020,7 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
               <Button
                 type="submit"
                 disabled={!selectedFile || !uploadFormData.title.trim() || uploading}
-                className="bg-navy-600 hover:bg-navy-700"
+                className="bg-brand-primary hover:bg-brand-primary-hover"
                 onClick={handleUploadSubmit}
               >
                 {uploading ? (
@@ -1151,6 +1038,21 @@ export function ChapterDocumentManager({ chapterId, className }: ChapterDocument
             </div>
           </div>
         </div>
+      )}
+
+      {/* Document Detail Drawer */}
+      {selectedDocument && (
+        <DocumentDetailDrawer
+          doc={selectedDocument}
+          isOpen={showDetailDrawer}
+          onClose={() => {
+            setShowDetailDrawer(false);
+            setSelectedDocument(null);
+          }}
+          onDelete={(deletedId) => {
+            setDocuments(prev => prev.filter(d => d.id !== deletedId));
+          }}
+        />
       )}
     </div>
   );

@@ -1,15 +1,15 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Message, ProfileMessageMetadata } from '@/lib/hooks/useMessages';
+import { Message, ProfileMessageMetadata, EventMessageMetadata } from '@/lib/hooks/useMessages';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/features/profile/UserAvatar';
-import { MoreHorizontal, Edit, Trash2, Check, X, User } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Check, X, User, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import ImageWithFallback from '@/components/figma/ImageWithFallback';
 import { useRouter } from 'next/navigation';
-
+import { Calendar, MapPin } from 'lucide-react';
 interface MessageListProps {
   messages: Message[];
   loading: boolean;
@@ -19,13 +19,13 @@ interface MessageListProps {
   onDeleteMessage: (messageId: string) => Promise<void>;
 }
 
-export function MessageList({ 
-  messages, 
-  loading, 
-  hasMore, 
-  onLoadMore, 
-  onEditMessage, 
-  onDeleteMessage 
+export function MessageList({
+  messages,
+  loading,
+  hasMore,
+  onLoadMore,
+  onEditMessage,
+  onDeleteMessage
 }: MessageListProps) {
   const { user } = useAuth();
   const router = useRouter();
@@ -47,13 +47,13 @@ export function MessageList({
     if (message.message_type !== 'profile' || !message.content) {
       return { hasText: !!message.content, text: message.content || '', isProfileOnly: false };
     }
-    
+
     const contentTrimmed = message.content.trim();
     const profileMetadata = message.metadata as ProfileMessageMetadata;
-    
+
     // Check if content is just a URL (starts with http/https)
     const isUrlPattern = /^https?:\/\/.+$/i.test(contentTrimmed);
-    
+
     // If content contains a profile URL, remove it
     let textWithoutUrl = contentTrimmed;
     if (profileMetadata?.shared_profile_id && isUrlPattern) {
@@ -66,7 +66,7 @@ export function MessageList({
         // Match /dashboard/profile/{userId} with optional query params (for backward compatibility)
         new RegExp(`https?://[^\\s]*/dashboard/profile/${profileMetadata.shared_profile_id}[^\\s]*`, 'gi'),
       ];
-      
+
       // Remove all matching profile URL patterns
       profileUrlPatterns.forEach(pattern => {
         textWithoutUrl = textWithoutUrl.replace(pattern, '').trim();
@@ -76,35 +76,60 @@ export function MessageList({
       // This handles the case where a profile link URL was sent but metadata is missing
       textWithoutUrl = '';
     }
-    
-    return { 
-      hasText: !!textWithoutUrl, 
+
+    return {
+      hasText: !!textWithoutUrl,
       text: textWithoutUrl,
       isProfileOnly: !textWithoutUrl && !!profileMetadata
     };
   };
 
+  // Helper function to extract text content from event messages
+  const getEventMessageContent = (message: Message) => {
+    if (message.message_type !== 'event' || !message.content) {
+      return { hasText: !!message.content, text: message.content || '', isEventOnly: false };
+    }
+
+    const contentTrimmed = message.content.trim();
+    const eventMetadata = message.metadata as EventMessageMetadata;
+
+    // Check if content is just a URL
+    const isUrlPattern = /^https?:\/\/.+$/i.test(contentTrimmed);
+
+    let textWithoutUrl = contentTrimmed;
+    if (eventMetadata?.shared_event_id && isUrlPattern) {
+      const eventUrlPattern = new RegExp(`https?://[^\\s]*/event/[^\\s]*`, 'gi');
+      textWithoutUrl = textWithoutUrl.replace(eventUrlPattern, '').trim();
+    } else if (isUrlPattern) {
+      textWithoutUrl = '';
+    }
+
+    return {
+      hasText: !!textWithoutUrl,
+      text: textWithoutUrl,
+      isEventOnly: !textWithoutUrl && !!eventMetadata
+    };
+  };
+
   const renderProfileMessage = (metadata: ProfileMessageMetadata, isOwnMessage: boolean, standalone: boolean = false) => {
     const profileMetadata = metadata as ProfileMessageMetadata;
-    
+
     return (
-      <div 
-        className={`${standalone ? '' : 'mt-2'} p-3 rounded-lg border cursor-pointer transition-colors ${
-          isOwnMessage 
-            ? standalone 
-              ? 'bg-blue-50 border-blue-200 hover:bg-blue-100' // More visible when standalone
-              : 'bg-white/10 border-white/20 hover:bg-white/20' // Original transparent for inside bubble
-            : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-        }`}
+      <div
+        className={`${standalone ? '' : 'mt-2'} p-3 rounded-lg border cursor-pointer transition-colors ${isOwnMessage
+          ? standalone
+            ? 'bg-accent-50 border-accent-200 hover:bg-accent-100' // More visible when standalone
+            : 'bg-white/10 border-white/20 hover:bg-white/20' // Original transparent for inside bubble
+          : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+          }`}
         onClick={() => handleProfileClick(profileMetadata.shared_profile_id, profileMetadata.shared_profile_type)}
       >
         <div className="flex items-center space-x-3">
           {profileMetadata.shared_profile_avatar ? (
-            <div className={`w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 ${
-              isOwnMessage && standalone 
-                ? 'border-blue-200' 
-                : 'border-white/20'
-            }`}>
+            <div className={`w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 ${isOwnMessage && standalone
+              ? 'border-accent-200'
+              : 'border-white/20'
+              }`}>
               <ImageWithFallback
                 src={profileMetadata.shared_profile_avatar}
                 alt={profileMetadata.shared_profile_name}
@@ -119,22 +144,20 @@ export function MessageList({
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className={`text-sm font-medium truncate ${
-              isOwnMessage && standalone 
-                ? 'text-gray-900' // Dark text for light background
-                : isOwnMessage 
-                  ? 'text-white' // White text for transparent background
-                  : 'text-gray-900'
-            }`}>
+            <p className={`text-sm font-medium truncate ${isOwnMessage && standalone
+              ? 'text-gray-900' // Dark text for light background
+              : isOwnMessage
+                ? 'text-white' // White text for transparent background
+                : 'text-gray-900'
+              }`}>
               {profileMetadata.shared_profile_name}
             </p>
-            <p className={`text-xs capitalize ${
-              isOwnMessage && standalone 
-                ? 'text-gray-500' // Gray text for light background
-                : isOwnMessage 
-                  ? 'text-white/70' // Transparent white for transparent background
-                  : 'text-gray-500'
-            }`}>
+            <p className={`text-xs capitalize ${isOwnMessage && standalone
+              ? 'text-gray-500' // Gray text for light background
+              : isOwnMessage
+                ? 'text-white/70' // Transparent white for transparent background
+                : 'text-gray-500'
+              }`}>
               {profileMetadata.shared_profile_type}
             </p>
           </div>
@@ -143,13 +166,83 @@ export function MessageList({
     );
   };
 
-  // Add debug logging (remove after fixing)
-  useEffect(() => {
-    if (messages.length > 0) {
-      console.log('Message sender data:', messages[0].sender);
-      console.log('Avatar URL:', messages[0].sender?.avatar_url);
+  // Format date for event display
+  const formatEventDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  };
+
+  // Render event message card
+  const renderEventMessage = (metadata: EventMessageMetadata, isOwnMessage: boolean, standalone: boolean = false) => {
+    return (
+      <div
+        className={`${standalone ? '' : 'mt-2'} p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md ${isOwnMessage
+          ? standalone
+            ? 'bg-gradient-to-br from-accent-50 to-white border-accent-200 hover:border-accent-300'
+            : 'bg-white/10 border-white/20 hover:bg-white/20'
+          : 'bg-gradient-to-br from-gray-50 to-white border-gray-200 hover:border-gray-300'
+          }`}
+        onClick={() => router.push(`/event/${metadata.shared_event_id}`)}
+      >
+        <div className="flex items-start space-x-3">
+          {/* Calendar Icon with date badge */}
+          <div className="flex-shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-brand-primary/10 flex flex-col items-center justify-center">
+              <Calendar className="w-5 h-5 text-brand-primary" />
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            {/* Event Title */}
+            <p className={`text-sm font-semibold truncate ${isOwnMessage && standalone ? 'text-gray-900' : isOwnMessage ? 'text-white' : 'text-gray-900'
+              }`}>
+              {metadata.shared_event_title}
+            </p>
+
+            {/* Date & Location */}
+            <div className={`flex items-center gap-2 mt-1 text-xs ${isOwnMessage && standalone ? 'text-gray-500' : isOwnMessage ? 'text-white/70' : 'text-gray-500'
+              }`}>
+              <Clock className="w-3 h-3" />
+              <span>{formatEventDate(metadata.shared_event_start_time)}</span>
+            </div>
+
+            {metadata.shared_event_location && (
+              <div className={`flex items-center gap-2 mt-0.5 text-xs ${isOwnMessage && standalone ? 'text-gray-500' : isOwnMessage ? 'text-white/70' : 'text-gray-500'
+                }`}>
+                <MapPin className="w-3 h-3" />
+                <span className="truncate">{metadata.shared_event_location}</span>
+              </div>
+            )}
+
+            {/* View Details indicator */}
+            <p className={`text-xs mt-2 font-medium ${isOwnMessage && standalone ? 'text-brand-primary' : isOwnMessage ? 'text-white/80' : 'text-brand-primary'
+              }`}>
+              Tap to view details →
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const getEventUrlFromContent = (content: string) => {
+    // Match /event/{uuid} URLs
+    const eventUrlPattern = /https?:\/\/[^\s]*\/event\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+    const match = content.match(eventUrlPattern);
+    if (match) {
+      return {
+        fullUrl: match[0],
+        eventId: match[1]
+      };
     }
-  }, [messages]);
+    return null;
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -192,21 +285,31 @@ export function MessageList({
   };
 
   const groupMessagesByDate = (messages: Message[]) => {
+    // CRITICAL: Deduplicate messages by ID first (defensive measure)
+    const seenIds = new Set<string>();
+    const uniqueMessages = messages.filter(message => {
+      if (seenIds.has(message.id)) {
+        return false; // Skip duplicate
+      }
+      seenIds.add(message.id);
+      return true;
+    });
+
     // Messages are already in ascending order from API, so we can group directly
     const groups: { [key: string]: Message[] } = {};
-    
-    messages.forEach(message => {
+
+    uniqueMessages.forEach(message => {
       const date = new Date(message.created_at).toDateString();
       if (!groups[date]) {
         groups[date] = [];
       }
       groups[date].push(message);
     });
-    
+
     // Sort date groups chronologically (oldest date first, newest date last)
     // Messages within each group are already in order
     return Object.entries(groups)
-      .sort(([dateA], [dateB]) => 
+      .sort(([dateA], [dateB]) =>
         new Date(dateA).getTime() - new Date(dateB).getTime()
       )
       .map(([date, msgs]) => ({
@@ -217,11 +320,37 @@ export function MessageList({
 
   const messageGroups = groupMessagesByDate(messages);
 
+  // Add event card render function
+  const renderEventLink = (eventUrl: string, eventId: string, isOwnMessage: boolean) => {
+    return (
+      <a
+        href={eventUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`block mt-2 p-3 rounded-lg border cursor-pointer transition-colors ${isOwnMessage
+          ? 'bg-accent-50 border-accent-200 hover:bg-accent-100'
+          : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+          }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-lg bg-brand-primary/10 flex items-center justify-center flex-shrink-0">
+            <Calendar className="w-5 h-5 text-brand-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900">View Event</p>
+            <p className="text-xs text-gray-500">Click to open event details</p>
+          </div>
+        </div>
+      </a>
+    );
+  };
+
   if (loading && messages.length === 0) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy-600 mx-auto mb-2"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary mx-auto mb-2"></div>
           <p className="text-gray-500">Loading messages...</p>
         </div>
       </div>
@@ -254,10 +383,10 @@ export function MessageList({
             disabled={loading}
             variant="outline"
             size="sm"
-            className="text-navy-600 border-navy-200 hover:bg-navy-50"
+            className="text-brand-primary border-primary-200 hover:bg-primary-50"
           >
             {loading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b border-navy-600 mr-2" />
+              <div className="animate-spin rounded-full h-4 w-4 border-b border-brand-primary mr-2" />
             ) : (
               'Load more messages'
             )}
@@ -298,30 +427,30 @@ export function MessageList({
                     {/* Avatar */}
                     <div className="flex-shrink-0">
                       <UserAvatar
-                        user={{ 
-                          email: null, 
-                          user_metadata: { 
+                        user={{
+                          email: null,
+                          user_metadata: {
                             avatar_url: message.sender?.avatar_url || null, // Ensure null fallback
                             full_name: message.sender?.full_name || 'Unknown User' // Ensure fallback
-                          } 
+                          }
                         }}
                         completionPercent={100}
                         hasUnread={false}
                         size="sm"
                       />
                     </div>
-                    
+
                     {/* Message content */}
                     <div className="flex flex-col min-w-0 flex-1">
                       {/* Sender name */}
                       <span className="text-xs text-gray-500 mb-1 px-2">
                         {message.sender.full_name}
                       </span>
-                      
+
                       {/* Message bubble */}
                       <div className="relative group min-w-0 max-w-full">
                         {isEditing ? (
-                          <div className="bg-white border border-navy-200 rounded-lg p-3 shadow-sm">
+                          <div className="bg-white border border-primary-200 rounded-lg p-3 shadow-sm">
                             <textarea
                               value={editContent}
                               onChange={(e) => setEditContent(e.target.value)}
@@ -342,7 +471,7 @@ export function MessageList({
                               <Button
                                 size="sm"
                                 onClick={handleSaveEdit}
-                                className="h-6 px-2 text-xs bg-navy-600 hover:bg-navy-700"
+                                className="h-6 px-2 text-xs bg-brand-primary hover:bg-brand-primary-hover"
                               >
                                 <Check className="w-3 h-3 mr-1" />
                                 Save
@@ -351,42 +480,52 @@ export function MessageList({
                           </div>
                         ) : (
                           (() => {
-                            const { hasText, text, isProfileOnly } = getProfileMessageContent(message);
                             const isProfileMessage = message.message_type === 'profile' && message.metadata;
-                            
+                            const isEventMessage = message.message_type === 'event' && message.metadata;
+
+                            // Only extract text for profile/event messages
+                            const { hasText: hasProfileText, text: profileText, isProfileOnly } = isProfileMessage
+                              ? getProfileMessageContent(message)
+                              : { hasText: false, text: '', isProfileOnly: false };
+
+                            const { hasText: hasEventText, text: eventText, isEventOnly } = isEventMessage
+                              ? getEventMessageContent(message)
+                              : { hasText: false, text: '', isEventOnly: false };
+
+                            // Determine what to show
+                            const showText = isEventMessage ? hasEventText : (isProfileMessage ? hasProfileText : !!message.content);
+                            const textContent = isEventMessage ? eventText : (isProfileMessage ? profileText : message.content || '');
+
                             return (
                               <>
-                                {/* Case 1: Profile message with no text - just show card, no bubble */}
-                                {isProfileOnly ? (
+                                {/* Event-only or Profile-only: show card only */}
+                                {(isEventOnly || isProfileOnly) ? (
                                   <div className="relative group min-w-0 max-w-full">
-                                    {renderProfileMessage(message.metadata as ProfileMessageMetadata, false, true)}
+                                    {isEventOnly && renderEventMessage(message.metadata as EventMessageMetadata, false, true)}
+                                    {isProfileOnly && renderProfileMessage(message.metadata as ProfileMessageMetadata, false, true)}
                                   </div>
                                 ) : (
                                   <>
-                                    {/* Case 2: Has text - show text in bubble */}
-                                    {hasText && (
+                                    {/* Show text bubble if there's text content */}
+                                    {showText && textContent && (
                                       <div className="relative group min-w-0 max-w-full">
                                         <div className="bg-white border border-gray-200 text-gray-900 px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
                                           <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                                            {text}
+                                            {textContent}
                                           </p>
                                         </div>
                                       </div>
                                     )}
-                                    {/* Case 3: Profile card below text (if profile message) */}
+                                    {/* Event card below text */}
+                                    {isEventMessage && (
+                                      <div className="relative group min-w-0 max-w-full mt-2">
+                                        {renderEventMessage(message.metadata as EventMessageMetadata, false, true)}
+                                      </div>
+                                    )}
+                                    {/* Profile card below text */}
                                     {isProfileMessage && (
                                       <div className="relative group min-w-0 max-w-full mt-2">
                                         {renderProfileMessage(message.metadata as ProfileMessageMetadata, false, true)}
-                                      </div>
-                                    )}
-                                    {/* Case 4: Regular message (not profile) */}
-                                    {!isProfileMessage && message.content && (
-                                      <div className="relative group min-w-0 max-w-full">
-                                        <div className="bg-white border border-gray-200 text-gray-900 px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
-                                          <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                                            {message.content}
-                                          </p>
-                                        </div>
                                       </div>
                                     )}
                                   </>
@@ -396,7 +535,7 @@ export function MessageList({
                           })()
                         )}
                       </div>
-                      
+
                       {/* Timestamp */}
                       <span className="text-xs text-gray-400 mt-1 px-2">
                         {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
@@ -413,7 +552,7 @@ export function MessageList({
                       {/* Message bubble */}
                       <div className="relative group">
                         {isEditing ? (
-                          <div className="bg-white border border-navy-200 rounded-lg p-3 shadow-sm">
+                          <div className="bg-white border border-primary-200 rounded-lg p-3 shadow-sm">
                             <textarea
                               value={editContent}
                               onChange={(e) => setEditContent(e.target.value)}
@@ -434,7 +573,7 @@ export function MessageList({
                               <Button
                                 size="sm"
                                 onClick={handleSaveEdit}
-                                className="h-6 px-2 text-xs bg-navy-600 hover:bg-navy-700"
+                                className="h-6 px-2 text-xs bg-brand-primary hover:bg-brand-primary-hover"
                               >
                                 <Check className="w-3 h-3 mr-1" />
                                 Save
@@ -443,16 +582,30 @@ export function MessageList({
                           </div>
                         ) : (
                           (() => {
-                            const { hasText, text, isProfileOnly } = getProfileMessageContent(message);
                             const isProfileMessage = message.message_type === 'profile' && message.metadata;
-                            
+                            const isEventMessage = message.message_type === 'event' && message.metadata;
+
+                            // Only extract text for profile/event messages
+                            const { hasText: hasProfileText, text: profileText, isProfileOnly } = isProfileMessage
+                              ? getProfileMessageContent(message)
+                              : { hasText: false, text: '', isProfileOnly: false };
+
+                            const { hasText: hasEventText, text: eventText, isEventOnly } = isEventMessage
+                              ? getEventMessageContent(message)
+                              : { hasText: false, text: '', isEventOnly: false };
+
+                            // Determine what to show
+                            const showText = isEventMessage ? hasEventText : (isProfileMessage ? hasProfileText : !!message.content);
+                            const textContent = isEventMessage ? eventText : (isProfileMessage ? profileText : message.content || '');
+
                             return (
                               <>
-                                {/* Case 1: Profile message with no text - just show card, no bubble */}
-                                {isProfileOnly ? (
+                                {/* Event-only or Profile-only: show card only */}
+                                {(isEventOnly || isProfileOnly) ? (
                                   <div className="relative group min-w-0 max-w-full">
-                                    {renderProfileMessage(message.metadata as ProfileMessageMetadata, true, true)}
-                                    {/* Message actions menu for profile-only messages */}
+                                    {isEventOnly && renderEventMessage(message.metadata as EventMessageMetadata, true, true)}
+                                    {isProfileOnly && renderProfileMessage(message.metadata as ProfileMessageMetadata, true, true)}
+                                    {/* Message actions menu for event/profile-only messages */}
                                     <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                       <Button
                                         size="sm"
@@ -462,7 +615,7 @@ export function MessageList({
                                       >
                                         <MoreHorizontal className="w-3 h-3" />
                                       </Button>
-                                      
+
                                       {showMenuFor === message.id && (
                                         <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10">
                                           <button
@@ -485,12 +638,12 @@ export function MessageList({
                                   </div>
                                 ) : (
                                   <>
-                                    {/* Case 2: Has text - show text in bubble */}
-                                    {hasText && (
+                                    {/* Show text bubble if there's text content - SINGLE RENDER POINT */}
+                                    {showText && textContent && (
                                       <div className="relative group min-w-0 max-w-full">
-                                        <div className="bg-navy-600 text-white px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
+                                        <div className="bg-brand-primary text-white px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
                                           <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                                            {text}
+                                            {textContent}
                                           </p>
                                         </div>
                                         {/* Message actions menu */}
@@ -503,7 +656,7 @@ export function MessageList({
                                           >
                                             <MoreHorizontal className="w-3 h-3" />
                                           </Button>
-                                          
+
                                           {showMenuFor === message.id && (
                                             <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10">
                                               <button
@@ -525,50 +678,16 @@ export function MessageList({
                                         </div>
                                       </div>
                                     )}
-                                    {/* Case 3: Profile card below text (if profile message) */}
+                                    {/* Event card below text */}
+                                    {isEventMessage && (
+                                      <div className="relative group min-w-0 max-w-full mt-2">
+                                        {renderEventMessage(message.metadata as EventMessageMetadata, true, true)}
+                                      </div>
+                                    )}
+                                    {/* Profile card below text */}
                                     {isProfileMessage && (
                                       <div className="relative group min-w-0 max-w-full mt-2">
                                         {renderProfileMessage(message.metadata as ProfileMessageMetadata, true, true)}
-                                      </div>
-                                    )}
-                                    {/* Case 4: Regular message (not profile) */}
-                                    {!isProfileMessage && message.content && (
-                                      <div className="relative group min-w-0 max-w-full">
-                                        <div className="bg-navy-600 text-white px-4 py-2 rounded-lg shadow-sm max-w-full overflow-hidden">
-                                          <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                                            {message.content}
-                                          </p>
-                                        </div>
-                                        {/* Message actions menu */}
-                                        <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                          <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => setShowMenuFor(showMenuFor === message.id ? null : message.id)}
-                                            className="h-6 w-6 p-0 bg-white/90 hover:bg-white shadow-sm"
-                                          >
-                                            <MoreHorizontal className="w-3 h-3" />
-                                          </Button>
-                                          
-                                          {showMenuFor === message.id && (
-                                            <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10">
-                                              <button
-                                                onClick={() => handleEdit(message)}
-                                                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
-                                              >
-                                                <Edit className="w-3 h-3 mr-2" />
-                                                Edit
-                                              </button>
-                                              <button
-                                                onClick={() => handleDelete(message.id)}
-                                                className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
-                                              >
-                                                <Trash2 className="w-3 h-3 mr-2" />
-                                                Delete
-                                              </button>
-                                            </div>
-                                          )}
-                                        </div>
                                       </div>
                                     )}
                                   </>
@@ -578,22 +697,22 @@ export function MessageList({
                           })()
                         )}
                       </div>
-                      
+
                       {/* Timestamp */}
                       <span className="text-xs text-gray-400 mt-1 px-2">
                         {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
                       </span>
                     </div>
-                    
+
                     {/* Avatar */}
                     <div className="flex-shrink-0">
                       <UserAvatar
-                        user={{ 
-                          email: null, 
-                          user_metadata: { 
+                        user={{
+                          email: null,
+                          user_metadata: {
                             avatar_url: message.sender?.avatar_url || null, // Ensure null fallback
                             full_name: message.sender?.full_name || 'You' // Ensure fallback
-                          } 
+                          }
                         }}
                         completionPercent={100}
                         hasUnread={false}

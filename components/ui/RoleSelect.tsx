@@ -118,7 +118,7 @@ export const RoleSelect = React.forwardRef<HTMLDivElement, RoleSelectProps>(
             disabled={disabled}
             className={cn(
               "flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm",
-              "focus:border-navy-500 focus:outline-none focus:ring-1 focus:ring-navy-500",
+              "focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary",
               "hover:border-gray-400 transition-colors",
               disabled && "opacity-50 cursor-not-allowed hover:border-gray-300"
             )}
@@ -148,7 +148,7 @@ export const RoleSelect = React.forwardRef<HTMLDivElement, RoleSelectProps>(
                 className={cn(
                   "flex cursor-pointer items-center justify-between px-3 py-2 text-sm",
                   "hover:bg-gray-50 transition-colors",
-                  option.value === selectedValue && "bg-navy-50 text-navy-900",
+                  option.value === selectedValue && "bg-primary-50 text-primary-900",
                   option.disabled && "opacity-50 cursor-not-allowed hover:bg-white"
                 )}
               >
@@ -159,7 +159,7 @@ export const RoleSelect = React.forwardRef<HTMLDivElement, RoleSelectProps>(
                   </span>
                 </div>
                 {option.value === selectedValue && !option.disabled && (
-                  <Check className="h-4 w-4 text-navy-600" />
+                  <Check className="h-4 w-4 text-brand-primary" />
                 )}
               </div>
             ))}

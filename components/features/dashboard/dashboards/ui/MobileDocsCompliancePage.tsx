@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'react-toastify';
+import { DocumentDetailDrawer } from './DocumentDetailDrawer';
 
 // Use the same interface as DocsCompliancePanel
 interface ChapterDocument {
@@ -31,6 +32,8 @@ export function MobileDocsCompliancePage() {
   const [documents, setDocuments] = useState<ChapterDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<'all' | 'current' | 'expired' | 'pending' | 'missing'>('all');
+  const [selectedDocument, setSelectedDocument] = useState<ChapterDocument | null>(null);
+  const [showDetailDrawer, setShowDetailDrawer] = useState(false);
   
   const { profile } = useProfile();
   const chapterId = profile?.chapter_id;
@@ -136,7 +139,7 @@ export function MobileDocsCompliancePage() {
     
     if (fileType.includes('pdf')) return <FileText className="h-4 w-4 text-red-600" />;
     if (fileType.includes('spreadsheet') || fileType.includes('excel')) return <FileText className="h-4 w-4 text-green-600" />;
-    if (fileType.includes('word')) return <FileText className="h-4 w-4 text-blue-600" />;
+    if (fileType.includes('word')) return <FileText className="h-4 w-4 text-brand-accent" />;
     
     return <FileText className="h-4 w-4" />;
   };
@@ -166,7 +169,7 @@ export function MobileDocsCompliancePage() {
       legal: 'bg-purple-100 text-purple-800',
       finance: 'bg-green-100 text-green-800',
       safety: 'bg-red-100 text-red-800',
-      policy: 'bg-blue-100 text-blue-800',
+      policy: 'bg-accent-100 text-accent-800',
       general: 'bg-gray-100 text-gray-800'
     };
     return colors[category] || colors.general;
@@ -268,7 +271,7 @@ export function MobileDocsCompliancePage() {
       <div className="max-w-md mx-auto">
         {/* Header */}
         <div className="flex items-center space-x-2 mb-6">
-          <FileText className="h-6 w-6 text-navy-600" />
+          <FileText className="h-6 w-6 text-brand-primary" />
           <h1 className="text-xl font-semibold text-gray-900">Documents & Compliance</h1>
         </div>
 
@@ -283,13 +286,13 @@ export function MobileDocsCompliancePage() {
                   onClick={() => setActiveFilter(filter.id)}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                     isActive 
-                      ? 'bg-blue-600 text-white' 
+                      ? 'bg-brand-accent text-white' 
                       : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                   }`}
                 >
                   <span>{filter.label}</span>
                   <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                    isActive ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
+                    isActive ? 'bg-accent-500 text-white' : 'bg-gray-100 text-gray-600'
                   }`}>
                     {filter.count}
                   </span>
@@ -318,7 +321,11 @@ export function MobileDocsCompliancePage() {
               return (
                 <div 
                   key={doc.id} 
-                  className={`px-4 py-4 ${index !== filteredDocuments.length - 1 ? 'border-b border-gray-100' : ''}`}
+                  className={`px-4 py-4 cursor-pointer hover:bg-gray-50 transition-colors ${index !== filteredDocuments.length - 1 ? 'border-b border-gray-100' : ''}`}
+                  onClick={() => {
+                    setSelectedDocument(doc);
+                    setShowDetailDrawer(true);
+                  }}
                 >
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0">
@@ -352,7 +359,7 @@ export function MobileDocsCompliancePage() {
                         </div>
                       </div>
                       
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
                         <Button 
                           size="sm" 
                           variant="outline" 
@@ -378,6 +385,21 @@ export function MobileDocsCompliancePage() {
               );
             })}
           </div>
+        )}
+
+        {/* Document Detail Drawer */}
+        {selectedDocument && (
+          <DocumentDetailDrawer
+            doc={selectedDocument}
+            isOpen={showDetailDrawer}
+            onClose={() => {
+              setShowDetailDrawer(false);
+              setSelectedDocument(null);
+            }}
+            onDelete={(deletedId) => {
+              setDocuments(prev => prev.filter(d => d.id !== deletedId));
+            }}
+          />
         )}
       </div>
     </div>

@@ -30,7 +30,7 @@ export function DuesSnapshot() {
       
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center space-x-2">
-          <DollarSign className="h-5 w-5 text-navy-600" />
+          <DollarSign className="h-5 w-5 text-brand-primary" />
           <span>Dues Snapshot</span>
         </CardTitle>
       </CardHeader>

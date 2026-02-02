@@ -189,13 +189,13 @@ export function MyTasksCard() {
       <Card className="bg-white shadow-sm border border-gray-200">
         <CardHeader className="pb-3 border-b border-gray-100">
           <CardTitle className="text-lg flex items-center space-x-2 font-semibold text-gray-900">
-            <ListTodo className="h-5 w-5 text-navy-600" />
+            <ListTodo className="h-5 w-5 text-brand-primary" />
             <span>My Tasks</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+            <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
             <span className="ml-2 text-gray-600">Loading tasks...</span>
           </div>
         </CardContent>
@@ -209,7 +209,7 @@ export function MyTasksCard() {
       <Card className="bg-white shadow-sm border border-gray-200">
         <CardHeader className="pb-3 border-b border-gray-100">
           <CardTitle className="text-lg flex items-center space-x-2 font-semibold text-gray-900">
-            <ListTodo className="h-5 w-5 text-navy-600" />
+            <ListTodo className="h-5 w-5 text-brand-primary" />
             <span>My Tasks</span>
           </CardTitle>
         </CardHeader>
@@ -219,7 +219,7 @@ export function MyTasksCard() {
             <p className="text-sm">{error}</p>
             <Button 
               onClick={() => loadMyTasks()} 
-              className="mt-3 bg-navy-600 hover:bg-navy-700 h-10 sm:h-8"
+              className="mt-3 bg-brand-primary hover:bg-brand-primary-hover h-10 sm:h-8"
             >
               Try Again
             </Button>
@@ -235,7 +235,7 @@ export function MyTasksCard() {
       <Card className="bg-white shadow-sm border border-gray-200">
         <CardHeader className="pb-3 border-b border-gray-100">
           <CardTitle className="text-lg flex items-center space-x-2 font-semibold text-gray-900">
-            <ListTodo className="h-5 w-5 text-navy-600" />
+            <ListTodo className="h-5 w-5 text-brand-primary" />
             <span>My Tasks</span>
           </CardTitle>
         </CardHeader>
@@ -254,7 +254,7 @@ export function MyTasksCard() {
     <Card className="bg-white shadow-sm border border-gray-200">
       <CardHeader className="pb-3 border-b border-gray-100">
         <CardTitle className="text-lg flex items-center space-x-2 font-semibold text-gray-900">
-          <ListTodo className="h-5 w-5 text-navy-600" />
+          <ListTodo className="h-5 w-5 text-brand-primary" />
           <span>My Tasks</span>
           <span className="ml-2 px-2 py-1 text-xs rounded-full text-gray-500 bg-gray-100">{totalTasks}</span>
         </CardTitle>
@@ -269,7 +269,7 @@ export function MyTasksCard() {
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3 sm:h-2">
               <div 
-                className="bg-navy-600 h-3 sm:h-2 rounded-full transition-all duration-300"
+                className="bg-brand-primary h-3 sm:h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progressPercentage}%` }}
               ></div>
             </div>
@@ -278,7 +278,7 @@ export function MyTasksCard() {
           {/* Task List */}
           <div className="space-y-2.5 max-h-48 overflow-y-auto">
             {currentItems.map((task) => (
-              <div key={task.id} className="flex items-start space-x-3 sm:space-x-3 p-3 sm:p-2 rounded-lg hover:border-navy-300 hover:shadow-sm transition-all duration-200 bg-white border border-gray-200">
+              <div key={task.id} className="flex items-start space-x-3 sm:space-x-3 p-3 sm:p-2 rounded-lg hover:border-primary-300 hover:shadow-sm transition-all duration-200 bg-white border border-gray-200">
                 <Checkbox
                   checked={task.status === 'completed'}
                   onCheckedChange={() => handleTaskToggle(task.id, task.status)}
@@ -307,7 +307,7 @@ export function MyTasksCard() {
                     <span className={`inline-block px-3 py-1 sm:px-2 sm:py-1 text-sm sm:text-xs rounded-full ${
                       task.priority === 'urgent' ? 'bg-red-100 text-red-800' :
                       task.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-                      task.priority === 'medium' ? 'bg-blue-100 text-blue-800' :
+                      task.priority === 'medium' ? 'bg-accent-100 text-accent-800' :
                       'bg-gray-100 text-gray-800'
                     }`}>
                       {task.priority}
@@ -350,7 +350,7 @@ export function MyTasksCard() {
                           onClick={() => setCurrentPage(page)}
                           className={`h-7 w-7 p-0 text-xs flex-shrink-0 ${
                             currentPage === page
-                              ? 'bg-navy-600 text-white hover:bg-navy-700'
+                              ? 'bg-brand-primary text-white hover:bg-brand-primary-hover'
                               : 'hover:bg-gray-50'
                           }`}
                         >

@@ -209,7 +209,7 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
       )}>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-3 sm:space-x-2 text-xl sm:text-lg">
-            <Calendar className="h-6 w-6 sm:h-5 sm:w-5 text-navy-600" />
+            <Calendar className="h-6 w-6 sm:h-5 sm:w-5 text-brand-primary" />
             <span>{event ? 'Edit Event' : 'Create New Event'}</span>
           </CardTitle>
           {isMobile && (
@@ -427,7 +427,7 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
               variant="outline"
               onClick={onCancel}
               disabled={loading}
-              className="w-full rounded-full bg-white/80 backdrop-blur-md border border-navy-500/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300"
+              className="w-full rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
             >
               Cancel
             </Button>
@@ -435,7 +435,7 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
               type="submit"
               form="event-form"
               disabled={loading}
-              className="w-full rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-full bg-brand-primary text-white hover:bg-brand-primary-hover shadow-lg shadow-navy-100/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="flex items-center space-x-2">
@@ -459,7 +459,7 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
               variant="outline"
               onClick={onCancel}
               disabled={loading}
-              className="rounded-full bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-navy-700 hover:text-navy-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+              className="rounded-full bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
             >
               Cancel
             </Button>
@@ -467,7 +467,7 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
               type="submit"
               form="event-form"
               disabled={loading}
-              className="rounded-full bg-navy-600 text-white hover:bg-navy-700 shadow-lg shadow-navy-100/20 disabled:opacity-50 disabled:cursor-not-allowed h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
+              className="rounded-full bg-brand-primary text-white hover:bg-brand-primary-hover shadow-lg shadow-navy-100/20 disabled:opacity-50 disabled:cursor-not-allowed h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm"
             >
               {loading ? (
                 <div className="flex items-center space-x-2">

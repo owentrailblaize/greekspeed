@@ -163,7 +163,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
         <Card className="hidden sm:block rounded-2xl border border-gray-100 bg-white/80 shadow-sm transition hover:shadow-md">
           <CardContent className="p-0">
             <div className="flex items-center gap-3 px-5 py-4">
-              <div className="h-12 w-12 rounded-full bg-navy-100/80 flex items-center justify-center text-navy-700 text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
+              <div className="h-12 w-12 rounded-full bg-primary-100/80 flex items-center justify-center text-brand-primary-hover text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
                 {profile?.avatar_url ? (
                   <ImageWithFallback
                     src={profile.avatar_url}
@@ -179,7 +179,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
               <div className="flex-1">
                 <Button
                   variant="outline"
-                  className="flex w-full items-center justify-start rounded-full border border-dashed border-gray-200 bg-gray-50 px-5 py-2.5 text-left text-gray-500 transition hover:border-gray-300 hover:bg-white hover:text-gray-700 focus-visible:ring-2 focus-visible:ring-navy-200"
+                  className="flex w-full items-center justify-start rounded-full border border-dashed border-gray-200 bg-gray-50 px-5 py-2.5 text-left text-gray-500 transition hover:border-gray-300 hover:bg-white hover:text-gray-700 focus-visible:ring-2 focus-visible:ring-primary-200"
                   onClick={() => setIsCreateModalOpen(true)}
                 >
                   Start a post…
@@ -195,7 +195,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
                   className="gap-2 rounded-full px-2 py-1 text-gray-500 transition hover:bg-white hover:text-gray-700"
                   onClick={() => setIsCreateModalOpen(true)}
                 >
-                  <ImageIcon className="h-4 w-4 text-blue-500" />
+                  <ImageIcon className="h-4 w-4 text-accent-500" />
                   Photo
                 </Button>
                 <Button
@@ -269,7 +269,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
             <div ref={loadMoreRef} className="h-px w-full" />
             {isFetchingNextPage && (
               <div className="flex justify-center py-4">
-                <div className="w-6 h-6 border-2 border-navy-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
               </div>
             )}
             {!hasNextPage && posts.length > 0 && (
@@ -281,12 +281,11 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
 
       <div
         onClick={() => setIsCreateModalOpen(true)}
-        className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full sm:hidden flex items-center justify-center cursor-pointer group"
+        className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full sm:hidden flex items-center justify-center cursor-pointer group bg-brand-primary hover:bg-brand-primary-hover transition-colors"
         style={{
-          background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 25%, #3b82f6 50%, #60a5fa 75%, #93c5fd 100%)',
           boxShadow: `
-            0 8px 16px rgba(30, 64, 175, 0.5),
-            0 4px 8px rgba(30, 64, 175, 0.4),
+            0 8px 16px rgba(0, 0, 0, 0.25),
+            0 4px 8px rgba(0, 0, 0, 0.15),
             inset 0 1px 0 rgba(255, 255, 255, 0.3),
             inset 0 -1px 0 rgba(0, 0, 0, 0.2)
           `,

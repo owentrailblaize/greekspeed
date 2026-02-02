@@ -213,7 +213,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-2 md:p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-accent-50 flex items-center justify-center p-2 md:p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -338,19 +338,19 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                   <BookOpen className="h-3 w-3" />
                   <span>Major(s) *</span>
                 </Label>
-                <div className={`min-h-[2rem] border rounded-md p-1.5 md:p-2 flex flex-wrap gap-1.5 items-center ${errors.major ? 'border-red-500' : 'border-gray-300'} focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500`}>
+                <div className={`min-h-[2rem] border rounded-md p-1.5 md:p-2 flex flex-wrap gap-1.5 items-center ${errors.major ? 'border-red-500' : 'border-gray-300'} focus-within:ring-2 focus-within:ring-accent-500 focus-within:border-accent-500`}>
                   {/* Major Tags */}
                   {majors.map((major, index) => (
                     <Badge
                       key={index}
                       variant="secondary"
-                      className="flex items-center space-x-1 px-2 py-0.5 text-xs bg-blue-100 text-blue-800 border-blue-200"
+                      className="flex items-center space-x-1 px-2 py-0.5 text-xs bg-accent-100 text-accent-800 border-accent-200"
                     >
                       <span>{major}</span>
                       <button
                         type="button"
                         onClick={() => removeMajor(major)}
-                        className="ml-1 hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                        className="ml-1 hover:bg-accent-200 rounded-full p-0.5 transition-colors"
                         aria-label={`Remove ${major}`}
                       >
                         <X className="h-3 w-3" />
@@ -450,12 +450,12 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
               </div>
 
               {/* Chapter Info */}
-              <div className="bg-white/80 backdrop-blur-md border border-navy-100/50 shadow-lg shadow-navy-100/20 rounded-lg p-1.5 md:p-2">
+              <div className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 rounded-lg p-1.5 md:p-2">
                 <div className="flex flex-col md:flex-row md:items-center md:space-x-2 space-y-1 md:space-y-0">
-                  <h4 className="font-medium text-navy-900 text-sm">You're joining:</h4>
+                  <h4 className="font-medium text-primary-900 text-sm">You're joining:</h4>
                   <div className="flex items-center space-x-2">
-                    <Users className="h-3 w-3 md:h-4 md:w-4 text-navy-600" />
-                    <span className="text-navy-800 text-sm">{invitation.chapter_name}</span>
+                    <Users className="h-3 w-3 md:h-4 md:w-4 text-brand-primary" />
+                    <span className="text-primary-800 text-sm">{invitation.chapter_name}</span>
                   </div>
                 </div>
               </div>
@@ -470,7 +470,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="rounded-full w-full bg-blue-600 hover:bg-blue-700 h-8 md:h-9"
+                className="rounded-full w-full bg-brand-accent hover:bg-accent-700 h-8 md:h-9"
                 disabled={loading}
               >
                 {loading ? (

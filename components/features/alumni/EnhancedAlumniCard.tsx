@@ -125,11 +125,11 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
           <Button
             onClick={(e) => handleConnectionAction('connect', e)}
             disabled={isLoading}
-            className="w-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 transition-colors duration-200 rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
+            className="w-full border border-brand-primary text-brand-primary bg-white hover:bg-primary-50 transition-colors duration-200 rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm"
             variant="outline"
           >
             {isLoading ? (
-              <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b border-navy-600 mr-1 sm:mr-2" />
+              <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b border-brand-primary mr-1 sm:mr-2" />
             ) : (
               <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             )}
@@ -160,7 +160,7 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
             onClick={(e) => handleMessageClick(e)}
             className="w-full text-white rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm flex items-center justify-center"
             style={{
-              background: 'linear-gradient(340deg, rgba(228, 236, 255, 1) 0%, rgba(130, 130, 255, 0.95) 34%, rgba(35, 70, 224, 0.93) 85%)'
+              background: 'linear-gradient(340deg, #e2e8f0 0%, #94a3b8 50%, #475569 100%)'
             }}
           >
             <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
@@ -207,7 +207,7 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
                   className="w-full h-full object-cover" 
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center">
+                <div className="w-full h-full bg-gradient-to-br from-brand-primary to-brand-primary flex items-center justify-center">
                   <span className="text-white font-medium text-lg">
                     {alumni.firstName?.[0] || ''}{alumni.lastName?.[0] || ''}
                   </span>
@@ -241,7 +241,7 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
               </div>
             )}
             {isValidField(alumni.jobTitle) && (
-              <p className="hidden sm:block text-xs sm:text-sm font-medium text-navy-600 mb-0.5 sm:mb-1 leading-tight truncate">{alumni.jobTitle}</p>
+              <p className="hidden sm:block text-xs sm:text-sm font-medium text-brand-primary mb-0.5 sm:mb-1 leading-tight truncate">{alumni.jobTitle}</p>
             )}
             {isValidField(alumni.company) && (
               <div className="flex items-center justify-center space-x-2 text-gray-500 text-xs sm:text-sm">
@@ -249,7 +249,7 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
                 <ClickableField 
                   value={alumni.company} 
                   entityType="company" 
-                  className="text-gray-500 hover:text-blue-600 text-center "
+                  className="text-gray-500 hover:text-brand-accent text-center "
                 />
               </div>
             )}

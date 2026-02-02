@@ -399,7 +399,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
   const getPriorityColor = (priority: TaskPriority) => {
     switch (priority) {
       case 'low': return 'bg-gray-100 text-gray-800';
-      case 'medium': return 'bg-blue-100 text-blue-800';
+      case 'medium': return 'bg-accent-100 text-accent-800';
       case 'high': return 'bg-orange-100 text-orange-800';
       case 'urgent': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -427,13 +427,13 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
       <Card className="bg-white">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center space-x-2">
-            <ClipboardList className="h-5 w-5 text-navy-600" />
+            <ClipboardList className="h-5 w-5 text-brand-primary" />
             <span>Tasks Panel</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-navy-600" />
+            <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
             <span className="ml-2 text-gray-600">Loading tasks...</span>
           </div>
         </CardContent>
@@ -447,7 +447,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
       <Card className="bg-white">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center space-x-2">
-            <ClipboardList className="h-5 w-5 text-navy-600" />
+            <ClipboardList className="h-5 w-5 text-brand-primary" />
             <span>Tasks Panel</span>
           </CardTitle>
         </CardHeader>
@@ -466,8 +466,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
     <Card className="bg-white">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center space-x-2">
-          <ClipboardList className="h-5 w-5 text-navy-600" />
-          <span>Tasks Panel</span>
+          <span>Tasks</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
@@ -475,10 +474,10 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
         <div className="mb-4">
           <Button 
             onClick={() => setIsModalOpen(true)}
-            className="w-full h-10 rounded-full bg-navy-600 hover:bg-navy-700 text-white font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-300"
+            className="w-full h-8 md:h-10 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white font-medium text-xs md:text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-300"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Create New Task
+            Create Task
           </Button>
         </div>
 
@@ -487,10 +486,10 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
           <Button 
             onClick={() => setIsViewAllModalOpen(true)}
             variant="outline"
-            className="w-full h-10 rounded-full border border-navy-600 text-navy-600 bg-white hover:bg-navy-50 font-medium text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-navy-300"
+            className="w-full h-8 md:h-10 rounded-full border border-brand-primary text-brand-primary bg-white hover:bg-primary-50 font-medium text-xs md:text-sm shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-300"
           >
             <Eye className="h-4 w-4 mr-2" />
-            View All Assigned Tasks
+            View Tasks
           </Button>
         </div>
 
@@ -532,9 +531,9 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
                     {allChapterTasks.length === 0 ? (
                       <div className="text-center py-8 text-gray-500 flex-1 flex items-center justify-center">
                         <div>
-                          <ClipboardList className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                          <p className="text-lg font-medium mb-2">No tasks yet</p>
-                          <p className="text-sm">Create your first task to get started!</p>
+                          <ClipboardList className="h-6 md:h-12 w-6 md:w-12 mx-auto mb-3 text-gray-300" />
+                          <p className="text-base md:text-lg font-medium mb-2">No tasks yet</p>
+                          <p className="text-xs md:text-sm">Create your first task to get started!</p>
                         </div>
                       </div>
                     ) : (
@@ -579,7 +578,7 @@ export function TasksPanel({ chapterId }: TasksPanelProps) {
                                         {task.description.length > MAX_DESCRIPTION_LENGTH && (
                                           <button
                                             onClick={() => handleToggleDescription(task.id)}
-                                            className="mt-1 text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1 transition-colors"
+                                            className="mt-1 text-xs text-brand-accent hover:text-accent-700 font-medium flex items-center space-x-1 transition-colors"
                                           >
                                             <span>{expandedTaskId === task.id ? 'Show less' : 'Show more'}</span>
                                             {expandedTaskId === task.id ? (

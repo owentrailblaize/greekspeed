@@ -182,7 +182,7 @@ export function AlumniPagination({
               onClick={() => onPageChange(page)}
               className={`h-8 w-8 p-0 text-xs transition-colors ${
                 currentPage === page
-                  ? 'bg-navy-600 text-white hover:bg-navy-700 font-semibold'
+                  ? 'bg-brand-primary text-white hover:bg-brand-primary-hover font-semibold'
                   : 'hover:bg-gray-100 border-gray-300'
               }`}
               aria-label={`Go to page ${page}`}

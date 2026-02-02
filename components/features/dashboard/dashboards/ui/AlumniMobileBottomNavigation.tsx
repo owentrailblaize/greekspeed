@@ -29,12 +29,12 @@ export function AlumniMobileBottomNavigation({ activeTab, onTabChange }: AlumniM
               onClick={() => onTabChange(tab.id)}
               className={`flex flex-col items-center justify-center space-y-1 ${
                 isActive 
-                  ? 'text-blue-600' 
+                  ? 'text-brand-accent' 
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
-              <span className={`text-xs font-medium ${isActive ? 'text-blue-600' : 'text-gray-500'}`}>
+              <Icon className={`h-5 w-5 ${isActive ? 'text-brand-accent' : 'text-gray-500'}`} />
+              <span className={`text-xs font-medium ${isActive ? 'text-brand-accent' : 'text-gray-500'}`}>
                 {tab.label}
               </span>
             </button>

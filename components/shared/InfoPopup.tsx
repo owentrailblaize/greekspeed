@@ -19,7 +19,7 @@ export function InfoPopup({ isOpen, onClose, entityType, entityId, entityName }:
   const renderCompanyContent = () => (
     <div className="space-y-4">
       <div className="flex items-start space-x-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+        <div className="w-16 h-16 bg-gradient-to-br from-accent-500 to-brand-accent rounded-lg flex items-center justify-center">
           <Building2 className="w-8 h-8 text-white" />
         </div>
         <div className="flex-1">
@@ -32,12 +32,12 @@ export function InfoPopup({ isOpen, onClose, entityType, entityId, entityName }:
         </div>
       </div>
       
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="bg-accent-50 border border-accent-200 rounded-lg p-4">
         <div className="flex items-center space-x-2 mb-2">
-          <Clock className="w-4 h-4 text-blue-600" />
-          <span className="text-sm font-medium text-blue-800">Feature Coming Soon</span>
+          <Clock className="w-4 h-4 text-brand-accent" />
+          <span className="text-sm font-medium text-accent-800">Feature Coming Soon</span>
         </div>
-        <p className="text-blue-700 text-sm">
+        <p className="text-accent-700 text-sm">
           Rich company information including industry details, employee count, founding year, 
           website, and more will be available soon. This will include data from reliable sources 
           to provide comprehensive company insights.
@@ -67,16 +67,16 @@ export function InfoPopup({ isOpen, onClose, entityType, entityId, entityName }:
   const renderIndustryContent = () => (
     <div className="space-y-4">
       <div className="flex items-center space-x-2">
-        <TrendingUp className="w-6 h-6 text-blue-600" />
+        <TrendingUp className="w-6 h-6 text-brand-accent" />
         <h3 className="text-xl font-semibold text-gray-900">{entityName}</h3>
       </div>
       
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="bg-accent-50 border border-accent-200 rounded-lg p-4">
         <div className="flex items-center space-x-2 mb-2">
-          <Clock className="w-4 h-4 text-blue-600" />
-          <span className="text-sm font-medium text-blue-800">Feature Coming Soon</span>
+          <Clock className="w-4 h-4 text-brand-accent" />
+          <span className="text-sm font-medium text-accent-800">Feature Coming Soon</span>
         </div>
-        <p className="text-blue-700 text-sm">
+        <p className="text-accent-700 text-sm">
           Industry insights including market size, growth rate, key trends, and related industries 
           will be available soon. This will provide valuable market intelligence for networking 
           and career decisions.
@@ -111,16 +111,16 @@ export function InfoPopup({ isOpen, onClose, entityType, entityId, entityName }:
   const renderChapterContent = () => (
     <div className="space-y-4">
       <div className="flex items-center space-x-2">
-        <Users className="w-6 h-6 text-blue-600" />
+        <Users className="w-6 h-6 text-brand-accent" />
         <h3 className="text-xl font-semibold text-gray-900">{entityName}</h3>
       </div>
       
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="bg-accent-50 border border-accent-200 rounded-lg p-4">
         <div className="flex items-center space-x-2 mb-2">
-          <Clock className="w-4 h-4 text-blue-600" />
-          <span className="text-sm font-medium text-blue-800">Feature Coming Soon</span>
+          <Clock className="w-4 h-4 text-brand-accent" />
+          <span className="text-sm font-medium text-accent-800">Feature Coming Soon</span>
         </div>
-        <p className="text-blue-700 text-sm">
+        <p className="text-accent-700 text-sm">
           Chapter information including member count, location, founding year, upcoming events, 
           and recent achievements will be available soon. This will help strengthen chapter 
           connections and engagement.
