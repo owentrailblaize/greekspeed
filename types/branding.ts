@@ -68,8 +68,8 @@ export interface ColorShades {
 export const DEFAULT_BRANDING_THEME: BrandingTheme = {
   primaryColor: '#000000',           // Black (primary)
   primaryColorHover: '#1a1a1a',      // text-900 (hover)
-  accentColor: '#aa263c',            // accent-600 (red accent)
-  accentColorLight: '#f6d5db',       // accent-100 (light red)
+  accentColor: '#1E3A8A',            // Navy blue accent (was #aa263c)
+  accentColorLight: '#DBEAFE',       // Light blue (was #f6d5db)
   focusColor: '#0000004D',           // Black with 30% opacity
   primaryLogo: '/logo.png',
   secondaryLogo: null,

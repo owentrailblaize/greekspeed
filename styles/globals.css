@@ -71,14 +71,14 @@ textarea {
   /* New default Trailblaize colors - black/white/grey with red accent */
   --brand-primary: #000000;
   --brand-primary-hover: #1a1a1a;
-  --brand-accent: #aa263c;
-  --brand-accent-light: #f6d5db;
+  --brand-accent: #1E3A8A;           /* Navy blue (was #aa263c) */
+  --brand-accent-light: #DBEAFE;     /* Light blue (was #f6d5db) */
   --brand-focus: #0000004D;
   
   /* New semantic variables */
   --brand-text: #000000;
   --brand-background: #ffffff;
-  --brand-secondary: #fff2f4;
+  --brand-secondary: #EFF6FF;
 }
 
 /* CSS variables will be dynamically injected by BrandingContext */
