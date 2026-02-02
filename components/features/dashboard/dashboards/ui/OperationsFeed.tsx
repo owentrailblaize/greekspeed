@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Drawer } from 'vaul';
-import { Clock, DollarSign, FileText, Megaphone, CheckCircle, Calendar, X, ChevronLeft, ChevronRight } from 'lucide-react'; 
+import { Clock, DollarSign, FileText, Megaphone, CheckCircle, Calendar, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { createClient } from '@supabase/supabase-js';
 import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';

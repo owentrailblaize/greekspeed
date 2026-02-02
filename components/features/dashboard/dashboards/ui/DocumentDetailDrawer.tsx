@@ -258,28 +258,31 @@ export function DocumentDetailDrawer({
 
       {/* Actions Footer */}
       <div className="border-t border-gray-200 p-4 sm:p-6 flex-shrink-0">
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button
-            onClick={handleDownload}
-            className="flex-1 bg-brand-primary hover:bg-brand-primary-hover rounded-full"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Download
-          </Button>
-          <Button
-            onClick={handleViewDocument}
-            variant="outline"
-            className="flex-1 rounded-full"
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            View
-          </Button>
-          {/* Only show delete button if user is the document owner */}
+        <div className="space-y-2">
+          {/* Download and View - Always on same row */}
+          <div className="flex gap-2">
+            <Button
+              onClick={handleDownload}
+              className="flex-1 bg-brand-primary hover:bg-brand-primary-hover rounded-full"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </Button>
+            <Button
+              onClick={handleViewDocument}
+              variant="outline"
+              className="flex-1 rounded-full"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              View
+            </Button>
+          </div>
+          {/* Delete button on its own row - only if user is owner */}
           {isOwner && (
             <Button
               onClick={handleDeleteDocument}
               variant="outline"
-              className="flex-1 rounded-full text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+              className="w-full rounded-full text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
               disabled={isDeleting}
             >
               {isDeleting ? (

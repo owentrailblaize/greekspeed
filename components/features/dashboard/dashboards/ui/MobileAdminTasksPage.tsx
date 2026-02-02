@@ -25,6 +25,7 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import type { Recruit, RecruitStage } from '@/types/recruitment';
 import { RecruitCard } from './RecruitCard';
 import { RecruitDetailSheet } from './RecruitDetailSheet';
+import { DocumentDetailDrawer } from './DocumentDetailDrawer';
 
 interface ChapterDocument {
   id: string;
@@ -89,6 +90,8 @@ export function MobileAdminTasksPage() {
   });
   const [docsPage, setDocsPage] = useState(1);
   const docsPerPage = 6;
+  const [selectedDocument, setSelectedDocument] = useState<ChapterDocument | null>(null);
+  const [showDocDetailDrawer, setShowDocDetailDrawer] = useState(false);
 
   // Recruits state
   const [recruits, setRecruits] = useState<Recruit[]>([]);
@@ -998,7 +1001,14 @@ export function MobileAdminTasksPage() {
               <>
                 <div className="space-y-2">
                   {paginatedDocs.map((doc) => (
-                    <Card key={doc.id} className="p-3 bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                    <Card
+                      key={doc.id}
+                      className="p-3 bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 cursor-pointer"
+                      onClick={() => {
+                        setSelectedDocument(doc);
+                        setShowDocDetailDrawer(true);
+                      }}
+                    >
                       <div className="space-y-2">
                         <div className="flex items-start justify-between">
                           <div className="flex items-start space-x-2 flex-1 min-w-0">
@@ -1027,7 +1037,10 @@ export function MobileAdminTasksPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleDownload(doc)}
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent card click
+                              handleDownload(doc);
+                            }}
                             className="h-7 px-2 text-brand-primary-hover hover:text-primary-900 hover:bg-primary-50"
                           >
                             <Download className="h-3 w-3" />
@@ -1089,11 +1102,27 @@ export function MobileAdminTasksPage() {
                           >
                             {page}
                           </Button>
-            ))}
-          </div>
-        )}
-
+                        ))}
+                      </div>
+                    )}
                   </div>
+                )}
+
+                {/* Document Detail Drawer */}
+                {selectedDocument && (
+                  <DocumentDetailDrawer
+                    doc={selectedDocument}
+                    isOpen={showDocDetailDrawer}
+                    onClose={() => {
+                      setShowDocDetailDrawer(false);
+                      setSelectedDocument(null);
+                    }}
+                    onDelete={(deletedId) => {
+                      setDocuments(prev => prev.filter(d => d.id !== deletedId));
+                      setShowDocDetailDrawer(false);
+                      setSelectedDocument(null);
+                    }}
+                  />
                 )}
               </>
             )}
