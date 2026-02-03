@@ -26,6 +26,9 @@ import {
   ConfidenceLevel,
   ImportReviewFormData,
   importReviewFormSchema,
+  alumniImportReviewFormSchema,
+  UserRole,
+  ExistingProfileData,
 } from '@/types/profile-import';
 import { industries, getGraduationYears } from '@/lib/alumniConstants';
 
@@ -46,6 +49,10 @@ interface ImportReviewFormProps {
   isSubmitting?: boolean;
   /** Additional className */
   className?: string;
+  /** User role - determines which sections to show */
+  userRole?: UserRole;
+  /** Existing profile data to pre-populate form fields */
+  existingProfileData?: ExistingProfileData;
 }
 
 // ============================================================================
@@ -107,7 +114,12 @@ export function ImportReviewForm({
   onBack,
   isSubmitting = false,
   className,
+  userRole,
+  existingProfileData,
 }: ImportReviewFormProps) {
+  // Determine if user is alumni (show job fields) or not (show education focus)
+  const isAlumni = userRole === 'alumni' || !userRole; // Default to alumni behavior if role not provided
+  
   // Get graduation years for dropdown
   const graduationYears = useMemo(() => getGraduationYears(), []);
 
@@ -115,28 +127,62 @@ export function ImportReviewForm({
   const currentExp = useMemo(() => getCurrentExperience(parsedData), [parsedData]);
   const education = useMemo(() => getRelevantEducation(parsedData), [parsedData]);
 
-  // Form state - initialize from parsed data
-  const [formData, setFormData] = useState<ImportReviewFormData>({
-    fullName: parsedData.fullName || '',
-    location: parsedData.location || currentExp?.location || '',
-    industry: '', // User needs to select this
-    currentExperience: {
-      title: currentExp?.title || '',
-      company: currentExp?.company || '',
-      startMonth: currentExp?.startMonth?.toString() || '',
-      startYear: currentExp?.startYear?.toString() || '',
-      endMonth: currentExp?.endMonth?.toString() || '',
-      endYear: currentExp?.endYear?.toString() || '',
-      isCurrent: currentExp?.isCurrent ?? true,
-      location: currentExp?.location || '',
-      description: currentExp?.description || '',
-    },
-    education: {
-      school: education?.school || '',
-      degree: education?.degree || '',
-      field: education?.field || '',
-      graduationYear: education?.endYear?.toString() || '',
-    },
+  // Build full name from existing profile data
+  const existingFullName = useMemo(() => {
+    if (existingProfileData?.fullName) return existingProfileData.fullName;
+    if (existingProfileData?.firstName && existingProfileData?.lastName) {
+      return `${existingProfileData.firstName} ${existingProfileData.lastName}`.trim();
+    }
+    if (existingProfileData?.firstName) return existingProfileData.firstName;
+    return '';
+  }, [existingProfileData]);
+
+  // Track which fields have suggestions from LinkedIn (different from existing data)
+  // Note: fullName is NOT included - we use existing profile data only (read-only)
+  const suggestions = useMemo(() => ({
+    location: parsedData.location && parsedData.location !== existingProfileData?.location ? parsedData.location : null,
+    field: education?.field && education.field !== existingProfileData?.major ? education.field : null,
+    graduationYear: education?.endYear && education.endYear !== existingProfileData?.gradYear ? education.endYear.toString() : null,
+    jobTitle: currentExp?.title && currentExp.title !== existingProfileData?.jobTitle ? currentExp.title : null,
+    company: currentExp?.company && currentExp.company !== existingProfileData?.company ? currentExp.company : null,
+  }), [parsedData, existingProfileData, education, currentExp]);
+
+  // Form state - prioritize EXISTING data, fall back to PARSED data
+  // For alumni: include all fields including job info
+  // For active members: only include personal info and education
+  // Note: fullName is NOT included in form state - displayed read-only from existingFullName
+  const [formData, setFormData] = useState<ImportReviewFormData>(() => {
+    const baseData: ImportReviewFormData = {
+      // Note: fullName is displayed read-only, not editable
+      location: existingProfileData?.location || parsedData.location || currentExp?.location || '',
+      education: {
+        school: education?.school || '',
+        degree: education?.degree || '',
+        // For active members, use existing major if available
+        field: existingProfileData?.major || education?.field || '',
+        graduationYear: existingProfileData?.gradYear?.toString() || education?.endYear?.toString() || '',
+      },
+    };
+
+    // Add job-related fields for alumni
+    if (isAlumni) {
+      // Use existing industry if available
+      baseData.industry = existingProfileData?.industry || '';
+      baseData.currentExperience = {
+        // Priority: existing data > parsed data > empty
+        title: existingProfileData?.jobTitle || currentExp?.title || '',
+        company: existingProfileData?.company || currentExp?.company || '',
+        startMonth: currentExp?.startMonth?.toString() || '',
+        startYear: currentExp?.startYear?.toString() || '',
+        endMonth: currentExp?.endMonth?.toString() || '',
+        endYear: currentExp?.endYear?.toString() || '',
+        isCurrent: currentExp?.isCurrent ?? true,
+        location: currentExp?.location || '',
+        description: currentExp?.description || '',
+      };
+    }
+
+    return baseData;
   });
 
   // Validation errors
@@ -158,12 +204,16 @@ export function ImportReviewForm({
   }, [errors]);
 
   /**
-   * Handle input changes for experience fields
+   * Handle input changes for experience fields (alumni only)
    */
-  const handleExperienceChange = useCallback((field: keyof ImportReviewFormData['currentExperience'], value: string | boolean) => {
+  const handleExperienceChange = useCallback((field: string, value: string | boolean) => {
+    if (!formData.currentExperience) return;
+    
     setFormData(prev => ({
       ...prev,
-      currentExperience: { ...prev.currentExperience, [field]: value },
+      currentExperience: prev.currentExperience 
+        ? { ...prev.currentExperience, [field]: value }
+        : undefined,
     }));
     // Clear error
     const errorKey = `currentExperience.${field}`;
@@ -174,7 +224,7 @@ export function ImportReviewForm({
         return next;
       });
     }
-  }, [errors]);
+  }, [errors, formData.currentExperience]);
 
   /**
    * Handle input changes for education fields
@@ -188,9 +238,12 @@ export function ImportReviewForm({
 
   /**
    * Validate form before submission
+   * Uses stricter validation for alumni (requires job info)
    */
   const validateForm = (): boolean => {
-    const result = importReviewFormSchema.safeParse(formData);
+    // Use appropriate schema based on user role
+    const schema = isAlumni ? alumniImportReviewFormSchema : importReviewFormSchema;
+    const result = schema.safeParse(formData);
     
     if (!result.success) {
       const newErrors: Record<string, string> = {};
@@ -248,6 +301,29 @@ export function ImportReviewForm({
     );
   };
 
+  /**
+   * Render suggestion badge when LinkedIn data differs from existing
+   */
+  const renderSuggestionBadge = (suggestionValue: string | null, onApply: () => void) => {
+    if (!suggestionValue) return null;
+
+    return (
+      <div className="mt-1.5 flex items-center gap-2">
+        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded flex items-center gap-1">
+          <Sparkles className="h-3 w-3" />
+          LinkedIn: {suggestionValue.length > 30 ? suggestionValue.substring(0, 30) + '...' : suggestionValue}
+        </span>
+        <button
+          type="button"
+          onClick={onApply}
+          className="text-xs text-blue-600 hover:text-blue-800 underline"
+        >
+          Use this
+        </button>
+      </div>
+    );
+  };
+
   return (
     <form onSubmit={handleSubmit} className={cn('space-y-6', className)}>
       {/* Header */}
@@ -280,26 +356,18 @@ export function ImportReviewForm({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Full Name */}
-          <div className="space-y-2">
-            <Label htmlFor="fullName" className="flex items-center">
-              Full Name *
-              {renderConfidenceIndicator('fullName')}
-            </Label>
-            <Input
-              id="fullName"
-              value={formData.fullName}
-              onChange={(e) => handleChange('fullName', e.target.value)}
-              placeholder="Enter your full name"
-              className={cn(
-                errors.fullName && 'border-red-500',
-                isLowConfidence(confidence, 'fullName') && getConfidenceBorderClass('low')
-              )}
-            />
-            {errors.fullName && (
-              <p className="text-sm text-red-500">{errors.fullName}</p>
-            )}
-          </div>
+          {/* Full Name - Read Only (from existing profile) */}
+          {existingFullName && (
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center">
+                <User className="h-5 w-5 text-brand-primary" />
+              </div>
+              <div>
+                <p className="font-medium text-gray-900">{existingFullName}</p>
+                <p className="text-xs text-gray-500">Your profile name (from account)</p>
+              </div>
+            </div>
+          )}
 
           {/* Location */}
           <div className="space-y-2">
@@ -317,114 +385,142 @@ export function ImportReviewForm({
                 isLowConfidence(confidence, 'location') && getConfidenceBorderClass('low')
               )}
             />
+            {renderSuggestionBadge(suggestions.location, () => handleChange('location', suggestions.location!))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Current Role Section */}
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Briefcase className="h-5 w-5 text-gray-400" />
-            Current Role
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Job Title */}
-          <div className="space-y-2">
-            <Label htmlFor="jobTitle" className="flex items-center">
-              Job Title *
-              {renderConfidenceIndicator('experiences.0.title')}
-            </Label>
-            <Input
-              id="jobTitle"
-              value={formData.currentExperience.title}
-              onChange={(e) => handleExperienceChange('title', e.target.value)}
-              placeholder="e.g., Product Manager"
-              className={cn(
-                errors['currentExperience.title'] && 'border-red-500',
-                isLowConfidence(confidence, 'experiences.0.title') && getConfidenceBorderClass('low')
+      {/* Current Role Section - Only show for alumni */}
+      {isAlumni && formData.currentExperience && (
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Briefcase className="h-5 w-5 text-gray-400" />
+              Current Role
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Job Title */}
+            <div className="space-y-2">
+              <Label htmlFor="jobTitle" className="flex items-center">
+                Job Title *
+                {renderConfidenceIndicator('experiences.0.title')}
+              </Label>
+              <Input
+                id="jobTitle"
+                value={formData.currentExperience.title}
+                onChange={(e) => handleExperienceChange('title', e.target.value)}
+                placeholder="e.g., Product Manager"
+                className={cn(
+                  errors['currentExperience.title'] && 'border-red-500',
+                  isLowConfidence(confidence, 'experiences.0.title') && getConfidenceBorderClass('low')
+                )}
+              />
+              {errors['currentExperience.title'] && (
+                <p className="text-sm text-red-500">{errors['currentExperience.title']}</p>
               )}
-            />
-            {errors['currentExperience.title'] && (
-              <p className="text-sm text-red-500">{errors['currentExperience.title']}</p>
-            )}
-          </div>
+              {renderSuggestionBadge(suggestions.jobTitle, () => handleExperienceChange('title', suggestions.jobTitle!))}
+            </div>
 
-          {/* Company */}
-          <div className="space-y-2">
-            <Label htmlFor="company" className="flex items-center">
-              <Building2 className="h-4 w-4 mr-1 text-gray-400" />
-              Company *
-              {renderConfidenceIndicator('experiences.0.company')}
-            </Label>
-            <Input
-              id="company"
-              value={formData.currentExperience.company}
-              onChange={(e) => handleExperienceChange('company', e.target.value)}
-              placeholder="e.g., Acme Corporation"
-              className={cn(
-                errors['currentExperience.company'] && 'border-red-500',
-                isLowConfidence(confidence, 'experiences.0.company') && getConfidenceBorderClass('low')
+            {/* Company */}
+            <div className="space-y-2">
+              <Label htmlFor="company" className="flex items-center">
+                <Building2 className="h-4 w-4 mr-1 text-gray-400" />
+                Company *
+                {renderConfidenceIndicator('experiences.0.company')}
+              </Label>
+              <Input
+                id="company"
+                value={formData.currentExperience.company}
+                onChange={(e) => handleExperienceChange('company', e.target.value)}
+                placeholder="e.g., Acme Corporation"
+                className={cn(
+                  errors['currentExperience.company'] && 'border-red-500',
+                  isLowConfidence(confidence, 'experiences.0.company') && getConfidenceBorderClass('low')
+                )}
+              />
+              {errors['currentExperience.company'] && (
+                <p className="text-sm text-red-500">{errors['currentExperience.company']}</p>
               )}
-            />
-            {errors['currentExperience.company'] && (
-              <p className="text-sm text-red-500">{errors['currentExperience.company']}</p>
-            )}
-          </div>
+              {renderSuggestionBadge(suggestions.company, () => handleExperienceChange('company', suggestions.company!))}
+            </div>
 
-          {/* Industry */}
-          <div className="space-y-2">
-            <Label htmlFor="industry" className="flex items-center">
-              Industry *
-              {renderConfidenceIndicator('industry')}
-            </Label>
-            <Select
-              value={formData.industry}
-              onValueChange={(value) => handleChange('industry', value)}
-              placeholder="Select your industry"
-              className={cn(
-                errors.industry && '[&>button]:border-red-500',
-                isLowConfidence(confidence, 'industry') && '[&>button]:border-amber-400'
+            {/* Industry */}
+            <div className="space-y-2">
+              <Label htmlFor="industry" className="flex items-center">
+                Industry *
+                {renderConfidenceIndicator('industry')}
+              </Label>
+              <Select
+                value={formData.industry || ''}
+                onValueChange={(value) => handleChange('industry', value)}
+                placeholder="Select your industry"
+                className={cn(
+                  errors.industry && '[&>button]:border-red-500',
+                  isLowConfidence(confidence, 'industry') && '[&>button]:border-amber-400'
+                )}
+              >
+                <SelectItem value="">Select industry...</SelectItem>
+                {industries.map((industry) => (
+                  <SelectItem key={industry} value={industry}>
+                    {industry}
+                  </SelectItem>
+                ))}
+              </Select>
+              {errors.industry && (
+                <p className="text-sm text-red-500">{errors.industry}</p>
               )}
-            >
-              <SelectItem value="">Select industry...</SelectItem>
-              {industries.map((industry) => (
-                <SelectItem key={industry} value={industry}>
-                  {industry}
-                </SelectItem>
-              ))}
-            </Select>
-            {errors.industry && (
-              <p className="text-sm text-red-500">{errors.industry}</p>
-            )}
-          </div>
+            </div>
 
-          {/* Work Location (optional) */}
-          <div className="space-y-2">
-            <Label htmlFor="workLocation" className="flex items-center">
-              Work Location
-              {renderConfidenceIndicator('experiences.0.location')}
-            </Label>
-            <Input
-              id="workLocation"
-              value={formData.currentExperience.location}
-              onChange={(e) => handleExperienceChange('location', e.target.value)}
-              placeholder="e.g., New York, NY (or Remote)"
-              className={cn(
-                isLowConfidence(confidence, 'experiences.0.location') && getConfidenceBorderClass('low')
-              )}
-            />
-          </div>
-        </CardContent>
-      </Card>
+            {/* Work Location (optional) */}
+            <div className="space-y-2">
+              <Label htmlFor="workLocation" className="flex items-center">
+                Work Location
+                {renderConfidenceIndicator('experiences.0.location')}
+              </Label>
+              <Input
+                id="workLocation"
+                value={formData.currentExperience.location}
+                onChange={(e) => handleExperienceChange('location', e.target.value)}
+                placeholder="e.g., New York, NY (or Remote)"
+                className={cn(
+                  isLowConfidence(confidence, 'experiences.0.location') && getConfidenceBorderClass('low')
+                )}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Academic Info Card - Only show for active members */}
+      {!isAlumni && (
+        <Card className="border-blue-200 bg-blue-50/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base text-blue-700">
+              <GraduationCap className="h-5 w-5" />
+              Academic Focus
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-blue-600">
+              As an active member, we'll save your <strong>field of study</strong> and <strong>graduation year</strong> from 
+              the Education section below to your profile.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Education Section */}
-      <Card>
+      <Card className={cn(!isAlumni && 'border-blue-200')}>
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-base">
-            <GraduationCap className="h-5 w-5 text-gray-400" />
+            <GraduationCap className={cn('h-5 w-5', isAlumni ? 'text-gray-400' : 'text-blue-500')} />
             Education
+            {!isAlumni && (
+              <span className="text-xs text-blue-600 font-normal ml-2">
+                (Will be saved to your profile)
+              </span>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -462,18 +558,25 @@ export function ImportReviewForm({
             />
           </div>
 
-          {/* Field of Study */}
+          {/* Field of Study - Highlighted for active members as it maps to major */}
           <div className="space-y-2">
-            <Label htmlFor="field">Field of Study</Label>
+            <Label htmlFor="field" className="flex items-center">
+              Field of Study {!isAlumni && <span className="text-blue-600 ml-1">→ Major</span>}
+            </Label>
             <Input
               id="field"
               value={formData.education.field}
               onChange={(e) => handleEducationChange('field', e.target.value)}
               placeholder="e.g., Computer Science"
+              className={cn(!isAlumni && 'border-blue-300 focus:border-blue-500')}
             />
+            {!isAlumni && (
+              <p className="text-xs text-blue-600">This will be saved as your major</p>
+            )}
+            {renderSuggestionBadge(suggestions.field, () => handleEducationChange('field', suggestions.field!))}
           </div>
 
-          {/* Graduation Year */}
+          {/* Graduation Year - Highlighted for active members */}
           <div className="space-y-2">
             <Label htmlFor="graduationYear" className="flex items-center">
               Graduation Year
@@ -484,7 +587,8 @@ export function ImportReviewForm({
               onValueChange={(value) => handleEducationChange('graduationYear', value)}
               placeholder="Select year"
               className={cn(
-                isLowConfidence(confidence, 'education.0.endYear') && '[&>button]:border-amber-400'
+                isLowConfidence(confidence, 'education.0.endYear') && '[&>button]:border-amber-400',
+                !isAlumni && '[&>button]:border-blue-300'
               )}
             >
               <SelectItem value="">Select year...</SelectItem>
@@ -494,6 +598,7 @@ export function ImportReviewForm({
                 </SelectItem>
               ))}
             </Select>
+            {renderSuggestionBadge(suggestions.graduationYear, () => handleEducationChange('graduationYear', suggestions.graduationYear!))}
           </div>
         </CardContent>
       </Card>

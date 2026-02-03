@@ -108,14 +108,38 @@ export interface EducationFormData {
 
 /**
  * Complete form data for the import review page
+ * Note: fullName is optional - we use existing profile data, not PDF extraction
+ * Note: currentExperience and industry are optional for non-alumni users
  */
 export interface ImportReviewFormData {
-  fullName: string;
-  headline: string;
+  fullName?: string; // Optional - displayed read-only from existing profile
+  headline?: string;
   location: string;
-  industry: string; // Maps to alumni.industry
-  currentExperience: ExperienceFormData;
+  industry?: string; // Maps to alumni.industry (optional for active members)
+  currentExperience?: ExperienceFormData; // Optional for active members
   education: EducationFormData;
+}
+
+/**
+ * User role type for conditional form rendering
+ */
+export type UserRole = 'alumni' | 'active_member' | 'admin' | 'pending';
+
+/**
+ * Existing profile data to pre-populate the import review form
+ * Used to show current values and highlight LinkedIn suggestions
+ */
+export interface ExistingProfileData {
+  fullName?: string;
+  firstName?: string;
+  lastName?: string;
+  location?: string;
+  major?: string;
+  gradYear?: number;
+  // Alumni-specific fields
+  company?: string;
+  jobTitle?: string;
+  industry?: string;
 }
 
 // ============================================================================
@@ -192,30 +216,54 @@ export const profileImportSchema = z.object({
 });
 
 /**
+ * Schema for the experience section (alumni only)
+ */
+export const experienceFormSchema = z.object({
+  title: z.string().min(1, 'Job title is required'),
+  company: z.string().min(1, 'Company is required'),
+  startMonth: z.string().optional(),
+  startYear: z.string().optional(),
+  endMonth: z.string().optional(),
+  endYear: z.string().optional(),
+  isCurrent: z.boolean(),
+  location: z.string().optional(),
+  description: z.string().optional(),
+});
+
+/**
+ * Schema for the education section
+ */
+export const educationFormSchema = z.object({
+  school: z.string().optional(),
+  degree: z.string().optional(),
+  field: z.string().optional(),
+  graduationYear: z.string().optional(),
+});
+
+/**
  * Schema for the review form submission
+ * Note: fullName is optional - we use existing profile data
+ * Note: industry and currentExperience are optional for non-alumni
  */
 export const importReviewFormSchema = z.object({
-  fullName: z.string().min(1, 'Name is required'),
+  fullName: z.string().optional(), // Optional - displayed read-only from existing profile
+  headline: z.string().optional(),
+  location: z.string().optional(),
+  industry: z.string().optional(), // Optional for active members
+  currentExperience: experienceFormSchema.optional(), // Optional for active members
+  education: educationFormSchema,
+});
+
+/**
+ * Schema for alumni form validation (stricter - requires job info)
+ */
+export const alumniImportReviewFormSchema = z.object({
+  fullName: z.string().optional(), // Optional - displayed read-only from existing profile
   headline: z.string().optional(),
   location: z.string().optional(),
   industry: z.string().min(1, 'Industry is required'),
-  currentExperience: z.object({
-    title: z.string().min(1, 'Job title is required'),
-    company: z.string().min(1, 'Company is required'),
-    startMonth: z.string().optional(),
-    startYear: z.string().optional(),
-    endMonth: z.string().optional(),
-    endYear: z.string().optional(),
-    isCurrent: z.boolean(),
-    location: z.string().optional(),
-    description: z.string().optional(),
-  }),
-  education: z.object({
-    school: z.string().optional(),
-    degree: z.string().optional(),
-    field: z.string().optional(),
-    graduationYear: z.string().optional(),
-  }),
+  currentExperience: experienceFormSchema,
+  education: educationFormSchema,
 });
 
 // --- Type Inference from Schemas ---

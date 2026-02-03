@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { useProfile } from '@/lib/contexts/ProfileContext';
+import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import {
   ProfilePdfUploader,
@@ -15,6 +17,8 @@ import {
   ImportConfidence,
   ImportReviewFormData,
   ImportSource,
+  UserRole,
+  ExistingProfileData,
 } from '@/types/profile-import';
 import {
   ChevronLeft,
@@ -48,6 +52,15 @@ interface ApplyApiResponse {
   error?: string;
 }
 
+// Alumni data structure (matches alumni table)
+interface AlumniData {
+  company?: string;
+  job_title?: string;
+  industry?: string;
+  location?: string;
+  graduation_year?: number;
+}
+
 // ============================================================================
 // Component
 // ============================================================================
@@ -56,10 +69,14 @@ export default function UploadPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, session, loading: authLoading } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
 
   // Determine source type from query param
   const sourceType = (searchParams.get('type') as 'linkedin' | 'resume') || 'linkedin';
   const importSource: ImportSource = sourceType === 'resume' ? 'resume_pdf' : 'linkedin_pdf';
+  
+  // Get user role for conditional form rendering
+  const userRole: UserRole | undefined = profile?.role as UserRole | undefined;
 
   // Step tracking
   const [currentStep, setCurrentStep] = useState<UploadStep>('upload');
@@ -68,6 +85,10 @@ export default function UploadPage() {
   const [importRecord, setImportRecord] = useState<ProfileImport | null>(null);
   const [parsedData, setParsedData] = useState<ParsedLinkedInData | null>(null);
   const [confidence, setConfidence] = useState<ImportConfidence | null>(null);
+  
+  // Alumni data state (for pre-populating form for alumni users)
+  const [alumniData, setAlumniData] = useState<AlumniData | null>(null);
+  const [alumniLoading, setAlumniLoading] = useState(false);
 
   // UI state
   const [error, setError] = useState<string | null>(null);
@@ -79,6 +100,39 @@ export default function UploadPage() {
       router.push('/sign-in');
     }
   }, [user, session, authLoading, router]);
+
+  // Fetch alumni data if user is an alumni
+  useEffect(() => {
+    async function fetchAlumniData() {
+      if (!profile?.id || profile.role !== 'alumni') {
+        setAlumniData(null);
+        return;
+      }
+
+      setAlumniLoading(true);
+      try {
+        const { data, error: alumniError } = await supabase
+          .from('alumni')
+          .select('company, job_title, industry, location, graduation_year')
+          .eq('user_id', profile.id)
+          .single();
+
+        if (alumniError) {
+          console.error('Error fetching alumni data:', alumniError);
+          setAlumniData(null);
+        } else {
+          setAlumniData(data);
+        }
+      } catch (err) {
+        console.error('Error fetching alumni data:', err);
+        setAlumniData(null);
+      } finally {
+        setAlumniLoading(false);
+      }
+    }
+
+    fetchAlumniData();
+  }, [profile?.id, profile?.role]);
 
   /**
    * Handle successful upload - proceed to parse
@@ -189,8 +243,8 @@ export default function UploadPage() {
     }
   }, [currentStep, router]);
 
-  // Loading state while checking auth - wait for auth to finish loading
-  if (authLoading || !user || !session) {
+  // Loading state while checking auth and profile - wait for both to finish loading
+  if (authLoading || profileLoading || !user || !session) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -332,6 +386,20 @@ export default function UploadPage() {
                 onConfirm={handleConfirm}
                 onBack={handleBack}
                 isSubmitting={currentStep === 'applying'}
+                userRole={userRole}
+                existingProfileData={{
+                  // Profile data (all users)
+                  fullName: profile?.full_name || undefined,
+                  firstName: profile?.first_name || undefined,
+                  lastName: profile?.last_name || undefined,
+                  location: alumniData?.location || profile?.location || undefined,
+                  major: profile?.major || undefined,
+                  gradYear: alumniData?.graduation_year || profile?.grad_year || undefined,
+                  // Alumni-specific fields (fetched from alumni table)
+                  company: alumniData?.company || undefined,
+                  jobTitle: alumniData?.job_title || undefined,
+                  industry: alumniData?.industry || undefined,
+                }}
               />
             )}
 
@@ -425,6 +493,6 @@ function getStepDescription(step: UploadStep, sourceType: string): string {
     case 'review':
       return 'Please verify the extracted information before continuing';
     case 'applying':
-      return 'Updating your alumni profile';
+      return 'Updating your profile';
   }
 }

@@ -6,7 +6,9 @@ import { ImportReviewFormInput } from '@/types/profile-import';
 /**
  * POST /api/profile-import/apply
  * 
- * Applies parsed/edited data to the alumni record.
+ * Applies parsed/edited data to the user's profile.
+ * - For alumni: Updates alumni table with job/company info
+ * - For active members: Updates profiles table with education info
  * Called after user reviews and confirms the imported data.
  */
 export async function POST(request: NextRequest) {
@@ -89,13 +91,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 8. Update profiles table with location
+    // 8. Build profile updates based on user role
+    const profileUpdates: Record<string, unknown> = {
+      location: formData.location || null,
+      updated_at: new Date().toISOString(),
+    };
+
+    // For non-alumni (active members), also save education data to profiles
+    if (profile.role !== 'alumni') {
+      // Map field of study to major
+      if (formData.education?.field) {
+        profileUpdates.major = formData.education.field;
+      }
+      // Map graduation year
+      if (formData.education?.graduationYear) {
+        profileUpdates.grad_year = parseInt(formData.education.graduationYear);
+      }
+    }
+
+    // Update profiles table
     const { error: profileUpdateError } = await supabase
       .from('profiles')
-      .update({
-        location: formData.location || null,
-        updated_at: new Date().toISOString(),
-      })
+      .update(profileUpdates)
       .eq('id', user.id);
 
     if (profileUpdateError) {
