@@ -74,7 +74,7 @@ export default function UploadPage() {
   // Determine source type from query param
   const sourceType = (searchParams.get('type') as 'linkedin' | 'resume') || 'linkedin';
   const importSource: ImportSource = sourceType === 'resume' ? 'resume_pdf' : 'linkedin_pdf';
-  
+
   // Get user role for conditional form rendering
   const userRole: UserRole | undefined = profile?.role as UserRole | undefined;
 
@@ -85,7 +85,7 @@ export default function UploadPage() {
   const [importRecord, setImportRecord] = useState<ProfileImport | null>(null);
   const [parsedData, setParsedData] = useState<ParsedLinkedInData | null>(null);
   const [confidence, setConfidence] = useState<ImportConfidence | null>(null);
-  
+
   // Alumni data state (for pre-populating form for alumni users)
   const [alumniData, setAlumniData] = useState<AlumniData | null>(null);
   const [alumniLoading, setAlumniLoading] = useState(false);
@@ -93,6 +93,7 @@ export default function UploadPage() {
   // UI state
   const [error, setError] = useState<string | null>(null);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Redirect if not authenticated - wait for auth to finish loading first
   useEffect(() => {
@@ -191,6 +192,7 @@ export default function UploadPage() {
       return;
     }
 
+    setIsSubmitting(true);
     setCurrentStep('applying');
     setError(null);
 
@@ -215,7 +217,7 @@ export default function UploadPage() {
 
       // Success!
       toast.success('Profile updated successfully!');
-      
+
       // Redirect to dashboard
       router.push('/dashboard');
 
@@ -225,6 +227,8 @@ export default function UploadPage() {
       setError(errorMessage);
       setCurrentStep('review');
       toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
   }, [importRecord, session, router]);
 
@@ -283,9 +287,9 @@ export default function UploadPage() {
             <div className="flex items-center gap-2 mb-6">
               <StepDot active={currentStep === 'upload'} completed={currentStep !== 'upload'} />
               <StepLine completed={currentStep !== 'upload'} />
-              <StepDot 
-                active={currentStep === 'parsing' || currentStep === 'review'} 
-                completed={currentStep === 'applying'} 
+              <StepDot
+                active={currentStep === 'parsing' || currentStep === 'review'}
+                completed={currentStep === 'applying'}
               />
               <StepLine completed={currentStep === 'applying'} />
               <StepDot active={currentStep === 'applying'} completed={false} />
@@ -385,7 +389,7 @@ export default function UploadPage() {
                 confidence={confidence}
                 onConfirm={handleConfirm}
                 onBack={handleBack}
-                isSubmitting={currentStep === 'applying'}
+                isSubmitting={isSubmitting}
                 userRole={userRole}
                 existingProfileData={{
                   // Profile data (all users)

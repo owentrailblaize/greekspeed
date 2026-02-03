@@ -1,0 +1,593 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/supabase/auth-context';
+import { useProfile } from '@/lib/contexts/ProfileContext';
+import { supabase } from '@/lib/supabase/client';
+import { useOnboarding } from '@/lib/hooks/useOnboarding';
+import { useChapters } from '@/lib/hooks/useChapters';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { industries, getGraduationYears } from '@/lib/alumniConstants';
+import {
+  User,
+  Building2,
+  GraduationCap,
+  MapPin,
+  Briefcase,
+  Info,
+  Users,
+  Loader2,
+  ChevronRight,
+} from 'lucide-react';
+import { toast } from 'react-toastify';
+import { cn } from '@/lib/utils';
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+const USER_ROLES = [
+  { value: 'alumni', label: 'Alumni' },
+  { value: 'active_member', label: 'Active Member' },
+];
+
+// ============================================================================
+// Component
+// ============================================================================
+
+export default function ProfileBasicsPage() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const { profile, refreshProfile } = useProfile();
+  const { completeStep } = useOnboarding();
+  const { chapters, loading: chaptersLoading } = useChapters();
+
+  // Form state
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    chapter: '',
+    chapterId: '',
+    role: '' as 'alumni' | 'active_member' | '',
+    graduationYear: '',
+    major: '',
+    // Alumni-specific fields
+    company: '',
+    jobTitle: '',
+    industry: '',
+    location: '',
+  });
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [hasInvitation, setHasInvitation] = useState(false);
+  const [invitationLoading, setInvitationLoading] = useState(true);
+
+  const graduationYears = getGraduationYears();
+  const isAlumni = formData.role === 'alumni';
+
+  // Check for invitation token and auto-populate
+  useEffect(() => {
+    const checkInvitation = async () => {
+      if (typeof window === 'undefined' || !user) {
+        setInvitationLoading(false);
+        return;
+      }
+
+      try {
+        const invitationToken = sessionStorage.getItem('invitation_token');
+        const invitationType = sessionStorage.getItem('invitation_type');
+
+        if (invitationToken) {
+          setHasInvitation(true);
+
+          // Try to fetch invitation data
+          const response = await fetch(`/api/join/${invitationToken}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.valid && data.invitation) {
+              const roleValue = data.invitation.invitation_type === 'alumni' ? 'alumni' : 'active_member';
+              setFormData(prev => ({
+                ...prev,
+                chapter: data.invitation.chapter_name || prev.chapter,
+                chapterId: data.invitation.chapter_id || prev.chapterId,
+                role: roleValue,
+              }));
+
+              // Clean up after delay
+              setTimeout(() => {
+                sessionStorage.removeItem('invitation_token');
+                sessionStorage.removeItem('invitation_type');
+              }, 1000);
+            }
+          }
+        }
+
+        // Check if profile already has chapter/role
+        if (profile?.chapter && profile?.role) {
+          if (profile.role === 'active_member') {
+            setHasInvitation(true);
+          }
+          setFormData(prev => ({
+            ...prev,
+            chapter: profile.chapter || prev.chapter,
+            chapterId: profile.chapter_id || prev.chapterId,
+            role: (profile.role as 'alumni' | 'active_member') || prev.role,
+          }));
+        }
+      } catch (error) {
+        console.error('Error checking invitation:', error);
+      } finally {
+        setInvitationLoading(false);
+      }
+    };
+
+    checkInvitation();
+  }, [user, profile]);
+
+  // Pre-populate form with OAuth data
+  useEffect(() => {
+    if (user?.user_metadata) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: user.user_metadata.given_name || user.user_metadata.first_name || user.user_metadata.name?.split(' ')[0] || prev.firstName,
+        lastName: user.user_metadata.family_name || user.user_metadata.last_name || user.user_metadata.name?.split(' ').slice(1).join(' ') || prev.lastName,
+        email: user.email || prev.email,
+      }));
+    }
+
+    // Also use profile data if available
+    if (profile) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: profile.first_name || prev.firstName,
+        lastName: profile.last_name || prev.lastName,
+        email: profile.email || prev.email,
+        graduationYear: profile.grad_year?.toString() || prev.graduationYear,
+        major: profile.major || prev.major,
+        location: profile.location || prev.location,
+      }));
+    }
+  }, [user, profile]);
+
+  // Fetch alumni data if user is alumni (from LinkedIn import)
+  useEffect(() => {
+    const fetchAlumniData = async () => {
+      if (!user?.id || !profile?.role || profile.role !== 'alumni') return;
+
+      try {
+        const { data: alumniData, error } = await supabase
+          .from('alumni')
+          .select('company, job_title, industry, location, graduation_year')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching alumni data:', error);
+          return;
+        }
+
+        if (alumniData) {
+          setFormData(prev => ({
+            ...prev,
+            company: alumniData.company && alumniData.company !== 'Not specified' ? alumniData.company : prev.company,
+            jobTitle: alumniData.job_title && alumniData.job_title !== 'Not specified' ? alumniData.job_title : prev.jobTitle,
+            industry: alumniData.industry && alumniData.industry !== 'Not specified' ? alumniData.industry : prev.industry,
+            location: alumniData.location && alumniData.location !== 'Not specified' ? alumniData.location : prev.location,
+            graduationYear: alumniData.graduation_year?.toString() || prev.graduationYear,
+          }));
+        }
+      } catch (err) {
+        console.error('Error fetching alumni data:', err);
+      }
+    };
+
+    fetchAlumniData();
+  }, [user?.id, profile?.role]);
+
+  // Redirect if no user
+  useEffect(() => {
+    if (!user) {
+      router.push('/sign-in');
+    }
+  }, [user, router]);
+
+  // Handle input changes
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user types
+    if (errors[field]) {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
+
+  // Handle chapter selection
+  const handleChapterChange = (chapterName: string) => {
+    const selectedChapter = chapters.find(c => c.name === chapterName);
+    setFormData(prev => ({
+      ...prev,
+      chapter: chapterName,
+      chapterId: selectedChapter?.id || '',
+    }));
+    if (errors.chapter) {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next.chapter;
+        return next;
+      });
+    }
+  };
+
+  // Validate form
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+    if (!formData.chapter) newErrors.chapter = 'Chapter is required';
+    if (!formData.role) newErrors.role = 'Role is required';
+    if (!formData.graduationYear) newErrors.graduationYear = 'Graduation year is required';
+
+    // Alumni-specific validation
+    if (isAlumni) {
+      if (!formData.industry) newErrors.industry = 'Industry is required for alumni';
+    }
+
+    // Active member validation
+    if (formData.role === 'active_member') {
+      if (!formData.major?.trim()) newErrors.major = 'Major is required for active members';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !validateForm()) return;
+
+    setLoading(true);
+
+    try {
+      const fullName = `${formData.firstName} ${formData.lastName}`;
+      const normalizedRole = formData.role.toLowerCase();
+
+      // Update profiles table
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          full_name: fullName,
+          email: formData.email,
+          chapter: formData.chapter,
+          chapter_id: formData.chapterId || null,
+          role: normalizedRole,
+          grad_year: parseInt(formData.graduationYear),
+          major: formData.major || null,
+          location: formData.location || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      // Create/update alumni record if alumni role
+      if (normalizedRole === 'alumni') {
+        const { error: alumniError } = await supabase
+          .from('alumni')
+          .upsert({
+            user_id: user.id,
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            full_name: fullName,
+            chapter: formData.chapter,
+            industry: formData.industry || 'Not specified',
+            graduation_year: parseInt(formData.graduationYear),
+            company: formData.company || 'Not specified',
+            job_title: formData.jobTitle || 'Not specified',
+            email: formData.email || user.email,
+            phone: null,
+            location: formData.location || 'Not specified',
+            description: `Alumni from ${formData.chapter}`,
+            avatar_url: profile?.avatar_url || null,
+            verified: false,
+            is_actively_hiring: false,
+            last_contact: null,
+            tags: null,
+            mutual_connections: [],
+            updated_at: new Date().toISOString(),
+          }, {
+            onConflict: 'user_id',
+            ignoreDuplicates: false,
+          });
+
+        if (alumniError) {
+          console.error('Alumni record error:', alumniError);
+          // Don't block the flow
+        }
+      }
+
+      // Refresh profile data
+      await refreshProfile();
+
+      // Mark step as complete and move to next
+      toast.success('Profile basics saved!');
+      await completeStep('profile-basics');
+
+    } catch (error) {
+      console.error('Profile update error:', error);
+      toast.error('Failed to save profile. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Information Banner for non-invitation users */}
+      {!hasInvitation && !invitationLoading && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <h3 className="font-medium text-amber-900 text-sm mb-1">Alumni Profile Only</h3>
+                <p className="text-sm text-amber-800">
+                  This profile setup is for alumni only. Active members must be invited by chapter administrators.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5 text-brand-primary" />
+            Tell Us About Yourself
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Name Fields */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name *</Label>
+                <Input
+                  id="firstName"
+                  value={formData.firstName}
+                  onChange={(e) => handleChange('firstName', e.target.value)}
+                  placeholder="John"
+                  className={cn(errors.firstName && 'border-red-500')}
+                />
+                {errors.firstName && (
+                  <p className="text-sm text-red-500">{errors.firstName}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name *</Label>
+                <Input
+                  id="lastName"
+                  value={formData.lastName}
+                  onChange={(e) => handleChange('lastName', e.target.value)}
+                  placeholder="Doe"
+                  className={cn(errors.lastName && 'border-red-500')}
+                />
+                {errors.lastName && (
+                  <p className="text-sm text-red-500">{errors.lastName}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Chapter Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="chapter" className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-gray-400" />
+                Chapter *
+              </Label>
+              <Select
+                value={formData.chapter}
+                onValueChange={handleChapterChange}
+                disabled={chaptersLoading || !!profile?.chapter}
+              >
+                <SelectTrigger className={cn(errors.chapter && 'border-red-500')}>
+                  <SelectValue placeholder="Select your chapter" />
+                </SelectTrigger>
+                <SelectContent>
+                  {chapters.map((chapter) => (
+                    <SelectItem key={chapter.id} value={chapter.name}>
+                      {chapter.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.chapter && (
+                <p className="text-sm text-red-500">{errors.chapter}</p>
+              )}
+            </div>
+
+            {/* Role Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="role" className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-gray-400" />
+                I am a(n) *
+              </Label>
+              <Select
+                value={formData.role}
+                onValueChange={(value) => handleChange('role', value)}
+                disabled={hasInvitation && !!formData.role}
+              >
+                <SelectTrigger className={cn(errors.role && 'border-red-500')}>
+                  <SelectValue placeholder="Select your role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(hasInvitation ? USER_ROLES : USER_ROLES.filter(r => r.value === 'alumni')).map((role) => (
+                    <SelectItem key={role.value} value={role.value}>
+                      {role.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.role && (
+                <p className="text-sm text-red-500">{errors.role}</p>
+              )}
+            </div>
+
+            {/* Graduation Year */}
+            <div className="space-y-2">
+              <Label htmlFor="graduationYear" className="flex items-center gap-2">
+                <GraduationCap className="h-4 w-4 text-gray-400" />
+                Graduation Year *
+              </Label>
+              <Select
+                value={formData.graduationYear}
+                onValueChange={(value) => handleChange('graduationYear', value)}
+              >
+                <SelectTrigger className={cn(errors.graduationYear && 'border-red-500')}>
+                  <SelectValue placeholder="Select year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {graduationYears.map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.graduationYear && (
+                <p className="text-sm text-red-500">{errors.graduationYear}</p>
+              )}
+            </div>
+
+            {/* Major */}
+            <div className="space-y-2">
+              <Label htmlFor="major" className="flex items-center gap-2">
+                <GraduationCap className="h-4 w-4 text-gray-400" />
+                Major {formData.role === 'active_member' ? '*' : '(Optional)'}
+              </Label>
+              <Input
+                id="major"
+                value={formData.major}
+                onChange={(e) => handleChange('major', e.target.value)}
+                placeholder="e.g., Computer Science"
+                className={cn(errors.major && 'border-red-500')}
+              />
+              {errors.major && (
+                <p className="text-sm text-red-500">{errors.major}</p>
+              )}
+            </div>
+
+            {/* Alumni-specific fields */}
+            {isAlumni && (
+              <>
+                <div className="border-t pt-6 mt-6">
+                  <h3 className="text-sm font-medium text-gray-900 mb-4 flex items-center gap-2">
+                    <Briefcase className="h-4 w-4" />
+                    Professional Information
+                  </h3>
+
+                  {/* Industry */}
+                  <div className="space-y-2 mb-4">
+                    <Label htmlFor="industry">Industry *</Label>
+                    <Select
+                      value={formData.industry}
+                      onValueChange={(value) => handleChange('industry', value)}
+                    >
+                      <SelectTrigger className={cn(errors.industry && 'border-red-500')}>
+                        <SelectValue placeholder="Select industry" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {industries.map((industry) => (
+                          <SelectItem key={industry} value={industry}>
+                            {industry}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.industry && (
+                      <p className="text-sm text-red-500">{errors.industry}</p>
+                    )}
+                  </div>
+
+                  {/* Company & Job Title */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="company">Company (Optional)</Label>
+                      <Input
+                        id="company"
+                        value={formData.company}
+                        onChange={(e) => handleChange('company', e.target.value)}
+                        placeholder="e.g., Acme Corp"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="jobTitle">Job Title (Optional)</Label>
+                      <Input
+                        id="jobTitle"
+                        value={formData.jobTitle}
+                        onChange={(e) => handleChange('jobTitle', e.target.value)}
+                        placeholder="e.g., Software Engineer"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Location */}
+                  <div className="space-y-2">
+                    <Label htmlFor="location" className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-gray-400" />
+                      Location (Optional)
+                    </Label>
+                    <Input
+                      id="location"
+                      value={formData.location}
+                      onChange={(e) => handleChange('location', e.target.value)}
+                      placeholder="e.g., San Francisco, CA"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Submit Button */}
+            <div className="pt-4">
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-brand-primary hover:bg-brand-primary-hover"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    Continue
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

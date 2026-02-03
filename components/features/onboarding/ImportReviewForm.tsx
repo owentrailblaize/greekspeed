@@ -247,9 +247,9 @@ export function ImportReviewForm({
     
     if (!result.success) {
       const newErrors: Record<string, string> = {};
-      result.error.errors.forEach(err => {
-        const path = err.path.join('.');
-        newErrors[path] = err.message;
+      result.error.issues.forEach((issue) => {
+        const path = issue.path.join('.');
+        newErrors[path] = issue.message;
       });
       setErrors(newErrors);
       return false;

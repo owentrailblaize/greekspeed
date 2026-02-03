@@ -446,17 +446,15 @@ export function ProfilePdfUploader({
               </p>
             </div>
           </div>
-          {uploadState !== 'uploading' && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleReset}
-              className="flex-shrink-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleReset}
+            className="flex-shrink-0"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
       )}
     </div>

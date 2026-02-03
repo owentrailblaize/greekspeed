@@ -348,8 +348,8 @@ export async function GET(request: NextRequest) {
                 // Record invitation usage
                 await recordInvitationUsage(invitation.id, user.email || '', user.id);
                 
-                // Redirect directly to dashboard
-                const redirectUrl = `${requestUrl.origin}/dashboard`;
+                // Redirect to onboarding for new users
+                const redirectUrl = `${requestUrl.origin}/onboarding`;
                 const htmlResponse = createHtmlRedirect(redirectUrl, response, cookieStore);
                 return htmlResponse;
               }
@@ -436,8 +436,11 @@ export async function GET(request: NextRequest) {
               // Record invitation usage
               await recordInvitationUsage(invitation.id, user.email || '', user.id);
               
-              // Redirect directly to dashboard
-              const redirectUrl = `${requestUrl.origin}/dashboard`;
+              // Check if onboarding is completed
+              const onboardingComplete = existingProfile.onboarding_completed === true;
+              const redirectUrl = onboardingComplete 
+                ? `${requestUrl.origin}/dashboard`
+                : `${requestUrl.origin}/onboarding`;
               const htmlResponse = createHtmlRedirect(redirectUrl, response, cookieStore);
               return htmlResponse;
             }
@@ -547,19 +550,20 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Check if profile is incomplete (missing chapter or role)
+      // Check if profile is incomplete or onboarding not done
       const finalProfileCheck = await serverSupabase
         .from('profiles')
-        .select('chapter, role')
+        .select('chapter, role, onboarding_completed')
         .eq('id', user.id)
         .single();
 
       const profile = finalProfileCheck.data;
       const isIncomplete = !profile?.chapter || !profile?.role;
+      const onboardingComplete = profile?.onboarding_completed === true;
 
-      // Redirect based on profile completeness
-      if (isIncomplete) {
-        return NextResponse.redirect(`${requestUrl.origin}/profile/complete`);
+      // Redirect based on profile/onboarding completeness
+      if (isIncomplete || !onboardingComplete) {
+        return NextResponse.redirect(`${requestUrl.origin}/onboarding`);
       } else {
         return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
       }
