@@ -118,7 +118,6 @@ export function ImportReviewForm({
   // Form state - initialize from parsed data
   const [formData, setFormData] = useState<ImportReviewFormData>({
     fullName: parsedData.fullName || '',
-    headline: parsedData.headline || '',
     location: parsedData.location || currentExp?.location || '',
     industry: '', // User needs to select this
     currentExperience: {
@@ -300,23 +299,6 @@ export function ImportReviewForm({
             {errors.fullName && (
               <p className="text-sm text-red-500">{errors.fullName}</p>
             )}
-          </div>
-
-          {/* Headline/Bio */}
-          <div className="space-y-2">
-            <Label htmlFor="headline" className="flex items-center">
-              Professional Headline
-              {renderConfidenceIndicator('headline')}
-            </Label>
-            <Input
-              id="headline"
-              value={formData.headline}
-              onChange={(e) => handleChange('headline', e.target.value)}
-              placeholder="e.g., Senior Software Engineer at Google"
-              className={cn(
-                isLowConfidence(confidence, 'headline') && getConfidenceBorderClass('low')
-              )}
-            />
           </div>
 
           {/* Location */}

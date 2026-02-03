@@ -184,51 +184,88 @@ function parseHeader(lines: string[], sections: Sections): HeaderInfo {
     /^Page \d+ of \d+$/i,
     /^Contact$/i,
     /^Top Skills$/i,
+    /^Summary$/i,
+    /^Certifications$/i,
     /linkedin\.com/i,
     /^www\./i,
-    /^\(/,  // Parenthetical notes
+    /^\(/,  // Parenthetical notes like "(Mobile)"
+    /\@/,  // Email addresses
+    /^\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/,  // Phone numbers
+    /^\d+/,  // Lines starting with numbers
+    /\.com/i,  // URLs
+    /\.edu/i,
+    /\.org/i,
   ];
   
   // Known skill/certification keywords to skip
   const skillKeywords = [
     'problem solving', 'leadership', 'building', 'management',
     'certificate', 'certification', 'foundations',
+    'orchestration', 'services', 'development', 'engineering',
+    'analytics', 'automation', 'architecture', 'design',
+    'agile', 'scrum', 'devops', 'cloud', 'data',
+    'proactive', 'collaborative', 'relationship',
   ];
   
-  const meaningfulLines: string[] = [];
-  
+  // Collect candidate name lines
+  const candidateNames: string[] = [];
+
   for (const line of headerLines) {
     const lowerLine = line.toLowerCase();
-    
+
     // Skip if matches skip patterns
     if (skipPatterns.some(p => p.test(line))) continue;
-    
-    // Skip if it looks like a skill
+
+    // Skip if it looks like a skill (single word or skill keyword)
     if (skillKeywords.some(k => lowerLine.includes(k))) continue;
-    
-    // Skip very short lines (likely abbreviations or noise)
+
+    // Skip very short lines
     if (line.length < 3) continue;
-    
-    meaningfulLines.push(line);
-  }
-  
-  // First meaningful line is likely the name
-  if (meaningfulLines.length > 0) {
-    const nameLine = meaningfulLines[0];
-    // Name should be 2-4 words, no special characters
-    if (/^[A-Za-z\s\-'\.]+$/.test(nameLine) && nameLine.split(/\s+/).length <= 5) {
-      header.fullName = nameLine;
+
+    // Skip lines with special characters that names don't have
+    if (/[•·|@#$%^&*()+=\[\]{}:;<>?/\\]/.test(line)) continue;
+
+    // Check if this looks like a proper name:
+    // - 2-4 words
+    // - Each word starts with uppercase
+    // - Only letters, spaces, hyphens, apostrophes
+    const words = line.split(/\s+/);
+    const isNameLike =
+      words.length >= 2 &&
+      words.length <= 4 &&
+      /^[A-Z][a-zA-Z\-']*$/.test(words[0]) &&  // First word capitalized
+      words.every(w => /^[A-Za-z\-'\.]+$/.test(w)) &&  // All words are letters
+      words.slice(0, 2).every(w => /^[A-Z]/.test(w));  // First 2 words capitalized
+
+    if (isNameLike) {
+      candidateNames.push(line);
     }
   }
-  
+
+  // Take the first name-like candidate
+  if (candidateNames.length > 0) {
+    header.fullName = candidateNames[0];
+  }
+
+  // Build meaningful lines for headline/location (excluding the name)
+  const meaningfulLines: string[] = [];
+  for (const line of headerLines) {
+    const lowerLine = line.toLowerCase();
+    if (skipPatterns.some(p => p.test(line))) continue;
+    if (line.length < 3) continue;
+    if (line === header.fullName) continue;  // Skip the name we already found
+    meaningfulLines.push(line);
+  }
+
   // Look for headline (contains " at " or job title patterns)
-  for (const line of meaningfulLines.slice(1)) {
+  for (const line of meaningfulLines) {
     if (line.toLowerCase().includes(' at ')) {
       header.headline = line;
       break;
     }
-    // Common title patterns
-    if (/\b(manager|director|engineer|developer|analyst|consultant|specialist)\b/i.test(line)) {
+    // Common title patterns with company context
+    if (/\b(manager|director|engineer|developer|analyst|consultant|specialist)\b/i.test(line) &&
+      line.length > 15) {  // Headline should be descriptive
       header.headline = line;
       break;
     }
