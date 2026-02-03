@@ -402,45 +402,15 @@ export class LinkedInImportService {
    */
   async extractTextFromPdf(pdfBuffer: Buffer): Promise<ExtractionResult> {
     try {
-      // Dynamic import to avoid bundling issues in browser
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const pdfParseModule = require('pdf-parse');
+      // pdf-parse 1.1.1 has a simple API
+      const pdfParse = require('pdf-parse/lib/pdf-parse');
 
-      // Debug: log the module structure to understand what's being exported
-      console.log('pdf-parse module type:', typeof pdfParseModule);
-      console.log('pdf-parse module keys:', Object.keys(pdfParseModule || {}));
-      console.log('pdf-parse default type:', typeof pdfParseModule?.default);
-
-      // Try multiple access patterns for ESM/CJS interop
-      let pdf: (buffer: Buffer) => Promise<{ text: string; numpages: number }>;
-
-      if (typeof pdfParseModule === 'function') {
-        // Direct function export
-        pdf = pdfParseModule;
-      } else if (typeof pdfParseModule?.default === 'function') {
-        // ESM default export
-        pdf = pdfParseModule.default;
-      } else if (typeof pdfParseModule?.default?.default === 'function') {
-        // Double-wrapped default (sometimes happens with webpack)
-        pdf = pdfParseModule.default.default;
-      } else {
-        // Last resort: try to find any function in the exports
-        const keys = Object.keys(pdfParseModule || {});
-        const funcKey = keys.find(k => typeof pdfParseModule[k] === 'function');
-        if (funcKey) {
-          pdf = pdfParseModule[funcKey];
-          console.log('Using function from key:', funcKey);
-        } else {
-          throw new Error(`Cannot find pdf-parse function. Module structure: ${JSON.stringify(Object.keys(pdfParseModule || {}))}`);
-        }
-      }
-
-      const data = await pdf(pdfBuffer);
+      const data = await pdfParse(pdfBuffer);
 
       return {
         success: true,
-        text: data.text,
-        pageCount: data.numpages,
+        text: data.text || '',
+        pageCount: data.numpages || 0,
       };
     } catch (error) {
       console.error('PDF extraction error:', error);
