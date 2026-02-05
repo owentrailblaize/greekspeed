@@ -406,7 +406,6 @@ export default function RoleChapterPage() {
             {/* Chapter Selection */}
             <div className="space-y-2">
               <Label htmlFor="chapter" className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-gray-400" />
                 Your Chapter *
               </Label>
               <Select
@@ -433,10 +432,9 @@ export default function RoleChapterPage() {
             {/* Role Display (Alumni only for free signup) */}
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-gray-400" />
                 Your Role
               </Label>
-              <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+              <div className="p-3 bg-gray-50 border border-gray-200 rounded-full">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-brand-primary/10 rounded-lg">
                     <GraduationCap className="h-5 w-5 text-brand-primary" />
@@ -459,7 +457,7 @@ export default function RoleChapterPage() {
               <Button
                 type="submit"
                 disabled={loading || chaptersLoading}
-                className="w-full bg-brand-primary hover:bg-brand-primary-hover"
+                className="w-full bg-brand-primary hover:bg-brand-primary-hover rounded-full"
               >
                 {loading ? (
                   <>

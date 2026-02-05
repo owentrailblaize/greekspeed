@@ -10,6 +10,7 @@ import { useChapters } from '@/lib/hooks/useChapters';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { industries, getGraduationYears } from '@/lib/alumniConstants';
@@ -23,6 +24,9 @@ import {
   Users,
   Loader2,
   ChevronRight,
+  Phone,
+  Home,
+  FileText,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { cn } from '@/lib/utils';
@@ -57,11 +61,15 @@ export default function ProfileBasicsPage() {
     role: '' as 'alumni' | 'active_member' | '',
     graduationYear: '',
     major: '',
+    // Active member-specific fields
+    bio: '',
+    phone: '',
+    location: '',
+    hometown: '',
     // Alumni-specific fields
     company: '',
     jobTitle: '',
     industry: '',
-    location: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -152,6 +160,9 @@ export default function ProfileBasicsPage() {
         graduationYear: profile.grad_year?.toString() || prev.graduationYear,
         major: profile.major || prev.major,
         location: profile.location || prev.location,
+        bio: profile.bio || prev.bio,
+        phone: profile.phone || prev.phone,
+        hometown: profile.hometown || prev.hometown,
       }));
     }
   }, [user, profile]);
@@ -198,9 +209,42 @@ export default function ProfileBasicsPage() {
     }
   }, [user, router]);
 
+  // Phone number formatting
+  const formatPhoneNumber = (value: string): string => {
+    // Remove all non-digits
+    const phoneNumber = value.replace(/\D/g, '');
+
+    // Limit to 10 digits
+    const limitedPhone = phoneNumber.slice(0, 10);
+
+    // Format as (XXX) XXX-XXXX
+    if (limitedPhone.length === 0) return '';
+    if (limitedPhone.length <= 3) {
+      return `(${limitedPhone}`;
+    } else if (limitedPhone.length <= 6) {
+      return `(${limitedPhone.slice(0, 3)}) ${limitedPhone.slice(3)}`;
+    } else {
+      return `(${limitedPhone.slice(0, 3)}) ${limitedPhone.slice(3, 6)}-${limitedPhone.slice(6)}`;
+    }
+  };
+
+  // Phone number validation
+  const isValidPhoneNumber = (phone: string): boolean => {
+    if (!phone || phone.trim().length === 0) return true; // Optional field
+    const digits = phone.replace(/\D/g, '');
+    return digits.length === 10;
+  };
+
   // Handle input changes
   const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // Special handling for phone number (format as user types)
+    if (field === 'phone') {
+      const formatted = formatPhoneNumber(value);
+      setFormData(prev => ({ ...prev, [field]: formatted }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
+
     // Clear error when user types
     if (errors[field]) {
       setErrors(prev => {
@@ -246,6 +290,11 @@ export default function ProfileBasicsPage() {
     // Active member validation
     if (formData.role === 'active_member') {
       if (!formData.major?.trim()) newErrors.major = 'Major is required for active members';
+
+      // Phone number validation (optional, but must be valid if provided)
+      if (formData.phone && !isValidPhoneNumber(formData.phone)) {
+        newErrors.phone = 'Please enter a valid 10-digit phone number';
+      }
     }
 
     setErrors(newErrors);
@@ -264,21 +313,34 @@ export default function ProfileBasicsPage() {
       const normalizedRole = formData.role.toLowerCase();
 
       // Update profiles table
+      const updateData: any = {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        full_name: fullName,
+        email: formData.email,
+        chapter: formData.chapter,
+        chapter_id: formData.chapterId || null,
+        role: normalizedRole,
+        grad_year: parseInt(formData.graduationYear),
+        major: formData.major || null,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Add location for all roles
+      if (formData.location) {
+        updateData.location = formData.location;
+      }
+
+      // Add active member-specific fields
+      if (normalizedRole === 'active_member') {
+        if (formData.bio) updateData.bio = formData.bio;
+        if (formData.phone) updateData.phone = formData.phone;
+        if (formData.hometown) updateData.hometown = formData.hometown;
+      }
+
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          full_name: fullName,
-          email: formData.email,
-          chapter: formData.chapter,
-          chapter_id: formData.chapterId || null,
-          role: normalizedRole,
-          grad_year: parseInt(formData.graduationYear),
-          major: formData.major || null,
-          location: formData.location || null,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', user.id);
 
       if (profileError) throw profileError;
@@ -489,6 +551,81 @@ export default function ProfileBasicsPage() {
                 <p className="text-sm text-red-500">{errors.major}</p>
               )}
             </div>
+
+            {/* Active member-specific fields */}
+            {formData.role === 'active_member' && (
+              <>
+                <div className="border-t pt-6 mt-6">
+                  <h3 className="text-sm font-medium text-gray-900 mb-4 flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Additional Information
+                  </h3>
+
+                  {/* Bio */}
+                  <div className="space-y-2 mb-4">
+                    <Label htmlFor="bio" className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-gray-400" />
+                      Bio (Optional)
+                    </Label>
+                    <Textarea
+                      id="bio"
+                      value={formData.bio}
+                      onChange={(e) => handleChange('bio', e.target.value)}
+                      placeholder="Tell us a bit about yourself..."
+                      rows={4}
+                      className="resize-none"
+                    />
+                  </div>
+
+                  {/* Phone & Location */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-gray-400" />
+                        Phone (Optional)
+                      </Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => handleChange('phone', e.target.value)}
+                        placeholder="e.g., (555) 123-4567"
+                        className={cn(errors.phone && 'border-red-500')}
+                      />
+                      {errors.phone && (
+                        <p className="text-sm text-red-500">{errors.phone}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="location" className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-gray-400" />
+                        Current Location (Optional)
+                      </Label>
+                      <Input
+                        id="location"
+                        value={formData.location}
+                        onChange={(e) => handleChange('location', e.target.value)}
+                        placeholder="e.g., Tampa, FL"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Hometown */}
+                  <div className="space-y-2">
+                    <Label htmlFor="hometown" className="flex items-center gap-2">
+                      <Home className="h-4 w-4 text-gray-400" />
+                      Hometown (Optional)
+                    </Label>
+                    <Input
+                      id="hometown"
+                      value={formData.hometown}
+                      onChange={(e) => handleChange('hometown', e.target.value)}
+                      placeholder="e.g., Jackson, MS"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Alumni-specific fields */}
             {isAlumni && (

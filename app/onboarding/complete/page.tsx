@@ -8,6 +8,7 @@ import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import Image from 'next/image';
 import {
   CheckCircle2,
   Sparkles,
@@ -78,11 +79,19 @@ export default function OnboardingCompletePage() {
     <div className="min-h-[70vh] flex flex-col items-center justify-center px-4">
       {/* Success Icon */}
       <div className="relative mb-8">
-        <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center">
-          <CheckCircle2 className="h-12 w-12 text-green-600" />
+        <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-gray-100">
+          <Image
+            src="/logo.png"
+            alt="Trailblaize"
+            width={80}
+            height={80}
+            className="object-contain"
+          />
         </div>
         <div className="absolute -top-2 -right-2">
-          <Sparkles className="h-8 w-8 text-amber-500" />
+          <div className="w-8 h-8 bg-green-100 rounded-full p-1 shadow-md flex items-center justify-center">
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
+          </div>
         </div>
       </div>
 
