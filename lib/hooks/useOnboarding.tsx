@@ -9,10 +9,13 @@ import {
   OnboardingState,
   OnboardingProgress,
   ONBOARDING_STEPS,
+  OAUTH_ONBOARDING_STEPS,
   STEP_CONFIG,
   getNextStep,
   getPreviousStep,
   canAccessStep,
+  getEffectiveSteps,
+  needsRoleChapterStep,
 } from '@/types/onboarding';
 
 // ============================================================================
@@ -26,23 +29,27 @@ interface OnboardingContextType {
   skippedSteps: OnboardingStep[];
   isComplete: boolean;
   isLoading: boolean;
-  
+
   // Navigation
   goToStep: (step: OnboardingStep) => void;
   goToNextStep: () => void;
   goToPreviousStep: () => void;
-  
+
   // Actions
   completeStep: (step: OnboardingStep) => Promise<void>;
   skipStep: (step: OnboardingStep) => Promise<void>;
   finishOnboarding: () => Promise<void>;
-  
+
   // Helpers
   canGoBack: boolean;
   canGoForward: boolean;
   progressPercentage: number;
   totalSteps: number;
   currentStepIndex: number;
+
+  // Conditional step info
+  needsRoleSelection: boolean;
+  effectiveSteps: OnboardingStep[];
 }
 
 // ============================================================================
@@ -62,8 +69,15 @@ interface OnboardingProviderProps {
 export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const router = useRouter();
   const { profile, refreshProfile } = useProfile();
-  
-  const [currentStep, setCurrentStep] = useState<OnboardingStep>('linkedin-import');
+
+  // Determine if user needs role/chapter selection (OAuth without invitation)
+  const needsRoleSelection = needsRoleChapterStep(profile);
+  const effectiveSteps = getEffectiveSteps(profile);
+
+  // Set initial step based on whether user needs role selection
+  const initialStep: OnboardingStep = needsRoleSelection ? 'role-chapter' : 'linkedin-import';
+
+  const [currentStep, setCurrentStep] = useState<OnboardingStep>(initialStep);
   const [completedSteps, setCompletedSteps] = useState<OnboardingStep[]>([]);
   const [skippedSteps, setSkippedSteps] = useState<OnboardingStep[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -124,32 +138,32 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
 
   // Navigate to a specific step
   const goToStep = useCallback((step: OnboardingStep) => {
-    if (!canAccessStep(step, completedSteps, skippedSteps)) {
+    if (!canAccessStep(step, completedSteps, skippedSteps, effectiveSteps)) {
       console.warn('Cannot access step:', step);
       return;
     }
-    
+
     setCurrentStep(step);
     router.push(STEP_CONFIG[step].path);
-  }, [completedSteps, skippedSteps, router]);
+  }, [completedSteps, skippedSteps, effectiveSteps, router]);
 
   // Navigate to next step
   const goToNextStep = useCallback(() => {
-    const nextStep = getNextStep(currentStep);
+    const nextStep = getNextStep(currentStep, effectiveSteps);
     if (nextStep) {
       setCurrentStep(nextStep);
       router.push(STEP_CONFIG[nextStep].path);
     }
-  }, [currentStep, router]);
+  }, [currentStep, effectiveSteps, router]);
 
   // Navigate to previous step
   const goToPreviousStep = useCallback(() => {
-    const prevStep = getPreviousStep(currentStep);
+    const prevStep = getPreviousStep(currentStep, effectiveSteps);
     if (prevStep) {
       setCurrentStep(prevStep);
       router.push(STEP_CONFIG[prevStep].path);
     }
-  }, [currentStep, router]);
+  }, [currentStep, effectiveSteps, router]);
 
   // Mark step as complete
   const completeStep = useCallback(async (step: OnboardingStep) => {
@@ -157,17 +171,17 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     if (!newCompletedSteps.includes(step)) {
       newCompletedSteps.push(step);
     }
-    
+
     setCompletedSteps(newCompletedSteps);
     await saveProgress(currentStep, newCompletedSteps, skippedSteps);
-    
+
     // Auto-advance to next step
-    const nextStep = getNextStep(step);
+    const nextStep = getNextStep(step, effectiveSteps);
     if (nextStep) {
       setCurrentStep(nextStep);
       router.push(STEP_CONFIG[nextStep].path);
     }
-  }, [completedSteps, currentStep, skippedSteps, saveProgress, router]);
+  }, [completedSteps, currentStep, skippedSteps, effectiveSteps, saveProgress, router]);
 
   // Skip optional step
   const skipStep = useCallback(async (step: OnboardingStep) => {
@@ -176,22 +190,22 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       console.warn('Cannot skip required step:', step);
       return;
     }
-    
+
     const newSkippedSteps = [...skippedSteps];
     if (!newSkippedSteps.includes(step)) {
       newSkippedSteps.push(step);
     }
-    
+
     setSkippedSteps(newSkippedSteps);
     await saveProgress(currentStep, completedSteps, newSkippedSteps);
-    
+
     // Auto-advance to next step
-    const nextStep = getNextStep(step);
+    const nextStep = getNextStep(step, effectiveSteps);
     if (nextStep) {
       setCurrentStep(nextStep);
       router.push(STEP_CONFIG[nextStep].path);
     }
-  }, [skippedSteps, completedSteps, currentStep, saveProgress, router]);
+  }, [skippedSteps, completedSteps, currentStep, effectiveSteps, saveProgress, router]);
 
   // Finish onboarding
   const finishOnboarding = useCallback(async () => {
@@ -230,12 +244,12 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     }
   }, [profile?.id, refreshProfile, router]);
 
-  // Computed values
-  const currentStepIndex = ONBOARDING_STEPS.indexOf(currentStep);
-  const totalSteps = ONBOARDING_STEPS.length - 1; // Exclude 'complete' from count
+  // Computed values using effective steps
+  const currentStepIndex = effectiveSteps.indexOf(currentStep);
+  const totalSteps = effectiveSteps.length - 1; // Exclude 'complete' from count
   const progressPercentage = Math.round((completedSteps.length + skippedSteps.length) / totalSteps * 100);
   const canGoBack = currentStepIndex > 0;
-  const canGoForward = currentStepIndex < ONBOARDING_STEPS.length - 1;
+  const canGoForward = currentStepIndex < effectiveSteps.length - 1;
 
   const value: OnboardingContextType = {
     currentStep,
@@ -254,6 +268,8 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     progressPercentage,
     totalSteps,
     currentStepIndex,
+    needsRoleSelection,
+    effectiveSteps,
   };
 
   return (

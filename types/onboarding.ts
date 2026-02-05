@@ -4,16 +4,28 @@ import { z } from 'zod';
 // Onboarding Step Definitions
 // ============================================================================
 
-export type OnboardingStep = 
-    'linkedin-import'
+export type OnboardingStep =
+  | 'role-chapter'      // Conditional step for OAuth users without role/chapter
+  | 'linkedin-import'
   | 'profile-basics'
   | 'profile-photo'
   | 'notifications'
   | 'complete';
 
+// Base steps for email signup users (already have role/chapter from profile-basics)
 export const ONBOARDING_STEPS: OnboardingStep[] = [
-  'linkedin-import',     
-  'profile-basics',      
+  'linkedin-import',
+  'profile-basics',
+  'profile-photo',
+  'notifications',
+  'complete',
+];
+
+// Steps for OAuth users without invitation (need to select role/chapter first)
+export const OAUTH_ONBOARDING_STEPS: OnboardingStep[] = [
+  'role-chapter',
+  'linkedin-import',
+  'profile-basics',
   'profile-photo',
   'notifications',
   'complete',
@@ -26,26 +38,33 @@ export const STEP_CONFIG: Record<OnboardingStep, {
   optional: boolean;
   order: number;
 }> = {
+  'role-chapter': {
+    title: 'Get Started',
+    description: 'Select your chapter',
+    path: '/onboarding/steps/role-chapter',
+    optional: false,
+    order: 0,
+  },
   'linkedin-import': {
     title: 'Import from LinkedIn',
     description: 'Quickly fill your profile',
     path: '/onboarding/steps/linkedin-import',
     optional: true,
-    order: 1,  // Changed from 3
+    order: 1,
   },
   'profile-basics': {
     title: 'Profile Basics',
     description: 'Tell us about yourself',
     path: '/onboarding/steps/profile-basics',
     optional: false,
-    order: 2,  // Changed from 1
+    order: 2,
   },
   'profile-photo': {
     title: 'Profile Photo',
     description: 'Add a profile picture',
     path: '/onboarding/steps/profile-photo',
     optional: true,
-    order: 3,  // Changed from 2
+    order: 3,
   },
   'notifications': {
     title: 'Notifications',
@@ -148,26 +167,38 @@ export const notificationPreferencesSchema = z.object({
 // Helper Functions
 // ============================================================================
 
-export function getStepIndex(step: OnboardingStep): number {
-  return ONBOARDING_STEPS.indexOf(step);
+/**
+ * Get the step index within a given steps array
+ */
+export function getStepIndex(step: OnboardingStep, steps: OnboardingStep[] = ONBOARDING_STEPS): number {
+  return steps.indexOf(step);
 }
 
-export function getNextStep(currentStep: OnboardingStep): OnboardingStep | null {
-  const currentIndex = getStepIndex(currentStep);
-  if (currentIndex === -1 || currentIndex >= ONBOARDING_STEPS.length - 1) {
+/**
+ * Get the next step in the sequence
+ */
+export function getNextStep(currentStep: OnboardingStep, steps: OnboardingStep[] = ONBOARDING_STEPS): OnboardingStep | null {
+  const currentIndex = getStepIndex(currentStep, steps);
+  if (currentIndex === -1 || currentIndex >= steps.length - 1) {
     return null;
   }
-  return ONBOARDING_STEPS[currentIndex + 1];
+  return steps[currentIndex + 1];
 }
 
-export function getPreviousStep(currentStep: OnboardingStep): OnboardingStep | null {
-  const currentIndex = getStepIndex(currentStep);
+/**
+ * Get the previous step in the sequence
+ */
+export function getPreviousStep(currentStep: OnboardingStep, steps: OnboardingStep[] = ONBOARDING_STEPS): OnboardingStep | null {
+  const currentIndex = getStepIndex(currentStep, steps);
   if (currentIndex <= 0) {
     return null;
   }
-  return ONBOARDING_STEPS[currentIndex - 1];
+  return steps[currentIndex - 1];
 }
 
+/**
+ * Check if a step is complete (completed or skipped)
+ */
 export function isStepComplete(
   step: OnboardingStep,
   completedSteps: OnboardingStep[],
@@ -176,20 +207,39 @@ export function isStepComplete(
   return completedSteps.includes(step) || skippedSteps.includes(step);
 }
 
+/**
+ * Check if user can access a specific step
+ */
 export function canAccessStep(
   step: OnboardingStep,
   completedSteps: OnboardingStep[],
-  skippedSteps: OnboardingStep[]
+  skippedSteps: OnboardingStep[],
+  steps: OnboardingStep[] = ONBOARDING_STEPS
 ): boolean {
-  const stepIndex = getStepIndex(step);
+  const stepIndex = getStepIndex(step, steps);
   if (stepIndex === 0) return true;
-  
+  if (stepIndex === -1) return false;
+
   // Check all previous steps are complete or skipped
   for (let i = 0; i < stepIndex; i++) {
-    const prevStep = ONBOARDING_STEPS[i];
+    const prevStep = steps[i];
     if (!isStepComplete(prevStep, completedSteps, skippedSteps)) {
       return false;
     }
   }
   return true;
+}
+
+/**
+ * Determine if user needs role/chapter selection (OAuth without invitation)
+ */
+export function needsRoleChapterStep(profile: { role?: string | null; chapter?: string | null } | null): boolean {
+  return !profile?.role || !profile?.chapter;
+}
+
+/**
+ * Get the effective steps array based on user state
+ */
+export function getEffectiveSteps(profile: { role?: string | null; chapter?: string | null } | null): OnboardingStep[] {
+  return needsRoleChapterStep(profile) ? OAUTH_ONBOARDING_STEPS : ONBOARDING_STEPS;
 }

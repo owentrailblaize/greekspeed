@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { Loader2 } from 'lucide-react';
-import { STEP_CONFIG } from '@/types/onboarding';
+import { STEP_CONFIG, needsRoleChapterStep } from '@/types/onboarding';
 
 /**
  * Onboarding Entry Point
@@ -13,7 +13,8 @@ import { STEP_CONFIG } from '@/types/onboarding';
  * This page redirects users to the appropriate step:
  * - If onboarding is complete → redirect to dashboard
  * - If not authenticated → redirect to sign-in
- * - Otherwise → redirect to first step (profile-basics)
+ * - If OAuth user without role/chapter → redirect to role-chapter step
+ * - Otherwise → redirect to linkedin-import step
  */
 export default function OnboardingPage() {
   const router = useRouter();
@@ -36,7 +37,13 @@ export default function OnboardingPage() {
       return;
     }
 
-    // Redirect to first step
+    // Check if user needs to select role/chapter first (OAuth without invitation)
+    if (needsRoleChapterStep(profile)) {
+      router.replace(STEP_CONFIG['role-chapter'].path);
+      return;
+    }
+
+    // Otherwise, redirect to linkedin-import step
     router.replace(STEP_CONFIG['linkedin-import'].path);
   }, [user, profile, authLoading, profileLoading, router]);
 

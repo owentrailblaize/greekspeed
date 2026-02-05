@@ -3,9 +3,10 @@
 import { ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { OnboardingProvider } from '@/lib/hooks/useOnboarding';
+import { useProfile } from '@/lib/contexts/ProfileContext';
 import { cn } from '@/lib/utils';
-import { Check, Circle } from 'lucide-react';
-import { ONBOARDING_STEPS, STEP_CONFIG, OnboardingStep } from '@/types/onboarding';
+import { Check } from 'lucide-react';
+import { ONBOARDING_STEPS, OAUTH_ONBOARDING_STEPS, STEP_CONFIG, OnboardingStep, needsRoleChapterStep } from '@/types/onboarding';
 
 // ============================================================================
 // Step Indicator Component
@@ -71,26 +72,45 @@ interface ProgressBarProps {
 
 function ProgressBar({ currentPath }: ProgressBarProps) {
   const router = useRouter();
+  const { profile } = useProfile();
+
+  /// Determine which steps to show based on profile state
+  // If user is on role-chapter step OR has completed it but not finished onboarding,
+  // they're in OAuth flow and should see all 5 steps
+  const needsRoleStep = needsRoleChapterStep(profile);
+  const isOnRoleChapterStep = currentPath.includes('role-chapter');
+  const hasCompletedRoleChapter = profile?.role && profile?.chapter && !profile?.onboarding_completed;
+
+  // Show OAuth steps if: needs it, is on it, or completed it but still onboarding
+  const effectiveSteps = (needsRoleStep || isOnRoleChapterStep || hasCompletedRoleChapter)
+    ? OAUTH_ONBOARDING_STEPS
+    : ONBOARDING_STEPS;
 
   // Determine current step from path
   const getCurrentStep = (): OnboardingStep => {
+    if (currentPath.includes('role-chapter')) return 'role-chapter';
     if (currentPath.includes('linkedin-import')) return 'linkedin-import';
     if (currentPath.includes('profile-basics')) return 'profile-basics';
     if (currentPath.includes('profile-photo')) return 'profile-photo';
     if (currentPath.includes('notifications')) return 'notifications';
     if (currentPath.includes('complete')) return 'complete';
-    return 'linkedin-import'; // Default to first step
+    return needsRoleStep ? 'role-chapter' : 'linkedin-import';
   };
 
   const currentStep = getCurrentStep();
-  const currentIndex = ONBOARDING_STEPS.indexOf(currentStep);
+  const currentIndex = effectiveSteps.indexOf(currentStep);
 
   // Filter out 'complete' from displayed steps
-  const displaySteps = ONBOARDING_STEPS.filter(s => s !== 'complete');
+  const displaySteps = effectiveSteps.filter(s => s !== 'complete');
 
   const handleStepClick = (step: OnboardingStep) => {
     router.push(STEP_CONFIG[step].path);
   };
+
+  // Calculate progress width
+  const progressWidth = currentIndex >= 0
+    ? (currentIndex / Math.max(displaySteps.length - 1, 1)) * 100
+    : 0;
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4">
@@ -99,7 +119,7 @@ function ProgressBar({ currentPath }: ProgressBarProps) {
         <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200" />
         <div
           className="absolute top-5 left-0 h-0.5 bg-green-500 transition-all duration-300"
-          style={{ width: `${(currentIndex / (displaySteps.length - 1)) * 100}%` }}
+          style={{ width: `${progressWidth}%` }}
         />
 
         {/* Step indicators */}
