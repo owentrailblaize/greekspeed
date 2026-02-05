@@ -320,7 +320,7 @@ export function ProfilePdfUploader({
                 handleClick();
               }}
               disabled={disabled}
-              className="gap-2"
+              className="gap-2 rounded-full"
             >
               <FileText className="h-4 w-4" />
               Choose PDF File

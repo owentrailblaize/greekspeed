@@ -299,11 +299,9 @@ export default function NotificationsPage() {
           )}
 
           {/* Info note */}
-          <div className="bg-blue-50 rounded-lg p-4">
-            <p className="text-sm text-blue-800">
-              You can always change these preferences later in your account settings.
-            </p>
-          </div>
+          <p className="text-sm text-blue-800">
+            You can always change these preferences later in your account settings.
+          </p>
         </CardContent>
       </Card>
 

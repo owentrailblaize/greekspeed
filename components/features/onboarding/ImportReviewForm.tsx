@@ -17,6 +17,7 @@ import {
   CheckCircle,
   Loader2,
   Sparkles,
+  CircleUserRound,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-toastify';
@@ -119,7 +120,7 @@ export function ImportReviewForm({
 }: ImportReviewFormProps) {
   // Determine if user is alumni (show job fields) or not (show education focus)
   const isAlumni = userRole === 'alumni' || !userRole; // Default to alumni behavior if role not provided
-  
+
   // Get graduation years for dropdown
   const graduationYears = useMemo(() => getGraduationYears(), []);
 
@@ -208,10 +209,10 @@ export function ImportReviewForm({
    */
   const handleExperienceChange = useCallback((field: string, value: string | boolean) => {
     if (!formData.currentExperience) return;
-    
+
     setFormData(prev => ({
       ...prev,
-      currentExperience: prev.currentExperience 
+      currentExperience: prev.currentExperience
         ? { ...prev.currentExperience, [field]: value }
         : undefined,
     }));
@@ -244,7 +245,7 @@ export function ImportReviewForm({
     // Use appropriate schema based on user role
     const schema = isAlumni ? alumniImportReviewFormSchema : importReviewFormSchema;
     const result = schema.safeParse(formData);
-    
+
     if (!result.success) {
       const newErrors: Record<string, string> = {};
       result.error.issues.forEach((issue) => {
@@ -310,7 +311,6 @@ export function ImportReviewForm({
     return (
       <div className="mt-1.5 flex items-center gap-2">
         <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded flex items-center gap-1">
-          <Sparkles className="h-3 w-3" />
           LinkedIn: {suggestionValue.length > 30 ? suggestionValue.substring(0, 30) + '...' : suggestionValue}
         </span>
         <button
@@ -328,9 +328,6 @@ export function ImportReviewForm({
     <form onSubmit={handleSubmit} className={cn('space-y-6', className)}>
       {/* Header */}
       <div className="text-center mb-6">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 mb-4">
-          <Sparkles className="h-6 w-6 text-green-600" />
-        </div>
         <h2 className="text-xl font-bold text-gray-900">
           Review Your Information
         </h2>
@@ -349,13 +346,13 @@ export function ImportReviewForm({
 
       {/* Personal Information Section */}
       <Card>
-        <CardHeader className="pb-4">
+        <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <User className="h-5 w-5 text-gray-400" />
+            <CircleUserRound className="h-5 w-5 text-gray-400" />
             Personal Information
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-0">
           {/* Full Name - Read Only (from existing profile) */}
           {existingFullName && (
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
@@ -372,7 +369,6 @@ export function ImportReviewForm({
           {/* Location */}
           <div className="space-y-2">
             <Label htmlFor="location" className="flex items-center">
-              <MapPin className="h-4 w-4 mr-1 text-gray-400" />
               Location
               {renderConfidenceIndicator('location')}
             </Label>
@@ -393,13 +389,13 @@ export function ImportReviewForm({
       {/* Current Role Section - Only show for alumni */}
       {isAlumni && formData.currentExperience && (
         <Card>
-          <CardHeader className="pb-4">
+          <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Briefcase className="h-5 w-5 text-gray-400" />
               Current Role
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-0">
             {/* Job Title */}
             <div className="space-y-2">
               <Label htmlFor="jobTitle" className="flex items-center">
@@ -425,7 +421,6 @@ export function ImportReviewForm({
             {/* Company */}
             <div className="space-y-2">
               <Label htmlFor="company" className="flex items-center">
-                <Building2 className="h-4 w-4 mr-1 text-gray-400" />
                 Company *
                 {renderConfidenceIndicator('experiences.0.company')}
               </Label>
@@ -492,27 +487,9 @@ export function ImportReviewForm({
         </Card>
       )}
 
-      {/* Academic Info Card - Only show for active members */}
-      {!isAlumni && (
-        <Card className="border-blue-200 bg-blue-50/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base text-blue-700">
-              <GraduationCap className="h-5 w-5" />
-              Academic Focus
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-blue-600">
-              As an active member, we'll save your <strong>field of study</strong> and <strong>graduation year</strong> from 
-              the Education section below to your profile.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Education Section */}
       <Card className={cn(!isAlumni && 'border-blue-200')}>
-        <CardHeader className="pb-4">
+        <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <GraduationCap className={cn('h-5 w-5', isAlumni ? 'text-gray-400' : 'text-blue-500')} />
             Education
@@ -523,7 +500,7 @@ export function ImportReviewForm({
             )}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-0">
           {/* School */}
           <div className="space-y-2">
             <Label htmlFor="school" className="flex items-center">
@@ -610,7 +587,7 @@ export function ImportReviewForm({
           variant="outline"
           onClick={onBack}
           disabled={isSubmitting}
-          className="flex-1 gap-2"
+          className="flex-1 gap-2 rounded-full"
         >
           <ChevronLeft className="h-4 w-4" />
           Back
@@ -618,7 +595,7 @@ export function ImportReviewForm({
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="flex-1 gap-2 bg-brand-primary hover:bg-brand-primary-hover"
+          className="flex-1 gap-2 bg-brand-primary hover:bg-brand-primary-hover rounded-full"
         >
           {isSubmitting ? (
             <>

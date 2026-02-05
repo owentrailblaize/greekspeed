@@ -233,11 +233,10 @@ export default function LinkedInImportPage() {
           <Card>
             <CardHeader className="text-center pb-2">
               <CardTitle className="flex items-center justify-center gap-2">
-                <FileText className="h-5 w-5 text-brand-primary" />
                 Import Your Profile
               </CardTitle>
               <CardDescription>
-                Save time by importing your professional information
+                Save time by importing your details from LinkedIn
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -291,10 +290,10 @@ export default function LinkedInImportPage() {
               <Button
                 variant="outline"
                 onClick={handleManualFill}
-                className="w-full h-auto py-4 justify-start"
+                className="w-full h-auto py-4 justify-start rounded-full"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gray-100 rounded-lg">
+                  <div className="p-2 bg-gray-100 rounded-full">
                     <PenLine className="h-5 w-5 text-gray-600" />
                   </div>
                   <div className="text-left">

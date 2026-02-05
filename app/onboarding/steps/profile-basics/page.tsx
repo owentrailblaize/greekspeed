@@ -358,13 +358,13 @@ export default function ProfileBasicsPage() {
       )}
 
       <Card>
-        <CardHeader className="pb-4">
+        <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5 text-brand-primary" />
             Tell Us About Yourself
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Name Fields */}
             <div className="grid grid-cols-2 gap-4">
@@ -399,7 +399,6 @@ export default function ProfileBasicsPage() {
             {/* Chapter Selection */}
             <div className="space-y-2">
               <Label htmlFor="chapter" className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-gray-400" />
                 Chapter *
               </Label>
               <Select
@@ -426,7 +425,6 @@ export default function ProfileBasicsPage() {
             {/* Role Selection */}
             <div className="space-y-2">
               <Label htmlFor="role" className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-gray-400" />
                 I am a(n) *
               </Label>
               <Select
@@ -453,7 +451,6 @@ export default function ProfileBasicsPage() {
             {/* Graduation Year */}
             <div className="space-y-2">
               <Label htmlFor="graduationYear" className="flex items-center gap-2">
-                <GraduationCap className="h-4 w-4 text-gray-400" />
                 Graduation Year *
               </Label>
               <Select
@@ -479,7 +476,6 @@ export default function ProfileBasicsPage() {
             {/* Major */}
             <div className="space-y-2">
               <Label htmlFor="major" className="flex items-center gap-2">
-                <GraduationCap className="h-4 w-4 text-gray-400" />
                 Major {formData.role === 'active_member' ? '*' : '(Optional)'}
               </Label>
               <Input
@@ -551,7 +547,6 @@ export default function ProfileBasicsPage() {
                   {/* Location */}
                   <div className="space-y-2">
                     <Label htmlFor="location" className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-gray-400" />
                       Location (Optional)
                     </Label>
                     <Input

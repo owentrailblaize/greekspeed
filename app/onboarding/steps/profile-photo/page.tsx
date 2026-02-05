@@ -278,7 +278,6 @@ export default function ProfilePhotoPage() {
       <Card>
         <CardHeader className="text-center pb-2">
           <CardTitle className="flex items-center justify-center gap-2">
-            <Camera className="h-5 w-5 text-brand-primary" />
             Add Your Photos
           </CardTitle>
           <CardDescription>
@@ -436,16 +435,6 @@ export default function ProfilePhotoPage() {
                 <p className="text-xs text-gray-400">Recommended: 1500x500px • JPEG, PNG, or GIF • Max 10MB</p>
               </div>
             </div>
-          </div>
-
-          {/* Tips */}
-          <div className="bg-blue-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-blue-900 mb-2">Tips for great photos:</h4>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Use a clear, recent headshot for your profile photo</li>
-              <li>• Make sure your face is well-lit and centered</li>
-              <li>• Choose a banner that represents you or your chapter</li>
-            </ul>
           </div>
         </CardContent>
       </Card>
