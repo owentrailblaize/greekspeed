@@ -34,19 +34,22 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
   const scrollToSection = (sectionId: string) => {
     setMobileMenuOpen(false);
 
-    // If we're on the landing page, scroll to section
-    if (pathname === '/') {
-      if (onSectionChange) {
-        onSectionChange(sectionId);
+    // Small delay to let mobile menu close animation complete
+    setTimeout(() => {
+      // If we're on the landing page, scroll to section
+      if (pathname === '/') {
+        if (onSectionChange) {
+          onSectionChange(sectionId);
+        }
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      } else {
+        // Otherwise, navigate to landing page with hash
+        router.push(`/#${sectionId}`);
       }
-      const element = document.getElementById(sectionId);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-      }
-    } else {
-      // Otherwise, navigate to landing page with hash
-      router.push(`/#${sectionId}`);
-    }
+    }, 250); // Wait for menu animation (200ms) to complete
   };
 
   // Opens Google Calendar appointment scheduler
@@ -87,7 +90,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
                     <button
                       key={id}
                       onClick={handleRequestDemo}
-                      className="text-sm font-medium font-sans text-slate-950 hover:text-slate-900 transition-colors py-2"
+                      className="text-sm font-medium font-sans text-slate-950 hover:text-slate-900 hover:bg-gray-100 rounded-full px-4 py-2 transition-all"
                     >
                       {label}
                     </button>
@@ -95,7 +98,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
                     <button
                       key={id}
                       onClick={() => scrollToSection(id)}
-                      className="text-sm font-medium font-sans text-slate-950 hover:text-slate-900 transition-colors py-2"
+                      className="text-sm font-medium font-sans text-slate-950 hover:text-slate-900 hover:bg-gray-100 rounded-full px-4 py-2 transition-all"
                     >
                       {label}
                     </button>
@@ -105,7 +108,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
                 {user && (
                   <Link
                     href="/dashboard"
-                    className="text-sm font-semibold font-sans text-gray-600 hover:text-gray-900 transition-colors py-2"
+                    className="text-sm font-semibold font-sans text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full px-4 py-2 transition-all"
                   >
                     Dashboard
                   </Link>
@@ -146,13 +149,13 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
                   <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors">
                     <User className="h-4 w-4 text-gray-600" />
                     <span className="text-sm font-medium font-sans text-gray-700">
-                        {profile?.first_name || user.email?.split('@')[0]}
+                      {profile?.first_name || user.email?.split('@')[0]}
                     </span>
                   </div>
                   <Button
                     variant="ghost"
                     onClick={() => signOut()}
-                    className="hover:text-gray-900 hover:bg-gray-100/50 font-sans"
+                    className="hover:text-gray-900 hover:bg-gray-100/50 font-sans rounded-full"
                     size="sm"
                   >
                     Sign Out
@@ -195,7 +198,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
                     <button
                       key={id}
                       onClick={handleRequestDemo}
-                      className="block w-full text-center py-3 px-4 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
+                      className="block w-full text-center py-3 px-6 rounded-full text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
                     >
                       {label}
                     </button>
@@ -203,7 +206,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
                     <button
                       key={id}
                       onClick={() => scrollToSection(id)}
-                      className="block w-full text-center py-3 px-4 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
+                      className="block w-full text-center py-3 px-6 rounded-full text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
                     >
                       {label}
                     </button>
@@ -212,7 +215,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
                 {user && (
                   <Link
                     href="/dashboard"
-                    className="block w-full text-center py-3 px-4 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
+                    className="block w-full text-center py-3 px-6 rounded-full text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
                   >
                     Dashboard
                   </Link>
@@ -246,16 +249,18 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
                   </Link>
                 </div>
               ) : (
-                <div className="pt-4 border-t border-gray-200 mt-4 flex flex-col items-center w-full">
-                  <div className="flex items-center gap-3 mb-3 px-4 py-2 rounded-lg bg-gray-50">
-                    <User className="h-5 w-5 text-gray-600" />
-                    <span className="text-sm font-medium font-sans text-gray-700">{user.email}</span>
+                <div className="pt-4 border-t border-gray-200 mt-4 flex flex-col items-center gap-3 w-full">
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <User className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm font-medium font-sans text-gray-700">
+                      {profile?.first_name || user.email?.split('@')[0]}
+                    </span>
                   </div>
                   <Button
                     variant="ghost"
-                    className="w-full justify-center hover:bg-gray-50"
                     onClick={() => signOut()}
-                    size="lg"
+                    className="hover:text-gray-900 hover:bg-gray-100/50 font-sans rounded-full"
+                    size="sm"
                   >
                     Sign Out
                   </Button>
