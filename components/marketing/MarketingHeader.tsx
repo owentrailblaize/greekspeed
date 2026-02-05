@@ -31,7 +31,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
 
   const scrollToSection = (sectionId: string) => {
     setMobileMenuOpen(false);
-    
+
     // If we're on the landing page, scroll to section
     if (pathname === '/') {
       if (onSectionChange) {
@@ -47,27 +47,26 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
     }
   };
 
-  // Edit later to take to section on page
+  // Opens Google Calendar appointment scheduler
   const handleRequestDemo = () => {
     setMobileMenuOpen(false);
-    window.open('mailto:support@trailblaize.com?subject=Request a Demo', '_blank');
+    window.open('https://calendar.google.com/calendar/appointments/schedules/AcZssZ1NJXnIQMnkhbkRAfqYtikSbF2mQ-aDq07LRF24XMnmISst7xvN5A9B5QZwIz4PmcuMLPvNANUn', '_blank');
   };
 
   return (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-      scrolled 
-        ? "bg-white/95 backdrop-blur-xl border-b border-gray-200/80 shadow-lg shadow-gray-900/5" 
+    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled
+        ? "bg-white/95 backdrop-blur-xl border-b border-gray-200/80 shadow-lg shadow-gray-900/5"
         : "bg-white/90 backdrop-blur-lg border-b border-gray-200/60"
-    }`}>
+      }`}>
       <div className="max-w-7xl mx-auto px-6 md:px-6 pl-2 md:pl-6">
         <div className="flex items-center justify-between h-16 md:h-18">
           {/* Logo */}
           <div className="flex items-center -ml-2 md:ml-0">
             <Link href="/" className="flex items-center">
-              <img 
-                src="/logo.png" 
-                alt="Trailblaize logo" 
-                className="h-28 w-auto max-h-full object-contain transition-all duration-300 hover:opacity-90" 
+              <img
+                src="/logo.png"
+                alt="Trailblaize logo"
+                className="h-28 w-auto max-h-full object-contain transition-all duration-300 hover:opacity-90"
               />
             </Link>
           </div>
@@ -78,9 +77,8 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
             {!hideNavigation && (
               <div className="flex items-center space-x-24">
                 {[
-                  { id: "about", label: "About Us" },
-                  { id: "pricing", label: "Pricing" },
                   { id: "features", label: "Features" },
+                  { id: "pricing", label: "Pricing" },
                   { id: "demo", label: "Request a Demo", isAction: true },
                 ].map(({ id, label, isAction }) => (
                   isAction ? (
@@ -103,8 +101,8 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
                 ))}
                 {/* Dashboard link for authenticated users */}
                 {user && (
-                  <Link 
-                    href="/dashboard" 
+                  <Link
+                    href="/dashboard"
                     className="text-sm font-semibold font-sans text-gray-600 hover:text-gray-900 transition-colors py-2"
                   >
                     Dashboard
@@ -117,7 +115,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
             <div className="flex items-center">
               {!user ? (
                 <Link href="/sign-in">
-                  <Button 
+                  <Button
                     className="
                       w-36
                       px-4 py-3
@@ -147,9 +145,9 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
                     <User className="h-4 w-4 text-gray-600" />
                     <span className="text-sm font-medium font-sans text-gray-700">{user.email?.split('@')[0]}</span>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    onClick={() => signOut()} 
+                  <Button
+                    variant="ghost"
+                    onClick={() => signOut()}
                     className="hover:text-gray-900 hover:bg-gray-100/50 font-sans"
                     size="sm"
                   >
@@ -161,8 +159,8 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
           </div>
 
           {/* Mobile Menu Button */}
-          <button 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors relative"
             aria-label="Toggle menu"
           >
@@ -185,23 +183,22 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
               {/* Mobile Navigation */}
               <>
                 {[
-                  { id: "about", label: "About Us" },
-                  { id: "pricing", label: "Pricing" },
                   { id: "features", label: "Features" },
+                  { id: "pricing", label: "Pricing" },
                   { id: "demo", label: "Request a Demo", isAction: true },
                 ].map(({ id, label, isAction }) => (
                   isAction ? (
-                    <button 
-                      key={id} 
-                      onClick={handleRequestDemo} 
+                    <button
+                      key={id}
+                      onClick={handleRequestDemo}
                       className="block w-full text-center py-3 px-4 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
                     >
                       {label}
                     </button>
                   ) : (
-                    <button 
-                      key={id} 
-                      onClick={() => scrollToSection(id)} 
+                    <button
+                      key={id}
+                      onClick={() => scrollToSection(id)}
                       className="block w-full text-center py-3 px-4 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
                     >
                       {label}
@@ -209,8 +206,8 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
                   )
                 ))}
                 {user && (
-                  <Link 
-                    href="/dashboard" 
+                  <Link
+                    href="/dashboard"
                     className="block w-full text-center py-3 px-4 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
                   >
                     Dashboard
@@ -220,7 +217,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
               {!user ? (
                 <div className="pt-4 border-t border-gray-200 mt-4 flex justify-center w-full">
                   <Link href="/sign-in" className="block">
-                    <Button 
+                    <Button
                       className="
                         w-36
                         px-4 py-3
@@ -250,9 +247,9 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
                     <User className="h-5 w-5 text-gray-600" />
                     <span className="text-sm font-medium font-sans text-gray-700">{user.email}</span>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-center hover:bg-gray-50" 
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-center hover:bg-gray-50"
                     onClick={() => signOut()}
                     size="lg"
                   >
