@@ -157,9 +157,12 @@ interface OnboardingLayoutProps {
 
 export default function OnboardingLayout({ children }: OnboardingLayoutProps) {
   const pathname = usePathname();
+  const { profile } = useProfile();
 
   // Don't show progress bar on the main onboarding page (redirect page)
-  const showProgressBar = pathname !== '/onboarding' && !pathname.includes('/complete');
+  // Also hide for users who have completed onboarding and are using prefill-profile (profile editing flow)
+  const isProfileEditFlow = pathname.includes('/prefill-profile') && profile?.onboarding_completed === true;
+  const showProgressBar = pathname !== '/onboarding' && !pathname.includes('/complete') && !isProfileEditFlow;
 
   return (
     <OnboardingProvider>
