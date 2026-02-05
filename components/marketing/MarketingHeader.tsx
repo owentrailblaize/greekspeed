@@ -6,6 +6,7 @@ import { Menu, X, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/supabase/auth-context";
+import { useProfile } from "@/lib/contexts/ProfileContext";
 import { Button } from "@/components/ui/button";
 
 interface MarketingHeaderProps {
@@ -18,6 +19,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, signOut } = useAuth();
+  const { profile } = useProfile();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -55,8 +57,8 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
 
   return (
     <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled
-        ? "bg-white/95 backdrop-blur-xl border-b border-gray-200/80 shadow-lg shadow-gray-900/5"
-        : "bg-white/90 backdrop-blur-lg border-b border-gray-200/60"
+      ? "bg-white/95 backdrop-blur-xl border-b border-gray-200/80 shadow-lg shadow-gray-900/5"
+      : "bg-white/90 backdrop-blur-lg border-b border-gray-200/60"
       }`}>
       <div className="max-w-7xl mx-auto px-6 md:px-6 pl-2 md:pl-6">
         <div className="flex items-center justify-between h-16 md:h-18">
@@ -141,9 +143,11 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
                 </Link>
               ) : (
                 <div className="flex items-center space-x-3">
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors">
                     <User className="h-4 w-4 text-gray-600" />
-                    <span className="text-sm font-medium font-sans text-gray-700">{user.email?.split('@')[0]}</span>
+                    <span className="text-sm font-medium font-sans text-gray-700">
+                        {profile?.first_name || user.email?.split('@')[0]}
+                    </span>
                   </div>
                   <Button
                     variant="ghost"

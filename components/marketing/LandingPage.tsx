@@ -398,8 +398,8 @@ export function LandingPage() {
                   }}
                 >
                   <Card className={`h-full bg-white border cursor-pointer transition-all duration-300 ${plan.popular
-                      ? "border-gray-300 shadow-lg"
-                      : "border-gray-200 shadow-sm"
+                    ? "border-gray-300 shadow-lg"
+                    : "border-gray-200 shadow-sm"
                     } group-hover:scale-105 group-hover:shadow-xl`}>
                     <CardContent className="p-4 h-full flex flex-col">
                       {/* Title */}
@@ -471,8 +471,8 @@ export function LandingPage() {
                 className="relative"
               >
                 <Card className={`h-full bg-white border ${plan.popular
-                    ? "border-gray-300 shadow-lg"
-                    : "border-gray-200 shadow-sm hover:shadow-md"
+                  ? "border-gray-300 shadow-lg"
+                  : "border-gray-200 shadow-sm hover:shadow-md"
                   } transition-all duration-300 relative`}>
                   <CardContent className="p-6 md:p-8 h-full flex flex-col">
                     {/* Title */}
