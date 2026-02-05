@@ -205,13 +205,13 @@ export default function PrefillProfilePage() {
 
             {/* Manual Option */}
             <Card
-              className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-brand-primary/50 ${selectedOption === 'manual' ? 'border-brand-primary ring-2 ring-brand-primary/20' : 'border-gray-200'
+              className={`rounded-full cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-brand-primary/50 ${selectedOption === 'manual' ? 'border-brand-primary ring-2 ring-brand-primary/20' : 'border-gray-200'
                 }`}
               onClick={() => !isNavigating && handleOptionSelect('manual')}
             >
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
                     <PenLine className="h-6 w-6 text-gray-600" />
                   </div>
                   <div className="flex-grow min-w-0">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useProfile } from '@/lib/contexts/ProfileContext';
@@ -18,6 +18,8 @@ import {
   Info,
   Loader2,
   ChevronRight,
+  CheckCircle,
+  Shield,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { cn } from '@/lib/utils';
@@ -46,6 +48,11 @@ export default function RoleChapterPage() {
   // Check for invitation data in session storage
   const [hasInvitation, setHasInvitation] = useState(false);
 
+  // Determine if this is confirmation mode (user already has role and chapter from invitation)
+  const isConfirmationMode = useMemo(() => {
+    return !!(profile?.role && profile?.chapter);
+  }, [profile?.role, profile?.chapter]);
+
   useEffect(() => {
     // Check if user came through invitation flow
     const invitationType = sessionStorage.getItem('invitation_type');
@@ -58,14 +65,14 @@ export default function RoleChapterPage() {
     }
 
     // Pre-populate from profile if available
-    if (profile?.chapter && profile?.role) {
+    if (profile?.chapter || profile?.role) {
       // Find the chapter in the chapters list to get the ID
       const matchingChapter = chapters.find(c => c.name === profile.chapter);
       setFormData(prev => ({
         ...prev,
-        chapter: profile.chapter || '',
-        chapterId: matchingChapter?.id || profile.chapter_id || '',
-        role: (profile.role as 'alumni' | 'active_member') || 'alumni',
+        chapter: profile.chapter || prev.chapter,
+        chapterId: matchingChapter?.id || profile.chapter_id || prev.chapterId,
+        role: (profile.role as 'alumni' | 'active_member') || prev.role,
       }));
     }
   }, [profile, chapters]); // Add chapters to dependencies
@@ -245,15 +252,126 @@ export default function RoleChapterPage() {
     }
   }, [user, router]);
 
-  // If profile already has role and chapter, skip this step
-  useEffect(() => {
-    if (profile?.role && profile?.chapter) {
-      router.replace('/onboarding/steps/linkedin-import');
+  // NOTE: Removed auto-skip - we now show confirmation mode for invitation users
+
+  // Handle confirmation mode continue (just complete step and move on)
+  const handleConfirmContinue = async () => {
+    setLoading(true);
+    try {
+      toast.success('Welcome! Let\'s continue setting up your profile.');
+      await completeStep('role-chapter');
+    } catch (error) {
+      console.error('Error completing step:', error);
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
-  }, [profile?.role, profile?.chapter, router]);
+  };
 
   if (!user) {
     return null;
+  }
+
+  // Confirmation mode UI for invitation users
+  if (isConfirmationMode) {
+    const roleLabel = profile?.role === 'active_member' ? 'Active Member' : 'Alumni';
+    const roleIcon = profile?.role === 'active_member' ? Shield : GraduationCap;
+    const RoleIcon = roleIcon;
+
+    return (
+      <div className="space-y-6">
+        {/* Welcome Banner */}
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <h3 className="font-medium text-green-900 text-sm mb-1">Welcome to Trailblaize!</h3>
+                <p className="text-sm text-green-800">
+                  Your account has been set up. Let&apos;s complete your profile.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              You&apos;re All Set!
+            </CardTitle>
+            <CardDescription>
+              Here&apos;s your account information. Continue to complete your profile.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Chapter Info */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2 text-gray-500 text-sm">
+                <Building2 className="h-4 w-4" />
+                Your Chapter
+              </Label>
+              <div className="p-4 bg-brand-primary/5 border border-brand-primary/20 rounded-full">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-brand-primary/10 rounded-lg">
+                    <Building2 className="h-5 w-5 text-brand-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">{profile?.chapter}</p>
+                    <p className="text-sm text-gray-500">Fraternity Chapter</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Role Info */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2 text-gray-500 text-sm">
+                <Users className="h-4 w-4" />
+                Your Role
+              </Label>
+              <div className="p-4 bg-brand-accent-light border border-brand-accent/20 rounded-full">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-brand-accent/10 rounded-lg">
+                    <RoleIcon className="h-5 w-5 text-brand-accent" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-brand-text">{roleLabel}</p>
+                    <p className="text-sm text-gray-500">
+                      {profile?.role === 'active_member'
+                        ? 'Current chapter member'
+                        : 'Connect with your fraternity network'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Continue Button */}
+            <div className="pt-4">
+              <Button
+                onClick={handleConfirmContinue}
+                disabled={loading}
+                className="w-full bg-brand-primary hover:bg-brand-primary-hover rounded-full"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    Continue to Profile Setup
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (

@@ -570,7 +570,7 @@ export default function ProfileBasicsPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-brand-primary hover:bg-brand-primary-hover"
+                className="w-full bg-brand-primary hover:bg-brand-primary-hover rounded-full"
               >
                 {loading ? (
                   <>

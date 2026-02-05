@@ -101,8 +101,8 @@ export default function JoinPageClient() {
     if (userData.needs_approval) {
       setShowApprovalPending(true);
     } else {
-      // Show success message and ensure session is ready before redirect
-      window.location.href = '/dashboard';
+      // Redirect to onboarding to complete profile setup
+      window.location.href = '/onboarding';
     }
   };
 

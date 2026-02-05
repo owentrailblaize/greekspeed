@@ -232,14 +232,27 @@ export function canAccessStep(
 
 /**
  * Determine if user needs role/chapter selection (OAuth without invitation)
+ * Note: Even if user already has role/chapter (from invitation), we still show
+ * the role-chapter step in "confirmation mode" for a unified 5-step experience.
  */
 export function needsRoleChapterStep(profile: { role?: string | null; chapter?: string | null } | null): boolean {
   return !profile?.role || !profile?.chapter;
 }
 
 /**
+ * Check if user has completed the role-chapter step (has both role and chapter set)
+ */
+export function hasCompletedRoleChapter(profile: { role?: string | null; chapter?: string | null } | null): boolean {
+  return !!(profile?.role && profile?.chapter);
+}
+
+/**
  * Get the effective steps array based on user state
+ * Always returns all 5 steps for a unified onboarding experience.
+ * Users with role/chapter already set (from invitation) will see a confirmation mode.
  */
 export function getEffectiveSteps(profile: { role?: string | null; chapter?: string | null } | null): OnboardingStep[] {
-  return needsRoleChapterStep(profile) ? OAUTH_ONBOARDING_STEPS : ONBOARDING_STEPS;
+  // Always return the full 5-step flow for unified experience
+  // The role-chapter page handles showing confirmation mode if data already exists
+  return OAUTH_ONBOARDING_STEPS;
 }

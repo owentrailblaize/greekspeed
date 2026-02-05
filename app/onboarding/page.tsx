@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { Loader2 } from 'lucide-react';
-import { STEP_CONFIG, needsRoleChapterStep } from '@/types/onboarding';
+import { STEP_CONFIG } from '@/types/onboarding';
 
 /**
  * Onboarding Entry Point
@@ -13,8 +13,11 @@ import { STEP_CONFIG, needsRoleChapterStep } from '@/types/onboarding';
  * This page redirects users to the appropriate step:
  * - If onboarding is complete → redirect to dashboard
  * - If not authenticated → redirect to sign-in
- * - If OAuth user without role/chapter → redirect to role-chapter step
- * - Otherwise → redirect to linkedin-import step
+ * - Otherwise → redirect to role-chapter step (first step in unified 5-step flow)
+ * 
+ * The role-chapter page handles both:
+ * - Selection mode: for users without role/chapter
+ * - Confirmation mode: for invitation users who already have role/chapter
  */
 export default function OnboardingPage() {
   const router = useRouter();
@@ -37,14 +40,9 @@ export default function OnboardingPage() {
       return;
     }
 
-    // Check if user needs to select role/chapter first (OAuth without invitation)
-    if (needsRoleChapterStep(profile)) {
-      router.replace(STEP_CONFIG['role-chapter'].path);
-      return;
-    }
-
-    // Otherwise, redirect to linkedin-import step
-    router.replace(STEP_CONFIG['linkedin-import'].path);
+    // Always start at role-chapter step (first step in unified 5-step flow)
+    // The page handles showing confirmation mode if user already has role/chapter
+    router.replace(STEP_CONFIG['role-chapter'].path);
   }, [user, profile, authLoading, profileLoading, router]);
 
   // Show loading state while determining redirect
