@@ -1,0 +1,118 @@
+'use client';
+
+import React from 'react';
+import { motion } from 'framer-motion';
+import Image from 'next/image';
+
+interface Logo {
+  name: string;
+  imagePath: string;
+}
+
+export const TrustedBySection: React.FC = () => {
+  const logos: Logo[] = [
+    {
+      name: 'Beta Theta Pi',
+      imagePath: '/chapter-logos/Beta_Theta_Pi_Coat_Arms.png',
+    },
+    {
+      name: 'Delta Kappa Epsilon',
+      imagePath: '/chapter-logos/Delta_Kappa_Epsilon_Coat_Arms.png',
+    },
+    {
+      name: 'Kappa Alpha',
+      imagePath: '/chapter-logos/Kappa_Alpha_Coat_Arms.png',
+    },
+    {
+      name: 'Kappa Sigma',
+      imagePath: '/chapter-logos/Kappa_Sigma_Coat_Arms.png',
+    },
+    {
+      name: 'Phi Delta Theta',
+      imagePath: '/chapter-logos/Phi_Delta_Theta_Coat_of_Arms.png',
+    },
+    {
+      name: 'Phi Gamma Delta',
+      imagePath: '/chapter-logos/Phi_Gamma_Delta_Coat_Arms.png',
+    },
+    {
+      name: 'Pi Kappa Alpha',
+      imagePath: '/chapter-logos/Pi_Kappa_Alpha_Coat_Arms.png',
+    },
+    {
+      name: 'Sigma Alpha Epsilon',
+      imagePath: '/chapter-logos/Sigma_Alpha_Epsilon_Coat_Arms.png',
+    },
+    {
+      name: 'Sigma Chi',
+      imagePath: '/chapter-logos/Sigma_Chi_Coat_Arms.png',
+    },
+  ];
+
+  // Duplicate logos for seamless infinite scroll
+  const duplicatedLogos = [...logos, ...logos, ...logos];
+
+  return (
+    <div className="relative w-full pt-0 pb-2 md:pb-4 overflow-hidden">
+      <div className="w-full max-w-6xl mx-auto px-4">
+        <div className="text-center mb-6 md:mb-8">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="text-base md:text-lg lg:text-xl font-normal text-gray-600 instrument-serif-regular"
+          >
+            Trusted by Member-Driven Communities
+          </motion.p>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="relative mx-auto max-w-6xl overflow-hidden"
+        >
+          <div className="relative py-6 md:py-8 px-4">
+            <div className="flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+              <motion.div
+                animate={{
+                  x: [0, -1440],
+                }}
+                transition={{
+                  x: {
+                    repeat: Infinity,
+                    repeatType: 'loop',
+                    duration: 30,
+                    ease: 'linear',
+                  },
+                }}
+                className="flex gap-8 md:gap-16 pr-8 md:pr-16"
+              >
+                {duplicatedLogos.map((logo, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-col items-center justify-center min-w-[120px] md:min-w-[160px] group flex-shrink-0"
+                  >
+                    <div className="opacity-60 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center h-12 w-12 md:h-16 md:w-16 mb-2">
+                      <Image
+                        src={logo.imagePath}
+                        alt={logo.name}
+                        width={64}
+                        height={64}
+                        className="h-12 w-12 md:h-16 md:w-16 object-contain"
+                        unoptimized={false}
+                      />
+                    </div>
+                    <p className="text-[10px] md:text-xs font-medium text-gray-600 text-center opacity-70 group-hover:opacity-100 transition-opacity duration-300 leading-tight">
+                      {logo.name}
+                    </p>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+};

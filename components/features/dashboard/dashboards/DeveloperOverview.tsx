@@ -1,0 +1,301 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useProfile } from '@/lib/contexts/ProfileContext';
+import { getUserPermissions } from '@/lib/developerPermissions';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Users, 
+  Settings,
+  Network,
+  ArrowRight,
+  UserCheck,
+  Shield,
+  Flag,
+  Palette
+} from 'lucide-react';
+
+export function DeveloperOverview() {
+  const { profile, isDeveloper } = useProfile();
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalChapters: 0,
+    totalAlumni: 0,
+    systemHealth: 'healthy',
+    userGrowthPercentage: '0.0',
+    newUsersThisMonth: 0,
+    newAlumniThisMonth: 0,
+    newChaptersThisMonth: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadDeveloperStats();
+  }, []);
+
+  const loadDeveloperStats = async () => {
+    try {
+      setLoading(true);
+      
+      const response = await fetch('/api/developer/stats');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      setStats({
+        totalUsers: data.totalUsers || 0,
+        totalChapters: data.totalChapters || 0,
+        totalAlumni: data.totalAlumni || 0,
+        systemHealth: data.systemHealth || 'healthy',
+        userGrowthPercentage: data.userGrowthPercentage || '0.0',
+        newUsersThisMonth: data.newUsersThisMonth || 0,
+        newAlumniThisMonth: data.newAlumniThisMonth || 0,
+        newChaptersThisMonth: data.newChaptersThisMonth || 0
+      });
+
+    } catch (error) {
+      console.error('Error loading developer stats:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isDeveloper) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+          <p className="text-gray-600">You don't have access to the developer portal.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const userPermissions = getUserPermissions(profile);
+  const accessLevel = profile?.access_level || 'standard';
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          {/* Total Users Card */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium pb-0">Total Users</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground pt-0" />
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">
+                +{stats.newUsersThisMonth} new from last month
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Total Alumni Card */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Alumni</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-bold">{stats.totalAlumni.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">
+                +{stats.newAlumniThisMonth} new from last month
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Chapters Card */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Chapters</CardTitle>
+              <Shield className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-bold">{stats.totalChapters}</div>
+              <p className="text-xs text-muted-foreground">
+                +{stats.newChaptersThisMonth} new from last month
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* System Health Card */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">System Health</CardTitle>
+              <Network className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-2xl font-bold capitalize">{stats.systemHealth}</div>
+              <p className="text-xs text-muted-foreground">
+                All systems operational
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+                {/* Developer Tools Section - Enhanced and Centered */}
+                <div className="mb-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Developer Tools</h2>
+            <p className="text-gray-600">Development and management tools for Trailblaize Internal. Request new features as needed <a href="https://www.deftpointconsulting.com" className="text-color-">Deft Point.</a></p>
+          </div>
+          
+          {/* Developer Tools Grid - Three Cards */}
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* User Management Card */}
+            <Card className="hover:shadow-lg transition-all duration-200 border-2 border-accent-100 hover:border-accent-200">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center space-x-3 text-xl">
+                  <div className="w-12 h-12 bg-accent-100 rounded-full flex items-center justify-center">
+                    <Users className="h-6 w-6 text-brand-accent" />
+                  </div>
+                  <div>
+                    <span className="text-gray-900">User Management</span>
+                  </div>
+                </CardTitle>
+                <p className="text-gray-600 mt-2">
+                  Create, delete, and manage chapters and alumni with basic user management functionality.
+                </p>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-4">
+                  {/* Feature List */}
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <UserCheck className="h-4 w-4 text-brand-primary" />
+                      <span>Create & Delete Users</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Shield className="h-4 w-4 text-brand-primary" />
+                      <span>Alumni Management</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Users className="h-4 w-4 text-brand-primary" />
+                      <span>Chapter Assignment</span>
+                    </div>
+                  </div>
+                  
+                  {/* Action Button */}
+                  <div className="pt-2">
+                    <Button 
+                      className="w-full bg-brand-accent hover:bg-accent-700 text-white rounded-full" 
+                      onClick={() => window.location.href = '/dashboard/user-management'}
+                    >
+                      <span>Access User Management</span>
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Feature Flags Management Card */}
+            <Card className="hover:shadow-lg transition-all duration-200 border-2 border-accent-100 hover:border-accent-200">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center space-x-3 text-xl">
+                  <div className="w-12 h-12 bg-accent-100 rounded-full flex items-center justify-center">
+                    <Settings className="h-6 w-6 text-brand-accent" />
+                  </div>
+                  <div>
+                    <span className="text-gray-900">Feature Flags</span>
+                  </div>
+                </CardTitle>
+                <p className="text-gray-600 mt-2">
+                  Enable or disable features like financial tools, recruitment CRM, and events management on a per-chapter basis.
+                </p>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-4">
+                  {/* Feature List */}
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Settings className="h-4 w-4 text-brand-primary" />
+                      <span>Financial Tools</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Settings className="h-4 w-4 text-brand-primary" />
+                      <span>Recruitment CRM</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Settings className="h-4 w-4 text-brand-primary" />
+                      <span>Events Management</span>
+                    </div>
+                  </div>
+                  
+                  {/* Action Button */}
+                  <div className="pt-2">
+                    <Button 
+                      className="w-full bg-brand-accent hover:bg-accent-700 text-white rounded-full" 
+                      onClick={() => window.location.href = '/dashboard/feature-flags'}
+                    >
+                      <span>Manage Feature Flags</span>
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Branding Management Card */}
+            <Card className="hover:shadow-lg transition-all duration-200 border-2 border-accent-100 hover:border-accent-200">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center space-x-3 text-xl">
+                  <div className="w-12 h-12 bg-accent-100 rounded-full flex items-center justify-center">
+                    <Palette className="h-6 w-6 text-brand-accent" />
+                  </div>
+                  <div>
+                    <span className="text-gray-900">Branding Management</span>
+                  </div>
+                </CardTitle>
+                <p className="text-gray-600 mt-2">
+                  Manage chapter branding including logos, colors, and visual identity. Customize the look and feel for each chapter.
+                </p>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-4">
+                  {/* Feature List */}
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Palette className="h-4 w-4 text-brand-primary" />
+                      <span>Logo Upload</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Palette className="h-4 w-4 text-brand-primary" />
+                      <span>Color Customization</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Shield className="h-4 w-4 text-brand-primary" />
+                      <span>Live Preview</span>
+                    </div>
+                  </div>
+                  
+                  {/* Action Button */}
+                  <div className="pt-2">
+                    <Button 
+                      className="w-full bg-brand-accent hover:bg-accent-700 text-white rounded-full" 
+                      onClick={() => window.location.href = '/dashboard/developer/branding'}
+                    >
+                      <span>Manage Branding</span>
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,20 @@
+{
+  "functions": {
+    "app/api/announcements/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/sms/send/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/messages/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/connections/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/events/send-email/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}
+
