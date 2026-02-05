@@ -73,7 +73,7 @@ const pricingPlans = [
       "Maintain lifelong affiliation"
     ],
     buttonText: "Request Access",
-    buttonAction: () => window.open('mailto:support@trailblaize.com?subject=Request Access', '_blank'),
+    buttonAction: () => window.open('https://calendar.google.com/calendar/appointments/schedules/AcZssZ1NJXnIQMnkhbkRAfqYtikSbF2mQ-aDq07LRF24XMnmISst7xvN5A9B5QZwIz4PmcuMLPvNANUn', '_blank'),
     popular: false,
   },
   {
@@ -90,7 +90,7 @@ const pricingPlans = [
       "Protect your chapter’s legacy"
     ],
     buttonText: "Book a demo",
-    buttonAction: () => window.open('mailto:support@trailblaize.com?subject=Book a Demo', '_blank'),
+    buttonAction: () => window.open('https://calendar.google.com/calendar/appointments/schedules/AcZssZ1NJXnIQMnkhbkRAfqYtikSbF2mQ-aDq07LRF24XMnmISst7xvN5A9B5QZwIz4PmcuMLPvNANUn', '_blank'),
     popular: true,
   },
   {
@@ -107,7 +107,7 @@ const pricingPlans = [
       "Long-term institutional value"
     ],
     buttonText: "Contact Us",
-    buttonAction: () => window.open('mailto:support@trailblaize.com?subject=Enterprise Inquiry', '_blank'),
+    buttonAction: () => window.open('https://calendar.google.com/calendar/appointments/schedules/AcZssZ1NJXnIQMnkhbkRAfqYtikSbF2mQ-aDq07LRF24XMnmISst7xvN5A9B5QZwIz4PmcuMLPvNANUn', '_blank'),
     popular: false,
   },
 ];
@@ -173,8 +173,8 @@ export function LandingPage() {
               transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
               className="flex flex-row items-center justify-center gap-4 mb-12 md:mb-16 px-4"
             >
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="
                   bg-black 
                   hover:bg-gray-900 
@@ -188,13 +188,13 @@ export function LandingPage() {
                   whitespace-nowrap 
                   focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
                 "
-                onClick={() => window.open('mailto:support@trailblaize.com?subject=Request a Demo', '_blank')}
+                onClick={() => window.open('https://calendar.google.com/calendar/appointments/schedules/AcZssZ1NJXnIQMnkhbkRAfqYtikSbF2mQ-aDq07LRF24XMnmISst7xvN5A9B5QZwIz4PmcuMLPvNANUn', '_blank')}
               >
                 Request a Demo
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
+              <Button
+                size="lg"
+                variant="outline"
                 className="
                   border border-black 
                   bg-white 
@@ -225,7 +225,7 @@ export function LandingPage() {
       </section>
 
       {/* Features Section - New */}
-      <section className="pt-0 pb-16 md:pb-24 bg-white">
+      <section id="features" className="pt-0 pb-16 md:pb-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           {/* Two Cards with Screenshots */}
           <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-6 mb-8 md:mb-16">
@@ -238,8 +238,8 @@ export function LandingPage() {
               className="flex flex-col items-center gap-8 w-full max-w-[363px]"
             >
               <div className="w-full rounded-lg shadow-lg overflow-hidden" style={{ width: '363px', height: '413px' }}>
-                <Image 
-                  src="/screenshots/system-of-record.png" 
+                <Image
+                  src="/screenshots/system-of-record.png"
                   alt="System of Record Dashboard"
                   width={363}
                   height={413}
@@ -266,8 +266,8 @@ export function LandingPage() {
               className="flex flex-col items-center gap-8 w-full max-w-[363px]"
             >
               <div className="w-full rounded-lg shadow-lg overflow-hidden" style={{ width: '363px', height: '413px' }}>
-                <Image 
-                  src="/screenshots/unified-alumni-network.png" 
+                <Image
+                  src="/screenshots/unified-alumni-network.png"
                   alt="Unified Alumni Network Dashboard"
                   width={363}
                   height={413}
@@ -310,12 +310,12 @@ export function LandingPage() {
             viewport={{ once: true }}
             className="flex justify-center"
           >
-            <div className="w-full max-w-[800px] min-w-0 md:min-w-[640px] p-4 md:p-8 bg-white rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/10 flex flex-col justify-end items-center gap-4 md:gap-6 overflow-hidden" style={{ boxShadow: '0px 6px 12px 0px rgba(0,0,0,0.03), 0px 4px 8px 0px rgba(0,0,0,0.02), -8px 12px 24px 0px rgba(0,0,0,0.08)' }}>  
+            <div className="w-full max-w-[800px] min-w-0 md:min-w-[640px] p-4 md:p-8 bg-white rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/10 flex flex-col justify-end items-center gap-4 md:gap-6 overflow-hidden" style={{ boxShadow: '0px 6px 12px 0px rgba(0,0,0,0.03), 0px 4px 8px 0px rgba(0,0,0,0.02), -8px 12px 24px 0px rgba(0,0,0,0.08)' }}>
               <div className="self-stretch flex flex-col md:flex-row justify-center items-center gap-3 md:gap-4">
                 <div className="flex-1 flex flex-col md:flex-row justify-center md:justify-start items-center md:items-start gap-3 md:gap-4 w-full">
-                  <img 
-                    className="w-12 h-12 rounded-lg flex-shrink-0" 
-                    src="/screenshots/Artboard 21.png" 
+                  <img
+                    className="w-12 h-12 rounded-lg flex-shrink-0"
+                    src="/screenshots/Artboard 21.png"
                     alt="Walker Cobb"
                   />
                   <div className="flex-1 flex flex-col justify-center md:justify-start items-center md:items-start gap-1 w-full">
@@ -327,14 +327,14 @@ export function LandingPage() {
                     </div>
                   </div>
                 </div>
-                <img 
-                  className="w-10 h-6 md:w-12 md:h-8 flex-shrink-0" 
-                  src={"/screenshots/quote.png"} 
+                <img
+                  className="w-10 h-6 md:w-12 md:h-8 flex-shrink-0"
+                  src={"/screenshots/quote.png"}
                   alt="Decorative"
                 />
               </div>
               <div className="w-full max-w-full md:max-w-[736px] text-center md:text-left text-black text-base md:text-lg font-medium font-sans leading-6 md:leading-7 px-2 md:px-0">
-                Trailblaize turned our chapter email list into an interactive network. <br className="hidden md:block"/>
+                Trailblaize turned our chapter email list into an interactive network. <br className="hidden md:block" />
                 Members and alumni have landed jobs, internships, and even deal flow across generations of our fraternity, while staying connected to the chapter.
               </div>
             </div>
@@ -342,7 +342,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      
+
 
       {/* Pricing Section */}
       <section id="pricing" className="py-8 md:py-24 bg-white">
@@ -397,11 +397,10 @@ export function LandingPage() {
                     }, 300);
                   }}
                 >
-                  <Card className={`h-full bg-white border cursor-pointer transition-all duration-300 ${
-                    plan.popular 
-                      ? "border-gray-300 shadow-lg" 
-                      : "border-gray-200 shadow-sm"
-                  } group-hover:scale-105 group-hover:shadow-xl`}>
+                  <Card className={`h-full bg-white border cursor-pointer transition-all duration-300 ${plan.popular
+                    ? "border-gray-300 shadow-lg"
+                    : "border-gray-200 shadow-sm"
+                    } group-hover:scale-105 group-hover:shadow-xl`}>
                     <CardContent className="p-4 h-full flex flex-col">
                       {/* Title */}
                       <div className="mb-3">
@@ -432,7 +431,7 @@ export function LandingPage() {
                       </div>
 
                       {/* CTA Button */}
-                      <Button 
+                      <Button
                         onClick={(e) => {
                           e.stopPropagation();
                           plan.buttonAction();
@@ -459,7 +458,7 @@ export function LandingPage() {
               ))}
             </div>
           </div>
-          
+
           {/* Desktop: Grid Layout (unchanged) */}
           <div className="hidden md:grid md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
             {pricingPlans.map((plan, index) => (
@@ -471,11 +470,10 @@ export function LandingPage() {
                 viewport={{ once: true }}
                 className="relative"
               >
-                <Card className={`h-full bg-white border ${
-                  plan.popular 
-                    ? "border-gray-300 shadow-lg" 
-                    : "border-gray-200 shadow-sm hover:shadow-md"
-                } transition-all duration-300 relative`}>
+                <Card className={`h-full bg-white border ${plan.popular
+                  ? "border-gray-300 shadow-lg"
+                  : "border-gray-200 shadow-sm hover:shadow-md"
+                  } transition-all duration-300 relative`}>
                   <CardContent className="p-6 md:p-8 h-full flex flex-col">
                     {/* Title */}
                     <div className="mb-4">
@@ -506,7 +504,7 @@ export function LandingPage() {
                     </div>
 
                     {/* CTA Button */}
-                    <Button 
+                    <Button
                       onClick={plan.buttonAction}
                       className={`
                         w-full
@@ -535,10 +533,10 @@ export function LandingPage() {
       {/* CTA Section */}
       <section className="py-10 md:py-24 bg-white">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }} 
-            whileInView={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.8 }} 
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-normal mb-6 instrument-serif-regular text-gray-900">
@@ -547,8 +545,8 @@ export function LandingPage() {
             <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed font-sans">
               Build your alumni community, connect across generations, and start creating real opportunities.
             </p>
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               variant="outline"
               className="
                 border-2 border-slate-200 
@@ -566,7 +564,7 @@ export function LandingPage() {
                 transition-all duration-200
                 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500
               "
-              onClick={() => window.open('mailto:support@trailblaize.com?subject=Book a Demo', '_blank')}
+              onClick={() => window.open('https://calendar.google.com/calendar/appointments/schedules/AcZssZ1NJXnIQMnkhbkRAfqYtikSbF2mQ-aDq07LRF24XMnmISst7xvN5A9B5QZwIz4PmcuMLPvNANUn', '_blank')}
             >
               Book a Demo
             </Button>
