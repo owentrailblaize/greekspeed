@@ -138,6 +138,11 @@ export default function RoleChapterPage() {
         updated_at: new Date().toISOString(),
       };
 
+      // Preserve avatar_url if it exists (from OAuth or previous steps)
+      if (profile?.avatar_url) {
+        updateData.avatar_url = profile.avatar_url;
+      }
+
       // Only set role if we have name for alumni, or if it's not alumni
       if (formData.role === 'alumni') {
         if (firstName && lastName) {

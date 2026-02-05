@@ -309,14 +309,14 @@ export default function LinkedInImportPage() {
           {/* Navigation */}
           <div className="flex items-center justify-between">
             {canGoBack ? (
-              <Button variant="outline" onClick={handleBack}>
+              <Button variant="outline" onClick={handleBack} className="rounded-full">
                 <ChevronLeft className="mr-2 h-4 w-4" />
                 Back
               </Button>
             ) : (
               <div />
             )}
-            <Button variant="ghost" onClick={handleSkip} className="text-gray-500">
+            <Button variant="ghost" onClick={handleSkip} className="text-gray-500 rounded-full">
               Skip for now
             </Button>
           </div>
@@ -333,7 +333,7 @@ export default function LinkedInImportPage() {
                 Processing your PDF...
               </h3>
               <p className="text-gray-500">
-                Extracting your professional information
+                Extracting your information...
               </p>
             </div>
           </CardContent>

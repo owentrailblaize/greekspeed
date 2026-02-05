@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useProfile } from '@/lib/contexts/ProfileContext';
@@ -56,9 +56,29 @@ export default function ProfilePhotoPage() {
     return (first + last).toUpperCase() || 'U';
   };
 
+
   // Current URLs (preview or existing)
-  const currentAvatarUrl = avatarPreviewUrl || profile?.avatar_url;
+  // Check profile first, then fall back to OAuth metadata if available
+  const oauthAvatarUrl = user?.user_metadata?.picture || user?.user_metadata?.avatar_url || null;
+  const currentAvatarUrl = avatarPreviewUrl || profile?.avatar_url || oauthAvatarUrl;
   const currentBannerUrl = bannerPreviewUrl || profile?.banner_url;
+
+  // Save OAuth avatar to profile if it exists in metadata but not in profile
+  useEffect(() => {
+    if (oauthAvatarUrl && !profile?.avatar_url && user?.id) {
+      // OAuth avatar exists but not saved to profile - save it
+      const saveOAuthAvatar = async () => {
+        try {
+          await updateProfile({ avatar_url: oauthAvatarUrl });
+          await refreshProfile();
+        } catch (error) {
+          console.warn('Failed to save OAuth avatar to profile:', error);
+          // Don't show error to user - avatar will still display from metadata
+        }
+      };
+      saveOAuthAvatar();
+    }
+  }, [oauthAvatarUrl, profile?.avatar_url, user?.id, updateProfile, refreshProfile]);
 
   // ============================================================================
   // Avatar Handlers
@@ -436,6 +456,7 @@ export default function ProfilePhotoPage() {
           variant="outline"
           onClick={handleBack}
           disabled={uploading}
+          className="rounded-full"
         >
           <ChevronLeft className="mr-2 h-4 w-4" />
           Back
@@ -446,14 +467,14 @@ export default function ProfilePhotoPage() {
             variant="ghost"
             onClick={handleSkip}
             disabled={uploading}
-            className="text-gray-500"
+            className="text-gray-500 rounded-full"
           >
             Skip for now
           </Button>
           <Button
             onClick={handleContinue}
             disabled={uploading}
-            className="bg-brand-primary hover:bg-brand-primary-hover"
+            className="bg-brand-primary hover:bg-brand-primary-hover rounded-full"
           >
             {uploading ? (
               <>

@@ -309,7 +309,7 @@ export default function NotificationsPage() {
 
       {/* Navigation */}
       <div className="flex items-center justify-between">
-        <Button variant="outline" onClick={handleBack} disabled={saving}>
+        <Button variant="outline" onClick={handleBack} disabled={saving} className="rounded-full">
           <ChevronLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
@@ -317,7 +317,7 @@ export default function NotificationsPage() {
         <Button
           onClick={handleContinue}
           disabled={saving}
-          className="bg-brand-primary hover:bg-brand-primary-hover"
+          className="bg-brand-primary hover:bg-brand-primary-hover rounded-full"
         >
           {saving ? (
             <>

@@ -140,7 +140,7 @@ export default function OnboardingCompletePage() {
         onClick={handleGoToDashboard}
         disabled={isFinishing}
         size="lg"
-        className="bg-brand-primary hover:bg-brand-primary-hover text-lg px-8 py-6"
+        className="bg-brand-primary hover:bg-brand-primary-hover text-lg px-8 py-6 rounded-full"
       >
         {isFinishing ? (
           <>
