@@ -9,6 +9,8 @@ import { X, Image, Clock, Lock } from 'lucide-react';
 import { CreatePostRequest } from '@/types/posts';
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
 import { EmojiPicker } from '@/components/features/messaging/EmojiPicker';
+import { PostImageService } from '@/lib/services/postImageService';
+import { useAuth } from '@/lib/supabase/auth-context';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -28,8 +30,10 @@ export function CreatePostModal({
   userAvatar, 
   userName 
 }: CreatePostModalProps) {
+  const { user } = useAuth();
   const [content, setContent] = useState('');
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [postType, setPostType] = useState<'text' | 'image' | 'text_image'>('text');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -39,8 +43,13 @@ export function CreatePostModal({
   // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
+      // Revoke all preview object URLs to free memory
+      setPreviewUrls((current) => {
+        current.forEach((url) => URL.revokeObjectURL(url));
+        return [];
+      });
       setContent('');
-      setImageUrls([]);
+      setImageFiles([]);
       setPostType('text');
       setUploadError(null);
       if (fileInputRef.current) {
@@ -52,10 +61,10 @@ export function CreatePostModal({
   const sanitizeContent = (value: string) =>
     value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-  const determinePostType = (nextContent: string, nextImageUrls: string[]) => {
+  const determinePostType = (nextContent: string, nextImageCount: number) => {
     const trimmedContent = nextContent.trim();
-    if (trimmedContent && nextImageUrls.length > 0) return 'text_image';
-    if (nextImageUrls.length > 0) return 'image';
+    if (trimmedContent && nextImageCount > 0) return 'text_image';
+    if (nextImageCount > 0) return 'image';
     if (trimmedContent) return 'text';
     return 'text';
   };
@@ -76,10 +85,10 @@ export function CreatePostModal({
 
     // Check if adding these files would exceed the limit
     const fileArray = Array.from(files);
-    const remainingSlots = MAX_IMAGES - imageUrls.length;
+    const remainingSlots = MAX_IMAGES - imageFiles.length;
     
     if (fileArray.length > remainingSlots) {
-      setUploadError(`You can only add up to ${MAX_IMAGES} images. You have ${imageUrls.length} image(s) and tried to add ${fileArray.length}. Please select ${remainingSlots} or fewer.`);
+      setUploadError(`You can only add up to ${MAX_IMAGES} images. You have ${imageFiles.length} image(s) and tried to add ${fileArray.length}. Please select ${remainingSlots} or fewer.`);
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -111,49 +120,30 @@ export function CreatePostModal({
       return;
     }
 
-    // Process valid files
-    const newImageUrls: string[] = [];
-    let loadedCount = 0;
-
-    validFiles.forEach((file) => {
-      const reader = new FileReader();
-      reader.onerror = () => {
-        setUploadError(`Failed to load ${file.name}. Please try again.`);
-        loadedCount++;
-        if (loadedCount === validFiles.length) {
-          // Reset file input after all files are processed
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-        }
-      };
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        if (result) {
-          newImageUrls.push(result);
-        }
-        loadedCount++;
-        
-        // Update state when all files are loaded
-        if (loadedCount === validFiles.length) {
-          const updatedUrls = [...imageUrls, ...newImageUrls];
-          setImageUrls(updatedUrls);
-          setPostType(determinePostType(sanitizedContent, updatedUrls));
-          
-          // Reset file input to allow re-uploading the same files
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-        }
-      };
-      reader.readAsDataURL(file);
+    // Store File objects and create lightweight object URLs for previews
+    const newPreviews = validFiles.map((f) => URL.createObjectURL(f));
+    setImageFiles((prev) => [...prev, ...validFiles]);
+    setPreviewUrls((prev) => {
+      const updated = [...prev, ...newPreviews];
+      setPostType(determinePostType(sanitizedContent, updated.length));
+      return updated;
     });
+
+    // Reset file input to allow re-uploading the same files
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleRemoveImage = (indexToRemove: number) => {
-    const newImageUrls = imageUrls.filter((_, index) => index !== indexToRemove);
-    setImageUrls(newImageUrls);
-    setPostType(determinePostType(sanitizedContent, newImageUrls));
+    // Revoke the object URL to free memory
+    URL.revokeObjectURL(previewUrls[indexToRemove]);
+    
+    const newFiles = imageFiles.filter((_, i) => i !== indexToRemove);
+    const newPreviews = previewUrls.filter((_, i) => i !== indexToRemove);
+    setImageFiles(newFiles);
+    setPreviewUrls(newPreviews);
+    setPostType(determinePostType(sanitizedContent, newPreviews.length));
     setUploadError(null);
     
     // Reset file input to ensure clean state
@@ -173,7 +163,7 @@ export function CreatePostModal({
     );
 
     setContent(nextContent);
-    setPostType(determinePostType(nextContent, imageUrls));
+    setPostType(determinePostType(nextContent, previewUrls.length));
 
     requestAnimationFrame(() => {
       textarea.focus();
@@ -184,20 +174,36 @@ export function CreatePostModal({
 
   const handleSubmit = async () => {
     const sanitized = sanitizeContent(content);
-    if (!sanitized.trim() && imageUrls.length === 0) return;
+    if (!sanitized.trim() && imageFiles.length === 0) return;
+    if (!user) {
+      setUploadError('You must be logged in to create a post.');
+      return;
+    }
 
     setIsSubmitting(true);
     setUploadError(null);
     
     try {
-      // Store all images in metadata, first image in image_url for backward compatibility
+      // 1. Upload images to Supabase Storage first
+      let uploadedUrls: string[] = [];
+      if (imageFiles.length > 0) {
+        try {
+          uploadedUrls = await PostImageService.uploadImages(imageFiles, user.id);
+        } catch (uploadErr: any) {
+          setUploadError(uploadErr.message || 'Failed to upload images. Please try again.');
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // 2. Create post with public URLs (lightweight JSON)
       await onSubmit({
         content: sanitized,
-        post_type: postType,
-        image_url: imageUrls[0] || undefined, // First image for backward compatibility
+        post_type: determinePostType(sanitized, uploadedUrls.length),
+        image_url: uploadedUrls[0] || undefined, // First image for backward compatibility
         metadata: {
-          image_urls: imageUrls.length > 0 ? imageUrls : undefined,
-          image_count: imageUrls.length
+          image_urls: uploadedUrls.length > 0 ? uploadedUrls : undefined,
+          image_count: uploadedUrls.length
         }
       });
       
@@ -211,7 +217,7 @@ export function CreatePostModal({
     }
   };
 
-  const canSubmit = (sanitizedContent.trim() || imageUrls.length > 0) && !isSubmitting;
+  const canSubmit = (sanitizedContent.trim() || imageFiles.length > 0) && !isSubmitting;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -264,7 +270,7 @@ export function CreatePostModal({
               onChange={(e) => {
                 const nextValue = sanitizeContent(e.target.value);
                 setContent(nextValue);
-                setPostType(determinePostType(nextValue, imageUrls));
+                setPostType(determinePostType(nextValue, previewUrls.length));
               }}
               className="min-h-[120px] sm:min-h-[100px] resize-none rounded-2xl border border-transparent bg-slate-50/80 p-5 text-base sm:text-lg text-slate-800 placeholder:text-slate-400 focus:border-primary-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 transition"
             />
@@ -277,7 +283,7 @@ export function CreatePostModal({
             )}
 
             {/* Multiple images in horizontal scrollable row - Fixed height container */}
-            {imageUrls.length > 0 && (
+            {previewUrls.length > 0 && (
               <div className="relative shrink-0">
                 {/* Constrained height container for horizontal scrolling */}
                 <div 
@@ -287,7 +293,7 @@ export function CreatePostModal({
                     WebkitOverflowScrolling: 'touch' // Smooth scrolling on iOS
                   }}
                 >
-                  {imageUrls.map((url, index) => (
+                  {previewUrls.map((url, index) => (
                     <div
                       key={index}
                       className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100"
@@ -308,9 +314,9 @@ export function CreatePostModal({
                     </div>
                   ))}
                 </div>
-                {imageUrls.length < MAX_IMAGES && (
+                {previewUrls.length < MAX_IMAGES && (
                   <p className="text-xs text-slate-500 mt-2">
-                    {imageUrls.length} of {MAX_IMAGES} images ({MAX_IMAGES - imageUrls.length} remaining)
+                    {previewUrls.length} of {MAX_IMAGES} images ({MAX_IMAGES - previewUrls.length} remaining)
                   </p>
                 )}
               </div>
@@ -326,7 +332,7 @@ export function CreatePostModal({
                 variant="ghost"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={imageUrls.length >= MAX_IMAGES || isSubmitting}
+                disabled={imageFiles.length >= MAX_IMAGES || isSubmitting}
                 className="h-11 sm:h-9 rounded-full border border-slate-200 bg-white/90 px-5 text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Image className="h-5 w-5 sm:h-4 sm:w-4 mr-2" />
