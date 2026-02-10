@@ -38,11 +38,11 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.first_name.trim()) {
+    if (!formData.first_name?.trim()) {
       newErrors.first_name = 'First name is required';
     }
 
-    if (!formData.last_name.trim()) {
+    if (!formData.last_name?.trim()) {
       newErrors.last_name = 'Last name is required';
     }
 
@@ -76,7 +76,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
       // Other fields will be collected during onboarding
       const submitData = {
         ...formData,
-        full_name: `${formData.first_name} ${formData.last_name}`.trim(),
+        full_name: `${formData.first_name || ''} ${formData.last_name || ''}`.trim(),
         // Set defaults for required fields - will be updated in onboarding
         major: 'To be updated',
         graduation_year: new Date().getFullYear() + 4,
@@ -96,7 +96,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
       }
 
       const data = await response.json();
-      
+
       // CRITICAL: Ensure client-side session is established
       try {
         const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -117,7 +117,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
       console.error('Error creating account:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to create account';
       toast.error(errorMessage);
-      
+
       if (errorMessage.includes('already been used')) {
         setErrors({ email: 'This email has already been used with this invitation' });
       }
@@ -128,7 +128,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
 
   const handleInputChange = (field: keyof JoinFormData, value: string | boolean | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
