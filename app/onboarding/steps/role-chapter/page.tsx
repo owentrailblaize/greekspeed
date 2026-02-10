@@ -298,7 +298,6 @@ export default function RoleChapterPage() {
         <Card>
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
               You&apos;re All Set!
             </CardTitle>
             <CardDescription>
