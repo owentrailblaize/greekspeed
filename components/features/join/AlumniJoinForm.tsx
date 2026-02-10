@@ -42,11 +42,11 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.first_name.trim()) {
+    if (!formData.first_name?.trim()) {
       newErrors.first_name = 'First name is required';
     }
 
-    if (!formData.last_name.trim()) {
+    if (!formData.last_name?.trim()) {
       newErrors.last_name = 'Last name is required';
     }
 
@@ -80,7 +80,7 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
       // Other fields will be collected during onboarding
       const submitData = {
         ...formData,
-        full_name: `${formData.first_name} ${formData.last_name}`.trim(),
+        full_name: `${formData.first_name || ''} ${formData.last_name || ''}`.trim(),
         // Set defaults for required fields - will be updated in onboarding
         industry: 'Not specified',
         company: 'Not specified',
