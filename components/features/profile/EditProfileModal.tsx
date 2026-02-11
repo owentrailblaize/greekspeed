@@ -22,6 +22,7 @@ import Link from 'next/link';
 import { getGraduationYears, industries } from '@/lib/alumniConstants';
 import { UsernameInput } from './UsernameInput';
 import { generateProfileSlug } from '@/lib/utils/usernameUtils';
+import { ImageCropper, type CropType } from '@/components/features/common/ImageCropper';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -78,6 +79,11 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [bannerUploading, setBannerUploading] = useState(false);
+
+  // Image cropper state
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [cropType, setCropType] = useState<CropType | null>(null);
+  const [showCropper, setShowCropper] = useState(false);
 
   // Add alumni data state
   const [alumniData, setAlumniData] = useState<any>(null);
@@ -344,7 +350,7 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
     handleInputChange('username', value);
   };
 
-  // Handle avatar file selection with upload
+  // Handle avatar file selection - show cropper first
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !profile?.id) return;
@@ -360,39 +366,19 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
       return;
     }
 
-    setAvatarUploading(true);
-    try {
-      // Upload new avatar
-      const newAvatarUrl = await AvatarService.uploadAvatar(file, profile.id);
-      
-      if (newAvatarUrl) {
-        // Delete old avatar if it exists
-        if (profile.avatar_url) {
-          await AvatarService.deleteOldAvatar(profile.avatar_url);
-        }
-
-        // Update profile with new avatar URL
-        await AvatarService.updateProfileAvatar(profile.id, newAvatarUrl);
-        
-        // Update global profile state
-        await updateProfile({ avatar_url: newAvatarUrl });
-        
-        // Update local state
-        setAvatarFile(file);
-        setAvatarPreview(newAvatarUrl);
-        
-        // Refresh profile data everywhere
-        await refreshProfile();
-      }
-    } catch (error) {
-      console.error('Error uploading avatar:', error);
-      alert('Failed to upload avatar. Please try again.');
-    } finally {
-      setAvatarUploading(false);
-    }
+    // Create preview URL and show cropper
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageToCrop(reader.result as string);
+      setCropType('avatar');
+      setShowCropper(true);
+    };
+    reader.readAsDataURL(file);
+    
+    e.target.value = ''; // Reset input
   };
 
-  // Handle banner file selection with upload
+  // Handle banner file selection - show cropper first
   const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !profile?.id) return;
@@ -408,39 +394,82 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
       return;
     }
 
-    setBannerUploading(true);
-    try {
-      // Upload new banner
-      const newBannerUrl = await BannerService.uploadBanner(file, profile.id);
-      
-      if (newBannerUrl) {
-        // Delete old banner if it exists (don't await - do it in background)
-        if (profile.banner_url) {
-          BannerService.deleteOldBanner(profile.banner_url).catch(err => 
-            console.error('Error deleting old banner:', err)
-          );
-        }
+    // Create preview URL and show cropper
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageToCrop(reader.result as string);
+      setCropType('banner');
+      setShowCropper(true);
+    };
+    reader.readAsDataURL(file);
+    
+    e.target.value = ''; // Reset input
+  };
 
-        // Update profile with new banner URL in database
-        await BannerService.updateProfileBanner(profile.id, newBannerUrl);
+  // Handle crop completion - upload the cropped image
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    if (!profile?.id || !cropType) return;
+
+    const file = new File([croppedBlob], `cropped-${Date.now()}.jpg`, {
+      type: 'image/jpeg',
+    });
+
+    try {
+      if (cropType === 'avatar') {
+        setAvatarUploading(true);
+        const newAvatarUrl = await AvatarService.uploadAvatar(file, profile.id);
         
-        // Update global profile state (this already updates the context)
-        await updateProfile({ banner_url: newBannerUrl });
+        if (newAvatarUrl) {
+          // Delete old avatar if it exists
+          if (profile.avatar_url) {
+            await AvatarService.deleteOldAvatar(profile.avatar_url);
+          }
+
+          // Update profile with new avatar URL
+          await AvatarService.updateProfileAvatar(profile.id, newAvatarUrl);
+          
+          // Update global profile state
+          await updateProfile({ avatar_url: newAvatarUrl });
+          
+          // Update local state
+          setAvatarFile(file);
+          setAvatarPreview(newAvatarUrl);
+          
+          // Refresh profile data everywhere
+          await refreshProfile();
+        }
+      } else if (cropType === 'banner') {
+        setBannerUploading(true);
+        const newBannerUrl = await BannerService.uploadBanner(file, profile.id);
         
-        // Update local state immediately for preview
-        setBannerFile(file);
-        setBannerPreview(newBannerUrl);
-        
-        // Remove refreshProfile() call - it's unnecessary and causes reload
-        // The updateProfile() call above already updates the context state
+        if (newBannerUrl) {
+          // Delete old banner if it exists (don't await - do it in background)
+          if (profile.banner_url) {
+            BannerService.deleteOldBanner(profile.banner_url).catch(err => 
+              console.error('Error deleting old banner:', err)
+            );
+          }
+
+          // Update profile with new banner URL in database
+          await BannerService.updateProfileBanner(profile.id, newBannerUrl);
+          
+          // Update global profile state
+          await updateProfile({ banner_url: newBannerUrl });
+          
+          // Update local state immediately for preview
+          setBannerFile(file);
+          setBannerPreview(newBannerUrl);
+        }
       }
     } catch (error) {
-      console.error('Error uploading banner:', error);
-      alert('Failed to upload banner. Please try again.');
+      console.error(`Error uploading ${cropType}:`, error);
+      alert(`Failed to upload ${cropType}. Please try again.`);
     } finally {
+      setAvatarUploading(false);
       setBannerUploading(false);
-      // Reset the input so the same file can be selected again if needed
-      e.target.value = '';
+      setShowCropper(false);
+      setImageToCrop(null);
+      setCropType(null);
     }
   };
 
@@ -1291,6 +1320,21 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
           </div>
         </div>
       </div>
+
+      {/* Image Cropper Modal */}
+      {imageToCrop && cropType && (
+        <ImageCropper
+          imageSrc={imageToCrop}
+          isOpen={showCropper}
+          onClose={() => {
+            setShowCropper(false);
+            setImageToCrop(null);
+            setCropType(null);
+          }}
+          onCropComplete={handleCropComplete}
+          cropType={cropType}
+        />
+      )}
     </div>
   );
 }
