@@ -1,12 +1,15 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import Cropper from 'react-easy-crop';
+import CropperLib from 'react-easy-crop';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Check, X, RotateCw } from 'lucide-react';
 import { LOGO_CONSTRAINTS } from '@/lib/constants/logoConstants';
 import type { Area, Point } from 'react-easy-crop';
+
+// Type-safe wrapper for react-easy-crop to fix React 19 compatibility
+const Cropper = CropperLib as any;
 
 interface LogoCropperProps {
   /** Image source (data URL or URL) */
