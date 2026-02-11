@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useProfile } from "@/lib/contexts/ProfileContext";
+import { useScopedChapterId } from "@/lib/hooks/useScopedChapterId";
 import { useVendors } from "@/lib/hooks/useVendors";
 import { VendorForm } from "@/components/ui/VendorForm";
 import { VendorContact, CreateVendorRequest, UpdateVendorRequest } from "@/types/vendors";
@@ -17,7 +18,7 @@ export function VendorsView() {
 
   // Get user profile and chapter ID
   const { profile } = useProfile();
-  const chapterId = profile?.chapter_id;
+  const chapterId = useScopedChapterId();
 
   // Add vendors hook
   const { 

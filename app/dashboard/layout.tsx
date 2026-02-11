@@ -15,6 +15,7 @@ import { ProfileUpdatePromptModal } from '@/components/features/profile/ProfileU
 import type { DetectedChange } from '@/components/features/profile/ProfileUpdatePromptModal';
 import { useAuth } from '@/lib/supabase/auth-context';
 import type { CreatePostRequest } from '@/types/posts';
+import { ActiveChapterProvider } from '@/lib/contexts/ActiveChapterContext';
 import {
   getProfileUpdatePrefs,
   saveProfileUpdatePrefs,
@@ -31,27 +32,29 @@ export default function DashboardLayout({
   useActivityTracking()
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Always show the header */}
-      <DashboardHeader />
-      
-      {/* Wrap the main content with SubscriptionPaywall */}
-      <SubscriptionPaywall>
-        <main className="flex-1">
-          <ModalProvider>
-            <ProfileModalProvider>
-              {children}
-              
-              {/* Global Edit Profile Modal - Rendered at layout level */}
-              <EditProfileModalWrapper />
-              
-              {/* Global User Profile Modal - Rendered at layout level */}
-              <UserProfileModalWrapper />
-            </ProfileModalProvider>
-          </ModalProvider>
-        </main>
-      </SubscriptionPaywall>
-    </div>
+    <ActiveChapterProvider>
+      <div className="min-h-screen bg-gray-50">
+        {/* Always show the header */}
+        <DashboardHeader />
+        
+        {/* Wrap the main content with SubscriptionPaywall */}
+        <SubscriptionPaywall>
+          <main className="flex-1">
+            <ModalProvider>
+              <ProfileModalProvider>
+                {children}
+                
+                {/* Global Edit Profile Modal - Rendered at layout level */}
+                <EditProfileModalWrapper />
+                
+                {/* Global User Profile Modal - Rendered at layout level */}
+                <UserProfileModalWrapper />
+              </ProfileModalProvider>
+            </ModalProvider>
+          </main>
+        </SubscriptionPaywall>
+      </div>
+    </ActiveChapterProvider>
   );
 }
 

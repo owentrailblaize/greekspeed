@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     // Get user profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('role, chapter_id, chapter_role')
+      .select('role, chapter_id, chapter_role, is_developer')
       .eq('id', user.id)
       .single();
 
@@ -95,8 +95,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Ensure user has a chapter_id
-    if (!profile.chapter_id) {
+    // Parse query parameters (include optional chapter override for internal/developer traversal)
+    const { searchParams } = new URL(request.url);
+    const requestedChapterId = searchParams.get('chapter_id')?.trim() || null;
+
+    const isDeveloper = profile.is_developer === true;
+    const isAdmin = profile.role === 'admin';
+
+    // Determine the effective chapter scope for the request.
+    // - Normal users: forced to their own chapter_id
+    // - Developers/Admins: can specify `chapter_id` to "view as" another chapter
+    const effectiveChapterId =
+      requestedChapterId && (isDeveloper || isAdmin) ? requestedChapterId : profile.chapter_id;
+
+    if (requestedChapterId && !(isDeveloper || isAdmin)) {
+      return NextResponse.json(
+        { error: 'Insufficient permissions to view another chapter' },
+        { status: 403 },
+      );
+    }
+
+    // Ensure we have a chapter scope
+    if (!effectiveChapterId) {
       return NextResponse.json({ error: 'User must belong to a chapter' }, { status: 400 });
     }
 
@@ -104,7 +124,7 @@ export async function GET(request: NextRequest) {
     const { data: chapter, error: chapterError } = await supabase
       .from('chapters')
       .select('id, feature_flags')
-      .eq('id', profile.chapter_id)
+      .eq('id', effectiveChapterId)
       .single();
 
     if (chapterError || !chapter) {
@@ -117,17 +137,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Permission check: Only allow exec roles (admin OR exec chapter_role)
-    const isAdmin = profile.role === 'admin';
     const isExec = profile.chapter_role && EXECUTIVE_ROLES.includes(profile.chapter_role as any);
     
-    if (!isAdmin && !isExec) {
+    // Developers are allowed to view recruits for QA/oversight.
+    if (!isDeveloper && !isAdmin && !isExec) {
       return NextResponse.json({ 
         error: 'Insufficient permissions. Only execs and admins can view recruits.' 
       }, { status: 403 });
     }
 
-    // Parse query parameters
-    const { searchParams } = new URL(request.url);
     const stage = searchParams.get('stage') as RecruitStage | null;
     const search = searchParams.get('search')?.trim() || null;
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
@@ -148,7 +166,7 @@ export async function GET(request: NextRequest) {
           full_name
         )
       `, { count: 'exact' })
-      .eq('chapter_id', profile.chapter_id);
+      .eq('chapter_id', effectiveChapterId);
 
     // Apply stage filter if provided
     if (stage) {

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useChapterBudget } from '@/lib/hooks/useChapterBudget';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEvents } from '@/lib/hooks/useEvents';
@@ -26,7 +27,7 @@ import { EventDetailModal } from '@/components/features/events/EventDetailModal'
 
 export function MobileEventsVendorsPage() {
   const { profile } = useProfile();
-  const chapterId = profile?.chapter_id;
+  const chapterId = useScopedChapterId();
   const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
   const searchParams = useSearchParams();
   

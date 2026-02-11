@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, CheckCircle, Crown, Settings, Clock, UserCheck, DollarSign, Calendar, BookOpen, Loader2 } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useChapterBudget } from '@/lib/hooks/useChapterBudget';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, UserPlus, Users as UsersIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -33,7 +34,7 @@ interface OverviewViewProps {
 export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProps) {
   const { profile } = useProfile();
   const { session } = useAuth();
-  const chapterId = profile?.chapter_id;
+  const chapterId = useScopedChapterId();
   const router = useRouter();
   const { startingBudget } = useChapterBudget();
   const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');

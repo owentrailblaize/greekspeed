@@ -13,6 +13,7 @@ import { ProfileService } from '@/lib/services/profileService';
 import { MessageCircle, Lock } from 'lucide-react';
 import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 import { useChapterLogo } from '@/lib/hooks/useChapterLogo';
+import { ChapterSwitcher } from '@/components/features/dashboard/ChapterSwitcher';
 
 // Small helper for consistent tab styling
 function NavLink({ href, label, locked = false }: { href: string; label: string; locked?: boolean }) {
@@ -150,6 +151,9 @@ export function DashboardHeader() {
               <NavLink key={tab.href} href={tab.href} label={tab.label} locked={tab.locked} />
             ))}
           </div>
+
+          {/* Chapter Switcher - Developer only */}
+          {profile?.is_developer && <ChapterSwitcher />}
         </div>
 
         {/* Right side - Messages icon and User dropdown */}

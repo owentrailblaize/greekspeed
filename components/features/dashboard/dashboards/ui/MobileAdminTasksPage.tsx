@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { useSearchParams } from 'next/navigation';
 import { Task, TaskStatus, TaskPriority, CreateTaskRequest } from '@/types/operations';
 import { getTasksByChapter, updateTask, getChapterMembersForTasks } from '@/lib/services/taskService';
@@ -50,7 +51,7 @@ export function MobileAdminTasksPage() {
   const { profile } = useProfile();
   const { session } = useAuth();
   const searchParams = useSearchParams();
-  const chapterId = profile?.chapter_id;
+  const chapterId = useScopedChapterId();
   const [activeTab, setActiveTab] = useState<'tasks' | 'docs' | 'recruits'>('tasks');
   const { enabled: recruitmentCrmEnabled } = useFeatureFlag('recruitment_crm_enabled');
 
@@ -347,7 +348,7 @@ export function MobileAdminTasksPage() {
         .eq('id', user.id)
         .single();
 
-      if (!profile?.chapter_id) {
+      if (!chapterId) {
         setDocuments([]);
       return;
     }
@@ -366,7 +367,7 @@ export function MobileAdminTasksPage() {
           *,
           profiles!documents_owner_id_fkey(full_name)
         `)
-        .eq('chapter_id', profile.chapter_id)
+        .eq('chapter_id', chapterId)
         .eq('is_active', true)
         .overlaps('visibility', visibilityFilter)
         .order('created_at', { ascending: false });

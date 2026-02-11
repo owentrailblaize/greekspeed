@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Clock, Users, HelpCircle, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { Event, RSVPStatus } from '@/types/events';
 import { parseRawTime } from '@/lib/utils/timezoneUtils';
 import { EventDetailModal } from '@/components/features/events/EventDetailModal';
@@ -25,7 +26,7 @@ export function UpcomingEventsCard() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   
   const { profile } = useProfile();
-  const chapterId = profile?.chapter_id;
+  const chapterId = useScopedChapterId();
 
   // Calculate pagination
   const totalPages = Math.ceil(events.length / eventsPerPage);

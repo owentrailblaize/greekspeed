@@ -8,6 +8,7 @@ import { Clock, DollarSign, FileText, Megaphone, CheckCircle, Calendar, X, Chevr
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { createClient } from '@supabase/supabase-js';
 import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,11 +42,12 @@ export function OperationsFeed() {
   const [hasMore, setHasMore] = useState(true);
   const [totalFetched, setTotalFetched] = useState(0);
   const { profile } = useProfile();
+  const chapterId = useScopedChapterId();
   const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
   const [totalItems, setTotalItems] = useState(0);
 
   useEffect(() => {
-    if (profile?.chapter_id) {
+    if (chapterId) {
       fetchRecentActivities();
 
       // Poll for updates every 60 seconds
@@ -55,11 +57,11 @@ export function OperationsFeed() {
 
       return () => clearInterval(interval);
     }
-  }, [profile?.chapter_id]);
+  }, [chapterId]);
 
   // Fetch responsive number of recent activities for the feed
   const fetchRecentActivities = async () => {
-    if (!profile?.chapter_id) return;
+    if (!chapterId) return;
 
     try {
       setLoading(true);
@@ -76,7 +78,7 @@ export function OperationsFeed() {
 
   // Fetch activities for the drawer with pagination
   const fetchActivitiesForDrawer = async (page: number = 1) => {
-    if (!profile?.chapter_id) return;
+    if (!chapterId) return;
 
     try {
       setDrawerLoading(true);
@@ -125,7 +127,7 @@ export function OperationsFeed() {
   // Core function to fetch activities from database
   // Core function to fetch activities from database
   const fetchActivitiesFromDatabase = async (limit: number): Promise<ActivityItem[]> => {
-    if (!profile?.chapter_id) return [];
+    if (!chapterId) return [];
 
     // Calculate date 2 months ago for filtering
     const twoMonthsAgo = new Date();
@@ -139,7 +141,7 @@ export function OperationsFeed() {
         supabase
           .from('events')
           .select('id, title, created_at, created_by')
-          .eq('chapter_id', profile.chapter_id)
+          .eq('chapter_id', chapterId)
           .gte('created_at', twoMonthsAgoISO)  // <-- ADD THIS
           .order('created_at', { ascending: false })
           .limit(limit)
@@ -152,7 +154,7 @@ export function OperationsFeed() {
         id, title, created_at, sender_id,
         sender:profiles!sender_id(full_name, first_name, last_name)
       `)
-        .eq('chapter_id', profile.chapter_id)
+        .eq('chapter_id', chapterId)
         .gte('created_at', twoMonthsAgoISO)  // <-- ADD THIS
         .order('created_at', { ascending: false })
         .limit(limit),
@@ -164,7 +166,7 @@ export function OperationsFeed() {
         id, title, status, created_at, assigned_by,
         assigner:profiles!assigned_by(full_name, first_name, last_name)
       `)
-        .eq('chapter_id', profile.chapter_id)
+        .eq('chapter_id', chapterId)
         .gte('created_at', twoMonthsAgoISO)  // <-- ADD THIS
         .order('created_at', { ascending: false })
         .limit(limit),
@@ -176,7 +178,7 @@ export function OperationsFeed() {
         id, title, created_at, owner_id,
         owner:profiles!owner_id(full_name, first_name, last_name)
       `)
-        .eq('chapter_id', profile.chapter_id)
+        .eq('chapter_id', chapterId)
         .gte('created_at', twoMonthsAgoISO)  // <-- ADD THIS
         .order('created_at', { ascending: false })
         .limit(limit),
@@ -189,7 +191,7 @@ export function OperationsFeed() {
         user:profiles!user_id(full_name, first_name, last_name),
         cycle:dues_cycles(name)
       `)
-        .eq('cycle.chapter_id', profile.chapter_id)
+        .eq('cycle.chapter_id', chapterId)
         .eq('status', 'paid')
         .gte('updated_at', twoMonthsAgoISO)  // <-- ADD THIS (uses updated_at for payments)
         .order('updated_at', { ascending: false })
