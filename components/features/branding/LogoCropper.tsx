@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import CropperLib from 'react-easy-crop';
-import 'react-easy-crop/dist/react-easy-crop.css';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Check, X, RotateCw } from 'lucide-react';
@@ -11,6 +10,25 @@ import type { Area, Point } from 'react-easy-crop';
 
 // Type-safe wrapper for react-easy-crop to fix React 19 compatibility
 const Cropper = CropperLib as any;
+
+// Minimal CSS for react-easy-crop (package doesn't export CSS file)
+const cropperStyles = `
+  .reactEasyCrop_Container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  .reactEasyCrop_Image {
+    max-width: unset;
+  }
+  .reactEasyCrop_CropArea {
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 0 9999em rgba(0, 0, 0, 0.5);
+  }
+  .reactEasyCrop_CropAreaGrid {
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+`;
 
 interface LogoCropperProps {
   /** Image source (data URL or URL) */
@@ -253,6 +271,7 @@ export function LogoCropper({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
+      <style dangerouslySetInnerHTML={{ __html: cropperStyles }} />
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0">
         {/* Fixed Header */}
         <DialogHeader className="px-6 pt-6 pb-4 border-b flex-shrink-0">
