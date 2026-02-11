@@ -7,6 +7,8 @@ import { Upload, X, Image as ImageIcon, Loader2, CheckCircle2, RotateCcw } from 
 import { toast } from 'react-toastify';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { LogoCropper } from './LogoCropper';
+import { LOGO_CONSTRAINTS } from '@/lib/constants/logoConstants';
 
 interface LogoUploaderProps {
   /** Logo variant: 'primary' or 'secondary' */
@@ -46,6 +48,8 @@ export function LogoUploader({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [showCropper, setShowCropper] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Allowed file types
@@ -180,8 +184,31 @@ export function LogoUploader({
    * Handle file selection from input
    */
   const handleFileSelect = useCallback(async (file: File) => {
-    await uploadFile(file);
-  }, [chapterId, variant, onUploadComplete]);
+    // Basic validation
+    const validationError = validateFile(file);
+    if (validationError) {
+      setError(validationError);
+      toast.error(validationError);
+      return;
+    }
+
+    // Skip SVG files (vector graphics don't need cropping)
+    if (file.type === 'image/svg+xml') {
+      await uploadFile(file);
+      return;
+    }
+
+    // For raster images, show cropper
+    try {
+      const previewUrl = await createPreview(file);
+      setImageToCrop(previewUrl);
+      setShowCropper(true);
+    } catch (error) {
+      console.error('Error creating preview:', error);
+      setError('Failed to load image for cropping');
+      toast.error('Failed to load image');
+    }
+  }, [validateFile, createPreview, uploadFile]);
 
   /**
    * Handle file input change
@@ -259,6 +286,35 @@ export function LogoUploader({
   const handleClick = () => {
     fileInputRef.current?.click();
   };
+
+  /**
+   * Handle crop completion
+   */
+  const handleCropComplete = useCallback(async (croppedBlob: Blob) => {
+    setShowCropper(false);
+    setImageToCrop(null);
+    
+    // Convert blob to File
+    const croppedFile = new File(
+      [croppedBlob],
+      `cropped-logo-${Date.now()}.png`,
+      { type: 'image/png' }
+    );
+    
+    // Upload the cropped file
+    await uploadFile(croppedFile);
+  }, [uploadFile]);
+
+  /**
+   * Handle cropper close
+   */
+  const handleCropperClose = useCallback(() => {
+    setShowCropper(false);
+    setImageToCrop(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, []);
 
   return (
     <div className={cn('space-y-3', className)}>
@@ -397,8 +453,19 @@ export function LogoUploader({
 
       {/* Help Text */}
       <p className="text-xs text-gray-500">
-        Recommended: Square logo (1:1 aspect ratio), transparent background, minimum 200x200px
+        Required: Horizontal logo (width &gt; height), dimensions {LOGO_CONSTRAINTS.RECOMMENDED_MIN_WIDTH}x{LOGO_CONSTRAINTS.RECOMMENDED_HEIGHT}px to {LOGO_CONSTRAINTS.RECOMMENDED_MAX_WIDTH}x{LOGO_CONSTRAINTS.RECOMMENDED_HEIGHT}px.
+        You'll be able to crop your logo after upload. SVG files are accepted without cropping.
       </p>
+
+      {/* Logo Cropper Modal */}
+      {imageToCrop && (
+        <LogoCropper
+          imageSrc={imageToCrop}
+          isOpen={showCropper}
+          onClose={handleCropperClose}
+          onCropComplete={handleCropComplete}
+        />
+      )}
     </div>
   );
 }

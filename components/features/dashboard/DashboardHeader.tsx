@@ -62,6 +62,9 @@ export function DashboardHeader() {
   // Get dynamic logo URL from branding system
   const logoUrl = useChapterLogo();
   
+  // Check if this is the default logo or an uploaded logo
+  const isDefaultLogo = logoUrl === '/logo.png' || logoUrl.endsWith('/logo.png');
+  
   // Count pending connection requests that require action
   const pendingConnections = connections.filter(conn => 
     conn.status === 'pending' && conn.recipient_id === user?.id
@@ -116,13 +119,26 @@ export function DashboardHeader() {
           {/* Logo/Branding - Now visible on both mobile and desktop */}
           <Link 
             href="/dashboard" 
-            className="flex items-center hover:opacity-80 transition-opacity"
+            className={cn(
+              "flex items-center hover:opacity-80 transition-opacity",
+              !isDefaultLogo && "h-full overflow-hidden max-w-[448px]"
+            )}
           >
-            <img
-              src={logoUrl}
-              alt="Trailblaize"
-              className="h-28 w-auto max-h-full object-contain transition-all duration-300"
-            />
+            {isDefaultLogo ? (
+              <img
+                src={logoUrl}
+                alt="Trailblaize"
+                className="h-28 w-auto object-contain transition-all duration-300"
+              />
+            ) : (
+              <div className="h-full max-h-[56px] flex items-center overflow-hidden max-w-full py-1">
+                <img
+                  src={logoUrl}
+                  alt="Trailblaize"
+                  className="max-h-[44px] w-auto max-w-full object-contain transition-all duration-300"
+                />
+              </div>
+            )}
           </Link>
 
           {/* Vertical Divider */}
