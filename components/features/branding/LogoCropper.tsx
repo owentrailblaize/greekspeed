@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import CropperLib from 'react-easy-crop';
+import 'react-easy-crop/dist/react-easy-crop.css';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Check, X, RotateCw } from 'lucide-react';
