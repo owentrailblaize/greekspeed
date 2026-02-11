@@ -71,7 +71,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
               <img
                 src="/logo.png"
                 alt="Trailblaize logo"
-                className="h-28 w-auto max-h-full object-contain transition-all duration-300 hover:opacity-90"
+                className="h-28 w-auto max-h-full max-w-[448px] object-contain transition-all duration-300 hover:opacity-90"
               />
             </Link>
           </div>
