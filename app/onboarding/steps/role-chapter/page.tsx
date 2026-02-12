@@ -30,7 +30,7 @@ import { cn } from '@/lib/utils';
 
 export default function RoleChapterPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { profile, refreshProfile } = useProfile();
   const { completeStep } = useOnboarding();
   const { chapters, loading: chaptersLoading } = useChapters();
@@ -240,17 +240,16 @@ export default function RoleChapterPage() {
       const errorMessage = error instanceof Error ? error.message : 'Failed to save. Please try again.';
       console.error('Profile update error:', error);
       toast.error(errorMessage);
-    } finally {
       setLoading(false);
     }
   };
 
   // Redirect if no user
   useEffect(() => {
-    if (!user) {
+    if (!authLoading && !user) {
       router.push('/sign-in');
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   // NOTE: Removed auto-skip - we now show confirmation mode for invitation users
 
@@ -260,11 +259,11 @@ export default function RoleChapterPage() {
     try {
       toast.success('Welcome! Let\'s continue setting up your profile.');
       await completeStep('role-chapter');
+      // Don't reset loading - page is navigating away
     } catch (error) {
       console.error('Error completing step:', error);
       toast.error('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
+      setLoading(false); // Only reset on error
     }
   };
 

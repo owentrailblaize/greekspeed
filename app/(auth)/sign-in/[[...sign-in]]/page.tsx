@@ -21,11 +21,27 @@ export default function SignInPage() {
 
   // Redirect if already authenticated
   useEffect(() => {
-    // SignInPage: Auth state check
-
     if (!authLoading && user) {
-      // SignInPage: User already authenticated, redirecting to dashboard
-      router.push('/dashboard');
+      // Check onboarding status before redirecting
+      const checkOnboarding = async () => {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('onboarding_completed')
+            .eq('id', user.id)
+            .single();
+  
+          if (profile?.onboarding_completed) {
+            router.push('/dashboard');
+          } else {
+            router.push('/onboarding');
+          }
+        } catch {
+          // Fallback to onboarding if check fails
+          router.push('/onboarding');
+        }
+      };
+      checkOnboarding();
     }
   }, [user, authLoading, router]);
 
@@ -41,8 +57,22 @@ export default function SignInPage() {
       // SignInPage: Sign in successful, redirecting to dashboard
       
       // Add a small delay to ensure auth state is updated
-      setTimeout(() => {
-        router.push('/dashboard');
+      setTimeout(async () => {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('onboarding_completed')
+            .eq('id', user!.id)
+            .single();
+      
+          if (profile?.onboarding_completed) {
+            router.push('/dashboard');
+          } else {
+            router.push('/onboarding');
+          }
+        } catch {
+          router.push('/onboarding');
+        }
       }, 100);
     } catch (error) {
       console.error('❌ SignInPage: Sign in failed:', error);
@@ -131,7 +161,7 @@ export default function SignInPage() {
 <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-brand-primary mx-auto mb-4"></div>
-        <p className="text-gray-600 font-medium">Redirecting to dashboard...</p>
+        <p className="text-gray-600 font-medium">Redirecting ...</p>
       </div>
     </div>
     );

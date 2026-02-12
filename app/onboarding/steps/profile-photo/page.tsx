@@ -39,6 +39,7 @@ export default function ProfilePhotoPage() {
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [isAvatarDragging, setIsAvatarDragging] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [navigating, setNavigating] = useState(false);
 
   // Banner state
   const [bannerUploading, setBannerUploading] = useState(false);
@@ -48,6 +49,7 @@ export default function ProfilePhotoPage() {
 
   // Combined uploading state
   const uploading = avatarUploading || bannerUploading;
+  const isDisabled = uploading || navigating;
 
   // Get initials for avatar fallback
   const getInitials = () => {
@@ -257,11 +259,23 @@ export default function ProfilePhotoPage() {
   // ============================================================================
 
   const handleContinue = async () => {
-    await completeStep('profile-photo');
+    setNavigating(true);
+    try {
+      await completeStep('profile-photo');
+    } catch (error) {
+      console.error('Error completing step:', error);
+      setNavigating(false);
+    }
   };
 
   const handleSkip = async () => {
-    await skipStep('profile-photo');
+    setNavigating(true);
+    try {
+      await skipStep('profile-photo');
+    } catch (error) {
+      console.error('Error skipping step:', error);
+      setNavigating(false);
+    }
   };
 
   const handleBack = () => {
@@ -444,7 +458,7 @@ export default function ProfilePhotoPage() {
         <Button
           variant="outline"
           onClick={handleBack}
-          disabled={uploading}
+          disabled={isDisabled}
           className="rounded-full"
         >
           <ChevronLeft className="mr-2 h-4 w-4" />
@@ -455,20 +469,25 @@ export default function ProfilePhotoPage() {
           <Button
             variant="ghost"
             onClick={handleSkip}
-            disabled={uploading}
+            disabled={isDisabled}
             className="text-gray-500 rounded-full"
           >
             Skip for now
           </Button>
           <Button
             onClick={handleContinue}
-            disabled={uploading}
+            disabled={isDisabled}
             className="bg-brand-primary hover:bg-brand-primary-hover rounded-full"
           >
             {uploading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Uploading...
+              </>
+            ) : navigating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
               </>
             ) : (
               <>

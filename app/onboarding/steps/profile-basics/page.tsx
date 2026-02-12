@@ -25,7 +25,6 @@ import {
   Loader2,
   ChevronRight,
   Phone,
-  Mail,
   Home,
   FileText,
 } from 'lucide-react';
@@ -47,7 +46,7 @@ const USER_ROLES = [
 
 export default function ProfileBasicsPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { profile, refreshProfile } = useProfile();
   const { completeStep } = useOnboarding();
   const { chapters, loading: chaptersLoading } = useChapters();
@@ -206,10 +205,10 @@ export default function ProfileBasicsPage() {
 
   // Redirect if no user
   useEffect(() => {
-    if (!user) {
+    if (!authLoading && !user) {
       router.push('/sign-in');
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   // Phone number formatting
   const formatPhoneNumber = (value: string): string => {
@@ -338,11 +337,9 @@ export default function ProfileBasicsPage() {
         updateData.phone = formData.phone;
       }
 
-      // Add active member-specific fields
-      if (normalizedRole === 'active_member') {
-        if (formData.bio) updateData.bio = formData.bio;
-        if (formData.hometown) updateData.hometown = formData.hometown;
-      }
+      // Add bio and hometown for all roles (if provided)
+      if (formData.bio) updateData.bio = formData.bio;
+      if (formData.hometown) updateData.hometown = formData.hometown;
 
       const { error: profileError } = await supabase
         .from('profiles')
@@ -397,9 +394,8 @@ export default function ProfileBasicsPage() {
     } catch (error) {
       console.error('Profile update error:', error);
       toast.error('Failed to save profile. Please try again.');
-    } finally {
       setLoading(false);
-    }
+    } 
   };
 
   if (!user) {
@@ -460,44 +456,6 @@ export default function ProfileBasicsPage() {
                 />
                 {errors.lastName && (
                   <p className="text-sm text-red-500">{errors.lastName}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Email & Phone Fields */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Email (read-only) */}
-              <div className="space-y-2">
-                <Label htmlFor="email" className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-gray-400" />
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  disabled
-                  className="bg-gray-50 text-gray-600 cursor-not-allowed"
-                />
-                <p className="text-xs text-gray-400">Email is linked to your account and cannot be changed here.</p>
-              </div>
-
-              {/* Phone (optional, formatted) */}
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-gray-400" />
-                  Phone (Optional)
-                </Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => handleChange('phone', e.target.value)}
-                  placeholder="(555) 123-4567"
-                  className={cn(errors.phone && 'border-red-500')}
-                />
-                {errors.phone && (
-                  <p className="text-sm text-red-500">{errors.phone}</p>
                 )}
               </div>
             </div>
@@ -596,8 +554,8 @@ export default function ProfileBasicsPage() {
               )}
             </div>
 
-            {/* Active member-specific fields */}
-            {formData.role === 'active_member' && (
+            {/* Additional Information - shown for all roles */}
+            {(formData.role === 'active_member' || isAlumni) && (
               <>
                 <div className="border-t pt-6 mt-6">
                   <h3 className="text-sm font-medium text-gray-900 mb-4 flex items-center gap-2">
@@ -704,7 +662,7 @@ export default function ProfileBasicsPage() {
                   </div>
 
                   {/* Company & Job Title */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="company">Company (Optional)</Label>
                       <Input
@@ -723,19 +681,6 @@ export default function ProfileBasicsPage() {
                         placeholder="e.g., Software Engineer"
                       />
                     </div>
-                  </div>
-
-                  {/* Location */}
-                  <div className="space-y-2">
-                    <Label htmlFor="location" className="flex items-center gap-2">
-                      Location (Optional)
-                    </Label>
-                    <Input
-                      id="location"
-                      value={formData.location}
-                      onChange={(e) => handleChange('location', e.target.value)}
-                      placeholder="e.g., San Francisco, CA"
-                    />
                   </div>
                 </div>
               </>
