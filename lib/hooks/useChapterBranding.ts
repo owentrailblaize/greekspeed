@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { BrandingService } from '@/lib/services/brandingService';
 import type { BrandingTheme } from '@/types/branding';
 import { DEFAULT_BRANDING_THEME } from '@/types/branding';
@@ -33,14 +34,15 @@ interface UseChapterBrandingResult {
  */
 export function useChapterBranding(chapterId?: string): UseChapterBrandingResult {
   const { profile } = useProfile();
+  const scopedChapterId = useScopedChapterId();
   const [branding, setBranding] = useState<BrandingTheme>(DEFAULT_BRANDING_THEME);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Determine which chapter ID to use
   const targetChapterId = useMemo(() => {
-    return chapterId || profile?.chapter_id || null;
-  }, [chapterId, profile?.chapter_id]);
+    return chapterId || scopedChapterId || null;
+  }, [chapterId, scopedChapterId]);
 
   const fetchBranding = useCallback(async () => {
     if (!targetChapterId) {

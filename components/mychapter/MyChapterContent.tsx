@@ -6,6 +6,7 @@ import { ChapterCardSkeletonGrid } from "./ChapterCardSkeleton";
 import { ChapterMember } from "@/types/chapter";
 import { useChapterRoleAccess } from '@/lib/hooks/useChapterRoleAccess';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { CHAPTER_ADMIN_ROLES, getRoleDisplayName } from '@/lib/permissions';
 import { Loader2 } from "lucide-react";
@@ -22,9 +23,10 @@ export function MyChapterContent({ onNavigate, activeSection, searchTerm }: MyCh
   
   // Get current user's profile and chapter
   const { profile, loading: profileLoading } = useProfile();
+  const chapterId = useScopedChapterId();
   
   // Fetch chapter members based on user's chapter, excluding alumni
-  const { members, loading: membersLoading, error } = useChapterMembers(profile?.chapter_id || undefined, true);
+  const { members, loading: membersLoading, error } = useChapterMembers(chapterId || undefined, true);
   
   // Role checking
   const { hasChapterRoleAccess } = useChapterRoleAccess(CHAPTER_ADMIN_ROLES);

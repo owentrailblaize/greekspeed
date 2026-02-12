@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, UserPlus, X, CheckCircle, ChevronRight, Search, MessageCircle, Loader2 } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { ConnectionManagement } from '@/components/ui/ConnectionManagement';
 import { ChapterMemberData } from '@/types/chapter';
@@ -45,7 +46,8 @@ export function MobileNetworkPage() {
   const router = useRouter();
   const { profile } = useProfile();
   const { user } = useAuth();
-  const { members: chapterMembers, loading: membersLoading } = useChapterMembers(profile?.chapter_id || undefined);
+  const chapterId = useScopedChapterId();
+  const { members: chapterMembers, loading: membersLoading } = useChapterMembers(chapterId || undefined);
   const { 
     connections, 
     sendConnectionRequest,

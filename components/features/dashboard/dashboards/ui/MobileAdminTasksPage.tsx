@@ -342,7 +342,7 @@ export function MobileAdminTasksPage() {
         return;
       }
 
-      const { data: profile } = await supabase
+      const { data: dbProfile } = await supabase
         .from('profiles')
         .select('chapter_id, role')
         .eq('id', user.id)
@@ -353,11 +353,15 @@ export function MobileAdminTasksPage() {
       return;
     }
 
+      if (!dbProfile) {
+        setDocuments([]);
+        return;
+      }
 
       let visibilityFilter = ['chapter_all', 'active_members', 'alumni', 'admins'];
-      if (profile.role === 'active_member') {
+      if (dbProfile.role === 'active_member') {
         visibilityFilter = ['chapter_all', 'active_members'];
-      } else if (profile.role === 'alumni') {
+      } else if (dbProfile.role === 'alumni') {
         visibilityFilter = ['chapter_all', 'alumni'];
       }
 

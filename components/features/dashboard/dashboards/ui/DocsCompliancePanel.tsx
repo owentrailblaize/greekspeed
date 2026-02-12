@@ -103,7 +103,7 @@ export function DocsCompliancePanel() {
         // Documents loaded with role-based access
         console.log('Documents loaded:', {
           totalDocuments: documents?.length || 0,
-          userRole: profile.role,
+          userRole: profile?.role,
           visibilityFilter: visibilityFilter
         });
 

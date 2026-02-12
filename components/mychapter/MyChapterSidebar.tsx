@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useChapterMembers } from '@/lib/hooks/useChapterMembers';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { AddMemberForm } from '@/components/chapter/AddMemberForm';
 import { EventForm } from '@/components/ui/EventForm'; // Add this import
 import { FeatureGuard } from '@/components/shared/FeatureGuard'; // Add this import
@@ -33,9 +34,10 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
   
   // Get current user's profile to check role and chapter
   const { profile } = useProfile();
+  const chapterId = useScopedChapterId();
   
   // Fetch chapter members to calculate stats dynamically, excluding alumni
-  const { members, loading: membersLoading } = useChapterMembers(profile?.chapter_id || undefined, true);
+  const { members, loading: membersLoading } = useChapterMembers(chapterId || undefined, true);
   
   // Check if user is admin (same pattern as other components)
   const isAdmin = profile?.role === 'admin';
