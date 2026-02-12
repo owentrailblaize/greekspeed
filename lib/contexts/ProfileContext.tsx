@@ -23,7 +23,6 @@ const profilesEqual = (a: Profile | null, b: Profile | null): boolean => {
   if (a === b) return true;
   if (!a || !b) return false;
 
-  // Compare key fields that matter for re-renders
   return (
     a.id === b.id &&
     a.chapter === b.chapter &&
@@ -33,7 +32,11 @@ const profilesEqual = (a: Profile | null, b: Profile | null): boolean => {
     a.role === b.role &&
     a.avatar_url === b.avatar_url &&
     a.banner_url === b.banner_url &&
-    a.location === b.location
+    a.location === b.location &&
+
+    // IMPORTANT: include these so onboarding completion updates propagate
+    a.onboarding_completed === b.onboarding_completed &&
+    a.onboarding_completed_at === b.onboarding_completed_at
   );
 };
 
