@@ -22,7 +22,7 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 const profilesEqual = (a: Profile | null, b: Profile | null): boolean => {
   if (a === b) return true;
   if (!a || !b) return false;
-  
+
   // Compare key fields that matter for re-renders
   return (
     a.id === b.id &&
@@ -31,7 +31,9 @@ const profilesEqual = (a: Profile | null, b: Profile | null): boolean => {
     a.first_name === b.first_name &&
     a.last_name === b.last_name &&
     a.role === b.role &&
-    a.avatar_url === b.avatar_url
+    a.avatar_url === b.avatar_url &&
+    a.banner_url === b.banner_url &&
+    a.location === b.location
   );
 };
 
@@ -51,17 +53,17 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       return;
     }
-    
+
     // Prevent concurrent fetches
     if (fetchingRef.current) {
       return;
     }
-    
+
     try {
       fetchingRef.current = true;
       setLoading(true);
       setError(null);
-      
+
       const { data, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
@@ -69,7 +71,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (fetchError) throw fetchError;
-      
+
       // Only update if data actually changed (deep comparison)
       setProfile(prevProfile => {
         if (prevProfile && profilesEqual(prevProfile, data)) {
@@ -97,10 +99,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     if (!user?.id) {
       throw new Error('User not authenticated');
     }
-    
+
     try {
       setError(null);
-      
+
       const { data, error: updateError } = await supabase
         .from('profiles')
         .update(updates)
@@ -109,7 +111,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (updateError) throw updateError;
-      
+
       setProfile(data);
       setIsDeveloper(canAccessDeveloperPortal(data));
     } catch (err) {
@@ -124,15 +126,15 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     if (!user?.id) {
       throw new Error('User not authenticated');
     }
-    
+
     try {
       setError(null);
       const avatarUrl = await ProfileService.uploadAvatar(file);
-      
+
       if (!avatarUrl) {
         throw new Error('Failed to upload avatar');
       }
-      
+
       // Update profile with new avatar URL
       setProfile(prevProfile => {
         if (!prevProfile) return prevProfile;
@@ -140,7 +142,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         setIsDeveloper(canAccessDeveloperPortal(updatedProfile));
         return updatedProfile;
       });
-      
+
       return avatarUrl;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to upload avatar';

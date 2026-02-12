@@ -12,6 +12,7 @@ export interface SelectProps {
   children: React.ReactNode;
   className?: string;
   disableDynamicPositioning?: boolean;
+  disabled?: boolean;
 }
 
 export interface SelectItemProps {
@@ -116,7 +117,7 @@ const findTriggerContent = (children: React.ReactNode): { icon?: React.ReactNode
 };
 
 export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
-  ({ value, onValueChange, placeholder, children, className, disableDynamicPositioning = false, ...props }, ref) => {
+  ({ value, onValueChange, placeholder, children, className, disableDynamicPositioning = false, disabled = false, ...props }, ref) => {
     const [isOpen, setIsOpen] = React.useState(false);
     const [selectedValue, setSelectedValue] = React.useState(value || "");
     const [selectedLabel, setSelectedLabel] = React.useState<string>("");
@@ -260,11 +261,13 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
         <div ref={selectRef} className={cn("relative", className)} {...props}>
           <button
             type="button"
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={() => !disabled && setIsOpen(!isOpen)}
+            disabled={disabled}
             className={cn(
               "flex h-9 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm",
               "focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary",
-              "hover:border-gray-400 transition-colors"
+              "hover:border-gray-400 transition-colors",
+              disabled && "cursor-not-allowed opacity-50 bg-gray-50"
             )}
           >
             <div className="flex items-center space-x-2 flex-1 min-w-0">

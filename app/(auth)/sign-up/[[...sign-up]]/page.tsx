@@ -74,10 +74,10 @@ export default function SignUpPage() {
         phone: phoneNumber, // Add phone number to the signUp payload
         smsConsent: smsConsent // Add SMS consent to the signUp payload
       });
-      setSuccess('Account created successfully! Redirecting...');
+      setSuccess('Account created successfully! Redirecting to onboarding...');
       
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        window.location.href = '/onboarding';
       }, 3000);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Sign up failed');
