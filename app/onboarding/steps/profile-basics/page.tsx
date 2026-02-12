@@ -25,6 +25,7 @@ import {
   Loader2,
   ChevronRight,
   Phone,
+  Mail,
   Home,
   FileText,
 } from 'lucide-react';
@@ -152,6 +153,7 @@ export default function ProfileBasicsPage() {
 
     // Also use profile data if available
     if (profile) {
+      const rawPhone = profile.phone || '';
       setFormData(prev => ({
         ...prev,
         firstName: profile.first_name || prev.firstName,
@@ -161,7 +163,7 @@ export default function ProfileBasicsPage() {
         major: profile.major || prev.major,
         location: profile.location || prev.location,
         bio: profile.bio || prev.bio,
-        phone: profile.phone || prev.phone,
+        phone: rawPhone ? formatPhoneNumber(rawPhone) : prev.phone,
         hometown: profile.hometown || prev.hometown,
       }));
     }
@@ -287,14 +289,14 @@ export default function ProfileBasicsPage() {
       if (!formData.industry) newErrors.industry = 'Industry is required for alumni';
     }
 
+    // Phone number validation for all roles (optional, but must be valid if provided)
+    if (formData.phone && !isValidPhoneNumber(formData.phone)) {
+      newErrors.phone = 'Please enter a valid 10-digit phone number';
+    }
+
     // Active member validation
     if (formData.role === 'active_member') {
       if (!formData.major?.trim()) newErrors.major = 'Major is required for active members';
-
-      // Phone number validation (optional, but must be valid if provided)
-      if (formData.phone && !isValidPhoneNumber(formData.phone)) {
-        newErrors.phone = 'Please enter a valid 10-digit phone number';
-      }
     }
 
     setErrors(newErrors);
@@ -331,10 +333,14 @@ export default function ProfileBasicsPage() {
         updateData.location = formData.location;
       }
 
+      // Save phone for all roles
+      if (formData.phone) {
+        updateData.phone = formData.phone;
+      }
+
       // Add active member-specific fields
       if (normalizedRole === 'active_member') {
         if (formData.bio) updateData.bio = formData.bio;
-        if (formData.phone) updateData.phone = formData.phone;
         if (formData.hometown) updateData.hometown = formData.hometown;
       }
 
@@ -360,7 +366,7 @@ export default function ProfileBasicsPage() {
             company: formData.company || 'Not specified',
             job_title: formData.jobTitle || 'Not specified',
             email: formData.email || user.email,
-            phone: null,
+            phone: formData.phone || null,
             location: formData.location || 'Not specified',
             description: `Alumni from ${formData.chapter}`,
             avatar_url: profile?.avatar_url || null,
@@ -454,6 +460,44 @@ export default function ProfileBasicsPage() {
                 />
                 {errors.lastName && (
                   <p className="text-sm text-red-500">{errors.lastName}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Email & Phone Fields */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Email (read-only) */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-gray-400" />
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  disabled
+                  className="bg-gray-50 text-gray-600 cursor-not-allowed"
+                />
+                <p className="text-xs text-gray-400">Email is linked to your account and cannot be changed here.</p>
+              </div>
+
+              {/* Phone (optional, formatted) */}
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-gray-400" />
+                  Phone (Optional)
+                </Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => handleChange('phone', e.target.value)}
+                  placeholder="(555) 123-4567"
+                  className={cn(errors.phone && 'border-red-500')}
+                />
+                {errors.phone && (
+                  <p className="text-sm text-red-500">{errors.phone}</p>
                 )}
               </div>
             </div>
