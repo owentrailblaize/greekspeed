@@ -44,18 +44,23 @@ interface AlumniData {
 // Component
 // ============================================================================
 
+/**
+ * LinkedIn Import Step - DISABLED
+ * Redirects to profile-basics. The LinkedIn import feature is temporarily hidden.
+ * The page file is kept to prevent 404s for any bookmarked/cached URLs.
+ */
 export default function LinkedInImportPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace('/onboarding/steps/profile-basics');
+  }, [router]);
+
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    }>
-      <LinkedInImportPageContent />
-    </Suspense>
+    <div className="min-h-[60vh] flex flex-col items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-brand-primary mb-4" />
+      <p className="text-gray-600">Redirecting...</p>
+    </div>
   );
 }
 

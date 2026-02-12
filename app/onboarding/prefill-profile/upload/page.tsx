@@ -87,8 +87,15 @@ function UploadPageContent() {
   const { profile, loading: profileLoading } = useProfile();
 
   // Determine source type from query param
-  const sourceType = (searchParams.get('type') as 'linkedin' | 'resume') || 'linkedin';
+  const sourceType = (searchParams.get('type') as 'linkedin' | 'resume') || 'resume';
   const importSource: ImportSource = sourceType === 'resume' ? 'resume_pdf' : 'linkedin_pdf';
+
+  // Redirect if someone tries to access linkedin upload directly
+  useEffect(() => {
+    if (sourceType === 'linkedin') {
+      router.replace('/onboarding/prefill-profile');
+    }
+  }, [sourceType, router]);
 
   // Get user role for conditional form rendering
   const userRole: UserRole | undefined = profile?.role as UserRole | undefined;

@@ -89,6 +89,7 @@ function ProgressBar({ currentPath }: ProgressBarProps) {
   // Determine current step from path
   const getCurrentStep = (): OnboardingStep => {
     if (currentPath.includes('role-chapter')) return 'role-chapter';
+    // linkedin-import detection kept for redirect safety, but step is no longer in arrays
     if (currentPath.includes('linkedin-import')) return 'linkedin-import';
     if (currentPath.includes('profile-basics')) return 'profile-basics';
     if (currentPath.includes('profile-photo')) return 'profile-photo';

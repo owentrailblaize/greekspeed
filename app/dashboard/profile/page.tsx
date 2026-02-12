@@ -782,6 +782,8 @@ export default function ProfilePage() {
             {/* Right Sidebar (1/3) */}
             <div className="lg:col-span-1 space-y-4">
               {/* Card 1: Import LinkedIn PDF */}
+              {/* DISABLED - LinkedIn import feature is temporarily hidden */}
+              {/*
               <Card className="bg-white rounded-xl shadow-sm">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-semibold text-gray-900 flex items-center gap-2">
@@ -801,7 +803,7 @@ export default function ProfilePage() {
                   </Link>
                 </CardContent>
               </Card>
-
+              */}
               {/* Card 2: Share Profile */}
               <Card className="bg-white rounded-xl shadow-sm">
                 <CardHeader className="pb-3">

@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LinkedInPdfHelpModal } from '@/components/features/onboarding/LinkedInPdfHelpModal';
+// import { LinkedInPdfHelpModal } from '@/components/features/onboarding/LinkedInPdfHelpModal';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   FileText,
@@ -26,7 +26,7 @@ export default function PrefillProfilePage() {
   const router = useRouter();
   const [selectedOption, setSelectedOption] = useState<PrefillOption | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
-  const [showHelpModal, setShowHelpModal] = useState(false);
+  // const [showHelpModal, setShowHelpModal] = useState(false);
 
   // Redirect if not authenticated - wait for auth to finish loading first
   useEffect(() => {
@@ -137,6 +137,8 @@ export default function PrefillProfilePage() {
           {/* Options */}
           <div className="space-y-4">
             {/* LinkedIn PDF Option - Recommended */}
+            {/* DISABLED - LinkedIn import feature is temporarily hidden */}
+            {/*
             <Card
               className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-brand-primary/50 ${selectedOption === 'linkedin' ? 'border-brand-primary ring-2 ring-brand-primary/20' : 'border-gray-200'
                 }`}
@@ -177,7 +179,7 @@ export default function PrefillProfilePage() {
                 </div>
               </CardContent>
             </Card>
-
+            */}
             {/* Resume Option */}
             <Card
               className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-brand-primary/50 ${selectedOption === 'resume' ? 'border-brand-primary ring-2 ring-brand-primary/20' : 'border-gray-200'
@@ -245,12 +247,15 @@ export default function PrefillProfilePage() {
       </div>
 
       {/* Help Modal - Placeholder for next ticket */}
+      {/* DISABLED - LinkedIn import feature is temporarily hidden */}
+      {/*
       {showHelpModal && (
         <LinkedInPdfHelpModal
           isOpen={showHelpModal}
           onClose={() => setShowHelpModal(false)}
         />
       )}
+      */}
     </div>
   );
 }

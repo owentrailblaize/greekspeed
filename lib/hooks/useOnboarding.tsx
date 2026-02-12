@@ -75,7 +75,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const effectiveSteps = getEffectiveSteps(profile);
 
   // Set initial step based on whether user needs role selection
-  const initialStep: OnboardingStep = needsRoleSelection ? 'role-chapter' : 'linkedin-import';
+  const initialStep: OnboardingStep = needsRoleSelection ? 'role-chapter' : 'profile-basics';
 
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(initialStep);
   const [completedSteps, setCompletedSteps] = useState<OnboardingStep[]>([]);

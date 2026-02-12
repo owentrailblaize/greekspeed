@@ -14,7 +14,7 @@ export type OnboardingStep =
 
 // Base steps for email signup users (already have role/chapter from profile-basics)
 export const ONBOARDING_STEPS: OnboardingStep[] = [
-  'linkedin-import',
+  //'linkedin-import',
   'profile-basics',
   'profile-photo',
   'notifications',
@@ -24,7 +24,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 // Steps for OAuth users without invitation (need to select role/chapter first)
 export const OAUTH_ONBOARDING_STEPS: OnboardingStep[] = [
   'role-chapter',
-  'linkedin-import',
+  //'linkedin-import',
   'profile-basics',
   'profile-photo',
   'notifications',
