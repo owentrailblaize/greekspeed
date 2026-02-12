@@ -18,6 +18,7 @@ import {
   Calendar,
   MessageSquare,
   Briefcase,
+  User
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -59,7 +60,7 @@ export default function OnboardingCompletePage() {
   const getInitials = () => {
     const first = profile?.first_name?.[0] || '';
     const last = profile?.last_name?.[0] || '';
-    return (first + last).toUpperCase() || 'U';
+    return (first + last).toUpperCase();
   };
 
   // Handle go to dashboard
@@ -107,12 +108,12 @@ export default function OnboardingCompletePage() {
       <Card className="w-full max-w-md mb-8">
         <CardContent className="pt-6">
           <div className="flex items-center gap-4 mb-6">
-            <Avatar className="h-16 w-16 border-2 border-brand-primary">
-              <AvatarImage src={avatarUrl || undefined} />
-              <AvatarFallback className="text-xl bg-gradient-to-br from-brand-primary to-brand-primary-dark text-white">
-                {getInitials()}
-              </AvatarFallback>
-            </Avatar>
+          <Avatar className="h-16 w-16 border-2 border-brand-primary">
+            {avatarUrl ? <AvatarImage src={avatarUrl} alt={fullName} /> : null}
+            <AvatarFallback className="text-xl bg-gradient-to-br from-brand-primary to-brand-primary-dark text-white">
+              {getInitials() || <User className="h-7 w-7" />}
+            </AvatarFallback>
+          </Avatar>
             <div>
               <h2 className="text-lg font-semibold text-gray-900">{fullName}</h2>
               <p className="text-sm text-gray-600">{role} • {chapter}</p>
