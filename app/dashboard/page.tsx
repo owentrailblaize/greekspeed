@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import DashboardPageClient from './DashboardPageClient';
 import type { Post, PostsResponse } from '@/types/posts';
+import type { Profile } from '@/types/profile';
 
 const POSTS_PAGE_LIMIT = 20;
 
@@ -36,40 +37,16 @@ export default async function DashboardPage() {
     return <DashboardPageClient />;
   }
 
-  // Fetch profile first — we need chapter_id to scope the remaining queries.
+  // Fetch the FULL profile — used both for server rendering gates AND
+  // to hydrate ProfileContext on the client, eliminating the duplicate fetch.
   const { data: profile } = await supabase
     .from('profiles')
-    .select(
-      `
-        id,
-        chapter_id,
-        role,
-        welcome_seen,
-        chapter,
-        role_display,
-        first_name,
-        last_name,
-        is_developer
-      `,
-    )
+    .select('*')  // Was: specific fields only
     .eq('id', session.user.id)
     .maybeSingle();
 
-  // Build a lightweight serverProfile to pass to the client so it can
-  // render DashboardOverview immediately without waiting for AuthProvider
-  // + ProfileProvider to finish their own client-side fetches.
-  const serverProfile = profile
-    ? {
-        id: profile.id as string,
-        role: (profile.role as string | null) ?? null,
-        chapter_id: (profile.chapter_id as string | null) ?? null,
-        chapter: (profile.chapter as string | null) ?? null,
-        welcome_seen: Boolean(profile.welcome_seen),
-        first_name: (profile.first_name as string | null) ?? null,
-        last_name: (profile.last_name as string | null) ?? null,
-        is_developer: Boolean(profile.is_developer),
-      }
-    : null;
+  // Cast to Profile (Supabase returns matching shape from SELECT *)
+  const serverProfile: Profile | null = profile ?? null;
 
   let initialFeed:
     | (PostsResponse & {

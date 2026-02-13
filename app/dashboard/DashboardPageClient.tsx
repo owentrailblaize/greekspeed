@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { DashboardOverview } from '@/components/features/dashboard/DashboardOverview';
@@ -10,6 +10,7 @@ import type { SocialFeedInitialData } from '@/components/features/dashboard/dash
 import { queueProfileUpdatePrompt } from '@/lib/utils/profileUpdatePromptQueue';
 import type { DetectedChange } from '@/components/features/profile/ProfileUpdatePromptModal';
 import { useModal } from '@/lib/contexts/ModalContext';
+import type { Profile } from '@/types/profile';
 
 /** Lightweight profile shape from the server RSC — just the fields we need to render. */
 export interface ServerProfile {
@@ -26,7 +27,7 @@ export interface ServerProfile {
 type DashboardPageClientProps = {
   initialFeed?: SocialFeedInitialData | null;
   fallbackChapterId?: string | null;
-  serverProfile?: ServerProfile | null;
+  serverProfile?: Profile | null;
 };
 
 export default function DashboardPageClient({
@@ -35,18 +36,26 @@ export default function DashboardPageClient({
   serverProfile,
 }: DashboardPageClientProps) {
   const { user, loading: authLoading } = useAuth();
-  const { profile, isDeveloper, loading: profileLoading } = useProfile();
+  const { profile, isDeveloper, loading: profileLoading, hydrateFromServer } = useProfile();
   const router = useRouter();
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const { openEditProfileModal } = useModal();
 
-  // ---------------------------------------------------------------------------
+  // ---- NEW: Hydrate ProfileContext with server data ASAP ----
+  // useLayoutEffect fires synchronously after DOM mutations but before paint,
+  // so every useProfile() consumer sees data on the very first render frame.
+  useLayoutEffect(() => {
+    if (serverProfile) {
+      hydrateFromServer(serverProfile);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- only on mount
+
   // Derive "effective" values: prefer live context, fall back to server snapshot
-  // ---------------------------------------------------------------------------
   const effectiveRole = profile?.role ?? serverProfile?.role ?? null;
   const effectiveChapterId =
     profile?.chapter_id ?? serverProfile?.chapter_id ?? fallbackChapterId ?? null;
   const effectiveIsDeveloper = isDeveloper || (serverProfile?.is_developer ?? false);
+
 
   // We can render immediately if the server gave us a usable profile
   const hasServerData = Boolean(serverProfile && (serverProfile.role || serverProfile.is_developer));

@@ -144,15 +144,22 @@ export async function GET(request: NextRequest) {
       };
     }) || [];
 
-    return NextResponse.json({
-      posts: transformedPosts,
-      pagination: {
-        page,
-        limit,
-        total: totalCount || 0,
-        totalPages: Math.ceil((totalCount || 0) / limit)
+    return NextResponse.json(
+      {
+        posts: transformedPosts,
+        pagination: {
+          page,
+          limit,
+          total: totalCount || 0,
+          totalPages: Math.ceil((totalCount || 0) / limit),
+        },
+      },
+      {
+        headers: {
+          'Cache-Control': 'private, max-age=30, stale-while-revalidate=60',
+        },
       }
-    });
+    );
   } catch (error) {
     console.error('API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

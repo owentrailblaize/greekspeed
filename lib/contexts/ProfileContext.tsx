@@ -15,6 +15,9 @@ interface ProfileContextType {
   refreshProfile: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
   uploadAvatar: (file: File) => Promise<string>;
+  /** Push server-fetched profile data into the context, instantly unblocking
+   *  all consumers without waiting for the client-side Supabase fetch. */
+  hydrateFromServer: (data: Profile) => void;
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -47,6 +50,18 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [isDeveloper, setIsDeveloper] = useState(false);
   const fetchingRef = useRef(false); // Prevent concurrent fetches
+  const serverHydratedRef = useRef(false);
+
+  // ---- hydrateFromServer ----
+  const hydrateFromServer = useCallback((data: Profile) => {
+    if (serverHydratedRef.current) return; // Only hydrate once
+    serverHydratedRef.current = true;
+
+    // Immediately populate profile — unblocks every useProfile() consumer
+    setProfile(prev => prev ?? data);
+    setIsDeveloper(canAccessDeveloperPortal(data));
+    setLoading(false);
+  }, []);
 
   const fetchProfile = useCallback(async () => {
     if (!user?.id) {
@@ -64,7 +79,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
     try {
       fetchingRef.current = true;
-      setLoading(true);
+      // Only flash loading state if we have no server-hydrated data.
+      // When hydrated, the background fetch silently refreshes without
+      // causing components to show spinners.
+      if (!serverHydratedRef.current) {
+        setLoading(true);
+      }
       setError(null);
 
       const { data, error: fetchError } = await supabase
@@ -84,10 +104,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       });
       setIsDeveloper(canAccessDeveloperPortal(data));
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load profile';
-      console.error('Error fetching profile:', err);
-      setError(errorMessage);
-      setIsDeveloper(false);
+      // NEW: If we have server data, don't surface errors from background refresh
+      if (!serverHydratedRef.current) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load profile';
+        console.error('Error fetching profile:', err);
+        setError(errorMessage);
+        setIsDeveloper(false);
+      }
     } finally {
       setLoading(false);
       fetchingRef.current = false;
@@ -167,8 +190,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     isDeveloper,
     refreshProfile,
     updateProfile,
-    uploadAvatar
-  }), [profile, loading, error, isDeveloper, refreshProfile, updateProfile, uploadAvatar]);
+    uploadAvatar,
+    hydrateFromServer
+  }), [profile, loading, error, isDeveloper, refreshProfile, updateProfile, uploadAvatar, hydrateFromServer]);
 
   return (
     <ProfileContext.Provider value={contextValue}>
