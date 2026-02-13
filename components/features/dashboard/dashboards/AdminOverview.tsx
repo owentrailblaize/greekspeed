@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import { QuickActions, QuickAction } from './ui/QuickActions';
 import { DuesSnapshot } from './ui/DuesSnapshot';
 import { ComplianceSnapshot } from './ui/ComplianceSnapshot';
@@ -10,6 +10,7 @@ import { TasksPanel } from './ui/TasksPanel';
 import { DocsCompliancePanel } from './ui/DocsCompliancePanel';
 import { AlertsStrip } from './ui/AlertsStrip';
 import { CompactCalendarCard } from './ui/CompactCalendarCard';
+import { Event } from '@/types/events';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { SocialFeed, type SocialFeedInitialData } from './ui/SocialFeed';
 import { DuesStatusCard } from './ui/DuesStatusCard';
@@ -64,6 +65,34 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // ---- Shared events fetch (eliminates duplicate API call) ----
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+  const [eventsError, setEventsError] = useState<string | null>(null);
+
+  const fetchAllEvents = useCallback(async () => {
+    if (!chapterId || !profile?.id) return;
+    try {
+      setEventsLoading(true);
+      setEventsError(null);
+      // Single call with scope=all AND user_id — covers both CompactCalendarCard + UpcomingEventsCard
+      const response = await fetch(
+        `/api/events?chapter_id=${chapterId}&scope=all&user_id=${profile.id}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch events');
+      const data: Event[] = await response.json();
+      setAllEvents(data);
+    } catch (err) {
+      setEventsError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setEventsLoading(false);
+    }
+  }, [chapterId, profile?.id]);
+
+  useEffect(() => {
+    fetchAllEvents();
+  }, [fetchAllEvents]);
 
   const feedData = useMemo(() => {
     if (!initialFeed) return undefined;
@@ -264,7 +293,14 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
           <div className="col-span-4">
             <div className="space-y-4">
               <FeatureGuard flagName="events_management_enabled">
-                <UpcomingEventsCard chapterId={chapterId} userId={profile?.id} />
+                <UpcomingEventsCard
+                  chapterId={chapterId}
+                  userId={profile?.id}
+                  events={allEvents}
+                  loading={eventsLoading}
+                  error={eventsError}
+                  onRetry={fetchAllEvents}
+                />
               </FeatureGuard>
               {chapterId && <TasksPanel chapterId={chapterId} />}
               {/* Include DuesStatusCard on tablet since left sidebar is hidden */}
@@ -295,10 +331,22 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
           {/* Right Column - 3 columns wide */}
           <div className="col-span-3 space-y-6">
             <FeatureGuard flagName="events_management_enabled">
-              <CompactCalendarCard />
+              <CompactCalendarCard
+                events={allEvents}
+                loading={eventsLoading}
+                error={eventsError}
+                onRetry={fetchAllEvents}
+              />
             </FeatureGuard>
             <FeatureGuard flagName="events_management_enabled">
-              <UpcomingEventsCard chapterId={chapterId} userId={profile?.id} />
+              <UpcomingEventsCard
+                chapterId={chapterId}
+                userId={profile?.id}
+                events={allEvents}
+                loading={eventsLoading}
+                error={eventsError}
+                onRetry={fetchAllEvents}
+              />
             </FeatureGuard>
             {chapterId && <TasksPanel chapterId={chapterId} />}
             <DocsCompliancePanel />

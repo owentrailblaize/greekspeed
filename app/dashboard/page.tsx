@@ -6,7 +6,7 @@ import DashboardPageClient from './DashboardPageClient';
 import type { Post, PostsResponse } from '@/types/posts';
 import type { Profile } from '@/types/profile';
 
-const POSTS_PAGE_LIMIT = 20;
+const POSTS_PAGE_LIMIT = 10;
 
 export default async function DashboardPage() {
   const cookieStore = await cookies();

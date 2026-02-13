@@ -1,10 +1,11 @@
 'use client';
 
-import { useMemo, useState, useEffect, Suspense } from 'react';
+import { useCallback, useEffect, useMemo, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { SocialFeed, type SocialFeedInitialData } from './ui/SocialFeed';
 import { DuesStatusCard } from './ui/DuesStatusCard';
+import { Event } from '@/types/events';
 import { MyTasksCard } from './ui/MyTasksCard';
 import { UpcomingEventsCard } from './ui/UpcomingEventsCard';
 import { AnnouncementsCard } from './ui/AnnouncementsCard';
@@ -42,6 +43,34 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
   const { enabled: recruitmentCrmEnabled } = useFeatureFlag('recruitment_crm_enabled');
   const [showAddRecruitModal, setShowAddRecruitModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Shared events fetch (eliminates duplicate API call) ----
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+  const [eventsError, setEventsError] = useState<string | null>(null);
+
+  const fetchAllEvents = useCallback(async () => {
+    if (!chapterId || !profile?.id) return;
+    try {
+      setEventsLoading(true);
+      setEventsError(null);
+      // Single call with scope=all AND user_id — covers both components
+      const response = await fetch(
+        `/api/events?chapter_id=${chapterId}&scope=all&user_id=${profile.id}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch events');
+      const data: Event[] = await response.json();
+      setAllEvents(data);
+    } catch (err) {
+      setEventsError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setEventsLoading(false);
+    }
+  }, [chapterId, profile?.id]);
+
+  useEffect(() => {
+    fetchAllEvents();
+  }, [fetchAllEvents]);
 
   const feedData = useMemo(() => {
     if (!initialFeed) return undefined;
@@ -186,7 +215,14 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
           <div className="col-span-4">
             <div className="space-y-4">
               <FeatureGuard flagName="events_management_enabled">
-                <UpcomingEventsCard chapterId={chapterId} userId={profile?.id} />
+                <UpcomingEventsCard
+                  chapterId={chapterId}
+                  userId={profile?.id}
+                  events={allEvents}
+                  loading={eventsLoading}
+                  error={eventsError}
+                  onRetry={fetchAllEvents}
+                />
               </FeatureGuard>
               <FeatureGuard flagName="financial_tools_enabled">
                 <DuesStatusCard />
@@ -219,10 +255,22 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
           <div className="col-span-3">
             <div className="space-y-6">
               <FeatureGuard flagName="events_management_enabled">
-                <CompactCalendarCard />
+                <CompactCalendarCard
+                  events={allEvents}
+                  loading={eventsLoading}
+                  error={eventsError}
+                  onRetry={fetchAllEvents}
+                />
               </FeatureGuard>
               <FeatureGuard flagName="events_management_enabled">
-                <UpcomingEventsCard chapterId={chapterId} userId={profile?.id} />
+                <UpcomingEventsCard
+                  chapterId={chapterId}
+                  userId={profile?.id}
+                  events={allEvents}
+                  loading={eventsLoading}
+                  error={eventsError}
+                  onRetry={fetchAllEvents}
+                />
               </FeatureGuard>
             </div>
           </div>
