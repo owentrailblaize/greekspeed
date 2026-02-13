@@ -133,7 +133,10 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     }
   };
 
-  if (isInitialLoading && posts.length === 0) {
+  // Only show skeleton placeholders when there is genuinely no data to display.
+  // When initialData is provided from the server, posts.length > 0 on first render
+  // and isInitialLoading is false, so this gate is skipped entirely.
+  if (posts.length === 0 && isInitialLoading) {
     return (
       <div className="space-y-4">
         <div className="animate-pulse">

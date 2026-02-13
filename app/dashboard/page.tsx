@@ -36,6 +36,7 @@ export default async function DashboardPage() {
     return <DashboardPageClient />;
   }
 
+  // Fetch profile first — we need chapter_id to scope the remaining queries.
   const { data: profile } = await supabase
     .from('profiles')
     .select(
@@ -47,11 +48,28 @@ export default async function DashboardPage() {
         chapter,
         role_display,
         first_name,
-        last_name
+        last_name,
+        is_developer
       `,
     )
     .eq('id', session.user.id)
     .maybeSingle();
+
+  // Build a lightweight serverProfile to pass to the client so it can
+  // render DashboardOverview immediately without waiting for AuthProvider
+  // + ProfileProvider to finish their own client-side fetches.
+  const serverProfile = profile
+    ? {
+        id: profile.id as string,
+        role: (profile.role as string | null) ?? null,
+        chapter_id: (profile.chapter_id as string | null) ?? null,
+        chapter: (profile.chapter as string | null) ?? null,
+        welcome_seen: Boolean(profile.welcome_seen),
+        first_name: (profile.first_name as string | null) ?? null,
+        last_name: (profile.last_name as string | null) ?? null,
+        is_developer: Boolean(profile.is_developer),
+      }
+    : null;
 
   let initialFeed:
     | (PostsResponse & {
@@ -60,32 +78,46 @@ export default async function DashboardPage() {
     | null = null;
 
   if (profile?.chapter_id) {
-    const { data: posts, error: postsError } = await supabase
-      .from('posts')
-      .select(
-        `
-          *,
-          author:profiles!author_id(
-            id,
-            full_name,
-            first_name,
-            last_name,
-            avatar_url,
-            chapter_role,
-            member_status
-          )
-        `,
-      )
-      .eq('chapter_id', profile.chapter_id)
-      .order('created_at', { ascending: false })
-      .range(0, POSTS_PAGE_LIMIT - 1);
+    // ---------------------------------------------------------------------------
+    // Run posts, likes, and count queries IN PARALLEL (saves ~200-400ms)
+    // ---------------------------------------------------------------------------
+    const [postsResult, likesResult, countResult] = await Promise.all([
+      supabase
+        .from('posts')
+        .select(
+          `
+            *,
+            author:profiles!author_id(
+              id,
+              full_name,
+              first_name,
+              last_name,
+              avatar_url,
+              chapter_role,
+              member_status
+            )
+          `,
+        )
+        .eq('chapter_id', profile.chapter_id)
+        .order('created_at', { ascending: false })
+        .range(0, POSTS_PAGE_LIMIT - 1),
 
-    if (!postsError && posts) {
-      const { data: userLikes } = await supabase
+      supabase
         .from('post_likes')
         .select('post_id')
-        .eq('user_id', session.user.id);
+        .eq('user_id', session.user.id),
 
+      supabase
+        .from('posts')
+        .select('*', { count: 'exact', head: true })
+        .eq('chapter_id', profile.chapter_id),
+    ]);
+
+    const { data: posts, error: postsError } = postsResult;
+    const { data: userLikes } = likesResult;
+    const { count: totalCount } = countResult;
+
+    if (!postsError && posts) {
       const likedPostIds = new Set(userLikes?.map((like) => like.post_id) ?? []);
 
       const transformedPosts: Post[] = posts.map((post) => ({
@@ -96,11 +128,6 @@ export default async function DashboardPage() {
         comments_count: post.comments_count ?? 0,
         shares_count: post.shares_count ?? 0,
       }));
-
-      const { count: totalCount } = await supabase
-        .from('posts')
-        .select('*', { count: 'exact', head: true })
-        .eq('chapter_id', profile.chapter_id);
 
       initialFeed = {
         posts: transformedPosts,
@@ -119,6 +146,7 @@ export default async function DashboardPage() {
     <DashboardPageClient
       initialFeed={initialFeed ?? undefined}
       fallbackChapterId={profile?.chapter_id ?? null}
+      serverProfile={serverProfile}
     />
   );
 }

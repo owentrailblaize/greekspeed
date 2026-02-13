@@ -84,6 +84,10 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
     queryFn: fetchPage,
     enabled,
     initialPageParam: 1,
+   // When server-seeded, mark data as freshly fetched and keep it fresh for 5 minutes.
+    // This prevents React Query from immediately refetching when `enabled` flips to true.
+    staleTime: normalizedInitialData ? 5 * 60 * 1000 : undefined,
+    initialDataUpdatedAt: normalizedInitialData ? Date.now() : undefined,
     getNextPageParam: (lastPage) => {
       const { page, totalPages } = lastPage.pagination;
       return page < totalPages ? page + 1 : undefined;

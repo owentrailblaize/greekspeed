@@ -22,6 +22,7 @@ import {
 } from '@/lib/utils/profileUpdatePreferences';
 import { getPendingPrompt, clearPendingPrompt, queueProfileUpdatePrompt } from '@/lib/utils/profileUpdatePromptQueue';
 import { useRouter } from 'next/navigation';
+import { ChapterFeaturesProvider } from '@/lib/contexts/ChapterFeaturesContext';
 
 export default function DashboardLayout({
   children,
@@ -42,27 +43,29 @@ export default function DashboardLayout({
   }, [profile, profileLoading, router]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Always show the header */}
-      <DashboardHeader />
-      
-      {/* Wrap the main content with SubscriptionPaywall */}
-      <SubscriptionPaywall>
-        <main className="flex-1">
-          <ModalProvider>
-            <ProfileModalProvider>
-              {children}
-              
-              {/* Global Edit Profile Modal - Rendered at layout level */}
-              <EditProfileModalWrapper />
-              
-              {/* Global User Profile Modal - Rendered at layout level */}
-              <UserProfileModalWrapper />
-            </ProfileModalProvider>
-          </ModalProvider>
-        </main>
-      </SubscriptionPaywall>
-    </div>
+    <ChapterFeaturesProvider>
+      <div className="min-h-screen bg-gray-50">
+        {/* Always show the header */}
+        <DashboardHeader />
+        
+        {/* Wrap the main content with SubscriptionPaywall */}
+        <SubscriptionPaywall>
+          <main className="flex-1">
+            <ModalProvider>
+              <ProfileModalProvider>
+                {children}
+                
+                {/* Global Edit Profile Modal - Rendered at layout level */}
+                <EditProfileModalWrapper />
+                
+                {/* Global User Profile Modal - Rendered at layout level */}
+                <UserProfileModalWrapper />
+              </ProfileModalProvider>
+            </ModalProvider>
+          </main>
+        </SubscriptionPaywall>
+      </div>
+    </ChapterFeaturesProvider>
   );
 }
 
