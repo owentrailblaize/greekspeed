@@ -6,6 +6,7 @@ import { DashboardHeader } from '@/components/features/dashboard/DashboardHeader
 import { useActivityTracking } from '@/lib/hooks/useActivityTracking';
 import { ModalProvider, useModal } from '@/lib/contexts/ModalContext';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { ChapterFeaturesProvider } from '@/lib/contexts/ChapterFeaturesContext';
 import { EditProfileModal } from '@/components/features/profile/EditProfileModal';
 import { EditAlumniProfileModal } from '@/components/features/alumni/EditAlumniProfileModal';
 import { ProfileService } from '@/lib/services/profileService';
@@ -19,22 +20,24 @@ export default function MyChapterLayout({
   useActivityTracking();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Always show the header */}
-      <DashboardHeader />
-      
-      {/* Wrap the main content with SubscriptionPaywall */}
-      <SubscriptionPaywall>
-        <main className="flex-1">
-          <ModalProvider>
-            {children}
-            
-            {/* Global Edit Profile Modal - Rendered at layout level */}
-            <EditProfileModalWrapper />
-          </ModalProvider>
-        </main>
-      </SubscriptionPaywall>
-    </div>
+    <ChapterFeaturesProvider>
+      <div className="min-h-screen bg-gray-50">
+        {/* Always show the header */}
+        <DashboardHeader />
+
+        {/* Wrap the main content with SubscriptionPaywall */}
+        <SubscriptionPaywall>
+          <main className="flex-1">
+            <ModalProvider>
+              {children}
+
+              {/* Global Edit Profile Modal - Rendered at layout level */}
+              <EditProfileModalWrapper />
+            </ModalProvider>
+          </main>
+        </SubscriptionPaywall>
+      </div>
+    </ChapterFeaturesProvider>
   );
 }
 
@@ -49,7 +52,7 @@ function EditProfileModalWrapper() {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 640); // sm breakpoint
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -59,7 +62,7 @@ function EditProfileModalWrapper() {
     try {
       // Update profile data without page reload
       const result = await ProfileService.updateProfile(updatedProfile);
-      
+
       if (result) {
         // Refresh profile data
         await refreshProfile();

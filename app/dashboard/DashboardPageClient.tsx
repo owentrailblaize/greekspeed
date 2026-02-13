@@ -11,22 +11,51 @@ import { queueProfileUpdatePrompt } from '@/lib/utils/profileUpdatePromptQueue';
 import type { DetectedChange } from '@/components/features/profile/ProfileUpdatePromptModal';
 import { useModal } from '@/lib/contexts/ModalContext';
 
+/** Lightweight profile shape from the server RSC — just the fields we need to render. */
+export interface ServerProfile {
+  id: string;
+  role: string | null;
+  chapter_id: string | null;
+  chapter: string | null;
+  welcome_seen: boolean;
+  first_name: string | null;
+  last_name: string | null;
+  is_developer: boolean;
+}
+
 type DashboardPageClientProps = {
   initialFeed?: SocialFeedInitialData | null;
   fallbackChapterId?: string | null;
+  serverProfile?: ServerProfile | null;
 };
 
 export default function DashboardPageClient({
   initialFeed,
   fallbackChapterId,
+  serverProfile
 }: DashboardPageClientProps) {
   const { user, loading: authLoading } = useAuth();
   const { profile, isDeveloper, loading: profileLoading } = useProfile();
   const router = useRouter();
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const { openEditProfileModal } = useModal();
-  const isOAuthUser = user?.app_metadata?.provider &&
-    user?.app_metadata?.provider !== 'email';
+
+  // ---------------------------------------------------------------------------
+  // Derive "effective" values: prefer live context, fall back to server snapshot
+  // ---------------------------------------------------------------------------
+  const effectiveRole = profile?.role ?? serverProfile?.role ?? null;
+  const effectiveChapterId =
+    profile?.chapter_id ?? serverProfile?.chapter_id ?? fallbackChapterId ?? null;
+  const effectiveIsDeveloper = isDeveloper || (serverProfile?.is_developer ?? false);
+
+  // We can render immediately if the server gave us a usable profile
+  const hasServerData = Boolean(serverProfile && (serverProfile.role || serverProfile.is_developer));
+
+  // Context is "ready" when either server data lets us render or contexts finished loading
+  const contextReady = hasServerData || (!authLoading && !profileLoading);
+
+  const isOAuthUser =
+    user?.app_metadata?.provider && user?.app_metadata?.provider !== 'email';
 
   // Handler for sharing an introduction post from welcome modal
   const handleShareIntroduction = () => {
@@ -42,6 +71,9 @@ export default function DashboardPageClient({
     queueProfileUpdatePrompt(profile.id, [introductionChange]);
   };
 
+ // ---------------------------------------------------------------------------
+  // Side-effects: redirects & welcome modal (still gated on full context)
+  // ---------------------------------------------------------------------------
   useEffect(() => {
     if (authLoading || profileLoading) return;
 
@@ -61,21 +93,24 @@ export default function DashboardPageClient({
       }
 
       if (!isDeveloper && !isOAuthUser && (!profile.chapter || !profile.role)) {
-        // Give it a bit more time for the profile to fully load
         const timeoutId = setTimeout(() => {
-          // Only redirect if still incomplete after waiting
           if (!profile.chapter || !profile.role) {
             console.warn('Email signup profile appears incomplete after loading delay');
             router.push('/profile/complete');
           }
         }, 3000);
-        
+
         return () => clearTimeout(timeoutId);
       }
     }
   }, [authLoading, profileLoading, user, profile, isDeveloper, isOAuthUser, router]);
 
-  if (authLoading || profileLoading) {
+  // ---------------------------------------------------------------------------
+  // Render gates
+  // ---------------------------------------------------------------------------
+
+  // Show spinner ONLY when we have no server data AND client is still loading
+  if (!contextReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -86,16 +121,24 @@ export default function DashboardPageClient({
     );
   }
 
-  if (!user) {
+  // After client context loads: if no user, return null (redirect fires via effect)
+  if (!authLoading && !user && !hasServerData) {
     return null;
   }
 
-  if (!isDeveloper && isOAuthUser && (!profile?.chapter || !profile?.role)) {
+  // Incomplete OAuth profile guard (only after context has resolved)
+  if (
+    !authLoading &&
+    !profileLoading &&
+    !effectiveIsDeveloper &&
+    isOAuthUser &&
+    (!profile?.chapter || !profile?.role)
+  ) {
     return null;
   }
 
-  // Don't render DashboardOverview until we have a role (prevents placeholder flash)
-  if (!profile?.role && !isDeveloper) {
+  // No role and not developer — show spinner (edge case: no server data, no role)
+  if (!effectiveRole && !effectiveIsDeveloper) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -110,14 +153,15 @@ export default function DashboardPageClient({
     <div>
       <div style={{ display: 'none' }}>Dashboard Page Wrapper</div>
       <DashboardOverview
-        userRole={profile?.role || null}
+        userRole={effectiveRole}
         initialFeed={initialFeed ?? undefined}
-        fallbackChapterId={fallbackChapterId}
+        fallbackChapterId={effectiveChapterId}
+        isDeveloper={effectiveIsDeveloper}
       />
 
       {showWelcomeModal && profile && (
-        <WelcomeModal 
-          profile={profile} 
+        <WelcomeModal
+          profile={profile}
           onClose={() => setShowWelcomeModal(false)}
           onShareIntroduction={handleShareIntroduction}
           onEditProfile={openEditProfileModal}

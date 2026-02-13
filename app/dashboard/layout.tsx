@@ -14,6 +14,7 @@ import { ProfileService } from '@/lib/services/profileService';
 import { ProfileUpdatePromptModal } from '@/components/features/profile/ProfileUpdatePromptModal';
 import type { DetectedChange } from '@/components/features/profile/ProfileUpdatePromptModal';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { ChapterFeaturesProvider } from '@/lib/contexts/ChapterFeaturesContext';
 import type { CreatePostRequest } from '@/types/posts';
 import {
   getProfileUpdatePrefs,
@@ -42,27 +43,29 @@ export default function DashboardLayout({
   }, [profile, profileLoading, router]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Always show the header */}
-      <DashboardHeader />
-      
-      {/* Wrap the main content with SubscriptionPaywall */}
-      <SubscriptionPaywall>
-        <main className="flex-1">
-          <ModalProvider>
-            <ProfileModalProvider>
-              {children}
-              
-              {/* Global Edit Profile Modal - Rendered at layout level */}
-              <EditProfileModalWrapper />
-              
-              {/* Global User Profile Modal - Rendered at layout level */}
-              <UserProfileModalWrapper />
-            </ProfileModalProvider>
-          </ModalProvider>
-        </main>
-      </SubscriptionPaywall>
-    </div>
+    <ChapterFeaturesProvider>
+      <div className="min-h-screen bg-gray-50">
+        {/* Always show the header */}
+        <DashboardHeader />
+
+        {/* Wrap the main content with SubscriptionPaywall */}
+        <SubscriptionPaywall>
+          <main className="flex-1">
+            <ModalProvider>
+              <ProfileModalProvider>
+                {children}
+
+                {/* Global Edit Profile Modal - Rendered at layout level */}
+                <EditProfileModalWrapper />
+
+                {/* Global User Profile Modal - Rendered at layout level */}
+                <UserProfileModalWrapper />
+              </ProfileModalProvider>
+            </ModalProvider>
+          </main>
+        </SubscriptionPaywall>
+      </div>
+    </ChapterFeaturesProvider>
   );
 }
 
@@ -71,7 +74,7 @@ function EditProfileModalWrapper() {
   const { isEditProfileModalOpen, closeEditProfileModal } = useModal();
   const { profile, refreshProfile } = useProfile();
   const [isMobile, setIsMobile] = useState(false);
-  
+
   // State for profile update prompt modal
   const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);
   const [detectedChanges, setDetectedChanges] = useState<DetectedChange[]>([]);
@@ -82,7 +85,7 @@ function EditProfileModalWrapper() {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 640); // sm breakpoint
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -92,7 +95,7 @@ function EditProfileModalWrapper() {
     try {
       // Update profile data without page reload
       const result = await ProfileService.updateProfile(updatedProfile);
-      
+
       if (result) {
         // Refresh profile data
         await refreshProfile();
@@ -119,7 +122,7 @@ function EditProfileModalWrapper() {
       queueProfileUpdatePrompt(profile.id, changes);
       return;
     }
-    
+
     // Show the prompt
     setDetectedChanges(changes);
     setShowUpdatePrompt(true);
@@ -143,7 +146,7 @@ function EditProfileModalWrapper() {
       const pending = getPendingPrompt(profile.id);
       if (pending && pending.changes.length > 0) {
         console.log('📬 Found pending prompt, showing after short delay...');
-        
+
         // Reduced delay: 2 seconds after modal closes
         timeoutId = setTimeout(() => {
           // Double-check edit modal is still closed
@@ -195,7 +198,7 @@ function EditProfileModalWrapper() {
     };
   }, [profile?.id, isEditProfileModalOpen, handleProfileUpdatedWithChanges]);
 
-  
+
   // Handler for updating user prompt preferences from the modal
   const handleUpdatePromptPrefs = (prefs: ProfileUpdatePrefs) => {
     if (!profile?.id) return;
@@ -265,7 +268,7 @@ function EditProfileModalWrapper() {
           variant={isMobile ? 'mobile' : 'desktop'}
           onProfileUpdatedWithChanges={handleProfileUpdatedWithChanges}
         />
-        
+
         {/* Profile Update Prompt Modal */}
         {showUpdatePrompt && detectedChanges.length > 0 && (
           <ProfileUpdatePromptModal
@@ -298,7 +301,7 @@ function EditProfileModalWrapper() {
         variant={isMobile ? 'mobile' : 'desktop'}
         onProfileUpdatedWithChanges={handleProfileUpdatedWithChanges}
       />
-      
+
       {/* Profile Update Prompt Modal */}
       {showUpdatePrompt && detectedChanges.length > 0 && (
         <ProfileUpdatePromptModal
