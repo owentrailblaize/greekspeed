@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     // This mirrors the pattern already used in the server RSC (page.tsx).
     // -------------------------------------------------------------------------
     const [postsResult, likesResult, countResult] = await Promise.all([
-      // Query 1: Posts with author + comments_preview
+      // Query 1: Posts with author only (no comments - loaded on-demand)
       supabase
         .from('posts')
         .select(`
@@ -56,28 +56,10 @@ export async function GET(request: NextRequest) {
             avatar_url,
             chapter_role,
             member_status
-          ),
-          comments_preview:post_comments(
-            id,
-            post_id,
-            author_id,
-            content,
-            likes_count,
-            created_at,
-            updated_at,
-            author:profiles!post_comments_author_id_fkey(
-              id,
-              full_name,
-              first_name,
-              last_name,
-              avatar_url
-            )
           )
         `)
         .eq('chapter_id', chapterId)
         .order('created_at', { ascending: false })
-        .order('created_at', { ascending: false, foreignTable: 'post_comments' })
-        .limit(2, { foreignTable: 'post_comments' })
         .range(offset, offset + limit - 1),
 
       // Query 2: User likes (runs in parallel — filtered to post IDs after)
@@ -119,28 +101,15 @@ export async function GET(request: NextRequest) {
         ? post.author[0] || null
         : post.author || null;
 
-      // Normalize comment authors as well
-      const preview = Array.isArray(post.comments_preview)
-        ? [...post.comments_preview]
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-            .slice(0, 2)
-            .map(comment => ({
-              ...comment,
-              author: Array.isArray(comment.author) 
-                ? comment.author[0] || null
-                : comment.author || null
-            }))
-        : [];
-
       return {
         ...post,
         author,
         is_liked: likedPostIds.has(post.id),
         is_author: post.author_id === user.id,
         likes_count: post.likes_count || 0,
-        comments_count: post.comments_count || preview.length,
+        comments_count: post.comments_count || 0,
         shares_count: post.shares_count || 0,
-        comments_preview: preview
+        // No comments_preview - will be loaded on-demand when user expands post
       };
     }) || [];
 

@@ -97,14 +97,23 @@ export default async function DashboardPage() {
     if (!postsError && posts) {
       const likedPostIds = new Set(userLikes?.map((like) => like.post_id) ?? []);
 
-      const transformedPosts: Post[] = posts.map((post) => ({
-        ...post,
-        is_liked: likedPostIds.has(post.id),
-        is_author: post.author_id === session.user.id,
-        likes_count: post.likes_count ?? 0,
-        comments_count: post.comments_count ?? 0,
-        shares_count: post.shares_count ?? 0,
-      }));
+      const transformedPosts: Post[] = posts.map((post) => {
+        // Normalize author - Supabase may return it as an array even for one-to-one relationships
+        const author = Array.isArray(post.author) 
+          ? post.author[0] || null
+          : post.author || null;
+
+        return {
+          ...post,
+          author,
+          is_liked: likedPostIds.has(post.id),
+          is_author: post.author_id === session.user.id,
+          likes_count: post.likes_count ?? 0,
+          comments_count: post.comments_count ?? 0,
+          shares_count: post.shares_count ?? 0,
+          // No comments_preview - will be loaded on-demand
+        };
+      });
 
       initialFeed = {
         posts: transformedPosts,
