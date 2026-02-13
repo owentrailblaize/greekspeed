@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect } from 'react';
 import {
   useInfiniteQuery,
   useQueryClient,
@@ -9,6 +9,7 @@ import {
 } from '@tanstack/react-query';
 import { useAuth } from '@/lib/supabase/auth-context';
 import type { Post, PostsResponse, CreatePostRequest } from '@/types/posts';
+import { writeFeedCache, readFeedCache } from '@/lib/cache/feedCache';
 
 interface InitialFeedData extends PostsResponse {
   chapterId: string;
@@ -40,6 +41,18 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
     if (!chapterId) return options.initialData;
     return options.initialData.chapterId === chapterId ? options.initialData : undefined;
   }, [chapterId, options.initialData]);
+
+  // ---- Read localStorage cache as placeholder when no server data ----
+  const cachedFeed = useMemo(() => {
+    if (normalizedInitialData) return undefined; // Server data takes priority
+    if (typeof window === 'undefined') return undefined;
+    const cached = readFeedCache(chapterId);
+    if (!cached) return undefined;
+    return {
+      pages: [cached] as PostsResponse[],
+      pageParams: [1],
+    } satisfies InfiniteData<PostsResponse, number>;
+  }, [chapterId, normalizedInitialData]);
 
   const pageSize = Math.min(Math.max(options.pageSize ?? 10, 1), 50);
   const queryKey = useMemo<PostsQueryKey>(() => ['posts', chapterId, pageSize], [chapterId, pageSize]);
@@ -79,12 +92,13 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
     isLoading,
     isInitialLoading,
     isRefetching,
+    isPlaceholderData,
   } = useInfiniteQuery<PostsResponse, Error, InfiniteData<PostsResponse, number>, PostsQueryKey, number>({
     queryKey,
     queryFn: fetchPage,
     enabled,
     initialPageParam: 1,
-   // When server-seeded, mark data as freshly fetched and keep it fresh for 5 minutes.
+    // When server-seeded, mark data as freshly fetched and keep it fresh for 5 minutes.
     // This prevents React Query from immediately refetching when `enabled` flips to true.
     staleTime: normalizedInitialData ? 5 * 60 * 1000 : undefined,
     initialDataUpdatedAt: normalizedInitialData ? Date.now() : undefined,
@@ -98,7 +112,19 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
           pageParams: [1],
         }
       : undefined,
+    placeholderData: cachedFeed,
   });
+
+  // ---- Write to localStorage after real (non-placeholder) fetch ----
+  useEffect(() => {
+    if (
+      !isPlaceholderData &&
+      data?.pages?.[0]?.posts?.length &&
+      chapterId
+    ) {
+      writeFeedCache(chapterId, data.pages[0]);
+    }
+  }, [data, chapterId, isPlaceholderData]);
 
   const posts = useMemo(() => {
     const pages = data?.pages ?? [];
