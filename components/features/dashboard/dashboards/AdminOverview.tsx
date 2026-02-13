@@ -264,7 +264,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
           <div className="col-span-4">
             <div className="space-y-4">
               <FeatureGuard flagName="events_management_enabled">
-                <UpcomingEventsCard />
+                <UpcomingEventsCard chapterId={chapterId} userId={profile?.id} />
               </FeatureGuard>
               {chapterId && <TasksPanel chapterId={chapterId} />}
               {/* Include DuesStatusCard on tablet since left sidebar is hidden */}
@@ -298,7 +298,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
               <CompactCalendarCard />
             </FeatureGuard>
             <FeatureGuard flagName="events_management_enabled">
-              <UpcomingEventsCard />
+              <UpcomingEventsCard chapterId={chapterId} userId={profile?.id} />
             </FeatureGuard>
             {chapterId && <TasksPanel chapterId={chapterId} />}
             <DocsCompliancePanel />

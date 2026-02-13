@@ -186,7 +186,7 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
           <div className="col-span-4">
             <div className="space-y-4">
               <FeatureGuard flagName="events_management_enabled">
-                <UpcomingEventsCard />
+                <UpcomingEventsCard chapterId={chapterId} userId={profile?.id} />
               </FeatureGuard>
               <FeatureGuard flagName="financial_tools_enabled">
                 <DuesStatusCard />
@@ -222,7 +222,7 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
                 <CompactCalendarCard />
               </FeatureGuard>
               <FeatureGuard flagName="events_management_enabled">
-                <UpcomingEventsCard />
+                <UpcomingEventsCard chapterId={chapterId} userId={profile?.id} />
               </FeatureGuard>
             </div>
           </div>

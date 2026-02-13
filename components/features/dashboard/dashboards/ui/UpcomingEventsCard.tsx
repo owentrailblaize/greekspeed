@@ -10,7 +10,21 @@ import { parseRawTime } from '@/lib/utils/timezoneUtils';
 import { EventDetailModal } from '@/components/features/events/EventDetailModal';
 import { EventActionsMenu } from '@/components/features/events/EventActionsMenu';
 
-export function UpcomingEventsCard() {
+/* -----------------------------------------------------------------------
+ * Performance: Accept chapterId + userId as props so the widget can start
+ * fetching immediately at mount without waiting for ProfileContext.
+ * RSVP statuses are now included in the /api/events response
+ * (user_rsvp_status field) — eliminates N+1 individual RSVP calls.
+ * ----------------------------------------------------------------------- */
+
+interface UpcomingEventsCardProps {
+  /** If provided, skip ProfileContext wait and start fetching immediately */
+  chapterId?: string | null;
+  /** If provided, events response will include user_rsvp_status inline */
+  userId?: string | null;
+}
+
+export function UpcomingEventsCard({ chapterId: propChapterId, userId: propUserId }: UpcomingEventsCardProps = {}) {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,8 +38,10 @@ export function UpcomingEventsCard() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   
+  // Use prop values first, fall back to ProfileContext
   const { profile } = useProfile();
-  const chapterId = profile?.chapter_id;
+  const chapterId = propChapterId ?? profile?.chapter_id;
+  const userId = propUserId ?? profile?.id;
 
   // Calculate pagination
   const totalPages = Math.ceil(events.length / eventsPerPage);
@@ -33,24 +49,33 @@ export function UpcomingEventsCard() {
   const endIndex = startIndex + eventsPerPage;
   const currentEvents = events.slice(startIndex, endIndex);
 
-  // Fetch events for the user's chapter
+  // Fetch events for the user's chapter — now includes user_rsvp_status inline
   const fetchEvents = async () => {
-    if (!chapterId || !profile?.id) return;
+    if (!chapterId || !userId) return;
     
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=upcoming`);
+      // Pass user_id so the API returns user_rsvp_status per event (kills N+1)
+      const response = await fetch(
+        `/api/events?chapter_id=${chapterId}&scope=upcoming&user_id=${userId}`
+      );
       if (!response.ok) {
         throw new Error('Failed to fetch events');
       }
       
-      const data = await response.json();
+      const data: Event[] = await response.json();
       setEvents(data);
 
-      // Fetch user's RSVP statuses for all events
-      await fetchUserRSVPs(data, profile.id);
+      // Extract inline RSVP statuses from the response — NO extra requests needed
+      const userRsvps: Record<string, 'attending' | 'maybe' | 'not_attending'> = {};
+      data.forEach((event) => {
+        if (event.user_rsvp_status) {
+          userRsvps[event.id] = event.user_rsvp_status;
+        }
+      });
+      setRsvpStatuses(userRsvps);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -60,7 +85,7 @@ export function UpcomingEventsCard() {
 
   useEffect(() => {
     fetchEvents();
-  }, [chapterId, profile?.id]);
+  }, [chapterId, userId]);
 
   // Reset to page 1 when events change
   useEffect(() => {
@@ -69,35 +94,8 @@ export function UpcomingEventsCard() {
     }
   }, [events.length]);
 
-  // Fetch user's RSVP statuses for all events
-  const fetchUserRSVPs = async (eventsList: Event[], userId: string) => {
-    try {
-      const rsvpPromises = eventsList.map(async (event) => {
-        const response = await fetch(`/api/events/${event.id}/rsvp?user_id=${userId}`);
-        if (response.ok) {
-          const rsvpData = await response.json();
-          return { eventId: event.id, status: rsvpData.status };
-        }
-        return null;
-      });
-
-      const rsvpResults = await Promise.all(rsvpPromises);
-      const userRsvps: Record<string, 'attending' | 'maybe' | 'not_attending'> = {};
-      
-      rsvpResults.forEach((result) => {
-        if (result && result.status) {
-          userRsvps[result.eventId] = result.status;
-        }
-      });
-
-      setRsvpStatuses(userRsvps);
-    } catch (error) {
-      console.error('Error fetching user RSVPs:', error);
-    }
-  };
-
   const handleRSVP = async (eventId: string, status: 'attending' | 'maybe' | 'not_attending') => {
-    if (!profile?.id) return;
+    if (!userId) return;
     
     try {
       const response = await fetch(`/api/events/${eventId}/rsvp`, {
@@ -107,18 +105,29 @@ export function UpcomingEventsCard() {
         },
         body: JSON.stringify({
           status,
-          user_id: profile.id,
+          user_id: userId,
         }),
       });
 
       if (response.ok) {
         setRsvpStatuses(prev => ({ ...prev, [eventId]: status }));
         
-        // Refresh events to get updated RSVP counts
-        const eventsResponse = await fetch(`/api/events?chapter_id=${chapterId}&scope=upcoming`);
+        // Refresh events to get updated RSVP counts (includes user_rsvp_status)
+        const eventsResponse = await fetch(
+          `/api/events?chapter_id=${chapterId}&scope=upcoming&user_id=${userId}`
+        );
         if (eventsResponse.ok) {
-          const updatedEvents = await eventsResponse.json();
+          const updatedEvents: Event[] = await eventsResponse.json();
           setEvents(updatedEvents);
+          
+          // Update RSVP statuses from refreshed data
+          const userRsvps: Record<string, 'attending' | 'maybe' | 'not_attending'> = {};
+          updatedEvents.forEach((event) => {
+            if (event.user_rsvp_status) {
+              userRsvps[event.id] = event.user_rsvp_status;
+            }
+          });
+          setRsvpStatuses(userRsvps);
         }
       } else {
         const errorData = await response.json();
