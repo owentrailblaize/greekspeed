@@ -56,7 +56,7 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
 
   const pageSize = Math.min(Math.max(options.pageSize ?? 10, 1), 50);
   const queryKey = useMemo<PostsQueryKey>(() => ['posts', chapterId, pageSize], [chapterId, pageSize]);
-  const enabled = Boolean(user && session && chapterId);
+  const enabled = Boolean(user && session && chapterId) || Boolean(normalizedInitialData);
 
   const fetchPage = useCallback(
     async ({ pageParam = 1 }: QueryFunctionContext<PostsQueryKey, number>) => {
@@ -102,6 +102,8 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
     // This prevents React Query from immediately refetching when `enabled` flips to true.
     staleTime: normalizedInitialData ? 5 * 60 * 1000 : undefined,
     initialDataUpdatedAt: normalizedInitialData ? Date.now() : undefined,
+    refetchOnMount: normalizedInitialData ? false : 'always',
+    refetchOnWindowFocus: false,
     getNextPageParam: (lastPage) => {
       const { page, totalPages } = lastPage.pagination;
       return page < totalPages ? page + 1 : undefined;

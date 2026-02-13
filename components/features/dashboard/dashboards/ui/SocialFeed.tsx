@@ -26,6 +26,8 @@ interface SocialFeedProps {
 export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
+  const [hasScrolled, setHasScrolled] = useState(false); // ← ADD THIS
+
   const {
     posts,
     error,
@@ -45,6 +47,12 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
   const prevPostCountRef = useRef(mergedPosts.length);
 
   useEffect(() => {
+    const handleScroll = () => setHasScrolled(true);
+    window.addEventListener('scroll', handleScroll, { once: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
     if (!expandedPostId) return;
     const stillExists = mergedPosts.some((post) => post.id === expandedPostId);
     if (!stillExists) {
@@ -54,7 +62,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
 
   useEffect(() => {
     const node = loadMoreRef.current;
-    if (!node || !hasNextPage) return;
+    if (!node || !hasNextPage || !hasScrolled) return; // ← Added !hasScrolled
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -71,7 +79,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     return () => {
       observer.disconnect();
     };
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, hasScrolled]); // ← Added hasScrolled
 
   const rowVirtualizer = useWindowVirtualizer({
     count: mergedPosts.length,
