@@ -170,7 +170,14 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
 
   return (
     <>
-      <div className="space-y-6 sm:space-y-5 max-w-2xl mx-auto">
+      <div 
+        className="space-y-6 sm:space-y-5 max-w-2xl mx-auto"
+        style={{
+          minHeight: initialData?.posts && initialData.posts.length > 0
+            ? `${Math.min(initialData.posts.length * 400, 2000)}px` // Cap at 2000px
+            : '600px'
+        }}
+      >
         <Card className="hidden sm:block rounded-2xl border border-gray-100 bg-white/80 shadow-sm transition hover:shadow-md">
           <CardContent className="p-0">
             <div className="flex items-center gap-3 px-5 py-4">

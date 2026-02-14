@@ -130,8 +130,15 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
 
   const posts = useMemo(() => {
     const pages = data?.pages ?? [];
-    return pages.flatMap((page) => page.posts);
-  }, [data]);
+    const queryPosts = pages.flatMap((page) => page.posts);
+    
+    // Optimistic UI: If React Query hasn't loaded yet, use initialData immediately
+    if (queryPosts.length === 0 && normalizedInitialData?.posts) {
+      return normalizedInitialData.posts;
+    }
+    
+    return queryPosts;
+  }, [data, normalizedInitialData]);
 
   const updateCachedPages = useCallback(
     (updater: (pages: PostsResponse[]) => PostsResponse[]) => {

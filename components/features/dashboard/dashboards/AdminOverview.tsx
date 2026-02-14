@@ -94,12 +94,6 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
     fetchAllEvents();
   }, [fetchAllEvents]);
 
-  const feedData = useMemo(() => {
-    if (!initialFeed) return undefined;
-    if (!chapterId) return initialFeed;
-    return initialFeed.chapterId === chapterId ? initialFeed : undefined;
-  }, [chapterId, initialFeed]);
-
   // Handle tool query param from FAB menu
   useEffect(() => {
     const tool = searchParams.get('tool');
@@ -241,7 +235,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
               )}
             </div>
             <div className="w-full">
-              <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
+              <SocialFeed chapterId={chapterId || ''} initialData={initialFeed} />
             </div>
           </div>
         );
@@ -261,7 +255,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
         return (
           <div className="space-y-4">
             <div className="w-full">
-              <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
+              <SocialFeed chapterId={chapterId || ''} initialData={initialFeed} />
             </div>
           </div>
         );
@@ -286,7 +280,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
         <div className="hidden sm:grid lg:hidden grid-cols-12 gap-4">
           {/* Main Content - Social Feed (takes ~70%) */}
           <div className="col-span-8">
-            <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
+            <SocialFeed chapterId={chapterId || ''} initialData={initialFeed} />
           </div>
 
           {/* Right Sidebar - Events & Key Info (~30%) */}
@@ -315,21 +309,21 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
 
         {/* Desktop Layout (lg+): Three Column Grid */}
         <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6">
+          {/* Center Column - 6 columns wide (RENDER FIRST for faster paint) */}
+          <div className="col-span-6 col-start-4 space-y-6">
+            <SocialFeed chapterId={chapterId || ''} initialData={initialFeed} />
+          </div>
+
           {/* Left Column - 3 columns wide */}
-          <div className="col-span-3 space-y-6">
+          <div className="col-span-3 col-start-1 row-start-1 space-y-6">
             <FeatureGuard flagName="financial_tools_enabled">
               <DuesStatusCard />
             </FeatureGuard>
             <OperationsFeed />
           </div>
 
-          {/* Center Column - 6 columns wide */}
-          <div className="col-span-6 space-y-6">
-            <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
-          </div>
-
           {/* Right Column - 3 columns wide */}
-          <div className="col-span-3 space-y-6">
+          <div className="col-span-3 col-start-10 row-start-1 space-y-6">
             <FeatureGuard flagName="events_management_enabled">
               <CompactCalendarCard
                 events={allEvents}

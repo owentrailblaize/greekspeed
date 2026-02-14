@@ -72,12 +72,6 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
     fetchAllEvents();
   }, [fetchAllEvents]);
 
-  const feedData = useMemo(() => {
-    if (!initialFeed) return undefined;
-    if (!chapterId) return initialFeed;
-    return initialFeed.chapterId === chapterId ? initialFeed : undefined;
-  }, [chapterId, initialFeed]);
-
   // Mobile detection
   useEffect(() => {
     const checkMobile = () => {
@@ -140,7 +134,7 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
           <div className="space-y-4">
             {/* Primary Feature: Social Feed */}
             <div className="w-full">
-              <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
+              <SocialFeed chapterId={chapterId || ''} initialData={initialFeed} />
             </div>
           </div>
         );
@@ -165,7 +159,7 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
           <div className="space-y-4">
             {/* Primary Feature: Social Feed */}
             <div className="w-full">
-              <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
+              <SocialFeed chapterId={chapterId || ''} initialData={initialFeed} />
             </div>
           </div>
         );
@@ -208,7 +202,7 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
         <div className="hidden sm:grid lg:hidden grid-cols-12 gap-4">
           {/* Main Content - Social Feed (takes ~70%) */}
           <div className="col-span-8">
-            <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
+            <SocialFeed chapterId={chapterId || ''} initialData={initialFeed} />
           </div>
 
           {/* Right Sidebar - Events & Key Info (~30%) */}
@@ -235,8 +229,13 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
 
         {/* Desktop Layout: Three Column Grid (Preserved) */}
         <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6">
+          {/* Center Column - Social Feed (RENDER FIRST for faster paint) */}
+          <div className="col-span-6 col-start-4">
+            <SocialFeed chapterId={chapterId || ''} initialData={initialFeed} />
+          </div>
+
           {/* Left Sidebar - Dues, Tasks, Calendar & Documents */}
-          <div className="col-span-3">
+          <div className="col-span-3 col-start-1 row-start-1">
             <div className="space-y-6">
               <FeatureGuard flagName="financial_tools_enabled">
                 <DuesStatusCard />
@@ -246,13 +245,8 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
             </div>
           </div>
 
-          {/* Center Column - Social Feed */}
-          <div className="col-span-6">
-            <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
-          </div>
-
           {/* Right Sidebar - Events & Networking */}
-          <div className="col-span-3">
+          <div className="col-span-3 col-start-10 row-start-1">
             <div className="space-y-6">
               <FeatureGuard flagName="events_management_enabled">
                 <CompactCalendarCard
