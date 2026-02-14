@@ -18,7 +18,7 @@ import { useChapterLogo } from '@/lib/hooks/useChapterLogo';
 function NavLink({ href, label, locked = false }: { href: string; label: string; locked?: boolean }) {
   const pathname = usePathname();
   const isActive = pathname === href;
-  
+
   if (locked) {
     return (
       <div
@@ -33,14 +33,14 @@ function NavLink({ href, label, locked = false }: { href: string; label: string;
       </div>
     );
   }
-  
+
   return (
     <Link
       href={href}
       className={cn(
         'relative flex items-center justify-center h-8 rounded-full px-3 sm:px-4 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-focus',
-        isActive 
-          ? 'bg-brand-primary/10 text-brand-primary font-medium shadow-sm hover:bg-brand-primary/20 hover:shadow-md' 
+        isActive
+          ? 'bg-brand-primary/10 text-brand-primary font-medium shadow-sm hover:bg-brand-primary/20 hover:shadow-md'
           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm shadow-sm'
       )}
     >
@@ -58,15 +58,18 @@ export function DashboardHeader() {
 
   // Check if financial tools feature is enabled
   const { enabled: financialToolsEnabled, loading: flagLoading } = useFeatureFlag('financial_tools_enabled');
-  
+
   // Get dynamic logo URL from branding system
   const logoUrl = useChapterLogo();
-  
+
+  // Check if this is the default logo or an uploaded logo
+  const isDefaultLogo = logoUrl === '/logo.png' || logoUrl.endsWith('/logo.png');
+
   // Count pending connection requests that require action
-  const pendingConnections = connections.filter(conn => 
+  const pendingConnections = connections.filter(conn =>
     conn.status === 'pending' && conn.recipient_id === user?.id
   ).length;
-  
+
   const completion = profile ? ProfileService.calculateCompletion(profile) : null;
   const completionPercent = completion?.percentage ?? 0;
   const hasUnread = pendingConnections > 0; // Now based on actual pending connections
@@ -114,15 +117,28 @@ export function DashboardHeader() {
         {/* Left side - Logo/Branding + Divider + Navigation tabs */}
         <div className="flex items-center space-x-4 sm:space-x-6 flex-shrink-0">
           {/* Logo/Branding - Now visible on both mobile and desktop */}
-          <Link 
-            href="/dashboard" 
-            className="flex items-center hover:opacity-80 transition-opacity"
+          <Link
+            href="/dashboard"
+            className={cn(
+              "flex items-center hover:opacity-80 transition-opacity",
+              !isDefaultLogo && "h-full overflow-hidden max-w-[448px]"
+            )}
           >
-            <img
-              src={logoUrl}
-              alt="Trailblaize"
-              className="h-28 w-auto max-h-full object-contain transition-all duration-300"
-            />
+            {isDefaultLogo ? (
+              <img
+                src={logoUrl}
+                alt="Trailblaize"
+                className="h-28 w-auto object-contain transition-all duration-300"
+              />
+            ) : (
+              <div className="h-full max-h-[56px] flex items-center overflow-hidden max-w-full py-1">
+                <img
+                  src={logoUrl}
+                  alt="Trailblaize"
+                  className="max-h-[44px] w-auto max-w-full object-contain transition-all duration-300"
+                />
+              </div>
+            )}
           </Link>
 
           {/* Vertical Divider */}
@@ -144,8 +160,8 @@ export function DashboardHeader() {
             href="/dashboard/messages"
             className={cn(
               'hidden sm:flex items-center justify-center h-8 w-8 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-focus shadow-sm',
-              pathname === '/dashboard/messages' 
-                ? 'bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 hover:shadow-md' 
+              pathname === '/dashboard/messages'
+                ? 'bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 hover:shadow-md'
                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-md'
             )}
           >
@@ -158,8 +174,8 @@ export function DashboardHeader() {
               href="/dashboard/messages"
               className={cn(
                 'sm:hidden flex items-center justify-center h-8 w-8 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-focus shadow-sm',
-                pathname === '/dashboard/messages' 
-                  ? 'bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 hover:shadow-md' 
+                pathname === '/dashboard/messages'
+                  ? 'bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 hover:shadow-md'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-md'
               )}
             >

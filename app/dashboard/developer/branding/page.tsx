@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,21 @@ interface Chapter {
  * Allows developers to manage branding for all chapters with a sidebar interface
  */
 export default function DeveloperBrandingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <DeveloperBrandingPageContent />
+    </Suspense>
+  );
+}
+
+function DeveloperBrandingPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { profile, isDeveloper } = useProfile();

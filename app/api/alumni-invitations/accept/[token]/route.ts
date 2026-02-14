@@ -3,21 +3,21 @@ import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { validateInvitationToken, validateEmailDomain, hasEmailUsedInvitation, recordInvitationUsage } from '@/lib/utils/invitationUtils';
 import { generateUniqueUsername, generateProfileSlug } from '@/lib/utils/usernameUtils';
 
-// New interface for alumni form data
+// New interface for alumni form data (simplified - most fields collected during onboarding)
 interface AlumniJoinFormData {
   email: string;
   password: string;
-  full_name: string;
+  full_name?: string;
   first_name?: string;
   last_name?: string;
   phone?: string;
   sms_consent?: boolean;
-  // Alumni-specific fields
-  industry: string;
-  company: string;
-  job_title: string;
-  graduation_year: number;
-  location: string;
+  // Alumni-specific fields - now optional, collected during onboarding
+  industry?: string;
+  company?: string;
+  job_title?: string;
+  graduation_year?: number;
+  location?: string;
   linkedin_url?: string;
 }
 
@@ -35,31 +35,35 @@ export async function POST(
       return NextResponse.json({ error: 'Token is required' }, { status: 400 });
     }
 
-    if (
-      !email?.trim() ||
-      !password ||
-      !full_name?.trim() ||
-      !industry?.trim() ||
-      !company?.trim() ||
-      !job_title?.trim() ||
-      !graduation_year ||
-      !location?.trim()
-    ) {
-      return NextResponse.json({ error: 'All required fields must be provided' }, { status: 400 });
+    // Only require email, password, and name for account creation
+    // Other fields will be collected during onboarding
+    if (!email?.trim() || !password) {
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    }
+
+    // Require at least some form of name
+    if (!full_name?.trim() && !first_name?.trim()) {
+      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
-    const normalizedFullName = full_name.trim();
+    
+    // Build effective name values
+    const effectiveFullName = full_name?.trim() || `${first_name || ''} ${last_name || ''}`.trim();
+    const normalizedFullName = effectiveFullName;
     const defaultFirstName = normalizedFullName.split(' ')[0] || normalizedFullName;
     const defaultLastName = normalizedFullName.split(' ').slice(1).join(' ');
     const normalizedFirstName = (first_name ?? defaultFirstName).trim();
     const normalizedLastName = (last_name ?? defaultLastName).trim();
-    const normalizedIndustry = industry.trim();
-    const normalizedCompany = company.trim();
-    const normalizedJobTitle = job_title.trim();
-    const normalizedLocation = location.trim();
+    
+    // Alumni fields - use defaults if not provided (will be updated during onboarding)
+    const normalizedIndustry = industry?.trim() || 'Not specified';
+    const normalizedCompany = company?.trim() || 'Not specified';
+    const normalizedJobTitle = job_title?.trim() || 'Not specified';
+    const normalizedLocation = location?.trim() || 'Not specified';
     const normalizedLinkedIn = linkedin_url?.trim() || null;
     const normalizedPhone = body.phone?.trim() || null;
+    const effectiveGradYear = graduation_year || new Date().getFullYear();
     const nowIso = new Date().toISOString();
 
     // Validate the invitation token
@@ -141,6 +145,7 @@ export async function POST(
         access_level: 'standard',
         is_developer: false,
         bio: null,
+        onboarding_completed: false, // Will be completed after onboarding
         created_at: nowIso,
         updated_at: nowIso
       },
@@ -190,7 +195,7 @@ export async function POST(
       full_name: normalizedFullName,
       chapter: validation.chapter_name,
       industry: normalizedIndustry,
-      graduation_year,
+      graduation_year: effectiveGradYear,
       company: normalizedCompany,
       job_title: normalizedJobTitle,
       email: normalizedEmail,

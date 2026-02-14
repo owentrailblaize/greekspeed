@@ -7,14 +7,29 @@ import { useProfile } from '@/lib/contexts/ProfileContext';
 import { Event } from '@/types/events';
 import { parseRawTime } from '@/lib/utils/timezoneUtils';
 
-export function CompactCalendarCard() {
+interface CompactCalendarCardProps {
+  /** Pre-fetched events from parent — skips internal fetch */
+  events?: Event[];
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
+}
+
+export function CompactCalendarCard({
+  events: propEvents,
+  loading: propLoading,
+  error: propError,
+  onRetry,
+}: CompactCalendarCardProps = {}) {
   const [calendarDate, setCalendarDate] = useState(new Date());
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [hoveredEvent, setHoveredEvent] = useState<Event | null>(null);
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0, placement: 'bottom-right' });
+
+  // ---- Fallback: self-fetch only if no events were passed as props ----
+  const [internalEvents, setInternalEvents] = useState<Event[]>([]);
+  const [internalLoading, setInternalLoading] = useState(true);
+  const [internalError, setInternalError] = useState<string | null>(null);
 
   const popupRef = useRef<HTMLDivElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
@@ -74,32 +89,32 @@ export function CompactCalendarCard() {
 
   // Fetch events for the calendar - ONLY for this chapter
   const fetchEvents = async () => {
+    if (propEvents !== undefined) return; // Skip if parent provides data
     if (!chapterId) return;
-
     try {
-      setLoading(true);
-      setError(null);
-
-      // CompactCalendarCard - Fetching events for chapter
+      setInternalLoading(true);
+      setInternalError(null);
       const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=all`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch events');
-      }
-
+      if (!response.ok) throw new Error('Failed to fetch events');
       const data = await response.json();
-      // CompactCalendarCard - Fetched events
-      setEvents(data);
+      setInternalEvents(data);
     } catch (err) {
-      console.error('CompactCalendarCard - Error fetching events:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setInternalError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
-      setLoading(false);
+      setInternalLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchEvents();
-  }, [chapterId]);
+    if (propEvents === undefined) {
+      fetchEvents();
+    }
+  }, [chapterId, propEvents]);
+
+  const events = propEvents ?? internalEvents;
+  const loading = propEvents !== undefined ? (propLoading ?? false) : internalLoading;
+  const error = propEvents !== undefined ? (propError ?? null) : internalError;
+  const handleRetry = onRetry ?? fetchEvents;
 
   const getDaysInMonth = (date: Date): number => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -245,7 +260,7 @@ export function CompactCalendarCard() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => fetchEvents()}
+            onClick={() => handleRetry()}
             className="text-brand-primary border-brand-primary hover:bg-primary-50 h-8"
           >
             Retry

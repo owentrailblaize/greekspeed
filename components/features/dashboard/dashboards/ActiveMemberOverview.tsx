@@ -1,10 +1,11 @@
 'use client';
 
-import { useMemo, useState, useEffect, Suspense } from 'react';
+import { useCallback, useEffect, useMemo, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { SocialFeed, type SocialFeedInitialData } from './ui/SocialFeed';
 import { DuesStatusCard } from './ui/DuesStatusCard';
+import { Event } from '@/types/events';
 import { MyTasksCard } from './ui/MyTasksCard';
 import { UpcomingEventsCard } from './ui/UpcomingEventsCard';
 import { AnnouncementsCard } from './ui/AnnouncementsCard';
@@ -43,11 +44,33 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
   const [showAddRecruitModal, setShowAddRecruitModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const feedData = useMemo(() => {
-    if (!initialFeed) return undefined;
-    if (!chapterId) return initialFeed;
-    return initialFeed.chapterId === chapterId ? initialFeed : undefined;
-  }, [chapterId, initialFeed]);
+  // Shared events fetch (eliminates duplicate API call) ----
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+  const [eventsError, setEventsError] = useState<string | null>(null);
+
+  const fetchAllEvents = useCallback(async () => {
+    if (!chapterId || !profile?.id) return;
+    try {
+      setEventsLoading(true);
+      setEventsError(null);
+      // Single call with scope=all AND user_id — covers both components
+      const response = await fetch(
+        `/api/events?chapter_id=${chapterId}&scope=all&user_id=${profile.id}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch events');
+      const data: Event[] = await response.json();
+      setAllEvents(data);
+    } catch (err) {
+      setEventsError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setEventsLoading(false);
+    }
+  }, [chapterId, profile?.id]);
+
+  useEffect(() => {
+    fetchAllEvents();
+  }, [fetchAllEvents]);
 
   // Mobile detection
   useEffect(() => {
@@ -111,7 +134,7 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
           <div className="space-y-4">
             {/* Primary Feature: Social Feed */}
             <div className="w-full">
-              <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
+              <SocialFeed chapterId={chapterId || ''} initialData={initialFeed} />
             </div>
           </div>
         );
@@ -136,7 +159,7 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
           <div className="space-y-4">
             {/* Primary Feature: Social Feed */}
             <div className="w-full">
-              <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
+              <SocialFeed chapterId={chapterId || ''} initialData={initialFeed} />
             </div>
           </div>
         );
@@ -179,14 +202,21 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
         <div className="hidden sm:grid lg:hidden grid-cols-12 gap-4">
           {/* Main Content - Social Feed (takes ~70%) */}
           <div className="col-span-8">
-            <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
+            <SocialFeed chapterId={chapterId || ''} initialData={initialFeed} />
           </div>
 
           {/* Right Sidebar - Events & Key Info (~30%) */}
           <div className="col-span-4">
             <div className="space-y-4">
               <FeatureGuard flagName="events_management_enabled">
-                <UpcomingEventsCard />
+                <UpcomingEventsCard
+                  chapterId={chapterId}
+                  userId={profile?.id}
+                  events={allEvents}
+                  loading={eventsLoading}
+                  error={eventsError}
+                  onRetry={fetchAllEvents}
+                />
               </FeatureGuard>
               <FeatureGuard flagName="financial_tools_enabled">
                 <DuesStatusCard />
@@ -199,8 +229,13 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
 
         {/* Desktop Layout: Three Column Grid (Preserved) */}
         <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6">
+          {/* Center Column - Social Feed (RENDER FIRST for faster paint) */}
+          <div className="col-span-6 col-start-4">
+            <SocialFeed chapterId={chapterId || ''} initialData={initialFeed} />
+          </div>
+
           {/* Left Sidebar - Dues, Tasks, Calendar & Documents */}
-          <div className="col-span-3">
+          <div className="col-span-3 col-start-1 row-start-1">
             <div className="space-y-6">
               <FeatureGuard flagName="financial_tools_enabled">
                 <DuesStatusCard />
@@ -210,19 +245,26 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
             </div>
           </div>
 
-          {/* Center Column - Social Feed */}
-          <div className="col-span-6">
-            <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
-          </div>
-
           {/* Right Sidebar - Events & Networking */}
-          <div className="col-span-3">
+          <div className="col-span-3 col-start-10 row-start-1">
             <div className="space-y-6">
               <FeatureGuard flagName="events_management_enabled">
-                <CompactCalendarCard />
+                <CompactCalendarCard
+                  events={allEvents}
+                  loading={eventsLoading}
+                  error={eventsError}
+                  onRetry={fetchAllEvents}
+                />
               </FeatureGuard>
               <FeatureGuard flagName="events_management_enabled">
-                <UpcomingEventsCard />
+                <UpcomingEventsCard
+                  chapterId={chapterId}
+                  userId={profile?.id}
+                  events={allEvents}
+                  loading={eventsLoading}
+                  error={eventsError}
+                  onRetry={fetchAllEvents}
+                />
               </FeatureGuard>
             </div>
           </div>

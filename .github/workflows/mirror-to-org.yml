@@ -1,0 +1,21 @@
+name: Mirror to Organization Repo
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to organization repo
+        run: |
+          git remote add org-mirror https://x-access-token:${{ secrets.ORG_REPO_TOKEN }}@github.com/Trailblaizedevelopment/trailblaize-web-app.git
+          git push org-mirror ${{ github.ref }} --force

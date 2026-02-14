@@ -180,11 +180,41 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
     return connection?.id || null;
   }, [user, connections]);
 
-  // Fixed: Remove fetchConnections from dependency array, use user?.id only
+  // ---------------------------------------------------------------
+  // DEFERRED: Wait ~5 seconds before fetching connections so that
+  // critical dashboard data (feed, events, profile) loads first.
+  // Connections are only needed for profile views, messaging, and
+  // alumni networking — not for the initial dashboard render.
+  // Uses requestIdleCallback where available for best-effort
+  // scheduling, with a plain setTimeout fallback.
+  // ---------------------------------------------------------------
   useEffect(() => {
-    if (user?.id && fetchConnectionsRef.current) {
-      fetchConnectionsRef.current();
+    if (!user?.id) return;
+
+    let idleCallbackId: number | undefined;
+    let deferTimerId: ReturnType<typeof setTimeout> | undefined;
+
+    const startFetch = () => {
+      if (fetchConnectionsRef.current) {
+        fetchConnectionsRef.current();
+      }
+    };
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      idleCallbackId = (window as any).requestIdleCallback(
+        () => startFetch(),
+        { timeout: 5000 },
+      );
+    } else {
+      deferTimerId = setTimeout(() => startFetch(), 5000);
     }
+
+    return () => {
+      if (idleCallbackId != null && typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+        (window as any).cancelIdleCallback(idleCallbackId);
+      }
+      if (deferTimerId) clearTimeout(deferTimerId);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]); // Only depend on user?.id, not fetchConnections
 

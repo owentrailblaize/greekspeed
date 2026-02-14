@@ -82,15 +82,22 @@ export async function GET(request: NextRequest) {
       .select('*', { count: 'exact', head: true })
       .eq('chapter_id', chapterId);
 
-    return NextResponse.json({
-      announcements: transformedAnnouncements,
-      pagination: {
-        page,
-        limit,
-        total: totalCount || 0,
-        totalPages: Math.ceil((totalCount || 0) / limit)
-      }
-    });
+      return NextResponse.json(
+        {
+          announcements: transformedAnnouncements,
+          pagination: {
+            page,
+            limit,
+            total: totalCount || 0,
+            totalPages: Math.ceil((totalCount || 0) / limit),
+          },
+        },
+        {
+          headers: {
+            'Cache-Control': 'private, max-age=60, stale-while-revalidate=120',
+          },
+        }
+      );
   } catch (error) {
     console.error('API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

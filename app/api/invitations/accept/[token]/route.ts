@@ -18,48 +18,36 @@ export async function POST(
       return NextResponse.json({ error: 'Token is required' }, { status: 400 });
     }
 
-    // Validate required fields
-    if (!email || !password || !full_name) {
-      return NextResponse.json({ error: 'Email, password, and full name are required' }, { status: 400 });
+    // Validate required fields - only name, email, password required
+    // Other fields (phone, graduation_year, major) will be collected during onboarding
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
-    // Validate new required fields
-    if (!phone || !phone.trim()) {
-      return NextResponse.json({ error: 'Phone number is required' }, { status: 400 });
+    // Require at least a name (full_name or first_name + last_name)
+    if (!full_name && !first_name) {
+      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
     }
 
-    // Validate phone format (10 digits)
-    const phoneDigits = phone.replace(/\D/g, '');
-    if (phoneDigits.length !== 10) {
-      return NextResponse.json({ error: 'Phone number must be 10 digits' }, { status: 400 });
+    // Handle optional phone - validate format only if provided
+    let phoneDigits = '';
+    if (phone && phone.trim()) {
+      phoneDigits = phone.replace(/\D/g, '');
+      if (phoneDigits.length !== 10 && phoneDigits.length !== 0) {
+        return NextResponse.json({ error: 'Phone number must be 10 digits' }, { status: 400 });
+      }
     }
 
-    if (!graduation_year || typeof graduation_year !== 'number') {
-      return NextResponse.json({ error: 'Graduation year is required' }, { status: 400 });
-    }
-
-    // Validate graduation year range
+    // Handle graduation_year - use default if not provided
     const currentYear = new Date().getFullYear();
-    const minYear = 1950;
-    const maxYear = currentYear + 10;
-    if (graduation_year < minYear || graduation_year > maxYear) {
-      return NextResponse.json({ 
-        error: `Graduation year must be between ${minYear} and ${maxYear}` 
-      }, { status: 400 });
-    }
+    const effectiveGradYear = graduation_year || (currentYear + 4); // Default to 4 years from now
 
-    // Handle major as string or array (for backward compatibility)
+    // Handle major as string or array (optional now)
     let majorString: string;
     if (Array.isArray(body.major)) {
-      // If major is an array, join with commas
       majorString = body.major.filter((m: string) => m && m.trim()).join(', ');
     } else {
-      // If major is a string, use it directly
-      majorString = body.major || '';
-    }
-
-    if (!majorString || !majorString.trim()) {
-      return NextResponse.json({ error: 'Major is required' }, { status: 400 });
+      majorString = body.major || 'To be updated'; // Default value
     }
 
     // Validate the invitation token
@@ -121,11 +109,16 @@ export async function POST(
       console.error('❌ Invitation Accept: Error checking auto-created profile:', autoProfileError);
     }
 
+    // Build the effective name values
+    const effectiveFullName = full_name || `${first_name || ''} ${last_name || ''}`.trim();
+    const effectiveFirstName = first_name || effectiveFullName.split(' ')[0] || '';
+    const effectiveLastName = last_name || effectiveFullName.split(' ').slice(1).join(' ') || '';
+
     if (autoProfile) {
       // Generate username if needed
       const username = await generateUniqueUsername(supabase,
-        first_name || full_name.split(' ')[0],
-        last_name || full_name.split(' ').slice(1).join(' '),
+        effectiveFirstName,
+        effectiveLastName,
         authData.user.id
       );
       const profileSlug = generateProfileSlug(username);
@@ -136,16 +129,20 @@ export async function POST(
         .update({
           username: username,
           profile_slug: profileSlug,
+          first_name: effectiveFirstName,
+          last_name: effectiveLastName,
+          full_name: effectiveFullName,
           chapter_id: invitation.chapter_id,
           chapter: validation.chapter_name,
           role: 'active_member',
           member_status: 'active',
           welcome_seen: false,
-          phone: phone.trim(),
+          phone: phoneDigits || null,
           sms_consent: body.sms_consent || false,
-          grad_year: graduation_year,
-          major: majorString.trim(),
-          location: location?.trim() || null
+          grad_year: effectiveGradYear,
+          major: majorString.trim() || null,
+          location: location?.trim() || null,
+          onboarding_completed: false, // Will be completed after onboarding
         })
         .eq('id', authData.user.id)
         .select()
@@ -182,8 +179,8 @@ export async function POST(
     } else {
       // Generate username
       const username = await generateUniqueUsername(supabase,
-        first_name || full_name.split(' ')[0],
-        last_name || full_name.split(' ').slice(1).join(' '),
+        effectiveFirstName,
+        effectiveLastName,
         authData.user.id
       );
       const profileSlug = generateProfileSlug(username);
@@ -194,20 +191,21 @@ export async function POST(
         .insert({
           id: authData.user.id,
           email: email.toLowerCase(),
-          full_name,
-          first_name: first_name || full_name.split(' ')[0],
-          last_name: last_name || full_name.split(' ').slice(1).join(' '),
+          full_name: effectiveFullName,
+          first_name: effectiveFirstName,
+          last_name: effectiveLastName,
           username: username,
           profile_slug: profileSlug,
-          phone: phone.trim(),
+          phone: phoneDigits || null,
           sms_consent: body.sms_consent || false,
           chapter_id: invitation.chapter_id,
           chapter: validation.chapter_name,
           role: 'active_member',
           member_status: 'active',
-          grad_year: graduation_year,
-          major: majorString.trim(),
+          grad_year: effectiveGradYear,
+          major: majorString.trim() || null,
           location: location?.trim() || null,
+          onboarding_completed: false, // Will be completed after onboarding
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         });

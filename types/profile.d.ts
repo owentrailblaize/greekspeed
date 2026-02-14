@@ -63,7 +63,9 @@ export interface Profile {
   is_developer?: boolean;
   developer_permissions?: DeveloperPermission[];
   access_level?: AccessLevel;
-  welcome_seen?: boolean; // Add this field
+  welcome_seen?: boolean;
+  onboarding_completed?: boolean;
+  onboarding_completed_at?: string;
 }
 
 export interface ProfileFormData {
