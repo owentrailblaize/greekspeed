@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -48,7 +48,7 @@ const formatSystemRole = (role: string | null | undefined): string => {
 
 export default function ProfilePage() {
   const { profile, loading, refreshProfile } = useProfile();
-  const { connections, loading: connectionsLoading, sendConnectionRequest } = useConnections();
+  const { connections, loading: connectionsLoading, sendConnectionRequest, getConnectionStatus, getConnectionId, cancelConnectionRequest } = useConnections();
   const [activeTab, setActiveTab] = useState('posts');
   const [connectionLoading, setConnectionLoading] = useState<string | null>(null);
   const router = useRouter();
@@ -57,6 +57,11 @@ export default function ProfilePage() {
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isConnectionsModalOpen, setIsConnectionsModalOpen] = useState(false);
+
+  // Stable suggested users - computed once, not re-shuffled on re-renders
+  const [suggestedUsers, setSuggestedUsers] = useState<any[]>([]);
+  const suggestedUsersInitializedRef = useRef(false);
+  const [pendingRequestUserIds, setPendingRequestUserIds] = useState<Set<string>>(new Set());
 
   // Calculate completion percentage
   const completion = profile ? ProfileService.calculateCompletion(profile) : null;
@@ -93,15 +98,18 @@ export default function ProfilePage() {
     return connection.requester_id === profile.id ? connection.recipient : connection.requester;
   };
 
-  // Get suggested users from same chapter (excluding current user and already connected users)
-  const getSuggestedUsers = () => {
-    if (!chapterMembers || !profile) return [];
+  // Compute suggested users ONCE when data is available — prevents re-shuffling on re-renders
+  useEffect(() => {
+    // Already computed — don't re-shuffle
+    if (suggestedUsersInitializedRef.current) return;
+    if (!chapterMembers?.length || !profile) return;
 
     // Get IDs of users the current user is already connected with (accepted or pending)
-    const connectedUserIds = new Set([
-      ...acceptedConnections.map(conn => getConnectionPartner(conn)?.id).filter(Boolean),
-      ...pendingRequests.map(conn => getConnectionPartner(conn)?.id).filter(Boolean)
-    ]);
+    const connectedUserIds = new Set(
+      connections
+        .filter(c => c.status === 'accepted' || c.status === 'pending')
+        .map(conn => conn.requester_id === profile.id ? conn.recipient_id : conn.requester_id)
+    );
 
     // Filter out current user and already connected users
     const availableUsers = chapterMembers.filter(member =>
@@ -109,13 +117,12 @@ export default function ProfilePage() {
       !connectedUserIds.has(member.id)
     );
 
-    // Randomly shuffle and return up to 3 users
-    return availableUsers
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
-  };
-
-  const suggestedUsers = getSuggestedUsers();
+    if (availableUsers.length > 0) {
+      const shuffled = [...availableUsers].sort(() => Math.random() - 0.5).slice(0, 3);
+      setSuggestedUsers(shuffled);
+      suggestedUsersInitializedRef.current = true;
+    }
+  }, [chapterMembers, profile, connections]);
   const MAX_VISIBLE_CONNECTIONS = 6;
   const sortedConnections = useMemo(() => {
     return [...acceptedConnections].sort((a, b) => {
@@ -813,29 +820,88 @@ export default function ProfilePage() {
                             {user.chapter_role || user.member_status || 'Member'}
                           </p>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="rounded-full text-xs h-7 px-3"
-                          onClick={async () => {
-                            setConnectionLoading(user.id);
-                            try {
-                              await sendConnectionRequest(user.id, 'Would love to connect!');
-                            } finally {
-                              setConnectionLoading(null);
-                            }
-                          }}
-                          disabled={connectionLoading === user.id}
-                        >
-                          {connectionLoading === user.id ? (
-                            <div className="w-3 h-3 border-2 border-gray-300 border-t-brand-primary rounded-full animate-spin" />
-                          ) : (
-                            <>
-                              <UserPlus className="w-3 h-3 mr-1" />
-                              Connect
-                            </>
-                          )}
-                        </Button>
+                        {(() => {
+                          const status = getConnectionStatus(user.id);
+                          const isPending = pendingRequestUserIds.has(user.id) || status === 'pending_sent';
+                          const isConnected = status === 'accepted';
+
+                          if (isConnected) {
+                            return (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="rounded-full text-xs h-7 px-3 text-green-700 border-green-300 bg-green-50"
+                                disabled
+                              >
+                                <UserCheck className="w-3 h-3 mr-1" />
+                                Connected
+                              </Button>
+                            );
+                          }
+
+                          if (isPending) {
+                            return (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="rounded-full text-xs h-7 px-3 text-gray-600 border-gray-300 hover:bg-gray-50"
+                                disabled={connectionLoading === user.id}
+                                onClick={async () => {
+                                  const connectionId = getConnectionId(user.id);
+                                  if (connectionId) {
+                                    setConnectionLoading(user.id);
+                                    try {
+                                      await cancelConnectionRequest(connectionId);
+                                      setPendingRequestUserIds(prev => {
+                                        const next = new Set(prev);
+                                        next.delete(user.id);
+                                        return next;
+                                      });
+                                    } finally {
+                                      setConnectionLoading(null);
+                                    }
+                                  }
+                                }}
+                              >
+                                {connectionLoading === user.id ? (
+                                  <div className="w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                                ) : (
+                                  <>
+                                    <Clock className="w-3 h-3 mr-1" />
+                                    Requested
+                                  </>
+                                )}
+                              </Button>
+                            );
+                          }
+
+                          return (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="rounded-full text-xs h-7 px-3"
+                              onClick={async () => {
+                                setConnectionLoading(user.id);
+                                try {
+                                  await sendConnectionRequest(user.id, 'Would love to connect!');
+                                  setPendingRequestUserIds(prev => new Set(prev).add(user.id));
+                                } finally {
+                                  setConnectionLoading(null);
+                                }
+                              }}
+                              disabled={connectionLoading === user.id}
+                            >
+                              {connectionLoading === user.id ? (
+                                <div className="w-3 h-3 border-2 border-gray-300 border-t-brand-primary rounded-full animate-spin" />
+                              ) : (
+                                <>
+                                  <UserPlus className="w-3 h-3 mr-1" />
+                                  Connect
+                                </>
+                              )}
+                            </Button>
+                          );
+                        })()}
                       </div>
                     ))}
                   </CardContent>
