@@ -201,6 +201,7 @@ interface PostCardProps {
   onCommentAdded?: () => void;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  variant?: 'default' | 'profile';
 }
 
 function PostCardInner({
@@ -210,6 +211,7 @@ function PostCardInner({
   onCommentAdded,
   isExpanded: isExpandedProp,
   onToggleExpand,
+  variant = 'default',
 }: PostCardProps) {
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -564,7 +566,9 @@ function PostCardInner({
 
       {/* Desktop Layout - Cardless Design */}
       <div
-        className="hidden sm:block py-4 sm:py-5 border-b border-gray-200/90 cursor-pointer"
+        className={`hidden sm:block py-4 sm:py-5 border-b border-gray-200/90 cursor-pointer ${
+          variant === 'profile' ? 'px-6' : ''
+        }`}
         onClick={handleCardClick}
       >
         <div className="space-y-4">
@@ -630,7 +634,11 @@ function PostCardInner({
 
           {/* Post Content - Wrapped in rounded container */}
           <div className="space-y-3">
-            <div className="rounded-2xl bg-gray-50/30 border border-gray-200/80 p-4 sm:p-5 space-y-3">
+            <div className={`space-y-3 ${
+              variant === 'profile'
+                ? 'px-1'
+                : 'rounded-2xl bg-gray-50/30 border border-gray-200/80 p-4 sm:p-5'
+            }`}>
               {renderPostContent(
                 'text-gray-700 text-base sm:text-[0.95rem] leading-relaxed',
                 'text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors',
@@ -746,11 +754,12 @@ function arePostCardPropsEqual(
   next: PostCardProps,
 ): boolean {
   // Fast path — same object references
-  if (prev.post === next.post && prev.isExpanded === next.isExpanded) {
+  if (prev.post === next.post && prev.isExpanded === next.isExpanded && prev.variant === next.variant) {
     return true;
   }
 
   if (prev.isExpanded !== next.isExpanded) return false;
+  if (prev.variant !== next.variant) return false;
 
   // Compare the post fields that drive visual output
   const p = prev.post;

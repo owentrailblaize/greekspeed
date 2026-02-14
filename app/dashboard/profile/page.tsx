@@ -30,6 +30,7 @@ import { MobileBottomNavigation } from '@/components/features/dashboard/dashboar
 import { ProfileHeaderSection } from '@/components/features/profile/mobile/ProfileHeaderSection';
 import { ContentNavigationTabs } from '@/components/features/profile/mobile/ContentNavigationTabs';
 import { ContentFeedSection } from '@/components/features/profile/mobile/ContentFeedSection';
+import { PostCard } from '@/components/features/social/PostCard';
 
 // Add a helper function to format system roles for display (add this near the top of the component, after other helper functions)
 const formatSystemRole = (role: string | null | undefined): string => {
@@ -198,7 +199,7 @@ export default function ProfilePage() {
   };
 
   // Move useUserPosts BEFORE the early returns
-  const { posts: userPosts, loading: postsLoading, deletePost } = useUserPosts(profile?.id || '');
+  const { posts: userPosts, loading: postsLoading, deletePost, likePost, refetch: refetchPosts } = useUserPosts(profile?.id || '');
 
   // Get recent connections for avatar display (up to 3) - Move this BEFORE early returns too
   const recentConnectionsForAvatars = useMemo(() => {
@@ -377,6 +378,8 @@ export default function ProfilePage() {
           connectionsLoading={connectionsLoading}
           onMessageClick={handleMessageClick}
           onDeletePost={handleDeleteClick}
+          onLikePost={async (postId: string) => { await likePost(postId); }}
+          onCommentAdded={async () => { await refetchPosts(); }}
           getConnectionPartner={getConnectionPartner}
         />
 
@@ -587,86 +590,14 @@ export default function ProfilePage() {
                         </div>
                       ) : userPosts.length > 0 ? (
                         userPosts.map((post) => (
-                          <div key={post.id} className="p-4 hover:bg-gray-50 transition-colors">
-                            {/* Post Header */}
-                            <div className="flex gap-3">
-                              <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
-                                {post.author?.avatar_url ? (
-                                  <ImageWithFallback
-                                    src={post.author.avatar_url}
-                                    alt={post.author.full_name || 'User'}
-                                    width={40}
-                                    height={40}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full bg-brand-primary flex items-center justify-center">
-                                    <span className="text-white text-sm font-medium">
-                                      {post.author?.first_name?.charAt(0) || 'U'}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-1 flex-wrap">
-                                  <span className="font-bold text-gray-900 text-sm">
-                                    {post.author?.full_name || 'Unknown User'}
-                                  </span>
-                                  <span className="text-gray-500 text-sm">
-                                    {post.author?.chapter_role || post.author?.member_status || ''}
-                                  </span>
-                                  <span className="text-gray-500 text-sm">·</span>
-                                  <span className="text-gray-500 text-sm">
-                                    {formatTimestamp(post.created_at)}
-                                  </span>
-                                  {post.is_author && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleDeleteClick(post.id)}
-                                      className="ml-auto text-gray-400 hover:text-red-500 hover:bg-red-50 p-1 h-auto"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  )}
-                                </div>
-
-                                {/* Post Content */}
-                                {post.content && (
-                                  <p className="text-gray-900 mt-1 whitespace-pre-wrap break-words">
-                                    {post.content}
-                                  </p>
-                                )}
-
-                                {post.image_url && (
-                                  <div className="mt-3 rounded-2xl overflow-hidden border border-gray-200">
-                                    <img
-                                      src={post.image_url}
-                                      alt="Post content"
-                                      className="w-full max-h-96 object-cover"
-                                    />
-                                  </div>
-                                )}
-
-                                {/* Post Actions */}
-                                <div className="flex items-center gap-6 mt-3 text-gray-500">
-                                  <button className="flex items-center gap-2 hover:text-brand-accent transition-colors group">
-                                    <div className="p-2 rounded-full group-hover:bg-accent-50 transition-colors">
-                                      <MessageCircle className="h-4 w-4" />
-                                    </div>
-                                    <span className="text-sm">{post.comments_count}</span>
-                                  </button>
-                                  <button className="flex items-center gap-2 hover:text-red-500 transition-colors group">
-                                    <div className="p-2 rounded-full group-hover:bg-red-50 transition-colors">
-                                      <Heart className="h-4 w-4" />
-                                    </div>
-                                    <span className="text-sm">{post.likes_count}</span>
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                          <PostCard
+                            variant="profile"
+                            key={post.id}
+                            post={post}
+                            onLike={async (postId) => { await likePost(postId); }}
+                            onDelete={(postId) => handleDeleteClick(postId)}
+                            onCommentAdded={async () => { await refetchPosts(); }}
+                          />
                         ))
                       ) : (
                         <div className="py-12 text-center">
