@@ -72,6 +72,7 @@ textarea {
   --brand-primary: #000000;
   --brand-primary-hover: #1a1a1a;
   --brand-accent: #1E3A8A;           /* Navy blue (was #aa263c) */
+  --brand-accent-hover: #1A3366;
   --brand-accent-light: #DBEAFE;     /* Light blue (was #f6d5db) */
   --brand-focus: #0000004D;
   

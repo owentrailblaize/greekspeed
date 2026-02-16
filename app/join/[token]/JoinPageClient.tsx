@@ -378,7 +378,7 @@ export default function JoinPageClient() {
               <Button
                 onClick={handleStartJoin}
                 disabled={linkedInLoading || googleLoading}
-                className="w-full h-11 rounded-full bg-brand-accent hover:bg-accent-700 text-white font-medium shadow-sm hover:shadow-md transition-all duration-200"
+                className="w-full h-11 rounded-full bg-brand-accent hover:bg-brand-accent-hover text-white font-medium shadow-sm hover:shadow-md transition-all duration-200"
               >
                 <Mail className="h-4 w-4 mr-2" />
                 Continue with Email

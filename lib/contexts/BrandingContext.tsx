@@ -48,6 +48,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     root.style.setProperty('--brand-primary', theme.primaryColor);
     root.style.setProperty('--brand-primary-hover', theme.primaryColorHover);
     root.style.setProperty('--brand-accent', theme.accentColor);
+    root.style.setProperty('--brand-accent-hover', theme.accentColorHover);
     root.style.setProperty('--brand-accent-light', theme.accentColorLight);
     root.style.setProperty('--brand-focus', theme.focusColor);
     
@@ -69,6 +70,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     root.style.setProperty('--brand-primary', DEFAULT_BRANDING_THEME.primaryColor);
     root.style.setProperty('--brand-primary-hover', DEFAULT_BRANDING_THEME.primaryColorHover);
     root.style.setProperty('--brand-accent', DEFAULT_BRANDING_THEME.accentColor);
+    root.style.setProperty('--brand-accent-hover', DEFAULT_BRANDING_THEME.accentColorHover);
     root.style.setProperty('--brand-accent-light', DEFAULT_BRANDING_THEME.accentColorLight);
     root.style.setProperty('--brand-focus', DEFAULT_BRANDING_THEME.focusColor);
     root.style.setProperty('--brand-text', DEFAULT_BRANDING_THEME.primaryColor);

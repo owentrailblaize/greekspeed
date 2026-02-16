@@ -81,6 +81,7 @@ module.exports = {
           primary: 'var(--brand-primary)',
           'primary-hover': 'var(--brand-primary-hover)',
           accent: 'var(--brand-accent)',
+          'accent-hover': 'var(--brand-accent-hover)',
           'accent-light': 'var(--brand-accent-light)',
           focus: 'var(--brand-focus)',
           text: 'var(--brand-text)',

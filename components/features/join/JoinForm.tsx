@@ -286,7 +286,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="rounded-full w-full bg-brand-accent hover:bg-accent-700 h-10"
+                className="rounded-full w-full bg-brand-accent hover:bg-brand-accent-hover h-10"
                 disabled={loading}
               >
                 {loading ? (

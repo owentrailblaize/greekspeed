@@ -478,7 +478,7 @@ export function MobileCalendarPage() {
                             onClick={() => handleRSVP(event.id, 'attending')}
                             className={`h-7 px-3 text-xs flex-1 rounded-full transition-all duration-300 ${
                               getRSVPButtonVariant(event.id, 'attending') === 'default'
-                                ? 'bg-brand-accent hover:bg-accent-700 text-white'
+                                ? 'bg-brand-accent hover:bg-brand-accent-hover text-white'
                                 : 'bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900'
                             }`}
                             title="Going"
@@ -492,7 +492,7 @@ export function MobileCalendarPage() {
                             onClick={() => handleRSVP(event.id, 'maybe')}
                             className={`h-7 px-3 text-xs flex-1 rounded-full transition-all duration-300 ${
                               getRSVPButtonVariant(event.id, 'maybe') === 'default'
-                                ? 'bg-brand-accent hover:bg-accent-700 text-white'
+                                ? 'bg-brand-accent hover:bg-brand-accent-hover text-white'
                                 : 'bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900'
                             }`}
                             title="Maybe"
@@ -506,7 +506,7 @@ export function MobileCalendarPage() {
                             onClick={() => handleRSVP(event.id, 'not_attending')}
                             className={`h-7 px-3 text-xs flex-1 rounded-full transition-all duration-300 ${
                               getRSVPButtonVariant(event.id, 'not_attending') === 'default'
-                                ? 'bg-brand-accent hover:bg-accent-700 text-white'
+                                ? 'bg-brand-accent hover:bg-brand-accent-hover text-white'
                                 : 'bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900'
                             }`}
                             title="Not Going"

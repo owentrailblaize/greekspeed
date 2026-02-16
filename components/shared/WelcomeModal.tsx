@@ -196,7 +196,7 @@ export function WelcomeModal({ profile, onClose, onShareIntroduction, onEditProf
               </Button>
               <Button
                 onClick={handleShareIntroduction}
-                className="bg-brand-accent hover:bg-accent-700 px-4 py-2 md:px-6 md:py-2 text-xs md:text-sm font-medium rounded-full"
+                className="bg-brand-accent hover:bg-brand-accent-hover px-4 py-2 md:px-6 md:py-2 text-xs md:text-sm font-medium rounded-full"
                 size="sm"
               >
                 Share an Introduction!
