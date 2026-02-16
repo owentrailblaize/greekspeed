@@ -41,7 +41,7 @@ export const getGraduationYears = (): number[] => {
   const years: number[] = [];
 
   // Generate years from current year down to 2005
-  const startYear = currentYear;
+  const startYear = currentYear + 8;
   const endYear = 1950;
 
   for (let year = startYear; year >= endYear; year--) {
