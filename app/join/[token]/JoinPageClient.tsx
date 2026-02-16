@@ -134,7 +134,7 @@ export default function JoinPageClient() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?invitation_token=${encodeURIComponent(invitation.token)}&invitation_type=active_member`,
+          redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {
             invitation_token: invitation.token,
             invitation_type: 'active_member',
@@ -187,7 +187,7 @@ export default function JoinPageClient() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?invitation_token=${encodeURIComponent(invitation.token)}&invitation_type=active_member`,
+          redirectTo: `${window.location.origin}/auth/callback`,
           scopes: 'openid profile email',
           queryParams: {
             invitation_token: invitation.token,
