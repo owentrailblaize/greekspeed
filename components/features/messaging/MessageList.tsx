@@ -285,10 +285,11 @@ export function MessageList({
   };
 
   const groupMessagesByDate = (messages: Message[]) => {
-    // CRITICAL: Deduplicate messages by ID first (defensive measure)
+    // CRITICAL: Deduplicate messages by ID first (defensive measure against StrictMode/race conditions)
     const seenIds = new Set<string>();
     const uniqueMessages = messages.filter(message => {
       if (seenIds.has(message.id)) {
+        console.warn('Duplicate message detected and filtered:', message.id, message.content.substring(0, 30));
         return false; // Skip duplicate
       }
       seenIds.add(message.id);
