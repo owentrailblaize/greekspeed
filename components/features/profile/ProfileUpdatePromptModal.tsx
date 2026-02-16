@@ -40,6 +40,7 @@ export interface DetectedChange {
     | 'location'
     | 'hometown'
     | 'introduction';
+  profile?: any;
 }
 
 interface ProfileUpdatePromptModalProps {
@@ -168,22 +169,57 @@ function generateTemplateOptions(changes: DetectedChange[]): TemplateOption[] {
   // Handle welcome introduction first (highest priority)
   if (primaryChange.type === 'welcome_introduction') {
     const chapter = primaryChange.newValue || 'the chapter';
+    const profile = primaryChange.profile;
+
+    // Determine what career info we have
+    const major = profile?.major;
+    const jobTitle = profile?.job_title;
+    const industry = profile?.industry;
+    const isAlumni = profile?.role === 'alumni';
+
+    // Option 1: Career-focused (if they have career info)
+    if (major || jobTitle || industry) {
+      let careerContent = '';
+      
+      if (isAlumni && jobTitle && industry) {
+        // Alumni with job info
+        careerContent = `Just joined ${chapter}! I'm a ${jobTitle} in ${industry}. Excited to connect with fellow members! 🚀`;
+      } else if (isAlumni && (jobTitle || industry)) {
+        // Alumni with partial info
+        careerContent = `Just joined ${chapter}! I'm a ${jobTitle} in ${industry}. Feel free to reach out if you are interested in the ${industry} industry!`;
+      } else if (major && industry) {
+        // Active member with major and career interest
+        careerContent = `Just joined ${chapter}! I'm a ${major} looking to explore opportunities within the ${industry} industry!`;
+      } else if (major) {
+        // Active member with just major
+        careerContent = `Just joined ${chapter}! I'm a ${major} looking to explore opportunities that align with my interests. Excited to see who I can connect with!`;
+      }
+      
+      if (careerContent) {
+        options.push({
+          id: 'career',
+          content: careerContent,
+          label: 'Career'
+        });
+      }
+    }
+    
+    // Option 2: Excited/Friendly
     options.push({
       id: 'excited',
       content: `Just joined ${chapter}! Would love to connect with new members. 👋`,
       label: 'Excited'
     });
-    options.push({
-      id: 'professional',
-      content: `Hello ${chapter}! Looking forward to getting to know the community being a strong contributor.`,
-      label: 'Professional'
-    });
+    
+    // Option 3: Brief
     options.push({
       id: 'brief',
       content: `I just joined the chapter and would love to connect with new members. 😊`,
       label: 'Brief'
     });
-    return options;
+    
+    // Keep only 3 options max
+    return options.slice(0, 3);
   }
   
   // Handle combined career updates first
