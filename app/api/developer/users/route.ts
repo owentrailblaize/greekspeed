@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { generateUniqueUsername, generateProfileSlug } from '@/lib/utils/usernameUtils';
+import { cascadeDeleteUser } from '@/lib/services/userDeletionService';
 
 export async function GET(request: NextRequest) {
   try {
@@ -133,75 +134,21 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    // Create a new Supabase client with service role key
+    // Service-role client — required for admin.deleteUser & cross-table deletes
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Attempting to delete user
-    const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+    const result = await cascadeDeleteUser(supabase, userId);
 
-    if (authError) {
-      console.error('❌ Auth user deletion failed:', authError);
-      
-      // Check if it's a permission issue or user not found
-      if (authError.message.includes('not found') || authError.message.includes('does not exist')) {
-        // Auth user not found, proceeding with profile deletion only
-      } else {
-        // For other auth errors, we'll still try to delete the profile
-        // Auth deletion failed, but proceeding with profile cleanup
-      }
-    } else {
-      // Auth user deleted successfully
+    if (!result.success && result.errors.includes('User not found')) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Then, delete the profile from the profiles table
-    // Deleting profile...
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId);
-
-    if (profileError) {
-      console.error('❌ Profile deletion error:', profileError);
-      return NextResponse.json({ error: 'Failed to delete user profile' }, { status: 500 });
-    }
-
-    // Profile deleted successfully
-
-    // Also clean up any related data (connections, etc.)
-    try {
-      // Cleaning up related data...
-      
-      // Delete connections where this user is involved
-      const { error: connectionsError } = await supabase
-        .from('connections')
-        .delete()
-        .or(`requester_id.eq.${userId},recipient_id.eq.${userId}`);
-
-      if (connectionsError) {
-        // Connections cleanup failed
-      } else {
-        // Connections cleaned up
-      }
-
-      // Delete any other related data as needed
-      // Add more cleanup operations here if you have other tables with user references
-
-    } catch (cleanupError) {
-      // Additional cleanup failed
-      // Don't fail the entire operation for cleanup issues
-    }
-
-    return NextResponse.json({ 
-      message: 'User deletion completed',
-      userId: userId,
-      authDeleted: !authError,
-      profileDeleted: true,
-      details: authError ? `Auth deletion failed: ${authError.message}` : 'All data deleted successfully'
+    return NextResponse.json(result, {
+      status: result.success ? 200 : 207, // 207 Multi-Status if partial
     });
-
   } catch (error) {
     console.error('❌ Unexpected error during user deletion:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
