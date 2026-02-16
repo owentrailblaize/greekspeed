@@ -35,6 +35,8 @@ export interface BrandingTheme {
   primaryColorHover: string;
   /** Accent brand color in hex format (e.g., "#3B82F6") */
   accentColor: string;
+  /** Accent color for hover states (10% darker) */
+  accentColorHover: string;
   /** Lighter shade of accent color (20% lighter) */
   accentColorLight: string;
   /** Focus ring color (30% opacity of primary) */
@@ -69,6 +71,7 @@ export const DEFAULT_BRANDING_THEME: BrandingTheme = {
   primaryColor: '#000000',           // Black (primary)
   primaryColorHover: '#1a1a1a',      // text-900 (hover)
   accentColor: '#1E3A8A',            // Navy blue accent (was #aa263c)
+  accentColorHover: '#1A3366',       // Darker hover state
   accentColorLight: '#DBEAFE',       // Light blue (was #f6d5db)
   focusColor: '#0000004D',           // Black with 30% opacity
   primaryLogo: '/logo.png',
@@ -188,6 +191,7 @@ export function brandingToTheme(
     primaryColor: primaryShades.primary,
     primaryColorHover: primaryShades.hover,
     accentColor: accentShades.primary,
+    accentColorHover: accentShades.hover,
     accentColorLight: accentShades.light,
     focusColor: primaryShades.focus,
     primaryLogo: branding.primary_logo_url || defaultTheme.primaryLogo,

@@ -581,7 +581,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
             <div className="flex justify-end p-6 border-t flex-shrink-0">
               <Button 
                 onClick={() => setShowUsageModal(null)} 
-                className="bg-brand-accent hover:bg-accent-700"
+                className="bg-brand-accent hover:bg-brand-accent-hover"
                 size="sm"
               >
                 Close

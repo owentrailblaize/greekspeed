@@ -189,7 +189,7 @@ export function DeveloperOverview() {
                   {/* Action Button */}
                   <div className="pt-2">
                     <Button 
-                      className="w-full bg-brand-accent hover:bg-accent-700 text-white rounded-full" 
+                      className="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-full"
                       onClick={() => window.location.href = '/dashboard/user-management'}
                     >
                       <span>Access User Management</span>
@@ -236,7 +236,7 @@ export function DeveloperOverview() {
                   {/* Action Button */}
                   <div className="pt-2">
                     <Button 
-                      className="w-full bg-brand-accent hover:bg-accent-700 text-white rounded-full" 
+                      className="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-full" 
                       onClick={() => window.location.href = '/dashboard/feature-flags'}
                     >
                       <span>Manage Feature Flags</span>
@@ -283,7 +283,7 @@ export function DeveloperOverview() {
                   {/* Action Button */}
                   <div className="pt-2">
                     <Button 
-                      className="w-full bg-brand-accent hover:bg-accent-700 text-white rounded-full" 
+                      className="w-full bg-brand-accent hover:bg-brand-accent-hover text-white rounded-full" 
                       onClick={() => window.location.href = '/dashboard/developer/branding'}
                     >
                       <span>Manage Branding</span>

@@ -42,7 +42,7 @@ export function UsersTable({
         ) : (
           <div className="overflow-x-auto">
             <div className="max-h-[70vh] overflow-y-auto border border-gray-200 rounded-lg">
-              <table className="w-full border-collapse">
+              <table className="w-full border-collapse table-auto">
                 <thead className="sticky top-0 bg-gray-50 z-10">
                   <tr className="border-b">
                     {columns.map((col) => (

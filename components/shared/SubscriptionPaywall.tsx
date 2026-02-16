@@ -265,7 +265,7 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
                     className={`w-full sm:w-auto font-semibold py-2 px-6 rounded-lg transition duration-200 ${
                       isLoading 
                         ? 'bg-gray-400 cursor-not-allowed' 
-                        : 'bg-brand-accent hover:bg-accent-700 text-white'
+                        : 'bg-brand-accent hover:bg-brand-accent-hover text-white'
                     }`}
                   >
                     {isLoading ? (
