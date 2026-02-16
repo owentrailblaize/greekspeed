@@ -183,18 +183,24 @@ function generateTemplateOptions(changes: DetectedChange[]): TemplateOption[] {
       
       if (isAlumni && jobTitle && industry) {
         // Alumni with job info
-        careerContent = `Just joined ${chapter}! I'm a ${jobTitle} in ${industry}. Excited to connect with fellow members! 🚀`;
-      } else if (isAlumni && (jobTitle || industry)) {
+        careerContent = `Just joined ${chapter}! I'm a ${jobTitle} in ${industry}. Excited to connect with fellow members! `;
+      }  else if (isAlumni && jobTitle) {
         // Alumni with partial info
-        careerContent = `Just joined ${chapter}! I'm a ${jobTitle} in ${industry}. Feel free to reach out if you are interested in the ${industry} industry!`;
-      } else if (major && industry) {
+        careerContent = `Just joined ${chapter}! I'm a ${jobTitle} who can help you with ...!`;
+      } else if (isAlumni && industry) {
         // Active member with major and career interest
-        careerContent = `Just joined ${chapter}! I'm a ${major} looking to explore opportunities within the ${industry} industry!`;
-      } else if (major) {
+        careerContent = `Just joined ${chapter}! I'm working in ${industry} and if you are looking to explore opportunities within the area, feel free to reach out!`;
+      } else if (major && industry) {
         // Active member with just major
+        careerContent = `Just joined ${chapter}! I'm a ${major} looking to explore opportunities in the ${industry} industry! Let's get connected!`;
+      } else if (major) {
         careerContent = `Just joined ${chapter}! I'm a ${major} looking to explore opportunities that align with my interests. Excited to see who I can connect with!`;
+      } else if (jobTitle) {
+        careerContent = `Just joined ${chapter}! I'm currently working as a ${jobTitle} who can help you with ...!`;
+      } else if (industry) {
+        careerContent = `Just joined ${chapter}! I'm working in ${industry} and if you are looking to explore ... Feel free to reach out!`;
       }
-      
+
       if (careerContent) {
         options.push({
           id: 'career',
@@ -202,6 +208,13 @@ function generateTemplateOptions(changes: DetectedChange[]): TemplateOption[] {
           label: 'Career'
         });
       }
+    } else {
+      // Fallback Career option when no career/academic data exists
+      options.push({
+        id: 'career',
+        content: `Just joined ${chapter}! I'm currently (looking for/working at) ... company/title in ... industry! Would love to connect with those in the space!`,
+        label: 'Career'
+      });
     }
     
     // Option 2: Excited/Friendly
