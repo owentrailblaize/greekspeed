@@ -74,6 +74,7 @@ export default function DashboardPageClient({
       type: 'welcome_introduction',
       field: 'introduction',
       newValue: profile.chapter || 'the chapter',
+      profile: profile,
     };
     
     // Queue the introduction prompt - will be picked up by layout.tsx
