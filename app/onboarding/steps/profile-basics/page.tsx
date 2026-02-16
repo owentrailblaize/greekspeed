@@ -117,8 +117,10 @@ export default function ProfileBasicsPage() {
           }
         }
 
-        // Check if profile already has chapter/role
-        if (profile?.chapter && profile?.role) {
+        // Check if profile already has chapter and/or role (saved from step 1)
+        // Note: These are checked separately — OAuth alumni users always have both
+        // saved from step 1, but we handle each independently as a safety net.
+        if (profile?.chapter || profile?.role) {
           if (profile.role === 'active_member') {
             setHasInvitation(true);
           }

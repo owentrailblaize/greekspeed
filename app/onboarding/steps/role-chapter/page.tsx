@@ -119,58 +119,45 @@ export default function RoleChapterPage() {
         throw new Error('Selected chapter not found. Please try again.');
       }
 
-      // Check if profile has first_name and last_name (from OAuth or previous steps)
-      const hasName = profile?.first_name && profile?.last_name;
-
-      // If user selected alumni role but we don't have name yet, we need to handle this carefully
-      // The database trigger will try to create an alumni record, so we need to either:
-      // 1. Create a minimal alumni record with available data, OR
-      // 2. Don't set role='alumni' until we have the name
-
-      // For OAuth users, check if we can get name from user metadata
+      // Extract name from all available sources (profile, OAuth metadata)
       let firstName = profile?.first_name || '';
       let lastName = profile?.last_name || '';
 
-      // Try to get name from OAuth metadata if not in profile
-      if (!hasName && user.user_metadata) {
-        firstName = user.user_metadata.given_name || user.user_metadata.first_name || '';
-        lastName = user.user_metadata.family_name || user.user_metadata.last_name || '';
+      if (user.user_metadata) {
+        // Google OAuth: given_name, family_name
+        // LinkedIn OAuth: first_name, last_name
+        // Fallback: split full 'name' field
+        firstName = firstName ||
+          user.user_metadata.given_name ||
+          user.user_metadata.first_name ||
+          (user.user_metadata.name?.split(' ')[0]) ||
+          '';
+        lastName = lastName ||
+          user.user_metadata.family_name ||
+          user.user_metadata.last_name ||
+          (user.user_metadata.name?.split(' ').slice(1).join(' ')) ||
+          '';
       }
 
-      // Update profiles table
+      // Build profile update — ALWAYS save role and chapter together
       const updateData: any = {
         chapter: formData.chapter,
         chapter_id: selectedChapter.id,
+        role: formData.role, // Always persist role from step 1
         member_status: formData.role === 'alumni' ? 'graduated' : 'active',
         updated_at: new Date().toISOString(),
       };
 
-      // Preserve avatar_url if it exists (from OAuth or previous steps)
-      if (profile?.avatar_url) {
-        updateData.avatar_url = profile.avatar_url;
+      // Save names if we have them from OAuth (so profile-basics can pre-populate)
+      if (firstName.trim()) updateData.first_name = firstName;
+      if (lastName.trim()) updateData.last_name = lastName;
+      if (firstName.trim() && lastName.trim()) {
+        updateData.full_name = `${firstName} ${lastName}`;
       }
 
-      // Only set role if we have name for alumni, or if it's not alumni
-      if (formData.role === 'alumni') {
-        if (firstName && lastName) {
-          // We have name, safe to set role and create alumni record
-          updateData.role = formData.role;
-
-          // Also update first_name/last_name in profile if they're missing
-          if (!profile?.first_name) updateData.first_name = firstName;
-          if (!profile?.last_name) updateData.last_name = lastName;
-          if (!profile?.full_name) updateData.full_name = `${firstName} ${lastName}`;
-        } else {
-          // No name yet - don't set role='alumni' to avoid trigger error
-          // Store the intended role in a way that doesn't trigger alumni creation
-          // We'll set role='alumni' in profile-basics when we have the name
-          updateData.role = null; // Keep role null for now
-          // Note: We'll need to track that they selected alumni somehow
-          // Could use a session variable or a custom field
-        }
-      } else {
-        // Not alumni, safe to set role
-        updateData.role = formData.role;
+      // Preserve avatar_url if it exists (from OAuth)
+      if (profile?.avatar_url) {
+        updateData.avatar_url = profile.avatar_url;
       }
 
       const { data, error: profileError } = await supabase
@@ -190,10 +177,11 @@ export default function RoleChapterPage() {
         throw profileError;
       }
 
-      // If we set role='alumni' and have name, create minimal alumni record to satisfy trigger
-      if (formData.role === 'alumni' && firstName && lastName && updateData.role === 'alumni') {
+      // If alumni and we have names, create a minimal alumni record now
+      // (will be fully populated in profile-basics)
+      if (formData.role === 'alumni' && firstName.trim() && lastName.trim()) {
         try {
-          const { error: alumniError } = await supabase
+          await supabase
             .from('alumni')
             .upsert({
               user_id: user.id,
@@ -204,7 +192,7 @@ export default function RoleChapterPage() {
               chapter_id: selectedChapter.id,
               email: user.email || profile?.email || '',
               industry: 'Not specified',
-              graduation_year: new Date().getFullYear(), // Temporary, will be updated in profile-basics
+              graduation_year: new Date().getFullYear(), // Temporary, updated in profile-basics
               company: 'Not specified',
               job_title: 'Not specified',
               location: 'Not specified',
@@ -216,18 +204,13 @@ export default function RoleChapterPage() {
               onConflict: 'user_id',
               ignoreDuplicates: false,
             });
-
-          if (alumniError) {
-            console.warn('Alumni record creation warning (non-critical):', alumniError);
-            // Don't throw - profile update succeeded
-          }
         } catch (alumniErr) {
-          console.warn('Alumni record creation exception (non-critical):', alumniErr);
-          // Don't throw - profile update succeeded
+          console.warn('Alumni record creation warning (will be created in profile-basics):', alumniErr);
+          // Don't fail — alumni record will be created/updated in profile-basics
         }
       }
 
-      // Refresh profile - but don't fail if it errors (update already succeeded)
+      // Refresh profile so step 2 sees the latest data
       try {
         await refreshProfile();
       } catch (refreshError) {
