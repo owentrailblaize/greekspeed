@@ -107,7 +107,9 @@ export async function POST(request: NextRequest) {
         member_status: memberStatus,
         is_developer: isDeveloper,
         developer_permissions: isDeveloper ? ['view_users'] : [],
-        access_level: isDeveloper ? 'standard' : 'standard'
+        access_level: isDeveloper ? 'standard' : 'standard',
+        onboarding_completed: true,               
+        onboarding_completed_at: new Date().toISOString(), 
       });
 
     if (profileError) {
