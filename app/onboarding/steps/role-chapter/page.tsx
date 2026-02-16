@@ -47,35 +47,73 @@ export default function RoleChapterPage() {
 
   // Check for invitation data in session storage
   const [hasInvitation, setHasInvitation] = useState(false);
+  const [invitationLoading, setInvitationLoading] = useState(false);
+
+  useEffect(() => {
+    const loadInvitationData = async () => {
+      // Check if user came through invitation flow
+      const invitationType = sessionStorage.getItem('invitation_type');
+      const invitationToken = sessionStorage.getItem('invitation_token');
+  
+      if (invitationType) {
+        setHasInvitation(true);
+        // If invitation specifies role, use it
+        if (invitationType === 'active_member') {
+          setFormData(prev => ({ ...prev, role: 'active_member' }));
+        }
+      }
+  
+      // Pre-populate from profile if available (invitation flow already set these)
+      if (profile?.chapter || profile?.role) {
+        const matchingChapter = chapters.find(c => c.name === profile.chapter);
+        setFormData(prev => ({
+          ...prev,
+          chapter: profile.chapter || prev.chapter,
+          chapterId: matchingChapter?.id || profile.chapter_id || prev.chapterId,
+          role: (profile.role as 'alumni' | 'active_member') || prev.role,
+        }));
+        return; // Profile already has data, no need to fetch
+      }
+  
+      // Fallback: if profile doesn't have chapter/role but we have an invitation token,
+      // fetch invitation data to pre-populate (handles case where callback missed params)
+      if (invitationToken && (!profile?.chapter || !profile?.role)) {
+        setInvitationLoading(true);
+        try {
+          // Determine which API to call based on invitation type
+          const apiPath = invitationType === 'alumni'
+            ? `/api/alumni-join/${invitationToken}`
+            : `/api/join/${invitationToken}`;
+          const response = await fetch(apiPath);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.valid && data.invitation) {
+              const roleValue = data.invitation.invitation_type === 'alumni' ? 'alumni' : 'active_member';
+              const matchingChapter = chapters.find(c => c.name === data.invitation.chapter_name);
+              setFormData(prev => ({
+                ...prev,
+                chapter: data.invitation.chapter_name || prev.chapter,
+                chapterId: matchingChapter?.id || data.invitation.chapter_id || prev.chapterId,
+                role: roleValue,
+              }));
+              setHasInvitation(true);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching invitation data for role-chapter:', error);
+        } finally {
+          setInvitationLoading(false);
+        }
+      }
+    };
+  
+    loadInvitationData();
+  }, [profile, chapters]);
 
   // Determine if this is confirmation mode (user already has role and chapter from invitation)
   const isConfirmationMode = useMemo(() => {
     return !!(profile?.role && profile?.chapter);
   }, [profile?.role, profile?.chapter]);
-
-  useEffect(() => {
-    // Check if user came through invitation flow
-    const invitationType = sessionStorage.getItem('invitation_type');
-    if (invitationType) {
-      setHasInvitation(true);
-      // If invitation specifies role, use it
-      if (invitationType === 'active_member') {
-        setFormData(prev => ({ ...prev, role: 'active_member' }));
-      }
-    }
-
-    // Pre-populate from profile if available
-    if (profile?.chapter || profile?.role) {
-      // Find the chapter in the chapters list to get the ID
-      const matchingChapter = chapters.find(c => c.name === profile.chapter);
-      setFormData(prev => ({
-        ...prev,
-        chapter: profile.chapter || prev.chapter,
-        chapterId: matchingChapter?.id || profile.chapter_id || prev.chapterId,
-        role: (profile.role as 'alumni' | 'active_member') || prev.role,
-      }));
-    }
-  }, [profile, chapters]); // Add chapters to dependencies
 
   // Handle chapter selection
   const handleChapterChange = (chapterName: string) => {
