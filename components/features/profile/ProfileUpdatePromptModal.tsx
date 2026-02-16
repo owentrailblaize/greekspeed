@@ -186,13 +186,13 @@ function generateTemplateOptions(changes: DetectedChange[]): TemplateOption[] {
         careerContent = `Just joined ${chapter}! I'm a ${jobTitle} in ${industry}. Excited to connect with fellow members! 🚀`;
       } else if (isAlumni && (jobTitle || industry)) {
         // Alumni with partial info
-        careerContent = `Just joined ${chapter}! Working in ${jobTitle || industry}. Looking forward to connecting! 💼`;
+        careerContent = `Just joined ${chapter}! I'm a ${jobTitle} in ${industry}. Feel free to reach out if you are interested in the ${industry} industry!`;
       } else if (major && industry) {
         // Active member with major and career interest
-        careerContent = `Just joined ${chapter}! I'm studying ${major} and looking to get into ${industry}. Would love to connect! 📚`;
+        careerContent = `Just joined ${chapter}! I'm a ${major} looking to explore opportunities within the ${industry} industry!`;
       } else if (major) {
         // Active member with just major
-        careerContent = `Just joined ${chapter}! I'm a ${major} major. Excited to meet everyone! 🎓`;
+        careerContent = `Just joined ${chapter}! I'm a ${major} looking to explore opportunities that align with my interests. Excited to see who I can connect with!`;
       }
       
       if (careerContent) {
