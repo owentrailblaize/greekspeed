@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from "react";
-import { Plus, Edit, Trash2, X } from "lucide-react";
+import { Plus, Edit, Trash2, Upload, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,9 +9,11 @@ import { useProfile } from "@/lib/contexts/ProfileContext";
 import { useVendors } from "@/lib/hooks/useVendors";
 import { VendorForm } from "@/components/ui/VendorForm";
 import { VendorContact, CreateVendorRequest, UpdateVendorRequest } from "@/types/vendors";
+import { BulkVendorImport } from "./BulkVendorImport";
 
 export function VendorsView() {
   const [showVendorForm, setShowVendorForm] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
   const [editingVendor, setEditingVendor] = useState<VendorContact | null>(null);
   const [isSubmittingVendor, setIsSubmittingVendor] = useState(false);
 
@@ -109,14 +111,25 @@ export function VendorsView() {
         <CardHeader className="pb-2 md:pb-6">
           <div className="flex justify-between items-center">
             <CardTitle className="text-lg md:text-xl">Vendor Contacts</CardTitle>
-            <Button 
-              className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() => setShowVendorForm(true)}
-            >
-              <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              <span className="hidden sm:inline">Add Vendor</span>
-              <span className="sm:hidden">Vendor</span>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                className="rounded-full h-12 sm:h-10 text-base sm:text-sm"
+                onClick={() => setShowBulkImport(true)}
+              >
+                <Upload className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">Import CSV</span>
+                <span className="sm:hidden">Import</span>
+              </Button>
+              <Button 
+                className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300 h-12 sm:h-10 w-full sm:w-auto text-base sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => setShowVendorForm(true)}
+              >
+                <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">Add Vendor</span>
+                <span className="sm:hidden">Vendor</span>
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="pt-2 md:pt-6">
@@ -299,6 +312,15 @@ export function VendorsView() {
             />
           </div>
         </div>
+      )}
+
+      {showBulkImport && (
+        <BulkVendorImport
+          onClose={() => setShowBulkImport(false)}
+          onSuccess={() => {
+            void fetchVendors();
+          }}
+        />
       )}
     </>
   );
