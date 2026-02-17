@@ -33,26 +33,31 @@ jobs:
           # Add the organization repo as a remote
           git remote add org-mirror https://x-access-token:${TOKEN}@github.com/${TARGET_REPO}.git
           
-          # Fetch from organization repo to check for changes
+          # Fetch from organization repo
           git fetch org-mirror main develop || true
           
           # Get current branch name
           CURRENT_BRANCH=${GITHUB_REF#refs/heads/}
           
-          # Remove workflow files from the index before pushing
-          # This prevents workflow files from being synced (they're repo-specific)
-          git rm -r --cached .github/workflows/ 2>/dev/null || true
+          # Use git archive to create a clean export without workflow files
+          TEMP_DIR=$(mktemp -d)
+          git archive --format=tar HEAD | tar -x -C "$TEMP_DIR"
           
-          # Stage all other changes
+          # Remove workflow files from the archive
+          rm -rf "$TEMP_DIR/.github/workflows"
+          
+          # Create a new git repo from this clean export
+          cd "$TEMP_DIR"
+          git init
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
           git add -A
+          git commit -m "Sync from greekspeed repo [skip ci]"
           
-          # Commit the removal of workflow files if they were removed
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: exclude workflow files from sync" || true
-          fi
+          # Push to org repo
+          git remote add org-mirror https://x-access-token:${TOKEN}@github.com/${TARGET_REPO}.git
+          git push org-mirror HEAD:${CURRENT_BRANCH} --force
           
-          # Push current branch to organization repo (excluding workflow files)
-          git push org-mirror ${CURRENT_BRANCH} --force
-          
-          # Restore workflow files in the local repo
-          git checkout HEAD -- .github/workflows/ 2>/dev/null || true
+          # Clean up
+          cd -
+          rm -rf "$TEMP_DIR"
