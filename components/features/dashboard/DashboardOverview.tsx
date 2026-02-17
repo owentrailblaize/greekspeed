@@ -4,18 +4,19 @@ import { AlumniOverview } from './dashboards/AlumniOverview';
 import { ActiveMemberOverview } from './dashboards/ActiveMemberOverview';
 import { AdminOverview } from './dashboards/AdminOverview';
 import { DeveloperOverview } from './dashboards/DeveloperOverview';
-import { useProfile } from '@/lib/contexts/ProfileContext';
 import type { SocialFeedInitialData } from './dashboards/ui/SocialFeed';
 import { useActiveChapter } from '@/lib/contexts/ActiveChapterContext';
 
 interface DashboardOverviewProps {
   userRole: string | null;
+  isDeveloper?: boolean;
   initialFeed?: SocialFeedInitialData;
   fallbackChapterId?: string | null;
 }
 
 export function DashboardOverview({
   userRole,
+  isDeveloper = false,
   initialFeed,
   fallbackChapterId,
 }: DashboardOverviewProps) {

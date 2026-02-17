@@ -50,7 +50,21 @@ export function useChapterFeatures(chapterId: string | null): UseChapterFeatures
   };
 
   useEffect(() => {
-    fetchFlags();
+    if (!chapterId || !session) {
+      // No data to fetch yet — mark loading as false so FeatureGuard
+      // doesn't block indefinitely.
+      setLoading(false);
+      return;
+    }
+
+    // Defer feature-flag fetch by 1s so the critical feed data loads first.
+    // Sidebar cards (wrapped in FeatureGuard) render nothing during this
+    // brief delay, which is visually acceptable as secondary content.
+    const timerId = setTimeout(() => {
+      fetchFlags();
+    }, 1000);
+
+    return () => clearTimeout(timerId);
   }, [chapterId, session?.access_token]); // Re-fetch if chapterId or session changes
 
   return {

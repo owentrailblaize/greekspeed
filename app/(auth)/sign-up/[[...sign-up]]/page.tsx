@@ -48,7 +48,24 @@ export default function SignUpPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (!authLoading && user) {
-      router.push('/dashboard');
+      const checkOnboarding = async () => {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('onboarding_completed')
+            .eq('id', user.id)
+            .single();
+  
+          if (profile?.onboarding_completed) {
+            router.push('/dashboard');
+          } else {
+            router.push('/onboarding');
+          }
+        } catch {
+          router.push('/onboarding');
+        }
+      };
+      checkOnboarding();
     }
   }, [user, authLoading, router]);
 
@@ -74,10 +91,10 @@ export default function SignUpPage() {
         phone: phoneNumber, // Add phone number to the signUp payload
         smsConsent: smsConsent // Add SMS consent to the signUp payload
       });
-      setSuccess('Account created successfully! Redirecting...');
+      setSuccess('Account created successfully! Redirecting to onboarding...');
       
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        window.location.href = '/onboarding';
       }, 3000);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Sign up failed');

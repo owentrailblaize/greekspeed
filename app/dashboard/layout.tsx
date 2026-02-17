@@ -22,6 +22,8 @@ import {
   type ProfileUpdatePrefs,
 } from '@/lib/utils/profileUpdatePreferences';
 import { getPendingPrompt, clearPendingPrompt, queueProfileUpdatePrompt } from '@/lib/utils/profileUpdatePromptQueue';
+import { useRouter } from 'next/navigation';
+import { ChapterFeaturesProvider } from '@/lib/contexts/ChapterFeaturesContext';
 
 export default function DashboardLayout({
   children,
@@ -30,6 +32,16 @@ export default function DashboardLayout({
 }) {
   // Initialize activity tracking for all dashboard pages
   useActivityTracking()
+
+  const { profile, loading: profileLoading } = useProfile();
+  const router = useRouter();
+
+  // Guard: redirect to onboarding if not completed
+  useEffect(() => {
+    if (!profileLoading && profile && !profile.onboarding_completed) {
+      router.replace('/onboarding');
+    }
+  }, [profile, profileLoading, router]);
 
   return (
     <ActiveChapterProvider>

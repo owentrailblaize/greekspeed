@@ -26,6 +26,8 @@ interface SocialFeedProps {
 export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
+  const [hasScrolled, setHasScrolled] = useState(false); // ← ADD THIS
+
   const {
     posts,
     error,
@@ -45,6 +47,12 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
   const prevPostCountRef = useRef(mergedPosts.length);
 
   useEffect(() => {
+    const handleScroll = () => setHasScrolled(true);
+    window.addEventListener('scroll', handleScroll, { once: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
     if (!expandedPostId) return;
     const stillExists = mergedPosts.some((post) => post.id === expandedPostId);
     if (!stillExists) {
@@ -54,7 +62,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
 
   useEffect(() => {
     const node = loadMoreRef.current;
-    if (!node || !hasNextPage) return;
+    if (!node || !hasNextPage || !hasScrolled) return; // ← Added !hasScrolled
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -71,7 +79,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     return () => {
       observer.disconnect();
     };
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, hasScrolled]); // ← Added hasScrolled
 
   const rowVirtualizer = useWindowVirtualizer({
     count: mergedPosts.length,
@@ -133,7 +141,10 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     }
   };
 
-  if (isInitialLoading && posts.length === 0) {
+  // Only show skeleton placeholders when there is genuinely no data to display.
+  // When initialData is provided from the server, posts.length > 0 on first render
+  // and isInitialLoading is false, so this gate is skipped entirely.
+  if (posts.length === 0 && isInitialLoading) {
     return (
       <div className="space-y-4">
         <div className="animate-pulse">
@@ -159,7 +170,14 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
 
   return (
     <>
-      <div className="space-y-6 sm:space-y-5 max-w-2xl mx-auto">
+      <div 
+        className="space-y-6 sm:space-y-5 max-w-2xl mx-auto"
+        style={{
+          minHeight: initialData?.posts && initialData.posts.length > 0
+            ? `${Math.min(initialData.posts.length * 400, 2000)}px` // Cap at 2000px
+            : '600px'
+        }}
+      >
         <Card className="hidden sm:block rounded-2xl border border-gray-100 bg-white/80 shadow-sm transition hover:shadow-md">
           <CardContent className="p-0">
             <div className="flex items-center gap-3 px-5 py-4">

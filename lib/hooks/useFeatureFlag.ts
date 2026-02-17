@@ -1,4 +1,4 @@
-import { useChapterFeatures } from './useChapterFeatures';
+import { useChapterFeaturesContext } from '@/lib/contexts/ChapterFeaturesContext';
 import { isFeatureEnabled } from '@/types/featureFlags';
 import type { FeatureFlagName } from '@/types/featureFlags';
 import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
@@ -11,10 +11,13 @@ interface UseFeatureFlagResult {
 
 /**
  * Hook to check if a specific feature flag is enabled for the user's chapter.
- * 
+ *
+ * Uses the shared `ChapterFeaturesContext` so **all** consumers share a single
+ * fetch instead of each firing an independent request.
+ *
  * @param flagName - The name of the feature flag to check
  * @returns Object with enabled status, loading state, and error state
- * 
+ *
  * @example
  * const { enabled, loading } = useFeatureFlag('financial_tools_enabled');
  * if (loading) return <Spinner />;

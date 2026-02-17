@@ -31,6 +31,8 @@ export function useActivityTracking() {
     if (!user) return
 
     let intervalId: NodeJS.Timeout
+    let deferTimerId: ReturnType<typeof setTimeout> | undefined
+    let idleCallbackId: number | undefined
 
     const startTracking = () => {
       // Track initial activity
@@ -54,8 +56,20 @@ export function useActivityTracking() {
       }
     }
 
-    // Start tracking when user is active
-    startTracking()
+    // ---------------------------------------------------------------
+    // DEFERRED: Wait ~3s before first activity ping so it doesn't
+    // compete with critical dashboard data fetches (feed, profile).
+    // Uses requestIdleCallback where available for best-effort
+    // scheduling, with a plain setTimeout fallback.
+    // ---------------------------------------------------------------
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      idleCallbackId = (window as any).requestIdleCallback(
+        () => startTracking(),
+        { timeout: 3000 },
+      )
+    } else {
+      deferTimerId = setTimeout(() => startTracking(), 3000)
+    }
 
     // Stop tracking when user becomes inactive (after 30 minutes)
     const inactivityTimer = setTimeout(() => {
@@ -63,6 +77,10 @@ export function useActivityTracking() {
     }, 30 * 60 * 1000) // 30 minutes
 
     return () => {
+      if (idleCallbackId != null && typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+        (window as any).cancelIdleCallback(idleCallbackId)
+      }
+      if (deferTimerId) clearTimeout(deferTimerId)
       stopTracking()
       clearTimeout(inactivityTimer)
     }

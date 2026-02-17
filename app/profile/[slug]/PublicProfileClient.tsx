@@ -266,16 +266,18 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
           )}
 
           {/* Share Button */}
-          <div className="absolute top-3 right-3 z-10">
-            <CopyProfileLinkButton
-              slug={slug}
-              userId={profile.id}
-              variant="icon"
-              buttonVariant="outline"
-              size="sm"
-              className="h-10 w-10 bg-white/90 backdrop-blur-sm hover:bg-white shadow-md border-0"
-            />
-          </div>
+          {isLoggedIn && (
+            <div className="absolute top-3 right-3 z-10">
+              <CopyProfileLinkButton
+                slug={slug}
+                userId={profile.id}
+                variant="icon"
+                buttonVariant="outline"
+                size="sm"
+                className="h-10 w-10 bg-white/90 backdrop-blur-sm hover:bg-white shadow-md border-0"
+              />
+            </div>
+          )}
         </div>
 
         {/* Profile Summary Section */}

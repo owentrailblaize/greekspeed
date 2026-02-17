@@ -7,7 +7,7 @@ import type { Session, User } from '@supabase/supabase-js';
 import { ActivityTypes, trackActivity } from '@/lib/utils/activityUtils';
 import { generateUniqueUsername, generateProfileSlug } from '@/lib/utils/usernameUtils';
 import { supabase } from './client';
-
+import { clearFeedCache } from '@/lib/cache/feedCache';
 interface ProfileData {
   fullName: string;
   firstName: string;
@@ -340,6 +340,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser(null);
       setSession(null);
+
+      clearFeedCache();
     } catch (signOutError) {
       const message = signOutError instanceof Error ? signOutError.message : 'Failed to sign out';
       setError(message);

@@ -1,13 +1,11 @@
 'use client';
-import { useState, KeyboardEvent } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Eye, EyeOff, AlertCircle, CheckCircle, Users, Shield, Loader2, Link, BookOpen, GraduationCap, X, MapPin } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, AlertCircle, Users, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectItem } from '@/components/ui/select';
 import { Invitation, JoinFormData } from '@/types/invitations';
 import { toast } from 'react-toastify';
 import { supabase } from '@/lib/supabase/client';
@@ -28,23 +26,25 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
     last_name: '',
     phone: '',
     sms_consent: false,
-    graduation_year: new Date().getFullYear() + 4, // Default to 4 years from now
+    graduation_year: new Date().getFullYear() + 4, // Default - will be updated in onboarding
     major: '',
     location: ''
   });
 
-  const [majors, setMajors] = useState<string[]>([]);
-  const [majorInput, setMajorInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Generate graduation years for active members (current year - 10 to current year + 10)
-  const currentYear = new Date().getFullYear();
-  const graduationYears = Array.from({ length: 21 }, (_, i) => currentYear - 10 + i);
-
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
+
+    if (!formData.first_name?.trim()) {
+      newErrors.first_name = 'First name is required';
+    }
+
+    if (!formData.last_name?.trim()) {
+      newErrors.last_name = 'Last name is required';
+    }
 
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
@@ -56,34 +56,6 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
-    }
-
-    if (!formData.full_name.trim()) {
-      newErrors.full_name = 'Full name is required';
-    }
-
-    // Phone validation - now required
-    if (!formData.phone || !formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!isValidPhoneNumber(formData.phone)) {
-      newErrors.phone = 'Please enter a valid 10-digit phone number';
-    }
-
-    // Graduation year validation - required
-    if (!formData.graduation_year) {
-      newErrors.graduation_year = 'Graduation year is required';
-    } else {
-      const currentYear = new Date().getFullYear();
-      const minYear = currentYear - 10; // Allow up to 10 years in the past
-      const maxYear = currentYear + 10; // Allow up to 10 years in the future
-      if (formData.graduation_year < minYear || formData.graduation_year > maxYear) {
-        newErrors.graduation_year = `Graduation year must be between ${minYear} and ${maxYear}`;
-      }
-    }
-
-    // Major validation - required (check majors array)
-    if (majors.length === 0) {
-      newErrors.major = 'At least one major is required';
     }
 
     setErrors(newErrors);
@@ -100,10 +72,14 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
     setLoading(true);
 
     try {
-      // Convert majors array to comma-separated string for backend
+      // Prepare simplified data - only send what's needed for account creation
+      // Other fields will be collected during onboarding
       const submitData = {
         ...formData,
-        major: majors.join(', ')
+        full_name: `${formData.first_name || ''} ${formData.last_name || ''}`.trim(),
+        // Set defaults for required fields - will be updated in onboarding
+        major: 'To be updated',
+        graduation_year: new Date().getFullYear() + 4,
       };
 
       const response = await fetch(`/api/invitations/accept/${invitation.token}`, {
@@ -120,8 +96,8 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
       }
 
       const data = await response.json();
-      
-      // CRITICAL FIX: Ensure client-side session is established
+
+      // CRITICAL: Ensure client-side session is established
       try {
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: formData.email.toLowerCase(),
@@ -130,22 +106,18 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
 
         if (signInError) {
           console.error('Client-side sign-in failed:', signInError);
-          // Don't fail the entire process, but log the error
-        } else {
-          // Client-side session established successfully
         }
       } catch (signInError) {
         console.error('Client-side sign-in error:', signInError);
       }
 
-      toast.success('Account created successfully!');
+      toast.success('Account created! Let\'s complete your profile.');
       onSuccess(data.user);
     } catch (error) {
       console.error('Error creating account:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to create account';
       toast.error(errorMessage);
-      
-      // Show specific error for email already used
+
       if (errorMessage.includes('already been used')) {
         setErrors({ email: 'This email has already been used with this invitation' });
       }
@@ -156,60 +128,10 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
 
   const handleInputChange = (field: keyof JoinFormData, value: string | boolean | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Clear error when user starts typing
+
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
-
-    // Auto-populate first and last name from full name
-    if (field === 'full_name' && typeof value === 'string') {
-      const nameParts = value.trim().split(' ');
-      setFormData(prev => ({
-        ...prev,
-        first_name: nameParts[0] || '',
-        last_name: nameParts.slice(1).join(' ') || ''
-      }));
-    }
-  };
-
-  const handleMajorKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && majorInput.trim()) {
-      e.preventDefault();
-      const trimmedMajor = majorInput.trim();
-      if (!majors.includes(trimmedMajor)) {
-        setMajors(prev => [...prev, trimmedMajor]);
-        setMajorInput('');
-        // Clear error when adding a major
-        if (errors.major) {
-          setErrors(prev => ({ ...prev, major: '' }));
-        }
-      }
-    } else if (e.key === 'Backspace' && majorInput === '' && majors.length > 0) {
-      // Remove last major when backspace is pressed on empty input
-      setMajors(prev => prev.slice(0, -1));
-    }
-  };
-
-  const removeMajor = (majorToRemove: string) => {
-    setMajors(prev => prev.filter(m => m !== majorToRemove));
-  };
-
-  const formatPhoneNumber = (value: string) => {
-    const phoneNumber = value.replace(/\D/g, '');
-    const limitedPhone = phoneNumber.slice(0, 10);
-    
-    if (limitedPhone.length === 0) return '';
-    if (limitedPhone.length < 4) return `(${limitedPhone}`;
-    if (limitedPhone.length < 7) {
-      return `(${limitedPhone.slice(0, 3)}) ${limitedPhone.slice(3)}`;
-    }
-    return `(${limitedPhone.slice(0, 3)}) ${limitedPhone.slice(3, 6)}-${limitedPhone.slice(6)}`;
-  };
-  
-  const isValidPhoneNumber = (phone: string) => {
-    const digits = phone.replace(/\D/g, '');
-    return digits.length === 10;
   };
 
   return (
@@ -220,7 +142,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
         className="max-w-md w-full"
       >
         <Card>
-          <CardHeader className="pb-1 md:pb-2">
+          <CardHeader className="pb-2 md:pb-4">
             <div className="flex items-center space-x-2 md:space-x-3">
               <Button
                 variant="ghost"
@@ -234,28 +156,50 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
             </div>
           </CardHeader>
           <CardContent className="pt-0 md:pt-1">
-            <form onSubmit={handleSubmit} className="space-y-2 md:space-y-3">
-              {/* Full Name */}
-              <div className="space-y-0.5 md:space-y-1">
-                <Label htmlFor="full_name" className="text-sm">Full Name *</Label>
-                <Input
-                  id="full_name"
-                  type="text"
-                  value={formData.full_name}
-                  onChange={(e) => handleInputChange('full_name', e.target.value)}
-                  placeholder="Enter your full name"
-                  className={`h-8 md:h-9 ${errors.full_name ? 'border-red-500' : ''}`}
-                />
-                {errors.full_name && (
-                  <p className="text-xs text-red-600 flex items-center space-x-1 mt-0.5">
-                    <AlertCircle className="h-3 w-3" />
-                    <span>{errors.full_name}</span>
-                  </p>
-                )}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Name Fields - Side by Side */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* First Name */}
+                <div className="space-y-1">
+                  <Label htmlFor="first_name" className="text-sm">First Name *</Label>
+                  <Input
+                    id="first_name"
+                    type="text"
+                    value={formData.first_name}
+                    onChange={(e) => handleInputChange('first_name', e.target.value)}
+                    placeholder="First name"
+                    className={`h-9 ${errors.first_name ? 'border-red-500' : ''}`}
+                  />
+                  {errors.first_name && (
+                    <p className="text-xs text-red-600 flex items-center space-x-1">
+                      <AlertCircle className="h-3 w-3" />
+                      <span>{errors.first_name}</span>
+                    </p>
+                  )}
+                </div>
+
+                {/* Last Name */}
+                <div className="space-y-1">
+                  <Label htmlFor="last_name" className="text-sm">Last Name *</Label>
+                  <Input
+                    id="last_name"
+                    type="text"
+                    value={formData.last_name}
+                    onChange={(e) => handleInputChange('last_name', e.target.value)}
+                    placeholder="Last name"
+                    className={`h-9 ${errors.last_name ? 'border-red-500' : ''}`}
+                  />
+                  {errors.last_name && (
+                    <p className="text-xs text-red-600 flex items-center space-x-1">
+                      <AlertCircle className="h-3 w-3" />
+                      <span>{errors.last_name}</span>
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Email */}
-              <div className="space-y-0.5 md:space-y-1">
+              <div className="space-y-1">
                 <Label htmlFor="email" className="text-sm">Email Address *</Label>
                 <Input
                   id="email"
@@ -263,142 +207,18 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   placeholder="Enter your email address"
-                  className={`h-8 md:h-9 ${errors.email ? 'border-red-500' : ''}`}
+                  className={`h-9 ${errors.email ? 'border-red-500' : ''}`}
                 />
                 {errors.email && (
-                  <p className="text-xs text-red-600 flex items-center space-x-1 mt-0.5">
+                  <p className="text-xs text-red-600 flex items-center space-x-1">
                     <AlertCircle className="h-3 w-3" />
                     <span>{errors.email}</span>
                   </p>
                 )}
               </div>
 
-              {/* Phone Number & Graduation Year - Same Row on Desktop */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
-                {/* Phone Number */}
-                <div className="space-y-0.5 md:space-y-1">
-                  <Label htmlFor="phone" className="text-sm">Phone Number *</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={formData.phone || ''}
-                    onChange={(e) => {
-                      const formatted = formatPhoneNumber(e.target.value);
-                      handleInputChange('phone', formatted);
-                    }}
-                    placeholder="(555) 123-4567"
-                    className={`h-8 md:h-9 ${errors.phone ? 'border-red-500' : ''}`}
-                  />
-                  {errors.phone && (
-                    <p className="text-xs text-red-600 flex items-center space-x-1 mt-0.5">
-                      <AlertCircle className="h-3 w-3" />
-                      <span>{errors.phone}</span>
-                    </p>
-                  )}
-                  {!errors.phone && (
-                    <p className="text-xs text-gray-500 mt-0.5 hidden md:block">
-                      SMS notifications
-                    </p>
-                  )}
-                </div>
-
-                {/* Graduation Year */}
-                <div className="space-y-0.5 md:space-y-1">
-                  <Label htmlFor="graduation_year" className="text-sm">Graduation Year *</Label>
-                  <Select
-                    value={formData.graduation_year.toString()}
-                    onValueChange={(value) => handleInputChange('graduation_year', parseInt(value))}
-                    placeholder="Select graduation year"
-                  >
-                    {graduationYears.map((year) => (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                  {errors.graduation_year && (
-                    <p className="text-xs text-red-600 flex items-center space-x-1 mt-0.5">
-                      <AlertCircle className="h-3 w-3" />
-                      <span>{errors.graduation_year}</span>
-                    </p>
-                  )}
-                </div>
-              </div>
-              
-              {/* Phone helper text for mobile only */}
-              {!errors.phone && (
-                <p className="text-xs text-gray-500 md:hidden -mt-1">
-                  Used for SMS notifications about chapter updates and events
-                </p>
-              )}
-
-              {/* Major(s) - Tag Input */}
-              <div className="space-y-0.5 md:space-y-1">
-                <Label htmlFor="major" className="text-sm flex items-center space-x-1">
-                  <BookOpen className="h-3 w-3" />
-                  <span>Major(s) *</span>
-                </Label>
-                <div className={`min-h-[2rem] border rounded-md p-1.5 md:p-2 flex flex-wrap gap-1.5 items-center ${errors.major ? 'border-red-500' : 'border-gray-300'} focus-within:ring-2 focus-within:ring-accent-500 focus-within:border-accent-500`}>
-                  {/* Major Tags */}
-                  {majors.map((major, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="flex items-center space-x-1 px-2 py-0.5 text-xs bg-accent-100 text-accent-800 border-accent-200"
-                    >
-                      <span>{major}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeMajor(major)}
-                        className="ml-1 hover:bg-accent-200 rounded-full p-0.5 transition-colors"
-                        aria-label={`Remove ${major}`}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                  {/* Input Field */}
-                  <Input
-                    id="major"
-                    type="text"
-                    value={majorInput}
-                    onChange={(e) => setMajorInput(e.target.value)}
-                    onKeyDown={handleMajorKeyDown}
-                    placeholder={majors.length === 0 ? "Type a major and press Enter" : "Add another major..."}
-                    className="flex-1 min-w-[120px] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto text-sm"
-                  />
-                </div>
-                {errors.major && (
-                  <p className="text-xs text-red-600 flex items-center space-x-1 mt-0.5">
-                    <AlertCircle className="h-3 w-3" />
-                    <span>{errors.major}</span>
-                  </p>
-                )}
-                {!errors.major && (
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Press Enter to add each major
-                  </p>
-                )}
-              </div>
-
-              {/* Location - Optional */}
-              <div className="space-y-0.5 md:space-y-1">
-                <Label htmlFor="location" className="text-sm flex items-center space-x-1">
-                  <MapPin className="h-3 w-3" />
-                  <span>Location (Optional)</span>
-                </Label>
-                <Input
-                  id="location"
-                  type="text"
-                  value={formData.location || ''}
-                  onChange={(e) => handleInputChange('location', e.target.value)}
-                  placeholder="City or state"
-                  className="h-8 md:h-9"
-                />
-              </div>
-
               {/* Password */}
-              <div className="space-y-0.5 md:space-y-1">
+              <div className="space-y-1">
                 <Label htmlFor="password" className="text-sm">Password *</Label>
                 <div className="relative">
                   <Input
@@ -407,7 +227,7 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
                     placeholder="Create a password"
-                    className={`h-8 md:h-9 pr-10 ${errors.password ? 'border-red-500' : ''}`}
+                    className={`h-9 pr-10 ${errors.password ? 'border-red-500' : ''}`}
                   />
                   <button
                     type="button"
@@ -418,20 +238,16 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-xs text-red-600 flex items-center space-x-1 mt-0.5">
+                  <p className="text-xs text-red-600 flex items-center space-x-1">
                     <AlertCircle className="h-3 w-3" />
                     <span>{errors.password}</span>
                   </p>
                 )}
-                {!errors.password && (
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Minimum 6 characters
-                  </p>
-                )}
+                <p className="text-xs text-gray-500">Minimum 6 characters</p>
               </div>
 
-              {/* SMS Consent Checkbox - More Compact */}
-              <div className="space-y-0.5">
+              {/* SMS Consent Checkbox */}
+              <div className="space-y-1">
                 <div className="flex items-start space-x-2">
                   <Checkbox
                     id="sms-consent"
@@ -450,27 +266,27 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
               </div>
 
               {/* Chapter Info */}
-              <div className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 rounded-lg p-1.5 md:p-2">
-                <div className="flex flex-col md:flex-row md:items-center md:space-x-2 space-y-1 md:space-y-0">
-                  <h4 className="font-medium text-primary-900 text-sm">You're joining:</h4>
-                  <div className="flex items-center space-x-2">
-                    <Users className="h-3 w-3 md:h-4 md:w-4 text-brand-primary" />
-                    <span className="text-primary-800 text-sm">{invitation.chapter_name}</span>
+              <div className="bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 rounded-lg p-3">
+                <div className="flex items-center space-x-2">
+                  <Users className="h-4 w-4 text-brand-primary" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Joining {invitation.chapter_name}</p>
+                    <p className="text-xs text-gray-500">as an Active Member</p>
                   </div>
                 </div>
               </div>
 
-              {/* Terms and Privacy - More Compact */}
-              <div className="bg-gray-50 rounded-lg p-1.5 md:p-2">
-                <p className="text-xs text-gray-600 leading-tight">
-                  By creating an account, you agree to join {invitation.chapter_name} and abide by the chapter's rules and policies.
+              {/* Info Note */}
+              <div className="bg-blue-50 rounded-lg p-3">
+                <p className="text-xs text-blue-700">
+                  After creating your account, you&apos;ll complete your profile with graduation year, major, and other details.
                 </p>
               </div>
 
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="rounded-full w-full bg-brand-accent hover:bg-accent-700 h-8 md:h-9"
+                className="rounded-full w-full bg-brand-accent hover:bg-brand-accent-hover h-10"
                 disabled={loading}
               >
                 {loading ? (
@@ -479,11 +295,11 @@ export function JoinForm({ invitation, onSuccess, onCancel }: JoinFormProps) {
                     <span>Creating Account...</span>
                   </div>
                 ) : (
-                  'Create Account'
+                  'Create Account & Continue'
                 )}
               </Button>
 
-              <div className="text-center pt-1">
+              <div className="text-center">
                 <button
                   type="button"
                   onClick={onCancel}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Clock, Users, HelpCircle, X, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -11,10 +11,33 @@ import { parseRawTime } from '@/lib/utils/timezoneUtils';
 import { EventDetailModal } from '@/components/features/events/EventDetailModal';
 import { EventActionsMenu } from '@/components/features/events/EventActionsMenu';
 
-export function UpcomingEventsCard() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+/* -----------------------------------------------------------------------
+ * Performance: Accept chapterId + userId as props so the widget can start
+ * fetching immediately at mount without waiting for ProfileContext.
+ * RSVP statuses are now included in the /api/events response
+ * (user_rsvp_status field) — eliminates N+1 individual RSVP calls.
+ * ----------------------------------------------------------------------- */
+
+interface UpcomingEventsCardProps {
+  /** If provided, skip ProfileContext wait and start fetching immediately */
+  chapterId?: string | null;
+  /** If provided, events response will include user_rsvp_status inline */
+  userId?: string | null;
+  /** Pre-fetched events from parent (scope=all) — filters to upcoming client-side */
+  events?: Event[];
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
+}
+
+export function UpcomingEventsCard({
+  chapterId: propChapterId,
+  userId: propUserId,
+  events: propEvents,
+  loading: propLoading,
+  error: propError,
+  onRetry,
+}: UpcomingEventsCardProps = {}) {
   const [rsvpStatuses, setRsvpStatuses] = useState<Record<string, 'attending' | 'maybe' | 'not_attending'>>({});
   
   // Pagination state
@@ -25,43 +48,80 @@ export function UpcomingEventsCard() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   
+  // Use prop values first, fall back to ProfileContext
   const { profile } = useProfile();
   const chapterId = useScopedChapterId();
 
-  // Calculate pagination
-  const totalPages = Math.ceil(events.length / eventsPerPage);
-  const startIndex = (currentPage - 1) * eventsPerPage;
-  const endIndex = startIndex + eventsPerPage;
-  const currentEvents = events.slice(startIndex, endIndex);
+  // ---- Filter parent-provided events to "upcoming" on the client ----
+  const upcomingFromProps = useMemo(() => {
+    if (!propEvents) return undefined;
+    const now = new Date().toISOString();
+    return propEvents
+      .filter(e => e.status === 'published' && e.start_time >= now)
+      .sort((a, b) => a.start_time.localeCompare(b.start_time));
+  }, [propEvents]);
 
-  // Fetch events for the user's chapter
-  const fetchEvents = async () => {
-    if (!chapterId || !profile?.id) return;
+  // ---- Fallback: self-fetch only if no events were passed as props ----
+  const [internalEvents, setInternalEvents] = useState<Event[]>([]);
+  const [internalLoading, setInternalLoading] = useState(true);
+  const [internalError, setInternalError] = useState<string | null>(null);
+
+  const fetchEvents = useCallback(async () => {
+    if (upcomingFromProps !== undefined) return; // Skip if parent provides data
+    if (!chapterId || !userId) return;
     
     try {
-      setLoading(true);
-      setError(null);
+      setInternalLoading(true);
+      setInternalError(null);
       
-      const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=upcoming`);
+      const response = await fetch(
+        `/api/events?chapter_id=${chapterId}&scope=upcoming&user_id=${userId}`
+      );
       if (!response.ok) {
         throw new Error('Failed to fetch events');
       }
       
-      const data = await response.json();
-      setEvents(data);
+      const data: Event[] = await response.json();
+      setInternalEvents(data);
 
-      // Fetch user's RSVP statuses for all events
-      await fetchUserRSVPs(data, profile.id);
+      const userRsvps: Record<string, 'attending' | 'maybe' | 'not_attending'> = {};
+      data.forEach((event) => {
+        if (event.user_rsvp_status) {
+          userRsvps[event.id] = event.user_rsvp_status;
+        }
+      });
+      setRsvpStatuses(userRsvps);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setInternalError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
-      setLoading(false);
+      setInternalLoading(false);
     }
-  };
+  }, [chapterId, userId, upcomingFromProps]);
 
   useEffect(() => {
-    fetchEvents();
-  }, [chapterId, profile?.id]);
+    if (upcomingFromProps === undefined) {
+      fetchEvents();
+    }
+  }, [fetchEvents, upcomingFromProps]);
+
+  // Use prop data when available, otherwise fall back to internal state
+  const events = upcomingFromProps ?? internalEvents;
+  const loading = upcomingFromProps !== undefined ? (propLoading ?? false) : internalLoading;
+  const error = upcomingFromProps !== undefined ? (propError ?? null) : internalError;
+  const handleRetry = onRetry ?? fetchEvents;
+
+  // Sync RSVP statuses from parent-provided events
+  useEffect(() => {
+    if (upcomingFromProps) {
+      const userRsvps: Record<string, 'attending' | 'maybe' | 'not_attending'> = {};
+      upcomingFromProps.forEach((event) => {
+        if (event.user_rsvp_status) {
+          userRsvps[event.id] = event.user_rsvp_status;
+        }
+      });
+      setRsvpStatuses(userRsvps);
+    }
+  }, [upcomingFromProps]);
 
   // Reset to page 1 when events change
   useEffect(() => {
@@ -70,35 +130,14 @@ export function UpcomingEventsCard() {
     }
   }, [events.length]);
 
-  // Fetch user's RSVP statuses for all events
-  const fetchUserRSVPs = async (eventsList: Event[], userId: string) => {
-    try {
-      const rsvpPromises = eventsList.map(async (event) => {
-        const response = await fetch(`/api/events/${event.id}/rsvp?user_id=${userId}`);
-        if (response.ok) {
-          const rsvpData = await response.json();
-          return { eventId: event.id, status: rsvpData.status };
-        }
-        return null;
-      });
+  // Pagination computed values
+  const totalPages = Math.ceil(events.length / eventsPerPage);
+  const startIndex = (currentPage - 1) * eventsPerPage;
+  const endIndex = startIndex + eventsPerPage;
+  const currentEvents = events.slice(startIndex, endIndex);
 
-      const rsvpResults = await Promise.all(rsvpPromises);
-      const userRsvps: Record<string, 'attending' | 'maybe' | 'not_attending'> = {};
-      
-      rsvpResults.forEach((result) => {
-        if (result && result.status) {
-          userRsvps[result.eventId] = result.status;
-        }
-      });
-
-      setRsvpStatuses(userRsvps);
-    } catch (error) {
-      console.error('Error fetching user RSVPs:', error);
-    }
-  };
-
-  const handleRSVP = async (eventId: string, status: 'attending' | 'maybe' | 'not_attending') => {
-    if (!profile?.id) return;
+  const handleRSVP = useCallback(async (eventId: string, status: 'attending' | 'maybe' | 'not_attending') => {
+    if (!userId) return;
     
     try {
       const response = await fetch(`/api/events/${eventId}/rsvp`, {
@@ -108,18 +147,34 @@ export function UpcomingEventsCard() {
         },
         body: JSON.stringify({
           status,
-          user_id: profile.id,
+          user_id: userId,
         }),
       });
 
       if (response.ok) {
+        // Optimistic update
         setRsvpStatuses(prev => ({ ...prev, [eventId]: status }));
         
-        // Refresh events to get updated RSVP counts
-        const eventsResponse = await fetch(`/api/events?chapter_id=${chapterId}&scope=upcoming`);
-        if (eventsResponse.ok) {
-          const updatedEvents = await eventsResponse.json();
-          setEvents(updatedEvents);
+        // Refresh events — if parent provides onRetry, use it to refresh shared data
+        if (onRetry) {
+          await onRetry();
+        } else {
+          // Fallback: self-fetch for updated counts
+          const eventsResponse = await fetch(
+            `/api/events?chapter_id=${chapterId}&scope=upcoming&user_id=${userId}`
+          );
+          if (eventsResponse.ok) {
+            const updatedEvents: Event[] = await eventsResponse.json();
+            setInternalEvents(updatedEvents);
+            
+            const userRsvps: Record<string, 'attending' | 'maybe' | 'not_attending'> = {};
+            updatedEvents.forEach((event) => {
+              if (event.user_rsvp_status) {
+                userRsvps[event.id] = event.user_rsvp_status;
+              }
+            });
+            setRsvpStatuses(userRsvps);
+          }
         }
       } else {
         const errorData = await response.json();
@@ -128,7 +183,7 @@ export function UpcomingEventsCard() {
     } catch (error) {
       console.error('Error submitting RSVP:', error);
     }
-  };
+  }, [userId, chapterId, onRetry]);
 
   const getRSVPButtonVariant = (eventId: string, buttonStatus: string) => {
     const currentStatus = rsvpStatuses[eventId];
@@ -187,7 +242,7 @@ export function UpcomingEventsCard() {
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => fetchEvents()}
+              onClick={() => handleRetry()}
               className="text-brand-primary border-brand-primary hover:bg-primary-50"
             >
               Retry

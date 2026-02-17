@@ -188,17 +188,17 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
     }
   };
 
+  // PAYWALL DISABLED: Always render children when paywall is disabled
+  if (!PAYWALL_CONFIG.enabled) {
+    return <>{children}</>;
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent"></div>
       </div>
     );
-  }
-
-  // PAYWALL DISABLED: Always render children when paywall is disabled
-  if (!PAYWALL_CONFIG.enabled) {
-    return <>{children}</>;
   }
 
   if (isPaywallVisible) {
@@ -265,7 +265,7 @@ export default function SubscriptionPaywall({ children }: SubscriptionPaywallPro
                     className={`w-full sm:w-auto font-semibold py-2 px-6 rounded-lg transition duration-200 ${
                       isLoading 
                         ? 'bg-gray-400 cursor-not-allowed' 
-                        : 'bg-brand-accent hover:bg-accent-700 text-white'
+                        : 'bg-brand-accent hover:bg-brand-accent-hover text-white'
                     }`}
                   >
                     {isLoading ? (

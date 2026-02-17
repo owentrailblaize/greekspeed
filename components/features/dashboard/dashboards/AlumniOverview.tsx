@@ -98,12 +98,6 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
     }
   }, []);
 
-  const feedData = useMemo(() => {
-    if (!initialFeed) return undefined;
-    if (!chapterId) return initialFeed;
-    return initialFeed.chapterId === chapterId ? initialFeed : undefined;
-  }, [chapterId, initialFeed]);
-
   // Take snapshot of connections when they're loaded and we haven't taken one yet
   useEffect(() => {
     if (profile?.id && connections.length >= 0 && !connectionsLoading && !snapshotTaken) {
@@ -245,7 +239,7 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
           <div className="space-y-4">
             {/* Social Feed - Primary feature for alumni */}
             <div className="w-full">
-              <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
+              <SocialFeed chapterId={chapterId || ''} initialData={initialFeed} />
             </div>
           </div>
         );
@@ -257,7 +251,7 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
         return (
           <div className="space-y-4">
             <div className="w-full">
-              <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
+              <SocialFeed chapterId={chapterId || ''} initialData={initialFeed} />
             </div>
           </div>
         );
@@ -309,8 +303,13 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
         <div className="max-w-full mx-auto px-6 py-6">
         <div className="grid grid-cols-12 gap-6">
           
+          {/* Center Column - Social Feed (RENDER FIRST for faster paint) */}
+          <div className="col-span-6 col-start-4">
+            <SocialFeed chapterId={chapterId || ''} initialData={initialFeed} />
+          </div>
+
           {/* Left Sidebar - Networking Spotlight */}
-          <div className="col-span-3">
+          <div className="col-span-3 col-start-1 row-start-1">
             <div className="sticky top-6">
               <Card className="bg-white">
                 <CardHeader className="pb-3">
@@ -426,13 +425,8 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
             </div>
           </div>
 
-          {/* Center Column - Social Feed */}
-          <div className="col-span-6">
-            <SocialFeed chapterId={chapterId || ''} initialData={feedData} />
-          </div>
-
           {/* Right Sidebar - Personal Alumni Profile */}
-          <div className="col-span-3">
+          <div className="col-span-3 col-start-10 row-start-1">
             <PersonalAlumniProfile />
           </div>
         </div>

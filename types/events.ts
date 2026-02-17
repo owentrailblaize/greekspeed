@@ -19,6 +19,8 @@ export interface Event {
   attendee_count?: number;
   maybe_count?: number;
   not_attending_count?: number;
+  /** The current user's RSVP status, included when user_id is passed to /api/events */
+  user_rsvp_status?: RSVPStatus | null;
 }
 
 export interface EventWithRSVPs extends Event {
