@@ -2,10 +2,12 @@
 
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Download, Loader2, Upload, X } from 'lucide-react';
+import { Select, SelectItem } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useAuth } from '@/lib/supabase/auth-context';
 import {
   BulkVendorImportResult,
   BulkVendorImportRow,
@@ -37,6 +39,7 @@ const DEFAULT_MAPPING: VendorImportColumnMapping = {
 };
 
 export function BulkVendorImport({ onClose, onSuccess }: BulkVendorImportProps) {
+  const { getAuthHeaders } = useAuth();
   const [step, setStep] = useState<ImportStep>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [parsedData, setParsedData] = useState<ParsedData | null>(null);
@@ -304,9 +307,10 @@ export function BulkVendorImport({ onClose, onSuccess }: BulkVendorImportProps) 
     setStep('importing');
 
     try {
+      const authHeaders = getAuthHeaders();
       const response = await fetch('/api/vendors/bulk-import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...authHeaders, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           vendors: mappedRows.filter((row) =>
             Object.values(row).some((value) => typeof value === 'string' && value.trim().length > 0)
@@ -348,7 +352,7 @@ export function BulkVendorImport({ onClose, onSuccess }: BulkVendorImportProps) 
         <Upload className="mx-auto h-10 w-10 text-gray-500 mb-3" />
         <p className="text-sm font-medium text-gray-800">Drag and drop your CSV or Excel file here</p>
         <p className="text-xs text-gray-500 mt-1">Supports CSV, XLSX, XLS up to 5MB</p>
-        <Button className="mt-4" type="button" onClick={() => fileInputRef.current?.click()}>
+        <Button className="mt-4 rounded-full" type="button" onClick={() => fileInputRef.current?.click()}>
           Choose File
         </Button>
         <input
@@ -390,18 +394,18 @@ export function BulkVendorImport({ onClose, onSuccess }: BulkVendorImportProps) 
             <label className="text-sm font-medium text-gray-700">
               {field.label} {field.required ? '*' : ''}
             </label>
-            <select
-              className="h-10 rounded-md border border-gray-300 px-3 text-sm"
+            <Select
               value={columnMapping[field.key] || '__none__'}
-              onChange={(event) => updateMapping(field.key, event.target.value)}
+              onValueChange={(value) => updateMapping(field.key, value)}
+              placeholder="Select column..."
             >
-              <option value="__none__">Not mapped</option>
+              <SelectItem value="__none__">Not mapped</SelectItem>
               {parsedData.headers.map((header) => (
-                <option key={header} value={header}>
+                <SelectItem key={header} value={header}>
                   {header}
-                </option>
+                </SelectItem>
               ))}
-            </select>
+            </Select>
           </div>
         ))}
 
@@ -496,7 +500,7 @@ export function BulkVendorImport({ onClose, onSuccess }: BulkVendorImportProps) 
       <div className="w-full max-w-3xl rounded-lg bg-white shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between border-b px-4 py-3">
           <div>
-            <h2 className="text-lg font-semibold">Bulk Import Vendor Contacts</h2>
+            <h2 className="text-lg font-semibold">Bulk Import Contacts</h2>
             <p className="text-xs text-gray-500">Step: {step}</p>
           </div>
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onClose}>
@@ -533,13 +537,14 @@ export function BulkVendorImport({ onClose, onSuccess }: BulkVendorImportProps) 
               else if (step === 'results') onClose();
             }}
             disabled={step === 'upload' || step === 'importing'}
+            className="rounded-full"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
 
           {step === 'results' ? (
-            <Button onClick={onClose}>Done</Button>
+              <Button onClick={onClose} className="rounded-full">Done</Button>
           ) : (
             <Button
               onClick={() => {
@@ -548,6 +553,7 @@ export function BulkVendorImport({ onClose, onSuccess }: BulkVendorImportProps) 
                 else if (step === 'preview') void handleImport();
               }}
               disabled={disableNext}
+              className="rounded-full"
             >
               {step === 'preview' ? 'Import' : 'Next'}
               <ArrowRight className="h-4 w-4 ml-1" />

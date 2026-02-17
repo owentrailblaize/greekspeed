@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import type { BulkVendorImportResult, BulkVendorImportRow } from '@/types/vendors';
 
@@ -31,6 +32,44 @@ async function createSupabaseFromCookies() {
       remove() {},
     },
   });
+}
+
+async function authenticateRequest(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.replace('Bearer ', '');
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(token);
+
+    if (!error && user) {
+      const authenticatedSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      });
+      return { user, supabase: authenticatedSupabase };
+    }
+  }
+
+  const cookieSupabase = await createSupabaseFromCookies();
+  const {
+    data: { user },
+    error,
+  } = await cookieSupabase.auth.getUser();
+
+  if (error || !user) {
+    return null;
+  }
+
+  return { user, supabase: cookieSupabase };
 }
 
 async function isDuplicateVendor(
@@ -90,15 +129,11 @@ function validateVendorRow(vendor: BulkVendorImportRow, row: number) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createSupabaseFromCookies();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    const auth = await authenticateRequest(request);
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const { user, supabase } = auth;
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')

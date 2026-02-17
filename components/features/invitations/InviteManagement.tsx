@@ -201,13 +201,6 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
     return <Badge variant="default">Active</Badge>;
   };
 
-  const getInvitationTypeBadge = (invitation: InvitationWithUsage) => {
-    if (invitation.invitation_type === 'alumni') {
-      return <Badge variant="outline" className="text-purple-600 border-purple-600">Alumni</Badge>;
-    }
-    return <Badge variant="outline" className="text-brand-accent border-brand-accent">Active Member</Badge>;
-  };
-
   const filteredInvitations = invitations;
 
   const renderInvitationsContent = () => {
@@ -250,9 +243,13 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-3">
                     <h4 className="font-medium text-gray-900">
-                      Invitation #{invitation.token.slice(0, 8)}...
+                      {invitation.invitation_type
+                        ? `${invitation.invitation_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} Invitation`
+                        : "Invitation"}
                     </h4>
-                    {getInvitationTypeBadge(invitation)}
+                    <Badge variant="outline" className="text-xs text-gray-600 border-gray-300">
+                      Created {invitation.created_at ? formatDate(invitation.created_at) : 'Unknown'}
+                    </Badge>
                     {getStatusBadge(invitation)}
                   </div>
                   
@@ -433,9 +430,9 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
         <CardHeader className="pb-4 border-b border-primary-100/30">
           {/* Desktop Layout */}
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center space-x-2 text-primary-900">
-              <Users className="h-5 w-5 text-purple-600" />
+            <CardTitle className="flex flex-col items-start text-primary-900">
               <span>Manage Invites</span>
+              <p className="text-sm text-gray-600 mt-1">Invite members, recruit new members, and manage your chapter's invitations.</p>
             </CardTitle>
             <div className="flex space-x-2">
               <Button

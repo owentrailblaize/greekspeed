@@ -54,3 +54,6 @@ docs/
 
 # Agents File
 AGENTS.md
+
+# Ignore CSV Files
+*.csv
