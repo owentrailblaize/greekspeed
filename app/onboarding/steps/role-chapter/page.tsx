@@ -278,7 +278,7 @@ export default function RoleChapterPage() {
         </Card>
 
         <Card>
-          <CardHeader className="pb-4">
+          <CardHeader className="pb-0">
             <CardTitle className="flex items-center gap-2">
               You&apos;re All Set!
             </CardTitle>
@@ -293,10 +293,10 @@ export default function RoleChapterPage() {
                 <Building2 className="h-4 w-4" />
                 Your Chapter
               </Label>
-              <div className="p-4 bg-brand-primary/5 border border-brand-primary/20 rounded-full">
+              <div className="p-4 bg-white border border-gray-200 rounded-full">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-brand-primary/10 rounded-lg">
-                    <Building2 className="h-5 w-5 text-brand-primary" />
+                  <div className="p-2 bg-gray-100 rounded-full">
+                    <Building2 className="h-5 w-5 text-gray-700" />
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">{profile?.chapter}</p>
@@ -312,10 +312,10 @@ export default function RoleChapterPage() {
                 <Users className="h-4 w-4" />
                 Your Role
               </Label>
-              <div className="p-4 bg-brand-accent-light border border-brand-accent/20 rounded-full">
+              <div className="p-4 bg-white border border-gray-200 rounded-full">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-brand-accent/10 rounded-lg">
-                    <RoleIcon className="h-5 w-5 text-brand-accent" />
+                  <div className="p-2 bg-gray-100 rounded-full">
+                    <RoleIcon className="h-5 w-5 text-gray-700" />
                   </div>
                   <div>
                     <p className="font-semibold text-brand-text">{roleLabel}</p>
@@ -330,7 +330,7 @@ export default function RoleChapterPage() {
             </div>
 
             {/* Continue Button */}
-            <div className="pt-4">
+            <div className="pt-0">
               <Button
                 onClick={handleConfirmContinue}
                 disabled={loading}
@@ -376,7 +376,7 @@ export default function RoleChapterPage() {
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">
             <GraduationCap className="h-5 w-5 text-brand-primary" />
-            Welcome! Let's Get Started
+            Welcome! Let&apos;s Get Started
           </CardTitle>
           <CardDescription>
             Select your chapter to continue setting up your profile
