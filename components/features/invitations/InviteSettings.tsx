@@ -58,7 +58,6 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
       {/* Header - Fixed */}
       <div className="flex items-center justify-between p-4 md:p-6 border-b flex-shrink-0 bg-white">
         <h2 className="text-lg md:text-xl font-semibold flex items-center space-x-2">
-          <Settings className="h-5 w-5" />
           <span>Invitation Settings & Statistics</span>
         </h2>
         <Button
@@ -97,15 +96,15 @@ export function InviteSettings({ chapterId, onClose }: InviteSettingsProps) {
             <CardContent className="pt-2">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="text-center">
-                  <div className="text-xl md:text-2xl font-bold text-gray-700">{stats.total_invitations}</div>
+                  <div className="text-xl md:text-2xl font-bold text-blue-500">{stats.total_invitations}</div>
                   <div className="text-xs md:text-sm text-gray-600">Total Invitations</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xl md:text-2xl font-bold text-green-600">{stats.active_invitations}</div>
+                  <div className="text-xl md:text-2xl font-bold text-blue-400">{stats.active_invitations}</div>
                   <div className="text-xs md:text-sm text-gray-600">Active</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xl md:text-2xl font-bold text-gray-700">{stats.total_usage}</div>
+                  <div className="text-xl md:text-2xl font-bold text-blue-300">{stats.total_usage}</div>
                   <div className="text-xs md:text-sm text-gray-600">Total Signups</div>
                 </div>
                 <div className="text-center">

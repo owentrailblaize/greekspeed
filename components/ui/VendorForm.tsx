@@ -98,41 +98,36 @@ export function VendorForm({ vendor, onSubmit, onCancel, loading = false, isMobi
 
   return (
     <Card className={cn(
-      "w-full mx-auto flex flex-col",
+      "w-full mx-auto flex flex-col h-full",
       isMobile 
         ? "rounded-none shadow-none border-0 h-full min-h-0 bg-transparent" // Transparent background, let drawer handle it
-        : "max-w-3xl" // Desktop max-width
+        : "max-w-3xl max-h-[90vh]" // Desktop max-width and height
     )}>
+      {/* Header - Fixed at top */}
       <CardHeader className={cn(
-        "pb-4 flex-shrink-0 bg-white",
-        isMobile ? "p-4 border-b border-gray-200" : ""
+        "flex-shrink-0 border-b border-gray-200 bg-white",
+        isMobile ? "p-4" : "px-6 py-4"
       )}>
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center space-x-2 text-lg">
+          <CardTitle className={cn(
+            "flex items-center space-x-2",
+            isMobile ? "text-lg" : "text-xl"
+          )}>
             <Building2 className="h-5 w-5 text-brand-primary" />
             <span>{vendor ? 'Edit Vendor' : 'Add New Vendor'}</span>
           </CardTitle>
-          {isMobile && (
-            <button
-              onClick={onCancel}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          )}
         </div>
       </CardHeader>
+
+      {/* Scrollable Content Area */}
       <CardContent className={cn(
-        "pt-0 flex-1 overflow-y-auto min-h-0",
-        isMobile 
-          ? "p-4" 
-          : ""
+        "flex-1 overflow-y-auto min-h-0",
+        isMobile ? "p-4" : "px-6 py-4"
       )}>
         <form onSubmit={handleSubmit} id="vendor-form" className="space-y-4">
           {/* Vendor Name */}
           <div className="space-y-2">
             <Label htmlFor="name" className="flex items-center space-x-2 text-sm font-medium">
-              <Building2 className="h-4 w-4" />
               <span>Vendor Name *</span>
             </Label>
             <Input
@@ -282,9 +277,14 @@ export function VendorForm({ vendor, onSubmit, onCancel, loading = false, isMobi
         </form>
       </CardContent>
       
-      {/* Form Actions - Mobile: Fixed at bottom, Desktop: Inside form */}
-      {isMobile ? (
-        <div className="flex-shrink-0 border-t border-gray-200 bg-white p-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
+      {/* Footer - Fixed at bottom with form actions */}
+      <div className={cn(
+        "flex-shrink-0 border-t border-gray-200 bg-white",
+        isMobile 
+          ? "p-4 pb-[calc(16px+env(safe-area-inset-bottom))]"
+          : "px-6 py-4"
+      )}>
+        {isMobile ? (
           <div className="flex flex-col space-y-2">
             <Button
               type="button"
@@ -299,20 +299,19 @@ export function VendorForm({ vendor, onSubmit, onCancel, loading = false, isMobi
               type="submit"
               form="vendor-form"
               disabled={loading}
-              className="w-full rounded-full bg-orange-600 hover:bg-orange-700 shadow-lg shadow-orange-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-full bg-brand-primary hover:bg-brand-primary-hover shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Saving...' : (vendor ? 'Update Vendor' : 'Add Vendor')}
             </Button>
           </div>
-        </div>
-      ) : (
-        <CardContent className="pt-0">
-          <div className="flex space-x-3 pt-4 justify-end">
+        ) : (
+          <div className="flex space-x-3 justify-end">
             <Button
               type="button"
               variant="outline"
               onClick={onCancel}
               disabled={loading}
+              className="rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
             >
               Cancel
             </Button>
@@ -320,13 +319,13 @@ export function VendorForm({ vendor, onSubmit, onCancel, loading = false, isMobi
               type="submit"
               form="vendor-form"
               disabled={loading}
-              className="bg-orange-600 hover:bg-orange-700"
+              className="rounded-full bg-brand-primary hover:bg-brand-primary-hover shadow-lg shadow-navy-100/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Saving...' : (vendor ? 'Update Vendor' : 'Add Vendor')}
             </Button>
           </div>
-        </CardContent>
-      )}
+        )}
+      </div>
     </Card>
   );
 }

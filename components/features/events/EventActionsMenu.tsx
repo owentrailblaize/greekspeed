@@ -131,18 +131,28 @@ export function EventActionsMenu({ event, onClose, hideOnMobile = false }: Event
                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     {/* ... existing Google Calendar button content ... */}
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M19.5 22h-15A2.5 2.5 0 0 1 2 19.5v-15A2.5 2.5 0 0 1 4.5 2h15A2.5 2.5 0 0 1 22 4.5v15a2.5 2.5 0 0 1-2.5 2.5zM9 18h6v-5H9v5zm0-6h6V7H9v5z" />
-                    </svg>
+                    <img
+                      src="/gmail-icon.png"
+                      alt="Google Calendar"
+                      className="h-4 w-4"
+                      width={16}
+                      height={16}
+                      style={{ display: 'inline-block' }}
+                    />
                     Google
                   </button>
                   <button
                     onClick={handleAddToOutlookCalendar}
                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M21.17 2.06A2 2 0 0 0 19 2H5a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V4a2 2 0 0 0-.83-1.94zM17 11h-4v4h-2v-4H7V9h4V5h2v4h4v2z" />
-                    </svg>
+                    <img
+                      src="/outlook-logo.png"
+                      alt="Outlook Calendar"
+                      className="h-4 w-4"
+                      width={16}
+                      height={16}
+                      style={{ display: 'inline-block' }}
+                    />
                     Outlook
                   </button>
                   <button

@@ -51,3 +51,9 @@ greekspeed.code-workspace
 
 # Documentation
 docs/
+
+# Agents File
+AGENTS.md
+
+# Ignore CSV Files
+*.csv
