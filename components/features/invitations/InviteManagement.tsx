@@ -432,7 +432,7 @@ export function InviteManagement({ chapterId, className }: InviteManagementProps
           <div className="flex items-center justify-between">
             <CardTitle className="flex flex-col items-start text-primary-900">
               <span>Manage Invites</span>
-              <p className="text-sm text-gray-600 mt-1">Invite members, recruit new members, and manage your chapter's invitations.</p>
+              <p className="text-sm text-gray-600 mt-1">Invite members, recruit new members, and manage your chapter&apos;s invitations.</p>
             </CardTitle>
             <div className="flex space-x-2">
               <Button

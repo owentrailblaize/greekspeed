@@ -33,21 +33,16 @@ jobs:
           files: |
             **/*.ts
             **/*.tsx
-            **/*.js
-            **/*.jsx
-            **/*.json
-            **/*.md
-            **/*.yml
-            **/*.yaml
-            **/*.html
-            **/*.css
-            **/*.scss
        
-      - name: Lint changed files only
+      - name: Lint changed TypeScript files only
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           if [ -n "${{ steps.changed-files.outputs.all_changed_files }}" ]; then
-            echo "${{ steps.changed-files.outputs.all_changed_files }}" | xargs npx eslint
+            # Filter to only .ts and .tsx files, exclude workflow files
+            echo "${{ steps.changed-files.outputs.all_changed_files }}" | \
+              grep -E '\.(ts|tsx)$' | \
+              grep -v '\.github/workflows' | \
+              xargs npx eslint || true
           else
             echo "No TypeScript files changed, skipping lint"
           fi

@@ -376,7 +376,7 @@ export default function RoleChapterPage() {
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2">
             <GraduationCap className="h-5 w-5 text-brand-primary" />
-            Welcome! Let's Get Started
+            Welcome! Let&apos;s Get Started
           </CardTitle>
           <CardDescription>
             Select your chapter to continue setting up your profile
