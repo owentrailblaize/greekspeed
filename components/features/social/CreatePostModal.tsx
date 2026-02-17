@@ -338,6 +338,7 @@ export function CreatePostModal({
                 <Image className="h-5 w-5 sm:h-4 sm:w-4 mr-2" />
                 <span className="text-sm font-medium">Photo</span>
               </Button>
+              {/*
               <EmojiPicker
                 onEmojiSelect={handleEmojiSelect}
                 disabled={isSubmitting}
@@ -346,6 +347,7 @@ export function CreatePostModal({
                 label="Emoji"
                 labelClassName="text-sm font-medium text-slate-500"
               />
+              */}
             </div>
 
             <Button

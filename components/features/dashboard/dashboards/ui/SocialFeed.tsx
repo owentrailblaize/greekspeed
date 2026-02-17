@@ -216,6 +216,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
                   <ImageIcon className="h-4 w-4 text-accent-500" />
                   Photo
                 </Button>
+                {/*
                 <Button
                   type="button"
                   variant="ghost"
@@ -226,7 +227,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
                   <Smile className="h-4 w-4 text-slate-500" />
                   Emoji
                 </Button>
-                
+                */}
               </div>
             </div>
           </CardContent>
