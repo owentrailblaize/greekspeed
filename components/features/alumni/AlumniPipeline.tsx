@@ -7,6 +7,7 @@ import { Alumni } from "@/lib/alumniConstants";
 import { AlumniProfileModal } from "./AlumniProfileModal";
 import { useProfile } from "@/lib/contexts/ProfileContext";
 import { useAuth } from "@/lib/supabase/auth-context";
+import { useScopedChapterId } from "@/lib/hooks/useScopedChapterId";
 
 interface FilterState {
   searchTerm: string;
@@ -86,8 +87,11 @@ export function AlumniPipeline() {
   };
 
   // Extract stable primitive values from profile
-  const profileChapter = useMemo(() => profile?.chapter, [profile?.chapter]);
   const profileId = useMemo(() => profile?.id, [profile?.id]);
+  
+  // Use scoped chapter ID - respects developer's selected chapter
+  const scopedChapterId = useScopedChapterId();
+  const effectiveChapterId = useMemo(() => scopedChapterId, [scopedChapterId]);
   
   // Stabilize session access token
   const accessToken = useMemo(() => session?.access_token, [session?.access_token]);
@@ -161,8 +165,8 @@ export function AlumniPipeline() {
       params.append('limit', '24'); // Optimized: Reduced from 100 to 24 for better performance
       params.append('page', pageToFetch.toString());
       
-      if (profileChapter) {
-        params.append('userChapter', profileChapter);
+      if (effectiveChapterId) {
+        params.append('chapter_id', effectiveChapterId);
       }
         
       const headers: HeadersInit = {};
@@ -196,7 +200,7 @@ export function AlumniPipeline() {
       setLoading(false);
       fetchingRef.current = false;
     }
-  }, [profileChapter, accessToken]); // Only depend on stable values
+  }, [effectiveChapterId, accessToken]); // Only depend on stable values
 
   // Keep fetchAlumni ref in sync
   useEffect(() => {
@@ -206,7 +210,7 @@ export function AlumniPipeline() {
   // Consolidated useEffect - handles all fetch triggers
   useEffect(() => {
     // Don't fetch if profile is still loading or not available
-    if (profileLoading || profileId === undefined || !profileChapter) {
+    if (profileLoading || profileId === undefined || !effectiveChapterId) {
       return;
     }
     
@@ -222,7 +226,7 @@ export function AlumniPipeline() {
   }, [
     profileId,
     profileLoading,
-    profileChapter,
+    effectiveChapterId,
     accessToken,
     filterDependency, // Memoized filter dependency
     pagination.page, // Pagination changes trigger fetch

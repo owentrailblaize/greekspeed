@@ -22,7 +22,14 @@ export const ActiveChapterProvider: React.FC<{ children: ReactNode }> = ({ child
 export const useActiveChapter = (): ActiveChapterContextType => {
   const context = useContext(ActiveChapterContext);
   if (!context) {
-    throw new Error('useActiveChapter must be used within an ActiveChapterProvider');
+    // Gracefully return null state when provider is missing
+    // Developer will fall back to their profile.chapter_id
+    return {
+      activeChapterId: null,
+      setActiveChapterId: () => {
+        // Silent no-op - switching disabled when provider not available
+      }
+    };
   }
   return context;
 };

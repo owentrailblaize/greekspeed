@@ -52,5 +52,8 @@ greekspeed.code-workspace
 # Documentation
 docs/
 
+# Agents File
+AGENTS.md
+
 # Github
 .github/
