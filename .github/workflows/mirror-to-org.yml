@@ -35,19 +35,24 @@ jobs:
           
           # Fetch from organization repo to check for changes
           git fetch org-mirror main develop || true
-          git fetch org-mirror develop || true
           
           # Get current branch name
           CURRENT_BRANCH=${GITHUB_REF#refs/heads/}
           
-          # Push current branch to organization repo
+          # Remove workflow files from the index before pushing
+          # This prevents workflow files from being synced (they're repo-specific)
+          git rm -r --cached .github/workflows/ 2>/dev/null || true
+          
+          # Stage all other changes
+          git add -A
+          
+          # Commit the removal of workflow files if they were removed
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: exclude workflow files from sync" || true
+          fi
+          
+          # Push current branch to organization repo (excluding workflow files)
           git push org-mirror ${CURRENT_BRANCH} --force
           
-          # Optionally, pull and merge changes from org repo if they exist
-          # This ensures bidirectional sync
-          if git ls-remote --heads org-mirror ${CURRENT_BRANCH} | grep -q ${CURRENT_BRANCH}; then
-            echo "Branch ${CURRENT_BRANCH} exists in org repo, checking for updates..."
-            # Note: We push first, then would need to handle conflicts if org has changes
-            # For now, we're doing one-way sync (dev repo -> org repo)
-            # To enable bidirectional sync, you'd need merge logic here
-          fi
+          # Restore workflow files in the local repo
+          git checkout HEAD -- .github/workflows/ 2>/dev/null || true
