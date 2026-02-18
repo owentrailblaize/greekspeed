@@ -11,6 +11,7 @@ interface SheetProps {
 interface SheetContentProps {
   children: React.ReactNode;
   className?: string;
+  backdropClassName?: string;
   side?: "left" | "right" | "top" | "bottom";
 }
 
@@ -55,7 +56,7 @@ export const Sheet = React.forwardRef<HTMLDivElement, SheetProps>(
 Sheet.displayName = "Sheet";
 
 export const SheetContent = React.forwardRef<HTMLDivElement, SheetContentProps>(
-  ({ children, className, side = "right", ...props }, ref) => {
+  ({ children, className, backdropClassName, side = "right", ...props }, ref) => {
     const context = React.useContext(SheetContext);
     if (!context) {
       throw new Error("SheetContent must be used within a Sheet");
@@ -74,7 +75,7 @@ export const SheetContent = React.forwardRef<HTMLDivElement, SheetContentProps>(
       <>
         {/* Backdrop - Click outside to close */}
         <div
-          className="fixed inset-0 bg-black/50 z-[9998] backdrop-blur-sm"
+          className={cn("fixed inset-0 bg-black/50 z-[9998] backdrop-blur-sm", backdropClassName)}
           onClick={() => context.setIsOpen(false)}
         />
         

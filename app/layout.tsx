@@ -77,7 +77,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           />
           {/* Mobile Toast Container */}
           <ToastContainer
-            position="top-center"
+            position="top-right"
             autoClose={3000}
             hideProgressBar={false}
             newestOnTop={true}
