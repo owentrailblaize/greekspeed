@@ -226,6 +226,7 @@ export async function POST(request: NextRequest) {
             `)
             .eq('chapter_id', profile.chapter_id)
             .in('role', ['active_member', 'admin'])
+            .neq('is_developer', true) // Exclude developer/ghost accounts from notifications
             .not('email', 'is', null);
 
           if (membersError) {
@@ -292,6 +293,7 @@ export async function POST(request: NextRequest) {
             `)
             .eq('chapter_id', profile.chapter_id)
             .eq('role', 'alumni')
+            .neq('is_developer', true) // Exclude developer/ghost accounts from notifications
             .not('email', 'is', null);
 
           if (alumniEmailError) {
@@ -353,6 +355,7 @@ export async function POST(request: NextRequest) {
             `)
             .eq('chapter_id', profile.chapter_id)
             .in('role', ['active_member', 'admin'])
+            .neq('is_developer', true) // Exclude developer/ghost accounts from notifications
             .not('phone', 'is', null)
             .neq('phone', '')
             .eq('sms_consent', true);
@@ -468,6 +471,7 @@ export async function POST(request: NextRequest) {
             `)
             .eq('chapter_id', profile.chapter_id)
             .eq('role', 'alumni')
+            .neq('is_developer', true) // Exclude developer/ghost accounts from notifications
             .not('phone', 'is', null)
             .neq('phone', '')
             .eq('sms_consent', true);
@@ -572,12 +576,13 @@ export async function POST(request: NextRequest) {
 
 async function createRecipientRecords(announcementId: string, chapterId: string, supabase: any) {
   try {
-    // Get all active members of the chapter
+    // Get all active members of the chapter (exclude developers)
     const { data: members, error } = await supabase
       .from('profiles')
       .select('id')
       .eq('chapter_id', chapterId)
-      .eq('role', 'active_member');
+      .eq('role', 'active_member')
+      .neq('is_developer', true); // Exclude developer/ghost accounts from recipient records
 
     if (error || !members) {
       console.error('Failed to fetch chapter members:', error);

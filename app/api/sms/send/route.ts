@@ -76,14 +76,15 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // Get all chapter members with phone numbers AND SMS consent
+    // Get all chapter members with phone numbers AND SMS consent (exclude developers)
     const { data: members, error: membersError } = await supabase
       .from('profiles')
       .select('phone, full_name')
       .eq('chapter_id', chapterId)
+      .neq('is_developer', true) // Exclude developer/ghost accounts from SMS notifications
       .not('phone', 'is', null)
       .neq('phone', '')
-      .eq('sms_consent', true);  // ← ADD THIS LINE
+      .eq('sms_consent', true);
 
     if (membersError) {
       console.error('Error fetching members:', membersError);

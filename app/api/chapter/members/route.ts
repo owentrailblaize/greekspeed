@@ -207,7 +207,7 @@ export async function GET(request: NextRequest) {
       console.log('Could not determine viewer identity for chapter members');
     }
 
-    // Fetch chapter members
+    // Fetch chapter members from view (don't filter is_developer here yet)
     let query = supabase
       .from('chapter_members_view')
       .select('*')
@@ -224,11 +224,35 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch members' }, { status: 500 });
     }
 
+    // Filter out developers by checking profiles table
+    let filteredMembers = members;
+    if (members && members.length > 0) {
+      const memberIds = members.map((m: any) => m.id).filter(Boolean);
+      
+      // Get is_developer status for all members
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, is_developer')
+        .in('id', memberIds);
+      
+      if (!profilesError && profiles) {
+        // Create a set of developer IDs to exclude
+        const developerIds = new Set(
+          profiles
+            .filter((p: any) => p.is_developer === true)
+            .map((p: any) => p.id)
+        );
+        
+        // Filter out developers from members
+        filteredMembers = members.filter((m: any) => !developerIds.has(m.id));
+      }
+    }
+
     // Calculate mutual connections if viewer is logged in
     let mutualConnectionsMap = new Map<string, Array<{ id: string; name: string; avatar: string | null }>>();
 
-    if (viewerId && members && members.length > 0) {
-      const memberUserIds = members
+    if (viewerId && filteredMembers && filteredMembers.length > 0) {
+      const memberUserIds = filteredMembers
         .map((m: any) => m.id)
         .filter((id: string | null) => id && id !== viewerId);
       
@@ -243,7 +267,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch last_active_at from profiles table if not in view
     // Get all member IDs to fetch activity data
-    const memberIds = members.map((m: any) => m.id).filter(Boolean);
+    const memberIds = filteredMembers.map((m: any) => m.id).filter(Boolean);
     let lastActiveMap = new Map<string, string | null>();
     
     if (memberIds.length > 0) {
@@ -260,7 +284,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform members with mutual connections and lastActiveAt
-    const transformedMembers = members.map((member: any) => {
+    const transformedMembers = filteredMembers.map((member: any) => {
       const mutualConnections = mutualConnectionsMap.get(member.id) || [];
       
       return {

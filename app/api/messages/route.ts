@@ -349,13 +349,17 @@ export async function POST(request: NextRequest) {
           phone,
           chapter,
           chapter_id,
-          sms_consent
+          sms_consent,
+          is_developer
         `)
         .eq('id', recipientId)
         .single();
 
       if (recipientError || !recipientProfile) {
         console.error('❌ Error fetching recipient profile:', recipientError);
+      } else if (recipientProfile.is_developer === true) {
+        // Skip notifications for developer/ghost accounts
+        console.log('⏭️ Skipping notification for developer account:', recipientId);
       } else {
         // Send email notification (respect user preferences)
         if (recipientProfile.email && recipientProfile.first_name && message.sender?.first_name) {
