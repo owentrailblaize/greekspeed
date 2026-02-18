@@ -540,6 +540,9 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
                     <Label htmlFor="send-sms-members" className="text-sm cursor-pointer flex items-center gap-1.5">
                       <Smartphone className="h-3.5 w-3.5 text-gray-500" />
                       SMS to Actives
+                      {memberSmsRecipientCount !== null && (
+                        <span className="text-xs text-gray-500 font-normal">({memberSmsRecipientCount})</span>
+                      )}
                     </Label>
                   </div>
                   
@@ -552,6 +555,9 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
                     <Label htmlFor="send-sms-alumni" className="text-sm cursor-pointer flex items-center gap-1.5">
                       <Smartphone className="h-3.5 w-3.5 text-gray-500" />
                       SMS to Alumni
+                      {alumniSmsRecipientCount !== null && (
+                        <span className="text-xs text-gray-500 font-normal">({alumniSmsRecipientCount})</span>
+                      )}
                     </Label>
                   </div>
                   
@@ -564,6 +570,9 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
                     <Label htmlFor="send-email-members" className="text-sm cursor-pointer flex items-center gap-1.5">
                       <Mail className="h-3.5 w-3.5 text-gray-500" />
                       Email to Actives
+                      {emailRecipientCount !== null && (
+                        <span className="text-xs text-gray-500 font-normal">({emailRecipientCount})</span>
+                      )}
                     </Label>
                   </div>
                   
@@ -576,39 +585,16 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
                     <Label htmlFor="send-email-alumni" className="text-sm cursor-pointer flex items-center gap-1.5">
                       <Mail className="h-3.5 w-3.5 text-gray-500" />
                       Email to Alumni
+                      {alumniEmailRecipientCount !== null && (
+                        <span className="text-xs text-gray-500 font-normal">({alumniEmailRecipientCount})</span>
+                      )}
                     </Label>
                   </div>
                 </div>
                 
-                <div className="text-xs text-gray-600 space-y-1 pl-6">
-                  {sendSmsToMembers && memberSmsRecipientCount !== null && (
-                    <p className="flex items-center gap-1 whitespace-nowrap">
-                      <Smartphone className="h-3 w-3 flex-shrink-0" />
-                      <span>SMS to actives: <span className="font-medium">{memberSmsRecipientCount}</span> recipients</span>
-                    </p>
-                  )}
-                  {sendSmsToAlumni && alumniSmsRecipientCount !== null && (
-                    <p className="flex items-center gap-1 whitespace-nowrap">
-                      <Smartphone className="h-3 w-3 flex-shrink-0" />
-                      <span>SMS to alumni: <span className="font-medium">{alumniSmsRecipientCount}</span> recipients</span>
-                    </p>
-                  )}
-                  {sendEmailToMembers && emailRecipientCount !== null && (
-                    <p className="flex items-center gap-1 whitespace-nowrap">
-                      <Mail className="h-3 w-3 flex-shrink-0" />
-                      <span>Email to actives: <span className="font-medium">{emailRecipientCount}</span> recipients</span>
-                    </p>
-                  )}
-                  {sendEmailToAlumni && alumniEmailRecipientCount !== null && (
-                    <p className="flex items-center gap-1 whitespace-nowrap">
-                      <Mail className="h-3 w-3 flex-shrink-0" />
-                      <span>Email to alumni: <span className="font-medium">{alumniEmailRecipientCount}</span> recipients</span>
-                    </p>
-                  )}
-                  {loadingRecipients && (
-                    <p className="text-gray-400 whitespace-nowrap">Loading recipient counts...</p>
-                  )}
-                </div>
+                {loadingRecipients && (
+                  <p className="text-xs text-gray-400 pl-6">Loading recipient counts...</p>
+                )}
               </div>
               
               <Button 

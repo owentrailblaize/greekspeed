@@ -276,6 +276,9 @@ export function SendAnnouncementButton() {
                     <Label htmlFor="send-sms-members-mobile" className="text-sm cursor-pointer font-medium flex items-center gap-1.5">
                       <Smartphone className="h-3.5 w-3.5 text-gray-500" />
                       SMS to Actives
+                      {memberSmsRecipientCount !== null && (
+                        <span className="text-xs text-gray-500 font-normal">({memberSmsRecipientCount}) members</span>
+                      )}
                     </Label>
                   </div>
 
@@ -288,6 +291,9 @@ export function SendAnnouncementButton() {
                     <Label htmlFor="send-sms-alumni-mobile" className="text-sm cursor-pointer font-medium flex items-center gap-1.5">
                       <Smartphone className="h-3.5 w-3.5 text-gray-500" />
                       SMS to Alumni
+                      {alumniSmsRecipientCount !== null && (
+                        <span className="text-xs text-gray-500 font-normal">({alumniSmsRecipientCount}) alumni</span>
+                      )}
                     </Label>
                   </div>
 
@@ -300,6 +306,9 @@ export function SendAnnouncementButton() {
                     <Label htmlFor="send-email-members-mobile" className="text-sm cursor-pointer font-medium flex items-center gap-1.5">
                       <Mail className="h-3.5 w-3.5 text-gray-500" />
                       Email to Actives
+                      {emailRecipientCount !== null && (
+                        <span className="text-xs text-gray-500 font-normal">({emailRecipientCount}) members</span>
+                      )}
                     </Label>
                   </div>
 
@@ -312,39 +321,15 @@ export function SendAnnouncementButton() {
                     <Label htmlFor="send-email-alumni-mobile" className="text-sm cursor-pointer font-medium flex items-center gap-1.5">
                       <Mail className="h-3.5 w-3.5 text-gray-500" />
                       Email to Alumni
+                      {alumniEmailRecipientCount !== null && (
+                        <span className="text-xs text-gray-500 font-normal">({alumniEmailRecipientCount}) alumni</span>
+                      )}
                     </Label>
                   </div>
 
-                  {/* Recipient count summary */}
-                  <div className="text-xs text-gray-500 space-y-1 pl-1 pt-2 border-t border-gray-100">
-                    {sendSmsToMembers && memberSmsRecipientCount !== null && (
-                      <p className="flex items-center gap-1.5">
-                        <Smartphone className="h-3 w-3 text-gray-400" />
-                        <span>SMS to actives: <span className="font-medium text-gray-700">{memberSmsRecipientCount}</span> recipients</span>
-                      </p>
-                    )}
-                    {sendSmsToAlumni && alumniSmsRecipientCount !== null && (
-                      <p className="flex items-center gap-1.5">
-                        <Smartphone className="h-3 w-3 text-gray-400" />
-                        <span>SMS to alumni: <span className="font-medium text-gray-700">{alumniSmsRecipientCount}</span> recipients</span>
-                      </p>
-                    )}
-                    {sendEmailToMembers && emailRecipientCount !== null && (
-                      <p className="flex items-center gap-1.5">
-                        <Mail className="h-3 w-3 text-gray-400" />
-                        <span>Email to actives: <span className="font-medium text-gray-700">{emailRecipientCount}</span> recipients</span>
-                      </p>
-                    )}
-                    {sendEmailToAlumni && alumniEmailRecipientCount !== null && (
-                      <p className="flex items-center gap-1.5">
-                        <Mail className="h-3 w-3 text-gray-400" />
-                        <span>Email to alumni: <span className="font-medium text-gray-700">{alumniEmailRecipientCount}</span> recipients</span>
-                      </p>
-                    )}
-                    {loadingRecipients && (
-                      <p className="text-gray-400">Loading recipient counts...</p>
-                    )}
-                  </div>
+                  {loadingRecipients && (
+                    <p className="text-xs text-gray-400 pl-1">Loading recipient counts...</p>
+                  )}
                 </div>
               </div>
               
@@ -431,6 +416,9 @@ export function SendAnnouncementButton() {
                     <Label htmlFor="send-sms-members-desktop" className="text-sm cursor-pointer font-medium flex items-center gap-1.5">
                       <Smartphone className="h-4 w-4 text-gray-500" />
                       SMS to Actives
+                      {memberSmsRecipientCount !== null && (
+                        <span className="text-xs text-gray-500 font-normal">({memberSmsRecipientCount})</span>
+                      )}
                     </Label>
                   </div>
 
@@ -443,6 +431,9 @@ export function SendAnnouncementButton() {
                     <Label htmlFor="send-sms-alumni-desktop" className="text-sm cursor-pointer font-medium flex items-center gap-1.5">
                       <Smartphone className="h-4 w-4 text-gray-500" />
                       SMS to Alumni
+                      {alumniSmsRecipientCount !== null && (
+                        <span className="text-xs text-gray-500 font-normal">({alumniSmsRecipientCount})</span>
+                      )}
                     </Label>
                   </div>
 
@@ -455,6 +446,9 @@ export function SendAnnouncementButton() {
                     <Label htmlFor="send-email-members-desktop" className="text-sm cursor-pointer font-medium flex items-center gap-1.5">
                       <Mail className="h-4 w-4 text-gray-500" />
                       Email to Actives
+                      {emailRecipientCount !== null && (
+                        <span className="text-xs text-gray-500 font-normal">({emailRecipientCount})</span>
+                      )}
                     </Label>
                   </div>
 
@@ -467,39 +461,15 @@ export function SendAnnouncementButton() {
                     <Label htmlFor="send-email-alumni-desktop" className="text-sm cursor-pointer font-medium flex items-center gap-1.5">
                       <Mail className="h-4 w-4 text-gray-500" />
                       Email to Alumni
+                      {alumniEmailRecipientCount !== null && (
+                        <span className="text-xs text-gray-500 font-normal">({alumniEmailRecipientCount})</span>
+                      )}
                     </Label>
                   </div>
 
-                  {/* Recipient count summary */}
-                  <div className="text-sm text-gray-600 space-y-2 pl-1 pt-3 border-t border-gray-200">
-                    {sendSmsToMembers && memberSmsRecipientCount !== null && (
-                      <p className="flex items-center gap-2">
-                        <Smartphone className="h-4 w-4 text-gray-400" />
-                        <span>SMS to actives: <span className="font-medium text-gray-700">{memberSmsRecipientCount}</span> recipients</span>
-                      </p>
-                    )}
-                    {sendSmsToAlumni && alumniSmsRecipientCount !== null && (
-                      <p className="flex items-center gap-2">
-                        <Smartphone className="h-4 w-4 text-gray-400" />
-                        <span>SMS to alumni: <span className="font-medium text-gray-700">{alumniSmsRecipientCount}</span> recipients</span>
-                      </p>
-                    )}
-                    {sendEmailToMembers && emailRecipientCount !== null && (
-                      <p className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-gray-400" />
-                        <span>Email to actives: <span className="font-medium text-gray-700">{emailRecipientCount}</span> recipients</span>
-                      </p>
-                    )}
-                    {sendEmailToAlumni && alumniEmailRecipientCount !== null && (
-                      <p className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-gray-400" />
-                        <span>Email to alumni: <span className="font-medium text-gray-700">{alumniEmailRecipientCount}</span> recipients</span>
-                      </p>
-                    )}
-                    {loadingRecipients && (
-                      <p className="text-gray-400">Loading recipient counts...</p>
-                    )}
-                  </div>
+                  {loadingRecipients && (
+                    <p className="text-xs text-gray-400 pl-1">Loading recipient counts...</p>
+                  )}
                 </div>
               </div>
               
