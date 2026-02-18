@@ -124,6 +124,10 @@ export async function POST(request: NextRequest) {
       send_sms,
       // New flag: when true, also send SMS to alumni
       send_sms_to_alumni,
+      // New flag: when true, send email to active members/admins (explicit opt-in required)
+      send_email_to_members,
+      // New flag: when true, send email to alumni (explicit opt-in required)
+      send_email_to_alumni,
       metadata
     } = body;
 
@@ -198,82 +202,139 @@ export async function POST(request: NextRequest) {
     if (!is_scheduled) {
       await createRecipientRecords(announcement.id, profile.chapter_id, supabase);
       
-      // Send email notifications directly
-      try {
-        // Starting email notification process
-        
-        // Get chapter name first
-        const { data: chapter, error: chapterError } = await supabase
-          .from('chapters')
-          .select('name')
-          .eq('id', profile.chapter_id)
-          .single();
+      // Send email notifications to active members/admins only if explicitly requested
+      if (send_email_to_members === true) {
+        try {
+          // Get chapter name first
+          const { data: chapter } = await supabase
+            .from('chapters')
+            .select('name')
+            .eq('id', profile.chapter_id)
+            .single();
 
-        const chapterName = chapter?.name || 'Your Chapter';
-        
-        // Get chapter members for email - FIXED QUERY
-        const { data: members, error: membersError } = await supabase
-          .from('profiles')
-          .select(`
-            id,
-            email,
-            first_name,
-            last_name,
-            chapter_id,
-            role
-          `)
-          .eq('chapter_id', profile.chapter_id)
-          .in('role', ['active_member', 'admin'])
-          .not('email', 'is', null);
+          const chapterName = chapter?.name || 'Your Chapter';
 
-        if (membersError) {
-          console.error('❌ Failed to fetch chapter members:', membersError);
-        } else if (!members || members.length === 0) {
-          // No chapter members found for email notifications
-        } else {
-          // Chapter members found
-          
-          // Filter by email preferences (email_enabled AND announcement_notifications)
-          const allowedMembers = await Promise.all(
-            members.map(async (member) => {
-              try {
-                const allowed = await canSendEmailNotification(member.id, 'announcement');
-                return allowed ? member : null;
-              } catch {
-                // On error, default to not sending to be safe
-                return null;
-              }
-            })
-          );
+          const { data: members, error: membersError } = await supabase
+            .from('profiles')
+            .select(`
+              id,
+              email,
+              first_name,
+              last_name,
+              chapter_id,
+              role
+            `)
+            .eq('chapter_id', profile.chapter_id)
+            .in('role', ['active_member', 'admin'])
+            .not('email', 'is', null);
 
-          const recipients = allowedMembers
-            .filter((m): m is NonNullable<typeof m> => Boolean(m))
-            .map(member => ({
-              email: member.email,
-              firstName: member.first_name || 'Member',
-              chapterName: chapterName
-            }));
-
-          if (recipients.length > 0) {
-            const { EmailService } = await import('@/lib/services/emailService');
-            
-            const result = await EmailService.sendAnnouncementToChapter(
-              recipients,
-              {
-                title: announcement.title,
-                summary: '',
-                content: announcement.content,
-                announcementId: announcement.id,
-                announcementType: announcement.announcement_type
-              }
+          if (membersError) {
+            console.error('❌ Failed to fetch chapter members for email:', membersError);
+          } else if (members && members.length > 0) {
+            const allowedMembers = await Promise.all(
+              members.map(async (member) => {
+                try {
+                  const allowed = await canSendEmailNotification(member.id, 'announcement');
+                  return allowed ? member : null;
+                } catch {
+                  return null;
+                }
+              })
             );
 
-            // Email sending result received
+            const recipients = allowedMembers
+              .filter((m): m is NonNullable<typeof m> => Boolean(m))
+              .map(member => ({
+                email: member.email,
+                firstName: member.first_name || 'Member',
+                chapterName: chapterName
+              }));
+
+            if (recipients.length > 0) {
+              const { EmailService } = await import('@/lib/services/emailService');
+              await EmailService.sendAnnouncementToChapter(
+                recipients,
+                {
+                  title: announcement.title,
+                  summary: '',
+                  content: announcement.content,
+                  announcementId: announcement.id,
+                  announcementType: announcement.announcement_type
+                }
+              );
+              console.log('Email sent to members:', recipients.length, 'recipients');
+            }
           }
+        } catch (emailError) {
+          console.error('❌ Error sending member announcement emails:', emailError);
+          // Don't fail the announcement creation if email fails
         }
-      } catch (emailError) {
-        console.error('❌ Error sending announcement emails:', emailError);
-        // Don't fail the announcement creation if email fails
+      }
+
+      // Send email notifications to alumni only if explicitly requested
+      if (send_email_to_alumni === true) {
+        try {
+          const { data: chapterForAlumni } = await supabase
+            .from('chapters')
+            .select('name')
+            .eq('id', profile.chapter_id)
+            .single();
+
+          const alumniChapterName = chapterForAlumni?.name || 'Your Chapter';
+
+          const { data: alumniMembers, error: alumniEmailError } = await supabase
+            .from('profiles')
+            .select(`
+              id,
+              email,
+              first_name,
+              last_name
+            `)
+            .eq('chapter_id', profile.chapter_id)
+            .eq('role', 'alumni')
+            .not('email', 'is', null);
+
+          if (alumniEmailError) {
+            console.error('❌ Failed to fetch alumni for email:', alumniEmailError);
+          } else if (alumniMembers && alumniMembers.length > 0) {
+            const allowedAlumni = await Promise.all(
+              alumniMembers.map(async (alum) => {
+                try {
+                  const allowed = await canSendEmailNotification(alum.id, 'announcement');
+                  return allowed ? alum : null;
+                } catch {
+                  return null;
+                }
+              })
+            );
+
+            const alumniRecipients = allowedAlumni
+              .filter((a): a is NonNullable<typeof a> => Boolean(a))
+              .map(alum => ({
+                email: alum.email,
+                firstName: alum.first_name || 'Alumni',
+                chapterName: alumniChapterName
+              }));
+
+            if (alumniRecipients.length > 0) {
+              const { EmailService } = await import('@/lib/services/emailService');
+              await EmailService.sendAnnouncementToChapter(
+                alumniRecipients,
+                {
+                  title: announcement.title,
+                  summary: '',
+                  content: announcement.content,
+                  announcementId: announcement.id,
+                  announcementType: announcement.announcement_type
+                }
+              );
+              console.log('Email sent to alumni:', alumniRecipients.length, 'recipients');
+            }
+          }
+        } catch (alumniEmailError) {
+          console.error('❌ Error sending alumni announcement emails:', alumniEmailError);
+          // Don't fail the announcement creation if email fails
+        }
       }
 
       // Send SMS notifications to active members/admins only if send_sms is true
