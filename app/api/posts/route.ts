@@ -35,6 +35,27 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
     }
 
+    // --- ADD DEVELOPER BYPASS LOGIC ---
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('chapter_id, is_developer')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    }
+
+    const isDeveloper = profile.is_developer === true;
+
+    // Regular users can only view their own chapter's posts
+    if (!isDeveloper && profile.chapter_id !== chapterId) {
+      return NextResponse.json(
+        { error: 'Insufficient permissions to view another chapter' },
+        { status: 403 },
+      );
+    }
+
     // Calculate offset for pagination
     const offset = (page - 1) * limit;
 
