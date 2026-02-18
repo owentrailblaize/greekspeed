@@ -28,10 +28,15 @@ export function SendAnnouncementButton() {
   // Separate toggles so execs can optionally include alumni
   const [sendSmsToMembers, setSendSmsToMembers] = useState(false);
   const [sendSmsToAlumni, setSendSmsToAlumni] = useState(false);
+  // Email toggles
+  const [sendEmailToMembers, setSendEmailToMembers] = useState(false);
+  const [sendEmailToAlumni, setSendEmailToAlumni] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Recipient counts
   const [emailRecipientCount, setEmailRecipientCount] = useState<number | null>(null);
   const [memberSmsRecipientCount, setMemberSmsRecipientCount] = useState<number | null>(null);
   const [alumniSmsRecipientCount, setAlumniSmsRecipientCount] = useState<number | null>(null);
+  const [alumniEmailRecipientCount, setAlumniEmailRecipientCount] = useState<number | null>(null);
   const [loadingRecipients, setLoadingRecipients] = useState(false);
 
   // Auto-set SMS for urgent announcements
@@ -69,6 +74,12 @@ export function SendAnnouncementButton() {
               ? data.alumni_sms_recipients
               : null
           );
+          // Alumni email count if provided by API
+          setAlumniEmailRecipientCount(
+            typeof data.alumni_email_recipients === 'number'
+              ? data.alumni_email_recipients
+              : null
+          );
         }
       } catch (error) {
         console.error('Error fetching recipient counts:', error);
@@ -86,6 +97,11 @@ export function SendAnnouncementButton() {
       return;
     }
 
+    if (!sendSmsToMembers && !sendSmsToAlumni && !sendEmailToMembers && !sendEmailToAlumni) {
+      toast.error('Please select at least one delivery method');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const announcementData: CreateAnnouncementData = {
@@ -96,6 +112,9 @@ export function SendAnnouncementButton() {
         send_sms: sendSmsToMembers,
         // New alumni SMS behavior
         send_sms_to_alumni: sendSmsToAlumni,
+        send_email_to_members: sendEmailToMembers,
+        send_email_to_alumni: sendEmailToAlumni,
+        
         metadata: {}
       };
 
@@ -107,6 +126,8 @@ export function SendAnnouncementButton() {
       setAnnouncementType('general');
       setSendSmsToMembers(false);
       setSendSmsToAlumni(false);
+      setSendEmailToMembers(false);
+      setSendEmailToAlumni(false);
       setShowModal(false);
       
       toast.success('Announcement sent successfully!');
@@ -241,49 +262,83 @@ export function SendAnnouncementButton() {
                   className="min-h-[120px] w-full border-gray-200 focus:border-brand-primary focus:ring-brand-primary resize-none"
                 />
                 
-                <div className="space-y-3">
-                  {/* Member SMS toggle */}
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">
+                    Delivery Options
+                  </p>
+
                   <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
                     <Checkbox
                       id="send-sms-members-mobile"
                       checked={sendSmsToMembers}
                       onCheckedChange={(checked) => setSendSmsToMembers(checked as boolean)}
                     />
-                    <Label htmlFor="send-sms-members-mobile" className="text-sm cursor-pointer font-medium">
-                      Send SMS to active members
+                    <Label htmlFor="send-sms-members-mobile" className="text-sm cursor-pointer font-medium flex items-center gap-1.5">
+                      <Smartphone className="h-3.5 w-3.5 text-gray-500" />
+                      SMS to Actives
                     </Label>
                   </div>
 
-                  {/* Alumni SMS toggle */}
                   <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
                     <Checkbox
                       id="send-sms-alumni-mobile"
                       checked={sendSmsToAlumni}
                       onCheckedChange={(checked) => setSendSmsToAlumni(checked as boolean)}
                     />
-                    <Label htmlFor="send-sms-alumni-mobile" className="text-sm cursor-pointer font-medium">
-                      Send SMS to alumni
+                    <Label htmlFor="send-sms-alumni-mobile" className="text-sm cursor-pointer font-medium flex items-center gap-1.5">
+                      <Smartphone className="h-3.5 w-3.5 text-gray-500" />
+                      SMS to Alumni
                     </Label>
                   </div>
-                  
-                  {/* Notification disclaimers */}
+
+                  <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                    <Checkbox
+                      id="send-email-members-mobile"
+                      checked={sendEmailToMembers}
+                      onCheckedChange={(checked) => setSendEmailToMembers(checked as boolean)}
+                    />
+                    <Label htmlFor="send-email-members-mobile" className="text-sm cursor-pointer font-medium flex items-center gap-1.5">
+                      <Mail className="h-3.5 w-3.5 text-gray-500" />
+                      Email to Actives
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                    <Checkbox
+                      id="send-email-alumni-mobile"
+                      checked={sendEmailToAlumni}
+                      onCheckedChange={(checked) => setSendEmailToAlumni(checked as boolean)}
+                    />
+                    <Label htmlFor="send-email-alumni-mobile" className="text-sm cursor-pointer font-medium flex items-center gap-1.5">
+                      <Mail className="h-3.5 w-3.5 text-gray-500" />
+                      Email to Alumni
+                    </Label>
+                  </div>
+
+                  {/* Recipient count summary */}
                   <div className="text-xs text-gray-500 space-y-1 pl-1 pt-2 border-t border-gray-100">
-                    {emailRecipientCount !== null && (
-                      <p className="flex items-center gap-1.5">
-                        <Mail className="h-3 w-3 text-gray-400" />
-                        <span>Email: <span className="font-medium text-gray-700">{emailRecipientCount}</span> {emailRecipientCount === 1 ? 'recipient' : 'recipients'}</span>
-                      </p>
-                    )}
                     {sendSmsToMembers && memberSmsRecipientCount !== null && (
                       <p className="flex items-center gap-1.5">
                         <Smartphone className="h-3 w-3 text-gray-400" />
-                        <span>SMS to members: <span className="font-medium text-gray-700">{memberSmsRecipientCount}</span> {memberSmsRecipientCount === 1 ? 'recipient' : 'recipients'}</span>
+                        <span>SMS to actives: <span className="font-medium text-gray-700">{memberSmsRecipientCount}</span> recipients</span>
                       </p>
                     )}
                     {sendSmsToAlumni && alumniSmsRecipientCount !== null && (
                       <p className="flex items-center gap-1.5">
                         <Smartphone className="h-3 w-3 text-gray-400" />
-                        <span>SMS to alumni: <span className="font-medium text-gray-700">{alumniSmsRecipientCount}</span> {alumniSmsRecipientCount === 1 ? 'recipient' : 'recipients'}</span>
+                        <span>SMS to alumni: <span className="font-medium text-gray-700">{alumniSmsRecipientCount}</span> recipients</span>
+                      </p>
+                    )}
+                    {sendEmailToMembers && emailRecipientCount !== null && (
+                      <p className="flex items-center gap-1.5">
+                        <Mail className="h-3 w-3 text-gray-400" />
+                        <span>Email to actives: <span className="font-medium text-gray-700">{emailRecipientCount}</span> recipients</span>
+                      </p>
+                    )}
+                    {sendEmailToAlumni && alumniEmailRecipientCount !== null && (
+                      <p className="flex items-center gap-1.5">
+                        <Mail className="h-3 w-3 text-gray-400" />
+                        <span>Email to alumni: <span className="font-medium text-gray-700">{alumniEmailRecipientCount}</span> recipients</span>
                       </p>
                     )}
                     {loadingRecipients && (
@@ -362,49 +417,83 @@ export function SendAnnouncementButton() {
                   className="min-h-[150px] w-full border-gray-200 focus:border-brand-primary focus:ring-brand-primary resize-none"
                 />
                 
-                <div className="space-y-4">
-                  {/* Member SMS toggle */}
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">
+                    Delivery Options
+                  </p>
+
                   <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
                     <Checkbox
                       id="send-sms-members-desktop"
                       checked={sendSmsToMembers}
                       onCheckedChange={(checked) => setSendSmsToMembers(checked as boolean)}
                     />
-                    <Label htmlFor="send-sms-members-desktop" className="text-sm cursor-pointer font-medium">
-                      Send SMS to active members
+                    <Label htmlFor="send-sms-members-desktop" className="text-sm cursor-pointer font-medium flex items-center gap-1.5">
+                      <Smartphone className="h-4 w-4 text-gray-500" />
+                      SMS to Actives
                     </Label>
                   </div>
 
-                  {/* Alumni SMS toggle */}
                   <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
                     <Checkbox
                       id="send-sms-alumni-desktop"
                       checked={sendSmsToAlumni}
                       onCheckedChange={(checked) => setSendSmsToAlumni(checked as boolean)}
                     />
-                    <Label htmlFor="send-sms-alumni-desktop" className="text-sm cursor-pointer font-medium">
-                      Send SMS to alumni
+                    <Label htmlFor="send-sms-alumni-desktop" className="text-sm cursor-pointer font-medium flex items-center gap-1.5">
+                      <Smartphone className="h-4 w-4 text-gray-500" />
+                      SMS to Alumni
                     </Label>
                   </div>
-                  
-                  {/* Notification disclaimers */}
+
+                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                    <Checkbox
+                      id="send-email-members-desktop"
+                      checked={sendEmailToMembers}
+                      onCheckedChange={(checked) => setSendEmailToMembers(checked as boolean)}
+                    />
+                    <Label htmlFor="send-email-members-desktop" className="text-sm cursor-pointer font-medium flex items-center gap-1.5">
+                      <Mail className="h-4 w-4 text-gray-500" />
+                      Email to Actives
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                    <Checkbox
+                      id="send-email-alumni-desktop"
+                      checked={sendEmailToAlumni}
+                      onCheckedChange={(checked) => setSendEmailToAlumni(checked as boolean)}
+                    />
+                    <Label htmlFor="send-email-alumni-desktop" className="text-sm cursor-pointer font-medium flex items-center gap-1.5">
+                      <Mail className="h-4 w-4 text-gray-500" />
+                      Email to Alumni
+                    </Label>
+                  </div>
+
+                  {/* Recipient count summary */}
                   <div className="text-sm text-gray-600 space-y-2 pl-1 pt-3 border-t border-gray-200">
-                    {emailRecipientCount !== null && (
-                      <p className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-gray-400" />
-                        <span>Email: <span className="font-medium text-gray-700">{emailRecipientCount}</span> {emailRecipientCount === 1 ? 'recipient' : 'recipients'}</span>
-                      </p>
-                    )}
                     {sendSmsToMembers && memberSmsRecipientCount !== null && (
                       <p className="flex items-center gap-2">
                         <Smartphone className="h-4 w-4 text-gray-400" />
-                        <span>SMS to members: <span className="font-medium text-gray-700">{memberSmsRecipientCount}</span> {memberSmsRecipientCount === 1 ? 'recipient' : 'recipients'}</span>
+                        <span>SMS to actives: <span className="font-medium text-gray-700">{memberSmsRecipientCount}</span> recipients</span>
                       </p>
                     )}
                     {sendSmsToAlumni && alumniSmsRecipientCount !== null && (
                       <p className="flex items-center gap-2">
                         <Smartphone className="h-4 w-4 text-gray-400" />
-                        <span>SMS to alumni: <span className="font-medium text-gray-700">{alumniSmsRecipientCount}</span> {alumniSmsRecipientCount === 1 ? 'recipient' : 'recipients'}</span>
+                        <span>SMS to alumni: <span className="font-medium text-gray-700">{alumniSmsRecipientCount}</span> recipients</span>
+                      </p>
+                    )}
+                    {sendEmailToMembers && emailRecipientCount !== null && (
+                      <p className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-gray-400" />
+                        <span>Email to actives: <span className="font-medium text-gray-700">{emailRecipientCount}</span> recipients</span>
+                      </p>
+                    )}
+                    {sendEmailToAlumni && alumniEmailRecipientCount !== null && (
+                      <p className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-gray-400" />
+                        <span>Email to alumni: <span className="font-medium text-gray-700">{alumniEmailRecipientCount}</span> recipients</span>
                       </p>
                     )}
                     {loadingRecipients && (
