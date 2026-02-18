@@ -60,9 +60,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           </AppQueryProvider>
           <Analytics />
           <SpeedInsights />
+          {/* Desktop Toast Container */}
           <ToastContainer
             position="top-right"
-            autoClose={3000}
+            autoClose={4000}
             hideProgressBar={false}
             newestOnTop={false}
             closeOnClick
@@ -72,6 +73,21 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             pauseOnHover
             theme="light"
             className="hidden sm:block"
+            toastClassName="!bg-white !shadow-lg !border !border-gray-200 !rounded-lg !p-4 !min-h-[60px]"
+          />
+          {/* Mobile Toast Container */}
+          <ToastContainer
+            position="top-center"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={true}
+            closeOnClick
+            pauseOnFocusLoss
+            draggable={false}
+            pauseOnHover
+            theme="light"
+            className="block sm:hidden"
+            toastClassName="!bg-white !shadow-lg !border !border-gray-200 !rounded-lg !p-4 !min-h-[60px]"
           />
         </body>
       </html>
