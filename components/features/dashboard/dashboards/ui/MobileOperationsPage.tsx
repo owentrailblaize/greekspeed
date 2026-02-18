@@ -21,6 +21,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useEvents } from '@/lib/hooks/useEvents';
 import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 import { useSearchParams } from 'next/navigation';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 
 interface User {
   id: string;
@@ -64,7 +65,7 @@ interface DuesAssignment {
 
 export function MobileOperationsPage() {
   const { profile } = useProfile();
-  const chapterId = profile?.chapter_id;
+  const chapterId = useScopedChapterId();
   const { enabled: financialToolsEnabled } = useFeatureFlag('financial_tools_enabled');
   const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
   const searchParams = useSearchParams();
