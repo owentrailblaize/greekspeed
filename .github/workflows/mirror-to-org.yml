@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - develop
+  workflow_dispatch: # Allow manual triggering
 
 jobs:
   mirror:
@@ -14,17 +15,49 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false  # THIS IS THE KEY FIX!
+          persist-credentials: false
 
       - name: Configure Git
         run: |
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
 
-      - name: Push to organization repo
+      - name: Sync with organization repo
         env:
           TARGET_REPO: Trailblaizedevelopment/trailblaize-web-app
           TOKEN: ${{ secrets.ORG_REPO_TOKEN }}
         run: |
+          # Remove remote if it already exists to avoid errors
+          git remote remove org-mirror 2>/dev/null || true
+          
+          # Add the organization repo as a remote
           git remote add org-mirror https://x-access-token:${TOKEN}@github.com/${TARGET_REPO}.git
-          git push org-mirror ${{ github.ref }} --force
+          
+          # Fetch from organization repo
+          git fetch org-mirror main develop || true
+          
+          # Get current branch name
+          CURRENT_BRANCH=${GITHUB_REF#refs/heads/}
+          
+          # Use git archive to create a clean export without workflow files
+          TEMP_DIR=$(mktemp -d)
+          git archive --format=tar HEAD | tar -x -C "$TEMP_DIR"
+          
+          # Remove workflow files from the archive
+          rm -rf "$TEMP_DIR/.github/workflows"
+          
+          # Create a new git repo from this clean export
+          cd "$TEMP_DIR"
+          git init
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add -A
+          git commit -m "Sync from greekspeed repo [skip ci]"
+          
+          # Push to org repo
+          git remote add org-mirror https://x-access-token:${TOKEN}@github.com/${TARGET_REPO}.git
+          git push org-mirror HEAD:${CURRENT_BRANCH} --force
+          
+          # Clean up
+          cd -
+          rm -rf "$TEMP_DIR"
