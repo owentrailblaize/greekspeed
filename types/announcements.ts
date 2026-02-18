@@ -64,6 +64,7 @@ export interface CreateAnnouncementData {
   announcement_type: 'general' | 'urgent' | 'event' | 'academic';
   is_scheduled?: boolean;
   scheduled_at?: string;
+
   /**
    * Whether to send an SMS notification to active members/admins.
    * This preserves existing behavior.
@@ -74,5 +75,12 @@ export interface CreateAnnouncementData {
    * Used when execs choose the "Send SMS to alumni" option.
    */
   send_sms_to_alumni?: boolean;
+
+  /** Send an email notification to active members/admins. */
+  send_email_to_members?: boolean;
+
+  /** Send an email notification to active members/admins */
+  send_email_to_alumni?: boolean;
+
   metadata?: Record<string, any>;
 }

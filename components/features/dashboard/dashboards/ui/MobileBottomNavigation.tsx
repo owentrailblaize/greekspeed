@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { Suspense, useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Users, Wrench, CreditCard, User, CheckSquare, FileText, Activity, X, Search, Building2, LucideIcon, MessageSquare, Calendar, Megaphone, Settings, UserPlus } from 'lucide-react';
@@ -34,7 +34,7 @@ interface MobileBottomNavigationProps {
   userRole?: string; // Optional role override (otherwise uses useProfile)
 }
 
-export function MobileBottomNavigation({ 
+function MobileBottomNavigationImpl({ 
   activeTab, 
   onTabChange,
   tabs: customTabs,
@@ -564,5 +564,14 @@ export function MobileBottomNavigation({
         </AnimatePresence>
       )}
     </>
+  );
+}
+
+// Wrap in Suspense to handle useSearchParams during SSR/prerendering
+export function MobileBottomNavigation(props: MobileBottomNavigationProps) {
+  return (
+    <Suspense fallback={null}>
+      <MobileBottomNavigationImpl {...props} />
+    </Suspense>
   );
 }

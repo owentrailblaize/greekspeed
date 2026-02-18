@@ -21,6 +21,7 @@ export default function AlumniJoinPageClient() {
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [linkedInLoading, setLinkedInLoading] = useState(false);
   const [linkedInIconError, setLinkedInIconError] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const token = params.token as string;
 
@@ -101,13 +102,66 @@ export default function AlumniJoinPageClient() {
     if (userData.needs_approval) {
       setShowApprovalPending(true);
     } else {
-      // Show success message and ensure session is ready before redirect
-      window.location.href = '/dashboard';
+      // Redirect to onboarding to complete profile setup
+      window.location.href = '/onboarding';
     }
   };
 
   const handleStartJoin = () => {
     setShowJoinForm(true);
+  };
+
+  const handleGoogleSignUp = async () => {
+    if (!invitation) return;
+    
+    try {
+      setGoogleLoading(true);
+      setError(null);
+      
+      // Set flag and store invitation token to indicate OAuth redirect is happening
+      sessionStorage.setItem('oauth_redirect', 'true');
+      sessionStorage.setItem('invitation_token', invitation.token);
+      sessionStorage.setItem('invitation_type', 'alumni');
+
+      console.log('Initiating Google OAuth with alumni invitation:', {
+        token: invitation.token,
+        type: 'alumni',
+        chapter_id: invitation.chapter_id,
+        chapter_name: invitation.chapter_name
+      });
+
+      // Use Supabase's queryParams option (more reliable than URL query params)
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            invitation_token: invitation.token,
+            invitation_type: 'alumni',
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+        
+      if (error) {
+        console.error('Google sign-up error:', error);
+        sessionStorage.removeItem('oauth_redirect');
+        sessionStorage.removeItem('invitation_token');
+        sessionStorage.removeItem('invitation_type');
+        setError('Google sign-up failed. Please try again.');
+        toast.error('Google sign-up failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Google sign-up exception:', error);
+      sessionStorage.removeItem('oauth_redirect');
+      sessionStorage.removeItem('invitation_token');
+      sessionStorage.removeItem('invitation_type');
+      setError('Google sign-up failed. Please try again.');
+      toast.error('Google sign-up failed. Please try again.');
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   const handleLinkedInSignUp = async () => {
@@ -301,8 +355,21 @@ export default function AlumniJoinPageClient() {
             {/* Authentication Options */}
             <div className="space-y-3">
               <Button
+                onClick={handleGoogleSignUp}
+                disabled={googleLoading || linkedInLoading}
+                className="w-full h-11 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-4 text-sm shadow-sm hover:shadow-md transition-all duration-200 bg-white"
+              >
+                <img 
+                  src="https://developers.google.com/identity/images/g-logo.png" 
+                  alt="Google" 
+                  className="w-5 h-5 mr-3"
+                />
+                {googleLoading ? 'Connecting...' : 'Continue with Google'}
+              </Button>
+
+              <Button
                 onClick={handleLinkedInSignUp}
-                disabled={linkedInLoading}
+                disabled={linkedInLoading || googleLoading}
                 className="w-full h-11 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-medium text-left px-4 text-sm shadow-sm hover:shadow-md transition-all duration-200 bg-white"
               >
                 {linkedInIconError ? (
@@ -320,8 +387,8 @@ export default function AlumniJoinPageClient() {
 
               <Button
                 onClick={handleStartJoin}
-                disabled={linkedInLoading}
-                className="w-full h-11 rounded-full bg-brand-accent hover:bg-accent-700 text-white font-medium shadow-sm hover:shadow-md transition-all duration-200"
+                disabled={linkedInLoading || googleLoading}
+                className="w-full h-11 rounded-full bg-brand-accent hover:bg-brand-accent-hover text-white font-medium shadow-sm hover:shadow-md transition-all duration-200"
               >
                 <Mail className="h-4 w-4 mr-2" />
                 Continue with Email

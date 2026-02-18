@@ -8,50 +8,58 @@ interface AppStatus {
 // Cache to avoid hitting database on every request
 let cachedStatus: AppStatus | null = null;
 let lastChecked = 0;
-const CACHE_DURATION = 30000; // 30 seconds cache
+const CACHE_DURATION = 30_000; // 30s
 
 export async function getAppStatus(): Promise<AppStatus> {
   const now = Date.now();
-  
-  // Return cached value if still valid
-  if (cachedStatus && (now - lastChecked) < CACHE_DURATION) {
+
+  if (cachedStatus && now - lastChecked < CACHE_DURATION) {
     return cachedStatus;
   }
-  
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return { active: false, notice: '' };
+  }
+
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return { active: false, notice: '' };
+    const url =
+      `${supabaseUrl}/rest/v1/app_maintenance` +
+      `?select=active,notice&order=created_at.desc&limit=1`;
+
+    const res = await fetch(url, {
+      headers: {
+        apikey: supabaseAnonKey,
+        Authorization: `Bearer ${supabaseAnonKey}`,
+        Accept: 'application/json',
+      },
+      // helps avoid stale edge caches if any
+      cache: 'no-store',
+    });
+
+    if (!res.ok) {
+      cachedStatus = { active: false, notice: '' }; // fail open
+      lastChecked = now;
+      return cachedStatus;
     }
-    
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
-    
-    const { data, error } = await supabase
-      .from('app_maintenance')
-      .select('active, notice')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-    
-    if (error) {
-      // Default to inactive if we can't fetch (fail open)
-      cachedStatus = { active: false, notice: '' };
-    } else {
-      cachedStatus = {
-        active: data?.active || false,
-        notice: data?.notice || 'This application is currently unavailable.',
-      };
-    }
-    
+
+    const rows = (await res.json()) as Array<{ active?: boolean; notice?: string }>;
+    const row = rows[0];
+
+    cachedStatus = {
+      active: Boolean(row?.active),
+      notice: row?.notice || (row?.active ? 'This application is currently unavailable.' : ''),
+    };
+
     lastChecked = now;
     return cachedStatus;
-  } catch (error) {
-    return { active: false, notice: '' };
+  } catch {
+    return { active: false, notice: '' }; // fail open
   }
 }
 
 export function isMaintenanceMode(): Promise<boolean> {
-  return getAppStatus().then(status => status.active);
+  return getAppStatus().then((status) => status.active);
 }

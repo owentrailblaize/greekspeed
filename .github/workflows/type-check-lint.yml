@@ -1,0 +1,48 @@
+name: Type Check & Lint
+
+on: 
+  pull_request:
+    branches: ['**']  # All branches
+  push:
+    branches: ['**']  # All branches
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v40
+        with:
+          files: |
+            **/*.ts
+            **/*.tsx
+       
+      - name: Lint changed TypeScript files only
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          if [ -n "${{ steps.changed-files.outputs.all_changed_files }}" ]; then
+            # Filter to only .ts and .tsx files, exclude workflow files
+            echo "${{ steps.changed-files.outputs.all_changed_files }}" | \
+              grep -E '\.(ts|tsx)$' | \
+              grep -v '\.github/workflows' | \
+              xargs npx eslint || true
+          else
+            echo "No TypeScript files changed, skipping lint"
+          fi

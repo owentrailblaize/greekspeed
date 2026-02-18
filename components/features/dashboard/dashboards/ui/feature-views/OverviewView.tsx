@@ -58,8 +58,11 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
   const [announcementType, setAnnouncementType] = useState<'general' | 'urgent' | 'event' | 'academic'>('general');
   const [sendSmsToMembers, setSendSmsToMembers] = useState(false);
   const [sendSmsToAlumni, setSendSmsToAlumni] = useState(false);
+  const [sendEmailToMembers, setSendEmailToMembers] = useState(false);
+  const [sendEmailToAlumni, setSendEmailToAlumni] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailRecipientCount, setEmailRecipientCount] = useState<number | null>(null);
+  const [alumniEmailRecipientCount, setAlumniEmailRecipientCount] = useState<number | null>(null);
   const [memberSmsRecipientCount, setMemberSmsRecipientCount] = useState<number | null>(null);
   const [alumniSmsRecipientCount, setAlumniSmsRecipientCount] = useState<number | null>(null);
   const [loadingRecipients, setLoadingRecipients] = useState(false);
@@ -113,6 +116,11 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
               ? data.alumni_sms_recipients
               : null
           );
+          setAlumniEmailRecipientCount(
+            typeof data.alumni_email_recipients === 'number'
+              ? data.alumni_email_recipients
+              : null
+          );
         }
       } catch (error) {
         console.error('Error fetching recipient counts:', error);
@@ -138,6 +146,8 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
         announcement_type: announcementType,
         send_sms: sendSmsToMembers,
         send_sms_to_alumni: sendSmsToAlumni,
+        send_email_to_members: sendEmailToMembers,
+        send_email_to_alumni: sendEmailToAlumni,
         metadata: {}
       };
 
@@ -149,6 +159,8 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
       setAnnouncementType('general');
       setSendSmsToMembers(false);
       setSendSmsToAlumni(false);
+      setSendEmailToMembers(false);
+      setSendEmailToAlumni(false);
       
       toast.success('Announcement sent successfully!');
     } catch (error) {
@@ -514,53 +526,76 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
             />
             
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-              <div className="flex flex-col space-y-2 flex-1">
-                <div className="flex flex-col md:flex-row md:items-center md:space-x-8 space-y-2 md:space-y-0">
+              <div className="flex flex-col space-y-3 flex-1">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Delivery Options
+                </p>
+                
+                <div className="grid grid-cols-2 gap-3">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="send-sms-members"
                       checked={sendSmsToMembers}
                       onCheckedChange={(checked) => setSendSmsToMembers(checked as boolean)}
                     />
-                    <Label htmlFor="send-sms-members" className="text-sm cursor-pointer">
-                      Send SMS to active members
+                    <Label htmlFor="send-sms-members" className="text-sm cursor-pointer flex items-center gap-1.5">
+                      <Smartphone className="h-3.5 w-3.5 text-gray-500" />
+                      SMS to Actives
+                      {memberSmsRecipientCount !== null && (
+                        <span className="text-xs text-gray-500 font-normal">({memberSmsRecipientCount})</span>
+                      )}
                     </Label>
                   </div>
+                  
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="send-sms-alumni"
                       checked={sendSmsToAlumni}
                       onCheckedChange={(checked) => setSendSmsToAlumni(checked as boolean)}
                     />
-                    <Label htmlFor="send-sms-alumni" className="text-sm cursor-pointer">
-                      Send SMS to alumni
+                    <Label htmlFor="send-sms-alumni" className="text-sm cursor-pointer flex items-center gap-1.5">
+                      <Smartphone className="h-3.5 w-3.5 text-gray-500" />
+                      SMS to Alumni
+                      {alumniSmsRecipientCount !== null && (
+                        <span className="text-xs text-gray-500 font-normal">({alumniSmsRecipientCount})</span>
+                      )}
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="send-email-members"
+                      checked={sendEmailToMembers}
+                      onCheckedChange={(checked) => setSendEmailToMembers(checked as boolean)}
+                    />
+                    <Label htmlFor="send-email-members" className="text-sm cursor-pointer flex items-center gap-1.5">
+                      <Mail className="h-3.5 w-3.5 text-gray-500" />
+                      Email to Actives
+                      {emailRecipientCount !== null && (
+                        <span className="text-xs text-gray-500 font-normal">({emailRecipientCount})</span>
+                      )}
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="send-email-alumni"
+                      checked={sendEmailToAlumni}
+                      onCheckedChange={(checked) => setSendEmailToAlumni(checked as boolean)}
+                    />
+                    <Label htmlFor="send-email-alumni" className="text-sm cursor-pointer flex items-center gap-1.5">
+                      <Mail className="h-3.5 w-3.5 text-gray-500" />
+                      Email to Alumni
+                      {alumniEmailRecipientCount !== null && (
+                        <span className="text-xs text-gray-500 font-normal">({alumniEmailRecipientCount})</span>
+                      )}
                     </Label>
                   </div>
                 </div>
                 
-                <div className="text-xs text-gray-600 space-y-1 pl-6">
-                  {emailRecipientCount !== null && (
-                    <p className="flex items-center gap-1 whitespace-nowrap">
-                      <Mail className="h-3 w-3 flex-shrink-0" />
-                      <span>Email will be sent to <span className="font-medium">{emailRecipientCount}</span> Members</span>
-                    </p>
-                  )}
-                  {sendSmsToMembers && memberSmsRecipientCount !== null && (
-                    <p className="flex items-center gap-1 whitespace-nowrap">
-                      <Smartphone className="h-3 w-3 flex-shrink-0" />
-                      <span>SMS to members: <span className="font-medium">{memberSmsRecipientCount}</span> {memberSmsRecipientCount === 1 ? 'recipient' : 'recipients'}</span>
-                    </p>
-                  )}
-                  {sendSmsToAlumni && alumniSmsRecipientCount !== null && (
-                    <p className="flex items-center gap-1 whitespace-nowrap">
-                      <Smartphone className="h-3 w-3 flex-shrink-0" />
-                      <span>SMS to alumni: <span className="font-medium">{alumniSmsRecipientCount}</span> {alumniSmsRecipientCount === 1 ? 'recipient' : 'recipients'}</span>
-                    </p>
-                  )}
-                  {loadingRecipients && (
-                    <p className="text-gray-400 whitespace-nowrap">Loading recipient counts...</p>
-                  )}
-                </div>
+                {loadingRecipients && (
+                  <p className="text-xs text-gray-400 pl-6">Loading recipient counts...</p>
+                )}
               </div>
               
               <Button 

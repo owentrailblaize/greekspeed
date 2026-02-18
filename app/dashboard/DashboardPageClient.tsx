@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { DashboardOverview } from '@/components/features/dashboard/DashboardOverview';
@@ -10,21 +10,59 @@ import type { SocialFeedInitialData } from '@/components/features/dashboard/dash
 import { queueProfileUpdatePrompt } from '@/lib/utils/profileUpdatePromptQueue';
 import type { DetectedChange } from '@/components/features/profile/ProfileUpdatePromptModal';
 import { useModal } from '@/lib/contexts/ModalContext';
+import type { Profile } from '@/types/profile';
+
+/** Lightweight profile shape from the server RSC — just the fields we need to render. */
+export interface ServerProfile {
+  id: string;
+  role: string | null;
+  chapter_id: string | null;
+  chapter: string | null;
+  welcome_seen: boolean;
+  first_name: string | null;
+  last_name: string | null;
+  is_developer: boolean;
+}
 
 type DashboardPageClientProps = {
   initialFeed?: SocialFeedInitialData | null;
   fallbackChapterId?: string | null;
+  serverProfile?: Profile | null;
 };
 
 export default function DashboardPageClient({
   initialFeed,
   fallbackChapterId,
+  serverProfile,
 }: DashboardPageClientProps) {
   const { user, loading: authLoading } = useAuth();
-  const { profile, isDeveloper, loading: profileLoading } = useProfile();
+  const { profile, isDeveloper, loading: profileLoading, hydrateFromServer } = useProfile();
   const router = useRouter();
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const { openEditProfileModal } = useModal();
+
+  // ---- NEW: Hydrate ProfileContext with server data ASAP ----
+  // useLayoutEffect fires synchronously after DOM mutations but before paint,
+  // so every useProfile() consumer sees data on the very first render frame.
+  useLayoutEffect(() => {
+    if (serverProfile) {
+      hydrateFromServer(serverProfile);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- only on mount
+
+  // Derive "effective" values: prefer live context, fall back to server snapshot
+  const effectiveRole = profile?.role ?? serverProfile?.role ?? null;
+  const effectiveChapterId =
+    profile?.chapter_id ?? serverProfile?.chapter_id ?? fallbackChapterId ?? null;
+  const effectiveIsDeveloper = isDeveloper || (serverProfile?.is_developer ?? false);
+
+
+  // We can render immediately if the server gave us a usable profile
+  const hasServerData = Boolean(serverProfile && (serverProfile.role || serverProfile.is_developer));
+
+  // Context is "ready" when either server data lets us render or contexts finished loading
+  const contextReady = hasServerData || (!authLoading && !profileLoading);
+
   const isOAuthUser = user?.app_metadata?.provider &&
     user?.app_metadata?.provider !== 'email';
 
@@ -36,12 +74,14 @@ export default function DashboardPageClient({
       type: 'welcome_introduction',
       field: 'introduction',
       newValue: profile.chapter || 'the chapter',
+      profile: profile,
     };
     
     // Queue the introduction prompt - will be picked up by layout.tsx
     queueProfileUpdatePrompt(profile.id, [introductionChange]);
   };
 
+  // Side-effects: redirects and welcome modal (only fire once context is fully ready)
   useEffect(() => {
     if (authLoading || profileLoading) return;
 
@@ -61,9 +101,7 @@ export default function DashboardPageClient({
       }
 
       if (!isDeveloper && !isOAuthUser && (!profile.chapter || !profile.role)) {
-        // Give it a bit more time for the profile to fully load
         const timeoutId = setTimeout(() => {
-          // Only redirect if still incomplete after waiting
           if (!profile.chapter || !profile.role) {
             console.warn('Email signup profile appears incomplete after loading delay');
             router.push('/profile/complete');
@@ -75,7 +113,11 @@ export default function DashboardPageClient({
     }
   }, [authLoading, profileLoading, user, profile, isDeveloper, isOAuthUser, router]);
 
-  if (authLoading || profileLoading) {
+  // ---------------------------------------------------------------------------
+  // RENDER GATES — only show spinner when we have NO server data AND client is
+  // still loading. With serverProfile, the DashboardOverview renders immediately.
+  // ---------------------------------------------------------------------------
+  if (!contextReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -86,16 +128,18 @@ export default function DashboardPageClient({
     );
   }
 
-  if (!user) {
+  // After context is ready and there's no user at all, bail
+  if (!user && !hasServerData) {
     return null;
   }
 
-  if (!isDeveloper && isOAuthUser && (!profile?.chapter || !profile?.role)) {
+  // OAuth incomplete-profile guard (only when live context is ready)
+  if (!effectiveIsDeveloper && isOAuthUser && (!profile?.chapter || !profile?.role) && !hasServerData) {
     return null;
   }
 
-  // Don't render DashboardOverview until we have a role (prevents placeholder flash)
-  if (!profile?.role && !isDeveloper) {
+  // No role and not developer — only show spinner when we truly have no data
+  if (!effectiveRole && !effectiveIsDeveloper) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -108,11 +152,11 @@ export default function DashboardPageClient({
 
   return (
     <div>
-      <div style={{ display: 'none' }}>Dashboard Page Wrapper</div>
       <DashboardOverview
-        userRole={profile?.role || null}
+        userRole={effectiveRole}
+        isDeveloper={effectiveIsDeveloper}
         initialFeed={initialFeed ?? undefined}
-        fallbackChapterId={fallbackChapterId}
+        fallbackChapterId={effectiveChapterId}
       />
 
       {showWelcomeModal && profile && (

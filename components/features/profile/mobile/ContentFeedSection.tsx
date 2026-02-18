@@ -1,11 +1,9 @@
 'use client';
 
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, Heart, Calendar, Trash2, UserCheck } from 'lucide-react';
+import { MessageCircle, UserCheck } from 'lucide-react';
 import { UserAvatar } from '@/components/features/profile/UserAvatar';
-import ImageWithFallback from '@/components/figma/ImageWithFallback';
-import { formatDistanceToNow } from 'date-fns';
+import { PostCard } from '@/components/features/social/PostCard';
 
 interface ContentFeedSectionProps {
   activeTab: string;
@@ -15,6 +13,8 @@ interface ContentFeedSectionProps {
   connectionsLoading: boolean;
   onMessageClick: (connectionId: string) => void;
   onDeletePost: (postId: string) => void;
+  onLikePost: (postId: string) => void;
+  onCommentAdded: () => void;
   getConnectionPartner: (connection: any) => any;
 }
 
@@ -26,16 +26,10 @@ export function ContentFeedSection({
   connectionsLoading,
   onMessageClick,
   onDeletePost,
+  onLikePost,
+  onCommentAdded,
   getConnectionPartner,
 }: ContentFeedSectionProps) {
-  const formatTimestamp = (timestamp: string) => {
-    try {
-      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
-    } catch {
-      return 'recently';
-    }
-  };
-
   // Posts Tab Content
   if (activeTab === 'posts') {
     if (postsLoading) {
@@ -61,78 +55,14 @@ export function ContentFeedSection({
     return (
       <div className="divide-y divide-gray-100">
         {posts.map((post) => (
-          <div key={post.id} className="p-4 bg-white">
-            {/* Post Header */}
-            <div className="flex items-start gap-3 mb-3">
-              <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-brand-primary text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
-                {post.author?.avatar_url ? (
-                  <ImageWithFallback
-                    src={post.author.avatar_url}
-                    alt={post.author.full_name || 'User'}
-                    width={40}
-                    height={40}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  post.author?.first_name?.charAt(0) || 'U'
-                )}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-gray-900 text-sm mb-1">
-                  {post.author?.full_name || 'Unknown User'}
-                </h4>
-                <p className="text-xs text-gray-500">
-                  {formatTimestamp(post.created_at)}
-                </p>
-              </div>
-
-              {post.is_author && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDeletePost(post.id)}
-                  className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2"
-                  title="Delete post"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-
-            {/* Post Content */}
-            {post.content && (
-              <p className="text-gray-900 text-sm leading-relaxed mb-3 break-words">
-                {post.content}
-              </p>
-            )}
-
-            {post.image_url && (
-              <img
-                src={post.image_url}
-                alt="Post content"
-                className="w-full max-h-96 object-cover rounded-lg mb-3"
-              />
-            )}
-
-            {/* Post Stats */}
-            <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
-              <div className="flex items-center gap-1 text-gray-500">
-                <Heart className="h-4 w-4" />
-                <span className="text-xs">{post.likes_count || 0}</span>
-              </div>
-              <div className="flex items-center gap-1 text-gray-500">
-                <MessageCircle className="h-4 w-4" />
-                <span className="text-xs">{post.comments_count || 0}</span>
-              </div>
-              <div className="flex items-center gap-1 text-gray-500">
-                <Calendar className="h-4 w-4" />
-                <span className="text-xs">
-                  {new Date(post.created_at).toLocaleDateString()}
-                </span>
-              </div>
-            </div>
-          </div>
+          <PostCard
+            key={post.id}
+            post={post}
+            onLike={onLikePost}
+            onDelete={onDeletePost}
+            onCommentAdded={onCommentAdded}
+            variant="profile"
+          />
         ))}
       </div>
     );

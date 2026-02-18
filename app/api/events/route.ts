@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const scope = searchParams.get('scope');
     const chapterId = searchParams.get('chapter_id');
+    const userId = searchParams.get('user_id'); // Optional: include current user's RSVP status
 
     if (!chapterId) {
       return NextResponse.json({ error: 'Chapter ID is required' }, { status: 400 });
@@ -45,19 +46,35 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 });
     }
 
-    // Transform data to include RSVP counts
+    // Transform data to include RSVP counts + optional per-user RSVP status.
+    // This eliminates the N+1 pattern where the client had to call
+    // /api/events/:id/rsvp for EVERY event individually.
     const eventsWithCounts = events?.map(event => {
       const rsvps = event.event_rsvps || [];
+
+      // Find the current user's RSVP status (if user_id was provided)
+      let user_rsvp_status: string | null = null;
+      if (userId) {
+        const userRsvp = rsvps.find((r: any) => r.user_id === userId);
+        user_rsvp_status = userRsvp?.status ?? null;
+      }
+
       return {
         ...event,
         attendee_count: rsvps.filter((r: any) => r.status === 'attending').length,
         maybe_count: rsvps.filter((r: any) => r.status === 'maybe').length,
         not_attending_count: rsvps.filter((r: any) => r.status === 'not_attending').length,
+        // Include per-user RSVP status when user_id is provided
+        ...(userId ? { user_rsvp_status } : {}),
         event_rsvps: undefined // Remove the raw RSVP data
       };
     }) || [];
 
-    return NextResponse.json(eventsWithCounts);
+    return NextResponse.json(eventsWithCounts, {
+      headers: {
+        'Cache-Control': 'private, max-age=60, stale-while-revalidate=120',
+      },
+    });
   } catch (error) {
     console.error('Error in events API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -9,6 +9,7 @@ import { useProfile } from '@/lib/contexts/ProfileContext';
 import { EditProfileModal } from '@/components/features/profile/EditProfileModal';
 import { EditAlumniProfileModal } from '@/components/features/alumni/EditAlumniProfileModal';
 import { ProfileService } from '@/lib/services/profileService';
+import { ChapterFeaturesProvider } from '@/lib/contexts/ChapterFeaturesContext';
 
 export default function MyChapterLayout({
   children,
@@ -19,22 +20,24 @@ export default function MyChapterLayout({
   useActivityTracking();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Always show the header */}
-      <DashboardHeader />
-      
-      {/* Wrap the main content with SubscriptionPaywall */}
-      <SubscriptionPaywall>
-        <main className="flex-1">
-          <ModalProvider>
-            {children}
-            
-            {/* Global Edit Profile Modal - Rendered at layout level */}
-            <EditProfileModalWrapper />
-          </ModalProvider>
-        </main>
-      </SubscriptionPaywall>
-    </div>
+    <ChapterFeaturesProvider>
+      <div className="min-h-screen bg-gray-50">
+        {/* Always show the header */}
+        <DashboardHeader />
+        
+        {/* Wrap the main content with SubscriptionPaywall */}
+        <SubscriptionPaywall>
+          <main className="flex-1">
+            <ModalProvider>
+              {children}
+              
+              {/* Global Edit Profile Modal - Rendered at layout level */}
+              <EditProfileModalWrapper />
+            </ModalProvider>
+          </main>
+        </SubscriptionPaywall>
+      </div>
+    </ChapterFeaturesProvider>
   );
 }
 

@@ -40,7 +40,7 @@ export function MobileCalendarPage() {
   const { profile } = useProfile();
   const chapterId = useScopedChapterId();
 
-  // Fetch events for the calendar and events list
+  // Fetch events for the calendar and events list — now includes user_rsvp_status inline
   const fetchEvents = async () => {
     if (!chapterId || !profile?.id) return;
     
@@ -48,48 +48,30 @@ export function MobileCalendarPage() {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=upcoming`);
+      // Pass user_id so the API returns user_rsvp_status per event (kills N+1)
+      const response = await fetch(
+        `/api/events?chapter_id=${chapterId}&scope=upcoming&user_id=${profile.id}`
+      );
       if (!response.ok) {
         throw new Error('Failed to fetch events');
       }
       
-      const data = await response.json();
+      const data: Event[] = await response.json();
       setEvents(data);
 
-      // Fetch user's RSVP statuses for all events
-      await fetchUserRSVPs(data, profile.id);
+      // Extract inline RSVP statuses from the response — NO extra requests needed
+      const userRsvps: Record<string, 'attending' | 'maybe' | 'not_attending'> = {};
+      data.forEach((event) => {
+        if (event.user_rsvp_status) {
+          userRsvps[event.id] = event.user_rsvp_status;
+        }
+      });
+      setRsvpStatuses(userRsvps);
     } catch (err) {
       console.error('Error fetching events:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Fetch user's RSVP statuses for all events
-  const fetchUserRSVPs = async (eventsList: Event[], userId: string) => {
-    try {
-      const rsvpPromises = eventsList.map(async (event) => {
-        const response = await fetch(`/api/events/${event.id}/rsvp?user_id=${userId}`);
-        if (response.ok) {
-          const rsvpData = await response.json();
-          return { eventId: event.id, status: rsvpData.status };
-        }
-        return null;
-      });
-
-      const rsvpResults = await Promise.all(rsvpPromises);
-      const userRsvps: Record<string, 'attending' | 'maybe' | 'not_attending'> = {};
-      
-      rsvpResults.forEach((result) => {
-        if (result && result.status) {
-          userRsvps[result.eventId] = result.status;
-        }
-      });
-
-      setRsvpStatuses(userRsvps);
-    } catch (error) {
-      console.error('Error fetching user RSVPs:', error);
     }
   };
 
@@ -112,11 +94,22 @@ export function MobileCalendarPage() {
         // Update local RSVP status
         setRsvpStatuses(prev => ({ ...prev, [eventId]: status }));
         
-        // Refresh events to get updated RSVP counts
-        const eventsResponse = await fetch(`/api/events?chapter_id=${chapterId}&scope=upcoming`);
+        // Refresh events to get updated RSVP counts (includes user_rsvp_status)
+        const eventsResponse = await fetch(
+          `/api/events?chapter_id=${chapterId}&scope=upcoming&user_id=${profile?.id}`
+        );
         if (eventsResponse.ok) {
-          const updatedEvents = await eventsResponse.json();
+          const updatedEvents: Event[] = await eventsResponse.json();
           setEvents(updatedEvents);
+          
+          // Update RSVP statuses from refreshed data
+          const userRsvps: Record<string, 'attending' | 'maybe' | 'not_attending'> = {};
+          updatedEvents.forEach((event) => {
+            if (event.user_rsvp_status) {
+              userRsvps[event.id] = event.user_rsvp_status;
+            }
+          });
+          setRsvpStatuses(userRsvps);
         }
         
         toast.success(`RSVP updated to ${status === 'attending' ? 'Going' : status === 'maybe' ? 'Maybe' : 'Not Going'}`);
@@ -486,7 +479,7 @@ export function MobileCalendarPage() {
                             onClick={() => handleRSVP(event.id, 'attending')}
                             className={`h-7 px-3 text-xs flex-1 rounded-full transition-all duration-300 ${
                               getRSVPButtonVariant(event.id, 'attending') === 'default'
-                                ? 'bg-brand-accent hover:bg-accent-700 text-white'
+                                ? 'bg-brand-accent hover:bg-brand-accent-hover text-white'
                                 : 'bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900'
                             }`}
                             title="Going"
@@ -500,7 +493,7 @@ export function MobileCalendarPage() {
                             onClick={() => handleRSVP(event.id, 'maybe')}
                             className={`h-7 px-3 text-xs flex-1 rounded-full transition-all duration-300 ${
                               getRSVPButtonVariant(event.id, 'maybe') === 'default'
-                                ? 'bg-brand-accent hover:bg-accent-700 text-white'
+                                ? 'bg-brand-accent hover:bg-brand-accent-hover text-white'
                                 : 'bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900'
                             }`}
                             title="Maybe"
@@ -514,7 +507,7 @@ export function MobileCalendarPage() {
                             onClick={() => handleRSVP(event.id, 'not_attending')}
                             className={`h-7 px-3 text-xs flex-1 rounded-full transition-all duration-300 ${
                               getRSVPButtonVariant(event.id, 'not_attending') === 'default'
-                                ? 'bg-brand-accent hover:bg-accent-700 text-white'
+                                ? 'bg-brand-accent hover:bg-brand-accent-hover text-white'
                                 : 'bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900'
                             }`}
                             title="Not Going"
