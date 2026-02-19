@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { useState as useStateMobile } from 'react';
 import { useEffect } from 'react';
 import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
-
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 // Action configuration interface
 export interface QuickAction {
   id: string;
@@ -51,7 +51,7 @@ export function QuickActions({
 }: QuickActionsProps) {
   const [showEventModalState, setShowEventModalState] = useState(false);
   const { profile } = useProfile();
-  const chapterId = profile?.chapter_id;
+  const chapterId = useScopedChapterId();
   const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
 
   const [isMobile, setIsMobile] = useState(false);
