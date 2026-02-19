@@ -12,6 +12,7 @@ import { Announcement } from '@/types/announcements';
 import { Task, TaskStatus } from '@/types/operations';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'react-toastify';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 
 // Helper function to get icon and color based on announcement type
 const getAnnouncementTypeConfig = (type: string) => {
@@ -45,7 +46,7 @@ const formatRelativeTime = (dateString: string) => {
 
 export function MobileAnnouncementsPage() {
   const { profile } = useProfile();
-  const chapterId = profile?.chapter_id || null;
+  const chapterId = useScopedChapterId();
   const { announcements, loading: announcementsLoading, markAsRead } = useAnnouncements(chapterId);
   
   // Tab state

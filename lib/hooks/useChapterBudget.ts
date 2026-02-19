@@ -3,11 +3,12 @@ import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { canManageChapter } from '@/lib/permissions';
 import { toast } from 'react-toastify';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 
 export function useChapterBudget() {
   const { profile } = useProfile();
   const { session } = useAuth();
-  const chapterId = profile?.chapter_id;
+  const chapterId = useScopedChapterId();
   const [startingBudget, setStartingBudget] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

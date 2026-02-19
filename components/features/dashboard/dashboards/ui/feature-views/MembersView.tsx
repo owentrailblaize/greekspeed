@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Search, Eye, Edit, Trash2 } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { execColumns } from '@/components/user-management/columns';
 import { ViewUserModal } from '@/components/user-management/ViewUserModal';
 import { EditUserModal } from '@/components/user-management/EditUserModal';
@@ -44,7 +45,7 @@ interface User {
 
 export function MembersView() {
   const { profile } = useProfile();
-  const chapterId = profile?.chapter_id;
+  const chapterId = useScopedChapterId();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -114,9 +115,10 @@ export function MembersView() {
       const data = await response.json();
       const allUsers = data.users || [];
       
-      // Filter to only active_member and admin roles
+      // Filter to only active_member and admin roles, excluding developers
       const filteredUsers = allUsers.filter((user: User) => 
-        user.role === 'active_member' || user.role === 'admin'
+        (user.role === 'active_member' || user.role === 'admin') &&
+        !user.is_developer // Exclude developer/ghost accounts from member lists
       );
 
       // Store all filtered users

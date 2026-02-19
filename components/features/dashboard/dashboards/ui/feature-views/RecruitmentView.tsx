@@ -22,6 +22,7 @@ import {
   Upload
 } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { useAuth } from '@/lib/supabase/auth-context';
 import type { Recruit, RecruitStage, UpdateRecruitRequest } from '@/types/recruitment';
 import { FeatureGuard } from '@/components/shared/FeatureGuard';
@@ -131,6 +132,7 @@ export function RecruitmentView() {
   const router = useRouter();
   const pathname = usePathname();
   const { profile } = useProfile();
+  const chapterId = useScopedChapterId();
   const { getAuthHeaders } = useAuth();
   const [recruits, setRecruits] = useState<Recruit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -161,7 +163,7 @@ export function RecruitmentView() {
 
   // Fetch recruits from API
   const fetchRecruits = useCallback(async () => {
-    if (!profile?.chapter_id) return;
+    if (!chapterId) return;
 
     try {
       setLoading(true);
@@ -172,6 +174,9 @@ export function RecruitmentView() {
         page: currentPage.toString(),
         limit: '50',
       });
+
+      // Allow developer "view as chapter" by explicitly scoping the API call
+      params.append('chapter_id', chapterId);
 
       if (selectedStage !== 'all') {
         params.append('stage', selectedStage);
@@ -201,7 +206,7 @@ export function RecruitmentView() {
     } finally {
       setLoading(false);
     }
-  }, [profile?.chapter_id, currentPage, selectedStage, searchQuery, getAuthHeaders]);
+  }, [chapterId, currentPage, selectedStage, searchQuery, getAuthHeaders]);
 
   // Reset to page 1 when filters change (but not on initial mount)
   useEffect(() => {
@@ -212,10 +217,10 @@ export function RecruitmentView() {
 
   // Fetch recruits when filters or page change
   useEffect(() => {
-    if (profile?.chapter_id) {
+    if (chapterId) {
       fetchRecruits();
     }
-  }, [profile?.chapter_id, fetchRecruits]);
+  }, [chapterId, fetchRecruits]);
 
   // Format phone number for display
   const formatPhoneNumber = (phone: string | null | undefined): string => {
@@ -457,7 +462,7 @@ export function RecruitmentView() {
         </div>
 
         {/* Show loading skeleton immediately when loading or when profile is not yet available */}
-        {(loading || !profile?.chapter_id) && (
+        {(loading || !chapterId) && (
           <div className="space-y-6">
             {/* Filters Skeleton */}
             <Card>
@@ -482,7 +487,7 @@ export function RecruitmentView() {
         )}
 
         {/* Only render content when not loading and profile is available */}
-        {!loading && profile?.chapter_id && (
+        {!loading && chapterId && (
           <>
             {/* Filters */}
             <Card>
@@ -778,7 +783,7 @@ export function RecruitmentView() {
         )}
 
         {/* Error state */}
-        {error && !loading && profile?.chapter_id && (
+        {error && !loading && chapterId && (
           <div className="text-center py-12">
             <p className="text-red-600 mb-4">{error}</p>
             <Button onClick={fetchRecruits} variant="outline">

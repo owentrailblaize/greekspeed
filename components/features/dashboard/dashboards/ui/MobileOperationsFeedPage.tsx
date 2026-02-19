@@ -5,6 +5,7 @@ import { Activity, AlertCircle, CheckCircle, Clock, Users, DollarSign, Calendar,
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { createClient } from '@supabase/supabase-js';
 import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,7 +33,7 @@ export function MobileOperationsFeedPage() {
   const [activeFilter, setActiveFilter] = useState<'all' | 'event' | 'announcement' | 'task' | 'document' | 'payment'>('all');
   
   const { profile } = useProfile();
-  const chapterId = profile?.chapter_id;
+  const chapterId = useScopedChapterId();
   const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
 
   // Load activities on component mount

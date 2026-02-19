@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Clock, Users, HelpCircle, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { Event, RSVPStatus } from '@/types/events';
 import { parseRawTime } from '@/lib/utils/timezoneUtils';
 import { EventDetailModal } from '@/components/features/events/EventDetailModal';
@@ -49,7 +50,7 @@ export function UpcomingEventsCard({
   
   // Use prop values first, fall back to ProfileContext
   const { profile } = useProfile();
-  const chapterId = propChapterId ?? profile?.chapter_id;
+  const chapterId = useScopedChapterId();
   const userId = propUserId ?? profile?.id;
 
   // ---- Filter parent-provided events to "upcoming" on the client ----

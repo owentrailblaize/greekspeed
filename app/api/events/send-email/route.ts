@@ -46,12 +46,13 @@ export async function POST(request: NextRequest) {
     }
 
 
-    // Fetch chapter members (active members and admins only)
+    // Fetch chapter members (active members and admins only, exclude developers)
     const { data: members, error: membersError } = await supabase
       .from('profiles')
       .select('id, email, first_name, chapter_id, role')
       .eq('chapter_id', chapterId)
       .in('role', ['active_member', 'admin'])
+      .neq('is_developer', true) // Exclude developer/ghost accounts from notifications
       .not('email', 'is', null);
 
     if (membersError) {
@@ -125,7 +126,7 @@ export async function POST(request: NextRequest) {
           chapterId: chapterId
         });
 
-        // Get chapter members with phone numbers and SMS consent
+        // Get chapter members with phone numbers and SMS consent (exclude developers)
         const { data: smsMembers, error: smsMembersError } = await supabase
           .from('profiles')
           .select(`
@@ -138,6 +139,7 @@ export async function POST(request: NextRequest) {
           `)
           .eq('chapter_id', chapterId)
           .in('role', ['active_member', 'admin'])
+          .neq('is_developer', true) // Exclude developer/ghost accounts from notifications
           .not('phone', 'is', null)
           .neq('phone', '')
           .eq('sms_consent', true);
@@ -271,21 +273,22 @@ export async function POST(request: NextRequest) {
         });
 
         // Get chapter alumni with phone numbers and SMS consent
-        const { data: alumni, error: alumniError } = await supabase
-          .from('profiles')
-          .select(`
-            id,
-            phone,
-            first_name,
-            chapter_id,
-            role,
-            sms_consent
-          `)
-          .eq('chapter_id', chapterId)
-          .eq('role', 'alumni')
-          .not('phone', 'is', null)
-          .neq('phone', '')
-          .eq('sms_consent', true);
+          const { data: alumni, error: alumniError } = await supabase
+            .from('profiles')
+            .select(`
+              id,
+              phone,
+              first_name,
+              chapter_id,
+              role,
+              sms_consent
+            `)
+            .eq('chapter_id', chapterId)
+            .eq('role', 'alumni')
+            .neq('is_developer', true) // Exclude developer/ghost accounts from notifications
+            .not('phone', 'is', null)
+            .neq('phone', '')
+            .eq('sms_consent', true);
 
         if (alumniError) {
           console.error('❌ Error fetching alumni for SMS:', alumniError);

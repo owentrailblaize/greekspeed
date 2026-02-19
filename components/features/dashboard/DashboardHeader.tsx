@@ -13,6 +13,8 @@ import { ProfileService } from '@/lib/services/profileService';
 import { MessageCircle, Lock } from 'lucide-react';
 import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 import { useChapterLogo } from '@/lib/hooks/useChapterLogo';
+import { ChapterSwitcher } from '@/components/features/dashboard/ChapterSwitcher';
+import { useActiveChapter } from '@/lib/contexts/ActiveChapterContext';
 
 // Small helper for consistent tab styling
 function NavLink({ href, label, locked = false }: { href: string; label: string; locked?: boolean }) {
@@ -55,7 +57,8 @@ export function DashboardHeader() {
   const { connections } = useConnections();
   const userRole = profile?.role;
   const pathname = usePathname();
-
+  const { activeChapterId } = useActiveChapter();
+  
   // Check if financial tools feature is enabled
   const { enabled: financialToolsEnabled, loading: flagLoading } = useFeatureFlag('financial_tools_enabled');
 
@@ -84,12 +87,20 @@ export function DashboardHeader() {
 
   // Filter tabs based on user role
   const visibleTabs = navigationTabs.filter(tab => {
-    // Check role access first
+    // Developers viewing a chapter can see ALL tabs (full admin access)
+    if (profile?.is_developer && activeChapterId) {
+      // Still respect feature flags for financial tools
+      if (tab.href === '/dashboard/dues') {
+        return financialToolsEnabled && !flagLoading;
+      }
+      return true; // Show all other tabs
+    }
+
+    // Non-developers: check role access
     const hasRoleAccess = tab.roles.includes(userRole || '');
 
     // If it's the Dues tab, also check feature flag
     if (tab.href === '/dashboard/dues') {
-      // Don't show Dues tab if flag is disabled or still loading
       return hasRoleAccess && financialToolsEnabled && !flagLoading;
     }
 
@@ -150,6 +161,9 @@ export function DashboardHeader() {
               <NavLink key={tab.href} href={tab.href} label={tab.label} locked={tab.locked} />
             ))}
           </div>
+
+          {/* Chapter Switcher - Developer only */}
+          {profile?.is_developer && <ChapterSwitcher />}
         </div>
 
         {/* Right side - Messages icon and User dropdown */}
