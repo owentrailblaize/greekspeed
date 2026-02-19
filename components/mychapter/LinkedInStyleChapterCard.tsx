@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
 import { ClickableAvatar } from "@/components/features/user-profile/ClickableAvatar";
 import { ClickableUserName } from "@/components/features/user-profile/ClickableUserName";
+import { ConnectionRequestDialog } from "@/components/features/connections/ConnectionRequestDialog";
 
 interface LinkedInStyleChapterCardProps {
   member: ChapterMember;
@@ -27,6 +28,7 @@ export function LinkedInStyleChapterCard({ member, onClick }: LinkedInStyleChapt
     getConnectionId
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
+  const [showConnectionDialog, setShowConnectionDialog] = useState(false);
 
   const {
     id,
@@ -48,12 +50,14 @@ export function LinkedInStyleChapterCard({ member, onClick }: LinkedInStyleChapt
     
     if (!user || user.id === id) return;
     
+    if (action === 'connect') {
+      setShowConnectionDialog(true);
+      return;
+    }
+    
     setConnectionLoading(true);
     try {
       switch (action) {
-        case 'connect':
-          await sendConnectionRequest(id, 'Would love to connect with a fellow chapter member!');
-          break;
         case 'accept':
           const connectionId = getConnectionId(id);
           if (connectionId) {
@@ -86,6 +90,10 @@ export function LinkedInStyleChapterCard({ member, onClick }: LinkedInStyleChapt
     if (connectionId) {
       router.push(`/dashboard/messages?connection=${connectionId}`);
     }
+  };
+
+  const handleSendConnectionRequest = async (message?: string) => {
+    await sendConnectionRequest(id, message);
   };
 
   const isValidField = (value: any): boolean => {
@@ -418,6 +426,13 @@ export function LinkedInStyleChapterCard({ member, onClick }: LinkedInStyleChapt
           </div>
         </div>
       </CardContent>
+      <ConnectionRequestDialog
+        isOpen={showConnectionDialog}
+        onClose={() => setShowConnectionDialog(false)}
+        onSend={handleSendConnectionRequest}
+        recipientName={name}
+        isLoading={connectionLoading}
+      />
     </Card>
   );
 }

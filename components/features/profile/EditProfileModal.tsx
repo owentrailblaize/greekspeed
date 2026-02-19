@@ -19,10 +19,11 @@ import { useModal } from '@/lib/contexts/ModalContext';
 import { useProfileUpdateDetection } from '@/lib/hooks/useProfileUpdateDetection';
 import type { DetectedChange } from './ProfileUpdatePromptModal';
 import Link from 'next/link';
-import { getGraduationYears, industries } from '@/lib/alumniConstants';
+import { getGraduationYears, industries, majors, minors } from '@/lib/alumniConstants';
 import { UsernameInput } from './UsernameInput';
 import { generateProfileSlug } from '@/lib/utils/usernameUtils';
 import { ImageCropper, type CropType } from '@/components/features/common/ImageCropper';
+import { SearchableSelect } from '@/components/ui/SearchableSelect';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -1149,22 +1150,24 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="major">Major</Label>
-                      <Input
-                        id="major"
-                        value={formData.major}
-                        onChange={(e) => handleInputChange('major', e.target.value)}
+                      <SearchableSelect
+                        value={formData.major || ''}
+                        onValueChange={(value) => handleInputChange('major', value)}
+                        options={majors.map(major => ({ value: major, label: major }))}
+                        placeholder="Select Major"
+                        searchPlaceholder="Search majors..."
                         className="mt-1"
-                        placeholder="Computer Science"
                       />
                     </div>
                     <div>
                       <Label htmlFor="minor">Minor</Label>
-                      <Input
-                        id="minor"
-                        value={formData.minor}
-                        onChange={(e) => handleInputChange('minor', e.target.value)}
+                      <SearchableSelect
+                        value={formData.minor || ''}
+                        onValueChange={(value) => handleInputChange('minor', value)}
+                        options={minors.map(minor => ({ value: minor, label: minor }))}
+                        placeholder="Select Minor"
+                        searchPlaceholder="Search minors..."
                         className="mt-1"
-                        placeholder="Mathematics"
                       />
                     </div>
                   </div>

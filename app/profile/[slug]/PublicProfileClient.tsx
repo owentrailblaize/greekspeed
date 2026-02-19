@@ -18,6 +18,7 @@ import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useMutualConnections } from '@/lib/hooks/useMutualConnections';
 import Link from 'next/link';
 import ImageWithFallback from '@/components/figma/ImageWithFallback';
+import { ConnectionRequestDialog } from '@/components/features/connections/ConnectionRequestDialog';
 
 interface PublicProfileClientProps {
   slug: string;
@@ -42,6 +43,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
   const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'declined' | 'blocked'>('none');
   const [connectionLoading, setConnectionLoading] = useState(false);
   const [dismissedModal, setDismissedModal] = useState(false);
+  const [showConnectionDialog, setShowConnectionDialog] = useState(false);
   const [tabsVisible, setTabsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
@@ -135,13 +137,14 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel' | 'message') => {
     if (!user || user.id === profile.id) return;
     
+    if (action === 'connect') {
+      setShowConnectionDialog(true);
+      return;
+    }
+    
     setConnectionLoading(true);
     try {
       switch (action) {
-        case 'connect':
-          await sendConnectionRequest(profile.id, 'Would love to connect!');
-          setConnectionStatus('pending_sent');
-          break;
         case 'accept':
           const connectionId = getConnectionId(profile.id);
           if (connectionId) {
@@ -175,6 +178,11 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
     } finally {
       setConnectionLoading(false);
     }
+  };
+
+  const handleSendConnectionRequest = async (message?: string) => {
+    await sendConnectionRequest(profile.id, message);
+    setConnectionStatus('pending_sent');
   };
 
   // Loading state
@@ -692,6 +700,15 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
 
         </div>
       </div>
+
+      {/* Connection Request Dialog */}
+      <ConnectionRequestDialog
+        isOpen={showConnectionDialog}
+        onClose={() => setShowConnectionDialog(false)}
+        onSend={handleSendConnectionRequest}
+        recipientName={profile.full_name}
+        isLoading={connectionLoading}
+      />
     </>
   );
 }

@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { LinkedInStyleChapterCard } from '@/components/mychapter/LinkedInStyleChapterCard';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
 import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
+import { ConnectionRequestDialog } from '@/components/features/connections/ConnectionRequestDialog';
 
 // Seeded random number generator (deterministic - same seed = same sequence)
 function seededRandom(seed: number) {
@@ -68,6 +69,8 @@ export function MobileNetworkPage() {
   const [suggestionsDisplayCount, setSuggestionsDisplayCount] = useState(6);
   const [isLoadingMoreSuggestions, setIsLoadingMoreSuggestions] = useState(false);
   const suggestionsObserverTarget = useRef<HTMLDivElement>(null);
+  const [showConnectionDialog, setShowConnectionDialog] = useState(false);
+  const [selectedMemberForConnection, setSelectedMemberForConnection] = useState<ChapterMemberData | null>(null);
 
   // Constants for pagination
   const INITIAL_LIMIT = 6;
@@ -414,23 +417,31 @@ export function MobileNetworkPage() {
 
   const handleConnect = async (member: ChapterMemberData) => {
     if (!profile) return;
+    setSelectedMemberForConnection(member);
+    setShowConnectionDialog(true);
+  };
+
+  const handleSendConnectionRequest = async (message?: string) => {
+    if (!profile || !selectedMemberForConnection) return;
     
-    setConnectionLoading(member.id);
+    setConnectionLoading(selectedMemberForConnection.id);
     try {
-      await sendConnectionRequest(member.id);
+      await sendConnectionRequest(selectedMemberForConnection.id, message);
       
       const newConnection = {
         id: `temp-${Date.now()}`,
         requester_id: profile.id,
-        recipient_id: member.id,
+        recipient_id: selectedMemberForConnection.id,
         status: 'pending',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
       
       setLocalConnectionsSnapshot(prev => [...prev, newConnection]);
-      setConnectedUserName(member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member');
+      setConnectedUserName(selectedMemberForConnection.full_name || `${selectedMemberForConnection.first_name || ''} ${selectedMemberForConnection.last_name || ''}`.trim() || 'Chapter Member');
       setSuccessModalOpen(true);
+      setShowConnectionDialog(false);
+      setSelectedMemberForConnection(null);
     } catch (error) {
       console.error('Failed to send connection request:', error);
     } finally {
@@ -974,6 +985,18 @@ export function MobileNetworkPage() {
           </div>
         </div>
       )}
+
+      {/* Connection Request Dialog */}
+      <ConnectionRequestDialog
+        isOpen={showConnectionDialog}
+        onClose={() => {
+          setShowConnectionDialog(false);
+          setSelectedMemberForConnection(null);
+        }}
+        onSend={handleSendConnectionRequest}
+        recipientName={selectedMemberForConnection?.full_name || (selectedMemberForConnection ? `${selectedMemberForConnection.first_name || ''} ${selectedMemberForConnection.last_name || ''}`.trim() : undefined)}
+        isLoading={!!connectionLoading}
+      />
     </div>
   );
 }
