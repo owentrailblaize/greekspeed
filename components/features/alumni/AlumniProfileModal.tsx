@@ -27,6 +27,7 @@ import { createPortal } from 'react-dom';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { ShareProfileDrawer } from "@/components/features/messaging/ShareProfileDrawer";
 import { supabase } from "@/lib/supabase/client";
+import { ConnectionRequestDialog } from "@/components/features/connections/ConnectionRequestDialog";
 
 interface AlumniProfileModalProps {
   alumni: Alumni | null;
@@ -58,6 +59,7 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
   const [mounted, setMounted] = useState(false);
   const isMobile = useIsMobile();
   const router = useRouter();
+  const [showConnectionDialog, setShowConnectionDialog] = useState(false);
   
   // On mobile, route to profile page instead of showing modal
   useEffect(() => {
@@ -127,12 +129,14 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel') => {
     if (!user || user.id === alumni.id) return;
     
+    if (action === 'connect') {
+      setShowConnectionDialog(true);
+      return;
+    }
+    
     setConnectionLoading(true);
     try {
       switch (action) {
-        case 'connect':
-          await sendConnectionRequest(alumni.id, 'Would love to connect!');
-          break;
         case 'accept':
           const connectionId = getConnectionId(alumni.id);
           if (connectionId) {
@@ -157,6 +161,10 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
     } finally {
       setConnectionLoading(false);
     }
+  };
+
+  const handleSendConnectionRequest = async (message?: string) => {
+    await sendConnectionRequest(alumni.id, message);
   };
 
   const handleMessageClick = () => {
@@ -560,6 +568,15 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
           name: alumni.fullName,
           avatarUrl: alumni.avatar || undefined
         }}
+      />
+
+      {/* Connection Request Dialog */}
+      <ConnectionRequestDialog
+        isOpen={showConnectionDialog}
+        onClose={() => setShowConnectionDialog(false)}
+        onSend={handleSendConnectionRequest}
+        recipientName={alumni.fullName}
+        isLoading={connectionLoading}
       />
     </div>,
     document.body

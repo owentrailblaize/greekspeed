@@ -10,6 +10,7 @@ import { useState, memo } from "react";
 import { useRouter } from "next/navigation";
 import { ClickableField } from '@/components/shared/ClickableField';
 import { ActivityIndicator } from '@/components/shared/ActivityIndicator';
+import { ConnectionRequestDialog } from '@/components/features/connections/ConnectionRequestDialog';
 
 // Add this function at the top of the file, outside the component
 const getChapterName = (chapterId: string, isMobile: boolean = false): string => {
@@ -48,6 +49,7 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
     getConnectionId
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
+  const [showConnectionDialog, setShowConnectionDialog] = useState(false);
 
   // Use mutual connections from alumni prop (already calculated by API)
   const mutualConnections = alumni.mutualConnections || [];
@@ -60,12 +62,14 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
 
     if (!user || user.id === alumni.id) return;
 
+    if (action === 'connect') {
+      setShowConnectionDialog(true);
+      return;
+    }
+
     setConnectionLoading(true);
     try {
       switch (action) {
-        case 'connect':
-          await sendConnectionRequest(alumni.id, 'Would love to connect!');
-          break;
         case 'accept':
           const connectionId = getConnectionId(alumni.id);
           if (connectionId) {
@@ -98,6 +102,10 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
     if (connectionId) {
       router.push(`/dashboard/messages?connection=${connectionId}`);
     }
+  };
+
+  const handleSendConnectionRequest = async (message?: string) => {
+    await sendConnectionRequest(alumni.id, message);
   };
 
   const renderConnectionButton = () => {
@@ -362,6 +370,13 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
           </div>
         </div>
       </CardContent>
+      <ConnectionRequestDialog
+        isOpen={showConnectionDialog}
+        onClose={() => setShowConnectionDialog(false)}
+        onSend={handleSendConnectionRequest}
+        recipientName={alumni.fullName}
+        isLoading={connectionLoading}
+      />
     </Card>
   );
 }

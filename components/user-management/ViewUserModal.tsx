@@ -26,6 +26,7 @@ import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useRouter } from 'next/navigation';
 import ImageWithFallback from '@/components/figma/ImageWithFallback';
+import { ConnectionRequestDialog } from '@/components/features/connections/ConnectionRequestDialog';
 
 interface User {
   id: string;
@@ -73,6 +74,7 @@ export function ViewUserModal({ isOpen, onClose, user }: ViewUserModalProps) {
     getConnectionId
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
+  const [showConnectionDialog, setShowConnectionDialog] = useState(false);
 
   // Ensure component is mounted (for SSR)
   useEffect(() => {
@@ -84,12 +86,14 @@ export function ViewUserModal({ isOpen, onClose, user }: ViewUserModalProps) {
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel') => {
     if (!currentUser || currentUser.id === user.id) return;
     
+    if (action === 'connect') {
+      setShowConnectionDialog(true);
+      return;
+    }
+    
     setConnectionLoading(true);
     try {
       switch (action) {
-        case 'connect':
-          await sendConnectionRequest(user.id, 'Would love to connect!');
-          break;
         case 'accept':
           const connectionId = getConnectionId(user.id);
           if (connectionId) {
@@ -122,6 +126,10 @@ export function ViewUserModal({ isOpen, onClose, user }: ViewUserModalProps) {
       router.push(`/dashboard/messages?connection=${connectionId}`);
       onClose();
     }
+  };
+
+  const handleSendConnectionRequest = async (message?: string) => {
+    await sendConnectionRequest(user.id, message);
   };
 
   const canSendMessage = () => {
@@ -405,6 +413,13 @@ export function ViewUserModal({ isOpen, onClose, user }: ViewUserModalProps) {
           </div>
         </div>
       </div>
+      <ConnectionRequestDialog
+        isOpen={showConnectionDialog}
+        onClose={() => setShowConnectionDialog(false)}
+        onSend={handleSendConnectionRequest}
+        recipientName={user.full_name}
+        isLoading={connectionLoading}
+      />
     </div>,
     document.body
   );

@@ -23,6 +23,7 @@ import { weightedRandomShuffle } from '@/lib/utils/weightedShuffle';
 import { calculateNetworkingPriority } from '@/lib/utils/networkingSpotlight';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
 import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
+import { ConnectionRequestDialog } from '@/components/features/connections/ConnectionRequestDialog';
 
 interface Profile {
   id: string;
@@ -78,6 +79,8 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
   const [activeMobileTab, setActiveMobileTab] = useState('home');
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [connectedUserName, setConnectedUserName] = useState<string>('');
+  const [showConnectionDialog, setShowConnectionDialog] = useState(false);
+  const [selectedMemberForConnection, setSelectedMemberForConnection] = useState<ChapterMemberData | null>(null);
   const [localConnectionsSnapshot, setLocalConnectionsSnapshot] = useState<any[]>([]);
   const [snapshotTaken, setSnapshotTaken] = useState(false);
   const [sessionSeed, setSessionSeed] = useState<number | null>(null);
@@ -201,16 +204,22 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
 
   const handleConnect = async (member: ChapterMemberData) => {
     if (!profile) return;
+    setSelectedMemberForConnection(member);
+    setShowConnectionDialog(true);
+  };
+
+  const handleSendConnectionRequest = async (message?: string) => {
+    if (!profile || !selectedMemberForConnection) return;
     
-    setConnectionLoading(member.id);
+    setConnectionLoading(selectedMemberForConnection.id);
     try {
-      await sendConnectionRequest(member.id);
+      await sendConnectionRequest(selectedMemberForConnection.id, message);
       
       // Update our local snapshot to include the new connection
       const newConnection = {
         id: `temp-${Date.now()}`, // Temporary ID
         requester_id: profile.id,
-        recipient_id: member.id,
+        recipient_id: selectedMemberForConnection.id,
         status: 'pending',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -219,8 +228,10 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
       setLocalConnectionsSnapshot(prev => [...prev, newConnection]);
       
       // Show success modal
-      setConnectedUserName(member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Chapter Member');
+      setConnectedUserName(selectedMemberForConnection.full_name || `${selectedMemberForConnection.first_name || ''} ${selectedMemberForConnection.last_name || ''}`.trim() || 'Chapter Member');
       setSuccessModalOpen(true);
+      setShowConnectionDialog(false);
+      setSelectedMemberForConnection(null);
     } catch (error) {
       console.error('Failed to send connection request:', error);
     } finally {
@@ -517,6 +528,18 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
           </div>
         </div>
       )}
+
+      {/* Connection Request Dialog */}
+      <ConnectionRequestDialog
+        isOpen={showConnectionDialog}
+        onClose={() => {
+          setShowConnectionDialog(false);
+          setSelectedMemberForConnection(null);
+        }}
+        onSend={handleSendConnectionRequest}
+        recipientName={selectedMemberForConnection?.full_name || (selectedMemberForConnection ? `${selectedMemberForConnection.first_name || ''} ${selectedMemberForConnection.last_name || ''}`.trim() : undefined)}
+        isLoading={!!connectionLoading}
+      />
     </div>
   );
 } 

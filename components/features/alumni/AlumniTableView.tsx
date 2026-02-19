@@ -35,6 +35,7 @@ import { useRouter } from 'next/navigation';
 import { ClickableField } from "@/components/shared/ClickableField";
 import { ActivityIndicator } from "@/components/shared/ActivityIndicator";
 import { calculateAlumniCompleteness, getCompletenessBadgeColor } from '@/lib/utils/profileCompleteness';
+import { ConnectionRequestDialog } from '@/components/features/connections/ConnectionRequestDialog';
 
 interface AlumniTableViewProps {
   alumni: Alumni[];
@@ -75,6 +76,8 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
   const [selectedAlumniForPopup, setSelectedAlumniForPopup] = useState<Alumni | null>(null);
   const [popupOpen, setPopupOpen] = useState(false);
   const [connectionLoading, setConnectionLoading] = useState<string | null>(null);
+  const [showConnectionDialog, setShowConnectionDialog] = useState(false);
+  const [selectedAlumniForConnection, setSelectedAlumniForConnection] = useState<Alumni | null>(null);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -125,12 +128,18 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
   const handleConnectionAction = async (alumniId: string, action: 'connect' | 'accept' | 'decline' | 'cancel') => {
     if (!user) return;
     
+    if (action === 'connect') {
+      const alumniToConnect = alumni.find(a => a.id === alumniId);
+      if (alumniToConnect) {
+        setSelectedAlumniForConnection(alumniToConnect);
+        setShowConnectionDialog(true);
+      }
+      return;
+    }
+    
     setConnectionLoading(alumniId);
     try {
       switch (action) {
-        case 'connect':
-          await sendConnectionRequest(alumniId, 'Would love to connect!');
-          break;
         case 'accept':
           const connectionId = getConnectionId(alumniId);
           if (connectionId) {
@@ -163,6 +172,13 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
       // Navigate to messages page with the connection pre-selected
       router.push(`/dashboard/messages?connection=${connectionId}`);
     }
+  };
+
+  const handleSendConnectionRequest = async (message?: string) => {
+    if (!selectedAlumniForConnection) return;
+    await sendConnectionRequest(selectedAlumniForConnection.id, message);
+    setShowConnectionDialog(false);
+    setSelectedAlumniForConnection(null);
   };
 
   const renderConnectionButton = (alumniId: string, hasProfile?: boolean) => {
@@ -821,6 +837,16 @@ export function AlumniTableView({ alumni, selectedAlumni, onSelectionChange }: A
           </Table>
         </div>
       </div>
+      <ConnectionRequestDialog
+        isOpen={showConnectionDialog}
+        onClose={() => {
+          setShowConnectionDialog(false);
+          setSelectedAlumniForConnection(null);
+        }}
+        onSend={handleSendConnectionRequest}
+        recipientName={selectedAlumniForConnection?.fullName}
+        isLoading={!!connectionLoading}
+      />
     </div>
   );
 }

@@ -24,6 +24,7 @@ import { useState } from "react";
 import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils";
 import { ShareProfileDrawer } from "@/components/features/messaging/ShareProfileDrawer";
+import { ConnectionRequestDialog } from "@/components/features/connections/ConnectionRequestDialog";
 
 interface UserProfileViewProps {
   profile: UnifiedUserProfile;
@@ -43,6 +44,7 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
   const [shareDrawerOpen, setShareDrawerOpen] = useState(false);
+  const [showConnectionDialog, setShowConnectionDialog] = useState(false);
 
   const userData = profile.user || {};
   const userId = profile.id;
@@ -50,12 +52,14 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel') => {
     if (!user || user.id === userId) return;
     
+    if (action === 'connect') {
+      setShowConnectionDialog(true);
+      return;
+    }
+    
     setConnectionLoading(true);
     try {
       switch (action) {
-        case 'connect':
-          await sendConnectionRequest(userId, 'Would love to connect!');
-          break;
         case 'accept':
           const connectionId = getConnectionId(userId);
           if (connectionId) {
@@ -88,6 +92,10 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
       router.push(`/dashboard/messages?connection=${connectionId}`);
       onClose();
     }
+  };
+
+  const handleSendConnectionRequest = async (message?: string) => {
+    await sendConnectionRequest(userId, message);
   };
 
   const handleShareProfile = () => {
@@ -437,6 +445,15 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
           name: profile.full_name,
           avatarUrl: profile.avatar_url || undefined
         }}
+      />
+
+      {/* Connection Request Dialog */}
+      <ConnectionRequestDialog
+        isOpen={showConnectionDialog}
+        onClose={() => setShowConnectionDialog(false)}
+        onSend={handleSendConnectionRequest}
+        recipientName={profile.full_name}
+        isLoading={connectionLoading}
       />
     </>
   );
