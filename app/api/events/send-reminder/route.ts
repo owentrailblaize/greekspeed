@@ -36,12 +36,13 @@ export async function POST(request: NextRequest) {
     }
 
 
-    // Get all chapter members
+    // Get all chapter members (exclude developers)
     const { data: allMembers, error: membersError } = await supabase
       .from('profiles')
       .select('id, email, first_name, chapter_id, role')
       .eq('chapter_id', chapterId)
       .in('role', ['active_member', 'admin'])
+      .neq('is_developer', true) // Exclude developer/ghost accounts from notifications
       .not('email', 'is', null);
 
     if (membersError || !allMembers) {

@@ -17,11 +17,12 @@ import {
 import { useProfile } from "@/lib/contexts/ProfileContext";
 import { useEvents } from "@/lib/hooks/useEvents";
 import { useChapterBudget } from "@/lib/hooks/useChapterBudget";
+import { useScopedChapterId } from "@/lib/hooks/useScopedChapterId";
 
 export function BudgetView() {
   // Get user profile and chapter ID
   const { profile } = useProfile();
-  const chapterId = profile?.chapter_id;
+  const chapterId = useScopedChapterId();
   const [currentPage, setCurrentPage] = useState(1);
   const eventsPerPage = 8;
   const [showEditDialog, setShowEditDialog] = useState(false);

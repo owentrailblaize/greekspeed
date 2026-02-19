@@ -55,5 +55,5 @@ docs/
 # Agents File
 AGENTS.md
 
-# Ignore CSV Files
-*.csv
+# Github
+.github/

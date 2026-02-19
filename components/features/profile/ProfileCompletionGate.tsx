@@ -277,7 +277,7 @@ export function ProfileCompletionGate({
               </button>
               
               <div className="flex items-center justify-center mb-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-orange-600 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-neutral-800 to-neutral-400 rounded-full flex items-center justify-center">
                   <AlertCircle className="h-6 w-6 text-white" />
                 </div>
               </div>
@@ -292,21 +292,21 @@ export function ProfileCompletionGate({
             <div className="pt-0 px-6 pb-1">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-600"></div>
                   <span className="ml-2 text-gray-600">Loading profile...</span>
                 </div>
                 ) : completion ? (
                   <>
                     {/* Profile Completion Status */}
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                    <div className="bg-gradient-to-r from-neutral-300 to-neutral-400 border border-neutral-200 rounded-lg p-4 mb-4">
                       <div className="flex items-start space-x-3">
-                        <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                        <AlertCircle className="h-5 w-5 text-neutral-600 mt-0.5 flex-shrink-0" />
                         <div className="flex-1">
-                          <h4 className="font-medium text-sm mb-1 text-red-900">
+                          <h4 className="font-medium text-sm mb-1 text-neutral-900">
                             {completion.isComplete ? 'Profile Complete!' : 'Profile Incomplete - Access Restricted'}
                           </h4>
                           <div className="flex items-center space-x-2 mt-2">
-                            <Badge className={`text-xs ${completion.isComplete ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            <Badge className={`text-xs ${completion.isComplete ? 'bg-green-100 text-green-800' : 'bg-neutral-100 text-red-800'}`}>
                               {completion.percentage}% Complete
                             </Badge>
                             {!completion.isComplete && (
@@ -334,7 +334,7 @@ export function ProfileCompletionGate({
                             transition={{ delay: index * 0.05 }}
                             className="flex items-center space-x-2 text-sm text-gray-600"
                           >
-                            <div className="w-2 h-2 bg-red-400 rounded-full flex-shrink-0"></div>
+                            <div className="w-2 h-2 bg-neutral-900 rounded-full flex-shrink-0"></div>
                             <span className="truncate">{field}</span>
                           </motion.div>
                         ))}
@@ -348,8 +348,8 @@ export function ProfileCompletionGate({
                   )}
 
                   {/* Benefits Section - Simplified */}
-                  <div className="bg-accent-50 border border-accent-200 rounded-lg p-4 mb-4 hidden sm:block">
-                    <h4 className="font-medium text-sm text-accent-900 mb-2">
+                  <div className="bg-gradient-to-r from-neutral-300 to-neutral-400 border border-neutral-200 rounded-lg p-4 mb-4 hidden sm:block">
+                    <h4 className="font-medium text-sm text-neutral-900 mb-2">
                       {currentProfile?.role === 'alumni' ? 'Why Complete Your Professional Profile?' : 'Why Complete Your Profile?'}
                     </h4>
                     <div className="space-y-2">
@@ -357,13 +357,13 @@ export function ProfileCompletionGate({
                         <>
                           <div className="flex items-start space-x-2">
                             <Building2 className="h-4 w-4 text-brand-accent mt-0.5 flex-shrink-0" />
-                            <p className="text-sm text-accent-800">
+                            <p className="text-sm text-neutral-800">
                               Help other alumni find you by industry and company
                             </p>
                           </div>
                           <div className="flex items-start space-x-2">
                             <Briefcase className="h-4 w-4 text-brand-accent mt-0.5 flex-shrink-0" />
-                            <p className="text-sm text-accent-800">
+                            <p className="text-sm text-neutral-800">
                               Enable professional networking and career opportunities
                             </p>
                           </div>
@@ -372,13 +372,13 @@ export function ProfileCompletionGate({
                         <>
                           <div className="flex items-start space-x-2">
                             <User className="h-4 w-4 text-brand-accent mt-0.5 flex-shrink-0" />
-                            <p className="text-sm text-accent-800">
+                            <p className="text-sm text-ac cent-800">
                               Improve your visibility in the chapter network
                             </p>
                           </div>
                           <div className="flex items-start space-x-2">
                             <Phone className="h-4 w-4 text-brand-accent mt-0.5 flex-shrink-0" />
-                            <p className="text-sm text-accent-800">
+                            <p className="text-sm text-neutral-800">
                               Enable direct communication with other members
                             </p>
                           </div>
@@ -399,7 +399,7 @@ export function ProfileCompletionGate({
               <div className="flex space-x-2">
                 <Button
                   onClick={handleEditProfile}
-                  className="bg-brand-accent hover:bg-brand-accent-hover text-white px-4 py-2.5 text-sm font-medium flex-1"
+                  className="bg-brand-accent hover:bg-brand-accent-hover rounded-full text-white px-4 py-2.5 text-sm font-medium flex-1"
                   size="sm"
                 >
                   <User className="h-4 w-4 mr-2" />
@@ -408,7 +408,7 @@ export function ProfileCompletionGate({
                 <Button
                   onClick={handleManualRefresh}
                   variant="outline"
-                  className="px-3 py-2.5 text-sm"
+                  className="px-3 py-2.5 text-sm rounded-full"
                   size="sm"
                 >
                   ↻

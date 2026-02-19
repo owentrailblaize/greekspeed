@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Megaphone, Send, Mail, Smartphone, X } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { useAnnouncements } from '@/lib/hooks/useAnnouncements';
 import { CreateAnnouncementData } from '@/types/announcements';
 import { toast } from 'react-toastify';
@@ -19,7 +20,7 @@ import { useEffect } from 'react';
 export function SendAnnouncementButton() {
   const { profile } = useProfile();
   const { session } = useAuth();
-  const chapterId = profile?.chapter_id;
+  const chapterId = useScopedChapterId();
   const { createAnnouncement, loading: announcementsLoading } = useAnnouncements(chapterId || null);
   
   const [showModal, setShowModal] = useState(false);

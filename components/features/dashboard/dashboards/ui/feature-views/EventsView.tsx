@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Calendar, Edit, Trash2, MapPin, Clock, Users, DollarSign, TrendingUp, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { useEvents } from '@/lib/hooks/useEvents';
 import { useChapterBudget } from '@/lib/hooks/useChapterBudget';
 import { EventForm } from '@/components/ui/EventForm';
@@ -18,7 +19,7 @@ import { toast } from 'react-toastify';
 
 export function EventsView() {
   const { profile } = useProfile();
-  const chapterId = profile?.chapter_id;
+  const chapterId = useScopedChapterId();
   const [showEventForm, setShowEventForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [sortColumn, setSortColumn] = useState<'title' | 'date' | 'location' | 'budget' | null>(null);

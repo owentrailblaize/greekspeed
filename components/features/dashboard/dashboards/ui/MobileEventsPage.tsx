@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Clock, Users, HelpCircle, X, Filter, Loader2, MoreVertical } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { Event, RSVPStatus } from '@/types/events';
 import { parseRawTime } from '@/lib/utils/timezoneUtils';
 import { useFeatureRedirect } from '@/lib/hooks/useFeatureRedirect';
@@ -29,7 +30,7 @@ export function MobileEventsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { profile } = useProfile();
-  const chapterId = profile?.chapter_id;
+  const chapterId = useScopedChapterId();
 
   // Fetch events for the user's chapter — now includes user_rsvp_status inline
   const fetchEvents = async () => {

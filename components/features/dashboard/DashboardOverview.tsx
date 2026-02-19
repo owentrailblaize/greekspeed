@@ -5,6 +5,9 @@ import { ActiveMemberOverview } from './dashboards/ActiveMemberOverview';
 import { AdminOverview } from './dashboards/AdminOverview';
 import { DeveloperOverview } from './dashboards/DeveloperOverview';
 import type { SocialFeedInitialData } from './dashboards/ui/SocialFeed';
+import { useActiveChapter } from '@/lib/contexts/ActiveChapterContext';
+import { useProfile } from '@/lib/contexts/ProfileContext';
+
 
 interface DashboardOverviewProps {
   userRole: string | null;
@@ -15,12 +18,21 @@ interface DashboardOverviewProps {
 
 export function DashboardOverview({
   userRole,
-  isDeveloper = false,
   initialFeed,
   fallbackChapterId,
 }: DashboardOverviewProps) {
+  const { isDeveloper } = useProfile();
+  const { activeChapterId } = useActiveChapter();
+
   // Check if user is a developer first
   if (isDeveloper) {
+    // If a developer has selected a chapter, render that chapter's dashboard view
+    // (this is the start of "workspace-style" traversal).
+    if (activeChapterId) {
+      return <AdminOverview initialFeed={initialFeed} fallbackChapterId={activeChapterId} />;
+    }
+
+    // Otherwise, show the developer portal overview
     return <DeveloperOverview />;
   }
 

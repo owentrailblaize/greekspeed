@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Plus, Settings, CheckCircle, Clock, UserCheck, Bell, ChevronLeft, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { supabase } from '@/lib/supabase/client';
 import { Progress } from '@/components/ui/progress';
 import { Task, CreateTaskRequest } from '@/types/operations';
@@ -17,7 +18,7 @@ import { toast } from 'react-toastify';
 
 export function TasksView() {
   const { profile } = useProfile();
-  const chapterId = profile?.chapter_id;
+  const chapterId = useScopedChapterId();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,7 +33,7 @@ export function TasksView() {
     try {
       setLoading(true);
       
-      if (!profile?.chapter_id) {
+      if (!chapterId) {
         return;
       }
       
@@ -42,7 +43,7 @@ export function TasksView() {
           *,
           assignee:profiles!tasks_assignee_id_fkey(full_name)
         `)
-        .eq('chapter_id', profile.chapter_id)
+        .eq('chapter_id', chapterId)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -56,7 +57,7 @@ export function TasksView() {
     } finally {
       setLoading(false);
     }
-  }, [profile?.chapter_id]);
+  }, [chapterId]);
 
   const loadChapterMembers = useCallback(async () => {
     if (!chapterId) return;

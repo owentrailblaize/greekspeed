@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, Users, HelpCircle, X, Loader2 } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { Event, RSVPStatus } from '@/types/events';
 import { parseRawTime } from '@/lib/utils/timezoneUtils';
 import { toast } from 'react-toastify';
@@ -37,7 +38,7 @@ export function MobileCalendarPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   const { profile } = useProfile();
-  const chapterId = profile?.chapter_id;
+  const chapterId = useScopedChapterId();
 
   // Fetch events for the calendar and events list — now includes user_rsvp_status inline
   const fetchEvents = async () => {

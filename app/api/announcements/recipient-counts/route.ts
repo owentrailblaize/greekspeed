@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
         }
 
-        // Get all active members and admins
+        // Get all active members and admins (exclude developers)
         const { data: members, error: membersError } = await supabase
         .from('profiles')
         .select(`
@@ -35,7 +35,8 @@ export async function GET(request: NextRequest) {
             sms_consent
         `)
         .eq('chapter_id', chapterId)
-        .in('role', ['active_member', 'admin']);
+        .in('role', ['active_member', 'admin'])
+        .neq('is_developer', true); // Exclude developer/ghost accounts from counts
 
         if (membersError || !members) {
         return NextResponse.json({ error: 'Failed to fetch members' }, { status: 500 });
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
         member.sms_consent === true
         ).length;
 
-        // Get alumni in the same chapter
+        // Get alumni in the same chapter (exclude developers)
         const { data: alumni, error: alumniError } = await supabase
         .from('profiles')
         .select(`
@@ -71,7 +72,8 @@ export async function GET(request: NextRequest) {
             sms_consent
         `)
         .eq('chapter_id', chapterId)
-        .eq('role', 'alumni');
+        .eq('role', 'alumni')
+        .neq('is_developer', true); // Exclude developer/ghost accounts from counts
 
         if (alumniError || !alumni) {
         return NextResponse.json({ error: 'Failed to fetch alumni' }, { status: 500 });

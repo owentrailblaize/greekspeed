@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Users, Edit, Eye, X } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { Event } from '@/types/events';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 
 export function EventsPanel() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -15,7 +16,7 @@ export function EventsPanel() {
   const [showAllEventsModal, setShowAllEventsModal] = useState(false);
   
   const { profile } = useProfile();
-  const chapterId = profile?.chapter_id;
+  const chapterId = useScopedChapterId();
 
   // Fetch events for the user's chapter
   const fetchEvents = async () => {

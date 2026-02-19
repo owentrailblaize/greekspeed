@@ -9,6 +9,8 @@ import { supabase } from '@/lib/supabase/client';
 import { toast } from 'react-toastify';
 import { AllDocumentsModal } from './AllDocumentsModal';
 import { DocumentDetailDrawer } from './DocumentDetailDrawer';
+import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 
 // Use the same interface as ChapterDocumentManager
 interface ChapterDocument {
@@ -35,32 +37,23 @@ export function DocsCompliancePanel() {
   const [showAllDocumentsModal, setShowAllDocumentsModal] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<ChapterDocument | null>(null);
   const [showDetailDrawer, setShowDetailDrawer] = useState(false);
+  const { profile, isDeveloper } = useProfile();
+  const chapterId = useScopedChapterId();
 
   // Load documents on component mount (limit to 3)
   useEffect(() => {
-    loadDocuments();
-  }, []);
+    if (chapterId) {
+      loadDocuments();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapterId, profile?.role, isDeveloper]);
 
   const loadDocuments = async () => {
     try {
       setLoading(true);
 
-      // Get current user's chapter_id and role from their profile
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.error('No authenticated user');
-        setDocuments([]);
-        return;
-      }
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('chapter_id, role')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile?.chapter_id) {
-        console.error('No chapter_id found for user');
+      if (!chapterId) {
+        console.error('No chapterId available for document fetch');
         setDocuments([]);
         return;
       }
@@ -68,13 +61,13 @@ export function DocsCompliancePanel() {
       // Build visibility filter based on user role
       let visibilityFilter = [];
 
-      if (profile.role === 'admin') {
-        // Admins can see all documents in their chapter
+      if (isDeveloper || profile?.role === 'admin') {
+        // Developers/admins can see all documents in the selected chapter
         visibilityFilter = ['chapter_all', 'active_members', 'alumni', 'admins'];
-      } else if (profile.role === 'active_member') {
+      } else if (profile?.role === 'active_member') {
         // Active members can see documents visible to chapter_all or active_members
         visibilityFilter = ['chapter_all', 'active_members'];
-      } else if (profile.role === 'alumni') {
+      } else if (profile?.role === 'alumni') {
         // Alumni can see documents visible to chapter_all or alumni
         visibilityFilter = ['chapter_all', 'alumni'];
       } else {
@@ -84,9 +77,9 @@ export function DocsCompliancePanel() {
 
       // User role-based access
       console.log('User access details:', {
-        userId: user.id,
-        userRole: profile.role,
-        chapterId: profile.chapter_id,
+        userId: profile?.id,
+        userRole: profile?.role,
+        chapterId,
         visibilityFilter: visibilityFilter
       });
 
@@ -97,7 +90,7 @@ export function DocsCompliancePanel() {
           *,
           profiles!documents_owner_id_fkey(full_name)
         `)
-        .eq('chapter_id', profile.chapter_id)
+        .eq('chapter_id', chapterId)
         .eq('is_active', true)
         .overlaps('visibility', visibilityFilter) // This checks if any value in visibility array matches our filter
         .order('created_at', { ascending: false })
@@ -110,7 +103,7 @@ export function DocsCompliancePanel() {
         // Documents loaded with role-based access
         console.log('Documents loaded:', {
           totalDocuments: documents?.length || 0,
-          userRole: profile.role,
+          userRole: profile?.role,
           visibilityFilter: visibilityFilter
         });
 

@@ -356,7 +356,28 @@ export async function GET(request: NextRequest) {
     const showActiveOnly = searchParams.get('showActiveOnly') || '' // 🔥 NEW
 
     // Chapter filtering parameter
-    const userChapter = searchParams.get('userChapter') || ''
+    const userChapterParam = searchParams.get('userChapter') || ''
+    const chapterIdParam = searchParams.get('chapter_id') || '' // Developer "view as" support
+
+    // Resolve chapter: if developer sent a chapter_id UUID, look up the chapter name
+    // (the alumni table uses `chapter` name column, not chapter_id)
+    let userChapter = userChapterParam;
+
+    if (!userChapter && chapterIdParam) {
+      const { data: chapterData, error: chapterError } = await supabase
+        .from('chapters')
+        .select('name')
+        .eq('id', chapterIdParam.trim())
+        .single();
+
+      if (chapterError) {
+        console.error('Error resolving chapter_id to chapter name:', chapterError);
+      }
+
+      if (chapterData?.name) {
+        userChapter = chapterData.name;
+      }
+    }
 
     // 🔥 KEY CHANGE: Use main branch query structure (alumni → profiles) with activity fields
     let query = supabase
@@ -418,7 +439,7 @@ export async function GET(request: NextRequest) {
               last_login_at
             )
           `, { count: 'exact' })
-          .eq('chapter_id', chapterId);
+          .eq('chapter', userChapter);
         
         // Apply all other filters to both queries
         if (search) {
@@ -702,7 +723,7 @@ export async function GET(request: NextRequest) {
               last_login_at
             )
           `, { count: 'exact' })
-          .eq('chapter_id', chapterId);
+          .eq('chapter', userChapter);
         
         // Apply all other filters to both queries (same logic as above)
         if (search) {
