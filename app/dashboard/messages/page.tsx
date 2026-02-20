@@ -19,6 +19,7 @@ function MessagesPageContent() {
   const [isMobile, setIsMobile] = useState(false);
   const { connections, loading } = useConnections();
   const searchParams = useSearchParams();
+  const connectionId = searchParams.get('connection');
   const router = useRouter();
 
   // ✅ Prevent body scrolling on mobile when chat is open

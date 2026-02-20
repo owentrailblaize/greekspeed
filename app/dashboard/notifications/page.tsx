@@ -1,17 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useSearchParams } from 'next/navigation';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { ConnectionManagement } from '@/components/ui/ConnectionManagement';
-import { Check, X, UserPlus, Users, Clock, MessageCircle, UserX, Bell, FileText } from 'lucide-react';
 
 export default function NotificationsPage() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const connectionId = searchParams.get('connection');
   const { 
     connections, 
     loading, 
@@ -32,6 +30,24 @@ export default function NotificationsPage() {
     
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Add useEffect to scroll to or highlight specific connection
+  useEffect(() => {
+    if (connectionId && !loading) {
+      // Small delay to ensure connections are loaded
+      setTimeout(() => {
+        const connectionElement = document.getElementById(`connection-${connectionId}`);
+        if (connectionElement) {
+          connectionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Optionally add a highlight class
+          connectionElement.classList.add('ring-2', 'ring-brand-primary');
+          setTimeout(() => {
+            connectionElement.classList.remove('ring-2', 'ring-brand-primary');
+          }, 3000);
+        }
+      }, 500);
+    }
+  }, [connectionId, loading]);
 
   // Filter connections by status
   const pendingRequests = connections.filter(conn => 
