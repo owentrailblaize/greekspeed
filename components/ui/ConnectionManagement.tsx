@@ -133,26 +133,44 @@ export function ConnectionManagement({ variant = 'desktop', className = '', hide
           </CardTitle>
         </CardHeader>
       )}
-      <CardContent className={isMobile ? (hideCard ? 'p-0 px-4' : 'pt-0') : 'pt-2'}>
+      <CardContent className={isMobile ? (hideCard ? 'p-0' : 'pt-0') : 'pt-2'}>
         <Tabs defaultValue="pending" className="w-full" onValueChange={setActiveTab}>
           {isMobile ? (
-            // Mobile: Wrap TabsList in overflow container
-            <div className="mb-4 overflow-x-auto">
-              <TabsList className="flex w-max min-w-full">
-                <TabsTrigger value="pending" className={`flex items-center space-x-1 ${tabTextSize} flex-shrink-0`}>
+            // Mobile: Full width tabs when hideCard, otherwise scrollable
+            hideCard ? (
+              <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsTrigger value="pending" className={`flex items-center space-x-1 ${tabTextSize}`}>
                   <Clock className={iconSize} />
                   <span>Pending ({pendingRequests.length})</span>
                 </TabsTrigger>
-                <TabsTrigger value="sent" className={`flex items-center space-x-1 ${tabTextSize} flex-shrink-0`}>
+                <TabsTrigger value="sent" className={`flex items-center space-x-1 ${tabTextSize}`}>
                   <UserPlus className={iconSize} />
                   <span>Sent ({sentRequests.length})</span>
                 </TabsTrigger>
-                <TabsTrigger value="declined" className={`flex items-center space-x-1 ${tabTextSize} flex-shrink-0`}>
+                <TabsTrigger value="declined" className={`flex items-center space-x-1 ${tabTextSize}`}>
                   <UserX className={iconSize} />
                   <span>Declined ({declinedConnections.length})</span>
                 </TabsTrigger>
               </TabsList>
-            </div>
+            ) : (
+              // Original scrollable mobile tabs
+              <div className="mb-4 overflow-x-auto">
+                <TabsList className="flex w-max min-w-full">
+                  <TabsTrigger value="pending" className={`flex items-center space-x-1 ${tabTextSize} flex-shrink-0`}>
+                    <Clock className={iconSize} />
+                    <span>Pending ({pendingRequests.length})</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="sent" className={`flex items-center space-x-1 ${tabTextSize} flex-shrink-0`}>
+                    <UserPlus className={iconSize} />
+                    <span>Sent ({sentRequests.length})</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="declined" className={`flex items-center space-x-1 ${tabTextSize} flex-shrink-0`}>
+                    <UserX className={iconSize} />
+                    <span>Declined ({declinedConnections.length})</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+            )
           ) : (
             // Desktop: Original grid layout
             <TabsList className="grid w-full grid-cols-3 mb-6">
