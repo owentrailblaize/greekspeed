@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { ConnectionManagement } from '@/components/ui/ConnectionManagement';
+import { NotificationsFeed } from '@/components/features/notifications/NotificationsFeed';
 
 export default function NotificationsPage() {
   const { user } = useAuth();
@@ -12,12 +13,9 @@ export default function NotificationsPage() {
   const connectionId = searchParams.get('connection');
   const { 
     connections, 
-    loading, 
-    updateConnectionStatus, 
-    refreshConnections 
+    loading
   } = useConnections();
   
-  const [processingId, setProcessingId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -49,63 +47,6 @@ export default function NotificationsPage() {
     }
   }, [connectionId, loading]);
 
-  // Filter connections by status
-  const pendingRequests = connections.filter(conn => 
-    conn.status === 'pending' && conn.recipient_id === user?.id
-  );
-  
-  const sentRequests = connections.filter(conn => 
-    conn.status === 'pending' && conn.requester_id === user?.id
-  );
-  
-  const acceptedConnections = connections.filter(conn => 
-    conn.status === 'accepted' && 
-    (conn.requester_id === user?.id || conn.recipient_id === user?.id)
-  );
-
-  const declinedConnections = connections.filter(conn => 
-    conn.status === 'declined' && 
-    (conn.requester_id === user?.id || conn.recipient_id === user?.id)
-  );
-
-  const handleConnectionAction = async (connectionId: string, action: 'accept' | 'decline') => {
-    setProcessingId(connectionId);
-    try {
-      // Convert action to the correct status format
-      const status = action === 'accept' ? 'accepted' : 'declined';
-      await updateConnectionStatus(connectionId, status);
-      await refreshConnections();
-    } catch (error) {
-      console.error('Failed to update connection:', error);
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  const getConnectionPartner = (connection: any) => {
-    if (connection.requester_id === user?.id) {
-      // Current user is the requester, so return recipient info
-      return {
-        id: connection.recipient_id,
-        name: connection.recipient.full_name || 'Unknown User',
-        avatar: connection.recipient.avatar_url,
-        initials: connection.recipient.first_name && connection.recipient.last_name 
-          ? `${connection.recipient.first_name[0]}${connection.recipient.last_name[0]}`.toUpperCase()
-          : connection.recipient.full_name?.slice(0, 2).toUpperCase() || 'U'
-      };
-    } else {
-      // Current user is the recipient, so return requester info
-      return {
-        id: connection.requester_id,
-        name: connection.requester.full_name || 'Unknown User',
-        avatar: connection.requester.avatar_url,
-        initials: connection.requester.first_name && connection.requester.last_name 
-          ? `${connection.requester.first_name[0]}${connection.requester.last_name[0]}`.toUpperCase()
-          : connection.requester.full_name?.slice(0, 2).toUpperCase() || 'U'
-      };
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -119,17 +60,19 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-primary-900">Notifications</h1>
-          <p className="text-gray-600">Manage your connections and stay updated on important activities</p>
-        </div>
-      </div>
-      
       <div className="max-w-7xl mx-auto px-6 py-6">
-        {/* Connection Management */}
-        <ConnectionManagement variant={isMobile ? "mobile" : "desktop"} />
+        {/* Desktop: Sidebar + Main Layout | Mobile: Stacked Layout */}
+        <div className={isMobile ? 'space-y-6' : 'flex gap-6 items-start'}>
+          {/* Connection Management - Sidebar on Desktop */}
+          <div className={isMobile ? 'w-full' : 'w-96 flex-shrink-0'}>
+            <ConnectionManagement variant={isMobile ? "mobile" : "desktop"} />
+          </div>
+          
+          {/* Notifications Feed - Main Content on Desktop */}
+          <div className={isMobile ? 'w-full' : 'flex-1 min-w-0'}>
+            <NotificationsFeed variant={isMobile ? "mobile" : "desktop"} />
+          </div>
+        </div>
       </div>
     </div>
   );

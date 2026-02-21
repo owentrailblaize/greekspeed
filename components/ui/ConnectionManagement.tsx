@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import { Check, X, UserPlus, Users, Clock, UserX } from 'lucide-react';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
 import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
+import { ConnectionPagination } from '@/components/ui/ConnectionPagination';
 
 interface ConnectionManagementProps {
   variant?: 'desktop' | 'mobile';
@@ -26,6 +27,20 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
   } = useConnections();
   
   const [processingId, setProcessingId] = useState<string | null>(null);
+  
+  // Pagination state for each tab
+  const [pendingPage, setPendingPage] = useState(1);
+  const [sentPage, setSentPage] = useState(1);
+  const [declinedPage, setDeclinedPage] = useState(1);
+  const [activeTab, setActiveTab] = useState('pending');
+  const itemsPerPage = 5;
+
+  // Reset pagination when switching tabs
+  useEffect(() => {
+    setPendingPage(1);
+    setSentPage(1);
+    setDeclinedPage(1);
+  }, [activeTab]);
 
   // Filter connections by status
   const pendingRequests = connections.filter(conn => 
@@ -42,15 +57,7 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
   
-  const acceptedConnections = connections.filter(conn => 
-    conn.status === 'accepted' && 
-    (conn.requester_id === user?.id || conn.recipient_id === user?.id)
-  ).sort((a, b) => {
-    // Sort by updated_at descending (newest first)
-    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-  });
-
-  const declinedConnections = connections.filter(conn => 
+  const declinedConnections = connections.filter(conn =>
     conn.status === 'declined' && 
     (conn.requester_id === user?.id || conn.recipient_id === user?.id)
   ).sort((a, b) => {
@@ -115,7 +122,7 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
         </CardTitle>
       </CardHeader>
       <CardContent className={isMobile ? 'pt-0' : 'pt-2'}>
-        <Tabs defaultValue="pending" className="w-full">
+        <Tabs defaultValue="pending" className="w-full" onValueChange={setActiveTab}>
           {isMobile ? (
             // Mobile: Wrap TabsList in overflow container
             <div className="mb-4 overflow-x-auto">
@@ -128,10 +135,6 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                   <UserPlus className={iconSize} />
                   <span>Sent ({sentRequests.length})</span>
                 </TabsTrigger>
-                <TabsTrigger value="connected" className={`flex items-center space-x-1 ${tabTextSize} flex-shrink-0`}>
-                  <Users className={iconSize} />
-                  <span>Connected ({acceptedConnections.length})</span>
-                </TabsTrigger>
                 <TabsTrigger value="declined" className={`flex items-center space-x-1 ${tabTextSize} flex-shrink-0`}>
                   <UserX className={iconSize} />
                   <span>Declined ({declinedConnections.length})</span>
@@ -140,7 +143,7 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
             </div>
           ) : (
             // Desktop: Original grid layout
-            <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="pending" className={`flex items-center space-x-1 ${tabTextSize}`}>
                 <Clock className={iconSize} />
                 <span>Pending ({pendingRequests.length})</span>
@@ -148,10 +151,6 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
               <TabsTrigger value="sent" className={`flex items-center space-x-1 ${tabTextSize}`}>
                 <UserPlus className={iconSize} />
                 <span>Sent ({sentRequests.length})</span>
-              </TabsTrigger>
-              <TabsTrigger value="connected" className={`flex items-center space-x-1 ${tabTextSize}`}>
-                <Users className={iconSize} />
-                <span>Connected ({acceptedConnections.length})</span>
               </TabsTrigger>
               <TabsTrigger value="declined" className={`flex items-center space-x-1 ${tabTextSize}`}>
                 <UserX className={iconSize} />
@@ -171,8 +170,11 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                 )}
               </div>
             ) : (
-              <div className={`space-y-${isMobile ? '3' : '4'}`}>
-                {pendingRequests.map((connection) => {
+              <>
+                <div className={`space-y-${isMobile ? '3' : '4'}`}>
+                  {pendingRequests
+                    .slice((pendingPage - 1) * itemsPerPage, pendingPage * itemsPerPage)
+                    .map((connection) => {
                   const partner = getConnectionPartner(connection);
                   return (
                     <div key={connection.id} className={`flex items-center justify-between ${cardPadding} border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors`}>
@@ -257,8 +259,17 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                       </div>
                     </div>
                   );
-                })}
-              </div>
+                  })}
+                </div>
+                <ConnectionPagination
+                  currentPage={pendingPage}
+                  totalPages={Math.ceil(pendingRequests.length / itemsPerPage)}
+                  totalItems={pendingRequests.length}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={setPendingPage}
+                  itemLabel="requests"
+                />
+              </>
             )}
           </TabsContent>
 
@@ -273,8 +284,11 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                 )}
               </div>
             ) : (
-              <div className={`space-y-${isMobile ? '3' : '4'}`}>
-                {sentRequests.map((connection) => {
+              <>
+                <div className={`space-y-${isMobile ? '3' : '4'}`}>
+                  {sentRequests
+                    .slice((sentPage - 1) * itemsPerPage, sentPage * itemsPerPage)
+                    .map((connection) => {
                   const partner = getConnectionPartner(connection);
                   return (
                     <div key={connection.id} className={`flex items-center justify-between ${cardPadding} border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors`}>
@@ -324,75 +338,17 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                       </Badge>
                     </div>
                   );
-                })}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Connected Tab */}
-          <TabsContent value="connected" className={isMobile ? 'mt-4' : 'mt-6'}>
-            {acceptedConnections.length === 0 ? (
-              <div className={`text-center ${isMobile ? 'py-6' : 'py-8'} text-gray-500`}>
-                <Users className={`${isMobile ? 'h-8 w-8' : 'h-12 w-12'} mx-auto mb-2 text-gray-300`} />
-                <p className={textSize}>No connections yet</p>
-                {!isMobile && (
-                  <p className="text-sm mt-1">Your accepted connections will appear here</p>
-                )}
-              </div>
-            ) : (
-              <div className={`space-y-${isMobile ? '3' : '4'}`}>
-                {acceptedConnections.map((connection) => {
-                  const partner = getConnectionPartner(connection);
-                  return (
-                    <div key={connection.id} className={`flex items-center justify-between ${cardPadding} border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors`}>
-                      <div className="flex items-center space-x-3">
-                        {partner.id ? (
-                          <ClickableAvatar
-                            userId={partner.id}
-                            avatarUrl={partner.avatar}
-                            fullName={partner.name}
-                            firstName={partner.firstName}
-                            lastName={partner.lastName}
-                            size={isMobile ? 'sm' : 'md'}
-                            className={avatarSize}
-                          />
-                        ) : (
-                          <div className={`${avatarSize} bg-primary-100 rounded-full flex items-center justify-center text-brand-primary ${textSize} font-semibold`}>
-                            {partner.avatar ? (
-                              <img 
-                                src={partner.avatar} 
-                                alt={partner.name}
-                                className="w-full h-full object-cover rounded-full"
-                              />
-                            ) : (
-                              partner.initials
-                            )}
-                          </div>
-                        )}
-                        <div>
-                          {partner.id ? (
-                            <ClickableUserName
-                              userId={partner.id}
-                              fullName={partner.name}
-                              className={`font-medium text-gray-900 ${textSize}`}
-                            />
-                          ) : (
-                            <p className={`font-medium text-gray-900 ${textSize}`}>
-                              {partner.name}
-                            </p>
-                          )}
-                          <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mt-1`}>
-                            Connected {new Date(connection.updated_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge className={`bg-green-100 text-green-800 ${tabTextSize}`}>
-                        Connected
-                      </Badge>
-                    </div>
-                  );
-                })}
-              </div>
+                  })}
+                </div>
+                <ConnectionPagination
+                  currentPage={sentPage}
+                  totalPages={Math.ceil(sentRequests.length / itemsPerPage)}
+                  totalItems={sentRequests.length}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={setSentPage}
+                  itemLabel="requests"
+                />
+              </>
             )}
           </TabsContent>
 
@@ -407,8 +363,11 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                 )}
               </div>
             ) : (
-              <div className={`space-y-${isMobile ? '3' : '4'}`}>
-                {declinedConnections.map((connection) => {
+              <>
+                <div className={`space-y-${isMobile ? '3' : '4'}`}>
+                  {declinedConnections
+                    .slice((declinedPage - 1) * itemsPerPage, declinedPage * itemsPerPage)
+                    .map((connection) => {
                   const partner = getConnectionPartner(connection);
                   return (
                     <div key={connection.id} className={`flex items-center justify-between ${cardPadding} border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors`}>
@@ -458,8 +417,17 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                       </Badge>
                     </div>
                   );
-                })}
-              </div>
+                  })}
+                </div>
+                <ConnectionPagination
+                  currentPage={declinedPage}
+                  totalPages={Math.ceil(declinedConnections.length / itemsPerPage)}
+                  totalItems={declinedConnections.length}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={setDeclinedPage}
+                  itemLabel="requests"
+                />
+              </>
             )}
           </TabsContent>
         </Tabs>
