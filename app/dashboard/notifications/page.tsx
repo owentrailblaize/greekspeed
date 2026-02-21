@@ -1,25 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { ConnectionManagement } from '@/components/ui/ConnectionManagement';
-import { Check, X, UserPlus, Users, Clock, MessageCircle, UserX, Bell, FileText } from 'lucide-react';
+import { NotificationsFeed } from '@/components/features/notifications/NotificationsFeed';
 
-export default function NotificationsPage() {
+// Extract the component that uses useSearchParams
+function NotificationsContent() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const connectionId = searchParams.get('connection');
   const { 
     connections, 
-    loading, 
-    updateConnectionStatus, 
-    refreshConnections 
+    loading
   } = useConnections();
   
-  const [processingId, setProcessingId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -33,62 +30,23 @@ export default function NotificationsPage() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Filter connections by status
-  const pendingRequests = connections.filter(conn => 
-    conn.status === 'pending' && conn.recipient_id === user?.id
-  );
-  
-  const sentRequests = connections.filter(conn => 
-    conn.status === 'pending' && conn.requester_id === user?.id
-  );
-  
-  const acceptedConnections = connections.filter(conn => 
-    conn.status === 'accepted' && 
-    (conn.requester_id === user?.id || conn.recipient_id === user?.id)
-  );
-
-  const declinedConnections = connections.filter(conn => 
-    conn.status === 'declined' && 
-    (conn.requester_id === user?.id || conn.recipient_id === user?.id)
-  );
-
-  const handleConnectionAction = async (connectionId: string, action: 'accept' | 'decline') => {
-    setProcessingId(connectionId);
-    try {
-      // Convert action to the correct status format
-      const status = action === 'accept' ? 'accepted' : 'declined';
-      await updateConnectionStatus(connectionId, status);
-      await refreshConnections();
-    } catch (error) {
-      console.error('Failed to update connection:', error);
-    } finally {
-      setProcessingId(null);
+  // Add useEffect to scroll to or highlight specific connection
+  useEffect(() => {
+    if (connectionId && !loading) {
+      // Small delay to ensure connections are loaded
+      setTimeout(() => {
+        const connectionElement = document.getElementById(`connection-${connectionId}`);
+        if (connectionElement) {
+          connectionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Optionally add a highlight class
+          connectionElement.classList.add('ring-2', 'ring-brand-primary');
+          setTimeout(() => {
+            connectionElement.classList.remove('ring-2', 'ring-brand-primary');
+          }, 3000);
+        }
+      }, 500);
     }
-  };
-
-  const getConnectionPartner = (connection: any) => {
-    if (connection.requester_id === user?.id) {
-      // Current user is the requester, so return recipient info
-      return {
-        id: connection.recipient_id,
-        name: connection.recipient.full_name || 'Unknown User',
-        avatar: connection.recipient.avatar_url,
-        initials: connection.recipient.first_name && connection.recipient.last_name 
-          ? `${connection.recipient.first_name[0]}${connection.recipient.last_name[0]}`.toUpperCase()
-          : connection.recipient.full_name?.slice(0, 2).toUpperCase() || 'U'
-      };
-    } else {
-      // Current user is the recipient, so return requester info
-      return {
-        id: connection.requester_id,
-        name: connection.requester.full_name || 'Unknown User',
-        avatar: connection.requester.avatar_url,
-        initials: connection.requester.first_name && connection.requester.last_name 
-          ? `${connection.requester.first_name[0]}${connection.requester.last_name[0]}`.toUpperCase()
-          : connection.requester.full_name?.slice(0, 2).toUpperCase() || 'U'
-      };
-    }
-  };
+  }, [connectionId, loading]);
 
   if (loading) {
     return (
@@ -103,18 +61,52 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-primary-900">Notifications</h1>
-          <p className="text-gray-600">Manage your connections and stay updated on important activities</p>
+      {isMobile ? (
+        // Mobile: Full width, no padding wrapper with header
+        <div className="pb-20">
+          {/* Mobile Header */}
+          <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3">
+            <h1 className="text-lg font-semibold text-gray-900">Notifications</h1>
+          </div>
+          <NotificationsFeed variant="mobile" hideCard />
         </div>
-      </div>
-      
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        {/* Connection Management */}
-        <ConnectionManagement variant={isMobile ? "mobile" : "desktop"} />
+      ) : (
+        // Desktop: Sidebar + Main Layout
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex gap-6 items-start">
+            {/* Connection Management - Sidebar on Desktop */}
+            <div className="w-96 flex-shrink-0">
+              <ConnectionManagement variant="desktop" />
+            </div>
+            
+            {/* Notifications Feed - Main Content on Desktop */}
+            <div className="flex-1 min-w-0">
+              <NotificationsFeed variant="desktop" />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Loading fallback component
+function NotificationsLoading() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading notifications...</p>
       </div>
     </div>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function NotificationsPage() {
+  return (
+    <Suspense fallback={<NotificationsLoading />}>
+      <NotificationsContent />
+    </Suspense>
   );
 } 

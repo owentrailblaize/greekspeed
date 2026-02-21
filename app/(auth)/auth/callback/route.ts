@@ -10,6 +10,10 @@ export async function GET(request: NextRequest) {
   const error = requestUrl.searchParams.get('error');
   const errorDescription = requestUrl.searchParams.get('error_description');
 
+  // Extract redirect parameter from hash or query (magic links use hash)
+  const hashParams = requestUrl.hash ? new URLSearchParams(requestUrl.hash.substring(1)) : null;
+  const redirectTo = hashParams?.get('redirect_to') || requestUrl.searchParams.get('redirect_to');
+
   // Extract invitation token and type from query params
   const invitationToken = requestUrl.searchParams.get('invitation_token');
   let invitationType = requestUrl.searchParams.get('invitation_type'); // 'active_member' or 'alumni'
@@ -612,7 +616,11 @@ export async function GET(request: NextRequest) {
       if (isIncomplete || !onboardingComplete) {
         return NextResponse.redirect(`${requestUrl.origin}/onboarding`);
       } else {
-        return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
+        // Use redirect parameter if provided, otherwise default to dashboard
+        const finalRedirect = redirectTo 
+          ? `${requestUrl.origin}${redirectTo}` 
+          : `${requestUrl.origin}/dashboard`;
+        return NextResponse.redirect(finalRedirect);
       }
     } catch (error) {
       console.error('Callback processing error:', error);

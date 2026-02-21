@@ -35,8 +35,8 @@ export function MessageInputWithEventLink({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const MAX_HEIGHT_MOBILE = 180;
-  const MAX_HEIGHT_DESKTOP = 150;
+  const MAX_HEIGHT_MOBILE = 200; // Increased from 180
+  const MAX_HEIGHT_DESKTOP = 250; // Increased from 150 (more reasonable for long messages)
 
   // Format date for display
   const formatEventDate = (dateString: string) => {
@@ -94,6 +94,7 @@ export function MessageInputWithEventLink({
       setIsExpanded(false);
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
+        textareaRef.current.scrollTop = 0;
       }
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -131,10 +132,45 @@ export function MessageInputWithEventLink({
     const shouldExpand = scrollHeight > 80;
     setIsExpanded(shouldExpand);
 
+    // Enable scrolling if at max height - CRITICAL FIX
     if (scrollHeight > maxHeight) {
       textarea.style.overflowY = 'auto';
+      // Auto-scroll to cursor position to keep it visible (enterprise pattern)
+      requestAnimationFrame(() => {
+        const cursorPosition = textarea.selectionStart;
+        const textBeforeCursor = inputValue.substring(0, cursorPosition);
+        const computedStyle = window.getComputedStyle(textarea);
+        const tempDiv = document.createElement('div');
+        tempDiv.style.cssText = `
+          visibility: hidden;
+          position: absolute;
+          width: ${textarea.offsetWidth}px;
+          height: auto;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          font-family: ${computedStyle.fontFamily};
+          font-size: ${computedStyle.fontSize};
+          font-weight: ${computedStyle.fontWeight};
+          line-height: ${computedStyle.lineHeight};
+          padding: ${computedStyle.padding};
+          border: ${computedStyle.border};
+          box-sizing: ${computedStyle.boxSizing};
+        `;
+        tempDiv.textContent = textBeforeCursor;
+        document.body.appendChild(tempDiv);
+        
+        const textHeight = tempDiv.offsetHeight;
+        document.body.removeChild(tempDiv);
+        
+        // Scroll to keep cursor visible (with some padding)
+        const scrollTop = textHeight - (maxHeight / 2);
+        if (scrollTop > 0) {
+          textarea.scrollTop = scrollTop;
+        }
+      });
     } else {
       textarea.style.overflowY = 'hidden';
+      textarea.scrollTop = 0; // Reset scroll when not needed
     }
 
     onTyping();
@@ -171,6 +207,7 @@ export function MessageInputWithEventLink({
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
         textareaRef.current.style.overflowY = 'hidden';
+        textareaRef.current.scrollTop = 0;
       }
     }
   }, [message]);
@@ -246,13 +283,19 @@ export function MessageInputWithEventLink({
             onKeyPress={handleKeyPress}
             placeholder={placeholder}
             disabled={disabled || isSending}
-            className={`w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent resize-none ${borderRadiusClass} transition-all duration-200 ${isExpanded ? 'min-h-[80px]' : 'min-h-[44px]'
+            className={`w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent resize-none ${borderRadiusClass} transition-all duration-200 scrollbar-thin scrollbar-thumb-navy-400 scrollbar-track-transparent hover:scrollbar-thumb-navy-500 ${isExpanded ? 'min-h-[80px]' : 'min-h-[44px]'
               } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
             style={{
               maxHeight: `${window.innerWidth < 768 ? MAX_HEIGHT_MOBILE : MAX_HEIGHT_DESKTOP}px`,
-              overflowY: isExpanded ? 'auto' : 'hidden'
+              // REMOVED: overflowY from inline style - let handleInput manage it dynamically
             }}
           />
+          {/* Character counter - enterprise pattern for long messages */}
+          {message.length > 800 && (
+            <div className="absolute -bottom-5 right-0 text-xs text-gray-400">
+              {message.length}/1000
+            </div>
+          )}
         </div>
 
         {/* Send Button */}

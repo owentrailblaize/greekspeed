@@ -18,7 +18,9 @@ import {
   Calendar,
   Edit3,
   Loader2,
-  Linkedin
+  Linkedin,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
 
@@ -57,6 +59,10 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
   const [error, setError] = useState<string | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isBioExpanded, setIsBioExpanded] = useState(false);
+  const [showJobTitleTooltip, setShowJobTitleTooltip] = useState(false);
+  const [jobTitleRef, setJobTitleRef] = useState<HTMLDivElement | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
   // Cache key for sessionStorage
   const getCacheKey = useCallback(() => {
@@ -209,6 +215,35 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
     });
   };
 
+  // Check if text is truncated
+  const checkIfTruncated = useCallback((element: HTMLElement | null) => {
+    if (!element) return false;
+    return element.scrollWidth > element.clientWidth;
+  }, []);
+
+  // Handle job title hover
+  const handleJobTitleMouseEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const element = e.currentTarget.querySelector('span');
+    if (element && checkIfTruncated(element)) {
+      const rect = element.getBoundingClientRect();
+      setTooltipPosition({
+        x: rect.left + rect.width / 2,
+        y: rect.top - 8
+      });
+      setShowJobTitleTooltip(true);
+    }
+  }, [checkIfTruncated]);
+
+  const handleJobTitleMouseLeave = useCallback(() => {
+    setShowJobTitleTooltip(false);
+  }, []);
+
+  // Check if bio needs truncation (more than 3 lines approximately)
+  const BIO_MAX_LENGTH = 200; // characters
+  const shouldTruncateBio = alumniData?.description && 
+    alumniData.description.length > BIO_MAX_LENGTH &&
+    alumniData.description !== `Alumni from ${alumniData.chapter}`;
+
   // Show loading until both profile and alumni data are ready
   if (profileLoading || loading || !isInitialized) {
     return (
@@ -316,7 +351,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
               </p>
 
               {alumniData.is_actively_hiring && (
-                <Badge className="bg-green-100 text-green-800 text-sm px-3 py-1 mb-4">
+                <Badge className="bg-gradient-to-r from-gray-100 via-white to-gray-100 text-green-800 text-sm px-3 py-1 mb-4">
                   Actively Hiring
                 </Badge>
               )}
@@ -421,9 +456,9 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
   return (
     <>
       <div className="sticky top-6">
-        <Card className="bg-white overflow-hidden">
+        <Card className="bg-white overflow-hidden flex flex-col" style={{ maxHeight: 'calc(100vh - 3rem)' }}>
           {/* Header with backdrop and avatar */}
-          <div className="relative h-24 bg-gradient-to-r from-brand-primary via-accent-400 to-accent-100">
+          <div className="relative h-24 bg-gradient-to-r from-brand-primary via-accent-400 to-accent-100 flex-shrink-0">
             {alumniData.banner_url ? (
               <img 
                 src={alumniData.banner_url} 
@@ -452,25 +487,24 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
             </div>
           </div>
 
-          <CardContent className="pt-8 pb-4">
+          <CardContent className="pt-8 pb-4 flex-1 overflow-y-auto">
             {/* Profile Information */}
             <div className="text-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-1">
                 {alumniData.full_name}
               </h3>
               
-              <div className="flex items-center justify-center mb-2">
-                <Badge className="bg-accent-100 text-accent-800 text-xs">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <p className="text-sm text-gray-900 font-medium">
+                  {alumniData.chapter}
+                </p>
+                <Badge className="bg-accent-100 text-gray-800 text-xs">
                   {alumniData.graduation_year}
                 </Badge>
               </div>
 
-              <p className="text-sm text-brand-accent font-medium mb-3">
-                {alumniData.chapter}
-              </p>
-
               {alumniData.is_actively_hiring && (
-                <Badge className="bg-green-100 text-green-800 text-xs mb-3">
+                <Badge className="bg-gradient-to-r from-gray-100 via-white to-gray-100 text-green-800 text-sm px-3 py-1 mb-4">
                   Actively Hiring
                 </Badge>
               )}
@@ -479,9 +513,30 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
             {/* Contact Information */}
             <div className="space-y-3 mb-4">
               {alumniData.job_title && alumniData.company && (
-                <div className="flex items-center text-sm text-gray-600">
-                  <Briefcase className="h-4 w-4 mr-2 text-gray-400" />
-                  <span>{alumniData.job_title} at {alumniData.company}</span>
+                <div 
+                  className="flex items-center text-sm text-gray-600 relative"
+                  onMouseEnter={handleJobTitleMouseEnter}
+                  onMouseLeave={handleJobTitleMouseLeave}
+                >
+                  <Briefcase className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0" />
+                  <span className="truncate block min-w-0">
+                    {alumniData.job_title} at {alumniData.company}
+                  </span>
+                </div>
+              )}
+
+              {/* Job Title Tooltip */}
+              {showJobTitleTooltip && (
+                <div
+                  className="fixed z-50 bg-gray-900 text-white text-xs rounded px-2 py-1 shadow-lg pointer-events-none whitespace-nowrap"
+                  style={{
+                    left: `${tooltipPosition.x}px`,
+                    top: `${tooltipPosition.y}px`,
+                    transform: 'translate(-50%, -100%)',
+                  }}
+                >
+                  {alumniData.job_title} at {alumniData.company}
+                  <div className="absolute left-1/2 top-full -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                 </div>
               )}
 
@@ -531,9 +586,31 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
             {/* Bio */}
             {alumniData.description && alumniData.description !== `Alumni from ${alumniData.chapter}` && (
               <div className="mb-4">
-                <p className="text-sm text-gray-700 leading-relaxed">
+                <p 
+                  className={`text-sm text-gray-700 leading-relaxed text-center ${
+                    shouldTruncateBio && !isBioExpanded ? 'line-clamp-3' : ''
+                  }`}
+                >
                   {alumniData.description}
                 </p>
+                {shouldTruncateBio && (
+                  <button
+                    onClick={() => setIsBioExpanded(!isBioExpanded)}
+                    className="mt-2 text-sm text-brand-accent hover:text-accent-800 flex items-center justify-center gap-1 mx-auto"
+                  >
+                    {isBioExpanded ? (
+                      <>
+                        <ChevronUp className="h-4 w-4" />
+                        View less
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="h-4 w-4" />
+                        View more
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             )}
 

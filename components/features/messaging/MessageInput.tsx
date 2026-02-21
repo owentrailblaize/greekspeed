@@ -26,9 +26,9 @@ export function MessageInput({
   const lastSentContentRef = useRef<string>('');
   const lastSentTimeRef = useRef<number>(0);
   
-  // Max height for mobile (larger) and desktop
-  const MAX_HEIGHT_MOBILE = 180; // Increased for mobile
-  const MAX_HEIGHT_DESKTOP = 150;
+  // Max height for mobile (larger) and desktop - increased for better long message handling
+  const MAX_HEIGHT_MOBILE = 200; // Increased from 180
+  const MAX_HEIGHT_DESKTOP = 250; // Increased from 150 (more reasonable for long messages)
 
   const handleSend = async () => {
     if (!message.trim() || isSending || disabled) return;
@@ -51,9 +51,10 @@ export function MessageInput({
       
       setMessage('');
       setIsExpanded(false);
-      // Reset textarea height
+      // Reset textarea height and scroll position
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
+        textareaRef.current.scrollTop = 0;
       }
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -87,21 +88,59 @@ export function MessageInput({
     // Reset height to calculate scrollHeight
     textarea.style.height = 'auto';
     const scrollHeight = textarea.scrollHeight;
-    const newHeight = Math.min(scrollHeight, maxHeight);
     
-    // Set new height
-    textarea.style.height = `${newHeight}px`;
-    
-    // Determine if we should be in expanded mode (more than 2 lines)
-    // Roughly 2 lines = ~80px (40px per line with padding)
-    const shouldExpand = scrollHeight > 80;
-    setIsExpanded(shouldExpand);
-    
-    // Enable scrolling if at max height
+    // CRITICAL: Always set height, but cap at maxHeight when content exceeds it
+    // This ensures the textarea maintains max height and shows scrollbar (like ChatGPT)
     if (scrollHeight > maxHeight) {
+      // Content exceeds max height - maintain max height and enable scrolling
+      textarea.style.height = `${maxHeight}px`;
       textarea.style.overflowY = 'auto';
+      setIsExpanded(true); // Ensure expanded state is maintained
+      
+      // Auto-scroll to cursor position to keep it visible
+      requestAnimationFrame(() => {
+        const cursorPosition = textarea.selectionStart;
+        const textBeforeCursor = inputValue.substring(0, cursorPosition);
+        const computedStyle = window.getComputedStyle(textarea);
+        
+        // Create a temporary element to measure text height up to cursor
+        const tempDiv = document.createElement('div');
+        tempDiv.style.cssText = `
+          visibility: hidden;
+          position: absolute;
+          width: ${textarea.offsetWidth}px;
+          height: auto;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          font-family: ${computedStyle.fontFamily};
+          font-size: ${computedStyle.fontSize};
+          font-weight: ${computedStyle.fontWeight};
+          line-height: ${computedStyle.lineHeight};
+          padding: ${computedStyle.padding};
+          border: ${computedStyle.border};
+          box-sizing: ${computedStyle.boxSizing};
+        `;
+        tempDiv.textContent = textBeforeCursor;
+        document.body.appendChild(tempDiv);
+        
+        const textHeight = tempDiv.offsetHeight;
+        document.body.removeChild(tempDiv);
+        
+        // Scroll to keep cursor visible (with some padding)
+        const scrollTop = textHeight - (maxHeight / 2);
+        if (scrollTop > 0) {
+          textarea.scrollTop = scrollTop;
+        }
+      });
     } else {
+      // Content fits within max height - grow naturally
+      textarea.style.height = `${scrollHeight}px`;
       textarea.style.overflowY = 'hidden';
+      textarea.scrollTop = 0; // Reset scroll when not needed
+      
+      // Determine if we should be in expanded mode (more than 2 lines)
+      const shouldExpand = scrollHeight > 80;
+      setIsExpanded(shouldExpand);
     }
     
     // Send typing indicator
@@ -124,16 +163,29 @@ export function MessageInput({
     
     setMessage(newMessage);
     
-    // Trigger input event to recalculate height
-    const event = new Event('input', { bubbles: true });
-    Object.defineProperty(event, 'target', { value: textarea, enumerable: true });
-    textarea.dispatchEvent(event);
-    
-    // Focus back to textarea and set cursor position
+    // Manually trigger height recalculation after state update
     setTimeout(() => {
-      textarea.focus();
-      const newCursorPosition = start + emoji.length;
-      textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+      if (textarea) {
+        const isMobile = window.innerWidth < 768;
+        const maxHeight = isMobile ? MAX_HEIGHT_MOBILE : MAX_HEIGHT_DESKTOP;
+        
+        textarea.style.height = 'auto';
+        const scrollHeight = textarea.scrollHeight;
+        
+        if (scrollHeight > maxHeight) {
+          textarea.style.height = `${maxHeight}px`;
+          textarea.style.overflowY = 'auto';
+          setIsExpanded(true);
+        } else {
+          textarea.style.height = `${scrollHeight}px`;
+          textarea.style.overflowY = 'hidden';
+          setIsExpanded(scrollHeight > 80);
+        }
+        
+        textarea.focus();
+        const newCursorPosition = start + emoji.length;
+        textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+      }
     }, 0);
   };
 
@@ -149,6 +201,7 @@ export function MessageInput({
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
         textareaRef.current.style.overflowY = 'hidden';
+        textareaRef.current.scrollTop = 0;
       }
     }
   }, [message]);
@@ -205,14 +258,14 @@ export function MessageInput({
               onKeyPress={handleKeyPress}
               placeholder={placeholder}
               disabled={disabled}
-              className="w-full resize-none bg-transparent border-0 focus:outline-none text-sm md:text-base text-slate-700 placeholder:text-gray-400 disabled:text-gray-400 disabled:cursor-not-allowed pr-2 overflow-y-auto scrollbar-thin scrollbar-thumb-navy-300 scrollbar-track-transparent"
+              className="w-full resize-none bg-transparent border-0 focus:outline-none text-sm md:text-base text-slate-700 placeholder:text-gray-400 disabled:text-gray-400 disabled:cursor-not-allowed pr-2 scrollbar-thin scrollbar-thumb-navy-400 scrollbar-track-transparent hover:scrollbar-thumb-navy-500"
               style={{ 
                 minHeight: isExpanded ? '36px' : '32px',
-                height: isExpanded ? 'auto' : '32px',
+                // REMOVED: height - let handleInput manage it completely
                 maxHeight: `${window.innerWidth < 768 ? MAX_HEIGHT_MOBILE : MAX_HEIGHT_DESKTOP}px`,
                 fontSize: '16px', // Prevent zoom on iOS
                 lineHeight: '1.5',
-                overflowY: 'hidden', // Will be set to 'auto' when needed
+                // REMOVED: overflowY from inline style - let handleInput manage it dynamically
                 padding: '0',
                 margin: '0',
                 verticalAlign: 'bottom',
@@ -221,6 +274,12 @@ export function MessageInput({
               rows={1}
             />
           </div>
+          {/* Character counter - enterprise pattern for long messages */}
+          {message.length > 800 && (
+            <div className="absolute -bottom-5 right-0 text-xs text-gray-400">
+              {message.length}/1000
+            </div>
+          )}
         </div>
 
         {/* Send button - perfectly aligned */}
