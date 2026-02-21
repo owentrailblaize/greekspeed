@@ -35,14 +35,19 @@ export function NotificationsFeed({ variant = 'desktop' }: NotificationsFeedProp
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const isMobile = variant === 'mobile';
 
   useEffect(() => {
     if (!user || !session) return;
 
-    const fetchNotifications = async () => {
+    const fetchNotifications = async (isBackgroundRefresh = false) => {
       try {
-        setLoading(true);
+        // Only show loading spinner on initial load, not background refreshes
+        if (!isBackgroundRefresh) {
+          setLoading(true);
+        }
+        
         const response = await fetch(`/api/notifications/feed?userId=${user.id}&limit=50`, {
           headers: {
             'Authorization': `Bearer ${session.access_token}`
@@ -59,12 +64,17 @@ export function NotificationsFeed({ variant = 'desktop' }: NotificationsFeedProp
         console.error('Error fetching notifications:', error);
       } finally {
         setLoading(false);
+        setIsInitialLoad(false);
       }
     };
 
-    fetchNotifications();
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
+    fetchNotifications(false);
+
+    // Background refresh every 30 seconds (without showing loading spinner)
+    const interval = setInterval(() => {
+      fetchNotifications(true);
+    }, 30000);
+    
     return () => clearInterval(interval);
   }, [user, session]);
 

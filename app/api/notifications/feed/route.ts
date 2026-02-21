@@ -42,18 +42,20 @@ export async function GET(request: NextRequest) {
 
     if (connectionRequests) {
       connectionRequests.forEach(conn => {
+        // Handle potential array type from Supabase relationship
+        const requester = Array.isArray(conn.requester) ? conn.requester[0] : conn.requester;
         notifications.push({
           id: `connection-request-${conn.id}`,
           type: 'connection_request',
           title: 'New Connection Request',
-          message: `${conn.requester?.full_name || 'Someone'} wants to connect with you`,
+          message: `${requester?.full_name || 'Someone'} wants to connect with you`,
           actionUrl: `/dashboard/notifications?connection=${conn.id}`,
           timestamp: conn.created_at,
           metadata: {
             connectionId: conn.id,
-            requesterName: conn.requester?.full_name,
-            requesterAvatar: conn.requester?.avatar_url,
-            requesterId: conn.requester?.id,
+            requesterName: requester?.full_name,
+            requesterAvatar: requester?.avatar_url,
+            requesterId: requester?.id,
             message: conn.message
           },
           read: false
@@ -81,20 +83,20 @@ export async function GET(request: NextRequest) {
 
     if (acceptedConnections) {
       acceptedConnections.forEach(conn => {
-        // The other user is always the recipient since we filtered by requester_id
-        const otherUser = conn.recipient;
+        // Handle potential array type from Supabase relationship
+        const recipient = Array.isArray(conn.recipient) ? conn.recipient[0] : conn.recipient;
         notifications.push({
           id: `connection-accepted-${conn.id}`,
           type: 'connection_accepted',
           title: 'Connection Accepted',
-          message: `${otherUser?.full_name || 'Someone'} accepted your connection request`,
+          message: `${recipient?.full_name || 'Someone'} accepted your connection request`,
           actionUrl: `/dashboard/notifications?connection=${conn.id}`,
           timestamp: conn.updated_at,
           metadata: {
             connectionId: conn.id,
-            userName: otherUser?.full_name,
-            userAvatar: otherUser?.avatar_url,
-            userId: otherUser?.id
+            userName: recipient?.full_name,
+            userAvatar: recipient?.avatar_url,
+            userId: recipient?.id
           },
           read: false
         });
@@ -140,10 +142,12 @@ export async function GET(request: NextRequest) {
       const messagesByConnection = new Map();
       unreadMessages.forEach(msg => {
         const connId = msg.connection_id;
+        // Handle potential array type from Supabase relationship
+        const sender = Array.isArray(msg.sender) ? msg.sender[0] : msg.sender;
         if (!messagesByConnection.has(connId)) {
           messagesByConnection.set(connId, {
             connectionId: connId,
-            sender: msg.sender,
+            sender: sender,
             latestMessage: msg,
             count: 0
           });
@@ -200,8 +204,11 @@ export async function GET(request: NextRequest) {
 
       if (unreadAnnouncements) {
         unreadAnnouncements.forEach(recipient => {
-          const announcement = recipient.announcement;
+          // Handle potential array type from Supabase relationship
+          const announcement = Array.isArray(recipient.announcement) ? recipient.announcement[0] : recipient.announcement;
           if (announcement) {
+            // Handle potential array type from Supabase relationship
+            const sender = Array.isArray(announcement.sender) ? announcement.sender[0] : announcement.sender;
             notifications.push({
               id: `announcement-${announcement.id}`,
               type: 'announcement',
@@ -212,9 +219,9 @@ export async function GET(request: NextRequest) {
               metadata: {
                 announcementId: announcement.id,
                 announcementType: announcement.announcement_type,
-                senderName: announcement.sender?.full_name,
-                senderAvatar: announcement.sender?.avatar_url,
-                senderId: announcement.sender?.id,
+                senderName: sender?.full_name,
+                senderAvatar: sender?.avatar_url,
+                senderId: sender?.id,
                 content: announcement.content?.substring(0, 150)
               },
               read: false
@@ -250,6 +257,8 @@ export async function GET(request: NextRequest) {
 
       if (upcomingEvents) {
         upcomingEvents.forEach(event => {
+          // Handle potential array type from Supabase relationship
+          const creator = Array.isArray(event.creator) ? event.creator[0] : event.creator;
           notifications.push({
             id: `event-${event.id}`,
             type: 'event',
@@ -262,9 +271,9 @@ export async function GET(request: NextRequest) {
               eventTitle: event.title,
               eventDate: event.start_at,
               eventLocation: event.location,
-              creatorName: event.creator?.full_name,
-              creatorAvatar: event.creator?.avatar_url,
-              creatorId: event.creator?.id
+              creatorName: creator?.full_name,
+              creatorAvatar: creator?.avatar_url,
+              creatorId: creator?.id
             },
             read: false
           });
