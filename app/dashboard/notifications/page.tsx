@@ -60,20 +60,31 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        {/* Desktop: Sidebar + Main Layout | Mobile: Stacked Layout */}
-        <div className={isMobile ? 'space-y-6' : 'flex gap-6 items-start'}>
-          {/* Connection Management - Sidebar on Desktop */}
-          <div className={isMobile ? 'w-full' : 'w-96 flex-shrink-0'}>
-            <ConnectionManagement variant={isMobile ? "mobile" : "desktop"} />
+      {isMobile ? (
+        // Mobile: Full width, no padding wrapper with header
+        <div className="pb-20">
+          {/* Mobile Header */}
+          <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3">
+            <h1 className="text-lg font-semibold text-gray-900">Notifications</h1>
           </div>
-          
-          {/* Notifications Feed - Main Content on Desktop */}
-          <div className={isMobile ? 'w-full' : 'flex-1 min-w-0'}>
-            <NotificationsFeed variant={isMobile ? "mobile" : "desktop"} />
+          <NotificationsFeed variant="mobile" hideCard />
+        </div>
+      ) : (
+        // Desktop: Sidebar + Main Layout
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex gap-6 items-start">
+            {/* Connection Management - Sidebar on Desktop */}
+            <div className="w-96 flex-shrink-0">
+              <ConnectionManagement variant="desktop" />
+            </div>
+            
+            {/* Notifications Feed - Main Content on Desktop */}
+            <div className="flex-1 min-w-0">
+              <NotificationsFeed variant="desktop" />
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 } 

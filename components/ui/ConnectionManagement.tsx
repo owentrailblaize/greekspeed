@@ -15,9 +15,10 @@ import { ConnectionPagination } from '@/components/ui/ConnectionPagination';
 interface ConnectionManagementProps {
   variant?: 'desktop' | 'mobile';
   className?: string;
+  hideCard?: boolean;
 }
 
-export function ConnectionManagement({ variant = 'desktop', className = '' }: ConnectionManagementProps) {
+export function ConnectionManagement({ variant = 'desktop', className = '', hideCard = false }: ConnectionManagementProps) {
   const { user } = useAuth();
   const { 
     connections, 
@@ -93,7 +94,7 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
 
   // Mobile-specific styling
   const isMobile = variant === 'mobile';
-  const cardPadding = isMobile ? 'p-3' : 'p-4';
+  const cardPadding = hideCard ? 'px-4 py-3' : (isMobile ? 'p-3' : 'p-4');
   const avatarSize = isMobile ? 'w-10 h-10' : 'w-12 h-12';
   const buttonSize = isMobile ? 'h-7 px-2' : 'h-8 px-3';
   const textSize = isMobile ? 'text-sm' : 'text-base';
@@ -101,27 +102,38 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
   const tabTextSize = isMobile ? 'text-xs' : 'text-sm';
 
   if (loading) {
+    const LoadingContent = (
+      <div className="p-6">
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary" />
+          <span className="ml-2 text-gray-600">Loading connections...</span>
+        </div>
+      </div>
+    );
+
+    if (hideCard) {
+      return <div className={className}>{LoadingContent}</div>;
+    }
     return (
       <Card className={className}>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary" />
-            <span className="ml-2 text-gray-600">Loading connections...</span>
-          </div>
-        </CardContent>
+        <CardContent>{LoadingContent}</CardContent>
       </Card>
     );
   }
 
-  return (
-    <Card className={className}>
-      <CardHeader className={isMobile ? 'pb-3' : 'pb-4'}>
-        <CardTitle className={`${textSize} flex items-center space-x-2`}>
-          <Users className={`${iconSize} text-brand-primary`} />
-          <span>Connection Management</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className={isMobile ? 'pt-0' : 'pt-2'}>
+
+  // Main content structure
+  const content = (
+    <>
+      {!hideCard && (
+        <CardHeader className={isMobile ? 'pb-3' : 'pb-4'}>
+          <CardTitle className={`${textSize} flex items-center space-x-2`}>
+            <Users className={`${iconSize} text-brand-primary`} />
+            <span>Connection Management</span>
+          </CardTitle>
+        </CardHeader>
+      )}
+      <CardContent className={isMobile ? (hideCard ? 'p-0 px-4' : 'pt-0') : 'pt-2'}>
         <Tabs defaultValue="pending" className="w-full" onValueChange={setActiveTab}>
           {isMobile ? (
             // Mobile: Wrap TabsList in overflow container
@@ -177,7 +189,7 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                     .map((connection) => {
                   const partner = getConnectionPartner(connection);
                   return (
-                    <div key={connection.id} className={`flex items-center justify-between ${cardPadding} border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors`}>
+                    <div key={connection.id} className={`flex items-center justify-between ${cardPadding} ${hideCard ? 'border-0 border-b border-gray-200 last:border-b-0' : 'border border-gray-200 rounded-lg'} hover:bg-gray-50 transition-colors`}>
                       <div className="flex items-center space-x-3">
                         {partner.id ? (
                           <ClickableAvatar
@@ -291,7 +303,7 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                     .map((connection) => {
                   const partner = getConnectionPartner(connection);
                   return (
-                    <div key={connection.id} className={`flex items-center justify-between ${cardPadding} border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors`}>
+                    <div key={connection.id} className={`flex items-center justify-between ${cardPadding} ${hideCard ? 'border-0 border-b border-gray-200 last:border-b-0' : 'border border-gray-200 rounded-lg'} hover:bg-gray-50 transition-colors`}>
                       <div className="flex items-center space-x-3">
                         {partner.id ? (
                           <ClickableAvatar
@@ -370,7 +382,7 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
                     .map((connection) => {
                   const partner = getConnectionPartner(connection);
                   return (
-                    <div key={connection.id} className={`flex items-center justify-between ${cardPadding} border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors`}>
+                    <div key={connection.id} className={`flex items-center justify-between ${cardPadding} ${hideCard ? 'border-0 border-b border-gray-200 last:border-b-0' : 'border border-gray-200 rounded-lg'} hover:bg-gray-50 transition-colors`}>
                       <div className="flex items-center space-x-3">
                         {partner.id ? (
                           <ClickableAvatar
@@ -432,6 +444,16 @@ export function ConnectionManagement({ variant = 'desktop', className = '' }: Co
           </TabsContent>
         </Tabs>
       </CardContent>
+    </>
+  );
+
+  if (hideCard) {
+    return <div className={className}>{content}</div>;
+  }
+
+  return (
+    <Card className={className}>
+      {content}
     </Card>
   );
 }

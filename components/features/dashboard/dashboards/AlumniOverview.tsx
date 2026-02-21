@@ -24,6 +24,7 @@ import { calculateNetworkingPriority } from '@/lib/utils/networkingSpotlight';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
 import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
 import { ConnectionRequestDialog } from '@/components/features/connections/ConnectionRequestDialog';
+import { cn } from '@/lib/utils';
 
 interface Profile {
   id: string;
@@ -468,8 +469,11 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
           </>
         ) : (
           <>
-            <div className="min-h-screen bg-gray-50 pt-4 pb-20 px-4">
-              <div className="max-w-md mx-auto">
+            <div className={cn(
+              "min-h-screen bg-gray-50 pt-4 pb-20",
+              activeMobileTab === 'network' ? 'px-0' : 'px-4'
+            )}>
+              <div className={activeMobileTab === 'network' ? '' : 'max-w-md mx-auto'}>
                 {renderMobileContent()}
               </div>
             </div>

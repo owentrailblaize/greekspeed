@@ -10,7 +10,8 @@ import {
   MessageCircle, 
   Bell, 
   Calendar,
-  Clock
+  Clock,
+  ChevronRight
 } from 'lucide-react';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
 import { formatDistanceToNow, isToday, isYesterday, differenceInDays } from 'date-fns';
@@ -28,9 +29,10 @@ interface Notification {
 
 interface NotificationsFeedProps {
   variant?: 'desktop' | 'mobile';
+  hideCard?: boolean;
 }
 
-export function NotificationsFeed({ variant = 'desktop' }: NotificationsFeedProps) {
+export function NotificationsFeed({ variant = 'desktop', hideCard = false }: NotificationsFeedProps) {
   const { user, session } = useAuth();
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -169,50 +171,82 @@ export function NotificationsFeed({ variant = 'desktop' }: NotificationsFeedProp
   }, [notifications]);
 
   if (loading) {
+    const LoadingContent = (
+      <div className={hideCard ? 'p-6' : 'p-6'}>
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary" />
+          <span className="ml-2 text-gray-600">Loading notifications...</span>
+        </div>
+      </div>
+    );
+
+    if (hideCard) {
+      return <div className="w-full">{LoadingContent}</div>;
+    }
+
     return (
       <div className="bg-white rounded-lg">
-        <div className="p-6">
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-primary" />
-            <span className="ml-2 text-gray-600">Loading notifications...</span>
-          </div>
-        </div>
+        {LoadingContent}
       </div>
     );
   }
 
   if (notifications.length === 0) {
+    const EmptyContent = (
+      <div className={hideCard ? 'p-6' : 'p-6'}>
+        <div className={`text-center ${isMobile ? 'py-6' : 'py-8'} text-gray-500`}>
+          <Bell className={`${isMobile ? 'h-8 w-8' : 'h-12 w-12'} mx-auto mb-2 text-gray-300`} />
+          <p className={isMobile ? 'text-sm' : 'text-base'}>No recent activity</p>
+          {!isMobile && (
+            <p className="text-sm mt-1">Your recent notifications will appear here</p>
+          )}
+        </div>
+      </div>
+    );
+
+    if (hideCard) {
+      return <div className="w-full">{EmptyContent}</div>;
+    }
+
     return (
       <div className="bg-white rounded-lg">
-        <div className="p-6">
-          <div className={`text-center ${isMobile ? 'py-6' : 'py-8'} text-gray-500`}>
-            <Bell className={`${isMobile ? 'h-8 w-8' : 'h-12 w-12'} mx-auto mb-2 text-gray-300`} />
-            <p className={isMobile ? 'text-sm' : 'text-base'}>No recent activity</p>
-            {!isMobile && (
-              <p className="text-sm mt-1">Your recent notifications will appear here</p>
-            )}
-          </div>
-        </div>
+        {EmptyContent}
       </div>
     );
   }
 
-  return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm border-opacity-80">
+  const mainContent = (
+    <>
       {/* Header */}
-      <div className={`${isMobile ? 'px-4 py-3' : 'px-6 py-4'} border-b border-gray-200`}>
-        <h2 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold text-gray-900 flex items-center space-x-2`}>
-          <Bell className="h-5 w-5 text-brand-primary" />
-          <span>Recent Activity</span>
-        </h2>
-      </div>
+      {!hideCard && (
+        <div className={`${isMobile ? 'px-4 py-3' : 'px-6 py-4'} border-b border-gray-200`}>
+          <h2 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold text-gray-900 flex items-center space-x-2`}>
+            <Bell className="h-5 w-5 text-brand-primary" />
+            <span>Recent Activity</span>
+          </h2>
+        </div>
+      )}
+
+      {/* Connection Management Button - Mobile Only */}
+      {isMobile && (
+        <div
+          onClick={() => router.push('/dashboard/notifications/connections')}
+          className={`bg-white rounded-full border border-gray-200 p-4 ${hideCard ? 'mx-4 my-4' : 'mx-4 my-4'} flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors`}
+        >
+          <div className="flex items-center space-x-3">
+            <Users className="h-5 w-5 text-gray-600" />
+            <span className="text-sm font-medium text-gray-900">Connection Management</span>
+          </div>
+          <ChevronRight className="h-5 w-5 text-gray-400" />
+        </div>
+      )}
 
       {/* Notifications grouped by time */}
       <div>
         {groupedNotifications.map((group, groupIndex) => (
           <div key={group.label}>
             {/* Time period header */}
-            <div className={`${isMobile ? 'px-4 py-3' : 'px-6 py-4'} bg-gray-50 border-b border-gray-200`}>
+            <div className={`${hideCard ? 'px-4' : (isMobile ? 'px-4' : 'px-6')} ${isMobile ? 'py-3' : 'py-4'} bg-gray-50 border-b border-gray-200`}>
               <h3 className={`${isMobile ? 'text-sm' : 'text-base'} font-medium text-gray-700`}>
                 {group.label}
               </h3>
@@ -241,7 +275,7 @@ export function NotificationsFeed({ variant = 'desktop' }: NotificationsFeedProp
                       className={`
                         flex items-start space-x-3 cursor-pointer transition-colors
                         hover:bg-gray-50
-                        ${isMobile ? 'px-4 py-3' : 'px-6 py-4'}
+                        ${hideCard ? 'px-4' : (isMobile ? 'px-4' : 'px-6')} ${isMobile ? 'py-3' : 'py-4'}
                       `}
                     >
                       {/* Avatar */}
@@ -295,7 +329,7 @@ export function NotificationsFeed({ variant = 'desktop' }: NotificationsFeedProp
                     </div>
                     {/* Divider - don't show after last notification in group */}
                     {index < group.notifications.length - 1 && (
-                      <div className={`${isMobile ? 'mx-4' : 'mx-6'} border-b border-gray-100`} />
+                      <div className={`${hideCard ? 'mx-4' : (isMobile ? 'mx-4' : 'mx-6')} border-b border-gray-100`} />
                     )}
                   </div>
                 );
@@ -309,6 +343,16 @@ export function NotificationsFeed({ variant = 'desktop' }: NotificationsFeedProp
           </div>
         ))}
       </div>
+    </>
+  );
+
+  if (hideCard) {
+    return <div className="w-full bg-white">{mainContent}</div>;
+  }
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm border-opacity-80">
+      {mainContent}
     </div>
   );
 }
