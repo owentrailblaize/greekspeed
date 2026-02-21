@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { industries, getGraduationYears } from '@/lib/alumniConstants';
+import { industries, getGraduationYears, majors, minors } from '@/lib/alumniConstants';
 import {
   User,
   Building2,
@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { cn } from '@/lib/utils';
+import { SearchableSelect } from '@/components/ui/SearchableSelect';
 
 // ============================================================================
 // Constants
@@ -544,11 +545,12 @@ export default function ProfileBasicsPage() {
               <Label htmlFor="major" className="flex items-center gap-2">
                 Major {formData.role === 'active_member' ? '*' : '(Optional)'}
               </Label>
-              <Input
-                id="major"
+              <SearchableSelect
                 value={formData.major}
-                onChange={(e) => handleChange('major', e.target.value)}
-                placeholder="e.g., Computer Science"
+                onValueChange={(value) => handleChange('major', value)}
+                options={majors.map(major => ({ value: major, label: major }))}
+                placeholder="Select Major"
+                searchPlaceholder="Search majors..."
                 className={cn(errors.major && 'border-red-500')}
               />
               {errors.major && (

@@ -1,5 +1,6 @@
 import sgMail from '@sendgrid/mail';
 import { getEmailBaseUrl } from '@/lib/utils/urlUtils';
+import { createServerSupabaseClient } from '@/lib/supabase/client';
 
 // Initialize SendGrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
@@ -221,6 +222,24 @@ export class EmailService {
     eventId
   }: EventNotificationEmail): Promise<boolean> {
     try {
+      // Generate magic link with event context
+      // First, try to get event slug if available, otherwise use eventId
+      const supabase = createServerSupabaseClient();
+      const { data: eventData } = await supabase
+        .from('events')
+        .select('slug')
+        .eq('id', eventId)
+        .single();
+  
+      const eventPath = eventData?.slug 
+        ? `/event/${eventData.slug}` 
+        : `/event/${eventId}`;
+  
+      const notificationUrl = await this.generateMagicLink(
+        to,
+        eventPath
+      );
+  
       // Format the start time for display
       const startDate = new Date(eventStartTime);
       const endDate = new Date(eventEndTime);
@@ -236,7 +255,7 @@ export class EmailService {
           timeZoneName: 'short'
         });
       };
-
+  
       const msg = {
         to,
         from: {
@@ -244,7 +263,7 @@ export class EmailService {
           name: this.fromName,
         },
         subject: `New Event: ${eventTitle}`,
-        templateId: process.env.SENDGRID_EVENT_TEMPLATE_ID!, // NEW: Event template ID
+        templateId: process.env.SENDGRID_EVENT_TEMPLATE_ID!,
         dynamicTemplateData: {
           payload: {
             event: {
@@ -265,19 +284,17 @@ export class EmailService {
           },
           cta: {
             label: 'View Event',
-            url: 'https://www.trailblaize.net/' // Link to main app
+            url: notificationUrl
           },
           unsubscribe: `{{unsubscribe}}`,
           unsubscribe_preferences: `{{unsubscribe_preferences}}`
         }
       };
-
+  
       await sgMail.send(msg);
-      // Event notification email sent successfully
       return true;
     } catch (error) {
       console.error('❌ Failed to send event notification email:', error);
-      // Add detailed error logging
       if (error && typeof error === 'object' && 'response' in error) {
         const sgError = error as any;
         console.error('SendGrid Response Body:', JSON.stringify(sgError.response?.body, null, 2));
@@ -446,6 +463,12 @@ export class EmailService {
     connectionId
   }: ConnectionAcceptedEmail): Promise<boolean> {
     try {
+      // Generate magic link with connection context
+      const notificationUrl = await this.generateMagicLink(
+        to,
+        `/dashboard/notifications?connection=${connectionId}`
+      );
+  
       const msg = {
         to,
         from: {
@@ -467,15 +490,14 @@ export class EmailService {
           },
           cta: {
             label: 'View Connection',
-            url: `${getEmailBaseUrl()}/dashboard/notifications`
+            url: notificationUrl
           },
           unsubscribe: `${getEmailBaseUrl()}/unsubscribe?email=${encodeURIComponent(to)}`,
           unsubscribe_preferences: `${getEmailBaseUrl()}/preferences?email=${encodeURIComponent(to)}`
         },
       };
-
+  
       await sgMail.send(msg);
-      // Connection accepted email sent successfully
       return true;
     } catch (error) {
       console.error('Error sending connection accepted email:', error);
@@ -495,6 +517,12 @@ export class EmailService {
     connectionId
   }: ConnectionRequestEmail): Promise<boolean> {
     try {
+      // Generate magic link with connection context
+      const notificationUrl = await this.generateMagicLink(
+        to,
+        `/dashboard/notifications?connection=${connectionId}`
+      );
+  
       const msg = {
         to,
         from: {
@@ -519,15 +547,14 @@ export class EmailService {
           },
           cta: {
             label: 'View Request',
-            url: `${getEmailBaseUrl()}/dashboard/notifications`
+            url: notificationUrl
           },
           unsubscribe: `${getEmailBaseUrl()}/unsubscribe?email=${encodeURIComponent(to)}`,
           unsubscribe_preferences: `${getEmailBaseUrl()}/preferences?email=${encodeURIComponent(to)}`
         },
       };
-
+  
       await sgMail.send(msg);
-      // Connection request email sent successfully
       return true;
     } catch (error) {
       console.error('Error sending connection request email:', error);
@@ -547,6 +574,12 @@ export class EmailService {
     connectionId
   }: MessageNotificationEmail): Promise<boolean> {
     try {
+      // Generate magic link with connection context for messages
+      const notificationUrl = await this.generateMagicLink(
+        to,
+        `/dashboard/messages?connection=${connectionId}`
+      );
+
       const msg = {
         to,
         from: {
@@ -571,7 +604,7 @@ export class EmailService {
           },
           cta: {
             label: 'Open Chat',
-            url: `${getEmailBaseUrl()}/dashboard/messages`
+            url: notificationUrl
           },
           unsubscribe: `${getEmailBaseUrl()}/unsubscribe?email=${encodeURIComponent(to)}`,
           unsubscribe_preferences: `${getEmailBaseUrl()}/preferences?email=${encodeURIComponent(to)}`
@@ -1028,6 +1061,37 @@ export class EmailService {
     } catch (error) {
       console.error('❌ Failed to send password reset instructions email:', error);
       return false;
+    }
+  }
+
+  private static async generateMagicLink(
+    email: string,
+    redirectPath: string
+  ): Promise<string> {
+    try {
+      const supabase = createServerSupabaseClient();
+      const baseUrl = getEmailBaseUrl();
+      
+      // Generate magic link with redirect
+      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+        type: 'magiclink',
+        email: email.toLowerCase(),
+        options: {
+          redirectTo: `${baseUrl}${redirectPath}`,
+        }
+      });
+  
+      if (linkError || !linkData?.properties?.action_link) {
+        console.error('Failed to generate magic link:', linkError);
+        // Fallback to regular link if magic link generation fails
+        return `${baseUrl}${redirectPath}`;
+      }
+  
+      return linkData.properties.action_link;
+    } catch (error) {
+      console.error('Error generating magic link:', error);
+      // Fallback to regular link on error
+      return `${getEmailBaseUrl()}${redirectPath}`;
     }
   }
 }

@@ -31,6 +31,7 @@ import { ProfileHeaderSection } from '@/components/features/profile/mobile/Profi
 import { ContentNavigationTabs } from '@/components/features/profile/mobile/ContentNavigationTabs';
 import { ContentFeedSection } from '@/components/features/profile/mobile/ContentFeedSection';
 import { PostCard } from '@/components/features/social/PostCard';
+import { ConnectionRequestDialog } from '@/components/features/connections/ConnectionRequestDialog';
 
 // Add a helper function to format system roles for display (add this near the top of the component, after other helper functions)
 const formatSystemRole = (role: string | null | undefined): string => {
@@ -62,6 +63,9 @@ export default function ProfilePage() {
   const [suggestedUsers, setSuggestedUsers] = useState<any[]>([]);
   const suggestedUsersInitializedRef = useRef(false);
   const [pendingRequestUserIds, setPendingRequestUserIds] = useState<Set<string>>(new Set());
+
+  const [showConnectionDialog, setShowConnectionDialog] = useState(false);
+  const [selectedUserForConnection, setSelectedUserForConnection] = useState<any | null>(null);
 
   // Calculate completion percentage
   const completion = profile ? ProfileService.calculateCompletion(profile) : null;
@@ -137,6 +141,22 @@ export default function ProfilePage() {
   // Handle message button click
   const handleMessageClick = (connectionId: string) => {
     router.push(`/dashboard/messages?connection=${connectionId}`);
+  };
+
+  const handleSendConnectionRequest = async (message?: string) => {
+    if (!selectedUserForConnection) return;
+    
+    setConnectionLoading(selectedUserForConnection.id);
+    try {
+      await sendConnectionRequest(selectedUserForConnection.id, message);
+      setPendingRequestUserIds(prev => new Set(prev).add(selectedUserForConnection.id));
+      setShowConnectionDialog(false);
+      setSelectedUserForConnection(null);
+    } catch (error) {
+      console.error('Failed to send connection request:', error);
+    } finally {
+      setConnectionLoading(null);
+    }
   };
 
   // Handle profile update
@@ -881,13 +901,8 @@ export default function ProfilePage() {
                               variant="outline"
                               className="rounded-full text-xs h-7 px-3"
                               onClick={async () => {
-                                setConnectionLoading(user.id);
-                                try {
-                                  await sendConnectionRequest(user.id, 'Would love to connect!');
-                                  setPendingRequestUserIds(prev => new Set(prev).add(user.id));
-                                } finally {
-                                  setConnectionLoading(null);
-                                }
+                                setSelectedUserForConnection(user);
+                                setShowConnectionDialog(true);
                               }}
                               disabled={connectionLoading === user.id}
                             >
@@ -992,6 +1007,18 @@ export default function ProfilePage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Connection Request Dialog */}
+        <ConnectionRequestDialog
+          isOpen={showConnectionDialog}
+          onClose={() => {
+            setShowConnectionDialog(false);
+            setSelectedUserForConnection(null);
+          }}
+          onSend={handleSendConnectionRequest}
+          recipientName={selectedUserForConnection?.full_name}
+          isLoading={!!connectionLoading}
+        />
       </div>
     </>
   );
