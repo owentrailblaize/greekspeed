@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { ConnectionManagement } from '@/components/ui/ConnectionManagement';
 import { NotificationsFeed } from '@/components/features/notifications/NotificationsFeed';
 
-export default function NotificationsPage() {
+// Extract the component that uses useSearchParams
+function NotificationsContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const connectionId = searchParams.get('connection');
@@ -86,5 +87,26 @@ export default function NotificationsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Loading fallback component
+function NotificationsLoading() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading notifications...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function NotificationsPage() {
+  return (
+    <Suspense fallback={<NotificationsLoading />}>
+      <NotificationsContent />
+    </Suspense>
   );
 } 
