@@ -104,7 +104,7 @@ export function MobileMessagesDrawer({
           className="
             bg-white flex flex-col rounded-t-[10px] z-[10003]
             fixed bottom-0 left-0 right-0 
-            h-[80vh] min-h-[60vh] max-h-[85vh]
+            h-[80dvh] min-h-[60dvh] max-h-[85dvh]
             shadow-2xl border border-gray-200
             outline-none p-0
           "

@@ -164,7 +164,7 @@ export function ShareEventDrawer({
             bg-white flex flex-col rounded-t-[10px] z-[10003]
             fixed bottom-0
             ${isMobile
-              ? 'left-0 right-0 max-h-[60vh]'
+              ? 'left-0 right-0 max-h-[60dvh]'
               : 'right-4 left-auto w-[450px] h-[600px] max-h-[calc(100vh-2rem)] rounded-lg'
             }
             shadow-2xl border border-gray-200

@@ -1,6 +1,6 @@
 import "../styles/globals.css";
 import type { ReactNode } from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { AuthProvider } from '@/lib/supabase/auth-context';
 import { ProfileProvider } from '@/lib/contexts/ProfileContext';
 import { BrandingProvider } from '@/lib/contexts/BrandingContext';
@@ -27,11 +27,19 @@ export const metadata: Metadata = {
   },
 };
 
+// Viewport configuration for mobile keyboard support
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  interactiveWidget: 'resizes-content', // Critical for mobile keyboard handling
+};
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
       <html lang="en">
         <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          {/* Viewport meta tag is now handled by Next.js viewport export */}
           {/* Google Fonts - Instrument Serif */}
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
