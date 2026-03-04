@@ -355,7 +355,7 @@ export function EventDetailModal({
             bg-white flex flex-col z-[10000]
             fixed bottom-0 left-0 right-0
             ${isMobile
-              ? 'h-[85vh] max-h-[85vh] rounded-t-[20px]'
+              ? 'h-[85dvh] max-h-[85dvh] rounded-t-[20px]'
               : 'max-w-lg mx-auto h-[80vh] max-h-[80vh] rounded-t-[20px]'
             }
             shadow-2xl border border-gray-200
