@@ -68,6 +68,9 @@ export interface PostComment {
   created_at: string;
   updated_at: string;
   parent_comment_id?: string | null;
+  metadata?: Record<string, any> & {
+    link_previews?: LinkPreview[];
+  };
   author?: {
     id: string;
     full_name: string;

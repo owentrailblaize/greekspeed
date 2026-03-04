@@ -12,6 +12,7 @@ import { useProfileModal } from '@/lib/contexts/ProfileModalContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
 import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
+import { LinkPreviewCard } from './LinkPreviewCard';
 import Image from 'next/image';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
@@ -256,6 +257,127 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
     });
   };
 
+  // Render post content with link parsing and preview cards (for modal display)
+  const renderPostContentInModal = () => {
+    if (!post.content) return null;
+
+    // Get URLs that have previews - we'll hide these from the content
+    const previewUrls = new Set(
+      (post.metadata?.link_previews || []).map((preview: any) => preview.url),
+    );
+
+    // Convert URLs to clickable links, but skip URLs that have previews
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const contentWithLinks = post.content
+      .split(urlRegex)
+      .map((part, i) => {
+        if (part.match(urlRegex)) {
+          const cleanUrl = part.replace(/[.,;:!?]+$/, '');
+          // If this URL has a preview card, don't render it as a link
+          if (previewUrls.has(cleanUrl)) {
+            return null; // Hide URLs that have preview cards
+          }
+          return (
+            <a
+              key={i}
+              href={cleanUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-accent hover:text-accent-700 hover:underline break-all"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {part}
+            </a>
+          );
+        }
+        return <span key={i}>{part}</span>;
+      })
+      .filter(Boolean); // Remove null entries
+
+    return (
+      <div className="space-y-2">
+        <p className="text-slate-800 text-sm sm:text-base leading-relaxed break-words whitespace-pre-wrap">
+          {contentWithLinks}
+        </p>
+        {/* Link Preview Cards */}
+        {post.metadata?.link_previews && post.metadata.link_previews.length > 0 && (
+          <div className="space-y-2 mt-2">
+            {post.metadata.link_previews.map(
+              (preview: any, index: number) => (
+                <LinkPreviewCard
+                  key={preview.url || index}
+                  preview={preview}
+                  className="max-w-full"
+                  hideImage={imageUrls.length > 0}
+                />
+              ),
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Render comment content with link parsing and preview cards
+  const renderCommentContent = (comment: PostComment) => {
+    if (!comment.content) return null;
+
+    // Get URLs that have previews - we'll hide these from the content
+    const previewUrls = new Set(
+      (comment.metadata?.link_previews || []).map((preview: any) => preview.url),
+    );
+
+    // Convert URLs to clickable links, but skip URLs that have previews
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const contentWithLinks = comment.content
+      .split(urlRegex)
+      .map((part, i) => {
+        if (part.match(urlRegex)) {
+          const cleanUrl = part.replace(/[.,;:!?]+$/, '');
+          // If this URL has a preview card, don't render it as a link
+          if (previewUrls.has(cleanUrl)) {
+            return null; // Hide URLs that have preview cards
+          }
+          return (
+            <a
+              key={i}
+              href={cleanUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-accent hover:text-accent-700 hover:underline break-all"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {part}
+            </a>
+          );
+        }
+        return <span key={i}>{part}</span>;
+      })
+      .filter(Boolean); // Remove null entries
+
+    return (
+      <div className="space-y-2">
+        <p className="text-slate-900 text-sm sm:text-base leading-relaxed break-words whitespace-pre-wrap">
+          {contentWithLinks}
+        </p>
+        {/* Link Preview Cards */}
+        {comment.metadata?.link_previews && comment.metadata.link_previews.length > 0 && (
+          <div className="space-y-2 mt-2">
+            {comment.metadata.link_previews.map(
+              (preview: any, index: number) => (
+                <LinkPreviewCard
+                  key={preview.url || index}
+                  preview={preview}
+                  className="max-w-full"
+                />
+              ),
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Recursive component to render comment with replies
   // MAX_DEPTH = 1 means: POST -> COMMENT (depth 0) -> REPLY (depth 1) -> STOP
   const MAX_DEPTH = 1;
@@ -331,9 +453,9 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
               </span>
             </div>
 
-            <p className="text-slate-900 text-sm sm:text-base leading-relaxed mb-2 break-words">
-              {comment.content}
-            </p>
+            <div className="mb-2">
+              {renderCommentContent(comment)}
+            </div>
 
             {/* Comment Actions - buttons keep existing styles */}
             <div className="flex flex-wrap items-center gap-3">
@@ -670,10 +792,8 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                   )}
                 </div>
                 
-                {/* Post Content with multiple image support */}
-                {post.content && (
-                  <p className="text-slate-800 text-sm sm:text-base leading-relaxed break-words">{post.content}</p>
-                )}
+                {/* Post Content with link previews */}
+                {post.content && renderPostContentInModal()}
                 
                 {/* Replace the single image_url display (lines 175-186) with: */}
                 {(() => {
