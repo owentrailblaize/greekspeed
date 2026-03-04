@@ -24,6 +24,12 @@ A comprehensive platform for Greek life chapter management, alumni networking, a
 
 3. **Environment Setup**
    Create a `.env.local` file with the following variables:
+
+   Copy Environment Example File
+   ```
+   cp .env.example .env.local
+   ```
+
    ```env
    # Supabase
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
