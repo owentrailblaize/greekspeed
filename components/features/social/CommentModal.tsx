@@ -1,11 +1,11 @@
 'use client';
 
 import { useMemo, useRef, useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { X, Heart, MessageCircle, Share, Trash2, Send, RefreshCcw, ChevronLeft, ChevronRight, Reply, ChevronDown, ChevronUp } from 'lucide-react';
-import { Post, PostComment, CreateCommentRequest } from '@/types/posts';
+import { X, Heart, MessageCircle, Trash2, Send, ChevronLeft, ChevronRight, Reply, ChevronDown, ChevronUp } from 'lucide-react';
+import { Post, PostComment } from '@/types/posts';
 import { useComments } from '@/lib/hooks/useComments';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useProfileModal } from '@/lib/contexts/ProfileModalContext';

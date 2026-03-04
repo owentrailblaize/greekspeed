@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { fetchLinkPreviewsServer } from '@/lib/services/linkPreviewService';
+import { LinkPreview } from '@/types/posts';
 
 export async function GET(
   request: NextRequest,
@@ -206,7 +207,7 @@ export async function POST(
     }
 
     // Extract URLs and fetch link previews (don't block comment creation if this fails)
-    let linkPreviews: any[] = [];
+    let linkPreviews: LinkPreview[] = [];
     if (content) {
       try {
         // Log the content to see what we're processing
@@ -226,7 +227,7 @@ export async function POST(
         
         linkPreviews = previewResults
           .filter(result => result.preview)
-          .map(result => result.preview);
+          .map(result => result.preview!);
         
         // Log final link previews
         console.log('[Comment API] Final link previews:', linkPreviews.length);
