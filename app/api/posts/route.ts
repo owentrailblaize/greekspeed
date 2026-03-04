@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { fetchLinkPreviewsServer } from '@/lib/services/linkPreviewService';
+import { LinkPreview } from '@/types/posts';
 
 export async function GET(request: NextRequest) {
   try {
@@ -209,13 +210,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Extract URLs and fetch link previews (don't block post creation if this fails)
-    let linkPreviews: any[] = [];
+    let linkPreviews: LinkPreview[] = [];
     if (content) {
       try {
         const previewResults = await fetchLinkPreviewsServer(content);
         linkPreviews = previewResults
           .filter(result => result.preview)
-          .map(result => result.preview);
+          .map(result => result.preview!);
       } catch (error) {
         console.error('Error fetching link previews:', error);
         // Continue without previews - don't block post creation

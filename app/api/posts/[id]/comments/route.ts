@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { fetchLinkPreviewsServer } from '@/lib/services/linkPreviewService';
+import { LinkPreview } from '@/types/posts';
 
 export async function GET(
   request: NextRequest,
@@ -204,15 +206,61 @@ export async function POST(
       }
     }
 
+    // Extract URLs and fetch link previews (don't block comment creation if this fails)
+    let linkPreviews: LinkPreview[] = [];
+    if (content) {
+      try {
+        // Log the content to see what we're processing
+        console.log('[Comment API] Processing content for link previews:', content);
+        
+        const previewResults = await fetchLinkPreviewsServer(content);
+        
+        // Log what we got back
+        console.log('[Comment API] Preview results:', {
+          totalResults: previewResults.length,
+          results: previewResults.map(r => ({
+            url: r.url,
+            hasPreview: !!r.preview,
+            error: r.error
+          }))
+        });
+        
+        linkPreviews = previewResults
+          .filter(result => result.preview)
+          .map(result => result.preview!);
+        
+        // Log final link previews
+        console.log('[Comment API] Final link previews:', linkPreviews.length);
+        
+        if (previewResults.length > 0 && linkPreviews.length === 0) {
+          console.warn('[Comment API] URLs found but no valid previews returned. Results:', 
+            previewResults.map(r => ({ url: r.url, error: r.error }))
+          );
+        }
+      } catch (error) {
+        console.error('[Comment API] Error fetching link previews:', error);
+        // Continue without previews - don't block comment creation
+      }
+    }
+
+    // Only create metadata object if we have link previews
+    // This prevents storing empty {} which Supabase might convert to {}
+    const finalMetadata = linkPreviews.length > 0 
+    ? { link_previews: linkPreviews }
+    : undefined;
+
     // Create comment
     const { data: comment, error: createError } = await supabase
-      .from('post_comments')
-      .insert({
-        post_id: postId,
-        author_id: user.id,
-        content: content.trim(),
-        parent_comment_id: parent_comment_id || null
-      })
+    .from('post_comments')
+    .insert({
+      post_id: postId,
+      author_id: user.id,
+      content: content.trim(),
+      parent_comment_id: parent_comment_id || null,
+      // Use undefined instead of null - Supabase will handle this correctly
+      // Only set metadata if we have link_previews, otherwise omit the field
+      ...(finalMetadata ? { metadata: finalMetadata } : {})
+    })
       .select(`
         *,
         author:profiles!author_id(
