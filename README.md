@@ -183,5 +183,23 @@ git push origin v1.0.0
 ## Environment
 The application uses environment-based configuration. Ensure all required environment variables are set before running the application.
 
+## For AI Agents & Developers
+
+This codebase is optimized for AI-assisted development. Key resources:
+
+- **`.cursorrules`** - Cursor-specific rules and conventions (committed to repo)
+- **`docs/ARCHITECTURE.md`** - Detailed architecture documentation
+- **`docs/AI_GUIDELINES.md`** - Guidelines for AI agents
+- **`docs/CODE_STYLE.md`** - Code style and patterns
+- **`docs/DATABASE_SCHEMA.md`** - Database schema, relationships, and query patterns
+- **`docs/COMPONENT_STYLING.md`** - Component structure, styling patterns, and reusable components
+
+When making changes:
+1. Review existing patterns in similar files
+2. Follow the established architecture
+3. Maintain type safety
+4. Test thoroughly
+5. Update documentation if needed
+
 ## Support
 For development questions or issues, refer to the project documentation or contact the development team.

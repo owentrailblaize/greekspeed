@@ -1,0 +1,178 @@
+# Cursor Rules for Trailblaize
+
+## Project Context
+Trailblaize is a Next.js 15 application for Greek life chapter management, alumni networking, and dues administration. Built with React 19, TypeScript, Supabase, and Tailwind CSS.
+
+## Code Style & Conventions
+
+### TypeScript
+- Always use TypeScript strict mode
+- Prefer explicit types over `any`
+- Use interfaces for object shapes, types for unions/primitives
+- Export types from `types/` directory
+- Use path aliases: `@/components`, `@/lib`, `@/types`
+
+### React Components
+- Use functional components with hooks
+- Prefer `'use client'` directive for client components
+- Server components by default (Next.js App Router)
+- Component files: PascalCase (e.g., `PostCard.tsx`)
+- Props interfaces: `ComponentNameProps`
+- Use `cn()` utility for className merging
+
+### File Organization
+- Components: `components/features/[feature-name]/ComponentName.tsx`
+- UI primitives: `components/ui/`
+- Hooks: `lib/hooks/useHookName.ts`
+- Services: `lib/services/serviceName.ts`
+- Types: `types/typeName.ts`
+- API routes: `app/api/[route]/route.ts`
+
+### Naming Conventions
+- Components: PascalCase
+- Functions/variables: camelCase
+- Constants: UPPER_SNAKE_CASE
+- Files: kebab-case for utilities, PascalCase for components
+- Database tables: snake_case (Supabase convention)
+
+### API Patterns
+- API routes use Next.js App Router format
+- Always validate input
+- Use Supabase service role key for server-side operations
+- Return consistent error formats: `{ error: string }`
+- Include proper HTTP status codes
+
+### State Management
+- React Query for server state (`@tanstack/react-query`)
+- React Context for global client state
+- Local state with `useState` for component-specific state
+- Avoid prop drilling - use Context when needed
+
+### Styling
+- Tailwind CSS for all styling
+- Use design tokens from `tailwind.config.js`
+- Brand colors via CSS variables: `var(--brand-primary)`
+- Responsive: mobile-first approach
+- Use `tailwind-merge` for conditional classes
+
+### Error Handling
+- Always handle errors in try-catch blocks
+- Log errors to console in development
+- Use Sentry for production error tracking
+- Show user-friendly error messages
+- Never expose sensitive error details to client
+
+### Security
+- Never commit API keys or secrets
+- Use environment variables for all secrets
+- Validate user input on both client and server
+- Check user permissions before database operations
+- Use Supabase RLS policies for data access control
+
+### Performance
+- Use React.memo for expensive components
+- Implement proper loading states
+- Use React Query caching strategies
+- Optimize images with Next.js Image component
+- Lazy load heavy components when possible
+
+## Common Patterns
+
+### Creating a New Feature
+1. Create types in `types/`
+2. Create API route in `app/api/`
+3. Create service function in `lib/services/`
+4. Create hook in `lib/hooks/` (if needed)
+5. Create components in `components/features/[feature]/`
+6. Add to appropriate page/route
+
+### Database Operations
+- Always use Supabase client from `lib/supabase/client.ts`
+- Use service role key for admin operations
+- Check RLS policies before queries
+- Use transactions for multi-step operations
+- Handle Supabase errors gracefully
+
+### Component Patterns
+```typescript
+// Component structure
+'use client';
+
+import { useState } from 'react';
+import type { ComponentProps } from '@/types/component';
+
+interface ComponentNameProps {
+  // props here
+}
+
+export function ComponentName({ prop }: ComponentNameProps) {
+  // hooks
+  // handlers
+  // render
+}
+```
+
+## What NOT to Do
+
+- Don't use `any` type without justification
+- Don't create components without proper TypeScript types
+- Don't hardcode API endpoints - use environment variables
+- Don't bypass authentication/authorization checks
+- Don't commit `.env` files or secrets
+- Don't use inline styles - use Tailwind classes
+- Don't create duplicate utilities - check `lib/utils/` first
+- Don't modify database schema without migration
+- Don't break existing API contracts
+- Don't ignore TypeScript errors
+
+## Testing Considerations
+- Write self-documenting code with clear function names
+- Add JSDoc comments for complex functions
+- Include error handling examples in comments
+- Document edge cases in code comments
+
+## When Making Changes
+1. Check existing patterns in similar files
+2. Follow the established architecture
+3. Update types if adding new data structures
+4. Test in development environment
+5. Ensure mobile responsiveness
+6. Check accessibility (keyboard navigation, ARIA labels)
+
+## Key Business Logic
+- Users belong to chapters (Greek organizations)
+- Posts are chapter-scoped (only chapter members see them)
+- Comments belong to posts
+- Payments are tracked per user per chapter
+- Role-based permissions: active members, alumni, exec admin
+
+## Reference Files
+
+### Documentation
+- `docs/ARCHITECTURE.md` - System architecture and patterns
+- `docs/AI_GUIDELINES.md` - AI agent guidelines
+- `docs/CODE_STYLE.md` - Code style guide
+- `docs/DATABASE_SCHEMA.md` - Database schema and relationships
+- `docs/COMPONENT_STYLING.md` - Component patterns and styling guide
+
+### For Link Previews
+- `lib/services/linkPreviewService.ts` - Link preview fetching
+- `components/features/social/LinkPreviewCard.tsx` - Preview component
+- `components/features/social/PostCard.tsx` - Usage example
+
+### For API Routes
+- `app/api/posts/route.ts` - Post API example
+- `app/api/posts/[id]/comments/route.ts` - Nested route example
+
+### For Components
+- `components/features/social/PostCard.tsx` - Complex component example
+- `components/features/social/CommentModal.tsx` - Modal example
+
+### For Hooks
+- `lib/hooks/useComments.ts` - Custom hook example
+- `lib/hooks/usePosts.ts` - Data fetching hook example
+
+### For Styling
+- `tailwind.config.js` - Tailwind configuration
+- `styles/globals.css` - Global styles and CSS variables
+- `components/ui/button.tsx` - Component with variants example

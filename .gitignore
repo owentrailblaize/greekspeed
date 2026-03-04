@@ -45,12 +45,9 @@ greekspeed.code-workspace
 
 # cursor
 .cursor/
-.cursorrules
+# Note: .cursorrules should be committed to share conventions with the team
 # Sentry Config File
 .env.sentry-build-plugin
-
-# Documentation
-docs/
 
 # Agents File
 AGENTS.md
