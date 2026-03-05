@@ -26,6 +26,8 @@ export interface UserGrowthChartData {
 export interface UserGrowthFilters {
   chapterId?: string;
   activityWindow?: 30 | 90 | 180 | 'all';
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface UserListParams {
