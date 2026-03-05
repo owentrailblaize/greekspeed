@@ -115,7 +115,28 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
         }
       : undefined,
     placeholderData: cachedFeed,
+    // CRITICAL: Mark placeholderData as fresh to prevent isInitialLoading from being true
+    // when we have cached data available
+    placeholderDataUpdatedAt: cachedFeed ? Date.now() : undefined,
   });
+
+  // Debug logging for React Query state
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      console.log('[usePosts] React Query state:', {
+        chapterId,
+        isInitialLoading,
+        isLoading,
+        isRefetching,
+        isPlaceholderData,
+        hasData: !!data,
+        dataPagesCount: data?.pages?.length ?? 0,
+        hasInitialData: !!normalizedInitialData,
+        hasCachedFeed: !!cachedFeed,
+        enabled,
+      });
+    }
+  }, [chapterId, isInitialLoading, isLoading, isRefetching, isPlaceholderData, data, normalizedInitialData, cachedFeed, enabled]);
 
   // ---- Write to localStorage after real (non-placeholder) fetch ----
   useEffect(() => {
@@ -129,16 +150,65 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
   }, [data, chapterId, isPlaceholderData]);
 
   const posts = useMemo(() => {
-    const pages = data?.pages ?? [];
-    const queryPosts = pages.flatMap((page) => page.posts);
-    
-    // Optimistic UI: If React Query hasn't loaded yet, use initialData immediately
-    if (queryPosts.length === 0 && normalizedInitialData?.posts) {
+    // Priority 1: Use initialData immediately if available (server-side rendered)
+    // This ensures instant rendering on first paint
+    if (normalizedInitialData?.posts && normalizedInitialData.posts.length > 0) {
+      if (typeof window !== 'undefined') {
+        console.log('[usePosts] Using initialData (server-side)', {
+          postsCount: normalizedInitialData.posts.length,
+          chapterId,
+        });
+      }
       return normalizedInitialData.posts;
     }
     
-    return queryPosts;
-  }, [data, normalizedInitialData]);
+    // Priority 2: Use React Query data if available
+    const pages = data?.pages ?? [];
+    const queryPosts = pages.flatMap((page) => page.posts);
+    if (queryPosts.length > 0) {
+      if (typeof window !== 'undefined') {
+        console.log('[usePosts] Using React Query data', {
+          postsCount: queryPosts.length,
+          chapterId,
+        });
+      }
+      return queryPosts;
+    }
+    
+    // Priority 3: Use placeholderData (localStorage cache) if available
+    // This provides instant content on return visits
+    if (cachedFeed?.pages?.[0]?.posts && cachedFeed.pages[0].posts.length > 0) {
+      if (typeof window !== 'undefined') {
+        console.log('[usePosts] Using cached feed (localStorage)', {
+          postsCount: cachedFeed.pages[0].posts.length,
+          chapterId,
+        });
+      }
+      return cachedFeed.pages[0].posts;
+    }
+    
+    // Priority 4: Fall back to initialData even if empty (for "No posts yet" state)
+    // This prevents skeleton loader from showing
+    if (normalizedInitialData?.posts) {
+      if (typeof window !== 'undefined') {
+        console.log('[usePosts] Using empty initialData', {
+          postsCount: 0,
+          chapterId,
+        });
+      }
+      return normalizedInitialData.posts;
+    }
+    
+    // Last resort: empty array (will show "No posts yet" message)
+    if (typeof window !== 'undefined') {
+      console.log('[usePosts] No data available, returning empty array', {
+        chapterId,
+        hasData: !!data,
+        hasCachedFeed: !!cachedFeed,
+      });
+    }
+    return [];
+  }, [data, normalizedInitialData, cachedFeed, chapterId]);
 
   const updateCachedPages = useCallback(
     (updater: (pages: PostsResponse[]) => PostsResponse[]) => {
