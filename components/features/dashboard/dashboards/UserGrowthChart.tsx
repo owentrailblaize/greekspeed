@@ -66,7 +66,7 @@ export const UserGrowthChart = memo(function UserGrowthChart({ filters }: UserGr
       prevFiltersRef.current = filtersKey;
       loadChartData();
     }
-  }, [filters, loadChartData]);
+  }, [filters]);
 
   // Transform data for Nivo format - memoized to prevent recalculation
   const chartData = useMemo(() => {

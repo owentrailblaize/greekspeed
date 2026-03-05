@@ -46,16 +46,37 @@ export function UserGrowthDashboard() {
 
   useEffect(() => {
     if (!loading && (isDeveloper || hasAccess)) {
-      // Serialize filters to string for comparison
       const filtersKey = JSON.stringify(filters);
       
-      // Only load stats if filters actually changed
       if (prevFiltersRef.current !== filtersKey) {
         prevFiltersRef.current = filtersKey;
-        loadStats();
+        
+        // Inline the fetch logic to avoid dependency on loadStats
+        const fetchStats = async () => {
+          try {
+            setLoadingStats(true);
+            const params = new URLSearchParams();
+            if (filters.chapterId) params.append('chapter_id', filters.chapterId);
+            if (filters.activityWindow) {
+              params.append('activity_window', filters.activityWindow.toString());
+            }
+  
+            const response = await fetch(`/api/developer/user-growth/stats?${params.toString()}`);
+            if (!response.ok) throw new Error('Failed to load stats');
+            
+            const data = await response.json();
+            setStats(data);
+          } catch (error) {
+            console.error('Error loading stats:', error);
+          } finally {
+            setLoadingStats(false);
+          }
+        };
+        
+        fetchStats();
       }
     }
-  }, [loading, isDeveloper, hasAccess, filters, loadStats]);
+  }, [loading, isDeveloper, hasAccess, filters]);
 
   if (loading) {
     return (
