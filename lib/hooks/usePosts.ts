@@ -115,9 +115,6 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
         }
       : undefined,
     placeholderData: cachedFeed,
-    // CRITICAL: Mark placeholderData as fresh to prevent isInitialLoading from being true
-    // when we have cached data available
-    placeholderDataUpdatedAt: cachedFeed ? Date.now() : undefined,
   });
 
   // Debug logging for React Query state
