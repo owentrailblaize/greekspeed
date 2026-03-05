@@ -6,6 +6,13 @@ export interface UserGrowthStats {
   alumniUsers: number;
   activeMemberUsers: number;
   lastUpdated: string;
+  // Previous period data for percentage change calculations
+  previousPeriod?: {
+    totalUsers: number;
+    adminUsers: number;
+    alumniUsers: number;
+    activeMemberUsers: number;
+  };
 }
 
 export interface UserGrowthChartData {

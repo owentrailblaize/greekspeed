@@ -79,6 +79,12 @@ export function UserGrowthDashboard() {
     );
   }
 
+  // Helper function to calculate amount change over past week
+  const calculateAmountChange = (current: number | undefined, previous: number | undefined): number | undefined => {
+    if (current === undefined || previous === undefined) return undefined;
+    return current - previous;
+  };
+
   return (
     <div 
       className="h-full flex flex-col overflow-hidden"
@@ -108,24 +114,35 @@ export function UserGrowthDashboard() {
             <UserGrowthKPICard
               title="Total Users"
               value={stats?.totalUsers || 0}
+              amountChange={calculateAmountChange(stats?.totalUsers, stats?.previousPeriod?.totalUsers)}
+              icon="users"
               loading={loadingStats}
               onClick={() => setSelectedMetric('total')}
             />
             <UserGrowthKPICard
               title="Alumni Users"
               value={stats?.alumniUsers || 0}
+              amountChange={calculateAmountChange(stats?.alumniUsers, stats?.previousPeriod?.alumniUsers)}
+              subtitle="Active alumni memberships"
+              icon="graduation"
               loading={loadingStats}
               onClick={() => setSelectedMetric('alumni')}
             />
             <UserGrowthKPICard
               title="Member Users"
               value={stats?.activeMemberUsers || 0}
+              amountChange={calculateAmountChange(stats?.activeMemberUsers, stats?.previousPeriod?.activeMemberUsers)}
+              subtitle="Seen in last 30 days"
+              icon="user-check"
               loading={loadingStats}
               onClick={() => setSelectedMetric('active_member')}
             />
             <UserGrowthKPICard
               title="Admin Users"
               value={stats?.adminUsers || 0}
+              amountChange={calculateAmountChange(stats?.adminUsers, stats?.previousPeriod?.adminUsers)}
+              subtitle="Active exec roles"
+              icon="shield"
               loading={loadingStats}
               onClick={() => setSelectedMetric('admin')}
             />
@@ -135,10 +152,13 @@ export function UserGrowthDashboard() {
         {/* Right Column: Chart with Filters Inside - Takes remaining space */}
         <div className="lg:col-span-2 flex flex-col min-h-0 overflow-hidden">
           <Card className="flex flex-col h-full overflow-hidden">
-            <CardHeader className="flex-shrink-0 pb-3">
-              <CardTitle className="text-lg">User Growth Trends</CardTitle>
+            <CardHeader className="flex-shrink-0 pb-3 border-b">
+              <div className="space-y-1">
+                <CardTitle className="text-xl font-semibold">User Growth Over Time</CardTitle>
+                <p className="text-sm text-gray-500">Monthly active users vs Total users trend</p>
+              </div>
               {/* Filters moved inside card header - Compact */}
-              <div className="mt-2">
+              <div className="mt-3">
                 <UserGrowthFilters filters={filters} onFiltersChange={setFilters} />
               </div>
             </CardHeader>

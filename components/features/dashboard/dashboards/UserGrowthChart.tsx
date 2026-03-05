@@ -150,7 +150,7 @@ export const UserGrowthChart = memo(function UserGrowthChart({ filters }: UserGr
           width={dimensions.width}
           height={dimensions.height}
           data={chartData}
-          margin={{ top: 20, right: 20, bottom: 60, left: 60 }}
+          margin={{ top: 50, right: 20, bottom: 60, left: 70 }}
           xScale={{
             type: 'time',
             format: '%Y-%m-%d',
@@ -170,97 +170,108 @@ export const UserGrowthChart = memo(function UserGrowthChart({ filters }: UserGr
             legend: 'Date',
             legendOffset: 50,
             legendPosition: 'middle',
+            tickSize: 5,
+            tickPadding: 5,
           }}
           axisLeft={{
             legend: 'Users',
-            legendOffset: -50,
+            legendOffset: -55,
             legendPosition: 'middle',
-            format: (value) => value.toLocaleString(),
+            format: (value) => {
+              if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
+              return value.toLocaleString();
+            },
+            tickSize: 5,
+            tickPadding: 5,
           }}
-          pointSize={8}
+          pointSize={6}
           pointColor={{ theme: 'background' }}
           pointBorderWidth={2}
           pointBorderColor={{ from: 'serieColor' }}
           pointLabelYOffset={-12}
           useMesh={false}
-        legends={[
-          {
-            anchor: 'top-right',
-            direction: 'column',
-            justify: false,
-            translateX: 0,
-            translateY: 0,
-            itemsSpacing: 0,
-            itemDirection: 'left-to-right',
-            itemWidth: 80,
-            itemHeight: 20,
-            itemOpacity: 0.75,
-            symbolSize: 12,
-            symbolShape: 'circle',
-            effects: [
-              {
-                on: 'hover',
-                style: {
-                  itemBackground: 'rgba(0, 0, 0, .03)',
-                  itemOpacity: 1,
+          legends={[
+            {
+              anchor: 'top',
+              direction: 'row',
+              justify: false,
+              translateX: 0,
+              translateY: -30,
+              itemsSpacing: 20,
+              itemDirection: 'left-to-right',
+              itemWidth: 100,
+              itemHeight: 20,
+              itemOpacity: 0.85,
+              symbolSize: 10,
+              symbolShape: 'circle',
+              effects: [
+                {
+                  on: 'hover',
+                  style: {
+                    itemBackground: 'rgba(0, 0, 0, .03)',
+                    itemOpacity: 1,
+                  },
+                },
+              ],
+            },
+          ]}
+          theme={{
+            axis: {
+              domain: {
+                line: {
+                  stroke: '#e5e7eb',
+                  strokeWidth: 1,
                 },
               },
-            ],
-          },
-        ]}
-        theme={{
-          axis: {
-            domain: {
+              ticks: {
+                line: {
+                  stroke: '#e5e7eb',
+                  strokeWidth: 1,
+                },
+                text: {
+                  fill: '#6b7280',
+                  fontSize: 11,
+                  fontFamily: 'inherit',
+                },
+              },
+              legend: {
+                text: {
+                  fill: '#6b7280',
+                  fontSize: 12,
+                  fontFamily: 'inherit',
+                  fontWeight: 500,
+                },
+              },
+            },
+            grid: {
               line: {
-                stroke: '#e0e0e0',
+                stroke: '#f0f0f0',
                 strokeWidth: 1,
+                strokeDasharray: '4 4',
               },
             },
-            ticks: {
-              line: {
-                stroke: '#e0e0e0',
-                strokeWidth: 1,
-              },
-              text: {
-                fill: '#666',
+            tooltip: {
+              container: {
+                background: 'white',
+                color: '#374151',
                 fontSize: 12,
+                borderRadius: '6px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                padding: '10px 14px',
+                border: '1px solid #e5e7eb',
               },
             },
-            legend: {
-              text: {
-                fill: '#666',
-                fontSize: 12,
-              },
-            },
-          },
-          grid: {
-            line: {
-              stroke: '#e0e0e0',
-              strokeWidth: 1,
-              strokeDasharray: '3 3',
-            },
-          },
-          tooltip: {
-            container: {
-              background: 'white',
-              color: '#333',
-              fontSize: 12,
-              borderRadius: '4px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              padding: '8px 12px',
-            },
-          },
-        }}
-        colors={['#8884d8', '#82ca9d', '#ffc658', '#ff7300']}
-        lineWidth={2}
-        curve="monotoneX"
-        enableArea={false}
-        enableGridX={true}
-        enableGridY={true}
-        enablePoints={true}
-        enablePointLabel={false}
-        animate={false}
-        isInteractive={false}
+          }}
+          colors={['#14b8a6', '#64748b', '#f59e0b', '#ef4444']}
+          lineWidth={2.5}
+          curve="monotoneX"
+          enableArea={false}
+          enableGridX={true}
+          enableGridY={true}
+          enablePoints={true}
+          enablePointLabel={false}
+          animate={false}
+          isInteractive={false}
         />
       </div>
     </div>

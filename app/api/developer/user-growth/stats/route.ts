@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { EXECUTIVE_ROLES } from '@/lib/permissions';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -15,79 +14,92 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('end_date') || undefined;
     const activityWindow = parseInt(searchParams.get('activity_window') || '30');
 
-    // Build base query for total users
-    let totalQuery = supabase
-      .from('profiles')
-      .select('id', { count: 'exact', head: true });
+    // Calculate previous period (7 days ago) for week-over-week comparison
+    const now = new Date();
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    // Build query for executive users
-    let executiveQuery = supabase
-      .from('profiles')
-      .select('id', { count: 'exact', head: true })
-      .eq('member_status', 'active')
-      .in('chapter_role', EXECUTIVE_ROLES);
+    // Helper function to build base query with filters
+    const buildQuery = (roleFilter?: string, usePreviousPeriod = false) => {
+      let query = supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true });
+      
+      if (chapterId) {
+        query = query.eq('chapter_id', chapterId);
+      }
+      
+      if (usePreviousPeriod) {
+        query = query.lte('created_at', sevenDaysAgo.toISOString());
+      } else {
+        if (startDate) {
+          query = query.gte('created_at', startDate);
+        }
+        if (endDate) {
+          query = query.lte('created_at', endDate);
+        }
+      }
+      
+      if (roleFilter) {
+        query = query.eq('role', roleFilter);
+      }
+      
+      return query;
+    };
 
-    // Build query for alumni users
-    let alumniQuery = supabase
-      .from('profiles')
-      .select('id', { count: 'exact', head: true })
-      .eq('role', 'alumni')
-      .eq('member_status', 'active');
-
-    // Calculate active member cutoff date
-    const activeMemberCutoff = new Date();
-    activeMemberCutoff.setDate(activeMemberCutoff.getDate() - activityWindow);
-    
-    // Build query for active member users
-    let activeMemberQuery = supabase
-      .from('profiles')
-      .select('id', { count: 'exact', head: true })
-      .eq('role', 'active_member')
-      .eq('member_status', 'active')
-      .gte('last_active_at', activeMemberCutoff.toISOString());
-
-    // Apply chapter filter if provided
-    if (chapterId) {
-      totalQuery = totalQuery.eq('chapter_id', chapterId);
-      executiveQuery = executiveQuery.eq('chapter_id', chapterId);
-      alumniQuery = alumniQuery.eq('chapter_id', chapterId);
-      activeMemberQuery = activeMemberQuery.eq('chapter_id', chapterId);
-    }
-
-    // Apply date range filter if provided
-    if (startDate) {
-      totalQuery = totalQuery.gte('created_at', startDate);
-      executiveQuery = executiveQuery.gte('created_at', startDate);
-      alumniQuery = alumniQuery.gte('created_at', startDate);
-      activeMemberQuery = activeMemberQuery.gte('created_at', startDate);
-    }
-
-    if (endDate) {
-      totalQuery = totalQuery.lte('created_at', endDate);
-      executiveQuery = executiveQuery.lte('created_at', endDate);
-      alumniQuery = alumniQuery.lte('created_at', endDate);
-      activeMemberQuery = activeMemberQuery.lte('created_at', endDate);
-    }
-
-    // Execute queries in parallel
-    const [totalResult, executiveResult, alumniResult, activeMemberResult] = await Promise.all([
-      totalQuery,
-      executiveQuery,
-      alumniQuery,
-      activeMemberQuery,
+    // Execute all queries in parallel
+    // Using the exact query pattern: COUNT(*) WHERE role = 'X'
+    const [
+      totalResult,
+      adminResult,
+      activeMemberResult,
+      alumniResult,
+      totalPrevious,
+      adminPrevious,
+      activeMemberPrevious,
+      alumniPrevious,
+    ] = await Promise.all([
+      // Current period: Total profiles (all profiles)
+      buildQuery(),
+      // Current period: Admin users (role = 'admin')
+      buildQuery('admin'),
+      // Current period: Active member users (role = 'active_member')
+      buildQuery('active_member'),
+      // Current period: Alumni users (role = 'alumni')
+      buildQuery('alumni'),
+      // Previous period: Total profiles
+      buildQuery(undefined, true),
+      // Previous period: Admin users
+      buildQuery('admin', true),
+      // Previous period: Active member users
+      buildQuery('active_member', true),
+      // Previous period: Alumni users
+      buildQuery('alumni', true),
     ]);
 
+    // Check for errors
     if (totalResult.error) {
       console.error('Error fetching total users:', totalResult.error);
       return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 });
     }
 
+    const totalUsers = totalResult.count || 0;
+    const adminUsers = adminResult.count || 0;
+    const activeMemberUsers = activeMemberResult.count || 0;
+    const alumniUsers = alumniResult.count || 0;
+
     return NextResponse.json({
-      totalUsers: totalResult.count || 0,
-      adminUsers: executiveResult.count || 0,
-      alumniUsers: alumniResult.count || 0,
-      activeMemberUsers: activeMemberResult.count || 0,
+      totalUsers,
+      adminUsers,
+      alumniUsers,
+      activeMemberUsers,
       lastUpdated: new Date().toISOString(),
+      previousPeriod: {
+        totalUsers: totalPrevious.count || 0,
+        adminUsers: adminPrevious.count || 0,
+        alumniUsers: alumniPrevious.count || 0,
+        activeMemberUsers: activeMemberPrevious.count || 0,
+      },
     });
   } catch (error) {
     console.error('User growth stats API error:', error);
