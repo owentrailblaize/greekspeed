@@ -15,7 +15,7 @@ export function UserGrowthDashboard() {
   const { isDeveloper } = useProfile();
   const { hasAccess, loading } = useRoleAccess(['admin']);
   const [stats, setStats] = useState<UserGrowthStats | null>(null);
-  const [filters, setFilters] = useState<Filters>({});
+  const [filters, setFilters] = useState<Filters>({ activityWindow: 30 });
   const [selectedMetric, setSelectedMetric] = useState<MetricType | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
   
@@ -28,9 +28,9 @@ export function UserGrowthDashboard() {
       setLoadingStats(true);
       const params = new URLSearchParams();
       if (filters.chapterId) params.append('chapter_id', filters.chapterId);
-      if (filters.startDate) params.append('start_date', filters.startDate);
-      if (filters.endDate) params.append('end_date', filters.endDate);
-      if (filters.activityWindow) params.append('activity_window', filters.activityWindow.toString());
+      if (filters.activityWindow) {
+        params.append('activity_window', filters.activityWindow.toString());
+      }
 
       const response = await fetch(`/api/developer/user-growth/stats?${params.toString()}`);
       if (!response.ok) throw new Error('Failed to load stats');
@@ -42,7 +42,7 @@ export function UserGrowthDashboard() {
     } finally {
       setLoadingStats(false);
     }
-  }, [filters.chapterId, filters.startDate, filters.endDate, filters.activityWindow]);
+  }, [filters.chapterId, filters.activityWindow]);
 
   useEffect(() => {
     if (!loading && (isDeveloper || hasAccess)) {

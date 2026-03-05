@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { EXECUTIVE_ROLES } from '@/lib/permissions';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -11,31 +10,24 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     
     const chapterId = searchParams.get('chapter_id') || undefined;
-    const startDate = searchParams.get('start_date') || undefined;
-    const endDate = searchParams.get('end_date') || undefined;
-    const activityWindow = parseInt(searchParams.get('activity_window') || '30');
-    const days = parseInt(searchParams.get('days') || '90'); // Default to 90 days of data
+    const activityWindowParam = searchParams.get('activity_window') || '30';
+    const activityWindow = activityWindowParam === 'all' ? null : parseInt(activityWindowParam);
 
-    // Calculate date range
-    const end = endDate ? new Date(endDate) : new Date();
-    const start = startDate ? new Date(startDate) : new Date();
-    start.setDate(start.getDate() - days);
+    // Calculate date range based on activity window
+    const now = new Date();
+    const startDate = activityWindow ? new Date(now.getTime() - activityWindow * 24 * 60 * 60 * 1000) : null;
 
     // Fetch all profiles in date range
     let profilesQuery = supabase
       .from('profiles')
-      .select('id, role, chapter_role, member_status, created_at, last_active_at, chapter_id');
+      .select('id, role, created_at, chapter_id');
 
     if (chapterId) {
       profilesQuery = profilesQuery.eq('chapter_id', chapterId);
     }
 
     if (startDate) {
-      profilesQuery = profilesQuery.gte('created_at', start.toISOString());
-    }
-
-    if (endDate) {
-      profilesQuery = profilesQuery.lte('created_at', end.toISOString());
+      profilesQuery = profilesQuery.gte('created_at', startDate.toISOString());
     }
 
     const { data: profiles, error } = await profilesQuery;
@@ -45,16 +37,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch chart data' }, { status: 500 });
     }
 
-    // Group by date and calculate metrics
+    // Group by date and calculate metrics using simplified role-based queries
     const dateMap = new Map<string, {
       total: Set<string>;
       admin: Set<string>;
       alumni: Set<string>;
       activeMember: Set<string>;
     }>();
-
-    const activeMemberCutoff = new Date();
-    activeMemberCutoff.setDate(activeMemberCutoff.getDate() - activityWindow);
 
     profiles?.forEach((profile) => {
       const createdDate = new Date(profile.created_at).toISOString().split('T')[0];
@@ -71,20 +60,16 @@ export async function GET(request: NextRequest) {
       const dayData = dateMap.get(createdDate)!;
       dayData.total.add(profile.id);
 
-      if (profile.member_status === 'active' && profile.chapter_role && EXECUTIVE_ROLES.includes(profile.chapter_role as any)) {
+      // Count by role directly (matching the stats API queries)
+      if (profile.role === 'admin') {
         dayData.admin.add(profile.id);
       }
 
-      if (profile.role === 'alumni' && profile.member_status === 'active') {
+      if (profile.role === 'alumni') {
         dayData.alumni.add(profile.id);
       }
 
-      if (
-        profile.role === 'active_member' &&
-        profile.member_status === 'active' &&
-        profile.last_active_at &&
-        new Date(profile.last_active_at) >= activeMemberCutoff
-      ) {
+      if (profile.role === 'active_member') {
         dayData.activeMember.add(profile.id);
       }
     });

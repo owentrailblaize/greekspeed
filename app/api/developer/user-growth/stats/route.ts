@@ -10,14 +10,17 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     
     const chapterId = searchParams.get('chapter_id') || undefined;
-    const startDate = searchParams.get('start_date') || undefined;
-    const endDate = searchParams.get('end_date') || undefined;
-    const activityWindow = parseInt(searchParams.get('activity_window') || '30');
+    const activityWindowParam = searchParams.get('activity_window') || '30';
+    const activityWindow = activityWindowParam === 'all' ? null : parseInt(activityWindowParam);
 
-    // Calculate previous period (7 days ago) for week-over-week comparison
+    // Calculate date range based on activity window
     const now = new Date();
+    const startDate = activityWindow ? new Date(now.getTime() - activityWindow * 24 * 60 * 60 * 1000) : null;
+    
+    // Calculate previous period (7 days ago) for week-over-week comparison
     const sevenDaysAgo = new Date(now);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const previousStartDate = activityWindow ? new Date(sevenDaysAgo.getTime() - activityWindow * 24 * 60 * 60 * 1000) : null;
 
     // Helper function to build base query with filters
     const buildQuery = (roleFilter?: string, usePreviousPeriod = false) => {
@@ -29,15 +32,14 @@ export async function GET(request: NextRequest) {
         query = query.eq('chapter_id', chapterId);
       }
       
+      const dateThreshold = usePreviousPeriod ? previousStartDate : startDate;
+      
+      if (dateThreshold) {
+        query = query.gte('created_at', dateThreshold.toISOString());
+      }
+      
       if (usePreviousPeriod) {
         query = query.lte('created_at', sevenDaysAgo.toISOString());
-      } else {
-        if (startDate) {
-          query = query.gte('created_at', startDate);
-        }
-        if (endDate) {
-          query = query.lte('created_at', endDate);
-        }
       }
       
       if (roleFilter) {

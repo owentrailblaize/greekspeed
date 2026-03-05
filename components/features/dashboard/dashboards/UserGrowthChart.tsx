@@ -41,10 +41,9 @@ export const UserGrowthChart = memo(function UserGrowthChart({ filters }: UserGr
       setLoading(true);
       const params = new URLSearchParams();
       if (filters.chapterId) params.append('chapter_id', filters.chapterId);
-      if (filters.startDate) params.append('start_date', filters.startDate);
-      if (filters.endDate) params.append('end_date', filters.endDate);
-      if (filters.activityWindow) params.append('activity_window', filters.activityWindow.toString());
-      params.append('days', '90');
+      if (filters.activityWindow) {
+        params.append('activity_window', filters.activityWindow.toString());
+      }
 
       const response = await fetch(`/api/developer/user-growth/chart?${params.toString()}`);
       if (!response.ok) throw new Error('Failed to load chart data');
@@ -56,7 +55,7 @@ export const UserGrowthChart = memo(function UserGrowthChart({ filters }: UserGr
     } finally {
       setLoading(false);
     }
-  }, [filters.chapterId, filters.startDate, filters.endDate, filters.activityWindow]);
+  }, [filters.chapterId, filters.activityWindow]);
 
   useEffect(() => {
     // Serialize filters to string for comparison

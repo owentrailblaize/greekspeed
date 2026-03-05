@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 import type { UserGrowthFilters } from '@/types/user-growth';
 
 interface UserGrowthFiltersProps {
@@ -37,15 +36,9 @@ export function UserGrowthFilters({ filters, onFiltersChange }: UserGrowthFilter
     onFiltersChange(newFilters);
   };
 
-  const clearFilters = () => {
-    const cleared = {};
-    setLocalFilters(cleared);
-    onFiltersChange(cleared);
-  };
-
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* Organization Filter */}
         <div>
           <Label htmlFor="chapter" className="text-xs">Organization</Label>
@@ -67,53 +60,27 @@ export function UserGrowthFilters({ filters, onFiltersChange }: UserGrowthFilter
           </Select>
         </div>
 
-        {/* Date Range - Start */}
-        <div>
-          <Label htmlFor="startDate" className="text-xs">Start Date</Label>
-          <input
-            id="startDate"
-            type="date"
-            value={localFilters.startDate || ''}
-            onChange={(e) => handleFilterChange('startDate', e.target.value)}
-            className="w-full px-2 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-brand-primary"
-          />
-        </div>
-
-        {/* Date Range - End */}
-        <div>
-          <Label htmlFor="endDate" className="text-xs">End Date</Label>
-          <input
-            id="endDate"
-            type="date"
-            value={localFilters.endDate || ''}
-            onChange={(e) => handleFilterChange('endDate', e.target.value)}
-            className="w-full px-2 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-brand-primary"
-          />
-        </div>
-
         {/* Activity Window */}
         <div>
-          <Label htmlFor="activityWindow" className="text-xs">Activity Window</Label>
+          <Label htmlFor="activityWindow" className="text-xs">Time Period</Label>
           <Select
             value={localFilters.activityWindow?.toString() || '30'}
-            onValueChange={(value) => handleFilterChange('activityWindow', parseInt(value) as 7 | 30 | 90)}
+            onValueChange={(value) => {
+              const windowValue = value === 'all' ? 'all' : parseInt(value) as 30 | 90 | 180;
+              handleFilterChange('activityWindow', windowValue);
+            }}
           >
             <SelectTrigger className="h-9">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7">7 days</SelectItem>
-              <SelectItem value="30">30 days</SelectItem>
-              <SelectItem value="90">90 days</SelectItem>
+              <SelectItem value="30">30 Days</SelectItem>
+              <SelectItem value="90">3 Months</SelectItem>
+              <SelectItem value="180">6 Months</SelectItem>
+              <SelectItem value="all">All Time</SelectItem>
             </SelectContent>
           </Select>
         </div>
-      </div>
-
-      <div className="flex justify-end">
-        <Button variant="outline" size="sm" onClick={clearFilters}>
-          Clear Filters
-        </Button>
       </div>
     </div>
   );
