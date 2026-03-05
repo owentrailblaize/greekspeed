@@ -2,7 +2,6 @@
 
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { UserGrowthDashboard } from './UserGrowthDashboard';
-import { Button } from '@/components/ui/button';
 
 export function DeveloperOverview() {
   const { isDeveloper } = useProfile();
@@ -19,45 +18,25 @@ export function DeveloperOverview() {
   }
 
   return (
-    <div className="w-full bg-gray-50">
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        {/* Developer Tools Section */}
-        <div className="mb-8">
-          
-          {/* Developer Tools Grid - Three Simple Buttons */}
-          <div className="max-w-6xl mx-auto flex flex-wrap gap-4 justify-center">
-            {/* User Management Button */}
-            <Button
-              variant="default"
-              className="rounded-full px-6 py-2"
-              onClick={() => window.location.href = '/dashboard/user-management'}
-            >
-              User Management
-            </Button>
-
-            {/* Feature Flags Button */}
-            <Button
-              variant="default"
-              className="rounded-full px-6 py-2"
-              onClick={() => window.location.href = '/dashboard/feature-flags'}
-            >
-              Feature Flags
-            </Button>
-
-            {/* Branding Management Button */}
-            <Button
-              variant="default"
-              className="rounded-full px-6 py-2"
-              onClick={() => window.location.href = '/dashboard/developer/branding'}
-            >
-              Branding Management
-            </Button>
-          </div>
-        </div>
-
-        {/* User Growth Dashboard - Stacked on top */}
-        <div className="mb-12">
+    <div 
+      className="w-full bg-gray-50 overflow-hidden"
+      style={{
+        height: 'calc(100vh - 4rem)', // Full viewport minus header (assuming 4rem header)
+        maxHeight: 'calc(100vh - 4rem)',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {/* Main Content - Flex container to fill available space */}
+      <div 
+        className="max-w-7xl mx-auto w-full flex-1 flex flex-col overflow-hidden"
+        style={{
+          padding: '1rem',
+          minHeight: 0,
+        }}
+      >
+        {/* User Growth Dashboard - Takes all available space */}
+        <div className="flex-1 min-h-0 overflow-hidden">
           <UserGrowthDashboard />
         </div>
       </div>

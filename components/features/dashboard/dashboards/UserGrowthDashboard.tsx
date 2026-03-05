@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useRoleAccess } from '@/lib/hooks/useRoleAccess';
 import { UserGrowthKPICard } from './UserGrowthKPICard';
@@ -18,14 +18,12 @@ export function UserGrowthDashboard() {
   const [filters, setFilters] = useState<Filters>({});
   const [selectedMetric, setSelectedMetric] = useState<MetricType | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
+  
+  // Use ref to track previous filters for comparison
+  const prevFiltersRef = useRef<string>('');
 
-  useEffect(() => {
-    if (!loading && (isDeveloper || hasAccess)) {
-      loadStats();
-    }
-  }, [loading, isDeveloper, hasAccess, filters]);
-
-  const loadStats = async () => {
+  // Memoize loadStats to prevent recreation on every render
+  const loadStats = useCallback(async () => {
     try {
       setLoadingStats(true);
       const params = new URLSearchParams();
@@ -44,11 +42,24 @@ export function UserGrowthDashboard() {
     } finally {
       setLoadingStats(false);
     }
-  };
+  }, [filters.chapterId, filters.startDate, filters.endDate, filters.activityWindow]);
+
+  useEffect(() => {
+    if (!loading && (isDeveloper || hasAccess)) {
+      // Serialize filters to string for comparison
+      const filtersKey = JSON.stringify(filters);
+      
+      // Only load stats if filters actually changed
+      if (prevFiltersRef.current !== filtersKey) {
+        prevFiltersRef.current = filtersKey;
+        loadStats();
+      }
+    }
+  }, [loading, isDeveloper, hasAccess, filters, loadStats]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-brand-primary mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">Loading dashboard...</p>
@@ -59,7 +70,7 @@ export function UserGrowthDashboard() {
 
   if (!isDeveloper && !hasAccess) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
           <p className="text-gray-600">You don't have access to this dashboard.</p>
@@ -69,57 +80,86 @@ export function UserGrowthDashboard() {
   }
 
   return (
-    <>
-      {/* Last Updated */}
+    <div 
+      className="h-full flex flex-col overflow-hidden"
+      style={{
+        height: '100%',
+        maxHeight: '100%',
+      }}
+    >
+      {/* Last Updated - Compact */}
       {stats && (
-        <div className="mb-4 flex items-center text-sm text-gray-500">
-          <Clock className="h-4 w-4 mr-2" />
+        <div className="mb-2 flex items-center text-xs text-gray-500 flex-shrink-0">
+          <Clock className="h-3 w-3 mr-1" />
           Last updated: {new Date(stats.lastUpdated).toLocaleString()}
         </div>
       )}
 
-      {/* Main Content: Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Left Column: Vertically Stacked KPI Cards */}
-        <div className="lg:col-span-1 space-y-4">
-          <UserGrowthKPICard
-            title="Total Users"
-            value={stats?.totalUsers || 0}
-            loading={loadingStats}
-            onClick={() => setSelectedMetric('total')}
-          />
-          <UserGrowthKPICard
-            title="Alumni Users"
-            value={stats?.alumniUsers || 0}
-            loading={loadingStats}
-            onClick={() => setSelectedMetric('alumni')}
-          />
-          <UserGrowthKPICard
-            title="Member Users"
-            value={stats?.activeMemberUsers || 0}
-            loading={loadingStats}
-            onClick={() => setSelectedMetric('active_member')}
-          />
-          <UserGrowthKPICard
-            title="Admin Users"
-            value={stats?.adminUsers || 0}
-            loading={loadingStats}
-            onClick={() => setSelectedMetric('admin')}
-          />
+      {/* Main Content: Two Column Layout - Flex to fill remaining space */}
+      <div 
+        className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0 overflow-hidden"
+        style={{
+          gridTemplateRows: '1fr',
+        }}
+      >
+        {/* Left Column: Vertically Stacked KPI Cards - Compact */}
+        <div className="lg:col-span-1 flex flex-col gap-2 overflow-hidden">
+          <div className="flex-1 grid grid-rows-4 gap-2 min-h-0">
+            <UserGrowthKPICard
+              title="Total Users"
+              value={stats?.totalUsers || 0}
+              loading={loadingStats}
+              onClick={() => setSelectedMetric('total')}
+            />
+            <UserGrowthKPICard
+              title="Alumni Users"
+              value={stats?.alumniUsers || 0}
+              loading={loadingStats}
+              onClick={() => setSelectedMetric('alumni')}
+            />
+            <UserGrowthKPICard
+              title="Member Users"
+              value={stats?.activeMemberUsers || 0}
+              loading={loadingStats}
+              onClick={() => setSelectedMetric('active_member')}
+            />
+            <UserGrowthKPICard
+              title="Admin Users"
+              value={stats?.adminUsers || 0}
+              loading={loadingStats}
+              onClick={() => setSelectedMetric('admin')}
+            />
+          </div>
         </div>
 
-        {/* Right Column: Chart with Filters Inside */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>User Growth Trends</CardTitle>
-              {/* Filters moved inside card header */}
-              <div className="mt-4">
+        {/* Right Column: Chart with Filters Inside - Takes remaining space */}
+        <div className="lg:col-span-2 flex flex-col min-h-0 overflow-hidden">
+          <Card className="flex flex-col h-full overflow-hidden">
+            <CardHeader className="flex-shrink-0 pb-3">
+              <CardTitle className="text-lg">User Growth Trends</CardTitle>
+              {/* Filters moved inside card header - Compact */}
+              <div className="mt-2">
                 <UserGrowthFilters filters={filters} onFiltersChange={setFilters} />
               </div>
             </CardHeader>
-            <CardContent>
-              <UserGrowthChart filters={filters} />
+            <CardContent 
+              className="flex-1 min-h-0 overflow-hidden p-4"
+              style={{
+                contain: 'layout style paint',
+                position: 'relative',
+              }}
+            >
+              <div 
+                className="h-full w-full"
+                style={{
+                  height: '100%',
+                  minHeight: 0,
+                  contain: 'layout style paint',
+                  position: 'relative',
+                }}
+              >
+                <UserGrowthChart filters={filters} />
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -133,6 +173,6 @@ export function UserGrowthDashboard() {
           onClose={() => setSelectedMetric(null)}
         />
       )}
-    </>
+    </div>
   );
 }
