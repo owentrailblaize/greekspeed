@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Palette, Search, List, LayoutGrid } from 'lucide-react';
+import { Loader2, Palette, Search, List, LayoutGrid, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { BrandingForm } from '@/components/features/branding/BrandingForm';
 import { ChapterBrandingList } from '@/components/features/branding/ChapterBrandingList';
