@@ -45,6 +45,7 @@ export function UserGrowthFilters({ filters, onFiltersChange }: UserGrowthFilter
           <Select
             value={localFilters.chapterId || 'all'}
             onValueChange={(value) => handleFilterChange('chapterId', value === 'all' ? undefined : value)}
+            className="[&>button]:rounded-full"
           >
             <SelectTrigger className="h-9">
               <SelectValue placeholder="All Organizations" />
@@ -69,6 +70,7 @@ export function UserGrowthFilters({ filters, onFiltersChange }: UserGrowthFilter
               const windowValue = value === 'all' ? 'all' : parseInt(value) as 30 | 90 | 180;
               handleFilterChange('activityWindow', windowValue);
             }}
+            className="[&>button]:rounded-full"
           >
             <SelectTrigger className="h-9">
               <SelectValue />
