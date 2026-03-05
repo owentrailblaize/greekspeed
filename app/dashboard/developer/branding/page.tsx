@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { DeveloperPortal } from '@/components/features/dashboard/dashboards/DeveloperPortal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Loader2, Palette, Search, Building2, List, LayoutGrid } from 'lucide-react';
+import { Loader2, Palette, Search, List, LayoutGrid, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { BrandingForm } from '@/components/features/branding/BrandingForm';
 import { ChapterBrandingList } from '@/components/features/branding/ChapterBrandingList';
@@ -305,29 +306,21 @@ function DeveloperBrandingPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.push('/dashboard')}
-                className="flex items-center space-x-2 text-black-600 hover:text-gray-900 hover:bg-gray-100 rounded-full"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Dashboard</span>
-              </Button>
-              <div>
-                <div className="flex items-center space-x-2">
-                  <h1 className="text-3xl font-bold text-black-900">Branding Management</h1>
+    <DeveloperPortal>
+      <div className="min-h-full bg-gray-50">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <h1 className="text-3xl font-bold text-black-900">Branding Management</h1>
+                  </div>
+                  <p className="text-gray-600 mt-1">Manage branding for all chapters</p>
                 </div>
-                <p className="text-gray-600 mt-1">Manage branding for all chapters</p>
               </div>
-            </div>
-            <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2">
               <Button
                 variant={viewMode === 'sidebar' ? 'default' : 'outline'}
                 size="sm"
@@ -489,7 +482,8 @@ function DeveloperBrandingPageContent() {
         </div>
         )}
       </div>
-    </div>
+      </div>
+    </DeveloperPortal>
   );
 }
 
