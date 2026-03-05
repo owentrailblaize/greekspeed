@@ -1,15 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { useRouter } from 'next/navigation';
+import { DeveloperPortal } from '@/components/features/dashboard/dashboards/DeveloperPortal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { 
-  ArrowLeft, 
   Flag, 
   Search, 
   Loader2,
@@ -174,28 +172,8 @@ export default function FeatureFlagsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
-            <div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.push('/dashboard')}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 mb-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Dashboard</span>
-              </Button>
-              <h1 className="text-3xl font-bold text-primary-900">Feature Flags Management</h1>
-              <p className="text-gray-600">Enable or disable features for specific chapters</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <DeveloperPortal>
+      <div className="min-h-full bg-gray-50">
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-6">
         {/* Search Bar */}
@@ -335,6 +313,7 @@ export default function FeatureFlagsPage() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </DeveloperPortal>
   );
 }
