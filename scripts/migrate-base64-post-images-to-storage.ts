@@ -2,13 +2,15 @@
  * One-time migration: find posts with base64 image_url or metadata.image_urls,
  * upload each image to Supabase Storage (post-images bucket, path migrated/{post_id}/{index}.{ext}),
  * then update the post row to use the new public URLs. No posts are deleted.
+ * Deduplicates by content hash before upload so the same image is only stored once per post.
  *
- * Run: npx tsx scripts/migrate-base64-post-images-to-storage.ts
+ * Run: npx tsx scripts/migrate-base64-post-images-to-storage.ts [post_id]
  * Requires: .env.local with NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY
  */
 
 import 'dotenv/config';
 import * as path from 'path';
+import * as crypto from 'crypto';
 import * as dotenv from 'dotenv';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
@@ -69,6 +71,24 @@ function collectDataUrls(post: {
   return urls;
 }
 
+/** Deduplicate data URLs by content hash so the same image is only uploaded once per post. */
+function deduplicateDataUrlsByHash(dataUrls: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const dataUrl of dataUrls) {
+    try {
+      const { buffer } = parseDataUrl(dataUrl);
+      const hash = crypto.createHash('sha256').update(buffer).digest('hex');
+      if (seen.has(hash)) continue;
+      seen.add(hash);
+      result.push(dataUrl);
+    } catch {
+      result.push(dataUrl);
+    }
+  }
+  return result;
+}
+
 async function uploadToStorage(postId: string, dataUrl: string, index: number): Promise<string> {
   const { buffer, ext } = parseDataUrl(dataUrl);
   const filePath = `${MIGRATED_PREFIX}/${postId}/${index}.${ext}`;
@@ -88,7 +108,8 @@ async function migratePost(post: {
   image_url?: string | null;
   metadata?: Record<string, unknown> | null;
 }): Promise<{ ok: boolean; error?: string }> {
-  const dataUrls = collectDataUrls(post);
+  const rawUrls = collectDataUrls(post);
+  const dataUrls = deduplicateDataUrlsByHash(rawUrls);
   if (dataUrls.length === 0) return { ok: true };
 
   const newUrls: string[] = [];
