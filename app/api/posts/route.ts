@@ -3,25 +3,18 @@ import { createClient } from '@supabase/supabase-js';
 import { fetchLinkPreviewsServer } from '@/lib/services/linkPreviewService';
 import { LinkPreview } from '@/types/posts';
 
-/** For slim first page: strip base64 image_url/metadata.image_urls and set has_image. */
+/** For slim first page: omit image URLs and set has_image so the client can load images on demand. */
 function toSlimPostShape<T extends { image_url?: string | null; metadata?: Record<string, unknown> }>(
   post: T
 ): T & { has_image?: boolean } {
   const out = { ...post, has_image: false } as T & { has_image: boolean };
-  const hasDataUrl = (url: string) => typeof url === 'string' && url.startsWith('data:');
-  const imageUrl = post.image_url ?? undefined;
-  let meta = post.metadata;
-  if (hasDataUrl(imageUrl as string)) {
+  const hasImage =
+    (post.image_url != null && post.image_url !== '') ||
+    (Array.isArray(post.metadata?.image_urls) && post.metadata.image_urls.length > 0);
+  if (hasImage) {
     (out as { image_url: null }).image_url = null;
     out.has_image = true;
-  } else if (imageUrl && (imageUrl as string).startsWith('http')) {
-    out.has_image = true;
-  }
-  const urls = meta?.image_urls;
-  if (Array.isArray(urls) && urls.some((u: unknown) => hasDataUrl(u as string))) {
-    out.has_image = true;
-    meta = { ...meta, image_urls: [] };
-    (out as { metadata: typeof meta }).metadata = meta;
+    out.metadata = post.metadata ? { ...post.metadata, image_urls: [] } : { image_urls: [] };
   }
   return out;
 }
@@ -166,7 +159,7 @@ export async function GET(request: NextRequest) {
       };
     }) || [];
 
-    // Slim first page: strip base64 image_url so initial payload stays small
+    // Slim first page: omit image URLs so initial payload stays small; client loads via /api/posts/[id]/image
     if (page === 1) {
       transformedPosts = transformedPosts.map((p) => toSlimPostShape(p));
     }
