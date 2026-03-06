@@ -3,6 +3,29 @@ import { createClient } from '@supabase/supabase-js';
 import { fetchLinkPreviewsServer } from '@/lib/services/linkPreviewService';
 import { LinkPreview } from '@/types/posts';
 
+/** For slim first page: strip base64 image_url/metadata.image_urls and set has_image. */
+function toSlimPostShape<T extends { image_url?: string | null; metadata?: Record<string, unknown> }>(
+  post: T
+): T & { has_image?: boolean } {
+  const out = { ...post, has_image: false } as T & { has_image: boolean };
+  const hasDataUrl = (url: string) => typeof url === 'string' && url.startsWith('data:');
+  const imageUrl = post.image_url ?? undefined;
+  let meta = post.metadata;
+  if (hasDataUrl(imageUrl as string)) {
+    (out as { image_url: null }).image_url = null;
+    out.has_image = true;
+  } else if (imageUrl && (imageUrl as string).startsWith('http')) {
+    out.has_image = true;
+  }
+  const urls = meta?.image_urls;
+  if (Array.isArray(urls) && urls.some((u: unknown) => hasDataUrl(u as string))) {
+    out.has_image = true;
+    meta = { ...meta, image_urls: [] };
+    (out as { metadata: typeof meta }).metadata = meta;
+  }
+  return out;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -127,9 +150,8 @@ export async function GET(request: NextRequest) {
     );
 
     // Transform the data to include like status and author info
-    const transformedPosts = posts?.map(post => {
-      // Normalize author - Supabase may return it as an array even for one-to-one relationships
-      const author = Array.isArray(post.author) 
+    let transformedPosts = posts?.map(post => {
+      const author = Array.isArray(post.author)
         ? post.author[0] || null
         : post.author || null;
 
@@ -141,9 +163,13 @@ export async function GET(request: NextRequest) {
         likes_count: post.likes_count || 0,
         comments_count: post.comments_count || 0,
         shares_count: post.shares_count || 0,
-        // No comments_preview - will be loaded on-demand when user expands post
       };
     }) || [];
+
+    // Slim first page: strip base64 image_url so initial payload stays small
+    if (page === 1) {
+      transformedPosts = transformedPosts.map((p) => toSlimPostShape(p));
+    }
 
     return NextResponse.json(
       {

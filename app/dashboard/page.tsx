@@ -8,6 +8,29 @@ import type { Profile } from '@/types/profile';
 
 const POSTS_PAGE_LIMIT = 10;
 
+/** For slim first page: strip base64 image_url/metadata.image_urls and set has_image. */
+function toSlimPostShape<T extends { image_url?: string | null; metadata?: Record<string, unknown> }>(
+  post: T
+): T & { has_image?: boolean } {
+  const out = { ...post, has_image: false } as T & { has_image: boolean };
+  const hasDataUrl = (url: string) => typeof url === 'string' && url.startsWith('data:');
+  const imageUrl = post.image_url ?? undefined;
+  let meta = post.metadata;
+  if (hasDataUrl(imageUrl as string)) {
+    (out as { image_url: null }).image_url = null;
+    out.has_image = true;
+  } else if (imageUrl && (imageUrl as string).startsWith('http')) {
+    out.has_image = true;
+  }
+  const urls = meta?.image_urls;
+  if (Array.isArray(urls) && urls.some((u: unknown) => hasDataUrl(u as string))) {
+    out.has_image = true;
+    meta = { ...meta, image_urls: [] };
+    (out as { metadata: typeof meta }).metadata = meta;
+  }
+  return out;
+}
+
 export default async function DashboardPage() {
   const cookieStore = await cookies();
 
@@ -109,12 +132,11 @@ export default async function DashboardPage() {
         const likedPostIds = new Set(userLikes?.map((like) => like.post_id) ?? []);
 
         const transformedPosts: Post[] = posts.map((post) => {
-          // Normalize author - Supabase may return it as an array even for one-to-one relationships
-          const author = Array.isArray(post.author) 
+          const author = Array.isArray(post.author)
             ? post.author[0] || null
             : post.author || null;
 
-          return {
+          const base = {
             ...post,
             author,
             is_liked: likedPostIds.has(post.id),
@@ -122,8 +144,8 @@ export default async function DashboardPage() {
             likes_count: post.likes_count ?? 0,
             comments_count: post.comments_count ?? 0,
             shares_count: post.shares_count ?? 0,
-            // No comments_preview - will be loaded on-demand
           };
+          return toSlimPostShape(base) as Post;
         });
 
         initialFeed = {

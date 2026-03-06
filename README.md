@@ -183,6 +183,23 @@ git push origin v1.0.0
 ## Environment
 The application uses environment-based configuration. Ensure all required environment variables are set before running the application.
 
+## Dev and Production Database
+
+We use **separate Supabase projects** for local development and production. Which database the app uses is determined only by environment variables (no code branching).
+
+| Environment | Config source | Database |
+|-------------|----------------|----------|
+| Local (`npm run dev`) | `.env.local` | Dev Supabase project |
+| Production (e.g. trailblaize.net) | Vercel/host env vars | Production Supabase project |
+
+**Workflow**
+
+- **Schema and table changes:** Define migrations in `supabase/migrations/`. Run them against the **dev** project first, test locally, then apply the same migrations to the **production** project when releasing (like promoting code to main).
+- **Local testing:** The app never touches production when run locally; `.env.local` must contain only the **dev** project URL and keys.
+- **Production:** Production URL and keys live only in the deployment host (e.g. Vercel); never put production Supabase credentials in `.env.local`.
+
+**Cloning production into a new dev project:** Use [Supabase: Restore to a new project](https://supabase.com/docs/guides/platform/clone-project) (paid plan) or [Backup and restore with the CLI](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore) to copy production data into a new Supabase project, then point `.env.local` at that project.
+
 ## For AI Agents & Developers
 
 This codebase is optimized for AI-assisted development. Key resources:
