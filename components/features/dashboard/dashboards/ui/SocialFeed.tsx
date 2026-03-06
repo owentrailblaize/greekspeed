@@ -312,8 +312,13 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
           </div>
         )}
 
-        {/* Use mergedPosts instead of posts to show initialData immediately */}
-        {mergedPosts.length === 0 ? (
+        {/* Loading: show spinner until first fetch completes; empty state only when loaded with 0 posts */}
+        {isInitialLoading && mergedPosts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 sm:py-16 gap-3">
+            <div className="w-8 h-8 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-500 text-sm sm:text-base">Loading feed…</p>
+          </div>
+        ) : mergedPosts.length === 0 ? (
           <div className="text-center py-8 sm:py-12">
             <p className="text-gray-500 text-lg sm:text-base">No posts yet</p>
             <p className="text-sm text-gray-400 mt-2">Be the first to share something!</p>
