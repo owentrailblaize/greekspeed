@@ -51,7 +51,7 @@ function slimPost(post: Post): Post {
     has_image = true;
     metadata = { ...metadata, image_urls: [] };
   }
-  return { ...rest, metadata, image_url: image_url ?? null, has_image, comments_preview: [] };
+  return { ...rest, metadata, image_url: image_url ?? undefined, has_image, comments_preview: [] };
 }
 
 /**
