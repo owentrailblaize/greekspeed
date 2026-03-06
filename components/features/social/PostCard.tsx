@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useMemo, useState, useCallback } from 'react';
+import { memo, useMemo, useState, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
@@ -11,6 +11,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { LinkPreviewCard } from './LinkPreviewCard';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
 import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
+import { useAuth } from '@/lib/supabase/auth-context';
 
 /* -----------------------------------------------------------------------
  * 9a: Lazy-load heavy modals via next/dynamic.
@@ -224,7 +225,11 @@ function PostCardInner({
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  // Extract image URLs from post
+  // On-demand image load when feed omitted URLs (slim feed)
+  const [loadedImageUrls, setLoadedImageUrls] = useState<string[] | null>(null);
+  const { getAuthHeaders } = useAuth();
+
+  // Extract image URLs from post (from feed payload)
   const imageUrls = useMemo(() => {
     if (
       post.metadata?.image_urls &&
@@ -237,7 +242,42 @@ function PostCardInner({
       return [post.image_url];
     }
     return [];
-  }, [post.image_url, post.metadata]);
+  }, [post.image_url, post.metadata, post.has_image]);
+
+  // Resolved URLs: use on-demand loaded URLs when post has_image but feed had none
+  const resolvedImageUrls = useMemo(() => {
+    if (post.has_image && imageUrls.length === 0 && loadedImageUrls !== null) {
+      return loadedImageUrls;
+    }
+    return imageUrls;
+  }, [post.has_image, imageUrls, loadedImageUrls]);
+
+  // Fetch image for this post when slim feed omitted it
+  useEffect(() => {
+    if (!post.has_image || imageUrls.length > 0 || loadedImageUrls !== null) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const headers = getAuthHeaders();
+        const res = await fetch(`/api/posts/${post.id}/image`, { headers });
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const urls =
+          Array.isArray(data.image_urls) && data.image_urls.length > 0
+            ? data.image_urls
+            : data.image_url
+              ? [data.image_url]
+              : [];
+        setLoadedImageUrls(urls);
+      } catch {
+        if (!cancelled) setLoadedImageUrls([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [post.id, post.has_image, imageUrls.length, loadedImageUrls, getAuthHeaders]);
 
   // Stable callbacks for image lightbox
   const handleImageClick = useCallback((index: number) => {
@@ -247,15 +287,15 @@ function PostCardInner({
 
   const handlePrevImage = useCallback(() => {
     setSelectedImageIndex((prev) =>
-      prev > 0 ? prev - 1 : imageUrls.length - 1,
+      prev > 0 ? prev - 1 : resolvedImageUrls.length - 1,
     );
-  }, [imageUrls.length]);
+  }, [resolvedImageUrls.length]);
 
   const handleNextImage = useCallback(() => {
     setSelectedImageIndex((prev) =>
-      prev < imageUrls.length - 1 ? prev + 1 : 0,
+      prev < resolvedImageUrls.length - 1 ? prev + 1 : 0,
     );
-  }, [imageUrls.length]);
+  }, [resolvedImageUrls.length]);
 
   const handleCloseLightbox = useCallback(() => {
     setIsImageModalOpen(false);
@@ -500,12 +540,20 @@ function PostCardInner({
                 'text-gray-700 text-sm leading-relaxed',
                 'text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors',
               )}
-              {/* 9c: Extracted image grid */}
-              <PostImageGrid
-                imageUrls={imageUrls}
-                onImageClick={handleImageClick}
-                multiImageSizes="(max-width: 640px) 128px, 160px"
-              />
+              {/* 9c: Extracted image grid; placeholder when slim feed omitted image URL */}
+              {post.has_image && resolvedImageUrls.length === 0 ? (
+                <div
+                  className="w-full rounded-3xl aspect-[4/3] bg-gray-100 animate-pulse"
+                  style={{ maxHeight: '24rem' }}
+                  aria-label="Image loading"
+                />
+              ) : (
+                <PostImageGrid
+                  imageUrls={resolvedImageUrls}
+                  onImageClick={handleImageClick}
+                  multiImageSizes="(max-width: 640px) 128px, 160px"
+                />
+              )}
               {/* Link Previews */}
               {post.metadata?.link_previews &&
                 post.metadata.link_previews.length > 0 && (
@@ -516,7 +564,7 @@ function PostCardInner({
                           key={preview.url || index}
                           preview={preview}
                           className="max-w-full"
-                          hideImage={imageUrls.length > 0}
+                          hideImage={resolvedImageUrls.length > 0 || !!post.has_image}
                         />
                       ),
                     )}
@@ -643,12 +691,20 @@ function PostCardInner({
                 'text-gray-700 text-base sm:text-[0.95rem] leading-relaxed',
                 'text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors',
               )}
-              {/* 9c: Extracted image grid */}
-              <PostImageGrid
-                imageUrls={imageUrls}
-                onImageClick={handleImageClick}
-                multiImageSizes="(max-width: 640px) 100vw, 700px"
-              />
+              {/* 9c: Extracted image grid; placeholder when slim feed omitted image URL */}
+              {post.has_image && resolvedImageUrls.length === 0 ? (
+                <div
+                  className="w-full rounded-3xl aspect-[4/3] bg-gray-100 animate-pulse"
+                  style={{ maxHeight: '24rem' }}
+                  aria-label="Image loading"
+                />
+              ) : (
+                <PostImageGrid
+                  imageUrls={resolvedImageUrls}
+                  onImageClick={handleImageClick}
+                  multiImageSizes="(max-width: 640px) 100vw, 700px"
+                />
+              )}
               {/* Link Previews */}
               {post.metadata?.link_previews &&
                 post.metadata.link_previews.length > 0 && (
@@ -659,7 +715,7 @@ function PostCardInner({
                           key={preview.url || index}
                           preview={preview}
                           className="max-w-full"
-                          hideImage={imageUrls.length > 0}
+                          hideImage={resolvedImageUrls.length > 0 || !!post.has_image}
                         />
                       ),
                     )}
@@ -710,7 +766,7 @@ function PostCardInner({
       {/* 9a: Image Lightbox — only mounted when an image is clicked */}
       {isImageModalOpen && (
         <ImageLightbox
-          imageUrls={imageUrls}
+          imageUrls={resolvedImageUrls}
           selectedIndex={selectedImageIndex}
           onClose={handleCloseLightbox}
           onPrev={handlePrevImage}

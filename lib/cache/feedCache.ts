@@ -29,16 +29,29 @@ function cacheKey(chapterId: string): string {
   return `${CACHE_PREFIX}-${chapterId}`;
 }
 
-/** Strip heavy nested fields that aren't needed for the initial visual render. */
+/** Strip heavy nested fields and base64 image data for cache. */
 function slimPost(post: Post): Post {
-  // Drop comments_preview (fetched on expand) and link_previews (heavy)
   const { comments_preview, ...rest } = post;
   let metadata = rest.metadata;
   if (metadata?.link_previews) {
     const { link_previews, ...metaRest } = metadata;
     metadata = metaRest;
   }
-  return { ...rest, metadata, comments_preview: [] };
+  const hasDataUrl = (url: string) => typeof url === 'string' && url.startsWith('data:');
+  let image_url = rest.image_url ?? undefined;
+  let has_image = false;
+  if (hasDataUrl(image_url as string)) {
+    image_url = null as unknown as undefined;
+    has_image = true;
+  } else if (image_url && (image_url as string).startsWith('http')) {
+    has_image = true;
+  }
+  const urls = metadata?.image_urls;
+  if (Array.isArray(urls) && urls.some((u: unknown) => hasDataUrl(u as string))) {
+    has_image = true;
+    metadata = { ...metadata, image_urls: [] };
+  }
+  return { ...rest, metadata, image_url: image_url ?? undefined, has_image, comments_preview: [] };
 }
 
 /**

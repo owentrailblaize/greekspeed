@@ -14,6 +14,8 @@ export interface Post {
   content: string;
   post_type: 'text' | 'image' | 'text_image';
   image_url?: string;
+  /** True when post has an image but URL was omitted (slim feed). Load via per-post endpoint when in view. */
+  has_image?: boolean;
   metadata?: Record<string, any> & {
     link_previews?: LinkPreview[];
     profile_update?: {
