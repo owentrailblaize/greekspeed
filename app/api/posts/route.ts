@@ -69,7 +69,17 @@ export async function GET(request: NextRequest) {
       supabase
         .from('posts')
         .select(`
-          *,
+          id,
+          chapter_id,
+          author_id,
+          content,
+          post_type,
+          image_url,
+          likes_count,
+          comments_count,
+          shares_count,
+          created_at,
+          updated_at,
           author:profiles!author_id(
             id,
             full_name,
