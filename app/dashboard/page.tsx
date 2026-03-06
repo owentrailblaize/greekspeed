@@ -8,6 +8,29 @@ import type { Profile } from '@/types/profile';
 
 const POSTS_PAGE_LIMIT = 10;
 
+/** For slim first page: strip base64 image_url/metadata.image_urls and set has_image. */
+function toSlimPostShape<T extends { image_url?: string | null; metadata?: Record<string, unknown> }>(
+  post: T
+): T & { has_image?: boolean } {
+  const out = { ...post, has_image: false } as T & { has_image: boolean };
+  const hasDataUrl = (url: string) => typeof url === 'string' && url.startsWith('data:');
+  const imageUrl = post.image_url ?? undefined;
+  let meta = post.metadata;
+  if (hasDataUrl(imageUrl as string)) {
+    (out as { image_url: null }).image_url = null;
+    out.has_image = true;
+  } else if (imageUrl && (imageUrl as string).startsWith('http')) {
+    out.has_image = true;
+  }
+  const urls = meta?.image_urls;
+  if (Array.isArray(urls) && urls.some((u: unknown) => hasDataUrl(u as string))) {
+    out.has_image = true;
+    meta = { ...meta, image_urls: [] };
+    (out as { metadata: typeof meta }).metadata = meta;
+  }
+  return out;
+}
+
 export default async function DashboardPage() {
   const cookieStore = await cookies();
 
@@ -55,73 +78,110 @@ export default async function DashboardPage() {
     | null = null;
 
   if (profile?.chapter_id) {
-    // ---------------------------------------------------------------------------
-    // Run posts, likes, and count queries IN PARALLEL (saves ~200-400ms)
-    // ---------------------------------------------------------------------------
-    const [postsResult, likesResult, countResult] = await Promise.all([
-      supabase
-        .from('posts')
-        .select(
-          `
-            *,
-            author:profiles!author_id(
+    try {
+      // ---------------------------------------------------------------------------
+      // Run posts, likes, and count queries IN PARALLEL (saves ~200-400ms)
+      // ---------------------------------------------------------------------------
+      const [postsResult, likesResult, countResult] = await Promise.all([
+        supabase
+          .from('posts')
+          .select(
+            `
               id,
-              full_name,
-              first_name,
-              last_name,
-              avatar_url,
-              chapter_role,
-              member_status
-            )
-          `,
-        )
-        .eq('chapter_id', profile.chapter_id)
-        .order('created_at', { ascending: false })
-        .range(0, POSTS_PAGE_LIMIT - 1),
+              chapter_id,
+              author_id,
+              content,
+              post_type,
+              image_url,
+              likes_count,
+              comments_count,
+              shares_count,
+              created_at,
+              updated_at,
+              author:profiles!author_id(
+                id,
+                full_name,
+                first_name,
+                last_name,
+                avatar_url,
+                chapter_role,
+                member_status
+              )
+            `,
+          )
+          .eq('chapter_id', profile.chapter_id)
+          .order('created_at', { ascending: false })
+          .range(0, POSTS_PAGE_LIMIT - 1),
 
-      supabase
-        .from('post_likes')
-        .select('post_id')
-        .eq('user_id', session.user.id),
+        supabase
+          .from('post_likes')
+          .select('post_id')
+          .eq('user_id', session.user.id),
 
-      supabase
-        .from('posts')
-        .select('*', { count: 'exact', head: true })
-        .eq('chapter_id', profile.chapter_id),
-    ]);
+        supabase
+          .from('posts')
+          .select('*', { count: 'exact', head: true })
+          .eq('chapter_id', profile.chapter_id),
+      ]);
 
-    const { data: posts, error: postsError } = postsResult;
-    const { data: userLikes } = likesResult;
-    const { count: totalCount } = countResult;
+      const { data: posts, error: postsError } = postsResult;
+      const { data: userLikes } = likesResult;
+      const { count: totalCount } = countResult;
 
-    if (!postsError && posts) {
-      const likedPostIds = new Set(userLikes?.map((like) => like.post_id) ?? []);
+      if (!postsError && posts) {
+        const likedPostIds = new Set(userLikes?.map((like) => like.post_id) ?? []);
 
-      const transformedPosts: Post[] = posts.map((post) => {
-        // Normalize author - Supabase may return it as an array even for one-to-one relationships
-        const author = Array.isArray(post.author) 
-          ? post.author[0] || null
-          : post.author || null;
+        const transformedPosts: Post[] = posts.map((post) => {
+          const author = Array.isArray(post.author)
+            ? post.author[0] || null
+            : post.author || null;
 
-        return {
-          ...post,
-          author,
-          is_liked: likedPostIds.has(post.id),
-          is_author: post.author_id === session.user.id,
-          likes_count: post.likes_count ?? 0,
-          comments_count: post.comments_count ?? 0,
-          shares_count: post.shares_count ?? 0,
-          // No comments_preview - will be loaded on-demand
+          const base = {
+            ...post,
+            author,
+            is_liked: likedPostIds.has(post.id),
+            is_author: post.author_id === session.user.id,
+            likes_count: post.likes_count ?? 0,
+            comments_count: post.comments_count ?? 0,
+            shares_count: post.shares_count ?? 0,
+          };
+          return toSlimPostShape(base) as Post;
+        });
+
+        initialFeed = {
+          posts: transformedPosts,
+          pagination: {
+            page: 1,
+            limit: POSTS_PAGE_LIMIT,
+            total: totalCount ?? transformedPosts.length,
+            totalPages: Math.ceil((totalCount ?? transformedPosts.length) / POSTS_PAGE_LIMIT),
+          },
+          chapterId: profile.chapter_id,
         };
-      });
-
+      } else {
+        // Even on error, provide empty feed structure to prevent skeleton loader
+        console.error('[DashboardPage] Error fetching posts:', postsError);
+        initialFeed = {
+          posts: [],
+          pagination: {
+            page: 1,
+            limit: POSTS_PAGE_LIMIT,
+            total: 0,
+            totalPages: 0,
+          },
+          chapterId: profile.chapter_id,
+        };
+      }
+    } catch (error) {
+      // On any error, still provide empty structure to prevent skeleton loader
+      console.error('[DashboardPage] Exception fetching initial feed:', error);
       initialFeed = {
-        posts: transformedPosts,
+        posts: [],
         pagination: {
           page: 1,
           limit: POSTS_PAGE_LIMIT,
-          total: totalCount ?? transformedPosts.length,
-          totalPages: Math.ceil((totalCount ?? transformedPosts.length) / POSTS_PAGE_LIMIT),
+          total: 0,
+          totalPages: 0,
         },
         chapterId: profile.chapter_id,
       };

@@ -26,7 +26,52 @@ interface SocialFeedProps {
 export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
-  const [hasScrolled, setHasScrolled] = useState(false); // ← ADD THIS
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  // CRITICAL: Store initialData posts immediately in a ref that persists
+  // This ensures we can show posts even before React Query hydrates
+  // Following industry standards (Facebook/Instagram/TikTok) - always show initial content immediately
+  const initialPostsRef = useRef<Post[]>(initialData?.posts ?? []);
+  
+  // Update ref if initialData changes
+  // If chapterId changes, clear old posts to prevent showing wrong chapter's posts
+  useEffect(() => {
+    // If chapterId changed and doesn't match initialData, clear the ref
+    if (initialData?.chapterId && initialData.chapterId !== chapterId) {
+      initialPostsRef.current = [];
+      if (typeof window !== 'undefined') {
+        console.log('[SocialFeed] Cleared initialPostsRef due to chapterId mismatch', {
+          initialDataChapterId: initialData.chapterId,
+          currentChapterId: chapterId,
+        });
+      }
+    }
+    
+    // Update ref with new initialData if it has posts and matches current chapter
+    if (initialData?.posts && initialData.posts.length > 0 && initialData.chapterId === chapterId) {
+      initialPostsRef.current = initialData.posts;
+      if (typeof window !== 'undefined') {
+        console.log('[SocialFeed] Updated initialPostsRef with new initialData', {
+          postsCount: initialData.posts.length,
+          chapterId: initialData.chapterId,
+        });
+      }
+    }
+  }, [initialData, chapterId]);
+
+  // Debug: Log initial props on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      console.log('[SocialFeed] Component mounted with props:', {
+        chapterId,
+        hasInitialData: !!initialData,
+        initialDataPostsCount: initialData?.posts?.length ?? 0,
+        initialDataChapterId: initialData?.chapterId,
+        initialPostsRefCount: initialPostsRef.current.length,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- only on mount
 
   const {
     posts,
@@ -43,7 +88,30 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
   } = usePosts(chapterId, { initialData });
   const { profile } = useProfile();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  const mergedPosts = useMemo(() => posts, [posts]);
+  
+  // CRITICAL: Use initialData posts immediately if React Query hasn't loaded yet
+  // This ensures instant rendering on first paint (industry standard approach)
+  // Priority: React Query posts > initialData posts from ref > empty array
+  const mergedPosts = useMemo(() => {
+    // Priority 1: If we have posts from React Query, use those (most up-to-date)
+    if (posts.length > 0) {
+      return posts;
+    }
+    // Priority 2: Use initialData posts from ref (instant fallback for first paint)
+    // This is the key to showing content immediately like Facebook/Instagram/TikTok
+    if (initialPostsRef.current.length > 0) {
+      if (typeof window !== 'undefined') {
+        console.log('[SocialFeed] Using initialData posts from ref (instant fallback)', {
+          postsCount: initialPostsRef.current.length,
+          reactQueryPostsCount: posts.length,
+        });
+      }
+      return initialPostsRef.current;
+    }
+    // Priority 3: Empty array (will show "No posts yet")
+    return posts;
+  }, [posts]);
+  
   const prevPostCountRef = useRef(mergedPosts.length);
 
   useEffect(() => {
@@ -141,21 +209,23 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     }
   };
 
-  // Only show skeleton placeholders when there is genuinely no data to display.
-  // When initialData is provided from the server, posts.length > 0 on first render
-  // and isInitialLoading is false, so this gate is skipped entirely.
-  if (posts.length === 0 && isInitialLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="animate-pulse">
-          <div className="h-32 bg-gray-200 rounded-lg" />
-        </div>
-        <div className="animate-pulse">
-          <div className="h-48 bg-gray-200 rounded-lg" />
-        </div>
-      </div>
-    );
-  }
+  // REMOVED: Skeleton loader - never show skeleton, always render feed
+  // The feed will show "No posts yet" if empty, or cached/initial posts immediately
+  // Debug logging to track loading state
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      console.log('[SocialFeed] Render state:', {
+        mergedPostsCount: mergedPosts.length,
+        reactQueryPostsCount: posts.length,
+        initialPostsRefCount: initialPostsRef.current.length,
+        isInitialLoading,
+        hasInitialData: !!initialData,
+        initialDataPostsCount: initialData?.posts?.length ?? 0,
+        chapterId,
+        dataSource: posts.length > 0 ? 'react-query' : initialPostsRef.current.length > 0 ? 'initial-data-ref' : 'empty',
+      });
+    }
+  }, [mergedPosts.length, posts.length, isInitialLoading, initialData, chapterId]);
 
   if (error) {
     return (
@@ -173,8 +243,9 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
       <div 
         className="space-y-6 sm:space-y-5 max-w-2xl mx-auto"
         style={{
-          minHeight: initialData?.posts && initialData.posts.length > 0
-            ? `${Math.min(initialData.posts.length * 400, 2000)}px` // Cap at 2000px
+          // Use mergedPosts for minHeight calculation to ensure proper layout
+          minHeight: mergedPosts.length > 0
+            ? `${Math.min(mergedPosts.length * 400, 2000)}px` // Cap at 2000px
             : '600px'
         }}
       >
@@ -233,14 +304,21 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
           </CardContent>
         </Card>
 
-        {isRefetching && (
+        {/* Show subtle refresh indicator when React Query is updating */}
+        {isRefetching && mergedPosts.length > 0 && (
           <div className="flex items-center space-x-2 text-sm text-gray-500">
             <div className="h-3 w-3 border border-gray-400 border-t-transparent rounded-full animate-spin" />
             <span>Refreshing feed…</span>
           </div>
         )}
 
-        {posts.length === 0 ? (
+        {/* Loading: show spinner until first fetch completes; empty state only when loaded with 0 posts */}
+        {isInitialLoading && mergedPosts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 sm:py-16 gap-3">
+            <div className="w-8 h-8 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-500 text-sm sm:text-base">Loading feed…</p>
+          </div>
+        ) : mergedPosts.length === 0 ? (
           <div className="text-center py-8 sm:py-12">
             <p className="text-gray-500 text-lg sm:text-base">No posts yet</p>
             <p className="text-sm text-gray-400 mt-2">Be the first to share something!</p>
@@ -291,8 +369,9 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
                 <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
               </div>
             )}
-            {!hasNextPage && posts.length > 0 && (
-              <div className="text-center py-4 text-sm text-gray-400">You’re all caught up.</div>
+            {/* Use mergedPosts for consistency, but check React Query posts for pagination state */}
+            {!hasNextPage && mergedPosts.length > 0 && (
+              <div className="text-center py-4 text-sm text-gray-400">You're all caught up.</div>
             )}
           </div>
         )}

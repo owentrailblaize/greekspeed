@@ -3,6 +3,22 @@ import { createClient } from '@supabase/supabase-js';
 import { fetchLinkPreviewsServer } from '@/lib/services/linkPreviewService';
 import { LinkPreview } from '@/types/posts';
 
+/** For slim first page: omit image URLs and set has_image so the client can load images on demand. */
+function toSlimPostShape<T extends { image_url?: string | null; metadata?: Record<string, unknown> }>(
+  post: T
+): T & { has_image?: boolean } {
+  const out = { ...post, has_image: false } as T & { has_image: boolean };
+  const hasImage =
+    (post.image_url != null && post.image_url !== '') ||
+    (Array.isArray(post.metadata?.image_urls) && post.metadata.image_urls.length > 0);
+  if (hasImage) {
+    (out as { image_url: null }).image_url = null;
+    out.has_image = true;
+    out.metadata = post.metadata ? { ...post.metadata, image_urls: [] } : { image_urls: [] };
+  }
+  return out;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -69,7 +85,17 @@ export async function GET(request: NextRequest) {
       supabase
         .from('posts')
         .select(`
-          *,
+          id,
+          chapter_id,
+          author_id,
+          content,
+          post_type,
+          image_url,
+          likes_count,
+          comments_count,
+          shares_count,
+          created_at,
+          updated_at,
           author:profiles!author_id(
             id,
             full_name,
@@ -117,9 +143,8 @@ export async function GET(request: NextRequest) {
     );
 
     // Transform the data to include like status and author info
-    const transformedPosts = posts?.map(post => {
-      // Normalize author - Supabase may return it as an array even for one-to-one relationships
-      const author = Array.isArray(post.author) 
+    let transformedPosts = posts?.map(post => {
+      const author = Array.isArray(post.author)
         ? post.author[0] || null
         : post.author || null;
 
@@ -131,9 +156,13 @@ export async function GET(request: NextRequest) {
         likes_count: post.likes_count || 0,
         comments_count: post.comments_count || 0,
         shares_count: post.shares_count || 0,
-        // No comments_preview - will be loaded on-demand when user expands post
       };
     }) || [];
+
+    // Slim first page: omit image URLs so initial payload stays small; client loads via /api/posts/[id]/image
+    if (page === 1) {
+      transformedPosts = transformedPosts.map((p) => toSlimPostShape(p));
+    }
 
     return NextResponse.json(
       {
