@@ -102,7 +102,7 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
     // This prevents React Query from immediately refetching when `enabled` flips to true.
     staleTime: normalizedInitialData ? 5 * 60 * 1000 : undefined,
     initialDataUpdatedAt: normalizedInitialData ? Date.now() : undefined,
-    refetchOnMount: normalizedInitialData ? false : 'always',
+    refetchOnMount: 'always',
     refetchOnWindowFocus: false,
     getNextPageParam: (lastPage) => {
       const { page, totalPages } = lastPage.pagination;
@@ -147,8 +147,21 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
   }, [data, chapterId, isPlaceholderData]);
 
   const posts = useMemo(() => {
-    // Priority 1: Use initialData immediately if available (server-side rendered)
-    // This ensures instant rendering on first paint
+    // Priority 1: Use React Query data when available (not placeholder)
+    // This ensures we show full data including metadata.link_previews after refetch
+    const pages = data?.pages ?? [];
+    const queryPosts = pages.flatMap((page) => page.posts);
+    if (!isPlaceholderData && queryPosts.length > 0) {
+      if (typeof window !== 'undefined') {
+        console.log('[usePosts] Using React Query data', {
+          postsCount: queryPosts.length,
+          chapterId,
+        });
+      }
+      return queryPosts;
+    }
+
+    // Priority 2: Use initialData for instant first paint (server-side rendered)
     if (normalizedInitialData?.posts && normalizedInitialData.posts.length > 0) {
       if (typeof window !== 'undefined') {
         console.log('[usePosts] Using initialData (server-side)', {
@@ -159,20 +172,7 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
       return normalizedInitialData.posts;
     }
     
-    // Priority 2: Use React Query data if available
-    const pages = data?.pages ?? [];
-    const queryPosts = pages.flatMap((page) => page.posts);
-    if (queryPosts.length > 0) {
-      if (typeof window !== 'undefined') {
-        console.log('[usePosts] Using React Query data', {
-          postsCount: queryPosts.length,
-          chapterId,
-        });
-      }
-      return queryPosts;
-    }
-    
-    // Priority 3: Use placeholderData (localStorage cache) if available
+    // Priority 3: Use placeholderData (localStorage cache) when no query/initial data
     // This provides instant content on return visits
     if (cachedFeed?.pages?.[0]?.posts && cachedFeed.pages[0].posts.length > 0) {
       if (typeof window !== 'undefined') {
