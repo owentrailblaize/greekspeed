@@ -6,13 +6,17 @@ import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Heart, MessageCircle, Trash2, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, MessageCircle, Trash2, X, ChevronLeft, ChevronRight, Send } from 'lucide-react';
 import { Post } from '@/types/posts';
 import { formatDistanceToNow } from 'date-fns';
 import { LinkPreviewCard } from './LinkPreviewCard';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
 import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { useComments } from '@/lib/hooks/useComments';
+import { useProfile } from '@/lib/contexts/ProfileContext';
+import { Textarea } from '@/components/ui/textarea';
+import { PostImageGrid } from './PostImageGrid';
 
 /* -----------------------------------------------------------------------
  * 9a: Lazy-load heavy modals via next/dynamic.
@@ -25,75 +29,6 @@ const LazyDeletePostModal = dynamic(
 );
 
 const MAX_COLLAPSED_CHARS = 220;
-
-/* -----------------------------------------------------------------------
- * 9c: Extracted PostImageGrid
- *     Eliminates the duplicated image-rendering IIFE that appeared in
- *     both the mobile and desktop layouts. Memoized to avoid re-renders
- *     when only text/like counts change.
- * --------------------------------------------------------------------- */
-interface PostImageGridProps {
-  imageUrls: string[];
-  onImageClick: (index: number) => void;
-  /** sizes attribute for multi-image thumbnails */
-  multiImageSizes?: string;
-}
-
-const PostImageGrid = memo(function PostImageGrid({
-  imageUrls,
-  onImageClick,
-  multiImageSizes = '(max-width: 640px) 128px, 160px',
-}: PostImageGridProps) {
-  if (imageUrls.length === 0) return null;
-
-  if (imageUrls.length === 1) {
-    return (
-      <div
-        className="relative w-full overflow-hidden rounded-3xl aspect-[4/3] shadow-inner cursor-pointer hover:opacity-90 transition-opacity"
-        style={{ maxHeight: '24rem' }}
-        onClick={(e) => {
-          e.stopPropagation();
-          onImageClick(0);
-        }}
-      >
-        <Image
-          src={imageUrls[0]}
-          alt="Post content"
-          fill
-          className="object-cover"
-          sizes="(max-width: 640px) 100vw, 700px"
-          priority={false}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative">
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
-        {imageUrls.map((url, index) => (
-          <div
-            key={index}
-            className="relative shrink-0 w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 cursor-pointer hover:opacity-90 transition-opacity"
-            onClick={(e) => {
-              e.stopPropagation();
-              onImageClick(index);
-            }}
-          >
-            <Image
-              src={url}
-              alt={`Post image ${index + 1}`}
-              fill
-              className="object-cover"
-              sizes={multiImageSizes}
-              priority={false}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-});
 
 /* -----------------------------------------------------------------------
  * 9a: Image Lightbox — rendered via portal, mounted ONLY when user clicks
@@ -256,6 +191,14 @@ function PostCardInner({
     }
     return imageUrls;
   }, [post.has_image, imageUrls, loadedImageUrls]);
+
+  const isImageOnly = useMemo(() => {
+    const hasContent = post.content?.trim();
+    const hasLinkPreviews = (post.metadata?.link_previews?.length ?? 0) > 0;
+    return (
+      (post.post_type === 'image' || (post.has_image && resolvedImageUrls.length > 0 && !hasContent && !hasLinkPreviews))
+    );
+  }, [post.post_type, post.has_image, post.content, post.metadata?.link_previews, resolvedImageUrls.length]);
 
   // Fetch image for this post when slim feed omitted it
   useEffect(() => {
@@ -469,6 +412,29 @@ function PostCardInner({
     router.push(`/dashboard/post/${post.id}`);
   }, [router, post.id]);
 
+  const { createComment } = useComments(post.id, { enabled: false });
+  const { profile } = useProfile();
+  const [inlineComment, setInlineComment] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+
+  const handleSubmitInlineComment = useCallback(async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const content = inlineComment.trim();
+    if (!content || isSubmittingComment) return;
+    setIsSubmittingComment(true);
+    try {
+      const created = await createComment({ content });
+      if (created) {
+        setInlineComment('');
+        onCommentAdded?.();
+      }
+    } catch (err) {
+      console.error('Inline comment failed:', err);
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  }, [inlineComment, isSubmittingComment, createComment, onCommentAdded]);
+
   const handleCardClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     if (target.closest('button, a, [role="button"], img')) return;
@@ -539,45 +505,63 @@ function PostCardInner({
             </div>
           </div>
 
-          {/* Post Content - Wrapped in rounded container */}
+          {/* Post Content - cardless when image-only (edge-to-edge) */}
           <div className="mb-3">
-            <div className="rounded-2xl bg-gray-50/30 border border-gray-100/50 p-4 space-y-3">
-              {renderPostContent(
-                'text-gray-700 text-sm leading-relaxed',
-                'text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors',
-              )}
-              {/* 9c: Extracted image grid; placeholder when slim feed omitted image URL */}
-              {post.has_image && resolvedImageUrls.length === 0 ? (
-                <div
-                  className="w-full rounded-3xl aspect-[4/3] bg-gray-100 animate-pulse"
-                  style={{ maxHeight: '24rem' }}
-                  aria-label="Image loading"
-                />
-              ) : (
-                <PostImageGrid
-                  imageUrls={resolvedImageUrls}
-                  onImageClick={handleImageClick}
-                  multiImageSizes="(max-width: 640px) 128px, 160px"
-                />
-              )}
-              {/* Link Previews */}
-              {post.metadata?.link_previews &&
-                post.metadata.link_previews.length > 0 && (
-                  <div className="space-y-3">
-                    {post.metadata.link_previews.map(
-                      (preview: any, index: number) => (
-                        <LinkPreviewCard
-                          key={preview.url || index}
-                          preview={preview}
-                          className="max-w-full"
-                          hideImage={resolvedImageUrls.length > 0 || !!post.has_image}
-                        />
-                      ),
-                    )}
-                  </div>
+            {isImageOnly ? (
+              <>
+                {resolvedImageUrls.length === 0 ? (
+                  <div
+                    className="w-full aspect-[4/3] bg-gray-100 animate-pulse"
+                    style={{ maxHeight: '24rem' }}
+                    aria-label="Image loading"
+                  />
+                ) : (
+                  <PostImageGrid
+                    imageUrls={resolvedImageUrls}
+                    onImageClick={handleImageClick}
+                    multiImageSizes="(max-width: 640px) 100vw, 700px"
+                  />
                 )}
-              {renderCommentsPreview()}
-            </div>
+              </>
+            ) : (
+              <div className="rounded-2xl bg-gray-50/30 border border-gray-100/50 p-4 space-y-3">
+                {renderPostContent(
+                  'text-gray-700 text-sm leading-relaxed',
+                  'text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors',
+                )}
+                {post.has_image && resolvedImageUrls.length === 0 ? (
+                  <div
+                    className="w-full rounded-3xl aspect-[4/3] bg-gray-100 animate-pulse"
+                    style={{ maxHeight: '24rem' }}
+                    aria-label="Image loading"
+                  />
+                ) : (
+                  post.has_image && (
+                    <PostImageGrid
+                      imageUrls={resolvedImageUrls}
+                      onImageClick={handleImageClick}
+                      multiImageSizes="(max-width: 640px) 128px, 160px"
+                    />
+                  )
+                )}
+                {post.metadata?.link_previews &&
+                  post.metadata.link_previews.length > 0 && (
+                    <div className="space-y-3">
+                      {post.metadata.link_previews.map(
+                        (preview: any, index: number) => (
+                          <LinkPreviewCard
+                            key={preview.url || index}
+                            preview={preview}
+                            className="max-w-full"
+                            hideImage={resolvedImageUrls.length > 0 || !!post.has_image}
+                          />
+                        ),
+                      )}
+                    </div>
+                  )}
+                {renderCommentsPreview()}
+              </div>
+            )}
           </div>
 
           {/* Post Actions */}
@@ -614,6 +598,58 @@ function PostCardInner({
                 <span>{commentCountLabel}</span>
               </Button>
             </div>
+          </div>
+
+          {/* Inline comment input */}
+          <div
+            className="flex items-end gap-3 pt-3 border-t border-gray-100/50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="h-8 w-8 rounded-full bg-primary-100/80 flex items-center justify-center text-brand-primary-hover text-xs font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+              {profile?.avatar_url ? (
+                <Image
+                  src={profile.avatar_url}
+                  alt={profile.full_name || 'You'}
+                  width={32}
+                  height={32}
+                  className="h-full w-full rounded-full object-cover"
+                  sizes="32px"
+                />
+              ) : (
+                (profile?.first_name?.charAt(0) || '?')
+              )}
+            </div>
+            <form
+              className="flex-1 flex items-end gap-2"
+              onSubmit={handleSubmitInlineComment}
+            >
+              <Textarea
+                placeholder="Write a comment..."
+                value={inlineComment}
+                onChange={(e) => setInlineComment(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmitInlineComment();
+                  }
+                }}
+                className="min-h-[36px] max-h-[100px] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-brand-primary/20"
+                rows={1}
+              />
+              <Button
+                type="submit"
+                size="sm"
+                disabled={!inlineComment.trim() || isSubmittingComment}
+                className="h-9 w-9 rounded-full p-0 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50"
+                aria-label="Send comment"
+              >
+                {isSubmittingComment ? (
+                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </form>
           </div>
         </div>
       </div>
@@ -686,21 +722,12 @@ function PostCardInner({
             </div>
           </div>
 
-          {/* Post Content - Wrapped in rounded container */}
+          {/* Post Content - cardless when image-only (edge-to-edge) */}
           <div className="space-y-3">
-            <div className={`space-y-3 ${
-              variant === 'profile'
-                ? 'px-1'
-                : 'rounded-2xl bg-gray-50/30 border border-gray-200/80 p-4 sm:p-5'
-            }`}>
-              {renderPostContent(
-                'text-gray-700 text-base sm:text-[0.95rem] leading-relaxed',
-                'text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors',
-              )}
-              {/* 9c: Extracted image grid; placeholder when slim feed omitted image URL */}
-              {post.has_image && resolvedImageUrls.length === 0 ? (
+            {isImageOnly ? (
+              resolvedImageUrls.length === 0 ? (
                 <div
-                  className="w-full rounded-3xl aspect-[4/3] bg-gray-100 animate-pulse"
+                  className="w-full aspect-[4/3] bg-gray-100 animate-pulse rounded-2xl"
                   style={{ maxHeight: '24rem' }}
                   aria-label="Image loading"
                 />
@@ -710,25 +737,50 @@ function PostCardInner({
                   onImageClick={handleImageClick}
                   multiImageSizes="(max-width: 640px) 100vw, 700px"
                 />
-              )}
-              {/* Link Previews */}
-              {post.metadata?.link_previews &&
-                post.metadata.link_previews.length > 0 && (
-                  <div className="space-y-3">
-                    {post.metadata.link_previews.map(
-                      (preview: any, index: number) => (
-                        <LinkPreviewCard
-                          key={preview.url || index}
-                          preview={preview}
-                          className="max-w-full"
-                          hideImage={resolvedImageUrls.length > 0 || !!post.has_image}
-                        />
-                      ),
-                    )}
-                  </div>
+              )
+            ) : (
+              <div className={`space-y-3 ${
+                variant === 'profile'
+                  ? 'px-1'
+                  : 'rounded-2xl bg-gray-50/30 border border-gray-200/80 p-4 sm:p-5'
+              }`}>
+                {renderPostContent(
+                  'text-gray-700 text-base sm:text-[0.95rem] leading-relaxed',
+                  'text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors',
                 )}
-              {renderCommentsPreview()}
-            </div>
+                {post.has_image && resolvedImageUrls.length === 0 ? (
+                  <div
+                    className="w-full rounded-3xl aspect-[4/3] bg-gray-100 animate-pulse"
+                    style={{ maxHeight: '24rem' }}
+                    aria-label="Image loading"
+                  />
+                ) : (
+                  post.has_image && (
+                    <PostImageGrid
+                      imageUrls={resolvedImageUrls}
+                      onImageClick={handleImageClick}
+                      multiImageSizes="(max-width: 640px) 100vw, 700px"
+                    />
+                  )
+                )}
+                {post.metadata?.link_previews &&
+                  post.metadata.link_previews.length > 0 && (
+                    <div className="space-y-3">
+                      {post.metadata.link_previews.map(
+                        (preview: any, index: number) => (
+                          <LinkPreviewCard
+                            key={preview.url || index}
+                            preview={preview}
+                            className="max-w-full"
+                            hideImage={resolvedImageUrls.length > 0 || !!post.has_image}
+                          />
+                        ),
+                      )}
+                    </div>
+                  )}
+                {renderCommentsPreview()}
+              </div>
+            )}
           </div>
 
           {/* Post Actions */}
@@ -765,6 +817,58 @@ function PostCardInner({
                 <span className="whitespace-nowrap">{commentCountLabel}</span>
               </Button>
             </div>
+          </div>
+
+          {/* Inline comment input */}
+          <div
+            className="flex items-end gap-3 pt-3 border-t border-gray-100/50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="h-9 w-9 rounded-full bg-primary-100/80 flex items-center justify-center text-brand-primary-hover text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+              {profile?.avatar_url ? (
+                <Image
+                  src={profile.avatar_url}
+                  alt={profile.full_name || 'You'}
+                  width={36}
+                  height={36}
+                  className="h-full w-full rounded-full object-cover"
+                  sizes="36px"
+                />
+              ) : (
+                (profile?.first_name?.charAt(0) || '?')
+              )}
+            </div>
+            <form
+              className="flex-1 flex items-end gap-2"
+              onSubmit={handleSubmitInlineComment}
+            >
+              <Textarea
+                placeholder="Write a comment..."
+                value={inlineComment}
+                onChange={(e) => setInlineComment(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmitInlineComment();
+                  }
+                }}
+                className="min-h-[40px] max-h-[120px] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-brand-primary/20"
+                rows={1}
+              />
+              <Button
+                type="submit"
+                size="sm"
+                disabled={!inlineComment.trim() || isSubmittingComment}
+                className="h-9 w-9 rounded-full p-0 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50"
+                aria-label="Send comment"
+              >
+                {isSubmittingComment ? (
+                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </form>
           </div>
         </div>
       </div>
@@ -818,6 +922,7 @@ function arePostCardPropsEqual(
   return (
     p.id === n.id &&
     p.content === n.content &&
+    p.post_type === n.post_type &&
     p.likes_count === n.likes_count &&
     p.is_liked === n.is_liked &&
     p.comments_count === n.comments_count &&

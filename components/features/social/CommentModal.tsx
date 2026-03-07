@@ -14,6 +14,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
 import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
 import { LinkPreviewCard } from './LinkPreviewCard';
+import { PostImageGrid } from './PostImageGrid';
 import Image from 'next/image';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
@@ -846,48 +847,16 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
                 {/* Post Content with link previews */}
                 {post.content && renderPostContentInModal()}
                 
-                {/* Post images: use resolvedImageUrls (from post, initialImageUrls, or on-demand fetch) */}
-                {(() => {
-                  if (resolvedImageUrls.length === 0) return null;
-                  
-                  // Single image - display large and make clickable
-                  if (resolvedImageUrls.length === 1) {
-                    return (
-                      <div 
-                        className="relative w-full overflow-hidden rounded-2xl border border-slate-200 bg-white/70 cursor-pointer hover:opacity-90 transition-opacity mt-3"
-                        style={{ maxHeight: '400px' }}
-                        onClick={() => handleImageClick(0)}
-                      >
-                        <img
-                          src={resolvedImageUrls[0]}
-                          alt="Post content"
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                    );
-                  }
-                  
-                  // Multiple images - display in horizontal scrollable row (clickable)
-                  return (
-                    <div className="relative mt-3">
-                      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
-                        {resolvedImageUrls.map((url, index) => (
-                          <div
-                            key={index}
-                            className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => handleImageClick(index)}
-                          >
-                            <img
-                              src={url}
-                              alt={`Post image ${index + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
+                {/* Post images: same multi-image grid as feed (2/3/4+ layout) */}
+                {resolvedImageUrls.length > 0 && (
+                  <div className="mt-3">
+                    <PostImageGrid
+                      imageUrls={resolvedImageUrls}
+                      onImageClick={handleImageClick}
+                      multiImageSizes="(max-width: 640px) 50vw, 350px"
+                    />
+                  </div>
+                )}
 
                 {/* Post Actions */}
                 <div className="flex flex-wrap items-center gap-3">

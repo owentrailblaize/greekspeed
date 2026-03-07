@@ -80,11 +80,12 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
-    isRefetching,
     refresh,
     createPost,
     likePost,
     deletePost,
+    newPostsCount,
+    applyNewPosts,
   } = usePosts(chapterId, { initialData });
   const { profile } = useProfile();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -304,11 +305,24 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
           </CardContent>
         </Card>
 
-        {/* Show subtle refresh indicator when React Query is updating */}
-        {isRefetching && mergedPosts.length > 0 && (
-          <div className="flex items-center space-x-2 text-sm text-gray-500">
-            <div className="h-3 w-3 border border-gray-400 border-t-transparent rounded-full animate-spin" />
-            <span>Refreshing feed…</span>
+        {/* Fixed-height slot for "new posts" pill to prevent scroll jump (Twitter pattern) */}
+        {mergedPosts.length > 0 && (
+          <div className="flex min-h-11 items-center justify-center py-1">
+            {newPostsCount > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-full border-brand-primary/30 bg-white px-4 py-2 text-sm font-medium text-brand-primary shadow-sm transition hover:bg-brand-primary/5 hover:border-brand-primary/50 focus-visible:ring-2 focus-visible:ring-brand-primary/20"
+                onClick={() => {
+                  applyNewPosts();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                aria-label={`${newPostsCount} new post${newPostsCount === 1 ? '' : 's'} available. Tap to load.`}
+              >
+                {newPostsCount} new post{newPostsCount === 1 ? '' : 's'}
+              </Button>
+            )}
           </div>
         )}
 

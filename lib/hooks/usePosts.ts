@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useEffect } from 'react';
+import { useCallback, useMemo, useEffect, useState } from 'react';
 import {
   useInfiniteQuery,
   useQueryClient,
@@ -102,7 +102,9 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
     // This prevents React Query from immediately refetching when `enabled` flips to true.
     staleTime: normalizedInitialData ? 5 * 60 * 1000 : undefined,
     initialDataUpdatedAt: normalizedInitialData ? Date.now() : undefined,
-    refetchOnMount: 'always',
+    // When we have server-seeded data, skip auto-refetch on mount to prevent scroll jump.
+    // New posts are surfaced via the "N new posts" pill and applied on tap.
+    refetchOnMount: normalizedInitialData ? false : 'always',
     refetchOnWindowFocus: false,
     getNextPageParam: (lastPage) => {
       const { page, totalPages } = lastPage.pagination;
@@ -344,6 +346,48 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
     [queryClient, queryKey],
   );
 
+  // ---- "New posts" pill (Twitter pattern): avoid scroll jump by not auto-applying refetches ----
+  const [newPostsCount, setNewPostsCount] = useState(0);
+
+  const checkForNewPosts = useCallback(async () => {
+    if (!session || !chapterId || posts.length === 0) return;
+    const currentFirstPageIds = new Set(
+      (queryClient.getQueryData<InfiniteData<PostsResponse>>(queryKey)?.pages?.[0]?.posts ?? posts.slice(0, pageSize)).map(
+        (p: Post) => p.id,
+      ),
+    );
+    try {
+      const headers = getAuthHeaders();
+      const response = await fetch(
+        `/api/posts?chapterId=${chapterId}&page=1&limit=${pageSize}`,
+        { headers },
+      );
+      if (!response.ok) return;
+      const result: PostsResponse = await response.json();
+      let count = 0;
+      for (const p of result.posts) {
+        if (currentFirstPageIds.has(p.id)) break;
+        count++;
+      }
+      if (count > 0) setNewPostsCount((prev) => (prev !== count ? count : prev));
+    } catch {
+      // Ignore check errors (network, etc.)
+    }
+  }, [chapterId, getAuthHeaders, pageSize, posts.length, queryClient, queryKey, session]);
+
+  const applyNewPosts = useCallback(() => {
+    setNewPostsCount(0);
+    queryClient.invalidateQueries({ queryKey });
+  }, [queryClient, queryKey]);
+
+  // Poll for new posts when feed has content; skip while placeholder/cache-only to avoid noise
+  useEffect(() => {
+    if (posts.length === 0 || isPlaceholderData) return;
+    checkForNewPosts();
+    const interval = setInterval(checkForNewPosts, 60 * 1000);
+    return () => clearInterval(interval);
+  }, [checkForNewPosts, isPlaceholderData, posts.length]);
+
   return {
     posts,
     error: error?.message ?? null,
@@ -357,5 +401,7 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
     createPost,
     likePost,
     deletePost,
+    newPostsCount,
+    applyNewPosts,
   };
 }

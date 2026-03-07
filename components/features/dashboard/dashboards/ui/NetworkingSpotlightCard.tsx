@@ -159,8 +159,8 @@ export function NetworkingSpotlightCard() {
   if (!chapterId) return null;
 
   return (
-    <div className="h-full min-h-0 flex flex-col">
-      <Card className="bg-white h-full min-h-0 flex flex-col overflow-hidden">
+    <div className="w-full flex flex-col">
+      <Card className="bg-white w-full min-h-0 flex flex-col overflow-hidden">
         <CardHeader className="pb-3 flex-shrink-0">
           <CardTitle className="text-lg flex items-center space-x-2">
             <Users className="h-5 w-5 text-brand-primary" />
@@ -174,7 +174,7 @@ export function NetworkingSpotlightCard() {
               <p className="text-xs text-gray-500">Loading members...</p>
             </div>
           ) : networkingSpotlight.length > 0 ? (
-            <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
+            <div className="flex-1 min-h-0 max-h-[480px] overflow-y-auto space-y-4">
                 {networkingSpotlight.map((member) => (
                   <div
                     key={member.id}

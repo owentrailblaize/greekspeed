@@ -68,6 +68,17 @@ export default function PostDetailPage() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleBack]);
 
+  useEffect(() => {
+    const prevBody = document.body.style.overflow;
+    const prevHtml = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevBody;
+      document.documentElement.style.overflow = prevHtml;
+    };
+  }, []);
+
   if (!postId) {
     return (
       <div className="flex flex-col flex-1 min-h-0 bg-gray-50">
@@ -115,7 +126,7 @@ export default function PostDetailPage() {
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-white lg:bg-gray-50">
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] max-h-[calc(100vh-3.5rem)] min-h-0 overflow-hidden bg-white lg:bg-gray-50">
       <div className="max-w-full mx-auto px-0 lg:px-6 py-0 lg:py-4 w-full flex-1 min-h-0 flex flex-col overflow-hidden">
         {/* Desktop: card layout with sidebar */}
         <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6 flex-1 min-h-0 overflow-hidden items-stretch">
