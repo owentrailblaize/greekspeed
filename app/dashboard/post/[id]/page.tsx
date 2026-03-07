@@ -105,35 +105,35 @@ export default function PostDetailPage() {
     );
   }
 
-  const postCard = (
-    <div className="w-full max-w-4xl flex flex-col flex-1 min-h-0 bg-white border border-slate-200/80 shadow-sm rounded-2xl overflow-hidden">
-      <PostDetailClient
-        post={post}
-        onLike={handleLike}
-        onCommentAdded={fetchPost}
-        onBack={handleBack}
-      />
-    </div>
+  const postContent = (
+    <PostDetailClient
+      post={post}
+      onLike={handleLike}
+      onCommentAdded={fetchPost}
+      onBack={handleBack}
+    />
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-gray-50">
-      <div className="max-w-full mx-auto px-4 sm:px-6 py-4 w-full flex-1 min-h-0 flex flex-col overflow-hidden">
-        {/* Desktop: left (Networking Spotlight), center (post centered), right (empty). No page scroll; only post+comments scroll. */}
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-white lg:bg-gray-50">
+      <div className="max-w-full mx-auto px-0 lg:px-6 py-0 lg:py-4 w-full flex-1 min-h-0 flex flex-col overflow-hidden">
+        {/* Desktop: card layout with sidebar */}
         <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6 flex-1 min-h-0 overflow-hidden items-stretch">
           <aside className="col-span-3 col-start-1 row-start-1 min-h-0 h-full flex flex-col overflow-hidden">
             <NetworkingSpotlightCard />
           </aside>
           <main className="col-span-9 col-start-4 row-start-1 flex flex-col min-h-0 min-w-0">
             <div className="flex-1 min-h-0 flex flex-col items-center">
-              {postCard}
+              <div className="w-full max-w-4xl flex flex-col flex-1 min-h-0 bg-white border border-slate-200/80 shadow-sm rounded-2xl overflow-hidden">
+                {postContent}
+              </div>
             </div>
           </main>
         </div>
-        {/* Mobile/tablet: single centered column */}
-        <div className="lg:hidden flex-1 min-h-0 flex flex-col">
-          <div className="max-w-2xl mx-auto w-full flex flex-col flex-1 min-h-0">
-            {postCard}
+        {/* Mobile/tablet: cardless full-screen */}
+        <div className="lg:hidden flex-1 min-h-0 flex flex-col w-full">
+          <div className="w-full flex flex-col flex-1 min-h-0 bg-white">
+            {postContent}
           </div>
         </div>
       </div>
