@@ -329,7 +329,7 @@ export function UserGrowthDashboard() {
         </div>
       )}
 
-      {/* Drill Down Modal */}
+      {/* Drill Down Drawer (all viewports) */}
       {selectedMetric && (
         <UserGrowthDrillDown
           metricType={selectedMetric}

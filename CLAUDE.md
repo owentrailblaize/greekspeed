@@ -133,3 +133,11 @@ Required env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, 
 - `app/api/posts/route.ts` — API route reference pattern
 - `components/features/social/PostCard.tsx` — complex component reference
 - `lib/hooks/usePosts.ts` — React Query hook reference
+
+## Editing Rules
+
+- Always explain planned changes before editing files.
+- Prefer minimal targeted edits over large refactors.
+- Respect existing TypeScript strict mode.
+- Preserve current architecture unless explicitly asked to redesign.
+- Run lint and typecheck commands before suggesting commits.
