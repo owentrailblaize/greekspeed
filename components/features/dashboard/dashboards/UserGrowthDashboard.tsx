@@ -9,7 +9,10 @@ import { UserGrowthFilters } from './UserGrowthFilters';
 import { UserGrowthDrillDown } from './UserGrowthDrillDown';
 import type { UserGrowthStats, UserGrowthFilters as Filters, MetricType } from '@/types/user-growth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Clock, LayoutGrid, LineChart } from 'lucide-react';
+
+export type CompactViewMode = 'cards' | 'graph';
 
 export function UserGrowthDashboard() {
   const { isDeveloper } = useProfile();
@@ -18,9 +21,20 @@ export function UserGrowthDashboard() {
   const [filters, setFilters] = useState<Filters>({ activityWindow: 30 });
   const [selectedMetric, setSelectedMetric] = useState<MetricType | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
-  
+  const [isCompactLayout, setIsCompactLayout] = useState(false);
+  const [compactViewMode, setCompactViewMode] = useState<CompactViewMode>('cards');
+
   // Use ref to track previous filters for comparison
   const prevFiltersRef = useRef<string>('');
+
+  // Detect compact layout (below lg breakpoint) for card/graph toggle
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 1023px)');
+    const handleChange = (e: MediaQueryListEvent) => setIsCompactLayout(e.matches);
+    setIsCompactLayout(mql.matches);
+    mql.addEventListener('change', handleChange);
+    return () => mql.removeEventListener('change', handleChange);
+  }, []);
 
   // Memoize loadStats to prevent recreation on every render
   const loadStats = useCallback(async () => {
@@ -114,97 +128,206 @@ export function UserGrowthDashboard() {
         maxHeight: '100%',
       }}
     >
-      {/* Last Updated - Compact */}
-      {stats && (
-        <div className="mb-2 flex items-center text-xs text-gray-500 flex-shrink-0">
-          <Clock className="h-3 w-3 mr-1" />
-          Last updated: {new Date(stats.lastUpdated).toLocaleString()}
-        </div>
-      )}
+      {/* Last Updated and compact view toggle */}
+      <div className="mb-2 flex flex-shrink-0 items-center justify-between gap-2">
+        {stats && (
+          <div className="flex items-center text-xs text-gray-500 min-w-0">
+            <Clock className="h-3 w-3 mr-1 flex-shrink-0 hidden sm:block" />
+            <span className="truncate">
+              <span className="sm:hidden">
+                {new Date(stats.lastUpdated).toLocaleTimeString(undefined, {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: true,
+                })}
+              </span>
+              <span className="hidden sm:inline">
+                Last updated:{' '}
+                {new Date(stats.lastUpdated).toLocaleString(undefined, {
+                  dateStyle: 'short',
+                  timeStyle: 'short',
+                })}
+              </span>
+            </span>
+          </div>
+        )}
+        {isCompactLayout && (
+          <Tabs
+            value={compactViewMode}
+            onValueChange={(v) => setCompactViewMode(v as CompactViewMode)}
+            className="flex-shrink-0"
+          >
+            <TabsList className="h-9">
+              <TabsTrigger value="cards" className="gap-1.5 text-xs">
+                <LayoutGrid className="h-3.5 w-3.5" />
+                Cards
+              </TabsTrigger>
+              <TabsTrigger value="graph" className="gap-1.5 text-xs">
+                <LineChart className="h-3.5 w-3.5" />
+                Graph
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
+      </div>
 
-      {/* Main Content: Two Column Layout - Flex to fill remaining space */}
-      <div 
-        className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0 overflow-hidden"
-        style={{
-          gridTemplateRows: '1fr',
-        }}
-      >
-        {/* Left Column: 2x2 grid on small screens, single column on lg+ */}
-        <div className="lg:col-span-1 flex flex-col gap-2 overflow-hidden">
-          <div className="flex-1 grid grid-cols-2 grid-rows-2 lg:grid-cols-1 lg:grid-rows-4 gap-2 min-h-0">
-            <UserGrowthKPICard
-              title="Total Users"
-              value={stats?.totalUsers || 0}
-              amountChange={calculateAmountChange(stats?.totalUsers, stats?.previousPeriod?.totalUsers)}
-              icon="users"
-              loading={loadingStats}
-              onClick={() => setSelectedMetric('total')}
-            />
-            <UserGrowthKPICard
-              title="Alumni Users"
-              value={stats?.alumniUsers || 0}
-              amountChange={calculateAmountChange(stats?.alumniUsers, stats?.previousPeriod?.alumniUsers)}
-              subtitle="Active alumni memberships"
-              icon="graduation"
-              loading={loadingStats}
-              onClick={() => setSelectedMetric('alumni')}
-            />
-            <UserGrowthKPICard
-              title="Member Users"
-              value={stats?.activeMemberUsers || 0}
-              amountChange={calculateAmountChange(stats?.activeMemberUsers, stats?.previousPeriod?.activeMemberUsers)}
-              subtitle="Seen in last 30 days"
-              icon="user-check"
-              loading={loadingStats}
-              onClick={() => setSelectedMetric('active_member')}
-            />
-            <UserGrowthKPICard
-              title="Admin Users"
-              value={stats?.adminUsers || 0}
-              amountChange={calculateAmountChange(stats?.adminUsers, stats?.previousPeriod?.adminUsers)}
-              subtitle="Active exec roles"
-              icon="shield"
-              loading={loadingStats}
-              onClick={() => setSelectedMetric('admin')}
-            />
+      {/* Main Content: Toggle view on compact, two columns on lg+ */}
+      {isCompactLayout ? (
+        <Tabs
+          value={compactViewMode}
+          onValueChange={(v) => setCompactViewMode(v as CompactViewMode)}
+          className="flex-1 flex flex-col min-h-0 overflow-hidden"
+        >
+          <TabsContent
+            value="cards"
+            className="flex-1 min-h-0 mt-0 overflow-auto data-[state=inactive]:hidden"
+          >
+            <div className="grid grid-cols-2 grid-rows-2 gap-2 h-full min-h-0">
+              <UserGrowthKPICard
+                title="Total Users"
+                value={stats?.totalUsers || 0}
+                amountChange={calculateAmountChange(stats?.totalUsers, stats?.previousPeriod?.totalUsers)}
+                icon="users"
+                loading={loadingStats}
+                onClick={() => setSelectedMetric('total')}
+              />
+              <UserGrowthKPICard
+                title="Alumni Users"
+                value={stats?.alumniUsers || 0}
+                amountChange={calculateAmountChange(stats?.alumniUsers, stats?.previousPeriod?.alumniUsers)}
+                subtitle="Active alumni memberships"
+                icon="graduation"
+                loading={loadingStats}
+                onClick={() => setSelectedMetric('alumni')}
+              />
+              <UserGrowthKPICard
+                title="Member Users"
+                value={stats?.activeMemberUsers || 0}
+                amountChange={calculateAmountChange(stats?.activeMemberUsers, stats?.previousPeriod?.activeMemberUsers)}
+                subtitle="Seen in last 30 days"
+                icon="user-check"
+                loading={loadingStats}
+                onClick={() => setSelectedMetric('active_member')}
+              />
+              <UserGrowthKPICard
+                title="Admin Users"
+                value={stats?.adminUsers || 0}
+                amountChange={calculateAmountChange(stats?.adminUsers, stats?.previousPeriod?.adminUsers)}
+                subtitle="Active exec roles"
+                icon="shield"
+                loading={loadingStats}
+                onClick={() => setSelectedMetric('admin')}
+              />
+            </div>
+          </TabsContent>
+          <TabsContent
+            value="graph"
+            className="flex-1 min-h-0 mt-0 overflow-hidden data-[state=inactive]:hidden"
+          >
+            <Card className="flex flex-col h-full overflow-hidden">
+              <CardHeader className="flex-shrink-0 pb-3 border-b">
+                <div className="space-y-1">
+                  <CardTitle className="text-xl font-semibold">User Growth Over Time</CardTitle>
+                  <p className="text-sm text-gray-500">Monthly active users vs Total users trend</p>
+                </div>
+                <div className="mt-3">
+                  <UserGrowthFilters filters={filters} onFiltersChange={setFilters} />
+                </div>
+              </CardHeader>
+              <CardContent
+                className="flex-1 min-h-0 overflow-hidden p-4"
+                style={{ contain: 'layout style paint', position: 'relative' }}
+              >
+                <div
+                  className="h-full w-full"
+                  style={{
+                    height: '100%',
+                    minHeight: 0,
+                    contain: 'layout style paint',
+                    position: 'relative',
+                  }}
+                >
+                  <UserGrowthChart filters={filters} />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <div
+          className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0 overflow-hidden"
+          style={{ gridTemplateRows: '1fr' }}
+        >
+          <div className="lg:col-span-1 flex flex-col gap-2 overflow-hidden">
+            <div className="flex-1 grid grid-cols-2 grid-rows-2 lg:grid-cols-1 lg:grid-rows-4 gap-2 min-h-0">
+              <UserGrowthKPICard
+                title="Total Users"
+                value={stats?.totalUsers || 0}
+                amountChange={calculateAmountChange(stats?.totalUsers, stats?.previousPeriod?.totalUsers)}
+                icon="users"
+                loading={loadingStats}
+                onClick={() => setSelectedMetric('total')}
+              />
+              <UserGrowthKPICard
+                title="Alumni Users"
+                value={stats?.alumniUsers || 0}
+                amountChange={calculateAmountChange(stats?.alumniUsers, stats?.previousPeriod?.alumniUsers)}
+                subtitle="Active alumni memberships"
+                icon="graduation"
+                loading={loadingStats}
+                onClick={() => setSelectedMetric('alumni')}
+              />
+              <UserGrowthKPICard
+                title="Member Users"
+                value={stats?.activeMemberUsers || 0}
+                amountChange={calculateAmountChange(stats?.activeMemberUsers, stats?.previousPeriod?.activeMemberUsers)}
+                subtitle="Seen in last 30 days"
+                icon="user-check"
+                loading={loadingStats}
+                onClick={() => setSelectedMetric('active_member')}
+              />
+              <UserGrowthKPICard
+                title="Admin Users"
+                value={stats?.adminUsers || 0}
+                amountChange={calculateAmountChange(stats?.adminUsers, stats?.previousPeriod?.adminUsers)}
+                subtitle="Active exec roles"
+                icon="shield"
+                loading={loadingStats}
+                onClick={() => setSelectedMetric('admin')}
+              />
+            </div>
+          </div>
+          <div className="lg:col-span-2 flex flex-col min-h-0 overflow-hidden">
+            <Card className="flex flex-col h-full overflow-hidden">
+              <CardHeader className="flex-shrink-0 pb-3 border-b">
+                <div className="space-y-1">
+                  <CardTitle className="text-xl font-semibold">User Growth Over Time</CardTitle>
+                  <p className="text-sm text-gray-500">Monthly active users vs Total users trend</p>
+                </div>
+                <div className="mt-3">
+                  <UserGrowthFilters filters={filters} onFiltersChange={setFilters} />
+                </div>
+              </CardHeader>
+              <CardContent
+                className="flex-1 min-h-0 overflow-hidden p-4"
+                style={{ contain: 'layout style paint', position: 'relative' }}
+              >
+                <div
+                  className="h-full w-full"
+                  style={{
+                    height: '100%',
+                    minHeight: 0,
+                    contain: 'layout style paint',
+                    position: 'relative',
+                  }}
+                >
+                  <UserGrowthChart filters={filters} />
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
-
-        {/* Right Column: Chart with Filters Inside - Takes remaining space */}
-        <div className="lg:col-span-2 flex flex-col min-h-0 overflow-hidden">
-          <Card className="flex flex-col h-full overflow-hidden">
-            <CardHeader className="flex-shrink-0 pb-3 border-b">
-              <div className="space-y-1">
-                <CardTitle className="text-xl font-semibold">User Growth Over Time</CardTitle>
-                <p className="text-sm text-gray-500">Monthly active users vs Total users trend</p>
-              </div>
-              {/* Filters moved inside card header - Compact */}
-              <div className="mt-3">
-                <UserGrowthFilters filters={filters} onFiltersChange={setFilters} />
-              </div>
-            </CardHeader>
-            <CardContent 
-              className="flex-1 min-h-0 overflow-hidden p-4"
-              style={{
-                contain: 'layout style paint',
-                position: 'relative',
-              }}
-            >
-              <div 
-                className="h-full w-full"
-                style={{
-                  height: '100%',
-                  minHeight: 0,
-                  contain: 'layout style paint',
-                  position: 'relative',
-                }}
-              >
-                <UserGrowthChart filters={filters} />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      )}
 
       {/* Drill Down Modal */}
       {selectedMetric && (
