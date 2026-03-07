@@ -7,10 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Plus, Image as ImageIcon, Paperclip, Calendar, Smile } from 'lucide-react';
 import { usePosts } from '@/lib/hooks/usePosts';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useAuth } from '@/lib/supabase/auth-context';
 import { CreatePostModal } from '@/components/features/social/CreatePostModal';
+import { EditPostModal } from '@/components/features/social/EditPostModal';
+import { ReportPostModal } from '@/components/features/social/ReportPostModal';
 import { PostCard } from '@/components/features/social/PostCard';
 import type { Post, CreatePostRequest, PostsResponse } from '@/types/posts';
 import ImageWithFallback from '@/components/figma/ImageWithFallback';
+import { toast } from 'react-toastify';
 
 export interface SocialFeedInitialData {
   posts: Post[];
@@ -25,6 +29,8 @@ interface SocialFeedProps {
 
 export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [reportPost, setReportPost] = useState<Post | null>(null);
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
   const [hasScrolled, setHasScrolled] = useState(false);
 
@@ -80,13 +86,17 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
-    isRefetching,
     refresh,
     createPost,
     likePost,
     deletePost,
+    updatePost,
+    toggleBookmark,
+    newPostsCount,
+    applyNewPosts,
   } = usePosts(chapterId, { initialData });
   const { profile } = useProfile();
+  const { getAuthHeaders } = useAuth();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   
   // CRITICAL: Use initialData posts immediately if React Query hasn't loaded yet
@@ -209,6 +219,46 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     }
   };
 
+  const handleEditPost = (postId: string) => {
+    const post = mergedPosts.find((p) => p.id === postId) ?? null;
+    setEditingPost(post);
+  };
+
+  const handleSaveEdit = async (content: string) => {
+    if (!editingPost) return;
+    await updatePost(editingPost.id, { content });
+    setEditingPost(null);
+  };
+
+  const handleReportPost = (postId: string) => {
+    const post = mergedPosts.find((p) => p.id === postId) ?? null;
+    setReportPost(post);
+  };
+
+  const handleSubmitReport = async (postId: string, reason: string) => {
+    const res = await fetch(`/api/posts/${postId}/report`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ reason }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data?.error ?? 'Failed to submit report');
+    }
+    setReportPost(null);
+    toast.success('Report submitted');
+  };
+
+  const handleBookmark = async (postId: string) => {
+    try {
+      const bookmarked = await toggleBookmark(postId);
+      toast.success(bookmarked ? 'Post saved' : 'Removed from saved');
+    } catch (error) {
+      console.error('Bookmark failed:', error);
+      toast.error('Failed to update bookmark');
+    }
+  };
+
   // REMOVED: Skeleton loader - never show skeleton, always render feed
   // The feed will show "No posts yet" if empty, or cached/initial posts immediately
   // Debug logging to track loading state
@@ -304,11 +354,22 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
           </CardContent>
         </Card>
 
-        {/* Show subtle refresh indicator when React Query is updating */}
-        {isRefetching && mergedPosts.length > 0 && (
-          <div className="flex items-center space-x-2 text-sm text-gray-500">
-            <div className="h-3 w-3 border border-gray-400 border-t-transparent rounded-full animate-spin" />
-            <span>Refreshing feed…</span>
+        {/* Only render pill slot when there are new posts to show (avoids empty gap above feed) */}
+        {mergedPosts.length > 0 && newPostsCount > 0 && (
+          <div className="flex min-h-11 items-center justify-center py-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-full border-brand-primary/30 bg-white px-4 py-2 text-sm font-medium text-brand-primary shadow-sm transition hover:bg-brand-primary/5 hover:border-brand-primary/50 focus-visible:ring-2 focus-visible:ring-brand-primary/20"
+              onClick={() => {
+                applyNewPosts();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              aria-label={`${newPostsCount} new post${newPostsCount === 1 ? '' : 's'} available. Tap to load.`}
+            >
+              {newPostsCount} new post{newPostsCount === 1 ? '' : 's'}
+            </Button>
           </div>
         )}
 
@@ -352,6 +413,9 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
                       post={post}
                       onLike={handleLikePost}
                       onDelete={handleDeletePost}
+                      onEdit={handleEditPost}
+                      onReport={handleReportPost}
+                      onBookmark={handleBookmark}
                       onCommentAdded={handleCommentAdded}
                       isExpanded={expandedPostId === post.id}
                       onToggleExpand={() => {
@@ -364,15 +428,14 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
               })}
             </div>
             <div ref={loadMoreRef} className="h-px w-full" />
-            {isFetchingNextPage && (
-              <div className="flex justify-center py-4">
-                <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
-              </div>
-            )}
-            {/* Use mergedPosts for consistency, but check React Query posts for pagination state */}
-            {!hasNextPage && mergedPosts.length > 0 && (
-              <div className="text-center py-4 text-sm text-gray-400">You're all caught up.</div>
-            )}
+            {/* Fixed-height slot: loading and end message live here to prevent scroll jump */}
+            <div className="flex min-h-12 flex-shrink-0 items-center justify-center py-3">
+              {isFetchingNextPage ? (
+                <span className="text-xs text-gray-400">Loading...</span>
+              ) : !hasNextPage && mergedPosts.length > 0 ? (
+                <span className="text-sm text-gray-400">You're all caught up.</span>
+              ) : null}
+            </div>
           </div>
         )}
       </div>
@@ -421,6 +484,20 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
         onSubmit={handleCreatePost}
         userAvatar={profile?.avatar_url || undefined}
         userName={profile?.full_name || undefined}
+      />
+
+      <EditPostModal
+        isOpen={!!editingPost}
+        onClose={() => setEditingPost(null)}
+        post={editingPost}
+        onSave={handleSaveEdit}
+      />
+
+      <ReportPostModal
+        isOpen={!!reportPost}
+        onClose={() => setReportPost(null)}
+        post={reportPost}
+        onSubmit={handleSubmitReport}
       />
     </>
   );
