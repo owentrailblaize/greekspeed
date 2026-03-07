@@ -48,7 +48,7 @@ export function MobileMessagesDrawer({
     setInnerHeight(window.innerHeight);
   }, []);
   const keyboardLikelyOpen = visualHeight < innerHeight;
-  const maxHeightPx = keyboardLikelyOpen ? visualHeight - 24 : undefined;
+  const maxHeightPx = keyboardLikelyOpen ? visualHeight - 32 : undefined;
 
   // Get connection details
   const connection = connections.find(conn => conn.id === connectionId);
