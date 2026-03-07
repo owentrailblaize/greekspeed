@@ -2,15 +2,24 @@
 
 import { useState, useEffect, useRef } from 'react';
 
+export interface VisualViewportState {
+  height: number;
+  offsetTop: number;
+}
+
 /**
- * Returns the visual viewport height (visible area when keyboard is open).
- * Falls back to window.innerHeight when visualViewport is unavailable (SSR, old browsers).
- * Use for drawers/modals so content stays within the visible viewport when the keyboard is open.
+ * Returns the visual viewport height and offsetTop (visible area when keyboard is open).
+ * Falls back to window.innerHeight / 0 when visualViewport is unavailable (SSR, old browsers).
+ * Use for drawers/modals so content stays within the visible viewport and bottom pins above the keyboard.
  */
-export function useVisualViewportHeight(): number {
-  const [height, setHeight] = useState(() => {
-    if (typeof window === 'undefined') return 768;
-    return window.visualViewport?.height ?? window.innerHeight;
+export function useVisualViewportHeight(): VisualViewportState {
+  const [state, setState] = useState<VisualViewportState>(() => {
+    if (typeof window === 'undefined') return { height: 768, offsetTop: 0 };
+    const vv = window.visualViewport;
+    return {
+      height: vv?.height ?? window.innerHeight,
+      offsetTop: vv?.offsetTop ?? 0
+    };
   });
   const rafRef = useRef<number | null>(null);
 
@@ -21,7 +30,7 @@ export function useVisualViewportHeight(): number {
     const update = () => {
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
       rafRef.current = requestAnimationFrame(() => {
-        setHeight(vv.height);
+        setState({ height: vv.height, offsetTop: vv.offsetTop });
         rafRef.current = null;
       });
     };
@@ -37,5 +46,5 @@ export function useVisualViewportHeight(): number {
     };
   }, []);
 
-  return height;
+  return state;
 }

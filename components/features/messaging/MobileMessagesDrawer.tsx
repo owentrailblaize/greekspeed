@@ -40,7 +40,7 @@ export function MobileMessagesDrawer({
     markAllAsRead
   } = useMessages(connectionId);
 
-  const visualHeight = useVisualViewportHeight();
+  const { height: visualHeight, offsetTop } = useVisualViewportHeight();
   const [innerHeight, setInnerHeight] = useState(
     typeof window !== 'undefined' ? window.innerHeight : 768
   );
@@ -49,6 +49,10 @@ export function MobileMessagesDrawer({
   }, []);
   const keyboardLikelyOpen = visualHeight < innerHeight;
   const maxHeightPx = keyboardLikelyOpen ? visualHeight - 32 : undefined;
+  const bottomPx =
+    keyboardLikelyOpen
+      ? innerHeight - (offsetTop + visualHeight)
+      : undefined;
 
   // Get connection details
   const connection = connections.find(conn => conn.id === connectionId);
@@ -120,8 +124,13 @@ export function MobileMessagesDrawer({
             outline-none p-0
           "
           style={
-            maxHeightPx !== undefined
-              ? { maxHeight: `${maxHeightPx}px` }
+            maxHeightPx !== undefined || bottomPx !== undefined
+              ? {
+                  ...(maxHeightPx !== undefined && {
+                    maxHeight: `${maxHeightPx}px`
+                  }),
+                  ...(bottomPx !== undefined && { bottom: `${bottomPx}px` })
+                }
               : undefined
           }
         >
