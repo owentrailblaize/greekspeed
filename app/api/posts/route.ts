@@ -91,6 +91,7 @@ export async function GET(request: NextRequest) {
           content,
           post_type,
           image_url,
+          metadata,
           likes_count,
           comments_count,
           shares_count,
