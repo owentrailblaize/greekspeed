@@ -158,6 +158,15 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
     setMounted(true);
   }, []);
 
+  // Auto-focus comment input when on post detail page (embedded) or when comment modal opens
+  useEffect(() => {
+    if (!isOpen && !embedded) return;
+    const timer = setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [isOpen, embedded]);
+
   // Handle keyboard navigation in image modal
   useEffect(() => {
     if (!isImageModalOpen || resolvedImageUrls.length <= 1) return;
@@ -573,8 +582,8 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
                 </Button>
               )}
 
-              {/* Reply count badge - show on top-level comments with replies */}
-              {depth === 0 && hasReplies && (
+              {/* Reply count badge - show on top-level comments with replies (only when expanded, so we show "Hide X reply" here; when collapsed, "Show X reply" is in the block below) */}
+              {depth === 0 && hasReplies && !isCollapsed && (
                 <button
                   onClick={() => toggleReplies(comment.id)}
                   className="text-xs text-brand-accent hover:text-accent-700 font-medium flex items-center gap-1 px-2 py-1 rounded-md hover:bg-accent-50/50 transition-colors"

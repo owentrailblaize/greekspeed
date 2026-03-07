@@ -19,10 +19,6 @@ import { useAuth } from '@/lib/supabase/auth-context';
  *     JS for these chunks is fetched ONLY when the user actually opens
  *     the modal — keeps the initial PostCard bundle small.
  * --------------------------------------------------------------------- */
-const LazyCommentModal = dynamic(
-  () => import('./CommentModal').then((mod) => ({ default: mod.CommentModal })),
-  { ssr: false },
-);
 const LazyDeletePostModal = dynamic(
   () => import('./DeletePostModal').then((mod) => ({ default: mod.DeletePostModal })),
   { ssr: false },
@@ -215,7 +211,6 @@ function PostCardInner({
   onToggleExpand,
   variant = 'default',
 }: PostCardProps) {
-  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [localExpanded, setLocalExpanded] = useState(false);
@@ -471,12 +466,8 @@ function PostCardInner({
   };
 
   const openPostView = useCallback(() => {
-    if (isMobile) {
-      setIsCommentModalOpen(true);
-    } else {
-      router.push(`/dashboard/post/${post.id}`);
-    }
-  }, [isMobile, router, post.id]);
+    router.push(`/dashboard/post/${post.id}`);
+  }, [router, post.id]);
 
   const handleCardClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -786,18 +777,6 @@ function PostCardInner({
           onClose={handleCloseLightbox}
           onPrev={handlePrevImage}
           onNext={handleNextImage}
-        />
-      )}
-
-      {/* 9a: Comment Modal — lazy-loaded, mounted only when opened */}
-      {isCommentModalOpen && (
-        <LazyCommentModal
-          isOpen={isCommentModalOpen}
-          onClose={() => setIsCommentModalOpen(false)}
-          post={post}
-          onLike={onLike}
-          onCommentAdded={onCommentAdded}
-          initialImageUrls={resolvedImageUrls.length > 0 ? resolvedImageUrls : undefined}
         />
       )}
 

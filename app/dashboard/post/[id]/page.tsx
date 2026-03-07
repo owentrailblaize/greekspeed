@@ -60,6 +60,14 @@ export default function PostDetailPage() {
     router.back();
   }, [router]);
 
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleBack();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [handleBack]);
+
   if (!postId) {
     return (
       <div className="flex flex-col flex-1 min-h-0 bg-gray-50">
