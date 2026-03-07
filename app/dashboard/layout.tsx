@@ -46,13 +46,13 @@ export default function DashboardLayout({
   return (
     <ActiveChapterProvider>
       <ChapterFeaturesProvider>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen flex flex-col bg-gray-50">
           {/* Always show the header */}
           <DashboardHeader />
           
           {/* Wrap the main content with SubscriptionPaywall */}
           <SubscriptionPaywall>
-            <main className="flex-1">
+            <main className="flex-1 min-h-0 flex flex-col">
               <ModalProvider>
                 <ProfileModalProvider>
                   {children}

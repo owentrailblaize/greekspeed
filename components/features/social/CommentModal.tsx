@@ -26,9 +26,11 @@ interface CommentModalProps {
   onCommentAdded?: () => void;
   /** When provided (e.g. from PostCard), avoids refetching images already loaded for the card. */
   initialImageUrls?: string[];
+  /** When true, render content without Dialog (for post-detail page). Comments always enabled. */
+  embedded?: boolean;
 }
 
-export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, initialImageUrls }: CommentModalProps) {
+export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, initialImageUrls, embedded = false }: CommentModalProps) {
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -65,7 +67,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
     loadedFromCache,
     buildCommentTree,
   } = useComments(post.id, {
-    enabled: isOpen,
+    enabled: isOpen || embedded,
     initialComments: post.comments_preview,
     initialTotal: post.comments_count,
   });
@@ -99,9 +101,9 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
     return imageUrls;
   }, [initialImageUrls, post.has_image, loadedImageUrls, imageUrls]);
 
-  // On-demand image load when modal opens with slim-feed post (has_image but no URLs)
+  // On-demand image load when modal opens (or when embedded) with slim-feed post (has_image but no URLs)
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen && !embedded) {
       setLoadedImageUrls(null);
       return;
     }
@@ -131,7 +133,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
       cancelled = true;
       setLoadedImageUrls(null);
     };
-  }, [isOpen, post.id, post.has_image, imageUrls.length, initialImageUrls?.length, getAuthHeaders]);
+  }, [isOpen, embedded, post.id, post.has_image, imageUrls.length, initialImageUrls?.length, getAuthHeaders]);
 
   // Handle mounting for portal
   useEffect(() => {
@@ -746,45 +748,8 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
     );
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose} modal={!isProfileModalOpen}>
-      <DialogContent 
-        className={cn(
-          // Mobile: Bottom sheet style - iOS 16+ fixed
-          isMobile 
-            ? "fixed left-0 right-0 bottom-0 top-auto z-50 w-full max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none flex flex-col overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-md shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] p-0 translate-x-0 translate-y-0 pb-[env(safe-area-inset-bottom)]"
-            // Desktop: Centered modal (existing style)
-            : "sm:max-w-[720px] max-w-[95vw] h-[100dvh] sm:h-[85vh] flex flex-col overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-md shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] sm:rounded-3xl rounded-2xl p-0 fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]",
-          "duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
-        )}
-        onPointerDownOutside={(e) => {
-          // Prevent Dialog from handling outside clicks when ProfileModal is open
-          if (isProfileModalOpen) {
-            e.preventDefault();
-          }
-        }}
-        onInteractOutside={(e) => {
-          // Prevent Dialog from handling outside interactions when ProfileModal is open
-          if (isProfileModalOpen) {
-            e.preventDefault();
-          }
-        }}
-      >
-        {/* Header */}
-        <DialogHeader className={cn(
-          "flex-shrink-0 border-b border-slate-200/70",
-          isMobile ? "px-4 py-3" : "px-6 py-4"
-        )}>
-          <div className="flex items-center justify-between">
-            <DialogTitle className={cn(
-              "font-semibold tracking-tight text-slate-900",
-              isMobile ? "text-lg" : "text-xl"
-            )}>
-              Comments
-            </DialogTitle>
-          </div>
-        </DialogHeader>
-
+  const postAndCommentsContent = (
+    <>
         {/* Combined Scrollable Content Area */}
         <div className={cn(
           "flex-1 overflow-y-auto min-h-0 bg-white/70",
@@ -941,7 +906,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
               ref={commentsScrollRef}
               className={cn(
                 "overflow-y-auto px-4 sm:px-6 py-4 bg-white/60",
-                isMobile ? "max-h-[calc(85dvh-200px)]" : "max-h-[55vh]"
+                !embedded && (isMobile ? "max-h-[calc(85dvh-200px)]" : "max-h-[55vh]")
               )}
             >
               <div className="space-y-0">
@@ -1005,9 +970,49 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
             </Button>
           </div>
         </div>
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+        {postAndCommentsContent}
+        <ImageViewerModal />
+      </div>
+    );
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose} modal={!isProfileModalOpen}>
+      <DialogContent
+        className={cn(
+          isMobile
+            ? "fixed left-0 right-0 bottom-0 top-auto z-50 w-full max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none flex flex-col overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-md shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] p-0 translate-x-0 translate-y-0 pb-[env(safe-area-inset-bottom)]"
+            : "sm:max-w-[720px] max-w-[95vw] h-[100dvh] sm:h-[85vh] flex flex-col overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-md shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] sm:rounded-3xl rounded-2xl p-0 fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]",
+          "duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+        )}
+        onPointerDownOutside={(e) => {
+          if (isProfileModalOpen) e.preventDefault();
+        }}
+        onInteractOutside={(e) => {
+          if (isProfileModalOpen) e.preventDefault();
+        }}
+      >
+        <DialogHeader className={cn(
+          "flex-shrink-0 border-b border-slate-200/70",
+          isMobile ? "px-4 py-3" : "px-6 py-4"
+        )}>
+          <div className="flex items-center justify-between">
+            <DialogTitle className={cn(
+              "font-semibold tracking-tight text-slate-900",
+              isMobile ? "text-lg" : "text-xl"
+            )}>
+              Comments
+            </DialogTitle>
+          </div>
+        </DialogHeader>
+        {postAndCommentsContent}
       </DialogContent>
-      
-      {/* Image Viewer Modal */}
       <ImageViewerModal />
     </Dialog>
   );

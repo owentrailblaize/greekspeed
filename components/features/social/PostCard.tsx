@@ -2,6 +2,7 @@
 
 import { memo, useMemo, useState, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -218,8 +219,17 @@ function PostCardInner({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [localExpanded, setLocalExpanded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const isExpanded = isExpandedProp ?? localExpanded;
   const handleExpandToggle = onToggleExpand ?? (() => setLocalExpanded((prev) => !prev));
+  const router = useRouter();
+
+  useEffect(() => {
+    const check = () => setIsMobile(typeof window !== 'undefined' && window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   // Image viewer state
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
@@ -460,13 +470,18 @@ function PostCardInner({
     onLike(post.id);
   };
 
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Don't open if clicking on interactive elements
-    const target = e.target as HTMLElement;
-    if (target.closest('button, a, [role="button"], img')) {
-      return;
+  const openPostView = useCallback(() => {
+    if (isMobile) {
+      setIsCommentModalOpen(true);
+    } else {
+      router.push(`/dashboard/post/${post.id}`);
     }
-    setIsCommentModalOpen(true);
+  }, [isMobile, router, post.id]);
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button, a, [role="button"], img')) return;
+    openPostView();
   };
 
   return (
@@ -600,7 +615,7 @@ function PostCardInner({
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setIsCommentModalOpen(true);
+                  openPostView();
                 }}
                 className="gap-2 rounded-full px-3 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
               >
@@ -751,7 +766,7 @@ function PostCardInner({
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setIsCommentModalOpen(true);
+                  openPostView();
                 }}
                 className="gap-2 rounded-full px-3 py-2 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
               >
