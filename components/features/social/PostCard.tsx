@@ -782,6 +782,7 @@ function PostCardInner({
           post={post}
           onLike={onLike}
           onCommentAdded={onCommentAdded}
+          initialImageUrls={resolvedImageUrls.length > 0 ? resolvedImageUrls : undefined}
         />
       )}
 

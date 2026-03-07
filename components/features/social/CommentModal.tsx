@@ -9,6 +9,7 @@ import { Post, PostComment } from '@/types/posts';
 import { useComments } from '@/lib/hooks/useComments';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useProfileModal } from '@/lib/contexts/ProfileModalContext';
+import { useAuth } from '@/lib/supabase/auth-context';
 import { formatDistanceToNow } from 'date-fns';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
 import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
@@ -23,9 +24,11 @@ interface CommentModalProps {
   post: Post;
   onLike: (postId: string) => void;
   onCommentAdded?: () => void;
+  /** When provided (e.g. from PostCard), avoids refetching images already loaded for the card. */
+  initialImageUrls?: string[];
 }
 
-export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: CommentModalProps) {
+export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, initialImageUrls }: CommentModalProps) {
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -68,6 +71,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
   });
   const { profile } = useProfile();
   const { isProfileModalOpen } = useProfileModal();
+  const { getAuthHeaders } = useAuth();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const commentsScrollRef = useRef<HTMLDivElement | null>(null);
   
@@ -81,11 +85,53 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const [loadedImageUrls, setLoadedImageUrls] = useState<string[] | null>(null);
 
-  // Get images from metadata or single image_url
+  // Get images from post payload (may be empty when feed uses slim shape)
   const imageUrls = useMemo<string[]>(() => {
     return post.metadata?.image_urls || (post.image_url ? [post.image_url] : []);
   }, [post.metadata?.image_urls, post.image_url]);
+
+  // Resolved URLs: prefer initialImageUrls from parent (e.g. PostCard), then on-demand loaded, then from post
+  const resolvedImageUrls = useMemo<string[]>(() => {
+    if (initialImageUrls?.length) return initialImageUrls;
+    if (post.has_image && loadedImageUrls !== null) return loadedImageUrls;
+    return imageUrls;
+  }, [initialImageUrls, post.has_image, loadedImageUrls, imageUrls]);
+
+  // On-demand image load when modal opens with slim-feed post (has_image but no URLs)
+  useEffect(() => {
+    if (!isOpen) {
+      setLoadedImageUrls(null);
+      return;
+    }
+    if (imageUrls.length > 0 || (initialImageUrls?.length ?? 0) > 0) return;
+    if (!post.has_image) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const headers = getAuthHeaders();
+        const res = await fetch(`/api/posts/${post.id}/image`, { headers });
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const urls =
+          Array.isArray(data.image_urls) && data.image_urls.length > 0
+            ? data.image_urls
+            : data.image_url
+              ? [data.image_url]
+              : [];
+        setLoadedImageUrls(urls);
+      } catch {
+        if (!cancelled) setLoadedImageUrls([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      setLoadedImageUrls(null);
+    };
+  }, [isOpen, post.id, post.has_image, imageUrls.length, initialImageUrls?.length, getAuthHeaders]);
 
   // Handle mounting for portal
   useEffect(() => {
@@ -94,13 +140,13 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
 
   // Handle keyboard navigation in image modal
   useEffect(() => {
-    if (!isImageModalOpen || imageUrls.length <= 1) return;
+    if (!isImageModalOpen || resolvedImageUrls.length <= 1) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') {
-        setSelectedImageIndex((prev) => (prev > 0 ? prev - 1 : imageUrls.length - 1));
+        setSelectedImageIndex((prev) => (prev > 0 ? prev - 1 : resolvedImageUrls.length - 1));
       } else if (e.key === 'ArrowRight') {
-        setSelectedImageIndex((prev) => (prev < imageUrls.length - 1 ? prev + 1 : 0));
+        setSelectedImageIndex((prev) => (prev < resolvedImageUrls.length - 1 ? prev + 1 : 0));
       } else if (e.key === 'Escape') {
         setIsImageModalOpen(false);
       }
@@ -108,7 +154,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isImageModalOpen, imageUrls.length]);
+  }, [isImageModalOpen, resolvedImageUrls.length]);
 
   const handleImageClick = (index: number) => {
     setSelectedImageIndex(index);
@@ -116,11 +162,11 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
   };
 
   const handleNextImage = () => {
-    setSelectedImageIndex((prev) => (prev < imageUrls.length - 1 ? prev + 1 : 0));
+    setSelectedImageIndex((prev) => (prev < resolvedImageUrls.length - 1 ? prev + 1 : 0));
   };
 
   const handlePrevImage = () => {
-    setSelectedImageIndex((prev) => (prev > 0 ? prev - 1 : imageUrls.length - 1));
+    setSelectedImageIndex((prev) => (prev > 0 ? prev - 1 : resolvedImageUrls.length - 1));
   };
 
   const handleSubmitComment = async () => {
@@ -308,7 +354,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                   key={preview.url || index}
                   preview={preview}
                   className="max-w-full"
-                  hideImage={imageUrls.length > 0}
+                  hideImage={resolvedImageUrls.length > 0}
                 />
               ),
             )}
@@ -631,7 +677,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
 
   // Image Viewer Modal Component (same as PostCard)
   const ImageViewerModal = () => {
-    if (!mounted || !isImageModalOpen || imageUrls.length === 0) return null;
+    if (!mounted || !isImageModalOpen || resolvedImageUrls.length === 0) return null;
 
     return createPortal(
       <div className="fixed inset-0 z-[9999] flex items-center justify-center">
@@ -650,7 +696,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
           <X className="h-5 w-5" />
         </Button>
 
-        {imageUrls.length > 1 && (
+        {resolvedImageUrls.length > 1 && (
           <>
             <Button
               variant="ghost"
@@ -684,15 +730,15 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
           onClick={(e) => e.stopPropagation()}
         >
           <img
-            src={imageUrls[selectedImageIndex]}
-            alt={`Post image ${selectedImageIndex + 1} of ${imageUrls.length}`}
+            src={resolvedImageUrls[Math.min(selectedImageIndex, resolvedImageUrls.length - 1)]}
+            alt={`Post image ${selectedImageIndex + 1} of ${resolvedImageUrls.length}`}
             className="max-w-full max-h-full object-contain rounded-lg"
           />
         </div>
 
-        {imageUrls.length > 1 && (
+        {resolvedImageUrls.length > 1 && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-black/50 text-white px-4 py-2 rounded-full text-sm">
-            {selectedImageIndex + 1} / {imageUrls.length}
+            {Math.min(selectedImageIndex, resolvedImageUrls.length - 1) + 1} / {resolvedImageUrls.length}
           </div>
         )}
       </div>,
@@ -795,12 +841,12 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                 {/* Post Content with link previews */}
                 {post.content && renderPostContentInModal()}
                 
-                {/* Replace the single image_url display (lines 175-186) with: */}
+                {/* Post images: use resolvedImageUrls (from post, initialImageUrls, or on-demand fetch) */}
                 {(() => {
-                  if (imageUrls.length === 0) return null;
+                  if (resolvedImageUrls.length === 0) return null;
                   
                   // Single image - display large and make clickable
-                  if (imageUrls.length === 1) {
+                  if (resolvedImageUrls.length === 1) {
                     return (
                       <div 
                         className="relative w-full overflow-hidden rounded-2xl border border-slate-200 bg-white/70 cursor-pointer hover:opacity-90 transition-opacity mt-3"
@@ -808,7 +854,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                         onClick={() => handleImageClick(0)}
                       >
                         <img
-                          src={imageUrls[0]}
+                          src={resolvedImageUrls[0]}
                           alt="Post content"
                           className="w-full h-full object-contain"
                         />
@@ -820,7 +866,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                   return (
                     <div className="relative mt-3">
                       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
-                        {imageUrls.map((url, index) => (
+                        {resolvedImageUrls.map((url, index) => (
                           <div
                             key={index}
                             className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 cursor-pointer hover:opacity-90 transition-opacity"
@@ -834,7 +880,6 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded }: 
                           </div>
                         ))}
                       </div>
-                      {/* Removed image count text */}
                     </div>
                   );
                 })()}
