@@ -65,8 +65,8 @@ export default function PostDetailPage() {
       <div className="flex flex-col flex-1 min-h-0 bg-gray-50">
         <div className="max-w-2xl mx-auto w-full flex flex-col items-center justify-center min-h-[50vh] px-4">
           <p className="text-slate-500 mb-4">Invalid post</p>
-          <Button variant="outline" asChild>
-            <Link href="/dashboard">Back to feed</Link>
+          <Button variant="outline" onClick={() => router.push('/dashboard')}>
+            Back to feed
           </Button>
         </div>
       </div>
