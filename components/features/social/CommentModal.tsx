@@ -849,7 +849,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
                 
                 {/* Post images: same multi-image grid as feed (2/3/4+ layout) */}
                 {resolvedImageUrls.length > 0 && (
-                  <div className="mt-3">
+                  <div className={cn("mt-3", embedded && "max-w-[450px]")}>
                     <PostImageGrid
                       imageUrls={resolvedImageUrls}
                       onImageClick={handleImageClick}

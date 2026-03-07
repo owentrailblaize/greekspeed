@@ -20,7 +20,7 @@ export const PostImageGrid = memo(function PostImageGrid({
   if (imageUrls.length === 1) {
     return (
       <div
-        className="relative w-full overflow-hidden rounded-3xl aspect-[4/3] shadow-inner cursor-pointer hover:opacity-90 transition-opacity"
+        className="relative w-full overflow-hidden rounded-3xl aspect-[3/2] shadow-inner cursor-pointer hover:opacity-90 transition-opacity"
         style={{ maxHeight: '24rem' }}
         onClick={(e) => {
           e.stopPropagation();
@@ -45,7 +45,7 @@ export const PostImageGrid = memo(function PostImageGrid({
         {imageUrls.map((url, index) => (
           <div
             key={index}
-            className="relative aspect-square overflow-hidden bg-slate-100 cursor-pointer hover:opacity-95 transition-opacity"
+            className="relative aspect-[3/2] overflow-hidden bg-slate-100 cursor-pointer hover:opacity-95 transition-opacity"
             onClick={(e) => {
               e.stopPropagation();
               onImageClick(index);
@@ -69,7 +69,7 @@ export const PostImageGrid = memo(function PostImageGrid({
     return (
       <div className="grid grid-cols-2 gap-1 rounded-2xl overflow-hidden">
         <div
-          className="relative row-span-2 aspect-square overflow-hidden bg-slate-100 cursor-pointer hover:opacity-95 transition-opacity"
+          className="relative row-span-2 aspect-[3/2] overflow-hidden bg-slate-100 cursor-pointer hover:opacity-95 transition-opacity"
           onClick={(e) => {
             e.stopPropagation();
             onImageClick(0);
@@ -85,7 +85,7 @@ export const PostImageGrid = memo(function PostImageGrid({
           />
         </div>
         <div
-          className="relative aspect-square overflow-hidden bg-slate-100 cursor-pointer hover:opacity-95 transition-opacity"
+          className="relative aspect-[3/2] overflow-hidden bg-slate-100 cursor-pointer hover:opacity-95 transition-opacity"
           onClick={(e) => {
             e.stopPropagation();
             onImageClick(1);
@@ -101,7 +101,7 @@ export const PostImageGrid = memo(function PostImageGrid({
           />
         </div>
         <div
-          className="relative aspect-square overflow-hidden bg-slate-100 cursor-pointer hover:opacity-95 transition-opacity"
+          className="relative aspect-[3/2] overflow-hidden bg-slate-100 cursor-pointer hover:opacity-95 transition-opacity"
           onClick={(e) => {
             e.stopPropagation();
             onImageClick(2);
@@ -128,7 +128,7 @@ export const PostImageGrid = memo(function PostImageGrid({
       {displayUrls.map((url, index) => (
         <div
           key={index}
-          className="relative aspect-square overflow-hidden bg-slate-100 cursor-pointer hover:opacity-95 transition-opacity"
+          className="relative aspect-[3/2] overflow-hidden bg-slate-100 cursor-pointer hover:opacity-95 transition-opacity"
           onClick={(e) => {
             e.stopPropagation();
             onImageClick(index);

@@ -378,15 +378,14 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
               })}
             </div>
             <div ref={loadMoreRef} className="h-px w-full" />
-            {isFetchingNextPage && (
-              <div className="flex justify-center py-4">
-                <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
-              </div>
-            )}
-            {/* Use mergedPosts for consistency, but check React Query posts for pagination state */}
-            {!hasNextPage && mergedPosts.length > 0 && (
-              <div className="text-center py-4 text-sm text-gray-400">You're all caught up.</div>
-            )}
+            {/* Fixed-height slot: loading and end message live here to prevent scroll jump */}
+            <div className="flex min-h-12 flex-shrink-0 items-center justify-center py-3">
+              {isFetchingNextPage ? (
+                <span className="text-xs text-gray-400">Loading...</span>
+              ) : !hasNextPage && mergedPosts.length > 0 ? (
+                <span className="text-sm text-gray-400">You're all caught up.</span>
+              ) : null}
+            </div>
           </div>
         )}
       </div>
