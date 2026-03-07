@@ -113,14 +113,35 @@ export function ChapterSwitcher() {
     setSearchQuery('');
   };
 
-  // Position the dropdown below the trigger
+  const DROPDOWN_WIDTH = 280;
+  const VIEWPORT_PADDING = 16;
+
+  // Position the dropdown below the trigger; keep in viewport and avoid right overflow
   const getDropdownPosition = () => {
-    if (!triggerRef.current) return {};
+    if (!triggerRef.current || typeof window === 'undefined') return {};
     const rect = triggerRef.current.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+
+    const spaceOnRight = viewportWidth - rect.left - VIEWPORT_PADDING;
+    const wouldOverflowRight = spaceOnRight < DROPDOWN_WIDTH;
+
+    let left: number;
+    let width: number;
+
+    if (wouldOverflowRight) {
+      // Right-align: dropdown extends to the left from trigger's right edge
+      left = Math.max(VIEWPORT_PADDING, rect.right - DROPDOWN_WIDTH);
+      width = Math.min(DROPDOWN_WIDTH, rect.right - left);
+    } else {
+      left = rect.left;
+      width = Math.min(DROPDOWN_WIDTH, viewportWidth - rect.left - VIEWPORT_PADDING);
+    }
+
     return {
       top: rect.bottom + 4,
-      left: rect.left,
-      minWidth: Math.max(rect.width, 280),
+      left,
+      minWidth: width,
+      width,
     };
   };
 
@@ -129,17 +150,25 @@ export function ChapterSwitcher() {
       <button
         ref={triggerRef}
         onClick={() => setIsOpen(!isOpen)}
+        title={displayLabel}
         className={cn(
-          'flex items-center space-x-2 h-8 rounded-full px-3 text-sm font-medium transition-all duration-200 shadow-sm',
+          'flex items-center min-w-0 max-w-full min-[401px]:space-x-2 h-8 rounded-full px-3 min-[401px]:px-3 max-[400px]:px-2 text-sm font-medium transition-all duration-200 shadow-sm',
           activeChapterId
             ? 'bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20'
             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
         )}
       >
-        <Building2 className="h-3.5 w-3.5" />
-        <span className="max-w-[160px] truncate">{displayLabel}</span>
+        <Building2 className="h-3.5 w-3.5 flex-shrink-0" />
+        <span
+          className="truncate max-w-[80px] sm:max-w-[120px] md:max-w-[160px] max-[400px]:hidden"
+        >
+          {displayLabel}
+        </span>
         <ChevronDown
-          className={cn('h-3.5 w-3.5 transition-transform', isOpen && 'rotate-180')}
+          className={cn(
+            'h-3.5 w-3.5 flex-shrink-0 transition-transform max-[400px]:hidden',
+            isOpen && 'rotate-180'
+          )}
         />
       </button>
 

@@ -18,22 +18,31 @@ export const UserGrowthChart = memo(function UserGrowthChart({ filters }: UserGr
   const [dimensions, setDimensions] = useState({ width: 800, height: 400 });
   const [isMounted, setIsMounted] = useState(false);
 
-  // Set dimensions once on mount only - never recalculate
+  const updateDimensions = useCallback(() => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setDimensions({ width: rect.width, height: rect.height });
+      } else {
+        setDimensions({ width: 800, height: 400 });
+      }
+    }
+  }, []);
+
+  // Initial measurement and ResizeObserver for responsive chart dimensions
   useEffect(() => {
     setIsMounted(true);
-    // Use requestAnimationFrame to ensure DOM is ready
-    requestAnimationFrame(() => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        if (rect.width > 0 && rect.height > 0) {
-          setDimensions({ width: rect.width, height: rect.height });
-        } else {
-          // Fallback if dimensions are 0
-          setDimensions({ width: 800, height: 400 });
-        }
-      }
+    requestAnimationFrame(updateDimensions);
+
+    const el = containerRef.current;
+    if (!el) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateDimensions();
     });
-  }, []); // Empty dependency array - only runs once
+    resizeObserver.observe(el);
+    return () => resizeObserver.disconnect();
+  }, [updateDimensions]);
 
   // Memoize loadChartData to prevent recreation on every render
   const loadChartData = useCallback(async () => {
@@ -149,7 +158,13 @@ export const UserGrowthChart = memo(function UserGrowthChart({ filters }: UserGr
           width={dimensions.width}
           height={dimensions.height}
           data={chartData}
-          margin={{ top: 50, right: 20, bottom: 60, left: 70 }}
+          margin={
+            dimensions.width < 400
+              ? { top: 40, right: 10, bottom: 50, left: 45 }
+              : dimensions.width < 600
+                ? { top: 45, right: 15, bottom: 55, left: 55 }
+                : { top: 50, right: 20, bottom: 60, left: 70 }
+          }
           xScale={{
             type: 'time',
             format: '%Y-%m-%d',

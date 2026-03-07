@@ -52,7 +52,7 @@ export function DeveloperSidebar({
           <motion.div
             initial={{ width: 0, opacity: 0 }}
             animate={{ 
-              width: sidebarCollapsed ? 64 : (isMobile ? '100vw' : 256), 
+              width: sidebarCollapsed ? 64 : (isMobile ? 280 : 256), 
               opacity: 1 
             }}
             exit={{ width: 0, opacity: 0 }}
@@ -63,14 +63,14 @@ export function DeveloperSidebar({
               {/* Header */}
               <div className="p-4 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <LayoutDashboard className="h-5 w-5 text-brand-primary flex-shrink-0" />
+                  <div className="flex items-center space-x-2 whitespace-nowrap min-w-0">
                     {!sidebarCollapsed && (
                       <motion.h3 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="font-semibold text-gray-900"
+                        className="font-semibold text-gray-900 truncate text-base sm:text-sm md:text-md"
+                        style={{ lineHeight: 1, minWidth: 0 }}
                       >
                         Developer Portal
                       </motion.h3>

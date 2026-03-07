@@ -55,20 +55,15 @@ export function DeveloperPortal({ children }: DeveloperPortalProps) {
       // Overview page - scroll-free
       return (
         <div 
-          className="w-full bg-gray-50 overflow-hidden"
+          className="w-full bg-gray-50 overflow-hidden flex flex-col min-h-0"
           style={{
             height: 'calc(100vh - 4rem)',
             maxHeight: 'calc(100vh - 4rem)',
-            display: 'flex',
-            flexDirection: 'column',
+            minHeight: 'calc(100dvh - 4rem)',
           }}
         >
           <div 
-            className="max-w-7xl mx-auto w-full flex-1 flex flex-col overflow-hidden"
-            style={{
-              padding: '1rem',
-              minHeight: 0,
-            }}
+            className="max-w-7xl mx-auto w-full flex-1 flex flex-col overflow-hidden px-4 py-4 sm:px-6 lg:px-8 min-h-0"
           >
             <div className="flex-1 min-h-0 overflow-hidden">
               <UserGrowthDashboard />
@@ -87,7 +82,13 @@ export function DeveloperPortal({ children }: DeveloperPortalProps) {
   };
 
   return (
-    <div className="flex h-full bg-gray-50 overflow-hidden" style={{ height: 'calc(100vh - 4rem)' }}>
+    <div 
+      className="flex h-full bg-gray-50 overflow-hidden min-h-0" 
+      style={{ 
+        height: 'calc(100vh - 4rem)', 
+        minHeight: 'calc(100dvh - 4rem)', 
+      }} 
+    >
       {/* Left Sidebar */}
       <DeveloperSidebar
         activeView={activeView}
