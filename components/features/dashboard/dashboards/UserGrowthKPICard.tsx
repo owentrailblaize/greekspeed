@@ -67,24 +67,24 @@ export function UserGrowthKPICard({
       )}
       onClick={onClick}
     >
-      <CardContent className="p-5 relative">
+      <CardContent className="p-4 md:p-5 relative">
         {/* Icon in top-right */}
         {IconComponent && (
-          <div className="absolute top-4 right-4 opacity-10">
-            <IconComponent className="h-8 w-8 text-gray-400" />
+          <div className="absolute top-3 right-3 md:top-4 md:right-4 opacity-10">
+            <IconComponent className="h-6 w-6 md:h-8 md:w-8 text-gray-400" />
           </div>
         )}
 
-        <div className="space-y-3">
+        <div className="space-y-2 md:space-y-3">
           {/* Title */}
           <div className="text-sm font-medium text-gray-600">{title}</div>
           
           {/* Value with Amount Change */}
           {loading ? (
-            <div className="h-10 w-32 bg-gray-200 animate-pulse rounded" />
+            <div className="h-8 md:h-10 w-24 md:w-32 bg-gray-200 animate-pulse rounded" />
           ) : (
-            <div className="flex items-baseline gap-2">
-              <div className="text-3xl font-bold text-gray-900">
+            <div className="flex items-baseline gap-1.5 md:gap-2 flex-wrap">
+              <div className="text-2xl md:text-3xl font-bold text-gray-900">
                 {value.toLocaleString()}
               </div>
               {/* Amount Change with Arrow */}
