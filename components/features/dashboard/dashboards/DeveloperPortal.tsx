@@ -102,7 +102,7 @@ export function DeveloperPortal({ children }: DeveloperPortalProps) {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -10 }}
           transition={{ duration: 0.2 }}
-          className="flex-1 min-w-0 min-h-0"
+          className="flex-1 min-w-0 min-h-0 flex flex-col"
         >
           {renderContent()}
         </motion.div>
