@@ -7,10 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Plus, Image as ImageIcon, Paperclip, Calendar, Smile } from 'lucide-react';
 import { usePosts } from '@/lib/hooks/usePosts';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useAuth } from '@/lib/supabase/auth-context';
 import { CreatePostModal } from '@/components/features/social/CreatePostModal';
+import { EditPostModal } from '@/components/features/social/EditPostModal';
+import { ReportPostModal } from '@/components/features/social/ReportPostModal';
 import { PostCard } from '@/components/features/social/PostCard';
 import type { Post, CreatePostRequest, PostsResponse } from '@/types/posts';
 import ImageWithFallback from '@/components/figma/ImageWithFallback';
+import { toast } from 'react-toastify';
 
 export interface SocialFeedInitialData {
   posts: Post[];
@@ -25,6 +29,8 @@ interface SocialFeedProps {
 
 export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [reportPost, setReportPost] = useState<Post | null>(null);
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
   const [hasScrolled, setHasScrolled] = useState(false);
 
@@ -84,10 +90,13 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     createPost,
     likePost,
     deletePost,
+    updatePost,
+    toggleBookmark,
     newPostsCount,
     applyNewPosts,
   } = usePosts(chapterId, { initialData });
   const { profile } = useProfile();
+  const { getAuthHeaders } = useAuth();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   
   // CRITICAL: Use initialData posts immediately if React Query hasn't loaded yet
@@ -207,6 +216,46 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
       await deletePost(postId);
     } catch (error) {
       console.error('Failed to delete post:', error);
+    }
+  };
+
+  const handleEditPost = (postId: string) => {
+    const post = mergedPosts.find((p) => p.id === postId) ?? null;
+    setEditingPost(post);
+  };
+
+  const handleSaveEdit = async (content: string) => {
+    if (!editingPost) return;
+    await updatePost(editingPost.id, { content });
+    setEditingPost(null);
+  };
+
+  const handleReportPost = (postId: string) => {
+    const post = mergedPosts.find((p) => p.id === postId) ?? null;
+    setReportPost(post);
+  };
+
+  const handleSubmitReport = async (postId: string, reason: string) => {
+    const res = await fetch(`/api/posts/${postId}/report`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ reason }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data?.error ?? 'Failed to submit report');
+    }
+    setReportPost(null);
+    toast.success('Report submitted');
+  };
+
+  const handleBookmark = async (postId: string) => {
+    try {
+      const bookmarked = await toggleBookmark(postId);
+      toast.success(bookmarked ? 'Post saved' : 'Removed from saved');
+    } catch (error) {
+      console.error('Bookmark failed:', error);
+      toast.error('Failed to update bookmark');
     }
   };
 
@@ -366,6 +415,9 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
                       post={post}
                       onLike={handleLikePost}
                       onDelete={handleDeletePost}
+                      onEdit={handleEditPost}
+                      onReport={handleReportPost}
+                      onBookmark={handleBookmark}
                       onCommentAdded={handleCommentAdded}
                       isExpanded={expandedPostId === post.id}
                       onToggleExpand={() => {
@@ -434,6 +486,20 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
         onSubmit={handleCreatePost}
         userAvatar={profile?.avatar_url || undefined}
         userName={profile?.full_name || undefined}
+      />
+
+      <EditPostModal
+        isOpen={!!editingPost}
+        onClose={() => setEditingPost(null)}
+        post={editingPost}
+        onSave={handleSaveEdit}
+      />
+
+      <ReportPostModal
+        isOpen={!!reportPost}
+        onClose={() => setReportPost(null)}
+        post={reportPost}
+        onSubmit={handleSubmitReport}
       />
     </>
   );

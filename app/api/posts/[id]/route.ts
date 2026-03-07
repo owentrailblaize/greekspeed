@@ -83,18 +83,27 @@ export async function GET(
       );
     }
 
-    const { data: userLike } = await supabase
-      .from('post_likes')
-      .select('post_id')
-      .eq('post_id', postId)
-      .eq('user_id', user.id)
-      .maybeSingle();
+    const [userLikeResult, userBookmarkResult] = await Promise.all([
+      supabase
+        .from('post_likes')
+        .select('post_id')
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('post_bookmarks')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .maybeSingle(),
+    ]);
 
     const author = Array.isArray(post.author) ? post.author[0] ?? null : post.author ?? null;
     const response = {
       ...post,
       author,
-      is_liked: !!userLike,
+      is_liked: !!userLikeResult.data,
+      is_bookmarked: !!userBookmarkResult.data,
       is_author: post.author_id === user.id,
       likes_count: post.likes_count ?? 0,
       comments_count: post.comments_count ?? 0,
@@ -170,6 +179,80 @@ export async function DELETE(
     return NextResponse.json({ success: true, message: 'Post deleted successfully' });
   } catch (error) {
     console.error('API error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+/**
+ * PATCH /api/posts/[id]
+ * Update post content/metadata. Author only.
+ */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: postId } = await params;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return NextResponse.json({ error: 'Missing environment variables' }, { status: 500 });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const { content, metadata } = body;
+    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (typeof content === 'string') updates.content = content;
+    if (metadata !== undefined && metadata !== null) updates.metadata = metadata;
+
+    if (Object.keys(updates).length <= 1) {
+      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
+    }
+
+    const { data: post, error: postError } = await supabase
+      .from('posts')
+      .select('id, author_id, chapter_id')
+      .eq('id', postId)
+      .single();
+
+    if (postError || !post) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    if (post.author_id !== user.id) {
+      return NextResponse.json({ error: 'You can only edit your own posts' }, { status: 403 });
+    }
+
+    const { data: updated, error: updateError } = await supabase
+      .from('posts')
+      .update(updates)
+      .eq('id', postId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Post PATCH error:', updateError);
+      return NextResponse.json({ error: 'Failed to update post' }, { status: 500 });
+    }
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error('Post PATCH API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

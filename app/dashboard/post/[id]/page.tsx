@@ -6,8 +6,11 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import type { Post } from '@/types/posts';
 import { PostDetailClient } from '@/app/dashboard/post/[id]/PostDetailClient';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { DeletePostModal } from '@/components/features/social/DeletePostModal';
+import { EditPostModal } from '@/components/features/social/EditPostModal';
+import { ReportPostModal } from '@/components/features/social/ReportPostModal';
 import { NetworkingSpotlightCard } from '@/components/features/dashboard/dashboards/ui/NetworkingSpotlightCard';
+import { toast } from 'react-toastify';
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -18,6 +21,10 @@ export default function PostDetailPage() {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingPost, setDeletingPost] = useState<Post | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const fetchPost = useCallback(async () => {
     if (!postId) return;
@@ -59,6 +66,85 @@ export default function PostDetailPage() {
   const handleBack = useCallback(() => {
     router.back();
   }, [router]);
+
+  const handleDeletePost = useCallback(async () => {
+    if (!postId || !deletingPost) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/posts/${postId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error ?? 'Failed to delete post');
+      }
+      setDeletingPost(null);
+      router.back();
+    } catch (err) {
+      console.error(err);
+      toast.error(err instanceof Error ? err.message : 'Failed to delete post');
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [postId, deletingPost, getAuthHeaders, router]);
+
+  const handleSaveEdit = useCallback(
+    async (content: string) => {
+      if (!postId) return;
+      const res = await fetch(`/api/posts/${postId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ content }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error ?? 'Failed to update post');
+      }
+      setShowEditModal(false);
+      fetchPost();
+    },
+    [postId, getAuthHeaders, fetchPost]
+  );
+
+  const handleSubmitReport = useCallback(
+    async (reportedPostId: string, reason: string) => {
+      const res = await fetch(`/api/posts/${reportedPostId}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ reason }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error ?? 'Failed to submit report');
+      }
+      setShowReportModal(false);
+      toast.success('Report submitted');
+    },
+    [getAuthHeaders]
+  );
+
+  const handleBookmark = useCallback(
+    async (bookmarkPostId: string) => {
+      try {
+        const res = await fetch(`/api/posts/${bookmarkPostId}/bookmark`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data?.error ?? 'Failed to update bookmark');
+        }
+        const { bookmarked } = await res.json();
+        await fetchPost();
+        toast.success(bookmarked ? 'Post saved' : 'Removed from saved');
+      } catch (err) {
+        console.error(err);
+        toast.error(err instanceof Error ? err.message : 'Failed to update bookmark');
+      }
+    },
+    [getAuthHeaders, fetchPost]
+  );
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -122,6 +208,10 @@ export default function PostDetailPage() {
       onLike={handleLike}
       onCommentAdded={fetchPost}
       onBack={handleBack}
+      onDelete={() => setDeletingPost(post)}
+      onEdit={() => setShowEditModal(true)}
+      onReport={() => setShowReportModal(true)}
+      onBookmark={handleBookmark}
     />
   );
 
@@ -148,6 +238,26 @@ export default function PostDetailPage() {
           </div>
         </div>
       </div>
+
+      <DeletePostModal
+        isOpen={!!deletingPost}
+        onClose={() => setDeletingPost(null)}
+        onConfirm={handleDeletePost}
+        post={deletingPost}
+        isDeleting={isDeleting}
+      />
+      <EditPostModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        post={post}
+        onSave={handleSaveEdit}
+      />
+      <ReportPostModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        post={post}
+        onSubmit={handleSubmitReport}
+      />
     </div>
   );
 }

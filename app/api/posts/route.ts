@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
     // Parallelize all three queries instead of running them sequentially.
     // This mirrors the pattern already used in the server RSC (page.tsx).
     // -------------------------------------------------------------------------
-    const [postsResult, likesResult, countResult] = await Promise.all([
+    const [postsResult, likesResult, bookmarksResult, countResult] = await Promise.all([
       // Query 1: Posts with author only (no comments - loaded on-demand)
       supabase
         .from('posts')
@@ -117,7 +117,13 @@ export async function GET(request: NextRequest) {
         .select('post_id')
         .eq('user_id', user.id),
 
-      // Query 3: Total count for pagination
+      // Query 3: User bookmarks (filtered to post IDs after)
+      supabase
+        .from('post_bookmarks')
+        .select('post_id')
+        .eq('user_id', user.id),
+
+      // Query 4: Total count for pagination
       supabase
         .from('posts')
         .select('*', { count: 'exact', head: true })
@@ -126,6 +132,7 @@ export async function GET(request: NextRequest) {
 
     const { data: posts, error: postsError } = postsResult;
     const { data: userLikes, error: likesError } = likesResult;
+    const { data: userBookmarks, error: bookmarksError } = bookmarksResult;
     const { count: totalCount } = countResult;
 
     if (postsError) {
@@ -136,14 +143,20 @@ export async function GET(request: NextRequest) {
     if (likesError) {
       console.error('Likes fetch error:', likesError);
     }
+    if (bookmarksError) {
+      console.error('Bookmarks fetch error:', bookmarksError);
+    }
 
-    // Scope likes to only the fetched post IDs for efficiency
+    // Scope likes and bookmarks to only the fetched post IDs for efficiency
     const postIds = new Set(posts?.map(p => p.id) || []);
     const likedPostIds = new Set(
       userLikes?.filter(like => postIds.has(like.post_id)).map(like => like.post_id) ?? []
     );
+    const bookmarkedPostIds = new Set(
+      userBookmarks?.filter(b => postIds.has(b.post_id)).map(b => b.post_id) ?? []
+    );
 
-    // Transform the data to include like status and author info
+    // Transform the data to include like/bookmark status and author info
     let transformedPosts = posts?.map(post => {
       const author = Array.isArray(post.author)
         ? post.author[0] || null
@@ -153,6 +166,7 @@ export async function GET(request: NextRequest) {
         ...post,
         author,
         is_liked: likedPostIds.has(post.id),
+        is_bookmarked: bookmarkedPostIds.has(post.id),
         is_author: post.author_id === user.id,
         likes_count: post.likes_count || 0,
         comments_count: post.comments_count || 0,

@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Heart, MessageCircle, Trash2, X, ChevronLeft, ChevronRight, Send } from 'lucide-react';
+import { PostActionsMenu } from './PostActionsMenu';
 import { Post } from '@/types/posts';
 import { formatDistanceToNow } from 'date-fns';
 import { LinkPreviewCard } from './LinkPreviewCard';
@@ -131,6 +132,9 @@ interface PostCardProps {
   post: Post;
   onLike: (postId: string) => void;
   onDelete?: (postId: string) => void;
+  onEdit?: (postId: string) => void;
+  onReport?: (postId: string) => void;
+  onBookmark?: (postId: string) => void;
   onCommentAdded?: () => void;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
@@ -141,6 +145,9 @@ function PostCardInner({
   post,
   onLike,
   onDelete,
+  onEdit,
+  onReport,
+  onBookmark,
   onCommentAdded,
   isExpanded: isExpandedProp,
   onToggleExpand,
@@ -487,21 +494,18 @@ function PostCardInner({
               </div>
             </div>
 
-            <div className="flex items-center space-x-1">
-              {post.is_author && onDelete && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteClick();
-                  }}
-                  className="text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full p-2"
-                  title="Delete post"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
+            <div className="flex items-center shrink-0">
+              <PostActionsMenu
+                post={post}
+                isAuthor={!!post.is_author}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onReport={onReport}
+                onBookmark={onBookmark}
+                onDeleteClick={handleDeleteClick}
+                useDeleteModal
+                isBookmarked={!!post.is_bookmarked}
+              />
             </div>
           </div>
 
@@ -704,21 +708,18 @@ function PostCardInner({
               </div>
             </div>
 
-            <div>
-              {post.is_author && onDelete && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteClick();
-                  }}
-                  className="rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50"
-                  title="Delete post"
-                >
-                  <Trash2 className="h-5 w-5 sm:h-4 sm:w-4" />
-                </Button>
-              )}
+            <div className="flex items-center shrink-0">
+              <PostActionsMenu
+                post={post}
+                isAuthor={!!post.is_author}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onReport={onReport}
+                onBookmark={onBookmark}
+                onDeleteClick={handleDeleteClick}
+                useDeleteModal
+                isBookmarked={!!post.is_bookmarked}
+              />
             </div>
           </div>
 

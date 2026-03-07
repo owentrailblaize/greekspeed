@@ -40,6 +40,7 @@ export interface Post {
   };
   is_liked?: boolean;
   is_author?: boolean;
+  is_bookmarked?: boolean;
   /**
    * Lightweight snapshot of the most recent comments returned with the feed payload.
    * Use this to show counts/teasers without triggering the full comments fetch.

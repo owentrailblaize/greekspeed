@@ -8,7 +8,7 @@ import {
   type QueryFunctionContext,
 } from '@tanstack/react-query';
 import { useAuth } from '@/lib/supabase/auth-context';
-import type { Post, PostsResponse, CreatePostRequest } from '@/types/posts';
+import type { Post, PostsResponse, CreatePostRequest, UpdatePostRequest } from '@/types/posts';
 import { writeFeedCache, readFeedCache } from '@/lib/cache/feedCache';
 
 interface InitialFeedData extends PostsResponse {
@@ -341,6 +341,70 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
     [getAuthHeaders, session, updateCachedPages, user],
   );
 
+  const updatePost = useCallback(
+    async (postId: string, payload: UpdatePostRequest) => {
+      if (!user || !session) return null;
+
+      const response = await fetch(`/api/posts/${postId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error?.error ?? 'Failed to update post');
+      }
+
+      const updatedPost = await response.json();
+
+      updateCachedPages((pages) =>
+        pages.map((page) => ({
+          ...page,
+          posts: page.posts.map((post) =>
+            post.id === postId ? { ...post, ...updatedPost } : post
+          ),
+        })),
+      );
+
+      return updatedPost;
+    },
+    [getAuthHeaders, session, updateCachedPages, user],
+  );
+
+  const toggleBookmark = useCallback(
+    async (postId: string): Promise<boolean> => {
+      if (!user || !session) return false;
+
+      const response = await fetch(`/api/posts/${postId}/bookmark`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error?.error ?? 'Failed to update bookmark');
+      }
+
+      const { bookmarked } = await response.json();
+
+      updateCachedPages((pages) =>
+        pages.map((page) => ({
+          ...page,
+          posts: page.posts.map((post) =>
+            post.id === postId ? { ...post, is_bookmarked: bookmarked } : post
+          ),
+        })),
+      );
+
+      return bookmarked;
+    },
+    [getAuthHeaders, session, updateCachedPages, user],
+  );
+
   const refresh = useCallback(
     () => queryClient.invalidateQueries({ queryKey }),
     [queryClient, queryKey],
@@ -401,6 +465,8 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
     createPost,
     likePost,
     deletePost,
+    updatePost,
+    toggleBookmark,
     newPostsCount,
     applyNewPosts,
   };

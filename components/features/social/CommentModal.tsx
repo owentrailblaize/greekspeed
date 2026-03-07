@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { X, Heart, MessageCircle, Trash2, Send, ChevronLeft, ChevronRight, Reply, ChevronDown, ChevronUp } from 'lucide-react';
+import { PostActionsMenu } from './PostActionsMenu';
 import { Post, PostComment } from '@/types/posts';
 import { useComments } from '@/lib/hooks/useComments';
 import { useProfile } from '@/lib/contexts/ProfileContext';
@@ -25,13 +26,17 @@ interface CommentModalProps {
   post: Post;
   onLike: (postId: string) => void;
   onCommentAdded?: () => void;
+  onDelete?: (postId: string) => void;
+  onEdit?: (postId: string) => void;
+  onReport?: (postId: string) => void;
+  onBookmark?: (postId: string) => void;
   /** When provided (e.g. from PostCard), avoids refetching images already loaded for the card. */
   initialImageUrls?: string[];
   /** When true, render content without Dialog (for post-detail page). Comments always enabled. */
   embedded?: boolean;
 }
 
-export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, initialImageUrls, embedded = false }: CommentModalProps) {
+export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, onDelete, onEdit, onReport, onBookmark, initialImageUrls, embedded = false }: CommentModalProps) {
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -819,21 +824,33 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
               )}
               
               <div className="flex-1 min-w-0 space-y-3">
-                <div className="flex flex-wrap items-center gap-3">
-                  {post.author?.id && post.author?.full_name ? (
-                    <ClickableUserName
-                      userId={post.author.id}
-                      fullName={post.author.full_name}
-                      className="font-medium text-slate-900 text-base break-words"
-                    />
-                  ) : (
-                    <h4 className="font-medium text-slate-900 text-base break-words">
-                      {post.author?.full_name || 'Unknown User'}
-                    </h4>
-                  )}
-                  <p className="text-sm text-slate-500">
-                    {formatTimestamp(post.created_at)}
-                  </p>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-3">
+                    {post.author?.id && post.author?.full_name ? (
+                      <ClickableUserName
+                        userId={post.author.id}
+                        fullName={post.author.full_name}
+                        className="font-medium text-slate-900 text-base break-words"
+                      />
+                    ) : (
+                      <h4 className="font-medium text-slate-900 text-base break-words">
+                        {post.author?.full_name || 'Unknown User'}
+                      </h4>
+                    )}
+                    <p className="text-sm text-slate-500">
+                      {formatTimestamp(post.created_at)}
+                    </p>
+                  </div>
+                  <PostActionsMenu
+                    post={post}
+                    isAuthor={!!post.is_author}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onReport={onReport}
+                    onBookmark={onBookmark}
+                    useDeleteModal={false}
+                    isBookmarked={!!post.is_bookmarked}
+                  />
                 </div>
                 
                 <div className="flex flex-wrap items-center gap-2">

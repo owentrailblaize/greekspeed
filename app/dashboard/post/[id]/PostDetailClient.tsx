@@ -10,6 +10,10 @@ interface PostDetailClientProps {
   onLike: (postId: string) => void;
   onCommentAdded?: () => void;
   onBack: () => void;
+  onDelete?: (postId: string) => void;
+  onEdit?: (postId: string) => void;
+  onReport?: (postId: string) => void;
+  onBookmark?: (postId: string) => void;
 }
 
 /**
@@ -21,6 +25,10 @@ export function PostDetailClient({
   onLike,
   onCommentAdded,
   onBack,
+  onDelete,
+  onEdit,
+  onReport,
+  onBookmark,
 }: PostDetailClientProps) {
   return (
     <div className="flex flex-col flex-1 min-h-0 bg-white">
@@ -50,6 +58,10 @@ export function PostDetailClient({
           post={post}
           onLike={onLike}
           onCommentAdded={onCommentAdded}
+          onDelete={onDelete}
+          onEdit={onEdit}
+          onReport={onReport}
+          onBookmark={onBookmark}
           embedded
         />
       </div>
