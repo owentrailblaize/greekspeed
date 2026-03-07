@@ -162,12 +162,22 @@ export function DashboardHeader() {
             ))}
           </div>
 
-          {/* Chapter Switcher - Developer only */}
-          {profile?.is_developer && <ChapterSwitcher />}
+          {/* Chapter Switcher - Developer only (desktop: next to tabs) */}
+          {profile?.is_developer && (
+            <div className="hidden md:block">
+              <ChapterSwitcher />
+            </div>
+          )}
         </div>
 
-        {/* Right side - Messages icon and User dropdown */}
+        {/* Right side - Messages icon, Chapter Switcher (mobile), and User dropdown */}
         <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+          {/* Chapter Switcher - Developer only (mobile: next to avatar) */}
+          {profile?.is_developer && (
+            <div className="md:hidden">
+              <ChapterSwitcher />
+            </div>
+          )}
           {/* Messages Icon Button */}
           {/* Desktop: Show for ALL roles */}
           <Link
