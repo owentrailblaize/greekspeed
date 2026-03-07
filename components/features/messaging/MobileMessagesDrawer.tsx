@@ -8,6 +8,7 @@ import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useMessages } from '@/lib/hooks/useMessages';
+import { useVisualViewportHeight } from '@/lib/hooks/useVisualViewportHeight';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { UserAvatar } from '@/components/features/profile/UserAvatar';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
@@ -38,6 +39,20 @@ export function MobileMessagesDrawer({
     sendTypingIndicator,
     markAllAsRead
   } = useMessages(connectionId);
+
+  const { height: visualHeight, offsetTop } = useVisualViewportHeight();
+  const [innerHeight, setInnerHeight] = useState(
+    typeof window !== 'undefined' ? window.innerHeight : 768
+  );
+  useEffect(() => {
+    setInnerHeight(window.innerHeight);
+  }, []);
+  const keyboardLikelyOpen = visualHeight < innerHeight;
+  const maxHeightPx = keyboardLikelyOpen ? visualHeight - 48 : undefined;
+  const bottomPx =
+    keyboardLikelyOpen
+      ? innerHeight - (offsetTop + visualHeight)
+      : undefined;
 
   // Get connection details
   const connection = connections.find(conn => conn.id === connectionId);
@@ -108,6 +123,16 @@ export function MobileMessagesDrawer({
             shadow-2xl border border-gray-200
             outline-none p-0
           "
+          style={
+            maxHeightPx !== undefined || bottomPx !== undefined
+              ? {
+                  ...(maxHeightPx !== undefined && {
+                    maxHeight: `${maxHeightPx}px`
+                  }),
+                  ...(bottomPx !== undefined && { bottom: `${bottomPx}px` })
+                }
+              : undefined
+          }
         >
           {/* Mobile drag handle */}
           <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-zinc-300 mt-3 mb-4" />
