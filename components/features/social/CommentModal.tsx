@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState, useEffect } from 'react';
+import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -75,7 +75,25 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
   const { isProfileModalOpen } = useProfileModal();
   const { getAuthHeaders } = useAuth();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const replyTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const commentsScrollRef = useRef<HTMLDivElement | null>(null);
+
+  const MAX_COMMENT_INPUT_HEIGHT = 200;
+  const MAX_REPLY_INPUT_HEIGHT = 120;
+  const MIN_COMMENT_INPUT_HEIGHT = 48;
+  const MIN_REPLY_INPUT_HEIGHT = 40;
+
+  const resizeTextarea = useCallback((
+    el: HTMLTextAreaElement | null,
+    maxHeight: number,
+    minHeight: number = 40
+  ) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    const newHeight = Math.max(minHeight, Math.min(el.scrollHeight, maxHeight));
+    el.style.height = `${newHeight}px`;
+    el.style.overflowY = newHeight >= maxHeight ? 'auto' : 'hidden';
+  }, []);
   
   // Build comment tree from flat array
   const commentTree = useMemo(() => {
@@ -229,6 +247,18 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
       handleSubmitComment();
     }
   };
+
+  // Auto-resize main comment textarea when content changes
+  useEffect(() => {
+    resizeTextarea(textareaRef.current, MAX_COMMENT_INPUT_HEIGHT, MIN_COMMENT_INPUT_HEIGHT);
+  }, [newComment, resizeTextarea]);
+
+  // Auto-resize active reply textarea when its content changes
+  useEffect(() => {
+    if (replyingToCommentId) {
+      resizeTextarea(replyTextareaRef.current, MAX_REPLY_INPUT_HEIGHT, MIN_REPLY_INPUT_HEIGHT);
+    }
+  }, [replyingToCommentId, replyContent, resizeTextarea]);
 
   const handleDeleteComment = async (commentId: string) => {
     if (confirm('Are you sure you want to delete this comment?')) {
@@ -600,8 +630,9 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
                       profile?.first_name?.charAt(0) || 'U'
                     )}
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <Textarea
+                      ref={replyTextareaRef}
                       placeholder="Write a reply..."
                       value={currentReplyContent}
                       onChange={(e) => setReplyContent(prev => ({ ...prev, [comment.id]: e.target.value }))}
@@ -611,7 +642,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
                           handleSubmitReply(comment.id);
                         }
                       }}
-                      className="min-h-[40px] max-h-[100px] resize-none rounded-xl border border-transparent bg-white/80 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-primary-300 focus:bg-white focus:ring-2 focus:ring-primary-200 transition"
+                      className="min-h-[40px] max-h-[120px] resize-none overflow-y-hidden rounded-xl border border-transparent bg-white/80 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-primary-300 focus:bg-white focus:ring-2 focus:ring-primary-200 transition"
                       rows={1}
                     />
                   </div>
@@ -945,14 +976,14 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
               )}
             </div>
             
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <Textarea
                 ref={textareaRef}
                 placeholder="Write a comment..."
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="min-h-[48px] sm:min-h-[52px] max-h-[140px] resize-none rounded-2xl border border-transparent bg-white/80 px-4 py-3 text-sm sm:text-base text-slate-800 placeholder:text-slate-400 focus:border-primary-300 focus:bg-white focus:ring-2 focus:ring-primary-200 transition"
+                className="min-h-[48px] sm:min-h-[52px] max-h-[200px] resize-none overflow-y-hidden rounded-2xl border border-transparent bg-white/80 px-4 py-3 text-sm sm:text-base text-slate-800 placeholder:text-slate-400 focus:border-primary-300 focus:bg-white focus:ring-2 focus:ring-primary-200 transition"
                 rows={1}
               />
             </div>

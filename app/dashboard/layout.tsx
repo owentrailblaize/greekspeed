@@ -46,7 +46,7 @@ export default function DashboardLayout({
   return (
     <ActiveChapterProvider>
       <ChapterFeaturesProvider>
-        <div className="min-h-screen flex flex-col bg-gray-50">
+        <div className="h-screen min-h-0 flex flex-col overflow-hidden bg-gray-50">
           {/* Always show the header */}
           <DashboardHeader />
           
