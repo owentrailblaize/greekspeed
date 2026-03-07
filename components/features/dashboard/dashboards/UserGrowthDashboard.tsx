@@ -129,9 +129,9 @@ export function UserGrowthDashboard() {
           gridTemplateRows: '1fr',
         }}
       >
-        {/* Left Column: Vertically Stacked KPI Cards - Compact */}
+        {/* Left Column: 2x2 grid on small screens, single column on lg+ */}
         <div className="lg:col-span-1 flex flex-col gap-2 overflow-hidden">
-          <div className="flex-1 grid grid-rows-4 gap-2 min-h-0">
+          <div className="flex-1 grid grid-cols-2 grid-rows-2 lg:grid-cols-1 lg:grid-rows-4 gap-2 min-h-0">
             <UserGrowthKPICard
               title="Total Users"
               value={stats?.totalUsers || 0}
