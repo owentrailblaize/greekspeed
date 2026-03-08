@@ -397,11 +397,28 @@ function PostCardInner({
           {comments.map((comment) => (
             <div key={comment.id} className="text-sm">
               <div className="flex items-center gap-2 mb-1">
+                {comment.author?.id ? (
+                  <ClickableAvatar
+                    userId={comment.author.id}
+                    avatarUrl={comment.author.avatar_url}
+                    fullName={comment.author.full_name}
+                    firstName={comment.author.first_name}
+                    lastName={comment.author.last_name}
+                    size="sm"
+                    className="shrink-0"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-primary-100/80 flex items-center justify-center text-brand-primary-hover text-xs font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+                    {comment.author?.first_name?.charAt(0) || comment.author?.full_name?.charAt(0) || '?'}
+                  </div>
+                )}
                 {comment.author?.id && comment.author?.full_name ? (
                   <ClickableUserName
                     userId={comment.author.id}
                     fullName={comment.author.full_name}
                     className="font-medium text-gray-900 text-sm"
+                    onClick={(e) => e.stopPropagation()}
                   />
                 ) : (
                   <span className="font-medium text-gray-900 text-sm">
@@ -412,7 +429,7 @@ function PostCardInner({
                   {formatTimestamp(comment.created_at)}
                 </span>
               </div>
-              <p className="text-gray-700 text-sm leading-relaxed">
+              <p className="text-gray-700 text-sm leading-relaxed pl-10">
                 {formatCommentSnippet(comment.content)}
               </p>
             </div>
@@ -638,72 +655,74 @@ function PostCardInner({
             </div>
           </div>
 
-          {/* Inline comment input */}
+          {/* Inline comment input - row keeps avatar aligned with input; comments block is sibling below */}
           <div
-            className="flex items-end gap-3 pt-3 border-t border-gray-100/50"
+            className="flex flex-col gap-2 pt-3 border-t border-gray-100/50"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="h-8 w-8 rounded-full bg-primary-100/80 flex items-center justify-center text-brand-primary-hover text-xs font-semibold shrink-0 overflow-hidden ring-2 ring-white">
-              {profile?.avatar_url ? (
-                <Image
-                  src={profile.avatar_url}
-                  alt={profile.full_name || 'You'}
-                  width={32}
-                  height={32}
-                  className="h-full w-full rounded-full object-cover"
-                  sizes="32px"
-                />
-              ) : (
-                (profile?.first_name?.charAt(0) || '?')
-              )}
-            </div>
-            <form
-              className="flex-1 flex flex-col gap-0"
-              onSubmit={handleSubmitInlineComment}
-            >
-              <div className="flex items-end gap-2">
-                <Textarea
-                  placeholder="Write a comment..."
-                  value={inlineComment}
-                  onChange={(e) => setInlineComment(e.target.value)}
-                  onFocus={handleCommentInputFocus}
-                  onBlur={handleCommentInputBlur}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmitInlineComment();
-                    }
-                  }}
-                  className="min-h-[36px] max-h-[100px] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-brand-primary/20"
-                  rows={1}
-                />
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={!inlineComment.trim() || isSubmittingComment}
-                  className="h-9 w-9 rounded-full p-0 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50"
-                  aria-label="Send comment"
-                >
-                  {isSubmittingComment ? (
-                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                </Button>
+            <div className="flex items-end gap-3">
+              <div className="h-8 w-8 rounded-full bg-primary-100/80 flex items-center justify-center text-brand-primary-hover text-xs font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+                {profile?.avatar_url ? (
+                  <Image
+                    src={profile.avatar_url}
+                    alt={profile.full_name || 'You'}
+                    width={32}
+                    height={32}
+                    className="h-full w-full rounded-full object-cover"
+                    sizes="32px"
+                  />
+                ) : (
+                  (profile?.first_name?.charAt(0) || '?')
+                )}
               </div>
-              {commentInputFocused && (commentsLoading || previewCommentsFromHook.length > 0) && (
-                <div className="mt-2 min-h-[24px]" onClick={(e) => e.stopPropagation()}>
-                  {commentsLoading ? (
-                    <div className="flex items-center gap-2 py-2">
-                      <div className="h-4 w-4 border-2 border-gray-300 border-t-brand-primary rounded-full animate-spin" />
-                      <span className="text-xs text-gray-500">Loading comments...</span>
-                    </div>
-                  ) : (
-                    renderCommentsPreviewList(previewCommentsFromHook)
-                  )}
+              <form
+                className="flex-1 min-w-0"
+                onSubmit={handleSubmitInlineComment}
+              >
+                <div className="flex items-end gap-2">
+                  <Textarea
+                    placeholder="Write a comment..."
+                    value={inlineComment}
+                    onChange={(e) => setInlineComment(e.target.value)}
+                    onFocus={handleCommentInputFocus}
+                    onBlur={handleCommentInputBlur}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmitInlineComment();
+                      }
+                    }}
+                    className="min-h-[36px] max-h-[100px] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-brand-primary/20"
+                    rows={1}
+                  />
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={!inlineComment.trim() || isSubmittingComment}
+                    className="h-9 w-9 rounded-full p-0 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50"
+                    aria-label="Send comment"
+                  >
+                    {isSubmittingComment ? (
+                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
                 </div>
-              )}
-            </form>
+              </form>
+            </div>
+            {commentInputFocused && (commentsLoading || previewCommentsFromHook.length > 0) && (
+              <div className="min-h-[24px]" onClick={(e) => e.stopPropagation()}>
+                {commentsLoading ? (
+                  <div className="flex items-center gap-2 py-2">
+                    <div className="h-4 w-4 border-2 border-gray-300 border-t-brand-primary rounded-full animate-spin" />
+                    <span className="text-xs text-gray-500">Loading comments...</span>
+                  </div>
+                ) : (
+                  renderCommentsPreviewList(previewCommentsFromHook)
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -870,72 +889,74 @@ function PostCardInner({
             </div>
           </div>
 
-          {/* Inline comment input */}
+          {/* Inline comment input - row keeps avatar aligned with input; comments block is sibling below */}
           <div
-            className="flex items-end gap-3 pt-3 border-t border-gray-100/50"
+            className="flex flex-col gap-2 pt-3 border-t border-gray-100/50"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="h-9 w-9 rounded-full bg-primary-100/80 flex items-center justify-center text-brand-primary-hover text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
-              {profile?.avatar_url ? (
-                <Image
-                  src={profile.avatar_url}
-                  alt={profile.full_name || 'You'}
-                  width={36}
-                  height={36}
-                  className="h-full w-full rounded-full object-cover"
-                  sizes="36px"
-                />
-              ) : (
-                (profile?.first_name?.charAt(0) || '?')
-              )}
-            </div>
-            <form
-              className="flex-1 flex flex-col gap-0"
-              onSubmit={handleSubmitInlineComment}
-            >
-              <div className="flex items-end gap-2">
-                <Textarea
-                  placeholder="Write a comment..."
-                  value={inlineComment}
-                  onChange={(e) => setInlineComment(e.target.value)}
-                  onFocus={handleCommentInputFocus}
-                  onBlur={handleCommentInputBlur}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmitInlineComment();
-                    }
-                  }}
-                  className="min-h-[40px] max-h-[120px] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-brand-primary/20"
-                  rows={1}
-                />
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={!inlineComment.trim() || isSubmittingComment}
-                  className="h-9 w-9 rounded-full p-0 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50"
-                  aria-label="Send comment"
-                >
-                  {isSubmittingComment ? (
-                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                </Button>
+            <div className="flex items-end gap-3">
+              <div className="h-9 w-9 rounded-full bg-primary-100/80 flex items-center justify-center text-brand-primary-hover text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+                {profile?.avatar_url ? (
+                  <Image
+                    src={profile.avatar_url}
+                    alt={profile.full_name || 'You'}
+                    width={36}
+                    height={36}
+                    className="h-full w-full rounded-full object-cover"
+                    sizes="36px"
+                  />
+                ) : (
+                  (profile?.first_name?.charAt(0) || '?')
+                )}
               </div>
-              {commentInputFocused && (commentsLoading || previewCommentsFromHook.length > 0) && (
-                <div className="mt-2 min-h-[24px]" onClick={(e) => e.stopPropagation()}>
-                  {commentsLoading ? (
-                    <div className="flex items-center gap-2 py-2">
-                      <div className="h-4 w-4 border-2 border-gray-300 border-t-brand-primary rounded-full animate-spin" />
-                      <span className="text-xs text-gray-500">Loading comments...</span>
-                    </div>
-                  ) : (
-                    renderCommentsPreviewList(previewCommentsFromHook)
-                  )}
+              <form
+                className="flex-1 min-w-0"
+                onSubmit={handleSubmitInlineComment}
+              >
+                <div className="flex items-end gap-2">
+                  <Textarea
+                    placeholder="Write a comment..."
+                    value={inlineComment}
+                    onChange={(e) => setInlineComment(e.target.value)}
+                    onFocus={handleCommentInputFocus}
+                    onBlur={handleCommentInputBlur}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmitInlineComment();
+                      }
+                    }}
+                    className="min-h-[40px] max-h-[120px] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-brand-primary/20"
+                    rows={1}
+                  />
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={!inlineComment.trim() || isSubmittingComment}
+                    className="h-9 w-9 rounded-full p-0 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50"
+                    aria-label="Send comment"
+                  >
+                    {isSubmittingComment ? (
+                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
                 </div>
-              )}
-            </form>
+              </form>
+            </div>
+            {commentInputFocused && (commentsLoading || previewCommentsFromHook.length > 0) && (
+              <div className="min-h-[24px]" onClick={(e) => e.stopPropagation()}>
+                {commentsLoading ? (
+                  <div className="flex items-center gap-2 py-2">
+                    <div className="h-4 w-4 border-2 border-gray-300 border-t-brand-primary rounded-full animate-spin" />
+                    <span className="text-xs text-gray-500">Loading comments...</span>
+                  </div>
+                ) : (
+                  renderCommentsPreviewList(previewCommentsFromHook)
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
