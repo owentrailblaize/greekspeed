@@ -332,28 +332,49 @@ function PostCardInner({
   };
 
   const [commentInputFocused, setCommentInputFocused] = useState(false);
+  const [isPostInView, setIsPostInView] = useState(false);
   const commentBlurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const postCardRef = useRef<HTMLDivElement | null>(null);
 
   const commentsPreview = post.comments_preview ?? [];
   const hasComments = (post.comments_count ?? 0) > 0;
   const commentCountLabel = hasComments ? 'View Comments' : 'Add Comment';
 
+  const commentsEnabled = hasComments
+    ? commentInputFocused || isPostInView
+    : commentInputFocused;
+
   const { comments: commentsFromHook, loading: commentsLoading, createComment } = useComments(post.id, {
-    enabled: commentInputFocused && (post.comments_count ?? 0) > 0,
-    limit: 2,
+    enabled: commentsEnabled,
+    limit: commentInputFocused ? 4 : 2,
   });
 
   const previewCommentsFromHook = useMemo(() => {
-    if (!commentInputFocused || commentsFromHook.length === 0) return [];
-    return [...commentsFromHook]
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .slice(0, 2);
+    if (commentsFromHook.length === 0) return [];
+    const sorted = [...commentsFromHook].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+    return sorted.slice(0, commentInputFocused ? 4 : 2);
   }, [commentInputFocused, commentsFromHook]);
 
   useEffect(() => {
     return () => {
       if (commentBlurTimeoutRef.current) clearTimeout(commentBlurTimeoutRef.current);
     };
+  }, []);
+
+  useEffect(() => {
+    const el = postCardRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry) setIsPostInView(entry.isIntersecting);
+      },
+      { rootMargin: '50px', threshold: 0 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   const handleCommentInputFocus = useCallback(() => {
@@ -384,6 +405,32 @@ function PostCardInner({
     const trimmed = content.trim();
     if (trimmed.length <= 140) return trimmed;
     return `${trimmed.slice(0, 137)}…`;
+  };
+
+  const linkifyCommentContent = (content: string, previewUrls?: Set<string>) => {
+    if (!content) return null;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = content.split(urlRegex);
+    return parts.map((part, i) => {
+      const isUrl = /^https?:\/\//.test(part);
+      if (isUrl) {
+        const cleanUrl = part.replace(/[.,;:!?]+$/, '');
+        if (previewUrls?.has(cleanUrl)) return null;
+        return (
+          <a
+            key={i}
+            href={cleanUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-brand-accent hover:text-accent-700 hover:underline break-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      }
+      return <span key={i}>{part}</span>;
+    }).filter(Boolean);
   };
 
   const renderCommentsPreviewList = (comments: PostComment[]) => {
@@ -429,8 +476,13 @@ function PostCardInner({
                   {formatTimestamp(comment.created_at)}
                 </span>
               </div>
-              <p className="text-gray-700 text-sm leading-relaxed pl-10">
-                {formatCommentSnippet(comment.content)}
+              <p className="text-gray-700 text-sm leading-relaxed pl-10 break-words whitespace-pre-wrap">
+                {linkifyCommentContent(
+                  formatCommentSnippet(comment.content),
+                  comment.metadata?.link_previews?.length
+                    ? new Set(comment.metadata.link_previews.map((p: { url: string }) => p.url))
+                    : undefined,
+                )}
               </p>
             </div>
           ))}
@@ -500,7 +552,7 @@ function PostCardInner({
   };
 
   return (
-    <>
+    <div ref={postCardRef}>
       {/* Mobile Layout - Cardless Feed */}
       <div className="sm:hidden">
         <div
@@ -711,7 +763,7 @@ function PostCardInner({
                 </div>
               </form>
             </div>
-            {commentInputFocused && (commentsLoading || previewCommentsFromHook.length > 0) && (
+            {(commentsLoading || previewCommentsFromHook.length > 0) && (
               <div className="min-h-[24px]" onClick={(e) => e.stopPropagation()}>
                 {commentsLoading ? (
                   <div className="flex items-center gap-2 py-2">
@@ -945,7 +997,7 @@ function PostCardInner({
                 </div>
               </form>
             </div>
-            {commentInputFocused && (commentsLoading || previewCommentsFromHook.length > 0) && (
+            {(commentsLoading || previewCommentsFromHook.length > 0) && (
               <div className="min-h-[24px]" onClick={(e) => e.stopPropagation()}>
                 {commentsLoading ? (
                   <div className="flex items-center gap-2 py-2">
@@ -982,7 +1034,7 @@ function PostCardInner({
           isDeleting={isDeleting}
         />
       )}
-    </>
+    </div>
   );
 }
 
