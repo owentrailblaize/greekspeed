@@ -10,13 +10,25 @@ import { DeletePostModal } from '@/components/features/social/DeletePostModal';
 import { EditPostModal } from '@/components/features/social/EditPostModal';
 import { ReportPostModal } from '@/components/features/social/ReportPostModal';
 import { NetworkingSpotlightCard } from '@/components/features/dashboard/dashboards/ui/NetworkingSpotlightCard';
+import { useVisualViewportHeight } from '@/lib/hooks/useVisualViewportHeight';
 import { toast } from 'react-toastify';
+
+const HEADER_HEIGHT_REM = 3.5;
 
 export default function PostDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { getAuthHeaders } = useAuth();
   const postId = typeof params.id === 'string' ? params.id : null;
+
+  const { height: visualHeight } = useVisualViewportHeight();
+  const [innerHeight, setInnerHeight] = useState(
+    typeof window !== 'undefined' ? window.innerHeight : 768
+  );
+  useEffect(() => {
+    setInnerHeight(window.innerHeight);
+  }, []);
+  const keyboardLikelyOpen = visualHeight < innerHeight;
 
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
@@ -215,13 +227,15 @@ export default function PostDetailPage() {
     />
   );
 
+  const headerHeightPx = HEADER_HEIGHT_REM * 16;
+  const containerStyle = keyboardLikelyOpen
+    ? { height: `${visualHeight - headerHeightPx}px`, maxHeight: `${visualHeight - headerHeightPx}px` }
+    : { height: 'calc(100dvh - 3.5rem)', maxHeight: 'calc(100dvh - 3.5rem)' };
+
   return (
     <div
       className="flex flex-col min-h-0 overflow-hidden bg-white lg:bg-gray-50 h-[calc(100vh-3.5rem)] max-h-[calc(100vh-3.5rem)] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] lg:pt-0 lg:pb-0"
-      style={{
-        height: 'calc(100dvh - 3.5rem)',
-        maxHeight: 'calc(100dvh - 3.5rem)',
-      }}
+      style={containerStyle}
     >
       <div className="max-w-full mx-auto px-0 lg:px-6 py-0 lg:py-4 w-full flex-1 min-h-0 flex flex-col overflow-hidden">
         {/* Desktop: card layout with sidebar */}

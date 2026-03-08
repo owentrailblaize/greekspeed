@@ -18,6 +18,7 @@ import { LinkPreviewCard } from './LinkPreviewCard';
 import { PostImageGrid } from './PostImageGrid';
 import Image from 'next/image';
 import { createPortal } from 'react-dom';
+import { useVisualViewportHeight } from '@/lib/hooks/useVisualViewportHeight';
 import { cn } from '@/lib/utils';
 
 interface CommentModalProps {
@@ -49,6 +50,16 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
   
   // Add mobile detection
   const [isMobile, setIsMobile] = useState(false);
+
+  const { height: visualHeight } = useVisualViewportHeight();
+  const [innerHeight, setInnerHeight] = useState(
+    typeof window !== 'undefined' ? window.innerHeight : 768
+  );
+  useEffect(() => {
+    setInnerHeight(window.innerHeight);
+  }, []);
+  const keyboardLikelyOpen = visualHeight < innerHeight;
+  const inputStickyNoPadding = embedded && isMobile && keyboardLikelyOpen;
   
   useEffect(() => {
     const checkMobile = () => {
@@ -950,10 +961,14 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
           )}
         </div>
 
-        {/* Comment Input */}
+        {/* Comment Input - no bottom padding when keyboard open so input stays flush above keyboard */}
         <div className={cn(
           "flex-shrink-0 border-t border-slate-200/70 bg-slate-50/70 shadow-inner",
-          isMobile ? "px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))]" : "px-6 py-4"
+          isMobile
+            ? inputStickyNoPadding
+              ? "px-4 py-3"
+              : "px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))]"
+            : "px-6 py-4"
         )}>
           <div className="flex items-end gap-4">
             <div className="w-10 h-10 sm:w-10 sm:h-10 bg-primary-100/70 rounded-full flex items-center justify-center text-brand-primary-hover text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
