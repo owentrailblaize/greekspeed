@@ -689,7 +689,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
               )}
             </div>
 
-            {/* Inline Reply Input */}
+            {/* Inline Reply Input - stacked on mobile so input is full width, single row on sm+ */}
             {isReplying && (
               <div className="mt-3 pt-3 border-t border-slate-100">
                 <div className="mb-2">
@@ -697,38 +697,40 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
                     Replying to {comment.author?.full_name || 'this comment'}
                   </p>
                 </div>
-                <div className="flex items-end gap-3">
-                  <div className="w-8 h-8 bg-primary-100/70 rounded-full flex items-center justify-center text-brand-primary-hover text-xs font-semibold shrink-0 overflow-hidden ring-2 ring-white">
-                    {profile?.avatar_url ? (
-                      <Image
-                        src={profile.avatar_url}
-                        alt={profile.full_name || 'User'}
-                        width={32}
-                        height={32}
-                        className="h-full w-full rounded-full object-cover"
-                        sizes="32px"
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
+                  <div className="flex items-end gap-2 flex-1 min-w-0">
+                    <div className="w-8 h-8 bg-primary-100/70 rounded-full flex items-center justify-center text-brand-primary-hover text-xs font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+                      {profile?.avatar_url ? (
+                        <Image
+                          src={profile.avatar_url}
+                          alt={profile.full_name || 'User'}
+                          width={32}
+                          height={32}
+                          className="h-full w-full rounded-full object-cover"
+                          sizes="32px"
+                        />
+                      ) : (
+                        profile?.first_name?.charAt(0) || 'U'
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Textarea
+                        ref={replyTextareaRef}
+                        placeholder="Write a reply..."
+                        value={currentReplyContent}
+                        onChange={(e) => setReplyContent(prev => ({ ...prev, [comment.id]: e.target.value }))}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSubmitReply(comment.id);
+                          }
+                        }}
+                        className="min-h-[40px] max-h-[120px] resize-none overflow-y-hidden rounded-xl border border-transparent bg-white/80 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-primary-300 focus:bg-white focus:ring-2 focus:ring-primary-200 transition"
+                        rows={1}
                       />
-                    ) : (
-                      profile?.first_name?.charAt(0) || 'U'
-                    )}
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <Textarea
-                      ref={replyTextareaRef}
-                      placeholder="Write a reply..."
-                      value={currentReplyContent}
-                      onChange={(e) => setReplyContent(prev => ({ ...prev, [comment.id]: e.target.value }))}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSubmitReply(comment.id);
-                        }
-                      }}
-                      className="min-h-[40px] max-h-[120px] resize-none overflow-y-hidden rounded-xl border border-transparent bg-white/80 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-primary-300 focus:bg-white focus:ring-2 focus:ring-primary-200 transition"
-                      rows={1}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-end gap-2 sm:shrink-0">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -879,7 +881,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
           {/* Original Post */}
           <div className={cn(
             "py-5 border-b border-slate-200/60 bg-white/80",
-            useFixedRegions && "pt-14",
+            useFixedRegions && "pt-16",
             isMobile ? "px-0" : "px-0"
           )}>
             <div className="flex items-start gap-4">
