@@ -6,8 +6,10 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase/client';
 import { ArrowLeft, ArrowRight, Mail, Star } from 'lucide-react';
+import { LottiePlayer } from '@/components/ui/LottiePlayer';
 
 export default function SignInPage() {
   const [email, setEmail] = useState('');
@@ -305,11 +307,12 @@ export default function SignInPage() {
 
       {/* Desktop Layout - Card Layout */}
       <div className="hidden lg:flex lg:items-center lg:justify-center lg:min-h-screen lg:p-6">
-        <div className="w-full max-w-5xl shadow-xl border-0">
+        <Card className="w-full max-w-5xl shadow-xl border-0 overflow-hidden">
+          <CardContent className="p-0">
           <div className="flex min-h-[500px]">
             {/* Left Column - Promotional Content */}
             <div className="hidden lg:block w-full lg:w-1/2 bg-gradient-to-br from-primary-50 to-accent-50 p-8 flex flex-col justify-center">
-              <div className="text-center lg:text-left">
+              <div className="text-center">
                 <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
                   Welcome to Trailblaize
                 </h1>
@@ -317,32 +320,19 @@ export default function SignInPage() {
                   Rethink the way you connect, manage, and grow your fraternity network
                 </p>
                 
-                {/* Network Visualization - Smaller */}
-                <div className="relative w-48 h-48 mx-auto lg:mx-0">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary-200 to-accent-200 rounded-full opacity-20"></div>
-                  <div className="absolute inset-4 bg-gradient-to-br from-primary-300 to-accent-300 rounded-full opacity-30"></div>
-                  <div className="absolute inset-8 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full opacity-40"></div>
-                  
-                  {/* Network Nodes */}
-                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-6 h-6 bg-white rounded-full border-2 border-brand-primary shadow-lg"></div>
-                  <div className="absolute top-10 left-6 w-5 h-5 bg-white rounded-full border-2 border-primary-400 shadow-md"></div>
-                  <div className="absolute top-14 right-10 w-6 h-6 bg-white rounded-full border-2 border-brand-primary shadow-md"></div>
-                  <div className="absolute bottom-16 left-12 w-4 h-4 bg-white rounded-full border-2 border-primary-400 shadow-md"></div>
-                  <div className="absolute bottom-6 right-6 w-5 h-5 bg-white rounded-full border-2 border-brand-primary shadow-md"></div>
-                  
-                  {/* Connection Lines */}
-                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 192 192">
-                    <line x1="96" y1="24" x2="72" y2="72" stroke="#1e40af" strokeWidth="2" opacity="0.3"/>
-                    <line x1="96" y1="24" x2="120" y2="96" stroke="#1e40af" strokeWidth="2" opacity="0.3"/>
-                    <line x1="72" y1="72" x2="48" y2="120" stroke="#1e40af" strokeWidth="2" opacity="0.3"/>
-                    <line x1="120" y1="96" x2="144" y2="120" stroke="#1e40af" strokeWidth="2" opacity="0.3"/>
-                  </svg>
+                {/* Networking Lottie - desktop only */}
+                <div className="relative w-[70%] max-w-[240px] h-[200px] mx-auto flex items-center justify-center" style={{ transform: 'scale(1.7)' }}>
+                  <LottiePlayer
+                    src="/animations/networking.json"
+                    loop
+                    className="w-full h-full"
+                  />
                 </div>
 
                 {/* Trust Badges */}
-                <div className="mt-6 text-center lg:text-left">
+                <div className="mt-6 text-center">
                   <p className="text-sm text-gray-600 mb-3">Trusted by 1000+ fraternity members</p>
-                  <div className="flex items-center justify-center lg:justify-start space-x-3">
+                  <div className="flex items-center justify-center space-x-3">
                     <div className="w-6 h-6 bg-brand-primary rounded-lg flex items-center justify-center">
                       <Star className="h-4 w-4 text-white" />
                     </div>
@@ -488,7 +478,8 @@ export default function SignInPage() {
               </div>
             </div>
           </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
