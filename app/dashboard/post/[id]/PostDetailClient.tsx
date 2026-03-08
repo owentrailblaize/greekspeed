@@ -39,7 +39,7 @@ export function PostDetailClient({
   return (
     <div className="flex flex-col flex-1 min-h-0 bg-white">
       {/* Sticky header: back + title. z-20 keeps it above CommentModal fixed scroll (z-10) on mobile. */}
-      <header data-post-detail-header className="relative z-20 flex-shrink-0 border-b border-slate-200/80 bg-white px-4 py-3 sm:px-6 sm:py-4 md:bg-white/95">
+      <header data-post-detail-header className="relative z-20 flex-shrink-0 border-b border-slate-200/80 bg-white px-4 py-1.5 sm:px-6 sm:py-4 md:bg-white/95">
         <div className="flex items-center gap-3 min-w-0">
           <Button
             variant="ghost"

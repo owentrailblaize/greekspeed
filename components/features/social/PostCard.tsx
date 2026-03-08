@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useMemo, useState, useCallback, useEffect } from 'react';
+import { memo, useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Heart, MessageCircle, Trash2, X, ChevronLeft, ChevronRight, Send } from 'lucide-react';
 import { PostActionsMenu } from './PostActionsMenu';
-import { Post } from '@/types/posts';
+import { Post, PostComment } from '@/types/posts';
 import { formatDistanceToNow } from 'date-fns';
 import { LinkPreviewCard } from './LinkPreviewCard';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
@@ -331,9 +331,45 @@ function PostCardInner({
     );
   };
 
+  const [commentInputFocused, setCommentInputFocused] = useState(false);
+  const commentBlurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const commentsPreview = post.comments_preview ?? [];
   const hasComments = (post.comments_count ?? 0) > 0;
   const commentCountLabel = hasComments ? 'View Comments' : 'Add Comment';
+
+  const { comments: commentsFromHook, loading: commentsLoading, createComment } = useComments(post.id, {
+    enabled: commentInputFocused && (post.comments_count ?? 0) > 0,
+    limit: 2,
+  });
+
+  const previewCommentsFromHook = useMemo(() => {
+    if (!commentInputFocused || commentsFromHook.length === 0) return [];
+    return [...commentsFromHook]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 2);
+  }, [commentInputFocused, commentsFromHook]);
+
+  useEffect(() => {
+    return () => {
+      if (commentBlurTimeoutRef.current) clearTimeout(commentBlurTimeoutRef.current);
+    };
+  }, []);
+
+  const handleCommentInputFocus = useCallback(() => {
+    if (commentBlurTimeoutRef.current) {
+      clearTimeout(commentBlurTimeoutRef.current);
+      commentBlurTimeoutRef.current = null;
+    }
+    setCommentInputFocused(true);
+  }, []);
+
+  const handleCommentInputBlur = useCallback(() => {
+    commentBlurTimeoutRef.current = setTimeout(() => {
+      setCommentInputFocused(false);
+      commentBlurTimeoutRef.current = null;
+    }, 300);
+  }, []);
 
   const formatTimestamp = (timestamp: string) => {
     try {
@@ -350,18 +386,15 @@ function PostCardInner({
     return `${trimmed.slice(0, 137)}…`;
   };
 
-  const renderCommentsPreview = () => {
-    if (commentsPreview.length === 0) {
-      return null;
-    }
-
+  const renderCommentsPreviewList = (comments: PostComment[]) => {
+    if (comments.length === 0) return null;
     return (
       <div className="mt-3 pt-3 border-t border-gray-100/50 space-y-2.5">
         <p className="text-xs font-medium text-gray-500 mb-2">
-          {commentsPreview.length > 1 ? 'Recent comments' : 'Recent comment'}
+          {comments.length > 1 ? 'Recent comments' : 'Recent comment'}
         </p>
         <div className="space-y-2.5">
-          {commentsPreview.map((comment) => (
+          {comments.map((comment) => (
             <div key={comment.id} className="text-sm">
               <div className="flex items-center gap-2 mb-1">
                 {comment.author?.id && comment.author?.full_name ? (
@@ -388,6 +421,8 @@ function PostCardInner({
       </div>
     );
   };
+
+  const renderCommentsPreview = () => renderCommentsPreviewList(commentsPreview);
 
   const handleDeleteClick = () => {
     setIsDeleteModalOpen(true);
@@ -419,7 +454,6 @@ function PostCardInner({
     router.push(`/dashboard/post/${post.id}`);
   }, [router, post.id]);
 
-  const { createComment } = useComments(post.id, { enabled: false });
   const { profile } = useProfile();
   const [inlineComment, setInlineComment] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -624,35 +658,51 @@ function PostCardInner({
               )}
             </div>
             <form
-              className="flex-1 flex items-end gap-2"
+              className="flex-1 flex flex-col gap-0"
               onSubmit={handleSubmitInlineComment}
             >
-              <Textarea
-                placeholder="Write a comment..."
-                value={inlineComment}
-                onChange={(e) => setInlineComment(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmitInlineComment();
-                  }
-                }}
-                className="min-h-[36px] max-h-[100px] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-brand-primary/20"
-                rows={1}
-              />
-              <Button
-                type="submit"
-                size="sm"
-                disabled={!inlineComment.trim() || isSubmittingComment}
-                className="h-9 w-9 rounded-full p-0 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50"
-                aria-label="Send comment"
-              >
-                {isSubmittingComment ? (
-                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </Button>
+              <div className="flex items-end gap-2">
+                <Textarea
+                  placeholder="Write a comment..."
+                  value={inlineComment}
+                  onChange={(e) => setInlineComment(e.target.value)}
+                  onFocus={handleCommentInputFocus}
+                  onBlur={handleCommentInputBlur}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmitInlineComment();
+                    }
+                  }}
+                  className="min-h-[36px] max-h-[100px] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-brand-primary/20"
+                  rows={1}
+                />
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={!inlineComment.trim() || isSubmittingComment}
+                  className="h-9 w-9 rounded-full p-0 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50"
+                  aria-label="Send comment"
+                >
+                  {isSubmittingComment ? (
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              {commentInputFocused && (commentsLoading || previewCommentsFromHook.length > 0) && (
+                <div className="mt-2 min-h-[24px]" onClick={(e) => e.stopPropagation()}>
+                  {commentsLoading ? (
+                    <div className="flex items-center gap-2 py-2">
+                      <div className="h-4 w-4 border-2 border-gray-300 border-t-brand-primary rounded-full animate-spin" />
+                      <span className="text-xs text-gray-500">Loading comments...</span>
+                    </div>
+                  ) : (
+                    renderCommentsPreviewList(previewCommentsFromHook)
+                  )}
+                </div>
+              )}
             </form>
           </div>
         </div>
@@ -840,35 +890,51 @@ function PostCardInner({
               )}
             </div>
             <form
-              className="flex-1 flex items-end gap-2"
+              className="flex-1 flex flex-col gap-0"
               onSubmit={handleSubmitInlineComment}
             >
-              <Textarea
-                placeholder="Write a comment..."
-                value={inlineComment}
-                onChange={(e) => setInlineComment(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmitInlineComment();
-                  }
-                }}
-                className="min-h-[40px] max-h-[120px] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-brand-primary/20"
-                rows={1}
-              />
-              <Button
-                type="submit"
-                size="sm"
-                disabled={!inlineComment.trim() || isSubmittingComment}
-                className="h-9 w-9 rounded-full p-0 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50"
-                aria-label="Send comment"
-              >
-                {isSubmittingComment ? (
-                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </Button>
+              <div className="flex items-end gap-2">
+                <Textarea
+                  placeholder="Write a comment..."
+                  value={inlineComment}
+                  onChange={(e) => setInlineComment(e.target.value)}
+                  onFocus={handleCommentInputFocus}
+                  onBlur={handleCommentInputBlur}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmitInlineComment();
+                    }
+                  }}
+                  className="min-h-[40px] max-h-[120px] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-brand-primary/20"
+                  rows={1}
+                />
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={!inlineComment.trim() || isSubmittingComment}
+                  className="h-9 w-9 rounded-full p-0 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50"
+                  aria-label="Send comment"
+                >
+                  {isSubmittingComment ? (
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              {commentInputFocused && (commentsLoading || previewCommentsFromHook.length > 0) && (
+                <div className="mt-2 min-h-[24px]" onClick={(e) => e.stopPropagation()}>
+                  {commentsLoading ? (
+                    <div className="flex items-center gap-2 py-2">
+                      <div className="h-4 w-4 border-2 border-gray-300 border-t-brand-primary rounded-full animate-spin" />
+                      <span className="text-xs text-gray-500">Loading comments...</span>
+                    </div>
+                  ) : (
+                    renderCommentsPreviewList(previewCommentsFromHook)
+                  )}
+                </div>
+              )}
             </form>
           </div>
         </div>
