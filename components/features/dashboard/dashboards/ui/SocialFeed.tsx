@@ -8,6 +8,8 @@ import { Plus, Image as ImageIcon, Paperclip, Calendar, Smile } from 'lucide-rea
 import { usePosts } from '@/lib/hooks/usePosts';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { useConnections } from '@/lib/contexts/ConnectionsContext';
+import { cn } from '@/lib/utils';
 import { CreatePostModal } from '@/components/features/social/CreatePostModal';
 import { EditPostModal } from '@/components/features/social/EditPostModal';
 import { ReportPostModal } from '@/components/features/social/ReportPostModal';
@@ -33,6 +35,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
   const [reportPost, setReportPost] = useState<Post | null>(null);
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
   const [hasScrolled, setHasScrolled] = useState(false);
+  const [feedFilter, setFeedFilter] = useState<'all' | 'connections'>('all');
 
   // CRITICAL: Store initialData posts immediately in a ref that persists
   // This ensures we can show posts even before React Query hydrates
@@ -96,9 +99,10 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     applyNewPosts,
   } = usePosts(chapterId, { initialData });
   const { profile } = useProfile();
-  const { getAuthHeaders } = useAuth();
+  const { user, getAuthHeaders } = useAuth();
+  const { connections } = useConnections();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  
+
   // CRITICAL: Use initialData posts immediately if React Query hasn't loaded yet
   // This ensures instant rendering on first paint (industry standard approach)
   // Priority: React Query posts > initialData posts from ref > empty array
@@ -121,7 +125,25 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     // Priority 3: Empty array (will show "No posts yet")
     return posts;
   }, [posts]);
-  
+
+  // Accepted connections only: set of peer user IDs (exclude self; only posts from connections).
+  const connectedUserIds = useMemo(() => {
+    if (!user?.id || !connections?.length) return new Set<string>();
+    const ids = new Set<string>();
+    for (const conn of connections) {
+      if (conn.status !== 'accepted') continue;
+      const peerId = conn.requester_id === user.id ? conn.recipient_id : conn.requester_id;
+      if (peerId) ids.add(peerId);
+    }
+    return ids;
+  }, [connections, user?.id]);
+
+  const filteredPosts = useMemo(() => {
+    if (feedFilter === 'all') return mergedPosts;
+    return mergedPosts.filter(
+      (p) => p.author_id && connectedUserIds.has(p.author_id)
+    );
+  }, [mergedPosts, feedFilter, connectedUserIds]);
 
   useEffect(() => {
     const handleScroll = () => setHasScrolled(true);
@@ -131,11 +153,11 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
 
   useEffect(() => {
     if (!expandedPostId) return;
-    const stillExists = mergedPosts.some((post) => post.id === expandedPostId);
+    const stillExists = filteredPosts.some((post) => post.id === expandedPostId);
     if (!stillExists) {
       setExpandedPostId(null);
     }
-  }, [expandedPostId, mergedPosts]);
+  }, [expandedPostId, filteredPosts]);
 
   useEffect(() => {
     const node = loadMoreRef.current;
@@ -159,7 +181,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
   }, [fetchNextPage, hasNextPage, isFetchingNextPage, hasScrolled]); // ← Added hasScrolled
 
   const rowVirtualizer = useWindowVirtualizer({
-    count: mergedPosts.length,
+    count: filteredPosts.length,
     estimateSize: () => 420,
     measureElement: (el) => el?.getBoundingClientRect().height ?? 420,
     overscan: 8,
@@ -329,6 +351,44 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
           </CardContent>
         </Card>
 
+        {/* Filter tabs: minimal text + pipe on mobile; boxed segmented control on desktop. No counts. */}
+        <div
+          role="tablist"
+          aria-label="Feed filter"
+          className="flex w-full items-center justify-center gap-0 sm:rounded-xl sm:border sm:border-gray-200 sm:bg-gray-50/80 sm:p-1"
+        >
+          {[
+            { id: 'all' as const, label: 'All' },
+            { id: 'connections' as const, label: 'Connections' },
+          ].map((tab, index) => (
+            <span key={tab.id} className="flex min-w-0 flex-1 items-center sm:flex-1">
+              {index > 0 && (
+                <span
+                  className="pointer-events-none px-2 text-gray-300 sm:hidden"
+                  aria-hidden
+                >
+                  |
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => setFeedFilter(tab.id)}
+                role="tab"
+                aria-selected={feedFilter === tab.id}
+                aria-label={tab.label}
+                className={cn(
+                  'w-full text-center text-sm font-medium transition-colors py-2 px-2 sm:flex sm:flex-1 sm:items-center sm:justify-center sm:rounded-lg sm:py-2.5 sm:px-3',
+                  feedFilter === tab.id
+                    ? 'text-gray-900 sm:bg-white sm:shadow-sm'
+                    : 'text-gray-400 hover:text-gray-600 sm:text-gray-600 sm:hover:bg-white/50 sm:hover:text-gray-900'
+                )}
+              >
+                {tab.label}
+              </button>
+            </span>
+          ))}
+        </div>
+
         {/* Only render pill slot when there are new posts to show (avoids empty gap above feed) */}
         {mergedPosts.length > 0 && newPostsCount > 0 && (
           <div className="flex min-h-11 items-center justify-center py-1">
@@ -354,10 +414,19 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
             <div className="w-8 h-8 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
             <p className="text-gray-500 text-sm sm:text-base">Loading feed…</p>
           </div>
-        ) : mergedPosts.length === 0 ? (
+        ) : filteredPosts.length === 0 ? (
           <div className="text-center py-8 sm:py-12">
-            <p className="text-gray-500 text-lg sm:text-base">No posts yet</p>
-            <p className="text-sm text-gray-400 mt-2">Be the first to share something!</p>
+            {feedFilter === 'connections' && mergedPosts.length > 0 ? (
+              <>
+                <p className="text-gray-500 text-lg sm:text-base">No posts from your connections yet.</p>
+                <p className="text-sm text-gray-400 mt-2">Connect with members to see their posts here.</p>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-500 text-lg sm:text-base">No posts yet</p>
+                <p className="text-sm text-gray-400 mt-2">Be the first to share something!</p>
+              </>
+            )}
           </div>
         ) : (
           <div className="relative">
@@ -366,7 +435,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
               style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
             >
               {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                const post = mergedPosts[virtualRow.index];
+                const post = filteredPosts[virtualRow.index];
                 if (!post) return null;
 
                 return (
@@ -407,7 +476,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
             <div className="flex min-h-12 flex-shrink-0 items-center justify-center py-3">
               {isFetchingNextPage ? (
                 <span className="text-xs text-gray-400">Loading...</span>
-              ) : !hasNextPage && mergedPosts.length > 0 ? (
+              ) : !hasNextPage && filteredPosts.length > 0 ? (
                 <span className="text-sm text-gray-400">You're all caught up.</span>
               ) : null}
             </div>
