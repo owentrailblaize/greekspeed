@@ -99,7 +99,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const replyTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const commentsScrollRef = useRef<HTMLDivElement | null>(null);
-
+  const scrollContentRef = useRef<HTMLDivElement | null>(null);
   const MAX_COMMENT_INPUT_HEIGHT = 200;
   const MAX_REPLY_INPUT_HEIGHT = 120;
   const MIN_COMMENT_INPUT_HEIGHT = 48;
@@ -281,14 +281,21 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
 
   const handleCommentInputFocus = useCallback(() => {
     if (!embedded || !isMobile) return;
+    const scrollEl = scrollContentRef.current;
+    const savedScrollTop = scrollEl?.scrollTop ?? 0;
     requestAnimationFrame(() => {
-      window.scrollTo(0, 0);
-      textareaRef.current?.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+      if (scrollEl) scrollEl.scrollTop = savedScrollTop;
     });
     const t = setTimeout(() => {
-      window.scrollTo(0, 0);
-    }, 100);
-    return () => clearTimeout(t);
+      if (scrollContentRef.current) scrollContentRef.current.scrollTop = savedScrollTop;
+    }, 50);
+    const t2 = setTimeout(() => {
+      if (scrollContentRef.current) scrollContentRef.current.scrollTop = savedScrollTop;
+    }, 150);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(t2);
+    };
   }, [embedded, isMobile]);
 
   // Auto-resize main comment textarea when content changes
@@ -825,7 +832,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
   const postAndCommentsContent = (
     <>
         {/* Combined Scrollable Content Area */}
-        <div className={cn(
+        <div ref={scrollContentRef} className={cn(
           "flex-1 overflow-y-auto min-h-0 bg-white/70",
           isMobile ? "px-4" : "px-6"
         )}>
