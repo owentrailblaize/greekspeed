@@ -1,16 +1,25 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { MoreVertical, Calendar, Download, Link2, Share2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  useDropdownMenuClose,
+} from '@/components/ui/dropdown-menu';
 import {
   generateGoogleCalendarUrl,
   generateOutlookCalendarUrl,
   downloadICSFile,
 } from '@/lib/utils/calendarUtils';
-import { copyEventLinkToClipboard, generateEventLink } from '@/lib/utils/eventLinkUtils';
+import { copyEventLinkToClipboard } from '@/lib/utils/eventLinkUtils';
 import { toast } from 'react-toastify';
 import { ShareEventDrawer } from '@/components/features/messaging/ShareEventDrawer';
+import { cn } from '@/lib/utils';
 
 interface EventActionsMenuProps {
   event: {
@@ -25,48 +34,80 @@ interface EventActionsMenuProps {
   hideOnMobile?: boolean;
 }
 
-export function EventActionsMenu({ event, onClose, hideOnMobile = false }: EventActionsMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [showCalendarSubmenu, setShowCalendarSubmenu] = useState(false);
-  const [shareDrawerOpen, setShareDrawerOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-        setShowCalendarSubmenu(false);
-        onClose?.();
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [isOpen, onClose]);
+function CalendarSubmenu({ event }: { event: EventActionsMenuProps['event'] }) {
+  const close = useDropdownMenuClose();
 
   const handleAddToGoogleCalendar = () => {
+    close();
     const url = generateGoogleCalendarUrl(event);
     window.open(url, '_blank', 'noopener,noreferrer');
-    setIsOpen(false);
-    setShowCalendarSubmenu(false);
   };
 
   const handleAddToOutlookCalendar = () => {
+    close();
     const url = generateOutlookCalendarUrl(event);
     window.open(url, '_blank', 'noopener,noreferrer');
-    setIsOpen(false);
-    setShowCalendarSubmenu(false);
   };
 
   const handleDownloadICS = () => {
+    close();
     downloadICSFile(event);
     toast.success('Calendar file downloaded');
-    setIsOpen(false);
-    setShowCalendarSubmenu(false);
   };
+
+  return (
+    <div
+      className={cn(
+        'absolute left-0 top-full z-[10000] mt-1 w-44 overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-lg',
+        'md:left-auto md:right-full md:top-0 md:mt-0 md:mr-1'
+      )}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        type="button"
+        onClick={handleAddToGoogleCalendar}
+        className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-gray-900 outline-none transition-colors hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+      >
+        <img
+          src="/gmail-icon.png"
+          alt="Google Calendar"
+          className="h-4 w-4"
+          width={16}
+          height={16}
+          style={{ display: 'inline-block' }}
+        />
+        Google
+      </button>
+      <button
+        type="button"
+        onClick={handleAddToOutlookCalendar}
+        className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-gray-900 outline-none transition-colors hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+      >
+        <img
+          src="/outlook-logo.png"
+          alt="Outlook Calendar"
+          className="h-4 w-4"
+          width={16}
+          height={16}
+          style={{ display: 'inline-block' }}
+        />
+        Outlook
+      </button>
+      <button
+        type="button"
+        onClick={handleDownloadICS}
+        className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-gray-900 outline-none transition-colors hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+      >
+        <Download className="h-4 w-4" />
+        Download
+      </button>
+    </div>
+  );
+}
+
+export function EventActionsMenu({ event, onClose, hideOnMobile = false }: EventActionsMenuProps) {
+  const [showCalendarSubmenu, setShowCalendarSubmenu] = useState(false);
+  const [shareDrawerOpen, setShareDrawerOpen] = useState(false);
 
   const handleCopyLink = async () => {
     const success = await copyEventLinkToClipboard(event.id, null, { ref: 'copy' });
@@ -75,121 +116,70 @@ export function EventActionsMenu({ event, onClose, hideOnMobile = false }: Event
     } else {
       toast.error('Failed to copy link');
     }
-    setIsOpen(false);
   };
 
   const handleShare = () => {
-    setIsOpen(false);
     setShareDrawerOpen(true);
   };
 
   return (
     <>
-      {/* Add isolate and z-50 when open to fix stacking on mobile */}
-      <div className={`relative ${isOpen ? 'z-[9998] isolate' : ''} ${hideOnMobile ? 'hidden md:block' : ''}`} ref={menuRef}>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsOpen(!isOpen);
-          }}
-          className="h-6 w-6 p-0 hover:bg-gray-100 rounded-full"
-          title="More actions"
-        >
-          <MoreVertical className="h-4 w-4 text-gray-500" />
-        </Button>
-
-        {isOpen && (
-          <div
-            className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[9999]"
-            onClick={(e) => e.stopPropagation()}
-          >
+      <div className={hideOnMobile ? 'hidden md:block' : ''}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowCalendarSubmenu(false)}
+              className="h-6 w-6 rounded-full p-0 text-gray-500 hover:bg-gray-100"
+              title="More actions"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
             {/* Add to Calendar with submenu */}
             <div className="relative">
-              <button
-                onClick={() => setShowCalendarSubmenu(!showCalendarSubmenu)}
-                className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowCalendarSubmenu((prev) => !prev);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setShowCalendarSubmenu((prev) => !prev);
+                  }
+                }}
+                className={cn(
+                  'relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors',
+                  'hover:bg-gray-100 focus:bg-gray-100 focus:outline-none'
+                )}
               >
-                <span className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Add to Calendar
-                </span>
+                <Calendar className="h-4 w-4" />
+                <span className="flex-1">Add to Calendar</span>
                 <ExternalLink className="h-3 w-3 text-gray-400" />
-              </button>
-
-              {showCalendarSubmenu && (
-                <div className="
-                  absolute w-44 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[10000]
-                  /* Mobile: position below the button */
-                  left-0 top-full mt-1
-                  /* Desktop: position to the left */
-                  md:left-auto md:right-full md:top-0 md:mt-0 md:mr-1
-                ">
-                  <button
-                    onClick={handleAddToGoogleCalendar}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    {/* ... existing Google Calendar button content ... */}
-                    <img
-                      src="/gmail-icon.png"
-                      alt="Google Calendar"
-                      className="h-4 w-4"
-                      width={16}
-                      height={16}
-                      style={{ display: 'inline-block' }}
-                    />
-                    Google
-                  </button>
-                  <button
-                    onClick={handleAddToOutlookCalendar}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <img
-                      src="/outlook-logo.png"
-                      alt="Outlook Calendar"
-                      className="h-4 w-4"
-                      width={16}
-                      height={16}
-                      style={{ display: 'inline-block' }}
-                    />
-                    Outlook
-                  </button>
-                  <button
-                    onClick={handleDownloadICS}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <Download className="h-4 w-4" />
-                    Download
-                  </button>
-                </div>
-              )}
+              </div>
+              {showCalendarSubmenu && <CalendarSubmenu event={event} />}
             </div>
 
-            <div className="border-t border-gray-100 my-1" />
+            <DropdownMenuSeparator />
 
-            {/* Copy Link */}
-            <button
-              onClick={handleCopyLink}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-            >
+            <DropdownMenuItem onClick={handleCopyLink} className="gap-2">
               <Link2 className="h-4 w-4" />
               Copy Event Link
-            </button>
+            </DropdownMenuItem>
 
-            {/* Share */}
-            <button
-              onClick={handleShare}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-            >
+            <DropdownMenuItem onClick={handleShare} className="gap-2">
               <Share2 className="h-4 w-4" />
               Share Event
-            </button>
-          </div>
-        )}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      {/* Share Event Drawer */}
       <ShareEventDrawer
         isOpen={shareDrawerOpen}
         onClose={() => setShareDrawerOpen(false)}

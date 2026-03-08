@@ -104,10 +104,12 @@ export function PostActionsMenu({
           <Flag className="h-4 w-4" />
           Report
         </DropdownMenuItem>
+        {/*
         <DropdownMenuItem onClick={handleCopyLink} className="gap-2">
           <Link2 className="h-4 w-4" />
           Copy link
         </DropdownMenuItem>
+        */}
         {(isAuthor ? (useDeleteModal ? onDeleteClick : onDelete) : false) && (
           <DropdownMenuItem
             onClick={handleDelete}

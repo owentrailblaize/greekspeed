@@ -44,6 +44,15 @@ const DropdownMenuContext = React.createContext<{
   setIsOpen: (open: boolean) => void;
 } | null>(null);
 
+/** Hook to close the dropdown from inside (e.g. submenu actions). Must be used within DropdownMenu. */
+export function useDropdownMenuClose(): () => void {
+  const context = React.useContext(DropdownMenuContext);
+  if (!context) {
+    throw new Error("useDropdownMenuClose must be used within a DropdownMenu");
+  }
+  return React.useCallback(() => context.setIsOpen(false), [context]);
+}
+
 export const DropdownMenu = React.forwardRef<HTMLDivElement, DropdownMenuProps>(
   ({ children, ...props }, ref) => {
     const [isOpen, setIsOpen] = React.useState(false);

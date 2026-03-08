@@ -4,6 +4,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Message, ProfileMessageMetadata, EventMessageMetadata } from '@/lib/hooks/useMessages';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { UserAvatar } from '@/components/features/profile/UserAvatar';
 import { MoreHorizontal, Edit, Trash2, Check, X, User, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -32,7 +38,6 @@ export function MessageList({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
-  const [showMenuFor, setShowMenuFor] = useState<string | null>(null);
 
   const handleProfileClick = (profileId: string, profileType: 'member' | 'alumni') => {
     if (profileType === 'alumni') {
@@ -254,8 +259,7 @@ export function MessageList({
 
   const handleEdit = (message: Message) => {
     setEditingMessageId(message.id);
-    setEditContent(message.content);
-    setShowMenuFor(null);
+    setEditContent(message.content ?? '');
   };
 
   const handleSaveEdit = async () => {
@@ -278,7 +282,6 @@ export function MessageList({
   const handleDelete = async (messageId: string) => {
     try {
       await onDeleteMessage(messageId);
-      setShowMenuFor(null);
     } catch (error) {
       console.error('Failed to delete message:', error);
     }
@@ -608,33 +611,31 @@ export function MessageList({
                                     {isProfileOnly && renderProfileMessage(message.metadata as ProfileMessageMetadata, true, true)}
                                     {/* Message actions menu for event/profile-only messages */}
                                     <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={() => setShowMenuFor(showMenuFor === message.id ? null : message.id)}
-                                        className="h-6 w-6 p-0 bg-white/90 hover:bg-white shadow-sm"
-                                      >
-                                        <MoreHorizontal className="w-3 h-3" />
-                                      </Button>
-
-                                      {showMenuFor === message.id && (
-                                        <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10">
-                                          <button
-                                            onClick={() => handleEdit(message)}
-                                            className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-6 w-6 p-0 bg-white/90 hover:bg-white shadow-sm"
+                                            aria-label="Message actions"
                                           >
-                                            <Edit className="w-3 h-3 mr-2" />
+                                            <MoreHorizontal className="w-3 h-3" />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="min-w-[8rem]">
+                                          <DropdownMenuItem onClick={() => handleEdit(message)} className="gap-2">
+                                            <Edit className="h-4 w-4" />
                                             Edit
-                                          </button>
-                                          <button
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem
                                             onClick={() => handleDelete(message.id)}
-                                            className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
+                                            className="gap-2 text-red-600 hover:bg-red-50 hover:text-red-700"
                                           >
-                                            <Trash2 className="w-3 h-3 mr-2" />
+                                            <Trash2 className="h-4 w-4" />
                                             Delete
-                                          </button>
-                                        </div>
-                                      )}
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
                                     </div>
                                   </div>
                                 ) : (
@@ -649,33 +650,31 @@ export function MessageList({
                                         </div>
                                         {/* Message actions menu */}
                                         <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                          <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => setShowMenuFor(showMenuFor === message.id ? null : message.id)}
-                                            className="h-6 w-6 p-0 bg-white/90 hover:bg-white shadow-sm"
-                                          >
-                                            <MoreHorizontal className="w-3 h-3" />
-                                          </Button>
-
-                                          {showMenuFor === message.id && (
-                                            <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10">
-                                              <button
-                                                onClick={() => handleEdit(message)}
-                                                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                                          <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                              <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                className="h-6 w-6 p-0 bg-white/90 hover:bg-white shadow-sm"
+                                                aria-label="Message actions"
                                               >
-                                                <Edit className="w-3 h-3 mr-2" />
+                                                <MoreHorizontal className="w-3 h-3" />
+                                              </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="min-w-[8rem]">
+                                              <DropdownMenuItem onClick={() => handleEdit(message)} className="gap-2">
+                                                <Edit className="h-4 w-4" />
                                                 Edit
-                                              </button>
-                                              <button
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem
                                                 onClick={() => handleDelete(message.id)}
-                                                className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
+                                                className="gap-2 text-red-600 hover:bg-red-50 hover:text-red-700"
                                               >
-                                                <Trash2 className="w-3 h-3 mr-2" />
+                                                <Trash2 className="h-4 w-4" />
                                                 Delete
-                                              </button>
-                                            </div>
-                                          )}
+                                              </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
                                         </div>
                                       </div>
                                     )}
