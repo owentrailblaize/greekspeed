@@ -18,7 +18,7 @@ import { LinkPreviewCard } from './LinkPreviewCard';
 import { PostImageGrid } from './PostImageGrid';
 import Image from 'next/image';
 import { createPortal } from 'react-dom';
-import { useVisualViewportHeight } from '@/lib/hooks/useVisualViewportHeight';
+import { useLayoutEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 interface CommentModalProps {
@@ -48,33 +48,33 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
   const [collapsedReplies, setCollapsedReplies] = useState<Set<string>>(new Set());
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
   
-  // Add mobile detection
+  // Mobile detection: sm breakpoint for modal UX, 768 for embedded fixed layout (match ChatWindow)
   const [isMobile, setIsMobile] = useState(false);
+  const [isEmbeddedMobile, setIsEmbeddedMobile] = useState(false);
 
-  const { height: visualHeight, offsetTop } = useVisualViewportHeight();
-  const [innerHeight, setInnerHeight] = useState(
-    typeof window !== 'undefined' ? window.innerHeight : 768
-  );
-  useEffect(() => {
-    setInnerHeight(window.innerHeight);
-  }, []);
-  const keyboardLikelyOpen = visualHeight < innerHeight;
-  const inputStickyNoPadding = embedded && isMobile && keyboardLikelyOpen;
-  const inputBarFixed = embedded && isMobile && keyboardLikelyOpen;
-  const fixedBarBottomPx = inputBarFixed
-    ? innerHeight - (offsetTop + visualHeight)
-    : 0;
-  const INPUT_BAR_HEIGHT_PX = 72;
-  
+  // Embedded + mobile: fixed regions (header, scroll, input) with measured heights, like ChatWindow
+  const useFixedRegions = embedded && isEmbeddedMobile;
+  const [appHeaderHeight, setAppHeaderHeight] = useState(56);
+  const [postHeaderHeight, setPostHeaderHeight] = useState(52);
+  const [bottomNavHeight, setBottomNavHeight] = useState(80);
+  const [inputBarHeight, setInputBarHeight] = useState(72);
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 640); // sm breakpoint
+      setIsEmbeddedMobile(window.innerWidth < 768); // md: match ChatWindow for embedded layout
     };
-    
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  const scrollAreaTop = useFixedRegions ? appHeaderHeight + postHeaderHeight : undefined;
+  const scrollAreaBottom = useFixedRegions ? bottomNavHeight + inputBarHeight : undefined;
+  const inputBarBottom = useFixedRegions ? bottomNavHeight : undefined;
+
+  // Non-fixed input bar padding (when not using fixed regions)
+  const inputStickyNoPadding = embedded && isMobile && !useFixedRegions;
   
   const {
     comments,
@@ -100,7 +100,39 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
   const replyTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const commentsScrollRef = useRef<HTMLDivElement | null>(null);
   const scrollContentRef = useRef<HTMLDivElement | null>(null);
+  const commentInputBarRef = useRef<HTMLDivElement>(null);
   const MAX_COMMENT_INPUT_HEIGHT = 200;
+
+  // Measure heights for embedded mobile fixed layout (same pattern as ChatWindow)
+  useLayoutEffect(() => {
+    if (!embedded || !isEmbeddedMobile) return;
+
+    const measure = () => {
+      const appHeader =
+        document.querySelector('header') ||
+        document.querySelector('[data-app-header]') ||
+        document.querySelector('.sticky.top-0');
+      setAppHeaderHeight(appHeader?.getBoundingClientRect().height ?? 56);
+
+      const postHeader = document.querySelector('[data-post-detail-header]');
+      setPostHeaderHeight(postHeader?.getBoundingClientRect().height ?? 52);
+
+      const bottomNav = document.querySelector('[class*="fixed"][class*="bottom-0"]');
+      setBottomNavHeight(bottomNav?.getBoundingClientRect().height ?? 80);
+
+      if (commentInputBarRef.current) {
+        setInputBarHeight(commentInputBarRef.current.getBoundingClientRect().height);
+      }
+    };
+
+    measure();
+    window.addEventListener('resize', measure);
+    const t = setTimeout(measure, 100);
+    return () => {
+      window.removeEventListener('resize', measure);
+      clearTimeout(t);
+    };
+  }, [embedded, isEmbeddedMobile, comments.length]);
   const MAX_REPLY_INPUT_HEIGHT = 120;
   const MIN_COMMENT_INPUT_HEIGHT = 48;
   const MIN_REPLY_INPUT_HEIGHT = 40;
@@ -831,11 +863,19 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
 
   const postAndCommentsContent = (
     <>
-        {/* Combined Scrollable Content Area */}
-        <div ref={scrollContentRef} className={cn(
-          "flex-1 overflow-y-auto min-h-0 bg-white/70",
-          isMobile ? "px-4" : "px-6"
-        )}>
+        {/* Combined Scrollable Content Area - fixed region on embedded mobile (like ChatWindow) */}
+        <div
+          ref={scrollContentRef}
+          className={cn(
+            "flex-1 overflow-y-auto min-h-0 bg-white/70",
+            isMobile ? "px-4" : "px-6",
+            useFixedRegions && "fixed left-0 right-0 z-10"
+          )}
+          style={useFixedRegions && scrollAreaTop != null && scrollAreaBottom != null ? {
+            top: `${scrollAreaTop}px`,
+            bottom: `${scrollAreaBottom}px`,
+          } : undefined}
+        >
           {/* Original Post */}
           <div className={cn(
             "py-5 border-b border-slate-200/60 bg-white/80",
@@ -985,26 +1025,28 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
           )}
         </div>
 
-        {/* Comment Input - no bottom padding when keyboard open so input stays flush above keyboard */}
-        {inputBarFixed ? (
-          <div style={{ height: INPUT_BAR_HEIGHT_PX, flexShrink: 0 }} aria-hidden="true" />
+        {/* Comment Input - fixed above bottom nav on embedded mobile (like ChatWindow) */}
+        {useFixedRegions ? (
+          <div style={{ height: inputBarHeight, flexShrink: 0 }} aria-hidden="true" />
         ) : null}
-        <div className={cn(
-          "flex-shrink-0 border-t border-slate-200/70 bg-slate-50/70 shadow-inner",
-          !inputBarFixed && (isMobile
-            ? inputStickyNoPadding
-              ? "px-4 py-3"
-              : "px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))]"
-            : "px-6 py-4")
-        )}
-        style={inputBarFixed ? {
-          position: 'fixed',
+        <div
+          ref={commentInputBarRef}
+          className={cn(
+            "flex-shrink-0 border-t border-slate-200/70 bg-slate-50/70 shadow-inner",
+            !useFixedRegions && (isMobile
+              ? inputStickyNoPadding
+                ? "px-4 py-3"
+                : "px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))]"
+              : "px-6 py-4")
+          )}
+          style={useFixedRegions && inputBarBottom != null ? {
+            position: 'fixed',
             left: 0,
             right: 0,
-            bottom: fixedBarBottomPx,
+            bottom: `${inputBarBottom}px`,
             zIndex: 50,
             padding: '12px 16px',
-            paddingBottom: 12,
+            paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))',
             background: 'rgb(248 250 252 / 0.95)',
             borderTop: '1px solid rgb(226 232 240 / 0.7)',
             boxShadow: '0 -4px 6px -1px rgb(0 0 0 / 0.05)',
