@@ -903,21 +903,39 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
               
               <div className="flex-1 min-w-0 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex flex-wrap items-center gap-3">
-                    {post.author?.id && post.author?.full_name ? (
-                      <ClickableUserName
-                        userId={post.author.id}
-                        fullName={post.author.full_name}
-                        className="font-medium text-slate-900 text-base break-words"
-                      />
+                  <div className="flex flex-wrap items-center gap-3 min-w-0">
+                    {isMobile ? (
+                      <span className="font-normal text-slate-600 text-base break-words">
+                        {post.author?.id ? (
+                          <ClickableUserName
+                            userId={post.author.id}
+                            fullName={[post.author.first_name, post.author.last_name].filter(Boolean).join(' ') || post.author.full_name || 'Unknown User'}
+                            className="font-normal text-slate-600 text-base break-words hover:text-slate-800"
+                          />
+                        ) : (
+                          [post.author?.first_name, post.author?.last_name].filter(Boolean).join(' ') || post.author?.full_name || 'Unknown User'
+                        )}
+                        {' · '}
+                        <span className="text-slate-500">{formatTimestamp(post.created_at)}</span>
+                      </span>
                     ) : (
-                      <h4 className="font-medium text-slate-900 text-base break-words">
-                        {post.author?.full_name || 'Unknown User'}
-                      </h4>
+                      <>
+                        {post.author?.id && post.author?.full_name ? (
+                          <ClickableUserName
+                            userId={post.author.id}
+                            fullName={post.author.full_name}
+                            className="font-medium text-slate-900 text-base break-words"
+                          />
+                        ) : (
+                          <h4 className="font-medium text-slate-900 text-base break-words">
+                            {post.author?.full_name || 'Unknown User'}
+                          </h4>
+                        )}
+                        <p className="text-sm text-slate-500">
+                          {formatTimestamp(post.created_at)}
+                        </p>
+                      </>
                     )}
-                    <p className="text-sm text-slate-500">
-                      {formatTimestamp(post.created_at)}
-                    </p>
                   </div>
                   <PostActionsMenu
                     post={post}
