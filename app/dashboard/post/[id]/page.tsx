@@ -216,7 +216,13 @@ export default function PostDetailPage() {
   );
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] max-h-[calc(100vh-3.5rem)] min-h-0 overflow-hidden bg-white lg:bg-gray-50">
+    <div
+      className="flex flex-col min-h-0 overflow-hidden bg-white lg:bg-gray-50 h-[calc(100vh-3.5rem)] max-h-[calc(100vh-3.5rem)] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] lg:pt-0 lg:pb-0"
+      style={{
+        height: 'calc(100dvh - 3.5rem)',
+        maxHeight: 'calc(100dvh - 3.5rem)',
+      }}
+    >
       <div className="max-w-full mx-auto px-0 lg:px-6 py-0 lg:py-4 w-full flex-1 min-h-0 flex flex-col overflow-hidden">
         {/* Desktop: card layout with sidebar */}
         <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6 flex-1 min-h-0 overflow-hidden items-stretch">
