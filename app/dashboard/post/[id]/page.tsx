@@ -21,7 +21,7 @@ export default function PostDetailPage() {
   const { getAuthHeaders } = useAuth();
   const postId = typeof params.id === 'string' ? params.id : null;
 
-  const { height: visualHeight } = useVisualViewportHeight();
+  const { height: visualHeight, offsetTop } = useVisualViewportHeight();
   const [innerHeight, setInnerHeight] = useState(
     typeof window !== 'undefined' ? window.innerHeight : 768
   );
@@ -228,56 +228,76 @@ export default function PostDetailPage() {
   );
 
   const headerHeightPx = HEADER_HEIGHT_REM * 16;
-  const containerStyle = keyboardLikelyOpen
-    ? { height: `${visualHeight - headerHeightPx}px`, maxHeight: `${visualHeight - headerHeightPx}px` }
-    : { height: 'calc(100dvh - 3.5rem)', maxHeight: 'calc(100dvh - 3.5rem)' };
+  const contentHeightPx = visualHeight - headerHeightPx;
+  const containerStyle: React.CSSProperties = keyboardLikelyOpen
+    ? {
+        position: 'fixed',
+        top: `${headerHeightPx}px`,
+        left: 0,
+        right: 0,
+        height: `${contentHeightPx}px`,
+        maxHeight: `${contentHeightPx}px`,
+        zIndex: 10,
+      }
+    : {
+        height: 'calc(100dvh - 3.5rem)',
+        maxHeight: 'calc(100dvh - 3.5rem)',
+      };
 
   return (
-    <div
-      className="flex flex-col min-h-0 overflow-hidden bg-white lg:bg-gray-50 h-[calc(100vh-3.5rem)] max-h-[calc(100vh-3.5rem)] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] lg:pt-0 lg:pb-0"
-      style={containerStyle}
-    >
-      <div className="max-w-full mx-auto px-0 lg:px-6 py-0 lg:py-4 w-full flex-1 min-h-0 flex flex-col overflow-hidden">
-        {/* Desktop: card layout with sidebar */}
-        <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6 flex-1 min-h-0 overflow-hidden items-stretch">
-          <aside className="col-span-3 col-start-1 row-start-1 min-h-0 h-full flex flex-col overflow-hidden">
-            <NetworkingSpotlightCard />
-          </aside>
-          <main className="col-span-9 col-start-4 row-start-1 flex flex-col min-h-0 min-w-0">
-            <div className="flex-1 min-h-0 flex flex-col items-center">
-              <div className="w-full max-w-4xl flex flex-col flex-1 min-h-0 bg-white border border-slate-200/80 shadow-sm rounded-2xl overflow-hidden">
-                {postContent}
+    <>
+      {keyboardLikelyOpen && (
+        <div
+          style={{ height: `${contentHeightPx}px`, flexShrink: 0 }}
+          aria-hidden="true"
+        />
+      )}
+      <div
+        className="flex flex-col min-h-0 overflow-hidden bg-white lg:bg-gray-50 h-[calc(100vh-3.5rem)] max-h-[calc(100vh-3.5rem)] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] lg:pt-0 lg:pb-0"
+        style={containerStyle}
+      >
+        <div className="max-w-full mx-auto px-0 lg:px-6 py-0 lg:py-4 w-full flex-1 min-h-0 flex flex-col overflow-hidden">
+          {/* Desktop: card layout with sidebar */}
+          <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6 flex-1 min-h-0 overflow-hidden items-stretch">
+            <aside className="col-span-3 col-start-1 row-start-1 min-h-0 h-full flex flex-col overflow-hidden">
+              <NetworkingSpotlightCard />
+            </aside>
+            <main className="col-span-9 col-start-4 row-start-1 flex flex-col min-h-0 min-w-0">
+              <div className="flex-1 min-h-0 flex flex-col items-center">
+                <div className="w-full max-w-4xl flex flex-col flex-1 min-h-0 bg-white border border-slate-200/80 shadow-sm rounded-2xl overflow-hidden">
+                  {postContent}
+                </div>
               </div>
+            </main>
+          </div>
+          {/* Mobile/tablet: cardless full-screen */}
+          <div className="lg:hidden flex-1 min-h-0 flex flex-col w-full">
+            <div className="w-full flex flex-col flex-1 min-h-0 bg-white">
+              {postContent}
             </div>
-          </main>
-        </div>
-        {/* Mobile/tablet: cardless full-screen */}
-        <div className="lg:hidden flex-1 min-h-0 flex flex-col w-full">
-          <div className="w-full flex flex-col flex-1 min-h-0 bg-white">
-            {postContent}
           </div>
         </div>
       </div>
 
-      <DeletePostModal
-        isOpen={!!deletingPost}
-        onClose={() => setDeletingPost(null)}
-        onConfirm={handleDeletePost}
-        post={deletingPost}
-        isDeleting={isDeleting}
-      />
-      <EditPostModal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        post={post}
-        onSave={handleSaveEdit}
-      />
-      <ReportPostModal
-        isOpen={showReportModal}
-        onClose={() => setShowReportModal(false)}
-        post={post}
-        onSubmit={handleSubmitReport}
-      />
-    </div>
+    <DeletePostModal
+      isOpen={!!deletingPost}
+      onClose={() => setDeletingPost(null)}
+      onConfirm={handleDeletePost}
+      post={deletingPost}
+      isDeleting={isDeleting}
+    />
+    <EditPostModal
+      isOpen={showEditModal}
+      onClose={() => setShowEditModal(false)}
+      post={post}
+      onSave={handleSaveEdit}
+    />
+    <ReportPostModal
+      isOpen={showReportModal}
+      onClose={() => setShowReportModal(false)}
+      post={post}
+      onSubmit={handleSubmitReport}
+    />
+  </>
   );
 }
