@@ -158,7 +158,7 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
         ) : (
           <>
             <div className={cn(
-              "min-h-screen bg-gray-50 pt-4 pb-20",
+              "min-h-screen bg-gray-50 pb-20",
               activeMobileTab === 'network' ? 'px-0' : 'px-4'
             )}>
               <div className={activeMobileTab === 'network' ? '' : 'max-w-md mx-auto'}>

@@ -11,6 +11,7 @@ import { Select, SelectItem } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Star, Mail, Info, Users, ArrowLeft, Linkedin } from 'lucide-react';
 import { LottiePlayer } from '@/components/ui/LottiePlayer';
+import { MobileAuthLoadingOverlay } from '@/components/features/splash/MobileAuthLoadingOverlay';
 import { supabase } from '@/lib/supabase/client';
 import { useChapters } from '@/lib/hooks/useChapters';
 import { Chapter } from '@/types/chapter';
@@ -196,23 +197,33 @@ export default function SignUpPage() {
 
   if (authLoading || oauthLoading || linkedInLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Completing authentication...</p>
+      <>
+        <div className="lg:hidden">
+          <MobileAuthLoadingOverlay />
         </div>
-      </div>
+        <div className="hidden lg:flex min-h-screen items-center justify-center bg-white">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
+            <p className="text-gray-600">Completing authentication...</p>
+          </div>
+        </div>
+      </>
     );
   }
 
   if (user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-brand-primary mx-auto mb-4"></div>
-        <p className="text-gray-600 font-medium">Redirecting to dashboard...</p>
-      </div>
-    </div>
+      <>
+        <div className="lg:hidden">
+          <MobileAuthLoadingOverlay />
+        </div>
+        <div className="hidden lg:flex min-h-screen items-center justify-center bg-white">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-brand-primary mx-auto mb-4"></div>
+            <p className="text-gray-600 font-medium">Redirecting to dashboard...</p>
+          </div>
+        </div>
+      </>
     );
   }
 

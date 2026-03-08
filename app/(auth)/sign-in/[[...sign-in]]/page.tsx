@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase/client';
 import { ArrowLeft, ArrowRight, Mail, Star } from 'lucide-react';
 import { LottiePlayer } from '@/components/ui/LottiePlayer';
+import { MobileAuthLoadingOverlay } from '@/components/features/splash/MobileAuthLoadingOverlay';
 
 export default function SignInPage() {
   const [email, setEmail] = useState('');
@@ -148,24 +149,34 @@ export default function SignInPage() {
   // Show loading while checking auth state
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+      <>
+        <div className="lg:hidden">
+          <MobileAuthLoadingOverlay />
         </div>
-      </div>
+        <div className="hidden lg:flex min-h-screen items-center justify-center bg-white">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </>
     );
   }
 
   // Don't render form if user is already authenticated
   if (user) {
     return (
-<div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-brand-primary mx-auto mb-4"></div>
-        <p className="text-gray-600 font-medium">Redirecting ...</p>
-      </div>
-    </div>
+      <>
+        <div className="lg:hidden">
+          <MobileAuthLoadingOverlay />
+        </div>
+        <div className="hidden lg:flex min-h-screen items-center justify-center bg-white">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-brand-primary mx-auto mb-4"></div>
+            <p className="text-gray-600 font-medium">Redirecting ...</p>
+          </div>
+        </div>
+      </>
     );
   }
 
