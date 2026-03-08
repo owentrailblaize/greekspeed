@@ -51,7 +51,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
   // Add mobile detection
   const [isMobile, setIsMobile] = useState(false);
 
-  const { height: visualHeight } = useVisualViewportHeight();
+  const { height: visualHeight, offsetTop } = useVisualViewportHeight();
   const [innerHeight, setInnerHeight] = useState(
     typeof window !== 'undefined' ? window.innerHeight : 768
   );
@@ -60,6 +60,11 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
   }, []);
   const keyboardLikelyOpen = visualHeight < innerHeight;
   const inputStickyNoPadding = embedded && isMobile && keyboardLikelyOpen;
+  const inputBarFixed = embedded && isMobile && keyboardLikelyOpen;
+  const fixedBarBottomPx = inputBarFixed
+    ? innerHeight - (offsetTop + visualHeight)
+    : 0;
+  const INPUT_BAR_HEIGHT_PX = 72;
   
   useEffect(() => {
     const checkMobile = () => {
@@ -273,6 +278,18 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
       handleSubmitComment();
     }
   };
+
+  const handleCommentInputFocus = useCallback(() => {
+    if (!embedded || !isMobile) return;
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      textareaRef.current?.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+    });
+    const t = setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 100);
+    return () => clearTimeout(t);
+  }, [embedded, isMobile]);
 
   // Auto-resize main comment textarea when content changes
   useEffect(() => {
@@ -962,14 +979,30 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
         </div>
 
         {/* Comment Input - no bottom padding when keyboard open so input stays flush above keyboard */}
+        {inputBarFixed ? (
+          <div style={{ height: INPUT_BAR_HEIGHT_PX, flexShrink: 0 }} aria-hidden="true" />
+        ) : null}
         <div className={cn(
           "flex-shrink-0 border-t border-slate-200/70 bg-slate-50/70 shadow-inner",
-          isMobile
+          !inputBarFixed && (isMobile
             ? inputStickyNoPadding
               ? "px-4 py-3"
               : "px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))]"
-            : "px-6 py-4"
-        )}>
+            : "px-6 py-4")
+        )}
+        style={inputBarFixed ? {
+          position: 'fixed',
+            left: 0,
+            right: 0,
+            bottom: fixedBarBottomPx,
+            zIndex: 50,
+            padding: '12px 16px',
+            paddingBottom: 12,
+            background: 'rgb(248 250 252 / 0.95)',
+            borderTop: '1px solid rgb(226 232 240 / 0.7)',
+            boxShadow: '0 -4px 6px -1px rgb(0 0 0 / 0.05)',
+          } : undefined}
+        >
           <div className="flex items-end gap-4">
             <div className="w-10 h-10 sm:w-10 sm:h-10 bg-primary-100/70 rounded-full flex items-center justify-center text-brand-primary-hover text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
               {profile?.avatar_url ? (
@@ -993,6 +1026,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 onKeyPress={handleKeyPress}
+                onFocus={handleCommentInputFocus}
                 className="min-h-[48px] sm:min-h-[52px] max-h-[200px] resize-none overflow-y-hidden rounded-2xl border border-transparent bg-white/80 px-4 py-3 text-sm sm:text-base text-slate-800 placeholder:text-slate-400 focus:border-primary-300 focus:bg-white focus:ring-2 focus:ring-primary-200 transition"
                 rows={1}
               />

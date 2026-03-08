@@ -177,6 +177,12 @@ export default function PostDetailPage() {
     };
   }, []);
 
+  useEffect(() => {
+    const preventScroll = (e: Event) => e.preventDefault();
+    window.addEventListener('scroll', preventScroll, { passive: false });
+    return () => window.removeEventListener('scroll', preventScroll);
+  }, []);
+
   if (!postId) {
     return (
       <div className="flex flex-col flex-1 min-h-0 bg-gray-50">
