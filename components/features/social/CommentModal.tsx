@@ -879,6 +879,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
           {/* Original Post */}
           <div className={cn(
             "py-5 border-b border-slate-200/60 bg-white/80",
+            useFixedRegions && "pt-8",
             isMobile ? "px-0" : "px-0"
           )}>
             <div className="flex items-start gap-4">
