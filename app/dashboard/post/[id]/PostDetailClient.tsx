@@ -32,8 +32,8 @@ export function PostDetailClient({
 }: PostDetailClientProps) {
   return (
     <div className="flex flex-col flex-1 min-h-0 bg-white">
-      {/* Sticky header: back + title (data attribute for CommentModal embedded mobile layout) */}
-      <header data-post-detail-header className="flex-shrink-0 border-b border-slate-200/80 bg-white/95 px-4 py-3 sm:px-6 sm:py-4">
+      {/* Sticky header: back + title. z-20 keeps it above CommentModal fixed scroll (z-10) on mobile. */}
+      <header data-post-detail-header className="relative z-20 flex-shrink-0 border-b border-slate-200/80 bg-white px-4 py-3 sm:px-6 sm:py-4 md:bg-white/95">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
