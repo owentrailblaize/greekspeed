@@ -336,6 +336,9 @@ function PostCardInner({
   const [isPostInView, setIsPostInView] = useState(false);
   const commentBlurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const postCardRef = useRef<HTMLDivElement | null>(null);
+  const [showHeartOverlay, setShowHeartOverlay] = useState(false);
+  const singleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTapTimeRef = useRef<number>(0);
 
   const commentsPreview = post.comments_preview ?? [];
   const hasComments = (post.comments_count ?? 0) > 0;
@@ -361,6 +364,7 @@ function PostCardInner({
   useEffect(() => {
     return () => {
       if (commentBlurTimeoutRef.current) clearTimeout(commentBlurTimeoutRef.current);
+      if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current);
     };
   }, []);
 
@@ -552,13 +556,46 @@ function PostCardInner({
     openPostView();
   };
 
+  const handleMobileCardTap = useCallback(
+    (e: React.MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('button, a, [role="button"], img, textarea, form, input')) return;
+      if (!isMobile) {
+        openPostView();
+        return;
+      }
+      const now = Date.now();
+      if (now - lastTapTimeRef.current < 400) {
+        if (singleTapTimerRef.current) {
+          clearTimeout(singleTapTimerRef.current);
+          singleTapTimerRef.current = null;
+        }
+        lastTapTimeRef.current = 0;
+        e.preventDefault();
+        e.stopPropagation();
+        onLike(post.id);
+        setShowHeartOverlay(true);
+        return;
+      }
+      lastTapTimeRef.current = now;
+      if (singleTapTimerRef.current) {
+        clearTimeout(singleTapTimerRef.current);
+      }
+      singleTapTimerRef.current = setTimeout(() => {
+        openPostView();
+        singleTapTimerRef.current = null;
+      }, 350);
+    },
+    [isMobile, post.id, onLike, openPostView],
+  );
+
   return (
     <div ref={postCardRef}>
       {/* Mobile Layout - Cardless Feed */}
       <div className="sm:hidden">
         <div
-          className="px-4 py-4 border-b border-gray-200/80 cursor-pointer"
-          onClick={handleCardClick}
+          className="relative px-4 py-4 border-b border-gray-200/80 cursor-pointer"
+          onClick={isMobile ? handleMobileCardTap : handleCardClick}
         >
           {/* Post Header */}
           <div className="flex items-start justify-between gap-3 mb-3">
@@ -784,6 +821,27 @@ function PostCardInner({
               </div>
             )}
           </div>
+
+          {/* Mobile double-tap heart overlay (Instagram-style) */}
+          {showHeartOverlay && (
+            <div
+              className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+              aria-hidden
+            >
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: [0, 1.2, 1.2], opacity: [0, 1, 0] }}
+                transition={{
+                  duration: 0.8,
+                  times: [0, 0.25, 1],
+                }}
+                onAnimationComplete={() => setShowHeartOverlay(false)}
+                className="flex items-center justify-center"
+              >
+                <Heart className="h-24 w-24 fill-rose-500 text-rose-500 drop-shadow-lg" />
+              </motion.div>
+            </div>
+          )}
         </div>
       </div>
 
