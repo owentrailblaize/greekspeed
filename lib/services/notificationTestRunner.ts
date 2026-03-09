@@ -1,0 +1,460 @@
+/**
+ * Notification test runner: sends or builds each notification type with sample data.
+ * Used by scripts/test-notifications.ts for local testing and dry-run preview.
+ */
+
+import { EmailService } from '@/lib/services/emailService';
+import { SMSNotificationService } from '@/lib/services/sms/smsNotificationService';
+import { SMSService } from '@/lib/services/sms/smsServiceTelnyx';
+import { SMSMessageFormatter } from '@/lib/services/sms/smsMessageFormatter';
+
+export const NOTIFICATION_TYPES = [
+  'chapter_announcement',
+  'new_event',
+  'event_reminder',
+  'connection_request',
+  'connection_accepted',
+  'new_message',
+  'password_reset_template',
+  'password_change',
+  'welcome',
+  'generic_notification',
+] as const;
+
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
+
+const TEST_USER_ID = 'test-user-id';
+const TEST_CHAPTER_ID = 'test-chapter-id';
+const TEST_CONNECTION_ID = 'test-connection-id-123';
+
+const SAMPLE = {
+  firstName: 'Jordan',
+  userName: 'Jordan',
+  chapterName: 'Alpha Beta Gamma',
+  actorFirstName: 'Alex',
+  title: 'Spring Formal 2025',
+  content: 'Join us this Saturday at 8 PM. Dress code: semi-formal. RSVP by Thursday.',
+  summary: 'Join us this Saturday at 8 PM. Dress code: semi-formal.',
+  eventTitle: 'Chapter Formal',
+  eventDescription: 'Annual chapter formal dinner and dance.',
+  eventLocation: 'Grand Ballroom, Student Center',
+  eventStartTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+  eventEndTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000).toISOString(),
+  eventDate: 'Sat, Mar 15, 2025, 8:00 PM',
+  messagePreview: 'Hey, are you going to the formal?',
+  connectionMessage: 'Would love to connect and catch up!',
+  resetLink: 'https://app.example.com/auth/reset-password?token=test-token',
+  timestamp: new Date().toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' }),
+};
+
+export interface NotificationTestOptions {
+  type: NotificationType;
+  toEmail: string;
+  toPhone: string;
+  sendEmail: boolean;
+  sendSms: boolean;
+  dryRun: boolean;
+}
+
+export interface DryRunResult {
+  type: NotificationType;
+  email?: {
+    subject: string;
+    templateData?: Record<string, unknown>;
+    bodyDescription?: string;
+  };
+  sms?: {
+    body: string;
+  };
+}
+
+export interface SendResult {
+  type: NotificationType;
+  emailSent?: boolean;
+  smsSent?: boolean;
+  emailError?: string;
+  smsError?: string;
+}
+
+function buildSmsBodyForType(type: NotificationType): string {
+  const optOut = ' Reply STOP to opt out.';
+  const compliance = ' Msg & data rates may apply';
+  const optOutHelp = ' Reply STOP to unsubscribe or HELP for help.';
+
+  switch (type) {
+    case 'chapter_announcement': {
+      const parts = SMSMessageFormatter.formatAnnouncementMessage(
+        SAMPLE.title,
+        SAMPLE.content,
+        { optOutText: optOut, complianceText: compliance }
+      );
+      return parts.fullMessage;
+    }
+    case 'new_event': {
+      const content = `Event reminder: ${SAMPLE.eventTitle} on ${SAMPLE.eventDate}.`;
+      const parts = SMSMessageFormatter.formatCompliantMessage(content, {
+        senderPrefix: '[Trailblaize]',
+        optOutText: optOutHelp,
+        complianceText: compliance,
+      });
+      return parts.fullMessage;
+    }
+    case 'connection_request': {
+      const connectionContent = `${SAMPLE.actorFirstName} wants to connect with you on Trailblaize. Check your email for details.`;
+      const parts = SMSMessageFormatter.formatConnectionMessage(
+        'Connection request: ',
+        connectionContent,
+        { optOutText: optOutHelp, complianceText: compliance }
+      );
+      return parts.fullMessage;
+    }
+    case 'connection_accepted': {
+      const connectionContent = `${SAMPLE.actorFirstName} accepted your connection request on Trailblaize! Check your email for details.`;
+      const parts = SMSMessageFormatter.formatConnectionMessage(
+        'Connection update: ',
+        connectionContent,
+        { optOutText: optOutHelp, complianceText: compliance }
+      );
+      return parts.fullMessage;
+    }
+    case 'new_message': {
+      const messageContent = `Message notification: New message from ${SAMPLE.actorFirstName}.`;
+      const parts = SMSMessageFormatter.formatCompliantMessage(messageContent, {
+        senderPrefix: '[Trailblaize]',
+        optOutText: ' Reply STOP to opt-out.',
+        complianceText: compliance,
+      });
+      return parts.fullMessage;
+    }
+    default:
+      return '(no SMS for this type)';
+  }
+}
+
+function buildEmailPayloadForType(type: NotificationType): DryRunResult['email'] {
+  switch (type) {
+    case 'chapter_announcement':
+      return {
+        subject: `Chapter Announcement: ${SAMPLE.title}`,
+        templateData: {
+          payload: { title: SAMPLE.title, summary: SAMPLE.summary, announcement_id: TEST_CONNECTION_ID },
+          recipient: { first_name: SAMPLE.firstName, email: 'test@example.com' },
+          chapter: { name: SAMPLE.chapterName },
+          cta: { label: 'Read Full Announcement', url: 'https://www.trailblaize.net/' },
+        },
+      };
+    case 'new_event':
+      return {
+        subject: `New Event: ${SAMPLE.eventTitle}`,
+        templateData: {
+          payload: {
+            event: {
+              title: SAMPLE.eventTitle,
+              description: SAMPLE.eventDescription,
+              location: SAMPLE.eventLocation,
+              start_at_human: SAMPLE.eventDate,
+              end_at_human: 'Sat, Mar 15, 2025, 12:00 AM',
+              event_id: 'test-event-id',
+            },
+          },
+          recipient: { first_name: SAMPLE.firstName, email: 'test@example.com' },
+          chapter: { name: SAMPLE.chapterName },
+          cta: { label: 'View Event', url: 'https://www.trailblaize.net/event/test' },
+        },
+      };
+    case 'event_reminder':
+      return {
+        subject: `Event Reminder: ${SAMPLE.eventTitle}`,
+        templateData: {
+          recipient: { first_name: SAMPLE.firstName },
+          chapter: { name: SAMPLE.chapterName },
+          payload: {
+            event: {
+              title: SAMPLE.eventTitle,
+              description: SAMPLE.eventDescription,
+              location: SAMPLE.eventLocation,
+              start_at_human: SAMPLE.eventDate,
+              start_at_relative: 'in 2 days',
+            },
+          },
+          cta: { url: 'https://www.trailblaize.net' },
+        },
+      };
+    case 'connection_request':
+      return {
+        subject: `${SAMPLE.actorFirstName} wants to connect with you on Trailblaize`,
+        templateData: {
+          payload: { message: SAMPLE.connectionMessage },
+          recipient: { first_name: SAMPLE.firstName, email: 'test@example.com' },
+          actor: { first_name: SAMPLE.actorFirstName },
+          chapter: { name: SAMPLE.chapterName },
+          cta: { label: 'View Request', url: 'https://www.trailblaize.net/dashboard/notifications' },
+        },
+      };
+    case 'connection_accepted':
+      return {
+        subject: `${SAMPLE.actorFirstName} accepted your connection request on Trailblaize`,
+        templateData: {
+          recipient: { first_name: SAMPLE.firstName, email: 'test@example.com' },
+          actor: { first_name: SAMPLE.actorFirstName },
+          chapter: { name: SAMPLE.chapterName },
+          cta: { label: 'View Connection', url: 'https://www.trailblaize.net/dashboard/notifications' },
+        },
+      };
+    case 'new_message':
+      return {
+        subject: `New message from ${SAMPLE.actorFirstName} on Trailblaize`,
+        templateData: {
+          payload: { preview: SAMPLE.messagePreview },
+          recipient: { first_name: SAMPLE.firstName, email: 'test@example.com' },
+          actor: { first_name: SAMPLE.actorFirstName },
+          chapter: { name: SAMPLE.chapterName },
+          cta: { label: 'Open Chat', url: 'https://www.trailblaize.net/dashboard/messages' },
+        },
+      };
+    case 'password_reset_template':
+      return {
+        subject: 'Reset Your GreekSpeed Password',
+        templateData: {
+          recipient: { first_name: SAMPLE.firstName, email: 'test@example.com' },
+          chapter: { name: SAMPLE.chapterName },
+          reset_link: SAMPLE.resetLink,
+          timestamp: SAMPLE.timestamp,
+        },
+      };
+    case 'password_change':
+      return {
+        subject: 'Password Successfully Changed - GreekSpeed',
+        templateData: {
+          recipient: { first_name: SAMPLE.firstName, email: 'test@example.com' },
+          chapter: { name: SAMPLE.chapterName },
+          timestamp: SAMPLE.timestamp,
+          device_info: 'Test Device',
+          dashboard_link: 'https://www.trailblaize.net/dashboard',
+        },
+      };
+    case 'welcome':
+      return {
+        subject: `Welcome to GreekSpeed, ${SAMPLE.userName}!`,
+        bodyDescription: `Inline HTML: header "Welcome to GreekSpeed!", body with userName=${SAMPLE.userName}, chapterName=${SAMPLE.chapterName}, feature list, "Get Started" button.`,
+      };
+    case 'generic_notification':
+      return {
+        subject: `GreekSpeed: ${SAMPLE.title}`,
+        bodyDescription: `Inline HTML: title=${SAMPLE.title}, userName=${SAMPLE.userName}, message="Sample notification message."`,
+      };
+    default:
+      return { subject: '(unknown)', bodyDescription: '(no email)' };
+  }
+}
+
+function hasEmail(type: NotificationType): boolean {
+  return true;
+}
+
+function hasSms(type: NotificationType): boolean {
+  return [
+    'chapter_announcement',
+    'new_event',
+    'connection_request',
+    'connection_accepted',
+    'new_message',
+  ].includes(type);
+}
+
+export async function runNotificationTest(options: NotificationTestOptions): Promise<DryRunResult | SendResult> {
+  const { type, toEmail, toPhone, sendEmail, sendSms, dryRun } = options;
+
+  if (dryRun) {
+    const result: DryRunResult = { type };
+    if (sendEmail && hasEmail(type)) {
+      result.email = buildEmailPayloadForType(type);
+    }
+    if (sendSms && hasSms(type)) {
+      result.sms = { body: buildSmsBodyForType(type) };
+    }
+    return result;
+  }
+
+  const result: SendResult = { type };
+
+  if (sendEmail && hasEmail(type)) {
+    try {
+      let emailSent = false;
+      switch (type) {
+        case 'chapter_announcement':
+          emailSent = await EmailService.sendChapterAnnouncement({
+            to: toEmail,
+            firstName: SAMPLE.firstName,
+            chapterName: SAMPLE.chapterName,
+            title: SAMPLE.title,
+            summary: SAMPLE.summary,
+            content: SAMPLE.content,
+            announcementId: TEST_CONNECTION_ID,
+            announcementType: 'general',
+          });
+          break;
+        case 'new_event':
+          emailSent = await EmailService.sendEventNotification({
+            to: toEmail,
+            firstName: SAMPLE.firstName,
+            chapterName: SAMPLE.chapterName,
+            eventTitle: SAMPLE.eventTitle,
+            eventDescription: SAMPLE.eventDescription,
+            eventLocation: SAMPLE.eventLocation,
+            eventStartTime: SAMPLE.eventStartTime,
+            eventEndTime: SAMPLE.eventEndTime,
+            eventId: 'test-event-id',
+          });
+          break;
+        case 'event_reminder':
+          emailSent = await EmailService.sendEventReminder({
+            to: toEmail,
+            firstName: SAMPLE.firstName,
+            chapterName: SAMPLE.chapterName,
+            eventTitle: SAMPLE.eventTitle,
+            eventDescription: SAMPLE.eventDescription,
+            eventLocation: SAMPLE.eventLocation,
+            eventStartTime: SAMPLE.eventStartTime,
+            eventEndTime: SAMPLE.eventEndTime,
+            eventId: 'test-event-id',
+            startAtRelative: 'in 2 days',
+          });
+          break;
+        case 'connection_request':
+          emailSent = await EmailService.sendConnectionRequestNotification({
+            to: toEmail,
+            firstName: SAMPLE.firstName,
+            chapterName: SAMPLE.chapterName,
+            actorFirstName: SAMPLE.actorFirstName,
+            message: SAMPLE.connectionMessage,
+            connectionId: TEST_CONNECTION_ID,
+          });
+          break;
+        case 'connection_accepted':
+          emailSent = await EmailService.sendConnectionAcceptedNotification({
+            to: toEmail,
+            firstName: SAMPLE.firstName,
+            chapterName: SAMPLE.chapterName,
+            actorFirstName: SAMPLE.actorFirstName,
+            connectionId: TEST_CONNECTION_ID,
+          });
+          break;
+        case 'new_message':
+          emailSent = await EmailService.sendMessageNotification({
+            to: toEmail,
+            firstName: SAMPLE.firstName,
+            chapterName: SAMPLE.chapterName,
+            actorFirstName: SAMPLE.actorFirstName,
+            messagePreview: SAMPLE.messagePreview,
+            connectionId: TEST_CONNECTION_ID,
+          });
+          break;
+        case 'password_reset_template':
+          emailSent = await EmailService.sendPasswordResetInstructions({
+            to: toEmail,
+            firstName: SAMPLE.firstName,
+            chapterName: SAMPLE.chapterName,
+            resetLink: SAMPLE.resetLink,
+            timestamp: SAMPLE.timestamp,
+          });
+          break;
+        case 'password_change':
+          emailSent = await EmailService.sendPasswordChangeConfirmation({
+            to: toEmail,
+            firstName: SAMPLE.firstName,
+            chapterName: SAMPLE.chapterName,
+            timestamp: SAMPLE.timestamp,
+            deviceInfo: 'Test Device',
+          });
+          break;
+        case 'welcome':
+          emailSent = await EmailService.sendWelcomeEmail({
+            to: toEmail,
+            userName: SAMPLE.userName,
+            chapterName: SAMPLE.chapterName,
+          });
+          break;
+        case 'generic_notification':
+          emailSent = await EmailService.sendNotificationEmail({
+            to: toEmail,
+            userName: SAMPLE.userName,
+            title: SAMPLE.title,
+            message: 'Sample notification message.',
+            actionUrl: 'https://www.trailblaize.net/dashboard',
+            actionText: 'Open Dashboard',
+          });
+          break;
+      }
+      result.emailSent = emailSent;
+    } catch (err) {
+      result.emailError = err instanceof Error ? err.message : String(err);
+    }
+  }
+
+  if (sendSms && hasSms(type)) {
+    const formattedPhone = SMSService.formatPhoneNumber(toPhone);
+    if (!SMSService.isValidPhoneNumber(toPhone)) {
+      result.smsError = 'Invalid phone number format';
+    } else {
+      try {
+        let smsSent = false;
+        switch (type) {
+          case 'chapter_announcement': {
+          const parts = SMSMessageFormatter.formatAnnouncementMessage(
+            SAMPLE.title,
+            SAMPLE.content,
+            { optOutText: ' Reply STOP to opt out.', complianceText: ' Msg & data rates may apply' }
+          );
+          const sendResult = await SMSService.sendSMS({ to: formattedPhone, body: parts.fullMessage });
+          smsSent = sendResult.success;
+          break;
+        }
+          case 'new_event':
+            smsSent = await SMSNotificationService.sendEventNotification(
+              formattedPhone,
+              SAMPLE.firstName,
+              SAMPLE.eventTitle,
+              SAMPLE.eventDate,
+              TEST_USER_ID,
+              TEST_CHAPTER_ID
+            );
+            break;
+          case 'connection_request':
+            smsSent = await SMSNotificationService.sendConnectionRequestNotification(
+              formattedPhone,
+              SAMPLE.firstName,
+              SAMPLE.actorFirstName,
+              TEST_USER_ID,
+              TEST_CHAPTER_ID
+            );
+            break;
+          case 'connection_accepted':
+            smsSent = await SMSNotificationService.sendConnectionAcceptedNotification(
+              formattedPhone,
+              SAMPLE.firstName,
+              SAMPLE.actorFirstName,
+              TEST_USER_ID,
+              TEST_CHAPTER_ID
+            );
+            break;
+          case 'new_message':
+            smsSent = await SMSNotificationService.sendMessageNotification(
+              formattedPhone,
+              SAMPLE.firstName,
+              SAMPLE.actorFirstName,
+              SAMPLE.messagePreview,
+              TEST_USER_ID,
+              TEST_CHAPTER_ID
+            );
+            break;
+        }
+        result.smsSent = smsSent;
+      } catch (err) {
+        result.smsError = err instanceof Error ? err.message : String(err);
+      }
+    }
+  }
+
+  return result;
+}
