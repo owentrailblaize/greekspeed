@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 import { Heart, MessageCircle, Trash2, X, ChevronLeft, ChevronRight, Send } from 'lucide-react';
 import { PostActionsMenu } from './PostActionsMenu';
 import { Post, PostComment } from '@/types/posts';
@@ -687,9 +688,16 @@ function PostCardInner({
                     : 'text-gray-500 hover:bg-gray-100'
                 }`}
               >
-                <Heart
-                  className={`h-4 w-4 ${post.is_liked ? 'fill-current' : ''}`}
-                />
+                <motion.span
+                  className="inline-flex"
+                  initial={false}
+                  animate={{ scale: post.is_liked ? [1, 1.25, 1] : 1 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <Heart
+                    className={`h-4 w-4 ${post.is_liked ? 'fill-current' : ''}`}
+                  />
+                </motion.span>
                 <span>{post.likes_count}</span>
               </Button>
               <Button
@@ -921,9 +929,16 @@ function PostCardInner({
                     : 'text-gray-500 hover:bg-gray-100'
                 }`}
               >
-                <Heart
-                  className={`h-4 w-4 ${post.is_liked ? 'fill-current' : ''}`}
-                />
+                <motion.span
+                  className="inline-flex"
+                  initial={false}
+                  animate={{ scale: post.is_liked ? [1, 1.25, 1] : 1 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <Heart
+                    className={`h-4 w-4 ${post.is_liked ? 'fill-current' : ''}`}
+                  />
+                </motion.span>
                 <span>{post.likes_count}</span>
               </Button>
               <Button
