@@ -37,7 +37,16 @@ export function MobileAuthLoadingOverlay() {
       aria-live="polite"
       aria-busy="true"
     >
-      <div className="w-[70%] max-w-[200px] h-[180px] flex items-center justify-center">
+      <div
+        className="flex items-center justify-center"
+        style={{
+          width: '85%',
+          maxWidth: 400,
+          height: 'min(55dvh, 400px)',
+          minHeight: 400,
+          transform: 'scale(1.4)',
+        }}
+      >
         <LottiePlayer
           src={NETWORKING_ANIMATION_PATH}
           loop
