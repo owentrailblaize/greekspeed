@@ -574,7 +574,7 @@ function PostCardInner({
         e.preventDefault();
         e.stopPropagation();
         onLike(post.id);
-        setShowHeartOverlay(true);
+        if (!post.is_liked) setShowHeartOverlay(true);
         return;
       }
       lastTapTimeRef.current = now;
@@ -847,7 +847,7 @@ function PostCardInner({
 
       {/* Desktop Layout - Cardless Design */}
       <div
-        className={`hidden sm:block py-4 sm:py-5 border-b border-gray-200/90 cursor-pointer ${
+        className={`relative hidden sm:block py-4 sm:py-5 border-b border-gray-200/90 cursor-pointer ${
           variant === 'profile' ? 'px-6' : ''
         }`}
         onClick={handleCardClick}
@@ -980,6 +980,7 @@ function PostCardInner({
                 onClick={(e) => {
                   e.stopPropagation();
                   handleLikeClick();
+                  if (!post.is_liked) setShowHeartOverlay(true);
                 }}
                 className={`gap-2 rounded-full px-3 py-2 text-sm transition ${
                   post.is_liked
@@ -1084,6 +1085,27 @@ function PostCardInner({
             )}
           </div>
         </div>
+
+        {/* Desktop like heart overlay */}
+        {showHeartOverlay && (
+          <div
+            className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+            aria-hidden
+          >
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: [0, 1.2, 1.2], opacity: [0, 1, 0] }}
+              transition={{
+                duration: 0.8,
+                times: [0, 0.25, 1],
+              }}
+              onAnimationComplete={() => setShowHeartOverlay(false)}
+              className="flex items-center justify-center"
+            >
+              <Heart className="h-24 w-24 fill-rose-500 text-rose-500 drop-shadow-lg" />
+            </motion.div>
+          </div>
+        )}
       </div>
 
       {/* 9a: Image Lightbox — only mounted when an image is clicked */}
