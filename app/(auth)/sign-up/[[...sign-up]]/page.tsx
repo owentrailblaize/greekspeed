@@ -10,6 +10,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectItem } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Star, Mail, Info, Users, ArrowLeft, Linkedin } from 'lucide-react';
+import { LottiePlayer } from '@/components/ui/LottiePlayer';
+import { MobileAuthLoadingOverlay } from '@/components/features/splash/MobileAuthLoadingOverlay';
 import { supabase } from '@/lib/supabase/client';
 import { useChapters } from '@/lib/hooks/useChapters';
 import { Chapter } from '@/types/chapter';
@@ -195,23 +197,33 @@ export default function SignUpPage() {
 
   if (authLoading || oauthLoading || linkedInLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Completing authentication...</p>
+      <>
+        <div className="lg:hidden">
+          <MobileAuthLoadingOverlay />
         </div>
-      </div>
+        <div className="hidden lg:flex min-h-screen items-center justify-center bg-white">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
+            <p className="text-gray-600">Completing authentication...</p>
+          </div>
+        </div>
+      </>
     );
   }
 
   if (user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-brand-primary mx-auto mb-4"></div>
-        <p className="text-gray-600 font-medium">Redirecting to dashboard...</p>
-      </div>
-    </div>
+      <>
+        <div className="lg:hidden">
+          <MobileAuthLoadingOverlay />
+        </div>
+        <div className="hidden lg:flex min-h-screen items-center justify-center bg-white">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-brand-primary mx-auto mb-4"></div>
+            <p className="text-gray-600 font-medium">Redirecting to dashboard...</p>
+          </div>
+        </div>
+      </>
     );
   }
 
@@ -523,7 +535,7 @@ export default function SignUpPage() {
 
       {/* Desktop Layout - Card Layout */}
       <div className="hidden lg:flex lg:items-center lg:justify-center lg:min-h-screen lg:p-1 lg:sm:p-2">
-        <Card className="w-full max-w-4xl shadow-xl border-0">
+        <Card className="w-full max-w-5xl shadow-xl border-0 overflow-hidden">
           <CardContent className="p-0">
             <div className="flex">
               {/* Left Column - Introduction */}
@@ -536,26 +548,13 @@ export default function SignUpPage() {
                     Rethink the way you connect, manage, and grow your fraternity network
                   </p>
                   
-                  {/* Network Visualization - Centered */}
-                  <div className="relative w-40 h-40 mx-auto">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary-200 to-accent-200 rounded-full opacity-20"></div>
-                    <div className="absolute inset-4 bg-gradient-to-br from-primary-300 to-accent-300 rounded-full opacity-30"></div>
-                    <div className="absolute inset-8 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full opacity-40"></div>
-                    
-                    {/* Network Nodes - Restored size */}
-                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-white rounded-full border-2 border-brand-primary shadow-lg"></div>
-                    <div className="absolute top-12 left-8 w-6 h-6 bg-white rounded-full border-2 border-primary-400 shadow-md"></div>
-                    <div className="absolute top-16 right-12 w-7 h-7 bg-white rounded-full border-2 border-brand-primary shadow-md"></div>
-                    <div className="absolute bottom-20 left-16 w-5 h-5 bg-white rounded-full border-2 border-primary-400 shadow-md"></div>
-                    <div className="absolute bottom-8 right-8 w-6 h-6 bg-white rounded-full border-2 border-brand-primary shadow-md"></div>
-                    
-                    {/* Connection Lines */}
-                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 160 160">
-                      <line x1="80" y1="32" x2="64" y2="96" stroke="#1e40af" strokeWidth="2" opacity="0.3"/>
-                      <line x1="80" y1="32" x2="96" y2="128" stroke="#1e40af" strokeWidth="2" opacity="0.3"/>
-                      <line x1="64" y1="96" x2="48" y2="128" stroke="#1e40af" strokeWidth="2" opacity="0.3"/>
-                      <line x1="96" y1="128" x2="128" y2="128" stroke="#1e40af" strokeWidth="2" opacity="0.3"/>
-                    </svg>
+                  {/* Networking Lottie - desktop only */}
+                  <div className="relative w-[70%] max-w-[220px] h-[200px] mx-auto flex items-center justify-center" style={{ transform: 'scale(1.7)' }}>
+                    <LottiePlayer
+                      src="/animations/networking.json"
+                      loop
+                      className="w-full h-full"
+                    />
                   </div>
                 </div>
               </div>

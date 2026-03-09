@@ -214,7 +214,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
     switch (activeMobileTab) {
       case 'home':
         return (
-          <div className="space-y-4">
+          <div className="space-y-2 sm:space-y-4">
             <div className="w-full">
               {/* Show Send Announcement for executive members, DuesStatusCard for others */}
               {isExecutiveMember ? (

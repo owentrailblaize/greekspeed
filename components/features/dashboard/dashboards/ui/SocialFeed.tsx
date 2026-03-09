@@ -288,7 +288,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
   return (
     <>
       <div 
-        className="space-y-6 sm:space-y-5 max-w-2xl mx-auto"
+        className="space-y-2 sm:space-y-5 max-w-2xl mx-auto"
         style={{
           // Use mergedPosts for minHeight calculation to ensure proper layout
           minHeight: mergedPosts.length > 0
