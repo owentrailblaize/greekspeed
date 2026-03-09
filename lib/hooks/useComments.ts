@@ -72,6 +72,8 @@ function buildCommentTree(comments: PostComment[]): PostComment[] {
 
 interface UseCommentsOptions {
   enabled?: boolean;
+  /** Max comments to fetch (e.g. 2 for feed preview, 20 for full list). Default 20. */
+  limit?: number;
   initialComments?: PostComment[];
   initialTotal?: number;
 }
@@ -81,9 +83,17 @@ type FetchOptions = {
   bypassCache?: boolean;
 };
 
+const DEFAULT_LIMIT = 20;
+
+function getCacheKey(postId: string, limit: number): string {
+  return limit === DEFAULT_LIMIT ? postId : `${postId}-${limit}`;
+}
+
 export function useComments(postId: string, options: UseCommentsOptions = {}) {
   const { user, session, getAuthHeaders } = useAuth();
   const enabled = options.enabled ?? true;
+  const limit = Math.min(Math.max(options.limit ?? DEFAULT_LIMIT, 1), 100);
+  const cacheKey = getCacheKey(postId, limit);
   const { initialComments, initialTotal } = options;
   const seededComments = initialComments ?? [];
   const seededTotal = typeof initialTotal === 'number' ? initialTotal : seededComments.length;
@@ -93,7 +103,7 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 20,
+    limit,
     total: seededTotal,
     totalPages: 0,
   });
@@ -118,9 +128,9 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
       if (!enabled || !user || !postId || !session) return;
 
       if (bypassCache) {
-        commentsCache.delete(postId);
+        commentsCache.delete(cacheKey);
       } else {
-        const cachedEntry = commentsCache.get(postId);
+        const cachedEntry = commentsCache.get(cacheKey);
         if (cachedEntry) {
           applyEntry(cachedEntry, 'cache');
           return;
@@ -133,7 +143,7 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
         }
         setError(null);
 
-        const response = await fetch(`/api/posts/${postId}/comments?page=${page}&limit=20`, {
+        const response = await fetch(`/api/posts/${postId}/comments?page=${page}&limit=${limit}`, {
           headers: getAuthHeaders(),
         });
 
@@ -148,14 +158,14 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
           fetchedAt: Date.now(),
         };
 
-        commentsCache.set(postId, entry);
+        commentsCache.set(cacheKey, entry);
         applyEntry(entry, 'remote');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch comments');
         setLoading(false);
       }
     },
-    [applyEntry, enabled, getAuthHeaders, postId, session, user],
+    [applyEntry, cacheKey, enabled, getAuthHeaders, limit, postId, session, user],
   );
 
   const createComment = useCallback(
@@ -181,7 +191,7 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
         setComments((prevComments) => {
           const timestamp = Date.now();
           const updated = [...prevComments, comment];
-          commentsCache.set(postId, {
+          commentsCache.set(cacheKey, {
             comments: updated,
             pagination: {
               ...pagination,
@@ -205,7 +215,7 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
         return null;
       }
     },
-    [getAuthHeaders, pagination, postId, session, user],
+    [cacheKey, getAuthHeaders, pagination, postId, session, user],
   );
 
   const createReply = useCallback(
@@ -234,7 +244,7 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
         setComments((prevComments) => {
           const timestamp = Date.now();
           const updated = [...prevComments, comment];
-          commentsCache.set(postId, {
+          commentsCache.set(cacheKey, {
             comments: updated,
             pagination: {
               ...pagination,
@@ -258,7 +268,7 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
         return null;
       }
     },
-    [getAuthHeaders, pagination, postId, session, user],
+    [cacheKey, getAuthHeaders, pagination, postId, session, user],
   );
 
   const deleteComment = useCallback(
@@ -278,7 +288,7 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
         setComments((prevComments) => {
           const timestamp = Date.now();
           const updated = prevComments.filter((comment) => comment.id !== commentId);
-          commentsCache.set(postId, {
+          commentsCache.set(cacheKey, {
             comments: updated,
             pagination: {
               ...pagination,
@@ -302,7 +312,7 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
         return false;
       }
     },
-    [getAuthHeaders, pagination, postId, session, user],
+    [cacheKey, getAuthHeaders, pagination, postId, session, user],
   );
 
   const likeComment = useCallback(
@@ -332,9 +342,9 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
               : comment,
           );
 
-          const cached = commentsCache.get(postId);
+          const cached = commentsCache.get(cacheKey);
           if (cached) {
-            commentsCache.set(postId, {
+            commentsCache.set(cacheKey, {
               comments: updated,
               pagination: cached.pagination,
               fetchedAt: cached.fetchedAt,
@@ -350,13 +360,13 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
         return false;
       }
     },
-    [getAuthHeaders, postId, session, user],
+    [cacheKey, getAuthHeaders, postId, session, user],
   );
 
   useEffect(() => {
     seededAppliedRef.current = false;
     fetchedRef.current = false;
-  }, [postId]);
+  }, [postId, cacheKey]);
 
   useEffect(() => {
     if (!enabled) {
@@ -364,7 +374,7 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
       return;
     }
 
-    const cached = commentsCache.get(postId);
+    const cached = commentsCache.get(cacheKey);
     if (cached) {
       applyEntry(cached, 'cache');
       fetchedRef.current = true;
@@ -386,13 +396,14 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
       seededAppliedRef.current = true;
     }
 
-    if (!fetchedRef.current && !commentsCache.has(postId)) {
+    if (!fetchedRef.current && !commentsCache.has(cacheKey)) {
       const shouldShowLoading = !hasInitialSeed || !seededAppliedRef.current;
       fetchComments(1, { showLoading: shouldShowLoading });
       fetchedRef.current = true;
     }
   }, [
     applyEntry,
+    cacheKey,
     enabled,
     fetchComments,
     hasInitialSeed,
@@ -410,9 +421,9 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
   }, [fetchComments]);
 
   const invalidateCache = useCallback(() => {
-    commentsCache.delete(postId);
+    commentsCache.delete(cacheKey);
     fetchedRef.current = false;
-  }, [postId]);
+  }, [cacheKey]);
 
   const refetch = useCallback(() => fetchComments(1), [fetchComments]);
 

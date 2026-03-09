@@ -22,7 +22,7 @@ import { MobileOperationsFeedPage } from './ui/MobileOperationsFeedPage';
 import { MobileCalendarPage } from './ui/MobileCalendarPage';
 import { MobileOperationsPage } from './ui/MobileOperationsPage';
 import { MobileEventsVendorsPage } from './ui/MobileEventsVendorsPage';
-import { Calendar, Users, MessageSquare, UserPlus, Home, Wrench, CheckSquare, FileText, Activity, User } from 'lucide-react';
+import { Calendar, Users, UserPlus, Home, Wrench, CheckSquare, FileText, Activity, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EventForm } from '@/components/ui/EventForm';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -128,10 +128,6 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
     setShowEventModal(true);
   };
 
-  const handleSendMessage = () => {
-    router.push('/dashboard/messages');
-  };
-
   const handleCreateEvent = async (eventData: any) => {
     try {
       const response = await fetch('/api/events', {
@@ -183,13 +179,6 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
       variant: 'outline' as const,
     }] : []),
     {
-      id: 'send-message',
-      label: 'Send Message',
-      icon: MessageSquare,
-      onClick: handleSendMessage,
-      variant: 'outline' as const,
-    },
-    {
       id: 'manage-members',
       label: 'Manage Members',
       icon: Users,
@@ -225,7 +214,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
     switch (activeMobileTab) {
       case 'home':
         return (
-          <div className="space-y-4">
+          <div className="space-y-2 sm:space-y-4">
             <div className="w-full">
               {/* Show Send Announcement for executive members, DuesStatusCard for others */}
               {isExecutiveMember ? (
@@ -419,7 +408,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
 
           {/* Mobile: Bottom Drawer - EDIT HERE FOR UPDATE LATER */}
           {isMobile && (
-            <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none pb-[calc(36px+env(safe-area-inset-bottom))]">
+            <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none pb-[calc(25px+env(safe-area-inset-bottom))]">
               {/* Header */}
               <div className="flex items-center justify-between p-4 flex-shrink-0 border-b border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
@@ -434,7 +423,7 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
               </div>
 
               {/* Content - Scrollable */}
-              <div className="flex-1 overflow-y-auto p-4 pb-[calc(40px+env(safe-area-inset-bottom))]">
+              <div className="flex-1 overflow-y-auto p-4 pb-[calc(25px+env(safe-area-inset-bottom))]">
                 <div className="space-y-3">
                   {eventsManagementEnabled && (
                     <Button
@@ -449,17 +438,6 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                       Create Event
                     </Button>
                   )}
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
-                    onClick={() => {
-                      handleSendMessage();
-                      setShowQuickActionsModal(false);
-                    }}
-                  >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Send Message
-                  </Button>
                   <Button
                     variant="outline"
                     className="w-full justify-start rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
@@ -543,17 +521,6 @@ export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewP
                       Create Event
                     </Button>
                   )}
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => {
-                      handleSendMessage();
-                      setShowQuickActionsModal(false);
-                    }}
-                  >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Send Message
-                  </Button>
                   <Button
                     variant="outline"
                     className="w-full justify-start"

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface DropdownMenuProps {
@@ -26,6 +27,10 @@ interface DropdownMenuItemProps {
   disabled?: boolean;
 }
 
+interface DropdownMenuSeparatorProps {
+  className?: string;
+}
+
 // Define a proper type for the child element that can accept onClick
 interface ClickableElementProps {
   onClick?: (e: React.MouseEvent) => void;
@@ -38,6 +43,15 @@ const DropdownMenuContext = React.createContext<{
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
 } | null>(null);
+
+/** Hook to close the dropdown from inside (e.g. submenu actions). Must be used within DropdownMenu. */
+export function useDropdownMenuClose(): () => void {
+  const context = React.useContext(DropdownMenuContext);
+  if (!context) {
+    throw new Error("useDropdownMenuClose must be used within a DropdownMenu");
+  }
+  return React.useCallback(() => context.setIsOpen(false), [context]);
+}
 
 export const DropdownMenu = React.forwardRef<HTMLDivElement, DropdownMenuProps>(
   ({ children, ...props }, ref) => {
@@ -132,17 +146,20 @@ export const DropdownMenuContent = React.forwardRef<HTMLDivElement, DropdownMenu
     if (!context.isOpen) return null;
 
     return (
-      <div
+      <motion.div
         ref={ref}
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: "tween", duration: 0.2, ease: [0, 0, 0.2, 1] }}
         className={cn(
-          "absolute top-full mt-1 z-[9999] min-w-[8rem] overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg",
+          "absolute top-full mt-2 z-[9999] min-w-[10rem] p-1 overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-lg",
           alignClasses[align],
           className
         )}
         {...props}
       >
         {children}
-      </div>
+      </motion.div>
     );
   }
 );
@@ -168,8 +185,8 @@ export const DropdownMenuItem = React.forwardRef<HTMLDivElement, DropdownMenuIte
       <div
         ref={ref}
         className={cn(
-          "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors",
-          "hover:bg-gray-100 focus:bg-gray-100",
+          "relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors",
+          "hover:bg-gray-100 focus:bg-gray-100 focus:outline-none",
           disabled && "pointer-events-none opacity-50",
           className
         )}
@@ -183,3 +200,15 @@ export const DropdownMenuItem = React.forwardRef<HTMLDivElement, DropdownMenuIte
 );
 
 DropdownMenuItem.displayName = "DropdownMenuItem";
+
+export const DropdownMenuSeparator = React.forwardRef<HTMLDivElement, DropdownMenuSeparatorProps>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      role="separator"
+      className={cn("my-1 h-px shrink-0 bg-gray-200", className)}
+      {...props}
+    />
+  )
+);
+DropdownMenuSeparator.displayName = "DropdownMenuSeparator";

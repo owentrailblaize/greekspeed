@@ -1,102 +1,35 @@
 'use client';
 
-import { memo, useMemo, useState, useCallback, useEffect } from 'react';
+import { memo, useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Heart, MessageCircle, Trash2, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Post } from '@/types/posts';
+import { Heart, MessageCircle, Trash2, X, ChevronLeft, ChevronRight, Send } from 'lucide-react';
+import { PostActionsMenu } from './PostActionsMenu';
+import { Post, PostComment } from '@/types/posts';
 import { formatDistanceToNow } from 'date-fns';
 import { LinkPreviewCard } from './LinkPreviewCard';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
 import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { useComments } from '@/lib/hooks/useComments';
+import { useProfile } from '@/lib/contexts/ProfileContext';
+import { Textarea } from '@/components/ui/textarea';
+import { PostImageGrid } from './PostImageGrid';
 
 /* -----------------------------------------------------------------------
  * 9a: Lazy-load heavy modals via next/dynamic.
  *     JS for these chunks is fetched ONLY when the user actually opens
  *     the modal — keeps the initial PostCard bundle small.
  * --------------------------------------------------------------------- */
-const LazyCommentModal = dynamic(
-  () => import('./CommentModal').then((mod) => ({ default: mod.CommentModal })),
-  { ssr: false },
-);
 const LazyDeletePostModal = dynamic(
   () => import('./DeletePostModal').then((mod) => ({ default: mod.DeletePostModal })),
   { ssr: false },
 );
 
 const MAX_COLLAPSED_CHARS = 220;
-
-/* -----------------------------------------------------------------------
- * 9c: Extracted PostImageGrid
- *     Eliminates the duplicated image-rendering IIFE that appeared in
- *     both the mobile and desktop layouts. Memoized to avoid re-renders
- *     when only text/like counts change.
- * --------------------------------------------------------------------- */
-interface PostImageGridProps {
-  imageUrls: string[];
-  onImageClick: (index: number) => void;
-  /** sizes attribute for multi-image thumbnails */
-  multiImageSizes?: string;
-}
-
-const PostImageGrid = memo(function PostImageGrid({
-  imageUrls,
-  onImageClick,
-  multiImageSizes = '(max-width: 640px) 128px, 160px',
-}: PostImageGridProps) {
-  if (imageUrls.length === 0) return null;
-
-  if (imageUrls.length === 1) {
-    return (
-      <div
-        className="relative w-full overflow-hidden rounded-3xl aspect-[4/3] shadow-inner cursor-pointer hover:opacity-90 transition-opacity"
-        style={{ maxHeight: '24rem' }}
-        onClick={(e) => {
-          e.stopPropagation();
-          onImageClick(0);
-        }}
-      >
-        <Image
-          src={imageUrls[0]}
-          alt="Post content"
-          fill
-          className="object-cover"
-          sizes="(max-width: 640px) 100vw, 700px"
-          priority={false}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative">
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
-        {imageUrls.map((url, index) => (
-          <div
-            key={index}
-            className="relative shrink-0 w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 cursor-pointer hover:opacity-90 transition-opacity"
-            onClick={(e) => {
-              e.stopPropagation();
-              onImageClick(index);
-            }}
-          >
-            <Image
-              src={url}
-              alt={`Post image ${index + 1}`}
-              fill
-              className="object-cover"
-              sizes={multiImageSizes}
-              priority={false}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-});
 
 /* -----------------------------------------------------------------------
  * 9a: Image Lightbox — rendered via portal, mounted ONLY when user clicks
@@ -199,6 +132,9 @@ interface PostCardProps {
   post: Post;
   onLike: (postId: string) => void;
   onDelete?: (postId: string) => void;
+  onEdit?: (postId: string) => void;
+  onReport?: (postId: string) => void;
+  onBookmark?: (postId: string) => void;
   onCommentAdded?: () => void;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
@@ -209,17 +145,28 @@ function PostCardInner({
   post,
   onLike,
   onDelete,
+  onEdit,
+  onReport,
+  onBookmark,
   onCommentAdded,
   isExpanded: isExpandedProp,
   onToggleExpand,
   variant = 'default',
 }: PostCardProps) {
-  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [localExpanded, setLocalExpanded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const isExpanded = isExpandedProp ?? localExpanded;
   const handleExpandToggle = onToggleExpand ?? (() => setLocalExpanded((prev) => !prev));
+  const router = useRouter();
+
+  useEffect(() => {
+    const check = () => setIsMobile(typeof window !== 'undefined' && window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   // Image viewer state
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
@@ -251,6 +198,14 @@ function PostCardInner({
     }
     return imageUrls;
   }, [post.has_image, imageUrls, loadedImageUrls]);
+
+  const isImageOnly = useMemo(() => {
+    const hasContent = post.content?.trim();
+    const hasLinkPreviews = (post.metadata?.link_previews?.length ?? 0) > 0;
+    return (
+      (post.post_type === 'image' || (post.has_image && resolvedImageUrls.length > 0 && !hasContent && !hasLinkPreviews))
+    );
+  }, [post.post_type, post.has_image, post.content, post.metadata?.link_previews, resolvedImageUrls.length]);
 
   // Fetch image for this post when slim feed omitted it
   useEffect(() => {
@@ -376,9 +331,66 @@ function PostCardInner({
     );
   };
 
+  const [commentInputFocused, setCommentInputFocused] = useState(false);
+  const [isPostInView, setIsPostInView] = useState(false);
+  const commentBlurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const postCardRef = useRef<HTMLDivElement | null>(null);
+
   const commentsPreview = post.comments_preview ?? [];
   const hasComments = (post.comments_count ?? 0) > 0;
   const commentCountLabel = hasComments ? 'View Comments' : 'Add Comment';
+
+  const commentsEnabled = hasComments
+    ? commentInputFocused || isPostInView
+    : commentInputFocused;
+
+  const { comments: commentsFromHook, loading: commentsLoading, createComment } = useComments(post.id, {
+    enabled: commentsEnabled,
+    limit: commentInputFocused ? 4 : 2,
+  });
+
+  const previewCommentsFromHook = useMemo(() => {
+    if (commentsFromHook.length === 0) return [];
+    const sorted = [...commentsFromHook].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+    return sorted.slice(0, commentInputFocused ? 4 : 2);
+  }, [commentInputFocused, commentsFromHook]);
+
+  useEffect(() => {
+    return () => {
+      if (commentBlurTimeoutRef.current) clearTimeout(commentBlurTimeoutRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    const el = postCardRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry) setIsPostInView(entry.isIntersecting);
+      },
+      { rootMargin: '50px', threshold: 0 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const handleCommentInputFocus = useCallback(() => {
+    if (commentBlurTimeoutRef.current) {
+      clearTimeout(commentBlurTimeoutRef.current);
+      commentBlurTimeoutRef.current = null;
+    }
+    setCommentInputFocused(true);
+  }, []);
+
+  const handleCommentInputBlur = useCallback(() => {
+    commentBlurTimeoutRef.current = setTimeout(() => {
+      setCommentInputFocused(false);
+      commentBlurTimeoutRef.current = null;
+    }, 300);
+  }, []);
 
   const formatTimestamp = (timestamp: string) => {
     try {
@@ -395,25 +407,65 @@ function PostCardInner({
     return `${trimmed.slice(0, 137)}…`;
   };
 
-  const renderCommentsPreview = () => {
-    if (commentsPreview.length === 0) {
-      return null;
-    }
+  const linkifyCommentContent = (content: string, previewUrls?: Set<string>) => {
+    if (!content) return null;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = content.split(urlRegex);
+    return parts.map((part, i) => {
+      const isUrl = /^https?:\/\//.test(part);
+      if (isUrl) {
+        const cleanUrl = part.replace(/[.,;:!?]+$/, '');
+        if (previewUrls?.has(cleanUrl)) return null;
+        return (
+          <a
+            key={i}
+            href={cleanUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-brand-accent hover:text-accent-700 hover:underline break-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      }
+      return <span key={i}>{part}</span>;
+    }).filter(Boolean);
+  };
 
+  const renderCommentsPreviewList = (comments: PostComment[]) => {
+    if (comments.length === 0) return null;
     return (
       <div className="mt-3 pt-3 border-t border-gray-100/50 space-y-2.5">
         <p className="text-xs font-medium text-gray-500 mb-2">
-          {commentsPreview.length > 1 ? 'Recent comments' : 'Recent comment'}
+          {comments.length > 1 ? 'Recent comments' : 'Recent comment'}
         </p>
         <div className="space-y-2.5">
-          {commentsPreview.map((comment) => (
+          {comments.map((comment) => (
             <div key={comment.id} className="text-sm">
               <div className="flex items-center gap-2 mb-1">
+                {comment.author?.id ? (
+                  <ClickableAvatar
+                    userId={comment.author.id}
+                    avatarUrl={comment.author.avatar_url}
+                    fullName={comment.author.full_name}
+                    firstName={comment.author.first_name}
+                    lastName={comment.author.last_name}
+                    size="sm"
+                    className="shrink-0"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-primary-100/80 flex items-center justify-center text-brand-primary-hover text-xs font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+                    {comment.author?.first_name?.charAt(0) || comment.author?.full_name?.charAt(0) || '?'}
+                  </div>
+                )}
                 {comment.author?.id && comment.author?.full_name ? (
                   <ClickableUserName
                     userId={comment.author.id}
                     fullName={comment.author.full_name}
                     className="font-medium text-gray-900 text-sm"
+                    onClick={(e) => e.stopPropagation()}
                   />
                 ) : (
                   <span className="font-medium text-gray-900 text-sm">
@@ -424,8 +476,13 @@ function PostCardInner({
                   {formatTimestamp(comment.created_at)}
                 </span>
               </div>
-              <p className="text-gray-700 text-sm leading-relaxed">
-                {formatCommentSnippet(comment.content)}
+              <p className="text-gray-700 text-sm leading-relaxed pl-10 break-words whitespace-pre-wrap">
+                {linkifyCommentContent(
+                  formatCommentSnippet(comment.content),
+                  comment.metadata?.link_previews?.length
+                    ? new Set(comment.metadata.link_previews.map((p: { url: string }) => p.url))
+                    : undefined,
+                )}
               </p>
             </div>
           ))}
@@ -433,6 +490,8 @@ function PostCardInner({
       </div>
     );
   };
+
+  const renderCommentsPreview = () => renderCommentsPreviewList(commentsPreview);
 
   const handleDeleteClick = () => {
     setIsDeleteModalOpen(true);
@@ -460,17 +519,40 @@ function PostCardInner({
     onLike(post.id);
   };
 
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Don't open if clicking on interactive elements
-    const target = e.target as HTMLElement;
-    if (target.closest('button, a, [role="button"], img')) {
-      return;
+  const openPostView = useCallback(() => {
+    router.push(`/dashboard/post/${post.id}`);
+  }, [router, post.id]);
+
+  const { profile } = useProfile();
+  const [inlineComment, setInlineComment] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+
+  const handleSubmitInlineComment = useCallback(async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const content = inlineComment.trim();
+    if (!content || isSubmittingComment) return;
+    setIsSubmittingComment(true);
+    try {
+      const created = await createComment({ content });
+      if (created) {
+        setInlineComment('');
+        onCommentAdded?.();
+      }
+    } catch (err) {
+      console.error('Inline comment failed:', err);
+    } finally {
+      setIsSubmittingComment(false);
     }
-    setIsCommentModalOpen(true);
+  }, [inlineComment, isSubmittingComment, createComment, onCommentAdded]);
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button, a, [role="button"], img')) return;
+    openPostView();
   };
 
   return (
-    <>
+    <div ref={postCardRef}>
       {/* Mobile Layout - Cardless Feed */}
       <div className="sm:hidden">
         <div
@@ -515,63 +597,78 @@ function PostCardInner({
               </div>
             </div>
 
-            <div className="flex items-center space-x-1">
-              {post.is_author && onDelete && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteClick();
-                  }}
-                  className="text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full p-2"
-                  title="Delete post"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
+            <div className="flex items-center shrink-0">
+              <PostActionsMenu
+                post={post}
+                isAuthor={!!post.is_author}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onReport={onReport}
+                onBookmark={onBookmark}
+                onDeleteClick={handleDeleteClick}
+                useDeleteModal
+                isBookmarked={!!post.is_bookmarked}
+              />
             </div>
           </div>
 
-          {/* Post Content - Wrapped in rounded container */}
+          {/* Post Content - cardless when image-only (edge-to-edge) */}
           <div className="mb-3">
-            <div className="rounded-2xl bg-gray-50/30 border border-gray-100/50 p-4 space-y-3">
-              {renderPostContent(
-                'text-gray-700 text-sm leading-relaxed',
-                'text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors',
-              )}
-              {/* 9c: Extracted image grid; placeholder when slim feed omitted image URL */}
-              {post.has_image && resolvedImageUrls.length === 0 ? (
-                <div
-                  className="w-full rounded-3xl aspect-[4/3] bg-gray-100 animate-pulse"
-                  style={{ maxHeight: '24rem' }}
-                  aria-label="Image loading"
-                />
-              ) : (
-                <PostImageGrid
-                  imageUrls={resolvedImageUrls}
-                  onImageClick={handleImageClick}
-                  multiImageSizes="(max-width: 640px) 128px, 160px"
-                />
-              )}
-              {/* Link Previews */}
-              {post.metadata?.link_previews &&
-                post.metadata.link_previews.length > 0 && (
-                  <div className="space-y-3">
-                    {post.metadata.link_previews.map(
-                      (preview: any, index: number) => (
-                        <LinkPreviewCard
-                          key={preview.url || index}
-                          preview={preview}
-                          className="max-w-full"
-                          hideImage={resolvedImageUrls.length > 0 || !!post.has_image}
-                        />
-                      ),
-                    )}
-                  </div>
+            {isImageOnly ? (
+              <>
+                {resolvedImageUrls.length === 0 ? (
+                  <div
+                    className="w-full aspect-[4/3] bg-gray-100 animate-pulse"
+                    style={{ maxHeight: '24rem' }}
+                    aria-label="Image loading"
+                  />
+                ) : (
+                  <PostImageGrid
+                    imageUrls={resolvedImageUrls}
+                    onImageClick={handleImageClick}
+                    multiImageSizes="(max-width: 640px) 100vw, 700px"
+                  />
                 )}
-              {renderCommentsPreview()}
-            </div>
+              </>
+            ) : (
+              <div className="rounded-2xl bg-gray-50/30 border border-gray-100/50 p-4 space-y-3">
+                {renderPostContent(
+                  'text-gray-700 text-sm leading-relaxed',
+                  'text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors',
+                )}
+                {post.has_image && resolvedImageUrls.length === 0 ? (
+                  <div
+                    className="w-full rounded-3xl aspect-[4/3] bg-gray-100 animate-pulse"
+                    style={{ maxHeight: '24rem' }}
+                    aria-label="Image loading"
+                  />
+                ) : (
+                  post.has_image && (
+                    <PostImageGrid
+                      imageUrls={resolvedImageUrls}
+                      onImageClick={handleImageClick}
+                      multiImageSizes="(max-width: 640px) 128px, 160px"
+                    />
+                  )
+                )}
+                {post.metadata?.link_previews &&
+                  post.metadata.link_previews.length > 0 && (
+                    <div className="space-y-3">
+                      {post.metadata.link_previews.map(
+                        (preview: any, index: number) => (
+                          <LinkPreviewCard
+                            key={preview.url || index}
+                            preview={preview}
+                            className="max-w-full"
+                            hideImage={resolvedImageUrls.length > 0 || !!post.has_image}
+                          />
+                        ),
+                      )}
+                    </div>
+                  )}
+                {renderCommentsPreview()}
+              </div>
+            )}
           </div>
 
           {/* Post Actions */}
@@ -600,7 +697,7 @@ function PostCardInner({
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setIsCommentModalOpen(true);
+                  openPostView();
                 }}
                 className="gap-2 rounded-full px-3 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
               >
@@ -608,6 +705,76 @@ function PostCardInner({
                 <span>{commentCountLabel}</span>
               </Button>
             </div>
+          </div>
+
+          {/* Inline comment input - row keeps avatar aligned with input; comments block is sibling below */}
+          <div
+            className="flex flex-col gap-2 pt-3 border-t border-gray-100/50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-end gap-3">
+              <div className="h-8 w-8 rounded-full bg-primary-100/80 flex items-center justify-center text-brand-primary-hover text-xs font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+                {profile?.avatar_url ? (
+                  <Image
+                    src={profile.avatar_url}
+                    alt={profile.full_name || 'You'}
+                    width={32}
+                    height={32}
+                    className="h-full w-full rounded-full object-cover"
+                    sizes="32px"
+                  />
+                ) : (
+                  (profile?.first_name?.charAt(0) || '?')
+                )}
+              </div>
+              <form
+                className="flex-1 min-w-0"
+                onSubmit={handleSubmitInlineComment}
+              >
+                <div className="flex items-end gap-2">
+                  <Textarea
+                    placeholder="Write a comment..."
+                    value={inlineComment}
+                    onChange={(e) => setInlineComment(e.target.value)}
+                    onFocus={handleCommentInputFocus}
+                    onBlur={handleCommentInputBlur}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmitInlineComment();
+                      }
+                    }}
+                    className="min-h-[36px] max-h-[100px] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-brand-primary/20"
+                    rows={1}
+                  />
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={!inlineComment.trim() || isSubmittingComment}
+                    className="h-9 w-9 rounded-full p-0 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50"
+                    aria-label="Send comment"
+                  >
+                    {isSubmittingComment ? (
+                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </div>
+            {(commentsLoading || previewCommentsFromHook.length > 0) && (
+              <div className="min-h-[24px]" onClick={(e) => e.stopPropagation()}>
+                {commentsLoading ? (
+                  <div className="flex items-center gap-2 py-2">
+                    <div className="h-4 w-4 border-2 border-gray-300 border-t-brand-primary rounded-full animate-spin" />
+                    <span className="text-xs text-gray-500">Loading comments...</span>
+                  </div>
+                ) : (
+                  renderCommentsPreviewList(previewCommentsFromHook)
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -662,39 +829,27 @@ function PostCardInner({
               </div>
             </div>
 
-            <div>
-              {post.is_author && onDelete && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteClick();
-                  }}
-                  className="rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50"
-                  title="Delete post"
-                >
-                  <Trash2 className="h-5 w-5 sm:h-4 sm:w-4" />
-                </Button>
-              )}
+            <div className="flex items-center shrink-0">
+              <PostActionsMenu
+                post={post}
+                isAuthor={!!post.is_author}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onReport={onReport}
+                onBookmark={onBookmark}
+                onDeleteClick={handleDeleteClick}
+                useDeleteModal
+                isBookmarked={!!post.is_bookmarked}
+              />
             </div>
           </div>
 
-          {/* Post Content - Wrapped in rounded container */}
+          {/* Post Content - cardless when image-only (edge-to-edge) */}
           <div className="space-y-3">
-            <div className={`space-y-3 ${
-              variant === 'profile'
-                ? 'px-1'
-                : 'rounded-2xl bg-gray-50/30 border border-gray-200/80 p-4 sm:p-5'
-            }`}>
-              {renderPostContent(
-                'text-gray-700 text-base sm:text-[0.95rem] leading-relaxed',
-                'text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors',
-              )}
-              {/* 9c: Extracted image grid; placeholder when slim feed omitted image URL */}
-              {post.has_image && resolvedImageUrls.length === 0 ? (
+            {isImageOnly ? (
+              resolvedImageUrls.length === 0 ? (
                 <div
-                  className="w-full rounded-3xl aspect-[4/3] bg-gray-100 animate-pulse"
+                  className="w-full aspect-[4/3] bg-gray-100 animate-pulse rounded-2xl"
                   style={{ maxHeight: '24rem' }}
                   aria-label="Image loading"
                 />
@@ -704,25 +859,50 @@ function PostCardInner({
                   onImageClick={handleImageClick}
                   multiImageSizes="(max-width: 640px) 100vw, 700px"
                 />
-              )}
-              {/* Link Previews */}
-              {post.metadata?.link_previews &&
-                post.metadata.link_previews.length > 0 && (
-                  <div className="space-y-3">
-                    {post.metadata.link_previews.map(
-                      (preview: any, index: number) => (
-                        <LinkPreviewCard
-                          key={preview.url || index}
-                          preview={preview}
-                          className="max-w-full"
-                          hideImage={resolvedImageUrls.length > 0 || !!post.has_image}
-                        />
-                      ),
-                    )}
-                  </div>
+              )
+            ) : (
+              <div className={`space-y-3 ${
+                variant === 'profile'
+                  ? 'px-1'
+                  : 'rounded-2xl bg-gray-50/30 border border-gray-200/80 p-4 sm:p-5'
+              }`}>
+                {renderPostContent(
+                  'text-gray-700 text-base sm:text-[0.95rem] leading-relaxed',
+                  'text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors',
                 )}
-              {renderCommentsPreview()}
-            </div>
+                {post.has_image && resolvedImageUrls.length === 0 ? (
+                  <div
+                    className="w-full rounded-3xl aspect-[4/3] bg-gray-100 animate-pulse"
+                    style={{ maxHeight: '24rem' }}
+                    aria-label="Image loading"
+                  />
+                ) : (
+                  post.has_image && (
+                    <PostImageGrid
+                      imageUrls={resolvedImageUrls}
+                      onImageClick={handleImageClick}
+                      multiImageSizes="(max-width: 640px) 100vw, 700px"
+                    />
+                  )
+                )}
+                {post.metadata?.link_previews &&
+                  post.metadata.link_previews.length > 0 && (
+                    <div className="space-y-3">
+                      {post.metadata.link_previews.map(
+                        (preview: any, index: number) => (
+                          <LinkPreviewCard
+                            key={preview.url || index}
+                            preview={preview}
+                            className="max-w-full"
+                            hideImage={resolvedImageUrls.length > 0 || !!post.has_image}
+                          />
+                        ),
+                      )}
+                    </div>
+                  )}
+                {renderCommentsPreview()}
+              </div>
+            )}
           </div>
 
           {/* Post Actions */}
@@ -751,7 +931,7 @@ function PostCardInner({
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setIsCommentModalOpen(true);
+                  openPostView();
                 }}
                 className="gap-2 rounded-full px-3 py-2 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
               >
@@ -759,6 +939,76 @@ function PostCardInner({
                 <span className="whitespace-nowrap">{commentCountLabel}</span>
               </Button>
             </div>
+          </div>
+
+          {/* Inline comment input - row keeps avatar aligned with input; comments block is sibling below */}
+          <div
+            className="flex flex-col gap-2 pt-3 border-t border-gray-100/50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-end gap-3">
+              <div className="h-9 w-9 rounded-full bg-primary-100/80 flex items-center justify-center text-brand-primary-hover text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+                {profile?.avatar_url ? (
+                  <Image
+                    src={profile.avatar_url}
+                    alt={profile.full_name || 'You'}
+                    width={36}
+                    height={36}
+                    className="h-full w-full rounded-full object-cover"
+                    sizes="36px"
+                  />
+                ) : (
+                  (profile?.first_name?.charAt(0) || '?')
+                )}
+              </div>
+              <form
+                className="flex-1 min-w-0"
+                onSubmit={handleSubmitInlineComment}
+              >
+                <div className="flex items-end gap-2">
+                  <Textarea
+                    placeholder="Write a comment..."
+                    value={inlineComment}
+                    onChange={(e) => setInlineComment(e.target.value)}
+                    onFocus={handleCommentInputFocus}
+                    onBlur={handleCommentInputBlur}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmitInlineComment();
+                      }
+                    }}
+                    className="min-h-[40px] max-h-[120px] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-brand-primary/20"
+                    rows={1}
+                  />
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={!inlineComment.trim() || isSubmittingComment}
+                    className="h-9 w-9 rounded-full p-0 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50"
+                    aria-label="Send comment"
+                  >
+                    {isSubmittingComment ? (
+                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </div>
+            {(commentsLoading || previewCommentsFromHook.length > 0) && (
+              <div className="min-h-[24px]" onClick={(e) => e.stopPropagation()}>
+                {commentsLoading ? (
+                  <div className="flex items-center gap-2 py-2">
+                    <div className="h-4 w-4 border-2 border-gray-300 border-t-brand-primary rounded-full animate-spin" />
+                    <span className="text-xs text-gray-500">Loading comments...</span>
+                  </div>
+                ) : (
+                  renderCommentsPreviewList(previewCommentsFromHook)
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -774,18 +1024,6 @@ function PostCardInner({
         />
       )}
 
-      {/* 9a: Comment Modal — lazy-loaded, mounted only when opened */}
-      {isCommentModalOpen && (
-        <LazyCommentModal
-          isOpen={isCommentModalOpen}
-          onClose={() => setIsCommentModalOpen(false)}
-          post={post}
-          onLike={onLike}
-          onCommentAdded={onCommentAdded}
-          initialImageUrls={resolvedImageUrls.length > 0 ? resolvedImageUrls : undefined}
-        />
-      )}
-
       {/* 9a: Delete Modal — lazy-loaded, mounted only when opened */}
       {isDeleteModalOpen && (
         <LazyDeletePostModal
@@ -796,7 +1034,7 @@ function PostCardInner({
           isDeleting={isDeleting}
         />
       )}
-    </>
+    </div>
   );
 }
 
@@ -824,6 +1062,7 @@ function arePostCardPropsEqual(
   return (
     p.id === n.id &&
     p.content === n.content &&
+    p.post_type === n.post_type &&
     p.likes_count === n.likes_count &&
     p.is_liked === n.is_liked &&
     p.comments_count === n.comments_count &&

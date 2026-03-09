@@ -52,6 +52,11 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
     }, 250); // Wait for menu animation (200ms) to complete
   };
 
+  const handleMobileLogIn = () => {
+    setMobileMenuOpen(false);
+    router.push('/sign-in');
+  };
+
   // Opens Google Calendar appointment scheduler
   const handleRequestDemo = () => {
     setMobileMenuOpen(false);
@@ -223,30 +228,29 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
               </>
               {!user ? (
                 <div className="pt-4 border-t border-gray-200 mt-4 flex justify-center w-full">
-                  <Link href="/sign-in" className="block">
-                    <Button
-                      className="
-                        w-36
-                        px-4 py-3
-                        bg-black hover:bg-gray-900
-                        rounded-xl
-                        inline-flex
-                        justify-center
-                        items-center
-                        gap-2
-                        text-white 
-                        text-base
-                        font-medium
-                        font-sans
-                        leading-6
-                        transition-all duration-200
-                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
-                      "
-                      size="lg"
-                    >
-                      Log In
-                    </Button>
-                  </Link>
+                  <Button
+                    onClick={handleMobileLogIn}
+                    className="
+                      w-36
+                      px-4 py-3
+                      bg-black hover:bg-gray-900
+                      rounded-xl
+                      inline-flex
+                      justify-center
+                      items-center
+                      gap-2
+                      text-white 
+                      text-base
+                      font-medium
+                      font-sans
+                      leading-6
+                      transition-all duration-200
+                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
+                    "
+                    size="lg"
+                  >
+                    Log In
+                  </Button>
                 </div>
               ) : (
                 <div className="pt-4 border-t border-gray-200 mt-4 flex flex-col items-center gap-3 w-full">

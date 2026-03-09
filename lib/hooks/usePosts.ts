@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useEffect } from 'react';
+import { useCallback, useMemo, useEffect, useState } from 'react';
 import {
   useInfiniteQuery,
   useQueryClient,
@@ -8,7 +8,7 @@ import {
   type QueryFunctionContext,
 } from '@tanstack/react-query';
 import { useAuth } from '@/lib/supabase/auth-context';
-import type { Post, PostsResponse, CreatePostRequest } from '@/types/posts';
+import type { Post, PostsResponse, CreatePostRequest, UpdatePostRequest } from '@/types/posts';
 import { writeFeedCache, readFeedCache } from '@/lib/cache/feedCache';
 
 interface InitialFeedData extends PostsResponse {
@@ -102,7 +102,9 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
     // This prevents React Query from immediately refetching when `enabled` flips to true.
     staleTime: normalizedInitialData ? 5 * 60 * 1000 : undefined,
     initialDataUpdatedAt: normalizedInitialData ? Date.now() : undefined,
-    refetchOnMount: 'always',
+    // When we have server-seeded data, skip auto-refetch on mount to prevent scroll jump.
+    // New posts are surfaced via the "N new posts" pill and applied on tap.
+    refetchOnMount: normalizedInitialData ? false : 'always',
     refetchOnWindowFocus: false,
     getNextPageParam: (lastPage) => {
       const { page, totalPages } = lastPage.pagination;
@@ -339,10 +341,116 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
     [getAuthHeaders, session, updateCachedPages, user],
   );
 
+  const updatePost = useCallback(
+    async (postId: string, payload: UpdatePostRequest) => {
+      if (!user || !session) return null;
+
+      const response = await fetch(`/api/posts/${postId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error?.error ?? 'Failed to update post');
+      }
+
+      const updatedPost = await response.json();
+
+      updateCachedPages((pages) =>
+        pages.map((page) => ({
+          ...page,
+          posts: page.posts.map((post) =>
+            post.id === postId ? { ...post, ...updatedPost } : post
+          ),
+        })),
+      );
+
+      return updatedPost;
+    },
+    [getAuthHeaders, session, updateCachedPages, user],
+  );
+
+  const toggleBookmark = useCallback(
+    async (postId: string): Promise<boolean> => {
+      if (!user || !session) return false;
+
+      const response = await fetch(`/api/posts/${postId}/bookmark`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error?.error ?? 'Failed to update bookmark');
+      }
+
+      const { bookmarked } = await response.json();
+
+      updateCachedPages((pages) =>
+        pages.map((page) => ({
+          ...page,
+          posts: page.posts.map((post) =>
+            post.id === postId ? { ...post, is_bookmarked: bookmarked } : post
+          ),
+        })),
+      );
+
+      return bookmarked;
+    },
+    [getAuthHeaders, session, updateCachedPages, user],
+  );
+
   const refresh = useCallback(
     () => queryClient.invalidateQueries({ queryKey }),
     [queryClient, queryKey],
   );
+
+  // ---- "New posts" pill (Twitter pattern): avoid scroll jump by not auto-applying refetches ----
+  const [newPostsCount, setNewPostsCount] = useState(0);
+
+  const checkForNewPosts = useCallback(async () => {
+    if (!session || !chapterId || posts.length === 0) return;
+    const currentFirstPageIds = new Set(
+      (queryClient.getQueryData<InfiniteData<PostsResponse>>(queryKey)?.pages?.[0]?.posts ?? posts.slice(0, pageSize)).map(
+        (p: Post) => p.id,
+      ),
+    );
+    try {
+      const headers = getAuthHeaders();
+      const response = await fetch(
+        `/api/posts?chapterId=${chapterId}&page=1&limit=${pageSize}`,
+        { headers },
+      );
+      if (!response.ok) return;
+      const result: PostsResponse = await response.json();
+      let count = 0;
+      for (const p of result.posts) {
+        if (currentFirstPageIds.has(p.id)) break;
+        count++;
+      }
+      if (count > 0) setNewPostsCount((prev) => (prev !== count ? count : prev));
+    } catch {
+      // Ignore check errors (network, etc.)
+    }
+  }, [chapterId, getAuthHeaders, pageSize, posts.length, queryClient, queryKey, session]);
+
+  const applyNewPosts = useCallback(() => {
+    setNewPostsCount(0);
+    queryClient.invalidateQueries({ queryKey });
+  }, [queryClient, queryKey]);
+
+  // Poll for new posts when feed has content; skip while placeholder/cache-only to avoid noise
+  useEffect(() => {
+    if (posts.length === 0 || isPlaceholderData) return;
+    checkForNewPosts();
+    const interval = setInterval(checkForNewPosts, 60 * 1000);
+    return () => clearInterval(interval);
+  }, [checkForNewPosts, isPlaceholderData, posts.length]);
 
   return {
     posts,
@@ -357,5 +465,9 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
     createPost,
     likePost,
     deletePost,
+    updatePost,
+    toggleBookmark,
+    newPostsCount,
+    applyNewPosts,
   };
 }

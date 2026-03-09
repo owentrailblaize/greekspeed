@@ -1,10 +1,11 @@
 'use client';
 
-import { useMemo, useRef, useState, useEffect } from 'react';
+import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { X, Heart, MessageCircle, Trash2, Send, ChevronLeft, ChevronRight, Reply, ChevronDown, ChevronUp } from 'lucide-react';
+import { PostActionsMenu } from './PostActionsMenu';
 import { Post, PostComment } from '@/types/posts';
 import { useComments } from '@/lib/hooks/useComments';
 import { useProfile } from '@/lib/contexts/ProfileContext';
@@ -14,8 +15,10 @@ import { formatDistanceToNow } from 'date-fns';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
 import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
 import { LinkPreviewCard } from './LinkPreviewCard';
+import { PostImageGrid } from './PostImageGrid';
 import Image from 'next/image';
 import { createPortal } from 'react-dom';
+import { useLayoutEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 interface CommentModalProps {
@@ -24,11 +27,17 @@ interface CommentModalProps {
   post: Post;
   onLike: (postId: string) => void;
   onCommentAdded?: () => void;
+  onDelete?: (postId: string) => void;
+  onEdit?: (postId: string) => void;
+  onReport?: (postId: string) => void;
+  onBookmark?: (postId: string) => void;
   /** When provided (e.g. from PostCard), avoids refetching images already loaded for the card. */
   initialImageUrls?: string[];
+  /** When true, render content without Dialog (for post-detail page). Comments always enabled. */
+  embedded?: boolean;
 }
 
-export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, initialImageUrls }: CommentModalProps) {
+export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, onDelete, onEdit, onReport, onBookmark, initialImageUrls, embedded = false }: CommentModalProps) {
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -39,18 +48,33 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
   const [collapsedReplies, setCollapsedReplies] = useState<Set<string>>(new Set());
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
   
-  // Add mobile detection
+  // Mobile detection: sm breakpoint for modal UX, 768 for embedded fixed layout (match ChatWindow)
   const [isMobile, setIsMobile] = useState(false);
-  
+  const [isEmbeddedMobile, setIsEmbeddedMobile] = useState(false);
+
+  // Embedded + mobile: fixed regions (header, scroll, input) with measured heights, like ChatWindow
+  const useFixedRegions = embedded && isEmbeddedMobile;
+  const [appHeaderHeight, setAppHeaderHeight] = useState(56);
+  const [postHeaderHeight, setPostHeaderHeight] = useState(52);
+  const [bottomNavHeight, setBottomNavHeight] = useState(80);
+  const [inputBarHeight, setInputBarHeight] = useState(72);
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 640); // sm breakpoint
+      setIsEmbeddedMobile(window.innerWidth < 768); // md: match ChatWindow for embedded layout
     };
-    
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  const scrollAreaTop = useFixedRegions ? appHeaderHeight + postHeaderHeight : undefined;
+  const scrollAreaBottom = useFixedRegions ? bottomNavHeight + inputBarHeight : undefined;
+  const inputBarBottom = useFixedRegions ? bottomNavHeight : undefined;
+
+  // Non-fixed input bar padding (when not using fixed regions)
+  const inputStickyNoPadding = embedded && isMobile && !useFixedRegions;
   
   const {
     comments,
@@ -65,7 +89,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
     loadedFromCache,
     buildCommentTree,
   } = useComments(post.id, {
-    enabled: isOpen,
+    enabled: isOpen || embedded,
     initialComments: post.comments_preview,
     initialTotal: post.comments_count,
   });
@@ -73,7 +97,57 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
   const { isProfileModalOpen } = useProfileModal();
   const { getAuthHeaders } = useAuth();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const replyTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const commentsScrollRef = useRef<HTMLDivElement | null>(null);
+  const scrollContentRef = useRef<HTMLDivElement | null>(null);
+  const commentInputBarRef = useRef<HTMLDivElement>(null);
+  const MAX_COMMENT_INPUT_HEIGHT = 200;
+
+  // Measure heights for embedded mobile fixed layout (same pattern as ChatWindow)
+  useLayoutEffect(() => {
+    if (!embedded || !isEmbeddedMobile) return;
+
+    const measure = () => {
+      const appHeader =
+        document.querySelector('header') ||
+        document.querySelector('[data-app-header]') ||
+        document.querySelector('.sticky.top-0');
+      setAppHeaderHeight(appHeader?.getBoundingClientRect().height ?? 56);
+
+      const postHeader = document.querySelector('[data-post-detail-header]');
+      setPostHeaderHeight(postHeader?.getBoundingClientRect().height ?? 52);
+
+      const bottomNav = document.querySelector('[class*="fixed"][class*="bottom-0"]');
+      setBottomNavHeight(bottomNav?.getBoundingClientRect().height ?? 80);
+
+      if (commentInputBarRef.current) {
+        setInputBarHeight(commentInputBarRef.current.getBoundingClientRect().height);
+      }
+    };
+
+    measure();
+    window.addEventListener('resize', measure);
+    const t = setTimeout(measure, 100);
+    return () => {
+      window.removeEventListener('resize', measure);
+      clearTimeout(t);
+    };
+  }, [embedded, isEmbeddedMobile, comments.length]);
+  const MAX_REPLY_INPUT_HEIGHT = 120;
+  const MIN_COMMENT_INPUT_HEIGHT = 48;
+  const MIN_REPLY_INPUT_HEIGHT = 40;
+
+  const resizeTextarea = useCallback((
+    el: HTMLTextAreaElement | null,
+    maxHeight: number,
+    minHeight: number = 40
+  ) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    const newHeight = Math.max(minHeight, Math.min(el.scrollHeight, maxHeight));
+    el.style.height = `${newHeight}px`;
+    el.style.overflowY = newHeight >= maxHeight ? 'auto' : 'hidden';
+  }, []);
   
   // Build comment tree from flat array
   const commentTree = useMemo(() => {
@@ -99,9 +173,9 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
     return imageUrls;
   }, [initialImageUrls, post.has_image, loadedImageUrls, imageUrls]);
 
-  // On-demand image load when modal opens with slim-feed post (has_image but no URLs)
+  // On-demand image load when modal opens (or when embedded) with slim-feed post (has_image but no URLs)
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen && !embedded) {
       setLoadedImageUrls(null);
       return;
     }
@@ -131,12 +205,21 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
       cancelled = true;
       setLoadedImageUrls(null);
     };
-  }, [isOpen, post.id, post.has_image, imageUrls.length, initialImageUrls?.length, getAuthHeaders]);
+  }, [isOpen, embedded, post.id, post.has_image, imageUrls.length, initialImageUrls?.length, getAuthHeaders]);
 
   // Handle mounting for portal
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Auto-focus comment input when on post detail page (embedded) or when comment modal opens
+  useEffect(() => {
+    if (!isOpen && !embedded) return;
+    const timer = setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [isOpen, embedded]);
 
   // Handle keyboard navigation in image modal
   useEffect(() => {
@@ -227,6 +310,37 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
       handleSubmitComment();
     }
   };
+
+  const handleCommentInputFocus = useCallback(() => {
+    if (!embedded || !isMobile) return;
+    const scrollEl = scrollContentRef.current;
+    const savedScrollTop = scrollEl?.scrollTop ?? 0;
+    requestAnimationFrame(() => {
+      if (scrollEl) scrollEl.scrollTop = savedScrollTop;
+    });
+    const t = setTimeout(() => {
+      if (scrollContentRef.current) scrollContentRef.current.scrollTop = savedScrollTop;
+    }, 50);
+    const t2 = setTimeout(() => {
+      if (scrollContentRef.current) scrollContentRef.current.scrollTop = savedScrollTop;
+    }, 150);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(t2);
+    };
+  }, [embedded, isMobile]);
+
+  // Auto-resize main comment textarea when content changes
+  useEffect(() => {
+    resizeTextarea(textareaRef.current, MAX_COMMENT_INPUT_HEIGHT, MIN_COMMENT_INPUT_HEIGHT);
+  }, [newComment, resizeTextarea]);
+
+  // Auto-resize active reply textarea when its content changes
+  useEffect(() => {
+    if (replyingToCommentId) {
+      resizeTextarea(replyTextareaRef.current, MAX_REPLY_INPUT_HEIGHT, MIN_REPLY_INPUT_HEIGHT);
+    }
+  }, [replyingToCommentId, replyContent, resizeTextarea]);
 
   const handleDeleteComment = async (commentId: string) => {
     if (confirm('Are you sure you want to delete this comment?')) {
@@ -541,8 +655,8 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
                 </Button>
               )}
 
-              {/* Reply count badge - show on top-level comments with replies */}
-              {depth === 0 && hasReplies && (
+              {/* Reply count badge - show on top-level comments with replies (only when expanded, so we show "Hide X reply" here; when collapsed, "Show X reply" is in the block below) */}
+              {depth === 0 && hasReplies && !isCollapsed && (
                 <button
                   onClick={() => toggleReplies(comment.id)}
                   className="text-xs text-brand-accent hover:text-accent-700 font-medium flex items-center gap-1 px-2 py-1 rounded-md hover:bg-accent-50/50 transition-colors"
@@ -575,7 +689,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
               )}
             </div>
 
-            {/* Inline Reply Input */}
+            {/* Inline Reply Input - stacked on mobile so input is full width, single row on sm+ */}
             {isReplying && (
               <div className="mt-3 pt-3 border-t border-slate-100">
                 <div className="mb-2">
@@ -583,37 +697,40 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
                     Replying to {comment.author?.full_name || 'this comment'}
                   </p>
                 </div>
-                <div className="flex items-end gap-3">
-                  <div className="w-8 h-8 bg-primary-100/70 rounded-full flex items-center justify-center text-brand-primary-hover text-xs font-semibold shrink-0 overflow-hidden ring-2 ring-white">
-                    {profile?.avatar_url ? (
-                      <Image
-                        src={profile.avatar_url}
-                        alt={profile.full_name || 'User'}
-                        width={32}
-                        height={32}
-                        className="h-full w-full rounded-full object-cover"
-                        sizes="32px"
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
+                  <div className="flex items-end gap-2 flex-1 min-w-0">
+                    <div className="w-8 h-8 bg-primary-100/70 rounded-full flex items-center justify-center text-brand-primary-hover text-xs font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+                      {profile?.avatar_url ? (
+                        <Image
+                          src={profile.avatar_url}
+                          alt={profile.full_name || 'User'}
+                          width={32}
+                          height={32}
+                          className="h-full w-full rounded-full object-cover"
+                          sizes="32px"
+                        />
+                      ) : (
+                        profile?.first_name?.charAt(0) || 'U'
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Textarea
+                        ref={replyTextareaRef}
+                        placeholder="Write a reply..."
+                        value={currentReplyContent}
+                        onChange={(e) => setReplyContent(prev => ({ ...prev, [comment.id]: e.target.value }))}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSubmitReply(comment.id);
+                          }
+                        }}
+                        className="min-h-[40px] max-h-[120px] resize-none overflow-y-hidden rounded-xl border border-transparent bg-white/80 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-primary-300 focus:bg-white focus:ring-2 focus:ring-primary-200 transition"
+                        rows={1}
                       />
-                    ) : (
-                      profile?.first_name?.charAt(0) || 'U'
-                    )}
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <Textarea
-                      placeholder="Write a reply..."
-                      value={currentReplyContent}
-                      onChange={(e) => setReplyContent(prev => ({ ...prev, [comment.id]: e.target.value }))}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSubmitReply(comment.id);
-                        }
-                      }}
-                      className="min-h-[40px] max-h-[100px] resize-none rounded-xl border border-transparent bg-white/80 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-primary-300 focus:bg-white focus:ring-2 focus:ring-primary-200 transition"
-                      rows={1}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-end gap-2 sm:shrink-0">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -746,53 +863,25 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
     );
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose} modal={!isProfileModalOpen}>
-      <DialogContent 
-        className={cn(
-          // Mobile: Bottom sheet style - iOS 16+ fixed
-          isMobile 
-            ? "fixed left-0 right-0 bottom-0 top-auto z-50 w-full max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none flex flex-col overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-md shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] p-0 translate-x-0 translate-y-0 pb-[env(safe-area-inset-bottom)]"
-            // Desktop: Centered modal (existing style)
-            : "sm:max-w-[720px] max-w-[95vw] h-[100dvh] sm:h-[85vh] flex flex-col overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-md shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] sm:rounded-3xl rounded-2xl p-0 fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]",
-          "duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
-        )}
-        onPointerDownOutside={(e) => {
-          // Prevent Dialog from handling outside clicks when ProfileModal is open
-          if (isProfileModalOpen) {
-            e.preventDefault();
-          }
-        }}
-        onInteractOutside={(e) => {
-          // Prevent Dialog from handling outside interactions when ProfileModal is open
-          if (isProfileModalOpen) {
-            e.preventDefault();
-          }
-        }}
-      >
-        {/* Header */}
-        <DialogHeader className={cn(
-          "flex-shrink-0 border-b border-slate-200/70",
-          isMobile ? "px-4 py-3" : "px-6 py-4"
-        )}>
-          <div className="flex items-center justify-between">
-            <DialogTitle className={cn(
-              "font-semibold tracking-tight text-slate-900",
-              isMobile ? "text-lg" : "text-xl"
-            )}>
-              Comments
-            </DialogTitle>
-          </div>
-        </DialogHeader>
-
-        {/* Combined Scrollable Content Area */}
-        <div className={cn(
-          "flex-1 overflow-y-auto min-h-0 bg-white/70",
-          isMobile ? "px-4" : "px-6"
-        )}>
+  const postAndCommentsContent = (
+    <>
+        {/* Combined Scrollable Content Area - fixed region on embedded mobile (like ChatWindow) */}
+        <div
+          ref={scrollContentRef}
+          className={cn(
+            "flex-1 overflow-y-auto min-h-0 bg-white/70",
+            isMobile ? "px-4" : "px-6",
+            useFixedRegions && "fixed left-0 right-0 z-10"
+          )}
+          style={useFixedRegions && scrollAreaTop != null && scrollAreaBottom != null ? {
+            top: `${scrollAreaTop}px`,
+            bottom: `${scrollAreaBottom}px`,
+          } : undefined}
+        >
           {/* Original Post */}
           <div className={cn(
             "py-5 border-b border-slate-200/60 bg-white/80",
+            useFixedRegions && "pt-16",
             isMobile ? "px-0" : "px-0"
           )}>
             <div className="flex items-start gap-4">
@@ -813,21 +902,51 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
               )}
               
               <div className="flex-1 min-w-0 space-y-3">
-                <div className="flex flex-wrap items-center gap-3">
-                  {post.author?.id && post.author?.full_name ? (
-                    <ClickableUserName
-                      userId={post.author.id}
-                      fullName={post.author.full_name}
-                      className="font-medium text-slate-900 text-base break-words"
-                    />
-                  ) : (
-                    <h4 className="font-medium text-slate-900 text-base break-words">
-                      {post.author?.full_name || 'Unknown User'}
-                    </h4>
-                  )}
-                  <p className="text-sm text-slate-500">
-                    {formatTimestamp(post.created_at)}
-                  </p>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-3 min-w-0">
+                    {isMobile ? (
+                      <span className="font-normal text-slate-600 text-base break-words">
+                        {post.author?.id ? (
+                          <ClickableUserName
+                            userId={post.author.id}
+                            fullName={[post.author.first_name, post.author.last_name].filter(Boolean).join(' ') || post.author.full_name || 'Unknown User'}
+                            className="font-normal text-slate-600 text-base break-words hover:text-slate-800"
+                          />
+                        ) : (
+                          [post.author?.first_name, post.author?.last_name].filter(Boolean).join(' ') || post.author?.full_name || 'Unknown User'
+                        )}
+                        {' · '}
+                        <span className="text-slate-500">{formatTimestamp(post.created_at)}</span>
+                      </span>
+                    ) : (
+                      <>
+                        {post.author?.id && post.author?.full_name ? (
+                          <ClickableUserName
+                            userId={post.author.id}
+                            fullName={post.author.full_name}
+                            className="font-medium text-slate-900 text-base break-words"
+                          />
+                        ) : (
+                          <h4 className="font-medium text-slate-900 text-base break-words">
+                            {post.author?.full_name || 'Unknown User'}
+                          </h4>
+                        )}
+                        <p className="text-sm text-slate-500">
+                          {formatTimestamp(post.created_at)}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  <PostActionsMenu
+                    post={post}
+                    isAuthor={!!post.is_author}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onReport={onReport}
+                    onBookmark={onBookmark}
+                    useDeleteModal={false}
+                    isBookmarked={!!post.is_bookmarked}
+                  />
                 </div>
                 
                 <div className="flex flex-wrap items-center gap-2">
@@ -841,48 +960,16 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
                 {/* Post Content with link previews */}
                 {post.content && renderPostContentInModal()}
                 
-                {/* Post images: use resolvedImageUrls (from post, initialImageUrls, or on-demand fetch) */}
-                {(() => {
-                  if (resolvedImageUrls.length === 0) return null;
-                  
-                  // Single image - display large and make clickable
-                  if (resolvedImageUrls.length === 1) {
-                    return (
-                      <div 
-                        className="relative w-full overflow-hidden rounded-2xl border border-slate-200 bg-white/70 cursor-pointer hover:opacity-90 transition-opacity mt-3"
-                        style={{ maxHeight: '400px' }}
-                        onClick={() => handleImageClick(0)}
-                      >
-                        <img
-                          src={resolvedImageUrls[0]}
-                          alt="Post content"
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                    );
-                  }
-                  
-                  // Multiple images - display in horizontal scrollable row (clickable)
-                  return (
-                    <div className="relative mt-3">
-                      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
-                        {resolvedImageUrls.map((url, index) => (
-                          <div
-                            key={index}
-                            className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => handleImageClick(index)}
-                          >
-                            <img
-                              src={url}
-                              alt={`Post image ${index + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
+                {/* Post images: same multi-image grid as feed (2/3/4+ layout) */}
+                {resolvedImageUrls.length > 0 && (
+                  <div className={cn("mt-3", embedded && "max-w-[450px]")}>
+                    <PostImageGrid
+                      imageUrls={resolvedImageUrls}
+                      onImageClick={handleImageClick}
+                      multiImageSizes="(max-width: 640px) 50vw, 350px"
+                    />
+                  </div>
+                )}
 
                 {/* Post Actions */}
                 <div className="flex flex-wrap items-center gap-3">
@@ -941,7 +1028,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
               ref={commentsScrollRef}
               className={cn(
                 "overflow-y-auto px-4 sm:px-6 py-4 bg-white/60",
-                isMobile ? "max-h-[calc(85dvh-200px)]" : "max-h-[55vh]"
+                !embedded && (isMobile ? "max-h-[calc(85dvh-200px)]" : "max-h-[55vh]")
               )}
             >
               <div className="space-y-0">
@@ -959,11 +1046,33 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
           )}
         </div>
 
-        {/* Comment Input */}
-        <div className={cn(
-          "flex-shrink-0 border-t border-slate-200/70 bg-slate-50/70 shadow-inner",
-          isMobile ? "px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))]" : "px-6 py-4"
-        )}>
+        {/* Comment Input - fixed above bottom nav on embedded mobile (like ChatWindow) */}
+        {useFixedRegions ? (
+          <div style={{ height: inputBarHeight, flexShrink: 0 }} aria-hidden="true" />
+        ) : null}
+        <div
+          ref={commentInputBarRef}
+          className={cn(
+            "flex-shrink-0 border-t border-slate-200/70 bg-slate-50/70 shadow-inner",
+            !useFixedRegions && (isMobile
+              ? inputStickyNoPadding
+                ? "px-4 py-3"
+                : "px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))]"
+              : "px-6 py-4")
+          )}
+          style={useFixedRegions && inputBarBottom != null ? {
+            position: 'fixed',
+            left: 0,
+            right: 0,
+            bottom: `${inputBarBottom}px`,
+            zIndex: 50,
+            padding: '12px 16px',
+            paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))',
+            background: 'rgb(248 250 252 / 0.95)',
+            borderTop: '1px solid rgb(226 232 240 / 0.7)',
+            boxShadow: '0 -4px 6px -1px rgb(0 0 0 / 0.05)',
+          } : undefined}
+        >
           <div className="flex items-end gap-4">
             <div className="w-10 h-10 sm:w-10 sm:h-10 bg-primary-100/70 rounded-full flex items-center justify-center text-brand-primary-hover text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
               {profile?.avatar_url ? (
@@ -980,14 +1089,15 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
               )}
             </div>
             
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <Textarea
                 ref={textareaRef}
                 placeholder="Write a comment..."
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="min-h-[48px] sm:min-h-[52px] max-h-[140px] resize-none rounded-2xl border border-transparent bg-white/80 px-4 py-3 text-sm sm:text-base text-slate-800 placeholder:text-slate-400 focus:border-primary-300 focus:bg-white focus:ring-2 focus:ring-primary-200 transition"
+                onFocus={handleCommentInputFocus}
+                className="min-h-[48px] sm:min-h-[52px] max-h-[200px] resize-none overflow-y-hidden rounded-2xl border border-transparent bg-white/80 px-4 py-3 text-sm sm:text-base text-slate-800 placeholder:text-slate-400 focus:border-primary-300 focus:bg-white focus:ring-2 focus:ring-primary-200 transition"
                 rows={1}
               />
             </div>
@@ -1005,9 +1115,49 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, in
             </Button>
           </div>
         </div>
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+        {postAndCommentsContent}
+        <ImageViewerModal />
+      </div>
+    );
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose} modal={!isProfileModalOpen}>
+      <DialogContent
+        className={cn(
+          isMobile
+            ? "fixed left-0 right-0 bottom-0 top-auto z-50 w-full max-h-[85dvh] mt-[15dvh] rounded-t-2xl rounded-b-none flex flex-col overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-md shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] p-0 translate-x-0 translate-y-0 pb-[env(safe-area-inset-bottom)]"
+            : "sm:max-w-[720px] max-w-[95vw] h-[100dvh] sm:h-[85vh] flex flex-col overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-md shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] sm:rounded-3xl rounded-2xl p-0 fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]",
+          "duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+        )}
+        onPointerDownOutside={(e) => {
+          if (isProfileModalOpen) e.preventDefault();
+        }}
+        onInteractOutside={(e) => {
+          if (isProfileModalOpen) e.preventDefault();
+        }}
+      >
+        <DialogHeader className={cn(
+          "flex-shrink-0 border-b border-slate-200/70",
+          isMobile ? "px-4 py-3" : "px-6 py-4"
+        )}>
+          <div className="flex items-center justify-between">
+            <DialogTitle className={cn(
+              "font-semibold tracking-tight text-slate-900",
+              isMobile ? "text-lg" : "text-xl"
+            )}>
+              Comments
+            </DialogTitle>
+          </div>
+        </DialogHeader>
+        {postAndCommentsContent}
       </DialogContent>
-      
-      {/* Image Viewer Modal */}
       <ImageViewerModal />
     </Dialog>
   );

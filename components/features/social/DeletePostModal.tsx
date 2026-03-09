@@ -47,7 +47,7 @@ export function DeletePostModal({ isOpen, onClose, onConfirm, post, isDeleting }
                 </p>
                 {post.image_url && (
                   <div className="mt-3 sm:mt-2 text-sm sm:text-xs text-gray-500">
-                    📷 Post contains an image
+                    Post contains an image
                   </div>
                 )}
               </div>

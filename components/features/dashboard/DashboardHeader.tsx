@@ -123,7 +123,7 @@ export function DashboardHeader() {
   const showMessagesIcon = userRole === 'alumni';
 
   return (
-    <header className="border-b border-gray-200/60 bg-white/95 backdrop-blur-sm z-50 sticky top-0">
+    <header className="border-b border-gray-200/60 bg-white/95 backdrop-blur-sm z-[100] sticky top-0">
       <div className="w-full px-4 sm:px-6 pl-2 sm:pl-6 h-14 flex items-center justify-between">
         {/* Left side - Logo/Branding + Divider + Navigation tabs */}
         <div className="flex items-center space-x-4 sm:space-x-6 flex-shrink-0">
