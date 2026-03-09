@@ -201,6 +201,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
       await likePost(postId);
     } catch (error) {
       console.error('Failed to like post:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to like post');
     }
   };
 

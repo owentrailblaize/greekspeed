@@ -277,17 +277,10 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
     async (postId: string) => {
       if (!user || !session) return;
 
-      const response = await fetch(`/api/posts/${postId}/like`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-      });
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error?.error ?? 'Failed to like post');
-      }
-
-      const { liked } = await response.json();
+      const existing = queryClient.getQueryData<InfiniteData<PostsResponse>>(queryKey);
+      const targetPost = existing?.pages?.flatMap((p) => p.posts).find((p) => p.id === postId);
+      const prevLiked = targetPost?.is_liked ?? false;
+      const prevCount = targetPost?.likes_count ?? 0;
 
       updateCachedPages((pages) =>
         pages.map((page) => ({
@@ -296,15 +289,41 @@ export function usePosts(chapterId: string, options: UsePostsOptions = {}) {
             post.id === postId
               ? {
                   ...post,
-                  is_liked: liked,
-                  likes_count: liked ? post.likes_count + 1 : Math.max(0, post.likes_count - 1),
+                  is_liked: !prevLiked,
+                  likes_count: prevLiked
+                    ? Math.max(0, prevCount - 1)
+                    : prevCount + 1,
                 }
               : post,
           ),
         })),
       );
+
+      try {
+        const response = await fetch(`/api/posts/${postId}/like`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+        });
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          throw new Error(error?.error ?? 'Failed to like post');
+        }
+      } catch (err) {
+        updateCachedPages((pages) =>
+          pages.map((page) => ({
+            ...page,
+            posts: page.posts.map((post) =>
+              post.id === postId
+                ? { ...post, is_liked: prevLiked, likes_count: prevCount }
+                : post,
+            ),
+          })),
+        );
+        throw err;
+      }
     },
-    [getAuthHeaders, session, updateCachedPages, user],
+    [getAuthHeaders, queryClient, queryKey, session, updateCachedPages, user],
   );
 
   const deletePost = useCallback(

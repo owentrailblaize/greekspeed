@@ -80,42 +80,50 @@ export function useUserPosts(userId: string) {
   const likePost = useCallback(async (postId: string) => {
     if (!user) return;
 
+    setPosts((prevPosts) => {
+      const target = prevPosts.find((p) => p.id === postId);
+      if (!target) return prevPosts;
+      const prevLiked = target.is_liked ?? false;
+      const prevCount = target.likes_count ?? 0;
+      return prevPosts.map((post) =>
+        post.id === postId
+          ? {
+              ...post,
+              is_liked: !prevLiked,
+              likes_count: prevLiked
+                ? Math.max(0, prevCount - 1)
+                : prevCount + 1,
+            }
+          : post,
+      );
+    });
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Authentication required');
-      }
+      if (!session) throw new Error('Authentication required');
 
       const response = await fetch(`/api/posts/${postId}/like`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to like post');
-      }
-
-      const { liked } = await response.json();
-
-      // Update the post in local state
-      setPosts(prevPosts =>
-        prevPosts.map(post =>
+      if (!response.ok) throw new Error('Failed to like post');
+    } catch (err) {
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
           post.id === postId
             ? {
                 ...post,
-                is_liked: liked,
-                likes_count: liked
-                  ? (post.likes_count || 0) + 1
-                  : Math.max(0, (post.likes_count || 0) - 1),
+                is_liked: !post.is_liked,
+                likes_count: post.is_liked
+                  ? Math.max(0, (post.likes_count ?? 0) - 1)
+                  : (post.likes_count ?? 0) + 1,
               }
-            : post
-        )
+            : post,
+        ),
       );
-    } catch (err) {
-      console.error('Failed to like post:', err);
       setError(err instanceof Error ? err.message : 'Failed to like post');
+      throw err;
     }
   }, [user]);
 
