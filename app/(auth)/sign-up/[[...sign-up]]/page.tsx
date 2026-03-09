@@ -12,7 +12,10 @@ import { Label } from '@/components/ui/label';
 import { Star, Mail, Info, Users, ArrowLeft, Linkedin } from 'lucide-react';
 import { LottiePlayer } from '@/components/ui/LottiePlayer';
 import { MobileAuthLoadingOverlay } from '@/components/features/splash/MobileAuthLoadingOverlay';
+import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { supabase } from '@/lib/supabase/client';
+
+const MOBILE_OVERLAY_MIN_MS = 4000;
 import { useChapters } from '@/lib/hooks/useChapters';
 import { Chapter } from '@/types/chapter';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -40,7 +43,14 @@ export default function SignUpPage() {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const { signUp, user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const isMobile = useIsMobile();
+  const [minOverlayTimeElapsed, setMinOverlayTimeElapsed] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setMinOverlayTimeElapsed(true), MOBILE_OVERLAY_MIN_MS);
+    return () => clearTimeout(t);
+  }, []);
   const [linkedInLoading, setLinkedInLoading] = useState(false);
   const [linkedInIconError, setLinkedInIconError] = useState(false);
   
@@ -195,23 +205,11 @@ export default function SignUpPage() {
 
   const isPhoneValid = phoneNumber === '' || isValidPhoneNumber(phoneNumber);
 
-  if (authLoading || oauthLoading || linkedInLoading) {
-    return (
-      <>
-        <div className="lg:hidden">
-          <MobileAuthLoadingOverlay />
-        </div>
-        <div className="hidden lg:flex min-h-screen items-center justify-center bg-white">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
-            <p className="text-gray-600">Completing authentication...</p>
-          </div>
-        </div>
-      </>
-    );
-  }
+  const showMobileOverlay =
+    (authLoading || oauthLoading || linkedInLoading || user) || (isMobile && !minOverlayTimeElapsed);
+  const showDesktopSpinner = authLoading || oauthLoading || linkedInLoading || user;
 
-  if (user) {
+  if (showMobileOverlay || showDesktopSpinner) {
     return (
       <>
         <div className="lg:hidden">
@@ -219,8 +217,14 @@ export default function SignUpPage() {
         </div>
         <div className="hidden lg:flex min-h-screen items-center justify-center bg-white">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-brand-primary mx-auto mb-4"></div>
-            <p className="text-gray-600 font-medium">Redirecting to dashboard...</p>
+            <div
+              className={`animate-spin rounded-full h-12 w-12 mx-auto mb-4 ${
+                user ? 'border-4 border-gray-200 border-t-brand-primary' : 'border-b-2 border-brand-primary'
+              }`}
+            />
+            <p className="text-gray-600 font-medium">
+              {user ? 'Redirecting to dashboard...' : 'Completing authentication...'}
+            </p>
           </div>
         </div>
       </>
