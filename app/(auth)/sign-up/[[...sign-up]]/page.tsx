@@ -15,7 +15,7 @@ import { MobileAuthLoadingOverlay } from '@/components/features/splash/MobileAut
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { supabase } from '@/lib/supabase/client';
 
-const MOBILE_OVERLAY_MIN_MS = 4000;
+const MOBILE_OVERLAY_MIN_MS = 6000;
 import { useChapters } from '@/lib/hooks/useChapters';
 import { Chapter } from '@/types/chapter';
 import { Checkbox } from '@/components/ui/checkbox';

@@ -13,7 +13,7 @@ import { LottiePlayer } from '@/components/ui/LottiePlayer';
 import { MobileAuthLoadingOverlay } from '@/components/features/splash/MobileAuthLoadingOverlay';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 
-const MOBILE_OVERLAY_MIN_MS = 4000;
+const MOBILE_OVERLAY_MIN_MS = 6000;
 
 export default function SignInPage() {
   const [email, setEmail] = useState('');
