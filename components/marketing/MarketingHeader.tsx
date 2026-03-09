@@ -8,7 +8,6 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { useProfile } from "@/lib/contexts/ProfileContext";
 import { Button } from "@/components/ui/button";
-import { MobileAuthLoadingOverlay } from "@/components/features/splash/MobileAuthLoadingOverlay";
 
 interface MarketingHeaderProps {
   activeSection?: string;
@@ -19,7 +18,6 @@ interface MarketingHeaderProps {
 export function MarketingHeader({ activeSection = "home", onSectionChange, hideNavigation = false }: MarketingHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [showAuthLoadingOverlay, setShowAuthLoadingOverlay] = useState(false);
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
   const router = useRouter();
@@ -56,10 +54,7 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
 
   const handleMobileLogIn = () => {
     setMobileMenuOpen(false);
-    setShowAuthLoadingOverlay(true);
-    setTimeout(() => {
-      router.push('/sign-in');
-    }, 2000);
+    router.push('/sign-in');
   };
 
   // Opens Google Calendar appointment scheduler
@@ -279,10 +274,6 @@ export function MarketingHeader({ activeSection = "home", onSectionChange, hideN
           </motion.div>
         )}
       </AnimatePresence>
-
-      {showAuthLoadingOverlay && (
-        <MobileAuthLoadingOverlay />
-      )}
     </nav>
   );
 }
