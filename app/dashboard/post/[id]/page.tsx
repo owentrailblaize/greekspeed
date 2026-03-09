@@ -55,14 +55,39 @@ export default function PostDetailPage() {
     fetchPost();
   }, [fetchPost]);
 
-  const handleLike = useCallback(async (likedPostId: string) => {
-    const headers = getAuthHeaders();
-    const res = await fetch(`/api/posts/${likedPostId}/like`, {
-      method: 'POST',
-      headers,
-    });
-    if (res.ok) fetchPost();
-  }, [getAuthHeaders, fetchPost]);
+  const handleLike = useCallback(
+    async (likedPostId: string) => {
+      if (!post || post.id !== likedPostId) return;
+
+      const prevLiked = post.is_liked ?? false;
+      const prevCount = post.likes_count ?? 0;
+
+      setPost({
+        ...post,
+        is_liked: !prevLiked,
+        likes_count: prevLiked ? Math.max(0, prevCount - 1) : prevCount + 1,
+      });
+
+      try {
+        const res = await fetch(`/api/posts/${likedPostId}/like`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data?.error ?? 'Failed to update like');
+        }
+      } catch (err) {
+        setPost((prev) =>
+          prev?.id === likedPostId
+            ? { ...prev, is_liked: prevLiked, likes_count: prevCount }
+            : prev,
+        );
+        toast.error(err instanceof Error ? err.message : 'Failed to update like');
+      }
+    },
+    [post, getAuthHeaders],
+  );
 
   const handleBack = useCallback(() => {
     router.back();

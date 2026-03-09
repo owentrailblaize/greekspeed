@@ -4,6 +4,7 @@ import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { motion } from 'framer-motion';
 import { X, Heart, MessageCircle, Trash2, Send, ChevronLeft, ChevronRight, Reply, ChevronDown, ChevronUp } from 'lucide-react';
 import { PostActionsMenu } from './PostActionsMenu';
 import { Post, PostComment } from '@/types/posts';
@@ -20,6 +21,7 @@ import Image from 'next/image';
 import { createPortal } from 'react-dom';
 import { useLayoutEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { toast } from 'react-toastify';
 
 interface CommentModalProps {
   isOpen: boolean;
@@ -349,7 +351,11 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
   };
 
   const handleLikeComment = async (commentId: string) => {
-    await likeComment(commentId);
+    try {
+      await likeComment(commentId);
+    } catch {
+      toast.error('Failed to like comment');
+    }
   };
 
   const handleRefresh = async () => {
@@ -630,12 +636,19 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
                   "text-xs sm:text-sm h-8 rounded-full px-4 shadow-sm transition"
                 )}
               >
-                <Heart
-                  className={cn(
-                    "h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2",
-                    comment.is_liked ? 'fill-current' : ''
-                  )}
-                />
+                <motion.span
+                  className="inline-flex mr-1 sm:mr-2"
+                  initial={false}
+                  animate={{ scale: comment.is_liked ? [1, 1.25, 1] : 1 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <Heart
+                    className={cn(
+                      "h-3 w-3 sm:h-4 sm:w-4",
+                      comment.is_liked ? 'fill-current' : ''
+                    )}
+                  />
+                </motion.span>
                 {comment.likes_count || 0}
               </Button>
               
@@ -983,7 +996,14 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
                         : 'bg-white/90 text-slate-500 border border-transparent hover:bg-rose-50 hover:text-rose-500'
                     } h-9 rounded-full px-4 shadow-sm transition`}
                   >
-                    <Heart className={`h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2 ${post.is_liked ? 'fill-current' : ''}`} />
+                    <motion.span
+                      className="inline-flex mr-1 sm:mr-2"
+                      initial={false}
+                      animate={{ scale: post.is_liked ? [1, 1.25, 1] : 1 }}
+                      transition={{ duration: 0.25 }}
+                    >
+                      <Heart className={`h-4 w-4 sm:h-5 sm:w-5 ${post.is_liked ? 'fill-current' : ''}`} />
+                    </motion.span>
                     <span className="text-xs sm:text-sm">{post.likes_count}</span>
                   </Button>
                   <Button 
