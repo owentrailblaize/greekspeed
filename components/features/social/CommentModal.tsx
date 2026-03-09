@@ -20,6 +20,7 @@ import Image from 'next/image';
 import { createPortal } from 'react-dom';
 import { useLayoutEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { toast } from 'react-toastify';
 
 interface CommentModalProps {
   isOpen: boolean;
@@ -349,7 +350,11 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
   };
 
   const handleLikeComment = async (commentId: string) => {
-    await likeComment(commentId);
+    try {
+      await likeComment(commentId);
+    } catch {
+      toast.error('Failed to like comment');
+    }
   };
 
   const handleRefresh = async () => {

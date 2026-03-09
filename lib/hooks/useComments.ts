@@ -111,6 +111,11 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
   const [loadedFromCache, setLoadedFromCache] = useState(hasInitialSeed);
   const seededAppliedRef = useRef(false);
   const fetchedRef = useRef(false);
+  const likeRollbackRef = useRef<{
+    commentId: string;
+    is_liked: boolean;
+    likes_count: number;
+  } | null>(null);
 
   const applyEntry = useCallback(
     (cacheEntry: CommentsCacheEntry, source: 'cache' | 'remote') => {
@@ -319,6 +324,38 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
     async (commentId: string) => {
       if (!user || !session) return false;
 
+      setComments((prevComments) => {
+        const comment = prevComments.find((c) => c.id === commentId);
+        if (!comment) return prevComments;
+
+        const prevLiked = comment.is_liked ?? false;
+        const prevCount = comment.likes_count ?? 0;
+        likeRollbackRef.current = { commentId, is_liked: prevLiked, likes_count: prevCount };
+
+        const updated = prevComments.map((c) =>
+          c.id === commentId
+            ? {
+                ...c,
+                is_liked: !prevLiked,
+                likes_count: prevLiked
+                  ? Math.max(0, prevCount - 1)
+                  : prevCount + 1,
+              }
+            : c,
+        );
+
+        const cached = commentsCache.get(cacheKey);
+        if (cached) {
+          commentsCache.set(cacheKey, {
+            comments: updated,
+            pagination: cached.pagination,
+            fetchedAt: cached.fetchedAt,
+          });
+        }
+
+        return updated;
+      });
+
       try {
         const response = await fetch(`/api/posts/${postId}/comments/${commentId}/like`, {
           method: 'POST',
@@ -329,35 +366,31 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
           throw new Error('Failed to like comment');
         }
 
-        const { liked } = await response.json();
-
-        setComments((prevComments) => {
-          const updated = prevComments.map((comment) =>
-            comment.id === commentId
-              ? {
-                  ...comment,
-                  is_liked: liked,
-                  likes_count: liked ? comment.likes_count + 1 : Math.max(0, comment.likes_count - 1),
-                }
-              : comment,
-          );
-
-          const cached = commentsCache.get(cacheKey);
-          if (cached) {
-            commentsCache.set(cacheKey, {
-              comments: updated,
-              pagination: cached.pagination,
-              fetchedAt: cached.fetchedAt,
-            });
-          }
-
-          return updated;
-        });
-
+        likeRollbackRef.current = null;
         return true;
       } catch (err) {
+        const rollback = likeRollbackRef.current;
+        if (rollback?.commentId === commentId) {
+          setComments((prevComments) => {
+            const reverted = prevComments.map((c) =>
+              c.id === commentId
+                ? { ...c, is_liked: rollback.is_liked, likes_count: rollback.likes_count }
+                : c,
+            );
+            const cached = commentsCache.get(cacheKey);
+            if (cached) {
+              commentsCache.set(cacheKey, {
+                comments: reverted,
+                pagination: cached.pagination,
+                fetchedAt: cached.fetchedAt,
+              });
+            }
+            return reverted;
+          });
+        }
+        likeRollbackRef.current = null;
         setError(err instanceof Error ? err.message : 'Failed to like comment');
-        return false;
+        throw err;
       }
     },
     [cacheKey, getAuthHeaders, postId, session, user],
