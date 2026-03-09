@@ -32,6 +32,8 @@ const SAMPLE = {
   userName: 'Jordan',
   chapterName: 'Alpha Beta Gamma',
   actorFirstName: 'Alex',
+  actorLastName: 'Smith',
+  actorAvatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
   title: 'Spring Formal 2025',
   content: 'Join us this Saturday at 8 PM. Dress code: semi-formal. RSVP by Thursday.',
   summary: 'Join us this Saturday at 8 PM. Dress code: semi-formal.',
@@ -180,17 +182,25 @@ function buildEmailPayloadForType(type: NotificationType): DryRunResult['email']
           cta: { url: 'https://www.trailblaize.net' },
         },
       };
-    case 'connection_request':
+    case 'connection_request': {
+      const actorFullName = SAMPLE.actorLastName?.trim()
+        ? `${SAMPLE.actorFirstName} ${SAMPLE.actorLastName.trim()}`
+        : SAMPLE.actorFirstName;
       return {
-        subject: `${SAMPLE.actorFirstName} wants to connect with you on Trailblaize`,
+        subject: `${actorFullName} wants to connect with you on Trailblaize`,
         templateData: {
           payload: { message: SAMPLE.connectionMessage },
           recipient: { first_name: SAMPLE.firstName, email: 'test@example.com' },
-          actor: { first_name: SAMPLE.actorFirstName },
+          actor: {
+            first_name: SAMPLE.actorFirstName,
+            last_name: SAMPLE.actorLastName ?? '',
+            avatar_url: SAMPLE.actorAvatarUrl ?? '',
+          },
           chapter: { name: SAMPLE.chapterName },
           cta: { label: 'View Request', url: 'https://www.trailblaize.net/dashboard/notifications' },
         },
       };
+    }
     case 'connection_accepted':
       return {
         subject: `${SAMPLE.actorFirstName} accepted your connection request on Trailblaize`,
@@ -327,6 +337,8 @@ export async function runNotificationTest(options: NotificationTestOptions): Pro
             firstName: SAMPLE.firstName,
             chapterName: SAMPLE.chapterName,
             actorFirstName: SAMPLE.actorFirstName,
+            actorLastName: SAMPLE.actorLastName,
+            actorAvatarUrl: SAMPLE.actorAvatarUrl,
             message: SAMPLE.connectionMessage,
             connectionId: TEST_CONNECTION_ID,
           });

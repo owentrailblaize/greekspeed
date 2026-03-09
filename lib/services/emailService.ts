@@ -63,6 +63,8 @@ export interface ConnectionRequestEmail {
   firstName: string;
   chapterName: string;
   actorFirstName: string;
+  actorLastName?: string;
+  actorAvatarUrl?: string | null;
   message?: string;
   connectionId: string;
 }
@@ -513,6 +515,8 @@ export class EmailService {
     firstName,
     chapterName,
     actorFirstName,
+    actorLastName,
+    actorAvatarUrl,
     message,
     connectionId
   }: ConnectionRequestEmail): Promise<boolean> {
@@ -522,6 +526,10 @@ export class EmailService {
         to,
         `/dashboard/notifications?connection=${connectionId}`
       );
+
+      const actorFullName = actorLastName?.trim()
+        ? `${actorFirstName} ${actorLastName.trim()}`
+        : actorFirstName;
   
       const msg = {
         to,
@@ -529,7 +537,7 @@ export class EmailService {
           email: this.fromEmail,
           name: this.fromName,
         },
-        subject: `${actorFirstName} wants to connect with you on Trailblaize`,
+        subject: `${actorFullName} wants to connect with you on Trailblaize`,
         templateId: process.env.SENDGRID_CONNECTION_REQUEST_TEMPLATE_ID!,
         dynamicTemplateData: {
           payload: {
@@ -540,7 +548,9 @@ export class EmailService {
             email: to
           },
           actor: {
-            first_name: actorFirstName
+            first_name: actorFirstName,
+            last_name: actorLastName ?? '',
+            avatar_url: actorAvatarUrl ?? ''
           },
           chapter: {
             name: chapterName

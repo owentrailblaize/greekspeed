@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
     // Get requester profile information for email notification
     const { data: requesterProfile, error: requesterError } = await supabase
       .from('profiles')
-      .select('first_name, chapter_id')
+      .select('first_name, last_name, avatar_url, chapter_id')
       .eq('id', requesterId)
       .single();
 
@@ -146,6 +146,8 @@ export async function POST(request: NextRequest) {
             firstName: recipientProfile.first_name,
             chapterName: recipientProfile.chapter || 'Your Chapter',
             actorFirstName: requesterProfile.first_name,
+            actorLastName: requesterProfile.last_name ?? '',
+            actorAvatarUrl: requesterProfile.avatar_url ?? null,
             message: message,
             connectionId: connection.id
           }).catch(emailError => {
