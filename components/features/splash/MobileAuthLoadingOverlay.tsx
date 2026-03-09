@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { LottiePlayer } from '@/components/ui/LottiePlayer';
 import { SplashColors } from '@/lib/constants/splashTheme';
 
@@ -9,6 +10,8 @@ const NETWORKING_ANIMATION_PATH = '/animations/networking.json';
 /**
  * Full-screen mobile-only loading overlay with networking animation.
  * Takes up entire viewport height with no scroll.
+ * Uses createPortal to render into document.body so position:fixed works
+ * relative to the viewport (not affected by backdrop-filter on nav).
  */
 export function MobileAuthLoadingOverlay() {
   useEffect(() => {
@@ -23,7 +26,7 @@ export function MobileAuthLoadingOverlay() {
     };
   }, []);
 
-  return (
+  const overlay = (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden"
       style={{
@@ -43,4 +46,7 @@ export function MobileAuthLoadingOverlay() {
       </div>
     </div>
   );
+
+  if (typeof document === 'undefined') return null;
+  return createPortal(overlay, document.body);
 }
