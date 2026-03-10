@@ -22,6 +22,7 @@ export default function SignInPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [linkedInLoading, setLinkedInLoading] = useState(false);
   const [error, setError] = useState('');
+  const [oauthCompleting, setOauthCompleting] = useState(false);
   const { signIn, user, loading: authLoading } = useAuth();
   const router = useRouter();
   const isMobile = useIsMobile();
@@ -30,6 +31,78 @@ export default function SignInPage() {
   useEffect(() => {
     const t = setTimeout(() => setMinOverlayTimeElapsed(true), MOBILE_OVERLAY_MIN_MS);
     return () => clearTimeout(t);
+  }, []);
+
+  // Client-side OAuth completion: handle hash fragment or query when server didn't receive code (e.g. LinkedIn)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const search = window.location.search;
+    const hash = window.location.hash;
+    const searchParamsObj = new URLSearchParams(search);
+    const hashParamsObj = hash ? new URLSearchParams(hash.substring(1)) : new URLSearchParams();
+
+    const code = searchParamsObj.get('code') || hashParamsObj.get('code');
+    const accessToken = hashParamsObj.get('access_token');
+    const refreshToken = hashParamsObj.get('refresh_token');
+    const errorParam = searchParamsObj.get('error') || hashParamsObj.get('error');
+    const errorDescription = searchParamsObj.get('error_description') || hashParamsObj.get('error_description');
+
+    const hasOAuthParams = code || (accessToken && refreshToken) || errorParam;
+
+    if (!hasOAuthParams) return;
+
+    const cleanUrl = () => {
+      window.history.replaceState(null, '', window.location.pathname);
+    };
+
+    // 1. OAuth error from callback or provider
+    if (errorParam) {
+      setError(errorDescription || errorParam || 'Authentication failed');
+      cleanUrl();
+      return;
+    }
+
+    // 2. Exchange code for session (PKCE or when code is in query/hash)
+    if (code) {
+      setOauthCompleting(true);
+      cleanUrl();
+      supabase.auth
+        .exchangeCodeForSession(code)
+        .then(({ error: exchangeError }) => {
+          if (exchangeError) {
+            setError(exchangeError.message || 'Failed to complete sign-in');
+            setOauthCompleting(false);
+            return;
+          }
+          // Auth context will update; existing "redirect if authenticated" effect will redirect
+        })
+        .catch((err) => {
+          setError(err?.message || 'Failed to complete sign-in');
+          setOauthCompleting(false);
+        });
+      return;
+    }
+
+    // 3. Implicit flow: tokens in hash (e.g. some LinkedIn/Supabase redirects)
+    if (accessToken && refreshToken) {
+      setOauthCompleting(true);
+      cleanUrl();
+      supabase.auth
+        .setSession({ access_token: accessToken, refresh_token: refreshToken })
+        .then(({ error: sessionError }) => {
+          if (sessionError) {
+            setError(sessionError.message || 'Failed to complete sign-in');
+            setOauthCompleting(false);
+            return;
+          }
+          // Auth context will update; existing effect will redirect
+        })
+        .catch((err) => {
+          setError(err?.message || 'Failed to complete sign-in');
+          setOauthCompleting(false);
+        });
+    }
   }, []);
 
   // Redirect if already authenticated
@@ -156,9 +229,9 @@ export default function SignInPage() {
     router.push('/');
   };
 
-  // Show loading: auth loading, user redirecting, or mobile minimum overlay time (4s)
-  const showMobileOverlay = (authLoading || user) || (isMobile && !minOverlayTimeElapsed);
-  const showDesktopSpinner = authLoading || user;
+  // Show loading: auth loading, user redirecting, OAuth completion in progress, or mobile minimum overlay time
+  const showMobileOverlay = (authLoading || user || oauthCompleting) || (isMobile && !minOverlayTimeElapsed);
+  const showDesktopSpinner = authLoading || user || oauthCompleting;
 
   if (showMobileOverlay || showDesktopSpinner) {
     return (

@@ -30,9 +30,13 @@ export async function GET(request: NextRequest) {
 
   // If no code and no error, this might be a redirect loop or hash fragment issue
   // LinkedIn OAuth sometimes redirects to /sign-in with hash fragments instead of /auth/callback with query params
+  // (Hash is never sent to the server; sign-in page now handles hash/query client-side.)
   if (!code && !error) {
-    console.warn('Callback hit without code or error - might be hash fragment redirect issue');
-    console.warn('This can happen when OAuth provider redirects with hash fragments instead of query params');
+    console.warn('Callback hit without code or error - redirecting to /sign-in for client-side OAuth handling', {
+      pathname: requestUrl.pathname,
+      origin: requestUrl.origin,
+      queryKeys: Array.from(requestUrl.searchParams.keys()),
+    });
 
     // If we have an invitation token, preserve it in the redirect
     if (invitationToken) {
