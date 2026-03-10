@@ -49,7 +49,23 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
           <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
           <link rel="manifest" href="/site.webmanifest" />
-          {/* Remove default favicon.ico reference */}
+          {/* OneSignal Web Push: dev app on localhost, prod app on trailblaize.net */}
+          <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer />
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                window.OneSignalDeferred = window.OneSignalDeferred || [];
+                OneSignalDeferred.push(async function(OneSignal) {
+                  var devId = "${process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID_DEV || ''}";
+                  var prodId = "${process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || ''}";
+                  var o = typeof window !== 'undefined' ? window.location.origin : '';
+                  var isLocal = o === 'http://localhost:3000' || o === 'http://127.0.0.1:3000';
+                  var appId = isLocal ? devId : prodId;
+                  if (appId) { await OneSignal.init({ appId: appId }); }
+                });
+              `,
+            }}
+          />
         </head>
         <body 
           className="antialiased bg-white text-gray-900"
