@@ -357,6 +357,8 @@ export default function JoinPageClient() {
                 {googleLoading ? 'Connecting...' : 'Continue with Google'}
               </Button>
 
+              {/* Temporarily disabled: LinkedIn OAuth on invitation flow (mobile/desktop) - re-enable when ready */}
+              {/*
               <Button
                 onClick={handleLinkedInSignUp}
                 disabled={linkedInLoading || googleLoading}
@@ -374,6 +376,7 @@ export default function JoinPageClient() {
                 )}
                 {linkedInLoading ? 'Connecting...' : 'Continue with LinkedIn'}
               </Button>
+              */}
 
               <Button
                 onClick={handleStartJoin}
