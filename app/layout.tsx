@@ -61,7 +61,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   var o = typeof window !== 'undefined' ? window.location.origin : '';
                   var isLocal = o === 'http://localhost:3000' || o === 'http://127.0.0.1:3000';
                   var appId = isLocal ? devId : prodId;
-                  if (appId) { await OneSignal.init({ appId: appId }); }
+                  if (appId) {
+                    await OneSignal.init({
+                      appId: appId,
+                      promptOptions: {
+                        slidedown: {
+                          prompts: [{ type: "push", autoPrompt: false }]
+                        }
+                      }
+                    });
+                  }
                 });
               `,
             }}

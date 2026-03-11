@@ -9,6 +9,7 @@ import { Settings, Shield, Bell, ArrowLeft, Mail, User, Phone, Calendar, Lock, U
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useOneSignalPush } from '@/lib/hooks/useOneSignalPush';
 import { ChangePasswordForm } from '@/components/features/settings/ChangePasswordForm';
 
 export default function SettingsPage() {
@@ -53,6 +54,14 @@ export default function SettingsPage() {
 
   const router = useRouter();
   const { profile, loading: profileLoading } = useProfile();
+  const {
+    permission: pushPermission,
+    playerId,
+    isSubscribed: pushSubscribed,
+    isPushSupported,
+    isLoading: pushLoading,
+    requestPermission,
+  } = useOneSignalPush(profile?.id);
 
   // Fetch notification settings on mount
   useEffect(() => {
@@ -461,6 +470,76 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Browser Push Notifications */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Bell className="w-5 h-5" />
+          Browser Push Notifications
+        </h3>
+
+        {!isPushSupported && (
+          <div className="p-4 border rounded-xl bg-gray-50">
+            <p className="text-sm text-gray-600">
+              Push notifications are not supported in this browser.
+            </p>
+          </div>
+        )}
+
+        {isPushSupported && pushLoading && (
+          <div className="p-4 border rounded-xl bg-white">
+            <p className="text-sm text-gray-500">Loading push settings...</p>
+          </div>
+        )}
+
+        {isPushSupported && !pushLoading && pushPermission === 'default' && (
+          <div className="p-4 border rounded-xl bg-white">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h4 className="font-medium text-gray-900">Enable push notifications</h4>
+                <p className="text-sm text-gray-600">
+                  Get real-time alerts in this browser for events, messages, and more.
+                </p>
+              </div>
+              <Button
+                onClick={() => requestPermission()}
+                className="ml-4 rounded-full"
+              >
+                Enable push notifications
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {isPushSupported && !pushLoading && pushPermission === 'granted' && pushSubscribed && (
+          <div className="p-4 border rounded-xl bg-white">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h4 className="font-medium text-gray-900">Push notifications enabled</h4>
+                <p className="text-sm text-gray-600">
+                  You will receive push alerts in this browser.
+                  {playerId && (
+                    <span className="block mt-1 text-xs text-gray-400 font-mono truncate" title={playerId}>
+                      Subscription ID: {playerId}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isPushSupported && !pushLoading && pushPermission === 'denied' && (
+          <div className="p-4 border rounded-xl bg-white">
+            <div className="flex-1">
+              <h4 className="font-medium text-gray-900">Push notifications blocked</h4>
+              <p className="text-sm text-gray-600">
+                Allow notifications in your browser or site settings to enable push alerts.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
