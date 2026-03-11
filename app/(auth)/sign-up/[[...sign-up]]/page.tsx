@@ -261,6 +261,9 @@ export default function SignUpPage() {
                   Continue with Google
                 </Button>
                 
+                {/*
+                  Temporarily disabled: LinkedIn signup button (mobile)
+                  Keeping handler and imports intact so we can re-enable quickly later.
                 <Button 
                   type="button"
                   variant="outline" 
@@ -280,6 +283,7 @@ export default function SignUpPage() {
                   )}
                   {linkedInLoading ? 'Signing up...' : 'Continue with LinkedIn'}
                 </Button>
+                */}
                 
                 <Button 
                   type="button"
@@ -589,6 +593,9 @@ export default function SignUpPage() {
                         Continue with Google
                       </Button>
                       
+                      {/*
+                        Temporarily disabled: LinkedIn signup button (desktop)
+                        Keeping handler and imports intact so we can re-enable quickly later.
                       <Button 
                         type="button"
                         variant="outline" 
@@ -608,6 +615,7 @@ export default function SignUpPage() {
                         )}
                         {linkedInLoading ? 'Signing up...' : 'Continue with LinkedIn'}
                       </Button>
+                      */}
                       
                       <Button 
                         type="button"
