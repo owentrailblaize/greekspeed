@@ -29,10 +29,10 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
     }
 
-    // Check if comment exists and user has access to it
+    // Check if comment exists and user has access to it (include author_id for push)
     const { data: comment, error: commentError } = await supabase
       .from('post_comments')
-      .select('id, post_id')
+      .select('id, post_id, author_id')
       .eq('id', commentId)
       .single();
 
@@ -96,6 +96,27 @@ export async function POST(
       if (likeError) {
         console.error('Comment like error:', likeError);
         return NextResponse.json({ error: 'Failed to like comment' }, { status: 500 });
+      }
+
+      // Push: notify comment author when someone else likes their comment
+      if (comment.author_id && comment.author_id !== user.id) {
+        try {
+          const { data: likerProfile } = await supabase
+            .from('profiles')
+            .select('first_name')
+            .eq('id', user.id)
+            .single();
+          const { buildPushPayload } = await import('@/lib/services/notificationPushPayload');
+          const { sendPushToUser } = await import('@/lib/services/oneSignalPushService');
+          const payload = buildPushPayload('comment_like', {
+            postId: comment.post_id,
+            commentId,
+            actorFirstName: likerProfile?.first_name ?? undefined,
+          });
+          await sendPushToUser(comment.author_id, payload);
+        } catch (pushErr) {
+          console.error('Failed to send comment like push:', pushErr);
+        }
       }
 
       return NextResponse.json({ liked: true });

@@ -76,6 +76,8 @@ export const PUSH_EVENT_TYPES: readonly NotificationType[] = [
   'new_message',
   'post_comment',
   'comment_reply',
+  'post_like',
+  'comment_like',
   'system_alert',
   'welcome',
   'generic_notification',
@@ -188,6 +190,28 @@ export function buildPushPayload(
             ? `${context.actorFirstName} replied: ${context.contentPreview}`
             : `${context.actorFirstName} replied to your comment`
           : 'Someone replied to your comment',
+        url: context.postId
+          ? `${base}/dashboard/post/${context.postId}`
+          : `${base}/dashboard`,
+      };
+
+    case 'post_like':
+      return {
+        title: 'Post liked',
+        body: context.actorFirstName
+          ? `${context.actorFirstName} liked your post`
+          : 'Someone liked your post',
+        url: context.postId
+          ? `${base}/dashboard/post/${context.postId}`
+          : `${base}/dashboard`,
+      };
+
+    case 'comment_like':
+      return {
+        title: 'Comment liked',
+        body: context.actorFirstName
+          ? `${context.actorFirstName} liked your comment`
+          : 'Someone liked your comment',
         url: context.postId
           ? `${base}/dashboard/post/${context.postId}`
           : `${base}/dashboard`,

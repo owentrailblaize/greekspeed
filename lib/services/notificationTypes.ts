@@ -17,6 +17,8 @@ export const NOTIFICATION_TYPES = [
   'generic_notification',
   'post_comment',
   'comment_reply',
+  'post_like',
+  'comment_like',
   'system_alert',
 ] as const;
 

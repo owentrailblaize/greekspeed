@@ -29,10 +29,10 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
     }
 
-    // Check if post exists and user has access to it
+    // Check if post exists and user has access to it (include author_id for push)
     const { data: post, error: postError } = await supabase
       .from('posts')
-      .select('chapter_id')
+      .select('chapter_id, author_id')
       .eq('id', postId)
       .single();
 
@@ -124,6 +124,26 @@ export async function POST(
             updated_at: new Date().toISOString()
           })
           .eq('id', postId);
+      }
+
+      // Push: notify post author when someone else likes their post
+      if (post.author_id && post.author_id !== user.id) {
+        try {
+          const { data: likerProfile } = await supabase
+            .from('profiles')
+            .select('first_name')
+            .eq('id', user.id)
+            .single();
+          const { buildPushPayload } = await import('@/lib/services/notificationPushPayload');
+          const { sendPushToUser } = await import('@/lib/services/oneSignalPushService');
+          const payload = buildPushPayload('post_like', {
+            postId,
+            actorFirstName: likerProfile?.first_name ?? undefined,
+          });
+          await sendPushToUser(post.author_id, payload);
+        } catch (pushErr) {
+          console.error('Failed to send post like push:', pushErr);
+        }
       }
 
       return NextResponse.json({ liked: true });
