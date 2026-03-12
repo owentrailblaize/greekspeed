@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { SMSService } from '@/lib/services/sms/smsServiceTelnyx';
 import { SMSMessageFormatter } from '@/lib/services/sms/smsMessageFormatter';
+import { SMSNotificationService } from '@/lib/services/sms/smsNotificationService';
 import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
 
 // Configure function timeout for Vercel (60 seconds for Pro plan)
@@ -387,63 +388,77 @@ export async function POST(request: NextRequest) {
               const headline = announcement.title.slice(0, 40);
               const detail = announcement.content.slice(0, 60).replace(/\s+/g, ' ').trim();
 
-              const messageParts = SMSMessageFormatter.formatShortMessage(
+              const receivedSet = await SMSNotificationService.getUserIdSetThatHaveReceivedSms(
+                validSMSMembers.map(m => m.id)
+              );
+              const isSandbox = SMSService.isInSandboxMode();
+              const recipientsToUse = isSandbox ? validSMSMembers.slice(0, 3) : validSMSMembers;
+              const firstTime = recipientsToUse.filter(m => !receivedSet.has(m.id));
+              const returning = recipientsToUse.filter(m => receivedSet.has(m.id));
+
+              const messagePartsFull = SMSMessageFormatter.formatShortMessage(
                 headline,
                 detail,
                 'Read more',
                 link,
                 { complianceLevel: 'full' }
               );
+              const messagePartsNone = SMSMessageFormatter.formatShortMessage(
+                headline,
+                detail,
+                'Read more',
+                link,
+                { complianceLevel: 'none' }
+              );
 
-              // Log message info for monitoring
-              console.log('📱 SMS Message Info:', {
-                parts: messageParts.estimatedParts,
-                encoding: messageParts.encoding,
-                willBeConcatenated: messageParts.willBeConcatenated,
-                length: messageParts.fullMessage.length,
-                announcementId: announcement.id
-              });
-                            
-              // Get phone numbers
-              const phoneNumbers = validSMSMembers.map(member => member.formattedPhone);
-
-              // Determine if we should use test mode (same logic as email)
-              const isSandbox = SMSService.isInSandboxMode();
-              const recipientsToUse = isSandbox ? phoneNumbers.slice(0, 3) : phoneNumbers;
-
-              // Send SMS via dedicated processing route (async but tracked)
               if (recipientsToUse.length > 0) {
-                console.log('🚀 Initiating SMS processing for announcement:', {
-                  announcementId: announcement.id,
-                  recipientsCount: recipientsToUse.length,
-                  messagePreview: messageParts.fullMessage.substring(0, 50) + '...',
-                  estimatedParts: messageParts.estimatedParts,
-                  timestamp: new Date().toISOString(),
-                });
-
-                // Await the SMS call to ensure it completes before function returns
                 try {
-                  // Send full message - Telnyx handles concatenation automatically
-                  const result = await SMSService.sendBulkSMS(recipientsToUse, messageParts.fullMessage);
-                  
+                  let totalSuccess = 0;
+                  let totalFailed = 0;
+                  if (firstTime.length > 0) {
+                    const resultFull = await SMSService.sendBulkSMS(
+                      firstTime.map(m => m.formattedPhone),
+                      messagePartsFull.fullMessage
+                    );
+                    totalSuccess += resultFull.success;
+                    totalFailed += resultFull.failed;
+                  }
+                  if (returning.length > 0) {
+                    const resultNone = await SMSService.sendBulkSMS(
+                      returning.map(m => m.formattedPhone),
+                      messagePartsNone.fullMessage
+                    );
+                    totalSuccess += resultNone.success;
+                    totalFailed += resultNone.failed;
+                  }
+
+                  await SMSNotificationService.recordAnnouncementSmsRecipients(
+                    recipientsToUse.map(m => ({
+                      userId: m.id,
+                      chapterId: m.chapter_id,
+                      phoneNumber: m.formattedPhone,
+                    })),
+                    messagePartsFull.fullMessage
+                  );
+
                   console.log('✅ Announcement SMS sent:', {
                     total: recipientsToUse.length,
-                    success: result.success,
-                    failed: result.failed,
+                    firstTime: firstTime.length,
+                    returning: returning.length,
+                    success: totalSuccess,
+                    failed: totalFailed,
                     announcementId: announcement.id,
-                    parts: messageParts.estimatedParts
                   });
 
-                  // Log to database
                   try {
                     const supabase = createServerSupabaseClient();
                     await supabase.from('sms_logs').insert({
                       chapter_id: profile.chapter_id,
                       sent_by: user.id,
-                      message: messageParts.fullMessage,
+                      message: messagePartsFull.fullMessage,
                       recipients_count: recipientsToUse.length,
-                      success_count: result.success,
-                      failed_count: result.failed,
+                      success_count: totalSuccess,
+                      failed_count: totalFailed,
                       test_mode: false,
                     });
                   } catch (logError) {
@@ -455,7 +470,6 @@ export async function POST(request: NextRequest) {
                     announcementId: announcement.id,
                     stack: error instanceof Error ? error.stack : undefined
                   });
-                  // Don't throw - SMS failure shouldn't block announcement creation
                 }
               }
             }
@@ -500,58 +514,77 @@ export async function POST(request: NextRequest) {
               const headline = announcement.title.slice(0, 40);
               const detail = announcement.content.slice(0, 60).replace(/\s+/g, ' ').trim();
 
-              const messageParts = SMSMessageFormatter.formatShortMessage(
+              const receivedSetAlumni = await SMSNotificationService.getUserIdSetThatHaveReceivedSms(
+                validAlumni.map(a => a.id)
+              );
+              const isSandboxAlumni = SMSService.isInSandboxMode();
+              const recipientsToUseAlumni = isSandboxAlumni ? validAlumni.slice(0, 3) : validAlumni;
+              const firstTimeAlumni = recipientsToUseAlumni.filter(a => !receivedSetAlumni.has(a.id));
+              const returningAlumni = recipientsToUseAlumni.filter(a => receivedSetAlumni.has(a.id));
+
+              const messagePartsFullAlumni = SMSMessageFormatter.formatShortMessage(
                 headline,
                 detail,
                 'Read more',
                 link,
                 { complianceLevel: 'full' }
               );
+              const messagePartsNoneAlumni = SMSMessageFormatter.formatShortMessage(
+                headline,
+                detail,
+                'Read more',
+                link,
+                { complianceLevel: 'none' }
+              );
 
-              // Log message info for monitoring
-              console.log('📱 Alumni SMS Message Info:', {
-                parts: messageParts.estimatedParts,
-                encoding: messageParts.encoding,
-                willBeConcatenated: messageParts.willBeConcatenated,
-                length: messageParts.fullMessage.length,
-                announcementId: announcement.id
-              });
-
-              const phoneNumbers = validAlumni.map(alum => alum.formattedPhone);
-              const isSandbox = SMSService.isInSandboxMode();
-              const recipientsToUse = isSandbox ? phoneNumbers.slice(0, 3) : phoneNumbers;
-
-              if (recipientsToUse.length > 0) {
-                console.log('🚀 Initiating SMS processing for alumni announcement:', {
-                  announcementId: announcement.id,
-                  recipientsCount: recipientsToUse.length,
-                  messagePreview: messageParts.fullMessage.substring(0, 50) + '...',
-                  estimatedParts: messageParts.estimatedParts,
-                  timestamp: new Date().toISOString(),
-                });
-
+              if (recipientsToUseAlumni.length > 0) {
                 try {
-                  // Send full message - Telnyx handles concatenation automatically
-                  const result = await SMSService.sendBulkSMS(recipientsToUse, messageParts.fullMessage);
+                  let totalSuccessAlumni = 0;
+                  let totalFailedAlumni = 0;
+                  if (firstTimeAlumni.length > 0) {
+                    const resultFull = await SMSService.sendBulkSMS(
+                      firstTimeAlumni.map(a => a.formattedPhone),
+                      messagePartsFullAlumni.fullMessage
+                    );
+                    totalSuccessAlumni += resultFull.success;
+                    totalFailedAlumni += resultFull.failed;
+                  }
+                  if (returningAlumni.length > 0) {
+                    const resultNone = await SMSService.sendBulkSMS(
+                      returningAlumni.map(a => a.formattedPhone),
+                      messagePartsNoneAlumni.fullMessage
+                    );
+                    totalSuccessAlumni += resultNone.success;
+                    totalFailedAlumni += resultNone.failed;
+                  }
+
+                  await SMSNotificationService.recordAnnouncementSmsRecipients(
+                    recipientsToUseAlumni.map(a => ({
+                      userId: a.id,
+                      chapterId: a.chapter_id,
+                      phoneNumber: a.formattedPhone,
+                    })),
+                    messagePartsFullAlumni.fullMessage
+                  );
 
                   console.log('✅ Alumni announcement SMS sent:', {
-                    total: recipientsToUse.length,
-                    success: result.success,
-                    failed: result.failed,
+                    total: recipientsToUseAlumni.length,
+                    firstTime: firstTimeAlumni.length,
+                    returning: returningAlumni.length,
+                    success: totalSuccessAlumni,
+                    failed: totalFailedAlumni,
                     announcementId: announcement.id,
-                    parts: messageParts.estimatedParts
                   });
 
-                  // Log alumni SMS activity; schema mirrors member logging
                   try {
                     const supabaseLog = createServerSupabaseClient();
                     await supabaseLog.from('sms_logs').insert({
                       chapter_id: profile.chapter_id,
                       sent_by: user.id,
-                      message: messageParts.fullMessage,
-                      recipients_count: recipientsToUse.length,
-                      success_count: result.success,
-                      failed_count: result.failed,
+                      message: messagePartsFullAlumni.fullMessage,
+                      recipients_count: recipientsToUseAlumni.length,
+                      success_count: totalSuccessAlumni,
+                      failed_count: totalFailedAlumni,
                       test_mode: false,
                     });
                   } catch (logError) {
@@ -563,7 +596,6 @@ export async function POST(request: NextRequest) {
                     announcementId: announcement.id,
                     stack: error instanceof Error ? error.stack : undefined
                   });
-                  // Don't throw - SMS failure shouldn't block announcement creation
                 }
               }
             }
