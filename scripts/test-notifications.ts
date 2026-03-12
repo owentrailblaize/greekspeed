@@ -18,6 +18,7 @@
 
 import path from 'path';
 import dotenv from 'dotenv';
+import { NOTIFICATION_TYPES, type NotificationType } from '../lib/services/notificationTypes';
 
 // Load .env.local before importing the runner (so SendGrid/Telnyx env is set)
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
@@ -64,10 +65,10 @@ async function main() {
   let phone = opts.phone;
 
   const runner = await import('../lib/services/notificationTestRunner');
-  const validTypes = runner.NOTIFICATION_TYPES as readonly string[];
+  const validTypes = NOTIFICATION_TYPES as readonly string[];
 
   const typesToRun: string[] =
-    type === 'all' ? [...runner.NOTIFICATION_TYPES] : [type];
+  type === 'all' ? [...NOTIFICATION_TYPES] : [type];
   for (const t of typesToRun) {
     if (!validTypes.includes(t)) {
       console.error('Unknown type: %s. Valid types: %s', t, validTypes.join(', '));
@@ -98,7 +99,7 @@ async function main() {
 
   for (const t of typesToRun) {
     const result = await runner.runNotificationTest({
-      type: t as (typeof runner.NOTIFICATION_TYPES)[number],
+      type: t as NotificationType,
       toEmail: email,
       toPhone: phone,
       sendEmail,
