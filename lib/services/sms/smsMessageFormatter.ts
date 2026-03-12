@@ -18,7 +18,7 @@ export interface SMSMessageParts {
   willBeConcatenated: boolean;
 }
 
-const DEFAULT_SENDER_PREFIX = 'TB: ';
+const DEFAULT_SENDER_PREFIX = 'Trailblaize: ';
 
 const COMPLIANCE = {
   full: ' Reply STOP to opt out. HELP for help. Msg & data rates may apply.',
@@ -137,7 +137,7 @@ export class SMSMessageFormatter {
     const prefix = options.senderPrefix ?? DEFAULT_SENDER_PREFIX;
     const complianceSuffix = getComplianceSuffix(options.complianceLevel ?? 'short');
     const emojiPart = options.emoji ? `${options.emoji} ` : '';
-    const body = `${emojiPart}${headline}\n${detail}\n${ctaText} -> ${ctaUrl}`;
+    const body = `${emojiPart}${headline}\n${detail}\n${ctaText} ➲ ${ctaUrl}`;
     const content = `${prefix}${body}${complianceSuffix}`;
 
     const encoding = this.detectEncoding(content);
