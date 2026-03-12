@@ -1,18 +1,33 @@
 /**
  * SMS Message Formatter
- * 
+ *
  * Handles proper formatting of SMS messages with:
  * - Encoding detection (GSM-7 vs UCS-2/Unicode)
  * - Multi-part message calculation
- * - Compliance text preservation
+ * - Compliance text preservation (Option A: full / short / none)
  * - Automatic concatenation support (Telnyx handles this)
+ * - Short 3-line structure: headline, detail, CTA with optional emoji
  */
+
+export type ComplianceLevel = 'full' | 'short' | 'none';
 
 export interface SMSMessageParts {
   fullMessage: string;
   estimatedParts: number;
   encoding: 'GSM-7' | 'UCS-2';
   willBeConcatenated: boolean;
+}
+
+const DEFAULT_SENDER_PREFIX = 'TB: ';
+
+const COMPLIANCE = {
+  full: ' Reply STOP to opt out. HELP for help. Msg & data rates may apply.',
+  short: ' Reply STOP to opt out.',
+  none: '',
+} as const;
+
+function getComplianceSuffix(level: ComplianceLevel): string {
+  return COMPLIANCE[level];
 }
 
 export class SMSMessageFormatter {
@@ -55,11 +70,8 @@ export class SMSMessageFormatter {
   }
   
   /**
-   * Formats a compliant SMS message ensuring compliance text is never truncated
-   * 
-   * @param content - The main message content
-   * @param options - Formatting options
-   * @returns Formatted message with metadata
+   * Formats a compliant SMS message ensuring compliance text is never truncated.
+   * Supports Option A compliance: full (marketing), short (transactional), or none.
    */
   static formatCompliantMessage(
     content: string,
@@ -67,63 +79,81 @@ export class SMSMessageFormatter {
       senderPrefix?: string;
       optOutText?: string;
       complianceText?: string;
-      maxParts?: number; // Optional: limit to N parts (default: no limit, let Telnyx handle)
+      complianceLevel?: ComplianceLevel;
+      maxParts?: number;
     } = {}
   ): SMSMessageParts {
-    const {
-      senderPrefix = '[Trailblaize]',
-      optOutText = ' Reply STOP to opt out.',
-      complianceText = ' Msg & data rates may apply',
-      maxParts
-    } = options;
-    
-    // Build the full message with compliance text
-    const fullMessage = `${senderPrefix} ${content}${optOutText}${complianceText}`;
-    
-    // Detect encoding
+    const { senderPrefix = DEFAULT_SENDER_PREFIX, maxParts } = options;
+    const complianceSuffix =
+      options.optOutText !== undefined && options.complianceText !== undefined
+        ? options.optOutText + options.complianceText
+        : getComplianceSuffix(options.complianceLevel ?? 'short');
+
+    const fullMessage = `${senderPrefix}${content}${complianceSuffix}`;
     const encoding = this.detectEncoding(fullMessage);
-    
-    // Calculate parts
     let estimatedParts = this.calculateParts(fullMessage);
-    
-    // If maxParts is specified and we exceed it, truncate content (but NEVER compliance text)
+
     if (maxParts && estimatedParts > maxParts) {
       const singleLimit = encoding === 'GSM-7' ? this.GSM_7_SINGLE : this.UCS_2_SINGLE;
       const multiLimit = encoding === 'GSM-7' ? this.GSM_7_MULTI : this.UCS_2_MULTI;
-      
-      // Calculate max content length for N parts
-      // Total available = (first part) + (remaining parts * multi limit) - fixed text
       const maxTotalLength = singleLimit + (maxParts - 1) * multiLimit;
-      const fixedTextLength = senderPrefix.length + 1 + optOutText.length + complianceText.length;
+      const fixedTextLength = senderPrefix.length + complianceSuffix.length;
       const maxContentLength = maxTotalLength - fixedTextLength;
-      
-      // Truncate ONLY the content, preserve compliance text
       const truncatedContent = content.substring(0, Math.max(0, maxContentLength));
-      const truncatedMessage = `${senderPrefix} ${truncatedContent}${optOutText}${complianceText}`;
-      
+      const truncatedMessage = `${senderPrefix}${truncatedContent}${complianceSuffix}`;
+
       return {
         fullMessage: truncatedMessage,
         estimatedParts: this.calculateParts(truncatedMessage),
         encoding,
-        willBeConcatenated: this.calculateParts(truncatedMessage) > 1
+        willBeConcatenated: this.calculateParts(truncatedMessage) > 1,
       };
     }
-    
+
     return {
       fullMessage,
       estimatedParts,
       encoding,
-      willBeConcatenated: estimatedParts > 1
+      willBeConcatenated: estimatedParts > 1,
+    };
+  }
+
+  /**
+   * Builds a short 3-line SMS: [emoji] headline / detail / CTA -> link.
+   * Target ~120 chars for body; compliance appended per level.
+   */
+  static formatShortMessage(
+    headline: string,
+    detail: string,
+    ctaText: string,
+    ctaUrl: string,
+    options: {
+      emoji?: string;
+      senderPrefix?: string;
+      complianceLevel?: ComplianceLevel;
+      maxParts?: number;
+    } = {}
+  ): SMSMessageParts {
+    const prefix = options.senderPrefix ?? DEFAULT_SENDER_PREFIX;
+    const complianceSuffix = getComplianceSuffix(options.complianceLevel ?? 'short');
+    const emojiPart = options.emoji ? `${options.emoji} ` : '';
+    const body = `${emojiPart}${headline}\n${detail}\n${ctaText} -> ${ctaUrl}`;
+    const content = `${prefix}${body}${complianceSuffix}`;
+
+    const encoding = this.detectEncoding(content);
+    const estimatedParts = this.calculateParts(content);
+
+    return {
+      fullMessage: content,
+      estimatedParts,
+      encoding,
+      willBeConcatenated: estimatedParts > 1,
     };
   }
   
   /**
-   * Formats announcement SMS with title and content
-   * 
-   * @param title - Announcement title
-   * @param content - Announcement content
-   * @param options - Formatting options
-   * @returns Formatted message with metadata
+   * Formats announcement SMS with title and content. Use complianceLevel 'full' for
+   * marketing/broadcast announcements (Option A).
    */
   static formatAnnouncementMessage(
     title: string,
@@ -131,57 +161,49 @@ export class SMSMessageFormatter {
     options: {
       optOutText?: string;
       complianceText?: string;
+      complianceLevel?: ComplianceLevel;
+      senderPrefix?: string;
       maxParts?: number;
     } = {}
   ): SMSMessageParts {
-    const {
-      optOutText = ' Reply STOP to opt out.',
-      complianceText = ' Msg & data rates may apply',
-      maxParts
-    } = options;
-    
-    const senderPrefix = '[Trailblaize]';
-    const titlePrefix = `${senderPrefix} ${title}: `;
-    
-    // Build full message
-    const fullMessage = `${titlePrefix}${content}${optOutText}${complianceText}`;
-    
+    const prefix = options.senderPrefix ?? DEFAULT_SENDER_PREFIX;
+    const complianceSuffix =
+      options.optOutText !== undefined && options.complianceText !== undefined
+        ? options.optOutText + options.complianceText
+        : getComplianceSuffix(options.complianceLevel ?? 'full');
+    const titlePrefix = `${prefix}${title}: `;
+
+    const fullMessage = `${titlePrefix}${content}${complianceSuffix}`;
     const encoding = this.detectEncoding(fullMessage);
     let estimatedParts = this.calculateParts(fullMessage);
-    
-    // If we need to truncate due to maxParts limit
-    if (maxParts && estimatedParts > maxParts) {
+
+    if (options.maxParts && estimatedParts > options.maxParts) {
       const singleLimit = encoding === 'GSM-7' ? this.GSM_7_SINGLE : this.UCS_2_SINGLE;
       const multiLimit = encoding === 'GSM-7' ? this.GSM_7_MULTI : this.UCS_2_MULTI;
-      
-      // Calculate available space for content
-      // Total available = (first part) + (remaining parts * multi limit) - fixed text
-      const maxTotalLength = singleLimit + (maxParts - 1) * multiLimit;
-      const fixedTextLength = titlePrefix.length + optOutText.length + complianceText.length;
+      const maxTotalLength = singleLimit + (options.maxParts - 1) * multiLimit;
+      const fixedTextLength = titlePrefix.length + complianceSuffix.length;
       const maxContentLength = maxTotalLength - fixedTextLength;
-      
-      // Truncate ONLY content, preserve title prefix and compliance text
       const truncatedContent = content.substring(0, Math.max(0, maxContentLength));
-      const truncatedMessage = `${titlePrefix}${truncatedContent}${optOutText}${complianceText}`;
-      
+      const truncatedMessage = `${titlePrefix}${truncatedContent}${complianceSuffix}`;
+
       return {
         fullMessage: truncatedMessage,
         estimatedParts: this.calculateParts(truncatedMessage),
         encoding,
-        willBeConcatenated: this.calculateParts(truncatedMessage) > 1
+        willBeConcatenated: this.calculateParts(truncatedMessage) > 1,
       };
     }
-    
+
     return {
       fullMessage,
       estimatedParts,
       encoding,
-      willBeConcatenated: estimatedParts > 1
+      willBeConcatenated: estimatedParts > 1,
     };
   }
   
   /**
-   * Formats connection notification messages
+   * Formats connection notification messages. Use complianceLevel 'short' for transactional.
    */
   static formatConnectionMessage(
     prefix: string,
@@ -189,51 +211,44 @@ export class SMSMessageFormatter {
     options: {
       optOutText?: string;
       complianceText?: string;
+      complianceLevel?: ComplianceLevel;
+      senderPrefix?: string;
       maxParts?: number;
     } = {}
   ): SMSMessageParts {
-    const {
-      optOutText = ' Reply STOP to unsubscribe or HELP for help.',
-      complianceText = ' Msg & data rates may apply',
-      maxParts
-    } = options;
-    
-    const senderPrefix = '[Trailblaize]';
-    const fullPrefix = `${senderPrefix} ${prefix}`;
-    
-    // Build full message
-    const fullMessage = `${fullPrefix}${content}${optOutText}${complianceText}`;
-    
+    const senderPrefix = options.senderPrefix ?? DEFAULT_SENDER_PREFIX;
+    const complianceSuffix =
+      options.optOutText !== undefined && options.complianceText !== undefined
+        ? options.optOutText + options.complianceText
+        : getComplianceSuffix(options.complianceLevel ?? 'short');
+    const fullPrefix = `${senderPrefix}${prefix}`;
+
+    const fullMessage = `${fullPrefix}${content}${complianceSuffix}`;
     const encoding = this.detectEncoding(fullMessage);
     let estimatedParts = this.calculateParts(fullMessage);
-    
-    // If we need to truncate due to maxParts limit
-    if (maxParts && estimatedParts > maxParts) {
+
+    if (options.maxParts && estimatedParts > options.maxParts) {
       const singleLimit = encoding === 'GSM-7' ? this.GSM_7_SINGLE : this.UCS_2_SINGLE;
       const multiLimit = encoding === 'GSM-7' ? this.GSM_7_MULTI : this.UCS_2_MULTI;
-      
-      // Calculate available space for content
-      const maxTotalLength = singleLimit + (maxParts - 1) * multiLimit;
-      const fixedTextLength = fullPrefix.length + optOutText.length + complianceText.length;
+      const maxTotalLength = singleLimit + (options.maxParts - 1) * multiLimit;
+      const fixedTextLength = fullPrefix.length + complianceSuffix.length;
       const maxContentLength = maxTotalLength - fixedTextLength;
-      
-      // Truncate ONLY content, preserve prefix and compliance text
       const truncatedContent = content.substring(0, Math.max(0, maxContentLength));
-      const truncatedMessage = `${fullPrefix}${truncatedContent}${optOutText}${complianceText}`;
-      
+      const truncatedMessage = `${fullPrefix}${truncatedContent}${complianceSuffix}`;
+
       return {
         fullMessage: truncatedMessage,
         estimatedParts: this.calculateParts(truncatedMessage),
         encoding,
-        willBeConcatenated: this.calculateParts(truncatedMessage) > 1
+        willBeConcatenated: this.calculateParts(truncatedMessage) > 1,
       };
     }
-    
+
     return {
       fullMessage,
       estimatedParts,
       encoding,
-      willBeConcatenated: estimatedParts > 1
+      willBeConcatenated: estimatedParts > 1,
     };
   }
 }

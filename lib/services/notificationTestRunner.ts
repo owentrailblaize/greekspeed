@@ -64,54 +64,65 @@ export interface SendResult {
   smsError?: string;
 }
 
-function buildSmsBodyForType(type: NotificationType): string {
-  const optOut = ' Reply STOP to opt out.';
-  const compliance = ' Msg & data rates may apply';
-  const optOutHelp = ' Reply STOP to unsubscribe or HELP for help.';
+const TEST_BASE_URL = 'https://trailblaize.net';
 
+function buildSmsBodyForType(type: NotificationType): string {
   switch (type) {
     case 'chapter_announcement': {
-      const parts = SMSMessageFormatter.formatAnnouncementMessage(
-        SAMPLE.title,
-        SAMPLE.content,
-        { optOutText: optOut, complianceText: compliance }
+      const headline = SAMPLE.title.slice(0, 40);
+      const detail = SAMPLE.content.slice(0, 60).replace(/\s+/g, ' ').trim();
+      const parts = SMSMessageFormatter.formatShortMessage(
+        headline,
+        detail,
+        'Read more',
+        `${TEST_BASE_URL}/dashboard/announcements`,
+        { complianceLevel: 'full' }
       );
       return parts.fullMessage;
     }
     case 'new_event': {
-      const content = `Event reminder: ${SAMPLE.eventTitle} on ${SAMPLE.eventDate}.`;
-      const parts = SMSMessageFormatter.formatCompliantMessage(content, {
-        senderPrefix: '[Trailblaize]',
-        optOutText: optOutHelp,
-        complianceText: compliance,
-      });
+      const headline = SAMPLE.eventTitle.slice(0, 50);
+      const detail = SAMPLE.eventDate.slice(0, 40);
+      const parts = SMSMessageFormatter.formatShortMessage(
+        headline,
+        detail,
+        'RSVP',
+        `${TEST_BASE_URL}/dashboard`,
+        { complianceLevel: 'short' }
+      );
       return parts.fullMessage;
     }
     case 'connection_request': {
-      const connectionContent = `${SAMPLE.actorFirstName} wants to connect with you on Trailblaize. Check your email for details.`;
-      const parts = SMSMessageFormatter.formatConnectionMessage(
-        'Connection request: ',
-        connectionContent,
-        { optOutText: optOutHelp, complianceText: compliance }
+      const headline = `${SAMPLE.actorFirstName} wants to connect`;
+      const parts = SMSMessageFormatter.formatShortMessage(
+        headline,
+        'View profile to accept',
+        'View',
+        `${TEST_BASE_URL}/dashboard/notifications`,
+        { complianceLevel: 'short' }
       );
       return parts.fullMessage;
     }
     case 'connection_accepted': {
-      const connectionContent = `${SAMPLE.actorFirstName} accepted your connection request on Trailblaize! Check your email for details.`;
-      const parts = SMSMessageFormatter.formatConnectionMessage(
-        'Connection update: ',
-        connectionContent,
-        { optOutText: optOutHelp, complianceText: compliance }
+      const headline = `${SAMPLE.actorFirstName} accepted your request`;
+      const parts = SMSMessageFormatter.formatShortMessage(
+        headline,
+        'Say hello',
+        'Open',
+        `${TEST_BASE_URL}/dashboard/notifications`,
+        { complianceLevel: 'short' }
       );
       return parts.fullMessage;
     }
     case 'new_message': {
-      const messageContent = `Message notification: New message from ${SAMPLE.actorFirstName}.`;
-      const parts = SMSMessageFormatter.formatCompliantMessage(messageContent, {
-        senderPrefix: '[Trailblaize]',
-        optOutText: ' Reply STOP to opt-out.',
-        complianceText: compliance,
-      });
+      const headline = `New message from ${SAMPLE.actorFirstName}`;
+      const parts = SMSMessageFormatter.formatShortMessage(
+        headline,
+        'Tap to reply',
+        'Open',
+        `${TEST_BASE_URL}/dashboard/messages`,
+        { complianceLevel: 'short' }
+      );
       return parts.fullMessage;
     }
     default:
@@ -393,15 +404,19 @@ export async function runNotificationTest(options: NotificationTestOptions): Pro
         let smsSent = false;
         switch (type) {
           case 'chapter_announcement': {
-          const parts = SMSMessageFormatter.formatAnnouncementMessage(
-            SAMPLE.title,
-            SAMPLE.content,
-            { optOutText: ' Reply STOP to opt out.', complianceText: ' Msg & data rates may apply' }
-          );
-          const sendResult = await SMSService.sendSMS({ to: formattedPhone, body: parts.fullMessage });
-          smsSent = sendResult.success;
-          break;
-        }
+            const headline = SAMPLE.title.slice(0, 40);
+            const detail = SAMPLE.content.slice(0, 60).replace(/\s+/g, ' ').trim();
+            const parts = SMSMessageFormatter.formatShortMessage(
+              headline,
+              detail,
+              'Read more',
+              `${TEST_BASE_URL}/dashboard/announcements`,
+              { complianceLevel: 'full' }
+            );
+            const sendResult = await SMSService.sendSMS({ to: formattedPhone, body: parts.fullMessage });
+            smsSent = sendResult.success;
+            break;
+          }
           case 'new_event':
             smsSent = await SMSNotificationService.sendEventNotification(
               formattedPhone,

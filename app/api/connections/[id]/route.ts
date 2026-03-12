@@ -138,13 +138,15 @@ export async function PATCH(
             // Import SMSNotificationService
             const { SMSNotificationService } = await import('@/lib/services/sms/smsNotificationService');
 
-            // Send SMS notification (don't await - fire and forget)
+            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trailblaize.net';
+            const connectionLink = `${baseUrl}/dashboard/notifications?connection=${id}`;
             SMSNotificationService.sendConnectionAcceptedNotification(
               formattedPhone,
               requesterProfile.first_name || 'Member',
               accepterName,
               requesterProfile.id,
-              requesterProfile.chapter_id || ''
+              requesterProfile.chapter_id || '',
+              { link: connectionLink }
             )
               .then(success => {
                 console.log('✅ Connection accepted SMS notification result:', {

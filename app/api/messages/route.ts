@@ -454,14 +454,16 @@ export async function POST(request: NextRequest) {
               // Import SMSNotificationService
               const { SMSNotificationService } = await import('@/lib/services/sms/smsNotificationService');
 
-              // Send SMS notification (don't await - fire and forget)
+              const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trailblaize.net';
+              const messageLink = `${baseUrl}/dashboard/messages?connection=${connectionId}`;
               SMSNotificationService.sendMessageNotification(
                 formattedPhone,
                 recipientProfile.first_name || 'Member',
                 senderName,
                 messagePreview,
                 recipientProfile.id,
-                recipientProfile.chapter_id || ''
+                recipientProfile.chapter_id || '',
+                { link: messageLink }
               )
                 .then(success => {
                   console.log('✅ Message SMS notification result:', {

@@ -382,19 +382,17 @@ export async function POST(request: NextRequest) {
               .filter(member => SMSService.isValidPhoneNumber(member.phone!));
 
             if (validSMSMembers.length > 0) {
-              // Format message using SMSMessageFormatter - ensures compliance text is never truncated
-              // Telnyx will automatically handle concatenation for messages longer than 160 chars
-              const optOutText = ' Reply STOP to opt out.';
-              const complianceText = ' Msg & data rates may apply';
+              const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trailblaize.net';
+              const link = `${baseUrl}/dashboard/announcements`;
+              const headline = announcement.title.slice(0, 40);
+              const detail = announcement.content.slice(0, 60).replace(/\s+/g, ' ').trim();
 
-              const messageParts = SMSMessageFormatter.formatAnnouncementMessage(
-                announcement.title,
-                announcement.content,
-                {
-                  optOutText,
-                  complianceText,
-                  // No maxParts limit - let Telnyx handle full message concatenation
-                }
+              const messageParts = SMSMessageFormatter.formatShortMessage(
+                headline,
+                detail,
+                'Read more',
+                link,
+                { complianceLevel: 'full' }
               );
 
               // Log message info for monitoring
@@ -497,19 +495,17 @@ export async function POST(request: NextRequest) {
               .filter(alum => SMSService.isValidPhoneNumber(alum.phone!));
 
             if (validAlumni.length > 0) {
-              // Format message using SMSMessageFormatter - ensures compliance text is never truncated
-              // Telnyx will automatically handle concatenation for messages longer than 160 chars
-              const optOutText = ' Reply STOP to opt out.';
-              const complianceText = ' Msg & data rates may apply';
+              const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trailblaize.net';
+              const link = `${baseUrl}/dashboard/announcements`;
+              const headline = announcement.title.slice(0, 40);
+              const detail = announcement.content.slice(0, 60).replace(/\s+/g, ' ').trim();
 
-              const messageParts = SMSMessageFormatter.formatAnnouncementMessage(
-                announcement.title,
-                announcement.content,
-                {
-                  optOutText,
-                  complianceText,
-                  // No maxParts limit - let Telnyx handle full message concatenation
-                }
+              const messageParts = SMSMessageFormatter.formatShortMessage(
+                headline,
+                detail,
+                'Read more',
+                link,
+                { complianceLevel: 'full' }
               );
 
               // Log message info for monitoring
