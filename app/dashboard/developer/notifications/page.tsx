@@ -17,12 +17,14 @@ import {
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { PUSH_EVENT_TYPES } from '@/lib/services/notificationPushPayload';
-import type { NotificationType } from '@/lib/services/notificationTestRunner';
-import { Bell, Loader2, ArrowLeft } from 'lucide-react';
+import { EMAIL_EVENT_TYPES, type NotificationType } from '@/lib/services/notificationTypes';
+import { Bell, Loader2, ArrowLeft, Mail } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { cn } from '@/lib/utils';
 
-const CHANNEL = 'Push';
+const CHANNELS = ['Push', 'Email'] as const;
+type Channel = (typeof CHANNELS)[number];
+
 const EVENT_TYPE_LABELS: Record<string, string> = {
   chapter_announcement: 'Chapter Announcement',
   new_event: 'New Event',
@@ -35,6 +37,8 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
   system_alert: 'System Alert',
   welcome: 'Welcome',
   generic_notification: 'Generic Notification',
+  password_reset_template: 'Password Reset',
+  password_change: 'Password Change',
 };
 
 export default function DeveloperNotificationsPage() {
@@ -48,9 +52,10 @@ function DeveloperNotificationsPageContent() {
   const { profile, isDeveloper } = useProfile();
   const { session } = useAuth();
 
-  const [channel] = useState<string>(CHANNEL);
+  const [channel, setChannel] = useState<Channel>('Push');
   const [eventType, setEventType] = useState<string>('');
   const [userId, setUserId] = useState('');
+  const [toEmail, setToEmail] = useState('');
   const [customTitle, setCustomTitle] = useState('');
   const [customBody, setCustomBody] = useState('');
   const [sending, setSending] = useState(false);
@@ -62,6 +67,11 @@ function DeveloperNotificationsPageContent() {
       router.push('/dashboard');
     }
   }, [profile, isDeveloper, router]);
+
+  useEffect(() => {
+    setEventType('');
+    setLastResult(null);
+  }, [channel]);
 
   const showOptionalContext =
     eventType === 'system_alert' || eventType === 'generic_notification';
@@ -122,6 +132,51 @@ function DeveloperNotificationsPageContent() {
     }
   };
 
+  const handleSendTestEmail = async () => {
+    if (!eventType || !toEmail.trim()) {
+      toast.error('Select an event type and enter an email address.');
+      return;
+    }
+    if (!session?.access_token) {
+      toast.error('Session expired. Please log in again.');
+      return;
+    }
+
+    setSending(true);
+    setLastResult(null);
+
+    try {
+      const res = await fetch('/api/developer/notifications/test-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          eventType: eventType as NotificationType,
+          toEmail: toEmail.trim(),
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success) {
+        setLastResult({ success: true, message: data.message ?? 'Sent' });
+        toast.success(data.message ?? 'Test email sent successfully.');
+      } else {
+        const err = data.error ?? res.statusText ?? 'Failed to send email';
+        setLastResult({ success: false, error: err });
+        toast.error(err);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Request failed';
+      setLastResult({ success: false, error: message });
+      toast.error(message);
+    } finally {
+      setSending(false);
+    }
+  };
+
   if (profile && !isDeveloper) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -152,7 +207,7 @@ function DeveloperNotificationsPageContent() {
               <h1 className="text-3xl font-bold text-gray-900">Test Notifications</h1>
             </div>
             <p className="text-gray-600 mt-1">
-              Send test push notifications by event type to a user. Phase 1: Push only.
+              Send test push or email notifications by event type. Choose channel, then event type and recipient.
             </p>
           </div>
         </div>
@@ -161,23 +216,37 @@ function DeveloperNotificationsPageContent() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Bell className="h-5 w-5" />
-                <span>Send test push</span>
+                {channel === 'Push' ? (
+                  <Bell className="h-5 w-5" />
+                ) : (
+                  <Mail className="h-5 w-5" />
+                )}
+                <span>
+                  {channel === 'Push' ? 'Send test push' : 'Send test email'}
+                </span>
               </CardTitle>
               <p className="text-sm text-gray-500 mt-1">
-                Choose channel, event type, and recipient. The push uses sample context unless you override title/body for system_alert or generic_notification.
+                {channel === 'Push'
+                  ? 'Choose event type and user ID. Push uses sample context unless you override title/body for system_alert or generic_notification.'
+                  : 'Choose event type and recipient email. Uses the same sample data as the CLI test script.'}
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="channel">Channel</Label>
-                <Input
-                  id="channel"
+                <Label>Channel</Label>
+                <Select
                   value={channel}
-                  readOnly
-                  className="mt-1 bg-gray-50"
-                />
-                <p className="text-xs text-gray-500 mt-1">Email and SMS will be added in a later phase.</p>
+                  onValueChange={(v) => setChannel(v as Channel)}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Push">Push</SelectItem>
+                    <SelectItem value="Email">Email</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 mt-1">SMS will be added in a later phase.</p>
               </div>
 
               <div>
@@ -185,70 +254,111 @@ function DeveloperNotificationsPageContent() {
                 <Select
                   value={eventType}
                   onValueChange={setEventType}
-                  placeholder="Select event type"
+                  placeholder={
+                    channel === 'Push'
+                      ? 'Select push event type'
+                      : 'Select email event type'
+                  }
                 >
                   <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select event type" />
+                    <SelectValue
+                      placeholder={
+                        channel === 'Push'
+                          ? 'Select push event type'
+                          : 'Select email event type'
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    {PUSH_EVENT_TYPES.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {EVENT_TYPE_LABELS[type] ?? type}
-                      </SelectItem>
-                    ))}
+                    {(channel === 'Push' ? PUSH_EVENT_TYPES : EMAIL_EVENT_TYPES).map(
+                      (type) => (
+                        <SelectItem key={type} value={type}>
+                          {EVENT_TYPE_LABELS[type] ?? type}
+                        </SelectItem>
+                      )
+                    )}
                   </SelectContent>
                 </Select>
               </div>
 
-              <div>
-                <Label htmlFor="userId">User ID (recipient)</Label>
-                <Input
-                  id="userId"
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
-                  placeholder="App user UUID (e.g. from profiles)"
-                  className="mt-1 font-mono text-sm"
-                />
-                <p className="text-xs text-gray-500 mt-1">The user must have an active push subscription to receive the notification.</p>
-              </div>
-
-              {showOptionalContext && (
+              {channel === 'Push' && (
                 <>
                   <div>
-                    <Label htmlFor="customTitle">Custom title (optional)</Label>
+                    <Label htmlFor="userId">User ID (recipient)</Label>
                     <Input
-                      id="customTitle"
-                      value={customTitle}
-                      onChange={(e) => setCustomTitle(e.target.value)}
-                      placeholder="Override notification title"
-                      className="mt-1"
+                      id="userId"
+                      value={userId}
+                      onChange={(e) => setUserId(e.target.value)}
+                      placeholder="App user UUID (e.g. from profiles)"
+                      className="mt-1 font-mono text-sm"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      The user must have an active push subscription to receive the notification.
+                    </p>
                   </div>
-                  <div>
-                    <Label htmlFor="customBody">Custom body (optional)</Label>
-                    <Input
-                      id="customBody"
-                      value={customBody}
-                      onChange={(e) => setCustomBody(e.target.value)}
-                      placeholder="Override notification body"
-                      className="mt-1"
-                    />
-                  </div>
+
+                  {showOptionalContext && (
+                    <>
+                      <div>
+                        <Label htmlFor="customTitle">Custom title (optional)</Label>
+                        <Input
+                          id="customTitle"
+                          value={customTitle}
+                          onChange={(e) => setCustomTitle(e.target.value)}
+                          placeholder="Override notification title"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="customBody">Custom body (optional)</Label>
+                        <Input
+                          id="customBody"
+                          value={customBody}
+                          onChange={(e) => setCustomBody(e.target.value)}
+                          placeholder="Override notification body"
+                          className="mt-1"
+                        />
+                      </div>
+                    </>
+                  )}
                 </>
+              )}
+
+              {channel === 'Email' && (
+                <div>
+                  <Label htmlFor="toEmail">Email address (recipient)</Label>
+                  <Input
+                    id="toEmail"
+                    type="email"
+                    value={toEmail}
+                    onChange={(e) => setToEmail(e.target.value)}
+                    placeholder="e.g. test@example.com"
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Test email will be sent to this address using sample template data.
+                  </p>
+                </div>
               )}
 
               <div className="flex items-center gap-3 pt-2">
                 <Button
-                  onClick={handleSendTestPush}
-                  disabled={sending || !eventType || !userId.trim()}
+                  onClick={channel === 'Push' ? handleSendTestPush : handleSendTestEmail}
+                  disabled={
+                    sending ||
+                    !eventType ||
+                    (channel === 'Push' ? !userId.trim() : !toEmail.trim())
+                  }
                 >
                   {sending ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       Sending...
                     </>
-                  ) : (
+                  ) : channel === 'Push' ? (
                     'Send test push'
+                  ) : (
+                    'Send test email'
                   )}
                 </Button>
               </div>

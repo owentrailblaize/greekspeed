@@ -7,24 +7,7 @@ import { EmailService } from '@/lib/services/emailService';
 import { SMSNotificationService } from '@/lib/services/sms/smsNotificationService';
 import { SMSService } from '@/lib/services/sms/smsServiceTelnyx';
 import { SMSMessageFormatter } from '@/lib/services/sms/smsMessageFormatter';
-
-export const NOTIFICATION_TYPES = [
-  'chapter_announcement',
-  'new_event',
-  'event_reminder',
-  'connection_request',
-  'connection_accepted',
-  'new_message',
-  'password_reset_template',
-  'password_change',
-  'welcome',
-  'generic_notification',
-  'post_comment',
-  'comment_reply',
-  'system_alert',
-] as const;
-
-export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
+import { NOTIFICATION_TYPES, type NotificationType, EMAIL_EVENT_TYPES } from '@/lib/services/notificationTypes';
 
 const TEST_USER_ID = 'test-user-id';
 const TEST_CHAPTER_ID = 'test-chapter-id';

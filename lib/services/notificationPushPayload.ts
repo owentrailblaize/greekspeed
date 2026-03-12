@@ -3,7 +3,7 @@
  * Single source for push content and deep links so every channel uses the same structure.
  */
 
-import type { NotificationType } from '@/lib/services/notificationTestRunner';
+import type { NotificationType } from '@/lib/services/notificationTypes';
 import type { OneSignalPushPayload } from '@/lib/services/oneSignalPushService';
 import { getEmailBaseUrl } from '@/lib/utils/urlUtils';
 
