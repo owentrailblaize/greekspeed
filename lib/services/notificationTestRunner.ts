@@ -19,6 +19,9 @@ export const NOTIFICATION_TYPES = [
   'password_change',
   'welcome',
   'generic_notification',
+  'post_comment',
+  'comment_reply',
+  'system_alert',
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { EmailService } from '@/lib/services/emailService';
 import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
+import { buildPushPayload } from '@/lib/services/notificationPushPayload';
+import { sendPushToUser } from '@/lib/services/oneSignalPushService';
 
 // Configure function timeout for Vercel (60 seconds for Pro plan)
 export const maxDuration = 60;
@@ -219,6 +221,19 @@ export async function POST(request: NextRequest) {
             });
         }
       }
+
+      // Push: notify recipient of connection request
+      const pushPayload = buildPushPayload('connection_request', {
+        connectionId: connection.id,
+        actorFirstName: requesterProfile?.first_name ?? undefined,
+        actorFullName: requesterProfile?.last_name
+          ? `${requesterProfile.first_name} ${requesterProfile.last_name}`.trim()
+          : requesterProfile?.first_name ?? undefined,
+        chapterName: recipientProfile?.chapter ?? undefined,
+      });
+      sendPushToUser(recipientId, pushPayload).catch(pushErr => {
+        console.error('Failed to send connection request push:', pushErr);
+      });
     } catch (notificationError) {
       console.error('❌ Error in notification process:', notificationError);
       // Don't fail the connection creation if notifications fail

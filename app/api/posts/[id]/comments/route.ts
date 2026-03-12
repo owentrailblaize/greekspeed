@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { fetchLinkPreviewsServer } from '@/lib/services/linkPreviewService';
 import { LinkPreview } from '@/types/posts';
+import { buildPushPayload } from '@/lib/services/notificationPushPayload';
+import { sendPushToUser } from '@/lib/services/oneSignalPushService';
 
 export async function GET(
   request: NextRequest,
@@ -153,10 +155,10 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
     }
 
-    // Check if post exists and user has access to it
+    // Check if post exists and user has access to it (include author_id for push)
     const { data: post, error: postError } = await supabase
       .from('posts')
-      .select('chapter_id')
+      .select('chapter_id, author_id')
       .eq('id', postId)
       .single();
 
@@ -175,11 +177,11 @@ export async function POST(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    // Validate parent_comment_id if provided
+    let parentCommentAuthorId: string | null = null;
     if (parent_comment_id) {
       const { data: parentComment, error: parentError } = await supabase
         .from('post_comments')
-        .select('id, post_id, parent_comment_id')
+        .select('id, post_id, parent_comment_id, author_id')
         .eq('id', parent_comment_id)
         .single();
 
@@ -204,6 +206,7 @@ export async function POST(
           { status: 400 }
         );
       }
+      parentCommentAuthorId = parentComment.author_id;
     }
 
     // Extract URLs and fetch link previews (don't block comment creation if this fails)
@@ -276,6 +279,22 @@ export async function POST(
     if (createError) {
       console.error('Comment creation error:', createError);
       return NextResponse.json({ error: 'Failed to create comment' }, { status: 500 });
+    }
+
+    const authorProfile = Array.isArray(comment?.author) ? comment?.author?.[0] : comment?.author;
+    const contentPreview = content.trim().slice(0, 80);
+    const eventType = parent_comment_id ? 'comment_reply' : 'post_comment';
+    const notifyUserId = parent_comment_id ? parentCommentAuthorId : post.author_id;
+    if (notifyUserId && notifyUserId !== user.id) {
+      const pushPayload = buildPushPayload(eventType, {
+        postId,
+        commentId: comment?.id,
+        actorFirstName: authorProfile?.first_name ?? undefined,
+        contentPreview: contentPreview || undefined,
+      });
+      sendPushToUser(notifyUserId, pushPayload).catch(pushErr => {
+        console.error('Failed to send comment push:', pushErr);
+      });
     }
 
     return NextResponse.json({ comment });

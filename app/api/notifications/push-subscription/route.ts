@@ -29,9 +29,9 @@ export async function GET(request: NextRequest) {
     const supabase = getSupabase();
     const { data: devices, error } = await supabase
       .from('push_subscriptions')
-      .select('id, onesignal_player_id, device_type, platform, created_at')
+      .select('id, onesignal_player_id, device_type, platform, subscribed_at')
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+      .order('subscribed_at', { ascending: false });
 
     if (error) {
       console.error('Push subscriptions fetch error:', error);
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
         },
         { onConflict: 'user_id,onesignal_player_id' }
       )
-      .select('id, onesignal_player_id, device_type, platform, created_at')
+      .select('id, onesignal_player_id, device_type, platform, subscribed_at')
       .single();
 
     if (error) {

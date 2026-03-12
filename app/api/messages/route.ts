@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { EmailService } from '@/lib/services/emailService';
 import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
+import { buildPushPayload } from '@/lib/services/notificationPushPayload';
+import { sendPushToUser } from '@/lib/services/oneSignalPushService';
 
 // Configure function timeout for Vercel (60 seconds for Pro plan)
 export const maxDuration = 60;
@@ -328,7 +330,30 @@ export async function POST(request: NextRequest) {
       console.error('Message creation error:', error);
       return NextResponse.json({ error: 'Failed to create message' }, { status: 500 });
     }
-    
+
+    // Push: notify the other party in the connection
+    const recipientUserId =
+      connection.requester_id === senderId ? connection.recipient_id : connection.requester_id;
+    const senderProfile = Array.isArray(message?.sender) ? message?.sender?.[0] : message?.sender;
+    const pushPayload = buildPushPayload('new_message', {
+      connectionId,
+      actorFirstName: senderProfile?.first_name ?? undefined,
+      messagePreview: typeof content === 'string' ? content.slice(0, 100) : undefined,
+    });
+
+    console.log('[Push] new_message payload', {
+      recipientUserId,
+      connectionId,
+      payload: pushPayload,
+    });
+
+    try {
+      const pushResult = await sendPushToUser(recipientUserId, pushPayload);
+      console.log('[Push] new_message result', pushResult);
+    } catch (pushErr) {
+      console.error('[Push] Failed to send new message push', pushErr);
+    }
+
     // #region agent log
     fetch('http://127.0.0.1:7242/ingest/a79c9eaa-4005-4d63-b8d0-3434e5dce3f3', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'route.ts:330', message: 'Message created successfully in database', data: { apiRequestId, messageId: message?.id, connectionId, messageType, senderId: message?.sender_id, contentPreview: message?.content?.substring(0, 30) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
     console.log('[DEBUG] POST /api/messages - Message created successfully:', { messageId: message?.id, connectionId, messageType });

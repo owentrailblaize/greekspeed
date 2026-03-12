@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EmailService } from '@/lib/services/emailService';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
+import { buildPushPayload } from '@/lib/services/notificationPushPayload';
+import { sendPushToUser } from '@/lib/services/oneSignalPushService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -142,19 +144,18 @@ export async function POST(request: NextRequest) {
     // Chapter members found
 
     // Filter members who have opted into announcements
-    const recipients = members
-      .filter(member => {
-        if (member.role === 'alumni') {
-          return false; // Exclude alumni
-        }
-        const preferences = member.email_preferences || {};
-        return preferences.announcements !== false; // Default to true if not set
-      })
-      .map(member => ({
-        email: member.email,
-        firstName: member.first_name || 'Member',
-        chapterName: chapter.name
-      }));
+    const recipientMembers = members.filter(member => {
+      if (member.role === 'alumni') {
+        return false; // Exclude alumni
+      }
+      const preferences = member.email_preferences || {};
+      return preferences.announcements !== false; // Default to true if not set
+    });
+    const recipients = recipientMembers.map(member => ({
+      email: member.email,
+      firstName: member.first_name || 'Member',
+      chapterName: chapter.name
+    }));
 
     // Recipients after filtering
 
@@ -178,6 +179,17 @@ export async function POST(request: NextRequest) {
         announcementType: announcement.announcement_type
       }
     );
+
+    // Push: notify each recipient
+    const pushPayload = buildPushPayload('chapter_announcement', {
+      announcementId: announcement.id,
+      announcementTitle: announcement.title,
+    });
+    for (const member of recipientMembers) {
+      sendPushToUser(member.id, pushPayload).catch(pushErr => {
+        console.error('Failed to send announcement push to', member.id, pushErr);
+      });
+    }
 
     // Email sending result received
 

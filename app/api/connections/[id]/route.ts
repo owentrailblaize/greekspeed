@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { EmailService } from '@/lib/services/emailService';
 import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
+import { buildPushPayload } from '@/lib/services/notificationPushPayload';
+import { sendPushToUser } from '@/lib/services/oneSignalPushService';
 
 export async function PATCH(
   request: NextRequest,
@@ -162,6 +164,15 @@ export async function PATCH(
               });
           }
         }
+
+        // Push: notify requester that their request was accepted
+        const pushPayload = buildPushPayload('connection_accepted', {
+          connectionId: id,
+          actorFirstName: recipientProfile?.first_name ?? undefined,
+        });
+        sendPushToUser(requesterProfile.id, pushPayload).catch(pushErr => {
+          console.error('Failed to send connection accepted push:', pushErr);
+        });
       } catch (notificationError) {
         console.error('❌ Error in connection accepted notification process:', {
           connectionId: id,

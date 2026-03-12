@@ -243,13 +243,13 @@ export async function POST(request: NextRequest) {
               })
             );
 
-            const recipients = allowedMembers
-              .filter((m): m is NonNullable<typeof m> => Boolean(m))
-              .map(member => ({
-                email: member.email,
-                firstName: member.first_name || 'Member',
-                chapterName: chapterName
-              }));
+            const allowedList = allowedMembers
+              .filter((m): m is NonNullable<typeof m> => Boolean(m));
+            const recipients = allowedList.map(member => ({
+              email: member.email,
+              firstName: member.first_name || 'Member',
+              chapterName: chapterName
+            }));
 
             if (recipients.length > 0) {
               const { EmailService } = await import('@/lib/services/emailService');
@@ -264,6 +264,18 @@ export async function POST(request: NextRequest) {
                 }
               );
               console.log('Email sent to members:', recipients.length, 'recipients');
+
+              const { buildPushPayload } = await import('@/lib/services/notificationPushPayload');
+              const { sendPushToUser } = await import('@/lib/services/oneSignalPushService');
+              const pushPayload = buildPushPayload('chapter_announcement', {
+                announcementId: announcement.id,
+                announcementTitle: announcement.title,
+              });
+              for (const member of allowedList) {
+                sendPushToUser(member.id, pushPayload).catch(pushErr => {
+                  console.error('Failed to send announcement push to', member.id, pushErr);
+                });
+              }
             }
           }
         } catch (emailError) {

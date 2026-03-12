@@ -117,6 +117,20 @@ export const UserGrowthChart = memo(function UserGrowthChart({ filters }: UserGr
     ];
   }, [data]);
 
+  // Compute y-axis max from data so scale adapts to actual counts (avoids Nivo 'auto' capping at 1000)
+  const yMax = useMemo(() => {
+    if (!data || data.length === 0) return 100;
+    const maxVal = Math.max(
+      ...data.flatMap((d) => [d.total, d.admin, d.alumni, d.activeMember])
+    );
+    const withPadding = Math.ceil(maxVal * 1.08);
+    // Round up to a nice interval for cleaner axis labels
+    if (withPadding <= 100) return Math.max(100, withPadding);
+    if (withPadding <= 500) return Math.ceil(withPadding / 100) * 100;
+    if (withPadding <= 2000) return Math.ceil(withPadding / 500) * 500;
+    return Math.ceil(withPadding / 1000) * 1000;
+  }, [data]);
+
   if (loading) {
     return <div className="h-full flex items-center justify-center">Loading chart...</div>;
   }
@@ -160,10 +174,10 @@ export const UserGrowthChart = memo(function UserGrowthChart({ filters }: UserGr
           data={chartData}
           margin={
             dimensions.width < 400
-              ? { top: 40, right: 10, bottom: 50, left: 45 }
+              ? { top: 40, right: 10, bottom: 72, left: 45 }
               : dimensions.width < 600
-                ? { top: 45, right: 15, bottom: 55, left: 55 }
-                : { top: 50, right: 20, bottom: 60, left: 70 }
+                ? { top: 45, right: 15, bottom: 72, left: 55 }
+                : { top: 50, right: 20, bottom: 72, left: 70 }
           }
           xScale={{
             type: 'time',
@@ -174,18 +188,19 @@ export const UserGrowthChart = memo(function UserGrowthChart({ filters }: UserGr
           yScale={{
             type: 'linear',
             min: 0,
-            max: 'auto',
+            max: yMax,
           }}
           axisTop={null}
           axisRight={null}
           axisBottom={{
             format: '%b %d',
-            tickValues: 'every 7 days',
+            tickValues: 'every 2 weeks',
             legend: 'Date',
             legendOffset: 50,
             legendPosition: 'middle',
             tickSize: 5,
             tickPadding: 5,
+            tickRotation: -45,
           }}
           axisLeft={{
             legend: 'Users',
