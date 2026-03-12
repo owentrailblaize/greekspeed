@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { canAccessDeveloperPortal } from '@/lib/developerPermissions';
 import { buildPushPayload, getSamplePushContext, PUSH_EVENT_TYPES } from '@/lib/services/notificationPushPayload';
 import type { NotificationPushContext } from '@/lib/services/notificationPushPayload';
-import type { NotificationType } from '@/lib/services/notificationTestRunner';
+import type { NotificationType } from '@/lib/services/notificationTypes';
 import { sendPushToUser } from '@/lib/services/oneSignalPushService';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
