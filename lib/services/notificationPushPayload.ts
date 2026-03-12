@@ -37,7 +37,37 @@ export interface NotificationPushContext {
   body?: string;
 }
 
-const PUSH_EVENT_TYPES: NotificationType[] = [
+/** Sample context for testing push notifications. Merges defaults with optional overrides. */
+const SAMPLE_PUSH_CONTEXT: NotificationPushContext = {
+  announcementTitle: 'Spring Formal 2025',
+  eventId: 'test-event-id',
+  eventSlug: 'chapter-formal',
+  eventTitle: 'Chapter Formal',
+  startAtRelative: 'in 2 days',
+  connectionId: 'test-connection-id-123',
+  actorFirstName: 'Alex',
+  chapterName: 'Alpha Beta Gamma',
+  messagePreview: 'Hey, are you going to the formal?',
+  postId: 'test-post-id',
+  commentId: 'test-comment-id',
+  contentPreview: 'Great event!',
+  title: 'Test notification',
+  body: 'This is a test push from the developer portal.',
+};
+
+/**
+ * Returns sample context for building a test push payload. Used by developer test-push API.
+ * Overrides (e.g. title, body for system_alert) are merged on top of defaults.
+ */
+export function getSamplePushContext(
+  _event: NotificationType,
+  overrides?: Partial<NotificationPushContext>
+): NotificationPushContext {
+  return { ...SAMPLE_PUSH_CONTEXT, ...overrides };
+}
+
+/** Event types that support push notifications. Used by test UI and API. */
+export const PUSH_EVENT_TYPES: readonly NotificationType[] = [
   'chapter_announcement',
   'new_event',
   'event_reminder',
@@ -55,7 +85,7 @@ const PUSH_EVENT_TYPES: NotificationType[] = [
  * Returns whether the given event type supports push (has a payload mapping).
  */
 export function supportsPush(event: NotificationType): boolean {
-  return PUSH_EVENT_TYPES.includes(event);
+  return PUSH_EVENT_TYPES.includes(event as (typeof PUSH_EVENT_TYPES)[number]);
 }
 
 /**
