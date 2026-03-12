@@ -17,12 +17,12 @@ import {
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { PUSH_EVENT_TYPES } from '@/lib/services/notificationPushPayload';
-import { EMAIL_EVENT_TYPES, type NotificationType } from '@/lib/services/notificationTypes';
-import { Bell, Loader2, ArrowLeft, Mail } from 'lucide-react';
+import { EMAIL_EVENT_TYPES, SMS_EVENT_TYPES, type NotificationType } from '@/lib/services/notificationTypes';
+import { Bell, Loader2, ArrowLeft, Mail, Phone } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { cn } from '@/lib/utils';
 
-const CHANNELS = ['Push', 'Email'] as const;
+const CHANNELS = ['Push', 'Email', 'SMS'] as const;
 type Channel = (typeof CHANNELS)[number];
 
 const EVENT_TYPE_LABELS: Record<string, string> = {
@@ -41,6 +41,24 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
   password_change: 'Password Change',
 };
 
+function formatPhoneInput(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+
+  const hasPlus = trimmed.startsWith('+');
+  const digits = trimmed.replace(/[^\d]/g, '');
+
+  if (!digits) return hasPlus ? '+' : '';
+
+  const base = (hasPlus ? '+' : '') + digits;
+
+  if (!hasPlus && digits.length === 10) {
+    return `+1${digits}`;
+  }
+
+  return base;
+}
+
 export default function DeveloperNotificationsPage() {
   return (
     <DeveloperNotificationsPageContent />
@@ -56,6 +74,7 @@ function DeveloperNotificationsPageContent() {
   const [eventType, setEventType] = useState<string>('');
   const [userId, setUserId] = useState('');
   const [toEmail, setToEmail] = useState('');
+  const [toPhone, setToPhone] = useState('');
   const [customTitle, setCustomTitle] = useState('');
   const [customBody, setCustomBody] = useState('');
   const [sending, setSending] = useState(false);
@@ -71,6 +90,7 @@ function DeveloperNotificationsPageContent() {
   useEffect(() => {
     setEventType('');
     setLastResult(null);
+    setToPhone('');
   }, [channel]);
 
   const showOptionalContext =
@@ -177,6 +197,51 @@ function DeveloperNotificationsPageContent() {
     }
   };
 
+  const handleSendTestSms = async () => {
+    if (!eventType || !toPhone.trim()) {
+      toast.error('Select an event type and enter a phone number.');
+      return;
+    }
+    if (!session?.access_token) {
+      toast.error('Session expired. Please log in again.');
+      return;
+    }
+
+    setSending(true);
+    setLastResult(null);
+
+    try {
+      const res = await fetch('/api/developer/notifications/test-sms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          eventType: eventType as NotificationType,
+          toPhone: toPhone.trim(),
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success) {
+        setLastResult({ success: true, message: data.message ?? 'Sent' });
+        toast.success(data.message ?? 'Test SMS sent successfully.');
+      } else {
+        const err = data.error ?? res.statusText ?? 'Failed to send SMS';
+        setLastResult({ success: false, error: err });
+        toast.error(err);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Request failed';
+      setLastResult({ success: false, error: message });
+      toast.error(message);
+    } finally {
+      setSending(false);
+    }
+  };
+
   if (profile && !isDeveloper) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -207,7 +272,7 @@ function DeveloperNotificationsPageContent() {
               <h1 className="text-3xl font-bold text-gray-900">Test Notifications</h1>
             </div>
             <p className="text-gray-600 mt-1">
-              Send test push or email notifications by event type. Choose channel, then event type and recipient.
+              Send test push, email, or SMS notifications by event type. Choose channel, then event type and recipient.
             </p>
           </div>
         </div>
@@ -218,17 +283,25 @@ function DeveloperNotificationsPageContent() {
               <CardTitle className="flex items-center space-x-2">
                 {channel === 'Push' ? (
                   <Bell className="h-5 w-5" />
-                ) : (
+                ) : channel === 'Email' ? (
                   <Mail className="h-5 w-5" />
+                ) : (
+                  <Phone className="h-5 w-5" />
                 )}
                 <span>
-                  {channel === 'Push' ? 'Send test push' : 'Send test email'}
+                  {channel === 'Push'
+                    ? 'Send test push'
+                    : channel === 'Email'
+                    ? 'Send test email'
+                    : 'Send test SMS'}
                 </span>
               </CardTitle>
               <p className="text-sm text-gray-500 mt-1">
                 {channel === 'Push'
                   ? 'Choose event type and user ID. Push uses sample context unless you override title/body for system_alert or generic_notification.'
-                  : 'Choose event type and recipient email. Uses the same sample data as the CLI test script.'}
+                  : channel === 'Email'
+                  ? 'Choose event type and recipient email. Uses the same sample data as the CLI test script.'
+                  : 'Choose event type and phone number. Uses the same sample SMS data as the CLI test script.'}
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -244,9 +317,10 @@ function DeveloperNotificationsPageContent() {
                   <SelectContent>
                     <SelectItem value="Push">Push</SelectItem>
                     <SelectItem value="Email">Email</SelectItem>
+                    <SelectItem value="SMS">SMS</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-gray-500 mt-1">SMS will be added in a later phase.</p>
+                <p className="text-xs text-gray-500 mt-1">All channels use sample context consistent with the CLI test runner.</p>
               </div>
 
               <div>
@@ -257,7 +331,9 @@ function DeveloperNotificationsPageContent() {
                   placeholder={
                     channel === 'Push'
                       ? 'Select push event type'
-                      : 'Select email event type'
+                      : channel === 'Email'
+                      ? 'Select email event type'
+                      : 'Select SMS event type'
                   }
                 >
                   <SelectTrigger className="mt-1">
@@ -265,18 +341,23 @@ function DeveloperNotificationsPageContent() {
                       placeholder={
                         channel === 'Push'
                           ? 'Select push event type'
-                          : 'Select email event type'
+                          : channel === 'Email'
+                          ? 'Select email event type'
+                          : 'Select SMS event type'
                       }
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {(channel === 'Push' ? PUSH_EVENT_TYPES : EMAIL_EVENT_TYPES).map(
-                      (type) => (
-                        <SelectItem key={type} value={type}>
-                          {EVENT_TYPE_LABELS[type] ?? type}
-                        </SelectItem>
-                      )
-                    )}
+                    {(channel === 'Push'
+                      ? PUSH_EVENT_TYPES
+                      : channel === 'Email'
+                      ? EMAIL_EVENT_TYPES
+                      : SMS_EVENT_TYPES
+                    ).map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {EVENT_TYPE_LABELS[type] ?? type}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -341,13 +422,40 @@ function DeveloperNotificationsPageContent() {
                 </div>
               )}
 
+              {channel === 'SMS' && (
+                <div>
+                  <Label htmlFor="toPhone">Phone number (recipient)</Label>
+                  <Input
+                    id="toPhone"
+                    type="tel"
+                    value={toPhone}
+                    onChange={(e) => setToPhone(formatPhoneInput(e.target.value))}
+                    placeholder="+1 (555) 123-4567"
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Enter a valid mobile number. Input is auto-formatted toward E.164 (e.g. +15551234567).
+                  </p>
+                </div>
+              )}
+
               <div className="flex items-center gap-3 pt-2">
                 <Button
-                  onClick={channel === 'Push' ? handleSendTestPush : handleSendTestEmail}
+                  onClick={
+                    channel === 'Push'
+                      ? handleSendTestPush
+                      : channel === 'Email'
+                      ? handleSendTestEmail
+                      : handleSendTestSms
+                  }
                   disabled={
                     sending ||
                     !eventType ||
-                    (channel === 'Push' ? !userId.trim() : !toEmail.trim())
+                    (channel === 'Push'
+                      ? !userId.trim()
+                      : channel === 'Email'
+                      ? !toEmail.trim()
+                      : !toPhone.trim())
                   }
                 >
                   {sending ? (
@@ -357,8 +465,10 @@ function DeveloperNotificationsPageContent() {
                     </>
                   ) : channel === 'Push' ? (
                     'Send test push'
-                  ) : (
+                  ) : channel === 'Email' ? (
                     'Send test email'
+                  ) : (
+                    'Send test SMS'
                   )}
                 </Button>
               </div>

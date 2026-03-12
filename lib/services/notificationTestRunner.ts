@@ -249,13 +249,7 @@ function hasEmail(type: NotificationType): boolean {
 }
 
 function hasSms(type: NotificationType): boolean {
-  return [
-    'chapter_announcement',
-    'new_event',
-    'connection_request',
-    'connection_accepted',
-    'new_message',
-  ].includes(type);
+  return EMAIL_EVENT_TYPES.includes(type);
 }
 
 export async function runNotificationTest(options: NotificationTestOptions): Promise<DryRunResult | SendResult> {

@@ -36,3 +36,12 @@ export const EMAIL_EVENT_TYPES: readonly NotificationType[] = [
   'generic_notification',
 ];
 
+/** Event types that support SMS notifications. */
+export const SMS_EVENT_TYPES: readonly NotificationType[] = [
+  'chapter_announcement',
+  'new_event',
+  'connection_request',
+  'connection_accepted',
+  'new_message',
+];
+
