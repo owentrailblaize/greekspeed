@@ -4,6 +4,7 @@ import { useProfileModal } from '@/lib/contexts/ProfileModalContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
 import Image from 'next/image';
 
 interface ClickableAvatarProps {
@@ -36,6 +37,7 @@ export function ClickableAvatar({
   const { openUserProfile } = useProfileModal();
   const { user } = useAuth();
   const router = useRouter();
+  const [imageError, setImageError] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
     // If custom onClick is provided, call it first
@@ -73,6 +75,8 @@ export function ClickableAvatar({
 
   const sizePixels = size === 'sm' ? 32 : size === 'md' ? 40 : 48;
 
+  const showImage = avatarUrl && !imageError;
+
   return (
     <div
       onClick={handleClick}
@@ -82,7 +86,7 @@ export function ClickableAvatar({
         className
       )}
     >
-      {avatarUrl ? (
+      {showImage ? (
         <div className="relative w-full h-full">
           <Image
             src={avatarUrl}
@@ -90,6 +94,8 @@ export function ClickableAvatar({
             fill
             className="object-cover rounded-full"
             sizes={`${sizePixels}px`}
+            onError={() => setImageError(true)}
+            onLoad={() => setImageError(false)}
           />
         </div>
       ) : (
