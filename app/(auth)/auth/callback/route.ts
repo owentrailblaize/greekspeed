@@ -155,7 +155,7 @@ export async function GET(request: NextRequest) {
       // Resolve OAuth avatar: copy LinkedIn/Google URLs to our storage so we control the asset (OAuth URLs can expire)
       let resolvedOAuthAvatarUrl: string | null = user.user_metadata?.picture || user.user_metadata?.avatar_url || null;
       const { isOAuthAvatarUrl, uploadAvatarFromUrl } = await import('@/lib/services/avatarFromUrlService');
-      if (isOAuthAvatarUrl(resolvedOAuthAvatarUrl)) {
+      if (resolvedOAuthAvatarUrl && isOAuthAvatarUrl(resolvedOAuthAvatarUrl)) {
         const stored = await uploadAvatarFromUrl(resolvedOAuthAvatarUrl, user.id, serverSupabase);
         if (stored) resolvedOAuthAvatarUrl = stored;
       }
