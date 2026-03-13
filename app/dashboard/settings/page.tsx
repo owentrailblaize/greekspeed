@@ -596,19 +596,28 @@ export default function SettingsPage() {
 
         {isPushSupported && !pushLoading && pushPermission === 'default' && (
           <div className="p-4 border rounded-xl bg-white">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex-1">
                 <h4 className="font-medium text-gray-900">Enable push notifications</h4>
                 <p className="text-sm text-gray-600">
-                  Get real-time alerts in this browser for events, messages, and more.
+                  {/* Desktop copy */}
+                  <span className="hidden lg:inline">
+                    Get real-time alerts in this browser for events, messages, and more.
+                  </span>
+                  {/* Mobile copy (shorter) */}
+                  <span className="lg:hidden">
+                    Get alerts for events, messages, and more.
+                  </span>
                 </p>
               </div>
-              <Button
-                onClick={() => requestPermission()}
-                className="ml-4 rounded-full"
-              >
-                Enable push notifications
-              </Button>
+              <div className="w-full lg:w-auto">
+                <Button
+                  onClick={() => requestPermission()}
+                  className="w-full lg:w-auto rounded-full"
+                >
+                  Enable push notifications
+                </Button>
+              </div>
             </div>
           </div>
         )}
@@ -620,11 +629,6 @@ export default function SettingsPage() {
                 <h4 className="font-medium text-gray-900">Push notifications enabled</h4>
                 <p className="text-sm text-gray-600">
                   You will receive push alerts in this browser.
-                  {playerId && (
-                    <span className="block mt-1 text-xs text-gray-400 font-mono truncate" title={playerId}>
-                      Subscription ID: {playerId}
-                    </span>
-                  )}
                 </p>
               </div>
             </div>
