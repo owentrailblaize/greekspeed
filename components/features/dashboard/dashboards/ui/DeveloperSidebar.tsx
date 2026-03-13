@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Users, Flag, Palette, ChevronRight, X } from 'lucide-react';
+import { LayoutDashboard, Users, Flag, Palette, Bell, ChevronRight, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
-export type DeveloperView = 'overview' | 'user-management' | 'feature-flags' | 'branding';
+export type DeveloperView = 'overview' | 'user-management' | 'feature-flags' | 'branding' | 'notifications';
 
 interface DeveloperSidebarProps {
   activeView: DeveloperView;
@@ -19,6 +19,7 @@ const navigationItems = [
   { id: 'user-management' as DeveloperView, label: 'User Management', icon: Users },
   { id: 'feature-flags' as DeveloperView, label: 'Feature Flags', icon: Flag },
   { id: 'branding' as DeveloperView, label: 'Branding Management', icon: Palette },
+  { id: 'notifications' as DeveloperView, label: 'Test Notifications', icon: Bell },
 ];
 
 export function DeveloperSidebar({

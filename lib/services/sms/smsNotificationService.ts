@@ -7,6 +7,8 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://trailblaize.net';
+
 interface SMSNotificationData {
   userId: string;
   chapterId: string;
@@ -16,6 +18,25 @@ interface SMSNotificationData {
 }
 
 export class SMSNotificationService {
+
+  /**
+   * Returns true if this user has ever received an SMS (any row in sms_notification_logs with status = 'sent').
+   * Used to show full compliance only on first-ever message.
+   */
+  private static async hasReceivedSmsBefore(userId: string): Promise<boolean> {
+    const { data, error } = await supabase
+      .from('sms_notification_logs')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('status', 'sent')
+      .limit(1)
+      .maybeSingle();
+    if (error) {
+      console.error('Failed to check sms_notification_logs:', error);
+      return true; // assume not first so we don't omit compliance if DB fails
+    }
+    return !!data;
+  }
 
   // Log SMS attempt to database
   private static async logSMS(data: SMSNotificationData, success: boolean, messageId?: string, error?: string) {
@@ -35,332 +56,396 @@ export class SMSNotificationService {
     }
   }
 
-  // For announcements
+  // For announcements: full compliance only on first-ever SMS (same as other flows)
   static async sendAnnouncementNotification(
     phoneNumber: string,
     userName: string,
     announcementTitle: string,
     userId: string,
-    chapterId: string
+    chapterId: string,
+    options?: { contentSummary?: string; link?: string }
   ): Promise<boolean> {
-    // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
-    
-    // GSM-safe, concise message with link
-    const senderPrefix = '[Trailblaize]';
-    const link = 'https://trailblaize.net/dashboard';
-    const compliance = ' Reply STOP to opt out. HELP for help. Msg/data rates apply.';
-    
-    const safeTitle = toGsmSafe(announcementTitle);
-    const baseText = 'New: ';
-    
-    // Calculate available space
-    const fixedLength = senderPrefix.length + 1 + baseText.length + 1 + link.length + compliance.length;
-    const maxTitleLength = 160 - fixedLength;
-    
-    // Truncate title if needed
-    let finalTitle = safeTitle;
-    if (safeTitle.length > maxTitleLength) {
-      finalTitle = safeTitle.substring(0, Math.max(0, maxTitleLength - 3)) + '...';
-    }
-    
-    let message = `${senderPrefix} ${baseText}${finalTitle} ${link}${compliance}`;
-    message = toGsmSafe(message);
-    if (message.length > 160) {
-      message = message.substring(0, 157) + '...';
-    }
-    
-    const result = await SMSService.sendSMS({ to: formattedPhone, body: message });
-    
-    await this.logSMS({
-      userId,
-      chapterId,
-      phoneNumber: formattedPhone,
-      messageType: 'announcement',
-      messageContent: message
-    }, result.success, result.messageId, result.error);
-    
+    const link = options?.link ?? `${BASE_URL}/dashboard/announcements`;
+    const detail = toGsmSafe((options?.contentSummary ?? announcementTitle).slice(0, 60));
+    const headline = toGsmSafe(announcementTitle.slice(0, 40));
+
+    const isFirst = !(await this.hasReceivedSmsBefore(userId));
+    const complianceLevel = isFirst ? 'full' : 'none';
+
+    const messageParts = SMSMessageFormatter.formatShortMessage(
+      headline,
+      detail,
+      'Read more',
+      link,
+      { complianceLevel }
+    );
+
+    const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
+    await this.logSMS(
+      { userId, chapterId, phoneNumber: formattedPhone, messageType: 'announcement', messageContent: messageParts.fullMessage },
+      result.success,
+      result.messageId,
+      result.error
+    );
     return result.success;
   }
 
-  // For events
+  // For events: full compliance only on first-ever SMS
   static async sendEventNotification(
     phoneNumber: string,
     userName: string,
     eventTitle: string,
     eventDate: string,
     userId: string,
-    chapterId: string
+    chapterId: string,
+    options?: { link?: string }
   ): Promise<boolean> {
-    console.log('📤 Sending event SMS notification:', {
-      userId,
-      userName,
-      phoneNumber,
-      eventTitle,
-      eventDate,
-      chapterId
-    });
-
-    // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
+    const link = options?.link ?? `${BASE_URL}/dashboard`;
+    const headline = toGsmSafe(eventTitle.slice(0, 50));
+    const detail = toGsmSafe(eventDate.slice(0, 40));
 
-    // Format message to match Telnyx campaign sample EXACTLY
-    // Sample: [Trailblaize] Event reminder: Chapter formal is this Saturday at 8 PM. Check your email for details. Reply STOP to unsubscribe or HELP for help. Msg & data rates may apply
-    const senderPrefix = '[Trailblaize]';
-    const reminderPrefix = 'Event reminder: ';
-    const optOutText = ' Reply STOP to unsubscribe or HELP for help.';
-    const complianceText = ' Msg & data rates may apply';
+    const isFirst = !(await this.hasReceivedSmsBefore(userId));
+    const complianceLevel = isFirst ? 'full' : 'none';
 
-    // Build event content - match sample format: "Event reminder: {details}"
-    // Sample uses: "Chapter formal is this Saturday at 8 PM. Check your email for details."
-    // We'll use: "{eventTitle} on {eventDate}."
-    const eventContent = `${eventTitle} on ${eventDate}.`;
-    
-    // Use formatter to ensure compliance text is never truncated
-    const messageParts = SMSMessageFormatter.formatCompliantMessage(
-      `${reminderPrefix}${eventContent}`,
-      {
-        senderPrefix,
-        optOutText,
-        complianceText,
-        // No maxParts limit - let Telnyx handle full message concatenation
-      }
+    const messageParts = SMSMessageFormatter.formatShortMessage(
+      headline,
+      detail,
+      'RSVP',
+      link,
+      { complianceLevel }
     );
 
-    console.log('📝 SMS message prepared:', {
-      to: formattedPhone,
-      messageLength: messageParts.fullMessage.length,
-      parts: messageParts.estimatedParts,
-      encoding: messageParts.encoding,
-      messagePreview: messageParts.fullMessage.substring(0, 80) + '...'
-    });
-
-    // Send full message - Telnyx handles concatenation automatically
     const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
-    
-    console.log('📬 SMS send result:', {
-      success: result.success,
-      messageId: result.messageId,
-      error: result.error,
-      phoneNumber: formattedPhone
-    });
-    
-    await this.logSMS({
-      userId,
-      chapterId,
-      phoneNumber: formattedPhone,
-      messageType: 'event',
-      messageContent: messageParts.fullMessage
-    }, result.success, result.messageId, result.error);
-    
+    await this.logSMS(
+      { userId, chapterId, phoneNumber: formattedPhone, messageType: 'event', messageContent: messageParts.fullMessage },
+      result.success,
+      result.messageId,
+      result.error
+    );
     return result.success;
   }
 
-  // For messages
+  // For messages: full compliance only on first-ever SMS
   static async sendMessageNotification(
     phoneNumber: string,
     userName: string,
     senderName: string,
     preview: string,
     userId: string,
-    chapterId: string
+    chapterId: string,
+    options?: { link?: string }
   ): Promise<boolean> {
-    console.log('📤 Sending message SMS notification:', {
-      userId,
-      userName,
-      phoneNumber,
-      senderName,
-      previewLength: preview.length
-    });
-
-    // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
+    const link = options?.link ?? `${BASE_URL}/dashboard/messages`;
+    const headline = `New message from ${toGsmSafe(senderName.slice(0, 30))}`;
 
-    // Format message to match Telnyx campaign sample pattern
-    // Pattern: [Trailblaize] Message notification: New message from {name}. Reply STOP to opt-out. Msg & data rates may apply
-    const senderPrefix = '[Trailblaize]';
-    const messagePrefix = 'Message notification: ';
-    const optOutText = ' Reply STOP to opt-out.';
-    const complianceText = ' Msg & data rates may apply';
+    const isFirst = !(await this.hasReceivedSmsBefore(userId));
+    const complianceLevel = isFirst ? 'full' : 'none';
 
-    // Build message content
-    const messageContent = `New message from ${senderName}.`;
-    
-    // Use formatter to ensure compliance text is never truncated
-    const messageParts = SMSMessageFormatter.formatCompliantMessage(
-      `${messagePrefix}${messageContent}`,
-      {
-        senderPrefix,
-        optOutText,
-        complianceText,
-        // No maxParts limit - let Telnyx handle full message concatenation
-      }
+    const messageParts = SMSMessageFormatter.formatShortMessage(
+      headline,
+      'Tap to reply',
+      'Open',
+      link,
+      { complianceLevel }
     );
 
-    console.log('📝 SMS message prepared:', {
-      to: formattedPhone,
-      messageLength: messageParts.fullMessage.length,
-      parts: messageParts.estimatedParts,
-      encoding: messageParts.encoding,
-      messagePreview: messageParts.fullMessage.substring(0, 80) + '...'
-    });
-
-    // Send full message - Telnyx handles concatenation automatically
     const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
-    
-    console.log('📬 SMS send result:', {
-      success: result.success,
-      messageId: result.messageId,
-      error: result.error,
-      phoneNumber: formattedPhone
-    });
-    
-    await this.logSMS({
-      userId,
-      chapterId,
-      phoneNumber: formattedPhone,
-      messageType: 'message',
-      messageContent: messageParts.fullMessage
-    }, result.success, result.messageId, result.error);
-    
+    await this.logSMS(
+      { userId, chapterId, phoneNumber: formattedPhone, messageType: 'message', messageContent: messageParts.fullMessage },
+      result.success,
+      result.messageId,
+      result.error
+    );
     return result.success;
   }
 
-  // For connection requests
+  // For connection requests: full compliance only on first-ever SMS
   static async sendConnectionRequestNotification(
     phoneNumber: string,
     userName: string,
     requesterName: string,
     userId: string,
-    chapterId: string
+    chapterId: string,
+    options?: { link?: string }
   ): Promise<boolean> {
-    console.log('📤 Sending connection request SMS notification:', {
-      userId,
-      userName,
-      phoneNumber,
-      requesterName,
-      chapterId
-    });
-
-    // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
+    const link = options?.link ?? `${BASE_URL}/dashboard/notifications`;
+    const headline = `${toGsmSafe(requesterName.slice(0, 30))} wants to connect`;
 
-    // Format message to match Telnyx campaign sample pattern
-    // Pattern: [Trailblaize] Connection request: {content}. Check your email for details. Reply STOP to unsubscribe or HELP for help. Msg & data rates may apply
-    const connectionPrefix = 'Connection request: ';
-    const optOutText = ' Reply STOP to unsubscribe or HELP for help.';
-    const complianceText = ' Msg & data rates may apply';
+    const isFirst = !(await this.hasReceivedSmsBefore(userId));
+    const complianceLevel = isFirst ? 'full' : 'none';
 
-    // Build connection content - match sample format
-    // Sample: "{requesterName} wants to connect with you on Trailblaize. Check your email for details."
-    const connectionContent = `${requesterName} wants to connect with you on Trailblaize. Check your email for details.`;
-    
-    // Use formatter to ensure compliance text is never truncated
-    const messageParts = SMSMessageFormatter.formatConnectionMessage(
-      connectionPrefix,
-      connectionContent,
-      {
-        optOutText,
-        complianceText,
-        // No maxParts limit - let Telnyx handle full message concatenation
-      }
+    const messageParts = SMSMessageFormatter.formatShortMessage(
+      headline,
+      'View profile to accept',
+      'View',
+      link,
+      { complianceLevel }
     );
-    
-    console.log('📝 SMS message prepared:', {
-      to: formattedPhone,
-      messageLength: messageParts.fullMessage.length,
-      parts: messageParts.estimatedParts,
-      encoding: messageParts.encoding,
-      messagePreview: messageParts.fullMessage.substring(0, 80) + '...'
-    });
 
-    // Send full message - Telnyx handles concatenation automatically
     const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
-    
-    console.log('📬 SMS send result:', {
-      success: result.success,
-      messageId: result.messageId,
-      error: result.error,
-      phoneNumber: formattedPhone
-    });
-    
-    await this.logSMS({
-      userId,
-      chapterId,
-      phoneNumber: formattedPhone,
-      messageType: 'connection_request',
-      messageContent: messageParts.fullMessage
-    }, result.success, result.messageId, result.error);
-    
+    await this.logSMS(
+      { userId, chapterId, phoneNumber: formattedPhone, messageType: 'connection_request', messageContent: messageParts.fullMessage },
+      result.success,
+      result.messageId,
+      result.error
+    );
     return result.success;
   }
 
-  // For connection accepted
+  // For connection accepted: full compliance only on first-ever SMS
   static async sendConnectionAcceptedNotification(
     phoneNumber: string,
     userName: string,
     accepterName: string,
     userId: string,
-    chapterId: string
+    chapterId: string,
+    options?: { link?: string }
   ): Promise<boolean> {
-    console.log('📤 Sending connection accepted SMS notification:', {
-      userId,
-      userName,
-      phoneNumber,
-      accepterName,
-      chapterId
-    });
-
-    // Format the phone number before sending
     const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
+    const link = options?.link ?? `${BASE_URL}/dashboard/notifications`;
+    const headline = `${toGsmSafe(accepterName.slice(0, 30))} accepted your request`;
 
-    // Format message to match Telnyx campaign sample pattern
-    // Pattern: [Trailblaize] Connection update: {content}. Check your email for details. Reply STOP to unsubscribe or HELP for help. Msg & data rates may apply
-    const connectionPrefix = 'Connection update: ';
-    const optOutText = ' Reply STOP to unsubscribe or HELP for help.';
-    const complianceText = ' Msg & data rates may apply';
+    const isFirst = !(await this.hasReceivedSmsBefore(userId));
+    const complianceLevel = isFirst ? 'full' : 'none';
 
-    // Build connection content - match sample format
-    // Sample: "{accepterName} accepted your connection request on Trailblaize! Check your email for details."
-    const connectionContent = `${accepterName} accepted your connection request on Trailblaize! Check your email for details.`;
-    
-    // Use formatter to ensure compliance text is never truncated
-    const messageParts = SMSMessageFormatter.formatConnectionMessage(
-      connectionPrefix,
-      connectionContent,
-      {
-        optOutText,
-        complianceText,
-        // No maxParts limit - let Telnyx handle full message concatenation
-      }
+    const messageParts = SMSMessageFormatter.formatShortMessage(
+      headline,
+      'Say hello',
+      'Open',
+      link,
+      { complianceLevel }
     );
 
-    console.log('📝 SMS message prepared:', {
-      to: formattedPhone,
-      messageLength: messageParts.fullMessage.length,
-      parts: messageParts.estimatedParts,
-      encoding: messageParts.encoding,
-      messagePreview: messageParts.fullMessage.substring(0, 80) + '...'
-    });
-
-    // Send full message - Telnyx handles concatenation automatically
     const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
-    
-    console.log('📬 SMS send result:', {
-      success: result.success,
-      messageId: result.messageId,
-      error: result.error,
-      phoneNumber: formattedPhone
-    });
-    
-    await this.logSMS({
-      userId,
-      chapterId,
-      phoneNumber: formattedPhone,
-      messageType: 'connection_accepted',
-      messageContent: messageParts.fullMessage
-    }, result.success, result.messageId, result.error);
-    
+    await this.logSMS(
+      { userId, chapterId, phoneNumber: formattedPhone, messageType: 'connection_accepted', messageContent: messageParts.fullMessage },
+      result.success,
+      result.messageId,
+      result.error
+    );
     return result.success;
+  }
+
+  // Post comment: notify post author when someone comments (Option A: phone + sms_consent only)
+  static async sendPostCommentNotification(
+    phoneNumber: string,
+    userName: string,
+    actorName: string,
+    contentPreview: string | undefined,
+    userId: string,
+    chapterId: string,
+    options?: { postId: string; link?: string }
+  ): Promise<boolean> {
+    const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
+    const link = options?.link ?? `${BASE_URL}/dashboard/post/${options?.postId ?? ''}`;
+    const headline = `${toGsmSafe(actorName.slice(0, 30))} commented on your post`;
+    const detail = contentPreview ? toGsmSafe(contentPreview.slice(0, 50)) : 'View post';
+
+    const isFirst = !(await this.hasReceivedSmsBefore(userId));
+    const complianceLevel = isFirst ? 'full' : 'none';
+
+    const messageParts = SMSMessageFormatter.formatShortMessage(
+      headline,
+      detail,
+      'View',
+      link,
+      { complianceLevel }
+    );
+
+    const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
+    await this.logSMS(
+      { userId, chapterId, phoneNumber: formattedPhone, messageType: 'post_comment', messageContent: messageParts.fullMessage },
+      result.success,
+      result.messageId,
+      result.error
+    );
+    return result.success;
+  }
+
+  // Comment reply: notify parent comment author when someone replies
+  static async sendCommentReplyNotification(
+    phoneNumber: string,
+    userName: string,
+    actorName: string,
+    contentPreview: string | undefined,
+    userId: string,
+    chapterId: string,
+    options?: { postId: string; link?: string }
+  ): Promise<boolean> {
+    const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
+    const link = options?.link ?? `${BASE_URL}/dashboard/post/${options?.postId ?? ''}`;
+    const headline = `${toGsmSafe(actorName.slice(0, 30))} replied to your comment`;
+
+    const isFirst = !(await this.hasReceivedSmsBefore(userId));
+    const complianceLevel = isFirst ? 'full' : 'none';
+
+    const messageParts = SMSMessageFormatter.formatShortMessage(
+      headline,
+      'View post',
+      'View',
+      link,
+      { complianceLevel }
+    );
+
+    const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
+    await this.logSMS(
+      { userId, chapterId, phoneNumber: formattedPhone, messageType: 'comment_reply', messageContent: messageParts.fullMessage },
+      result.success,
+      result.messageId,
+      result.error
+    );
+    return result.success;
+  }
+
+  // Post like: notify post author when someone likes their post
+  static async sendPostLikeNotification(
+    phoneNumber: string,
+    userName: string,
+    actorName: string,
+    userId: string,
+    chapterId: string,
+    options?: { postId: string; link?: string }
+  ): Promise<boolean> {
+    const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
+    const link = options?.link ?? `${BASE_URL}/dashboard/post/${options?.postId ?? ''}`;
+    const headline = `${toGsmSafe(actorName.slice(0, 30))} liked your post`;
+
+    const isFirst = !(await this.hasReceivedSmsBefore(userId));
+    const complianceLevel = isFirst ? 'full' : 'none';
+
+    const messageParts = SMSMessageFormatter.formatShortMessage(
+      headline,
+      'View post',
+      'View',
+      link,
+      { complianceLevel }
+    );
+
+    const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
+    await this.logSMS(
+      { userId, chapterId, phoneNumber: formattedPhone, messageType: 'post_like', messageContent: messageParts.fullMessage },
+      result.success,
+      result.messageId,
+      result.error
+    );
+    return result.success;
+  }
+
+  // Comment like: notify comment author when someone likes their comment
+  static async sendCommentLikeNotification(
+    phoneNumber: string,
+    userName: string,
+    actorName: string,
+    userId: string,
+    chapterId: string,
+    options?: { postId: string; link?: string }
+  ): Promise<boolean> {
+    const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
+    const link = options?.link ?? `${BASE_URL}/dashboard/post/${options?.postId ?? ''}`;
+    const headline = `${toGsmSafe(actorName.slice(0, 30))} liked your comment`;
+
+    const isFirst = !(await this.hasReceivedSmsBefore(userId));
+    const complianceLevel = isFirst ? 'full' : 'none';
+
+    const messageParts = SMSMessageFormatter.formatShortMessage(
+      headline,
+      'View post',
+      'View',
+      link,
+      { complianceLevel }
+    );
+
+    const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
+    await this.logSMS(
+      { userId, chapterId, phoneNumber: formattedPhone, messageType: 'comment_like', messageContent: messageParts.fullMessage },
+      result.success,
+      result.messageId,
+      result.error
+    );
+    return result.success;
+  }
+
+  // Inactivity reminder: re-engage users who have not been active for 30+ days
+  static async sendInactivityReminderNotification(
+    phoneNumber: string,
+    userName: string,
+    userId: string,
+    chapterId: string,
+    options?: { link?: string }
+  ): Promise<boolean> {
+    const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
+    const link = options?.link ?? `${BASE_URL}/dashboard`;
+    const headline = 'We miss you on Trailblaize';
+
+    const isFirst = !(await this.hasReceivedSmsBefore(userId));
+    const complianceLevel = isFirst ? 'full' : 'none';
+
+    const messageParts = SMSMessageFormatter.formatShortMessage(
+      headline,
+      "Your chapter is here when you're ready.",
+      'Open',
+      link,
+      { complianceLevel }
+    );
+
+    const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
+    await this.logSMS(
+      { userId, chapterId, phoneNumber: formattedPhone, messageType: 'inactivity_reminder', messageContent: messageParts.fullMessage },
+      result.success,
+      result.messageId,
+      result.error
+    );
+    return result.success;
+  }
+
+  /**
+   * Batch check: returns the set of user IDs that have at least one 'sent' row in sms_notification_logs.
+   * Used by the announcements route to split first-time vs returning recipients (one query instead of N).
+   */
+  static async getUserIdSetThatHaveReceivedSms(userIds: string[]): Promise<Set<string>> {
+    if (userIds.length === 0) return new Set();
+    const { data, error } = await supabase
+      .from('sms_notification_logs')
+      .select('user_id')
+      .in('user_id', userIds)
+      .eq('status', 'sent');
+    if (error) {
+      console.error('Failed to batch check sms_notification_logs:', error);
+      return new Set(); // assume none so everyone gets full compliance if DB fails
+    }
+    const set = new Set<string>();
+    for (const row of data ?? []) {
+      if (row.user_id) set.add(row.user_id);
+    }
+    return set;
+  }
+
+  /**
+   * Log announcement recipients to sms_notification_logs so future "first ever" checks include them.
+   * Call after a successful bulk announcement send. Inserts one row per recipient with status 'sent'.
+   */
+  static async recordAnnouncementSmsRecipients(
+    recipients: Array<{ userId: string; chapterId: string; phoneNumber: string }>,
+    messageContent: string
+  ): Promise<void> {
+    if (recipients.length === 0) return;
+    try {
+      await supabase.from('sms_notification_logs').insert(
+        recipients.map(({ userId, chapterId, phoneNumber }) => ({
+          user_id: userId,
+          chapter_id: chapterId,
+          phone_number: phoneNumber,
+          message_type: 'announcement',
+          message_content: messageContent,
+          status: 'sent',
+        }))
+      );
+    } catch (logError) {
+      console.error('Failed to record announcement SMS recipients:', logError);
+    }
   }
 }

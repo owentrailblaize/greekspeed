@@ -9,6 +9,8 @@ import { Settings, Shield, Bell, ArrowLeft, Mail, User, Phone, Calendar, Lock, U
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useOneSignalPush } from '@/lib/hooks/useOneSignalPush';
+import { clearPushPromptCooldown } from '@/lib/utils/pushPromptStorage';
 import { ChangePasswordForm } from '@/components/features/settings/ChangePasswordForm';
 
 export default function SettingsPage() {
@@ -26,6 +28,11 @@ export default function SettingsPage() {
     event_reminder_notifications: true,
     message_notifications: true,
     connection_notifications: true,
+    post_comment_notifications: true,
+    comment_reply_notifications: true,
+    post_like_notifications: true,
+    comment_like_notifications: true,
+    inactivity_reminder_notifications: true,
   });
 
   // Helper to PATCH only changed fields
@@ -53,6 +60,14 @@ export default function SettingsPage() {
 
   const router = useRouter();
   const { profile, loading: profileLoading } = useProfile();
+  const {
+    permission: pushPermission,
+    playerId,
+    isSubscribed: pushSubscribed,
+    isPushSupported,
+    isLoading: pushLoading,
+    requestPermission,
+  } = useOneSignalPush(profile?.id);
 
   // Fetch notification settings on mount
   useEffect(() => {
@@ -83,6 +98,11 @@ export default function SettingsPage() {
           event_reminder_notifications: data.event_reminder_notifications === true,
           message_notifications: data.message_notifications === true,
           connection_notifications: data.connection_notifications === true,
+          post_comment_notifications: data.post_comment_notifications !== false,
+          comment_reply_notifications: data.comment_reply_notifications !== false,
+          post_like_notifications: data.post_like_notifications !== false,
+          comment_like_notifications: data.comment_like_notifications !== false,
+          inactivity_reminder_notifications: data.inactivity_reminder_notifications !== false,
         })
       } else {
         console.error('Failed to fetch settings:', response.status);
@@ -431,6 +451,96 @@ export default function SettingsPage() {
                 </div>
               </div>
             </div>
+
+            <div className="p-4 border rounded-xl bg-white">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">Post comments</h4>
+                  <p className="text-sm text-gray-600">
+                    Email when someone comments on your post
+                  </p>
+                </div>
+                <div className="flex items-center space-x-3 ml-4">
+                  <Switch
+                    checked={emailPrefs.post_comment_notifications}
+                    onCheckedChange={(checked) => togglePref('post_comment_notifications', checked)}
+                    disabled={emailPrefsLoading}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border rounded-xl bg-white">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">Comment replies</h4>
+                  <p className="text-sm text-gray-600">
+                    Email when someone replies to your comment
+                  </p>
+                </div>
+                <div className="flex items-center space-x-3 ml-4">
+                  <Switch
+                    checked={emailPrefs.comment_reply_notifications}
+                    onCheckedChange={(checked) => togglePref('comment_reply_notifications', checked)}
+                    disabled={emailPrefsLoading}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border rounded-xl bg-white">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">Post likes</h4>
+                  <p className="text-sm text-gray-600">
+                    Email when someone likes your post
+                  </p>
+                </div>
+                <div className="flex items-center space-x-3 ml-4">
+                  <Switch
+                    checked={emailPrefs.post_like_notifications}
+                    onCheckedChange={(checked) => togglePref('post_like_notifications', checked)}
+                    disabled={emailPrefsLoading}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border rounded-xl bg-white">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">Comment likes</h4>
+                  <p className="text-sm text-gray-600">
+                    Email when someone likes your comment
+                  </p>
+                </div>
+                <div className="flex items-center space-x-3 ml-4">
+                  <Switch
+                    checked={emailPrefs.comment_like_notifications}
+                    onCheckedChange={(checked) => togglePref('comment_like_notifications', checked)}
+                    disabled={emailPrefsLoading}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border rounded-xl bg-white">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">Inactivity reminder</h4>
+                  <p className="text-sm text-gray-600">
+                    Email after 30 days of no activity
+                  </p>
+                </div>
+                <div className="flex items-center space-x-3 ml-4">
+                  <Switch
+                    checked={emailPrefs.inactivity_reminder_notifications}
+                    onCheckedChange={(checked) => togglePref('inactivity_reminder_notifications', checked)}
+                    disabled={emailPrefsLoading}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -461,6 +571,86 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Browser Push Notifications */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Bell className="w-5 h-5" />
+          Browser Push Notifications
+        </h3>
+
+        {!isPushSupported && (
+          <div className="p-4 border rounded-xl bg-gray-50">
+            <p className="text-sm text-gray-600">
+              Push notifications are not supported in this browser.
+            </p>
+          </div>
+        )}
+
+        {isPushSupported && pushLoading && (
+          <div className="p-4 border rounded-xl bg-white">
+            <p className="text-sm text-gray-500">Loading push settings...</p>
+          </div>
+        )}
+
+        {isPushSupported && !pushLoading && pushPermission === 'default' && (
+          <div className="p-4 border rounded-xl bg-white">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h4 className="font-medium text-gray-900">Enable push notifications</h4>
+                <p className="text-sm text-gray-600">
+                  Get real-time alerts in this browser for events, messages, and more.
+                </p>
+              </div>
+              <Button
+                onClick={() => requestPermission()}
+                className="ml-4 rounded-full"
+              >
+                Enable push notifications
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {isPushSupported && !pushLoading && pushPermission === 'granted' && pushSubscribed && (
+          <div className="p-4 border rounded-xl bg-white">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h4 className="font-medium text-gray-900">Push notifications enabled</h4>
+                <p className="text-sm text-gray-600">
+                  You will receive push alerts in this browser.
+                  {playerId && (
+                    <span className="block mt-1 text-xs text-gray-400 font-mono truncate" title={playerId}>
+                      Subscription ID: {playerId}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isPushSupported && !pushLoading && pushPermission === 'denied' && (
+          <div className="p-4 border rounded-xl bg-white space-y-3">
+            <div>
+              <h4 className="font-medium text-gray-900">Push notifications disabled</h4>
+              <p className="text-sm text-gray-600 mt-1">
+                To enable push alerts, allow notifications for this site in your browser or device settings (e.g. address bar lock icon, or Settings &gt; Site settings &gt; Notifications).
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (profile?.id) clearPushPromptCooldown(profile.id);
+                requestPermission();
+              }}
+              className="rounded-full"
+            >
+              Try again / Enable notifications
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

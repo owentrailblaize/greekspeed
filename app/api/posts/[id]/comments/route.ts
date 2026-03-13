@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { fetchLinkPreviewsServer } from '@/lib/services/linkPreviewService';
 import { LinkPreview } from '@/types/posts';
+import { buildPushPayload } from '@/lib/services/notificationPushPayload';
+import { sendPushToUser } from '@/lib/services/oneSignalPushService';
+import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
+import { EmailService } from '@/lib/services/emailService';
 
 export async function GET(
   request: NextRequest,
@@ -153,10 +157,10 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
     }
 
-    // Check if post exists and user has access to it
+    // Check if post exists and user has access to it (include author_id for push)
     const { data: post, error: postError } = await supabase
       .from('posts')
-      .select('chapter_id')
+      .select('chapter_id, author_id')
       .eq('id', postId)
       .single();
 
@@ -175,11 +179,11 @@ export async function POST(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    // Validate parent_comment_id if provided
+    let parentCommentAuthorId: string | null = null;
     if (parent_comment_id) {
       const { data: parentComment, error: parentError } = await supabase
         .from('post_comments')
-        .select('id, post_id, parent_comment_id')
+        .select('id, post_id, parent_comment_id, author_id')
         .eq('id', parent_comment_id)
         .single();
 
@@ -204,6 +208,7 @@ export async function POST(
           { status: 400 }
         );
       }
+      parentCommentAuthorId = parentComment.author_id;
     }
 
     // Extract URLs and fetch link previews (don't block comment creation if this fails)
@@ -276,6 +281,87 @@ export async function POST(
     if (createError) {
       console.error('Comment creation error:', createError);
       return NextResponse.json({ error: 'Failed to create comment' }, { status: 500 });
+    }
+
+    const authorProfile = Array.isArray(comment?.author) ? comment?.author?.[0] : comment?.author;
+    const contentPreview = content.trim().slice(0, 80);
+    const eventType = parent_comment_id ? 'comment_reply' : 'post_comment';
+    const notifyUserId = parent_comment_id ? parentCommentAuthorId : post.author_id;
+    if (notifyUserId && notifyUserId !== user.id) {
+      const pushPayload = buildPushPayload(eventType, {
+        postId,
+        commentId: comment?.id,
+        actorFirstName: authorProfile?.first_name ?? undefined,
+        contentPreview: contentPreview || undefined,
+      });
+      sendPushToUser(notifyUserId, pushPayload).catch(pushErr => {
+        console.error('Failed to send comment push:', pushErr);
+      });
+
+      const { data: recipientProfile } = await supabase
+        .from('profiles')
+        .select('id, email, first_name, chapter, chapter_id, phone, sms_consent')
+        .eq('id', notifyUserId)
+        .single();
+
+      const actorName = authorProfile?.first_name ?? 'Someone';
+
+      // Email: post_comment or comment_reply (respect preferences)
+      const allowed = await canSendEmailNotification(notifyUserId, eventType);
+      if (allowed && recipientProfile?.email && recipientProfile?.first_name) {
+        const chapterName = recipientProfile.chapter ?? 'Your chapter';
+        if (eventType === 'post_comment') {
+          EmailService.sendPostCommentNotification({
+            to: recipientProfile.email,
+            firstName: recipientProfile.first_name,
+            chapterName,
+            actorFirstName: actorName,
+            contentPreview: contentPreview || '',
+            postId,
+          }).catch((err) => console.error('Failed to send post comment email:', err));
+        } else {
+          EmailService.sendCommentReplyNotification({
+            to: recipientProfile.email,
+            firstName: recipientProfile.first_name,
+            chapterName,
+            actorFirstName: actorName,
+            contentPreview: contentPreview || '',
+            postId,
+          }).catch((err) => console.error('Failed to send comment reply email:', err));
+        }
+      }
+
+      // SMS: Option A - send when phone and sms_consent present (no per-type toggle)
+      if (recipientProfile?.phone && recipientProfile.sms_consent === true) {
+        const { SMSService } = await import('@/lib/services/sms/smsServiceTelnyx');
+        const { SMSNotificationService } = await import('@/lib/services/sms/smsNotificationService');
+        const formattedPhone = SMSService.formatPhoneNumber(recipientProfile.phone);
+        if (SMSService.isValidPhoneNumber(recipientProfile.phone)) {
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trailblaize.net';
+          const postUrl = `${baseUrl}/dashboard/post/${postId}`;
+          if (eventType === 'post_comment') {
+            SMSNotificationService.sendPostCommentNotification(
+              formattedPhone,
+              recipientProfile.first_name ?? 'Member',
+              actorName,
+              contentPreview || undefined,
+              recipientProfile.id,
+              recipientProfile.chapter_id ?? '',
+              { postId, link: postUrl }
+            ).catch((err) => console.error('Failed to send post comment SMS:', err));
+          } else {
+            SMSNotificationService.sendCommentReplyNotification(
+              formattedPhone,
+              recipientProfile.first_name ?? 'Member',
+              actorName,
+              contentPreview || undefined,
+              recipientProfile.id,
+              recipientProfile.chapter_id ?? '',
+              { postId, link: postUrl }
+            ).catch((err) => console.error('Failed to send comment reply SMS:', err));
+          }
+        }
+      }
     }
 
     return NextResponse.json({ comment });

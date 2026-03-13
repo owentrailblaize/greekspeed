@@ -4,6 +4,9 @@ import { EmailService } from '@/lib/services/emailService';
 import { SMSService } from '@/lib/services/sms/smsServiceTelnyx';
 import { SMSNotificationService } from '@/lib/services/sms/smsNotificationService';
 import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
+import { buildPushPayload } from '@/lib/services/notificationPushPayload';
+import { sendPushToUser } from '@/lib/services/oneSignalPushService';
+import { generateEventLink } from '@/lib/utils/eventLinkUtils';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -97,13 +100,13 @@ export async function POST(request: NextRequest) {
       })
     );
 
-    const recipients = allowedMembers
-      .filter((m): m is NonNullable<typeof m> => Boolean(m))
-      .map(member => ({
-        email: member.email,
-        firstName: member.first_name || 'Member',
-        chapterName: chapter.name
-      }));
+    const allowedList = allowedMembers
+      .filter((m): m is NonNullable<typeof m> => Boolean(m));
+    const recipients = allowedList.map(member => ({
+      email: member.email,
+      firstName: member.first_name || 'Member',
+      chapterName: chapter.name
+    }));
 
 
 
@@ -116,6 +119,18 @@ export async function POST(request: NextRequest) {
       eventEndTime: event.end_time,
       eventId: event.id
     });
+
+    // Push: notify each recipient of new event
+    const pushPayload = buildPushPayload('new_event', {
+      eventId: event.id,
+      eventSlug: event.slug ?? null,
+      eventTitle: event.title,
+    });
+    for (const member of allowedList) {
+      sendPushToUser(member.id, pushPayload).catch(pushErr => {
+        console.error('Failed to send new event push to', member.id, pushErr);
+      });
+    }
 
     // Send SMS notifications only if send_sms is true (parallel to email, don't block if SMS fails)
     if (send_sms === true) {
@@ -211,7 +226,7 @@ export async function POST(request: NextRequest) {
             // Import SMSNotificationService
             const { SMSNotificationService } = await import('@/lib/services/sms/smsNotificationService');
 
-            // Send SMS notifications in parallel (don't await - fire and forget)
+            const eventLink = generateEventLink(event.id, event.slug ?? null, { ref: 'sms' });
             Promise.all(
               membersToNotify.map(member =>
                 SMSNotificationService.sendEventNotification(
@@ -220,7 +235,8 @@ export async function POST(request: NextRequest) {
                   event.title,
                   formattedDate,
                   member.id,
-                  chapterId
+                  chapterId,
+                  { link: eventLink }
                 )
               )
             )
@@ -354,7 +370,7 @@ export async function POST(request: NextRequest) {
               }))
             });
 
-            // Send SMS notifications in parallel (don't await - fire and forget)
+            const eventLink = generateEventLink(event.id, event.slug ?? null, { ref: 'sms' });
             Promise.all(
               alumniToNotify.map(alum =>
                 SMSNotificationService.sendEventNotification(
@@ -363,7 +379,8 @@ export async function POST(request: NextRequest) {
                   event.title,
                   formattedDate,
                   alum.id,
-                  chapterId
+                  chapterId,
+                  { link: eventLink }
                 )
               )
             )

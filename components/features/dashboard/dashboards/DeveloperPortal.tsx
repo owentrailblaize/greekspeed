@@ -18,6 +18,8 @@ function getViewFromPathname(pathname: string): DeveloperView {
     return 'feature-flags';
   } else if (pathname === '/dashboard/developer/branding') {
     return 'branding';
+  } else if (pathname === '/dashboard/developer/notifications') {
+    return 'notifications';
   } else if (pathname === '/dashboard' || pathname === '/dashboard/') {
     return 'overview';
   }
@@ -45,6 +47,9 @@ export function DeveloperPortal({ children }: DeveloperPortalProps) {
         break;
       case 'branding':
         router.push('/dashboard/developer/branding');
+        break;
+      case 'notifications':
+        router.push('/dashboard/developer/notifications');
         break;
     }
   };

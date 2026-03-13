@@ -41,17 +41,9 @@ async function getMutualConnectionsForMembers(
       return new Map(); // No connections, so no mutual connections
     }
 
-    // Step 2: Get all accepted connections for all members in one query
-    // This is much more efficient than N separate queries
+    // Step 2: Get all accepted connections for all members via RPC (avoids URL length limit)
     const { data: allMemberConnections, error: memberConnectionsError } = await supabase
-      .from('connections')
-      .select('requester_id, recipient_id')
-      .eq('status', 'accepted')
-      .or(
-        memberUserIds
-          .map((id) => `requester_id.eq.${id},recipient_id.eq.${id}`)
-          .join(',')
-      );
+      .rpc('get_connections_for_member_ids', { member_ids: memberUserIds });
 
     if (memberConnectionsError || !allMemberConnections) {
       console.error('Error fetching member connections:', memberConnectionsError);

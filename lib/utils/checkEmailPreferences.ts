@@ -12,6 +12,11 @@ type EmailType =
   | 'message'
   | 'connection'
   | 'connection_accepted'
+  | 'post_comment'
+  | 'comment_reply'
+  | 'post_like'
+  | 'comment_like'
+  | 'inactivity_reminder'
   | 'password_reset'
   | 'password_change';
 
@@ -29,7 +34,12 @@ export async function canSendEmailNotification(
       event_notifications,
       event_reminder_notifications,
       message_notifications,
-      connection_notifications
+      connection_notifications,
+      post_comment_notifications,
+      comment_reply_notifications,
+      post_like_notifications,
+      comment_like_notifications,
+      inactivity_reminder_notifications
     `)
     .eq('user_id', userId)
     .single();
@@ -60,6 +70,16 @@ export async function canSendEmailNotification(
     case 'connection':
     case 'connection_accepted':
       return settings?.connection_notifications ?? true;
+    case 'post_comment':
+      return settings?.post_comment_notifications ?? true;
+    case 'comment_reply':
+      return settings?.comment_reply_notifications ?? true;
+    case 'post_like':
+      return settings?.post_like_notifications ?? true;
+    case 'comment_like':
+      return settings?.comment_like_notifications ?? true;
+    case 'inactivity_reminder':
+      return settings?.inactivity_reminder_notifications ?? true;
     default:
       return true;
   }

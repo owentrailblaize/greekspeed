@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Palette, Search, List, LayoutGrid, ArrowLeft } from 'lucide-react';
+import { Loader2, Palette, Search, List, LayoutGrid, ArrowLeft, Bell } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { BrandingForm } from '@/components/features/branding/BrandingForm';
 import { ChapterBrandingList } from '@/components/features/branding/ChapterBrandingList';
@@ -350,6 +350,16 @@ function DeveloperBrandingPageContent() {
               >
                 <List className="h-4 w-4 mr-2" />
                 List
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push('/dashboard/developer/notifications')}
+                title="Test Notifications"
+                className="rounded-full"
+              >
+                <Bell className="h-4 w-4 mr-2" />
+                Test Notifications
               </Button>
             </div>
           </div>

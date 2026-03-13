@@ -29,10 +29,10 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
     }
 
-    // Check if comment exists and user has access to it
+    // Check if comment exists and user has access to it (include author_id for push)
     const { data: comment, error: commentError } = await supabase
       .from('post_comments')
-      .select('id, post_id')
+      .select('id, post_id, author_id')
       .eq('id', commentId)
       .single();
 
@@ -96,6 +96,68 @@ export async function POST(
       if (likeError) {
         console.error('Comment like error:', likeError);
         return NextResponse.json({ error: 'Failed to like comment' }, { status: 500 });
+      }
+
+      // Push and email: notify comment author when someone else likes their comment
+      if (comment.author_id && comment.author_id !== user.id) {
+        try {
+          const { data: likerProfile } = await supabase
+            .from('profiles')
+            .select('first_name')
+            .eq('id', user.id)
+            .single();
+          const { buildPushPayload } = await import('@/lib/services/notificationPushPayload');
+          const { sendPushToUser } = await import('@/lib/services/oneSignalPushService');
+          const payload = buildPushPayload('comment_like', {
+            postId: comment.post_id,
+            commentId,
+            actorFirstName: likerProfile?.first_name ?? undefined,
+          });
+          await sendPushToUser(comment.author_id, payload);
+        } catch (pushErr) {
+          console.error('Failed to send comment like push:', pushErr);
+        }
+
+        const { data: authorProfile } = await supabase
+          .from('profiles')
+          .select('email, first_name, phone, sms_consent, chapter_id')
+          .eq('id', comment.author_id)
+          .single();
+        const { data: likerProfile } = await supabase
+          .from('profiles')
+          .select('first_name')
+          .eq('id', user.id)
+          .single();
+        const actorFirstName = likerProfile?.first_name ?? 'Someone';
+
+        const { canSendEmailNotification } = await import('@/lib/utils/checkEmailPreferences');
+        const allowed = await canSendEmailNotification(comment.author_id, 'comment_like');
+        if (allowed && authorProfile?.email && authorProfile?.first_name) {
+          const { EmailService } = await import('@/lib/services/emailService');
+          EmailService.sendCommentLikeNotification({
+            to: authorProfile.email,
+            firstName: authorProfile.first_name,
+            actorFirstName,
+            postId: comment.post_id,
+          }).catch((err) => console.error('Failed to send comment like email:', err));
+        }
+
+        if (authorProfile?.phone && authorProfile.sms_consent === true) {
+          const { SMSService } = await import('@/lib/services/sms/smsServiceTelnyx');
+          const { SMSNotificationService } = await import('@/lib/services/sms/smsNotificationService');
+          const formattedPhone = SMSService.formatPhoneNumber(authorProfile.phone);
+          if (SMSService.isValidPhoneNumber(authorProfile.phone)) {
+            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trailblaize.net';
+            SMSNotificationService.sendCommentLikeNotification(
+              formattedPhone,
+              authorProfile.first_name ?? 'Member',
+              actorFirstName,
+              comment.author_id,
+              authorProfile.chapter_id ?? '',
+              { postId: comment.post_id, link: `${baseUrl}/dashboard/post/${comment.post_id}` }
+            ).catch((err) => console.error('Failed to send comment like SMS:', err));
+          }
+        }
       }
 
       return NextResponse.json({ liked: true });

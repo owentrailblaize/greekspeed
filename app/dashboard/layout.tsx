@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import SubscriptionPaywall from '@/components/shared/SubscriptionPaywall';
 import { DashboardHeader } from '@/components/features/dashboard/DashboardHeader';
 import { useActivityTracking } from '@/lib/hooks/useActivityTracking';
+import { useOneSignalPush } from '@/lib/hooks/useOneSignalPush';
 import { ModalProvider, useModal } from '@/lib/contexts/ModalContext';
 import { ProfileModalProvider, useProfileModal } from '@/lib/contexts/ProfileModalContext';
 import { useProfile } from '@/lib/contexts/ProfileContext';
@@ -24,6 +25,8 @@ import {
 import { getPendingPrompt, clearPendingPrompt, queueProfileUpdatePrompt } from '@/lib/utils/profileUpdatePromptQueue';
 import { useRouter } from 'next/navigation';
 import { ChapterFeaturesProvider } from '@/lib/contexts/ChapterFeaturesContext';
+import { OneSignalDashboardLoader } from '@/components/features/dashboard/OneSignalDashboardLoader';
+import { PwaAndPushPrompts } from '@/components/features/pwa/PwaAndPushPrompts';
 
 export default function DashboardLayout({
   children,
@@ -31,9 +34,12 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   // Initialize activity tracking for all dashboard pages
-  useActivityTracking()
+  useActivityTracking();
 
   const { profile, loading: profileLoading } = useProfile();
+
+  // Register push subscription so users receive chapter announcements, events, messages, etc.
+  useOneSignalPush(profile?.id);
   const router = useRouter();
 
   // Guard: redirect to onboarding if not completed
@@ -46,6 +52,8 @@ export default function DashboardLayout({
   return (
     <ActiveChapterProvider>
       <ChapterFeaturesProvider>
+        <OneSignalDashboardLoader userId={profile?.id} />
+        <PwaAndPushPrompts userId={profile?.id} />
         {/* min-h-screen allows content to grow so window can scroll; SocialFeed uses useWindowVirtualizer */}
         <div className="min-h-screen flex flex-col bg-gray-50">
           {/* Always show the header */}
