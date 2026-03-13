@@ -47,27 +47,32 @@ export function useUserPosts(userId: string) {
         throw new Error(postsError.message);
       }
 
-      // Check if current user liked each post
-      const postsWithLikes = await Promise.all(
-        (postsData || []).map(async (post) => {
-          const { data: likeData } = await supabase
-            .from('post_likes')
-            .select('id')
-            .eq('post_id', post.id)
-            .eq('user_id', user.id)
-            .single();
+      // Collect post IDs we just fetched
+      const postIds = (postsData ?? []).map((post) => post.id);
 
-          // Ensure counts are present (default to 0 if missing)
-          return {
-            ...post,
-            is_liked: !!likeData,
-            is_author: post.author_id === user.id,
-            likes_count: post.likes_count ?? 0,
-            comments_count: post.comments_count ?? 0,
-            shares_count: post.shares_count ?? 0,
-          };
-        })
-      );
+      // Fetch all likes for these posts in a single query
+      let likedPostIds = new Set<string>();
+
+      if (postIds.length > 0) {
+        const { data: likesData, error: likesError } = await supabase
+          .from('post_likes')
+          .select('post_id')
+          .in('post_id', postIds)
+          .eq('user_id', user.id);
+        if (!likesError && likesData) {
+          likedPostIds = new Set(likesData.map((row) => row.post_id as string));
+        }
+      }
+
+      // Merge likes and counts into posts
+      const postsWithLikes = (postsData || []).map((post) => ({
+        ...post,
+        is_liked: likedPostIds.has(post.id),
+        is_author: post.author_id === user.id,
+        likes_count: post.likes_count ?? 0,
+        comments_count: post.comments_count ?? 0,
+        shares_count: post.shares_count ?? 0,
+      }))
 
       setPosts(postsWithLikes);
     } catch (err) {
