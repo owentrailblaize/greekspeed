@@ -128,6 +128,9 @@ export function IosInstallModal({
               <InstallStepsContent />
               {imageSection}
             </div>
+            <p className="text-[11px] text-center text-muted-foreground">
+              Stay updated on our full mobile app in progress.
+            </p>
             <div className="flex-shrink-0 p-4 pt-0 border-t border-gray-100">
               <Button type="button" variant="outline" className="w-full rounded-full" onClick={handleDismiss}>
                 Got it

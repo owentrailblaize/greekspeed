@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { supabase } from '@/lib/supabase/client';
 import { PostComment, CommentsResponse, CreateCommentRequest } from '@/types/posts';
 
 type CommentsCacheEntry = {
@@ -447,6 +448,114 @@ export function useComments(postId: string, options: UseCommentsOptions = {}) {
     seededComments,
     seededTotal,
   ]);
+
+  useEffect(() => {
+    if (!enabled || !postId) {
+      return;
+    }
+
+    const channel = supabase
+      .channel(`post-comments:${postId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'post_comments',
+          filter: `post_id=eq.${postId}`,
+        },
+        (payload) => {
+          const newComment = payload.new as PostComment;
+          setComments((prev) => {
+            if (prev.some((c) => c.id === newComment.id)) {
+              return prev;
+            }
+            const updated = [...prev, newComment];
+            const timestamp = Date.now();
+            const cached = commentsCache.get(cacheKey);
+            const nextPagination = {
+              ...pagination,
+              total: (pagination.total ?? prev.length) + 1,
+            };
+            commentsCache.set(cacheKey, {
+              comments: updated,
+              pagination: cached?.pagination ?? nextPagination,
+              fetchedAt: timestamp,
+            });
+            setLastFetchedAt(timestamp);
+            setLoadedFromCache(false);
+            setPagination(nextPagination);
+            return updated;
+          });
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'post_comments',
+          filter: `post_id=eq.${postId}`,
+        },
+        (payload) => {
+          const deletedId = payload.old.id as string;
+          setComments((prev) => {
+            if (!prev.some((c) => c.id === deletedId)) {
+              return prev;
+            }
+            const updated = prev.filter((c) => c.id !== deletedId);
+            const timestamp = Date.now();
+            const cached = commentsCache.get(cacheKey);
+            const nextPagination = {
+              ...pagination,
+              total: Math.max(0, (pagination.total ?? prev.length) - 1),
+            };
+            commentsCache.set(cacheKey, {
+              comments: updated,
+              pagination: cached?.pagination ?? nextPagination,
+              fetchedAt: timestamp,
+            });
+            setLastFetchedAt(timestamp);
+            setLoadedFromCache(false);
+            setPagination(nextPagination);
+            return updated;
+          });
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'post_comments',
+          filter: `post_id=eq.${postId}`,
+        },
+        (payload) => {
+          const updatedComment = payload.new as PostComment;
+          setComments((prev) => {
+            if (!prev.some((c) => c.id === updatedComment.id)) {
+              return prev;
+            }
+            const updated = prev.map((c) => (c.id === updatedComment.id ? updatedComment : c));
+            const timestamp = Date.now();
+            const cached = commentsCache.get(cacheKey);
+            commentsCache.set(cacheKey, {
+              comments: updated,
+              pagination: cached?.pagination ?? pagination,
+              fetchedAt: timestamp,
+            });
+            setLastFetchedAt(timestamp);
+            setLoadedFromCache(false);
+            return updated;
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [cacheKey, enabled, pagination, postId]);
 
   const refresh = useCallback(async () => {
     fetchedRef.current = true;
