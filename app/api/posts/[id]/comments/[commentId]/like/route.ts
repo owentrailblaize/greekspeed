@@ -98,7 +98,7 @@ export async function POST(
         return NextResponse.json({ error: 'Failed to like comment' }, { status: 500 });
       }
 
-      // Push: notify comment author when someone else likes their comment
+      // Push and email: notify comment author when someone else likes their comment
       if (comment.author_id && comment.author_id !== user.id) {
         try {
           const { data: likerProfile } = await supabase
@@ -116,6 +116,30 @@ export async function POST(
           await sendPushToUser(comment.author_id, payload);
         } catch (pushErr) {
           console.error('Failed to send comment like push:', pushErr);
+        }
+
+        const { canSendEmailNotification } = await import('@/lib/utils/checkEmailPreferences');
+        const allowed = await canSendEmailNotification(comment.author_id, 'comment_like');
+        if (allowed) {
+          const { data: authorProfile } = await supabase
+            .from('profiles')
+            .select('email, first_name')
+            .eq('id', comment.author_id)
+            .single();
+          const { data: likerProfile } = await supabase
+            .from('profiles')
+            .select('first_name')
+            .eq('id', user.id)
+            .single();
+          if (authorProfile?.email && authorProfile?.first_name) {
+            const { EmailService } = await import('@/lib/services/emailService');
+            EmailService.sendCommentLikeNotification({
+              to: authorProfile.email,
+              firstName: authorProfile.first_name,
+              actorFirstName: likerProfile?.first_name ?? 'Someone',
+              postId: comment.post_id,
+            }).catch((err) => console.error('Failed to send comment like email:', err));
+          }
         }
       }
 

@@ -126,7 +126,7 @@ export async function POST(
           .eq('id', postId);
       }
 
-      // Push: notify post author when someone else likes their post
+      // Push and email: notify post author when someone else likes their post
       if (post.author_id && post.author_id !== user.id) {
         try {
           const { data: likerProfile } = await supabase
@@ -143,6 +143,30 @@ export async function POST(
           await sendPushToUser(post.author_id, payload);
         } catch (pushErr) {
           console.error('Failed to send post like push:', pushErr);
+        }
+
+        const { canSendEmailNotification } = await import('@/lib/utils/checkEmailPreferences');
+        const allowed = await canSendEmailNotification(post.author_id, 'post_like');
+        if (allowed) {
+          const { data: authorProfile } = await supabase
+            .from('profiles')
+            .select('email, first_name')
+            .eq('id', post.author_id)
+            .single();
+          const { data: likerProfile } = await supabase
+            .from('profiles')
+            .select('first_name')
+            .eq('id', user.id)
+            .single();
+          if (authorProfile?.email && authorProfile?.first_name) {
+            const { EmailService } = await import('@/lib/services/emailService');
+            EmailService.sendPostLikeNotification({
+              to: authorProfile.email,
+              firstName: authorProfile.first_name,
+              actorFirstName: likerProfile?.first_name ?? 'Someone',
+              postId,
+            }).catch((err) => console.error('Failed to send post like email:', err));
+          }
         }
       }
 

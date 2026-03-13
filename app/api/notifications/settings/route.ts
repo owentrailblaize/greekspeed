@@ -33,7 +33,12 @@ export async function GET(request: NextRequest) {
         event_notifications,
         event_reminder_notifications,
         message_notifications,
-        connection_notifications
+        connection_notifications,
+        post_comment_notifications,
+        comment_reply_notifications,
+        post_like_notifications,
+        comment_like_notifications,
+        inactivity_reminder_notifications
       `)
       .eq('user_id', userId)
       .single();
@@ -54,6 +59,11 @@ export async function GET(request: NextRequest) {
           event_reminder_notifications: true,
           message_notifications: true,
           connection_notifications: true,
+          post_comment_notifications: true,
+          comment_reply_notifications: true,
+          post_like_notifications: true,
+          comment_like_notifications: true,
+          inactivity_reminder_notifications: true,
         })
         .select(`
           sms_enabled,
@@ -62,7 +72,12 @@ export async function GET(request: NextRequest) {
           event_notifications,
           event_reminder_notifications,
           message_notifications,
-          connection_notifications
+          connection_notifications,
+          post_comment_notifications,
+          comment_reply_notifications,
+          post_like_notifications,
+          comment_like_notifications,
+          inactivity_reminder_notifications
         `)
         .single();
 
@@ -86,6 +101,11 @@ export async function GET(request: NextRequest) {
     const event_reminder_notifications = settings?.event_reminder_notifications ?? true;
     const message_notifications = settings?.message_notifications ?? true;
     const connection_notifications = settings?.connection_notifications ?? true;
+    const post_comment_notifications = settings?.post_comment_notifications ?? true;
+    const comment_reply_notifications = settings?.comment_reply_notifications ?? true;
+    const post_like_notifications = settings?.post_like_notifications ?? true;
+    const comment_like_notifications = settings?.comment_like_notifications ?? true;
+    const inactivity_reminder_notifications = settings?.inactivity_reminder_notifications ?? true;
 
     return NextResponse.json({
       // SMS
@@ -98,6 +118,11 @@ export async function GET(request: NextRequest) {
       event_reminder_notifications,
       message_notifications,
       connection_notifications,
+      post_comment_notifications,
+      comment_reply_notifications,
+      post_like_notifications,
+      comment_like_notifications,
+      inactivity_reminder_notifications,
     });
   } catch (error) {
     console.error('Error fetching notification settings:', error);
@@ -119,6 +144,11 @@ export async function PATCH(request: NextRequest) {
       event_reminder_notifications,
       message_notifications,
       connection_notifications,
+      post_comment_notifications,
+      comment_reply_notifications,
+      post_like_notifications,
+      comment_like_notifications,
+      inactivity_reminder_notifications,
     } = body || {};
 
     if (!userId) {
@@ -179,6 +209,21 @@ export async function PATCH(request: NextRequest) {
     }
     if (typeof connection_notifications === 'boolean') {
       settingsUpdate.connection_notifications = connection_notifications;
+    }
+    if (typeof post_comment_notifications === 'boolean') {
+      settingsUpdate.post_comment_notifications = post_comment_notifications;
+    }
+    if (typeof comment_reply_notifications === 'boolean') {
+      settingsUpdate.comment_reply_notifications = comment_reply_notifications;
+    }
+    if (typeof post_like_notifications === 'boolean') {
+      settingsUpdate.post_like_notifications = post_like_notifications;
+    }
+    if (typeof comment_like_notifications === 'boolean') {
+      settingsUpdate.comment_like_notifications = comment_like_notifications;
+    }
+    if (typeof inactivity_reminder_notifications === 'boolean') {
+      settingsUpdate.inactivity_reminder_notifications = inactivity_reminder_notifications;
     }
 
     // Upsert notification_settings with provided fields

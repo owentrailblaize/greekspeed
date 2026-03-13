@@ -12,6 +12,7 @@ import { NOTIFICATION_TYPES, type NotificationType, EMAIL_EVENT_TYPES } from '@/
 const TEST_USER_ID = 'test-user-id';
 const TEST_CHAPTER_ID = 'test-chapter-id';
 const TEST_CONNECTION_ID = 'test-connection-id-123';
+const TEST_POST_ID = 'test-post-id';
 
 const SAMPLE = {
   firstName: 'Jordan',
@@ -250,6 +251,56 @@ function buildEmailPayloadForType(type: NotificationType): DryRunResult['email']
         subject: `GreekSpeed: ${SAMPLE.title}`,
         bodyDescription: `Inline HTML: title=${SAMPLE.title}, userName=${SAMPLE.userName}, message="Sample notification message."`,
       };
+    case 'post_comment':
+      return {
+        subject: `${SAMPLE.actorFirstName} commented on your post on Trailblaize`,
+        templateData: {
+          recipient: { first_name: SAMPLE.firstName, email: 'test@example.com' },
+          title: 'New comment on your post',
+          body: `${SAMPLE.actorFirstName} commented: "${SAMPLE.content.slice(0, 80)}..."`,
+          cta: { label: 'View post', url: `${TEST_BASE_URL}/dashboard/post/${TEST_POST_ID}` },
+        },
+      };
+    case 'comment_reply':
+      return {
+        subject: `${SAMPLE.actorFirstName} replied to your comment on Trailblaize`,
+        templateData: {
+          recipient: { first_name: SAMPLE.firstName, email: 'test@example.com' },
+          title: 'New reply to your comment',
+          body: `${SAMPLE.actorFirstName} replied: "${SAMPLE.content.slice(0, 80)}..."`,
+          cta: { label: 'View post', url: `${TEST_BASE_URL}/dashboard/post/${TEST_POST_ID}` },
+        },
+      };
+    case 'post_like':
+      return {
+        subject: `${SAMPLE.actorFirstName} liked your post on Trailblaize`,
+        templateData: {
+          recipient: { first_name: SAMPLE.firstName, email: 'test@example.com' },
+          title: 'Your post was liked',
+          body: `${SAMPLE.actorFirstName} liked your post.`,
+          cta: { label: 'View post', url: `${TEST_BASE_URL}/dashboard/post/${TEST_POST_ID}` },
+        },
+      };
+    case 'comment_like':
+      return {
+        subject: `${SAMPLE.actorFirstName} liked your comment on Trailblaize`,
+        templateData: {
+          recipient: { first_name: SAMPLE.firstName, email: 'test@example.com' },
+          title: 'Your comment was liked',
+          body: `${SAMPLE.actorFirstName} liked your comment.`,
+          cta: { label: 'View post', url: `${TEST_BASE_URL}/dashboard/post/${TEST_POST_ID}` },
+        },
+      };
+    case 'inactivity_reminder':
+      return {
+        subject: "We haven't seen you in a while on Trailblaize",
+        templateData: {
+          recipient: { first_name: SAMPLE.firstName, email: 'test@example.com' },
+          title: 'We miss you',
+          body: `It's been a while since you've been on Trailblaize. Your ${SAMPLE.chapterName} community is here when you're ready to catch up.`,
+          cta: { label: 'Open Trailblaize', url: `${TEST_BASE_URL}/dashboard` },
+        },
+      };
     default:
       return { subject: '(unknown)', bodyDescription: '(no email)' };
   }
@@ -386,6 +437,49 @@ export async function runNotificationTest(options: NotificationTestOptions): Pro
             message: 'Sample notification message.',
             actionUrl: 'https://www.trailblaize.net/dashboard',
             actionText: 'Open Dashboard',
+          });
+          break;
+        case 'post_comment':
+          emailSent = await EmailService.sendPostCommentNotification({
+            to: toEmail,
+            firstName: SAMPLE.firstName,
+            chapterName: SAMPLE.chapterName,
+            actorFirstName: SAMPLE.actorFirstName,
+            contentPreview: SAMPLE.content.slice(0, 80),
+            postId: TEST_POST_ID,
+          });
+          break;
+        case 'comment_reply':
+          emailSent = await EmailService.sendCommentReplyNotification({
+            to: toEmail,
+            firstName: SAMPLE.firstName,
+            chapterName: SAMPLE.chapterName,
+            actorFirstName: SAMPLE.actorFirstName,
+            contentPreview: SAMPLE.content.slice(0, 80),
+            postId: TEST_POST_ID,
+          });
+          break;
+        case 'post_like':
+          emailSent = await EmailService.sendPostLikeNotification({
+            to: toEmail,
+            firstName: SAMPLE.firstName,
+            actorFirstName: SAMPLE.actorFirstName,
+            postId: TEST_POST_ID,
+          });
+          break;
+        case 'comment_like':
+          emailSent = await EmailService.sendCommentLikeNotification({
+            to: toEmail,
+            firstName: SAMPLE.firstName,
+            actorFirstName: SAMPLE.actorFirstName,
+            postId: TEST_POST_ID,
+          });
+          break;
+        case 'inactivity_reminder':
+          emailSent = await EmailService.sendInactivityReminderEmail({
+            to: toEmail,
+            firstName: SAMPLE.firstName,
+            chapterName: SAMPLE.chapterName,
           });
           break;
       }

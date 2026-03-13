@@ -4,6 +4,8 @@ import { fetchLinkPreviewsServer } from '@/lib/services/linkPreviewService';
 import { LinkPreview } from '@/types/posts';
 import { buildPushPayload } from '@/lib/services/notificationPushPayload';
 import { sendPushToUser } from '@/lib/services/oneSignalPushService';
+import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
+import { EmailService } from '@/lib/services/emailService';
 
 export async function GET(
   request: NextRequest,
@@ -295,6 +297,39 @@ export async function POST(
       sendPushToUser(notifyUserId, pushPayload).catch(pushErr => {
         console.error('Failed to send comment push:', pushErr);
       });
+
+      // Email: post_comment or comment_reply (respect preferences)
+      const allowed = await canSendEmailNotification(notifyUserId, eventType);
+      if (allowed) {
+        const { data: recipientProfile } = await supabase
+          .from('profiles')
+          .select('email, first_name, chapter')
+          .eq('id', notifyUserId)
+          .single();
+        if (recipientProfile?.email && recipientProfile?.first_name) {
+          const actorName = authorProfile?.first_name ?? 'Someone';
+          const chapterName = recipientProfile.chapter ?? 'Your chapter';
+          if (eventType === 'post_comment') {
+            EmailService.sendPostCommentNotification({
+              to: recipientProfile.email,
+              firstName: recipientProfile.first_name,
+              chapterName,
+              actorFirstName: actorName,
+              contentPreview: contentPreview || '',
+              postId,
+            }).catch((err) => console.error('Failed to send post comment email:', err));
+          } else {
+            EmailService.sendCommentReplyNotification({
+              to: recipientProfile.email,
+              firstName: recipientProfile.first_name,
+              chapterName,
+              actorFirstName: actorName,
+              contentPreview: contentPreview || '',
+              postId,
+            }).catch((err) => console.error('Failed to send comment reply email:', err));
+          }
+        }
+      }
     }
 
     return NextResponse.json({ comment });

@@ -27,6 +27,11 @@ export default function SettingsPage() {
     event_reminder_notifications: true,
     message_notifications: true,
     connection_notifications: true,
+    post_comment_notifications: true,
+    comment_reply_notifications: true,
+    post_like_notifications: true,
+    comment_like_notifications: true,
+    inactivity_reminder_notifications: true,
   });
 
   // Helper to PATCH only changed fields
@@ -92,6 +97,11 @@ export default function SettingsPage() {
           event_reminder_notifications: data.event_reminder_notifications === true,
           message_notifications: data.message_notifications === true,
           connection_notifications: data.connection_notifications === true,
+          post_comment_notifications: data.post_comment_notifications !== false,
+          comment_reply_notifications: data.comment_reply_notifications !== false,
+          post_like_notifications: data.post_like_notifications !== false,
+          comment_like_notifications: data.comment_like_notifications !== false,
+          inactivity_reminder_notifications: data.inactivity_reminder_notifications !== false,
         })
       } else {
         console.error('Failed to fetch settings:', response.status);
@@ -435,6 +445,96 @@ export default function SettingsPage() {
                   <Switch
                     checked={emailPrefs.connection_notifications}
                     onCheckedChange={(checked) => togglePref('connection_notifications', checked)}
+                    disabled={emailPrefsLoading}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border rounded-xl bg-white">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">Post comments</h4>
+                  <p className="text-sm text-gray-600">
+                    Email when someone comments on your post
+                  </p>
+                </div>
+                <div className="flex items-center space-x-3 ml-4">
+                  <Switch
+                    checked={emailPrefs.post_comment_notifications}
+                    onCheckedChange={(checked) => togglePref('post_comment_notifications', checked)}
+                    disabled={emailPrefsLoading}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border rounded-xl bg-white">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">Comment replies</h4>
+                  <p className="text-sm text-gray-600">
+                    Email when someone replies to your comment
+                  </p>
+                </div>
+                <div className="flex items-center space-x-3 ml-4">
+                  <Switch
+                    checked={emailPrefs.comment_reply_notifications}
+                    onCheckedChange={(checked) => togglePref('comment_reply_notifications', checked)}
+                    disabled={emailPrefsLoading}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border rounded-xl bg-white">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">Post likes</h4>
+                  <p className="text-sm text-gray-600">
+                    Email when someone likes your post
+                  </p>
+                </div>
+                <div className="flex items-center space-x-3 ml-4">
+                  <Switch
+                    checked={emailPrefs.post_like_notifications}
+                    onCheckedChange={(checked) => togglePref('post_like_notifications', checked)}
+                    disabled={emailPrefsLoading}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border rounded-xl bg-white">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">Comment likes</h4>
+                  <p className="text-sm text-gray-600">
+                    Email when someone likes your comment
+                  </p>
+                </div>
+                <div className="flex items-center space-x-3 ml-4">
+                  <Switch
+                    checked={emailPrefs.comment_like_notifications}
+                    onCheckedChange={(checked) => togglePref('comment_like_notifications', checked)}
+                    disabled={emailPrefsLoading}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border rounded-xl bg-white">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">Inactivity reminder</h4>
+                  <p className="text-sm text-gray-600">
+                    Email after 30 days of no activity
+                  </p>
+                </div>
+                <div className="flex items-center space-x-3 ml-4">
+                  <Switch
+                    checked={emailPrefs.inactivity_reminder_notifications}
+                    onCheckedChange={(checked) => togglePref('inactivity_reminder_notifications', checked)}
                     disabled={emailPrefsLoading}
                   />
                 </div>

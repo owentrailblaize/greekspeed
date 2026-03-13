@@ -105,6 +105,18 @@ export interface PasswordResetInstructionsEmail {
   timestamp: string;
 }
 
+/** Payload for generic notification template (post comment, comment reply, post like, comment like, inactivity) */
+export interface GenericNotificationTemplateData {
+  to: string;
+  subject: string;
+  firstName: string;
+  title: string;
+  body: string;
+  ctaLabel: string;
+  ctaUrl: string;
+  templateId?: string;
+}
+
 export class EmailService {
   private static fromEmail = process.env.SENDGRID_FROM_EMAIL || 'devin@trailblaize.net';
   private static fromName = process.env.SENDGRID_FROM_NAME || 'GreekSpeed';
@@ -628,6 +640,192 @@ export class EmailService {
       console.error('Error sending message notification email:', error);
       return false;
     }
+  }
+
+  /**
+   * Send email using the generic notification dynamic template.
+   * Used for post comment, comment reply, post like, comment like, and inactivity reminder.
+   */
+  private static async sendGenericNotificationEmail({
+    to,
+    subject,
+    firstName,
+    title,
+    body,
+    ctaLabel,
+    ctaUrl,
+    templateId: templateIdOverride,
+  }: GenericNotificationTemplateData): Promise<boolean> {
+    const templateId = templateIdOverride ?? process.env.SENDGRID_GENERIC_NOTIFICATION_TEMPLATE_ID;
+    if (!templateId) {
+      console.warn('No notification template ID set; skipping email');
+      return false;
+    }
+    try {
+      const msg = {
+        to,
+        from: { email: this.fromEmail, name: this.fromName },
+        subject,
+        templateId,
+        dynamicTemplateData: {
+          recipient: { first_name: firstName, email: to },
+          title,
+          body,
+          cta: { label: ctaLabel, url: ctaUrl },
+          unsubscribe: `${getEmailBaseUrl()}/unsubscribe?email=${encodeURIComponent(to)}`,
+          unsubscribe_preferences: `${getEmailBaseUrl()}/preferences?email=${encodeURIComponent(to)}`,
+        },
+      };
+      await sgMail.send(msg);
+      return true;
+    } catch (error) {
+      console.error('Failed to send generic notification email:', error);
+      return false;
+    }
+  }
+
+  /** Post comment: notify post author when someone comments on their post */
+  static async sendPostCommentNotification({
+    to,
+    firstName,
+    chapterName,
+    actorFirstName,
+    contentPreview,
+    postId,
+  }: {
+    to: string;
+    firstName: string;
+    chapterName: string;
+    actorFirstName: string;
+    contentPreview: string;
+    postId: string;
+  }): Promise<boolean> {
+    const baseUrl = getEmailBaseUrl();
+    const postUrl = `${baseUrl}/dashboard/post/${postId}`;
+    const title = 'New comment on your post';
+    const body = contentPreview
+      ? `${actorFirstName} commented: "${contentPreview.slice(0, 80)}${contentPreview.length > 80 ? '...' : ''}"`
+      : `${actorFirstName} commented on your post.`;
+    return this.sendGenericNotificationEmail({
+      to,
+      subject: `${actorFirstName} commented on your post on Trailblaize`,
+      firstName,
+      title,
+      body,
+      ctaLabel: 'View post',
+      ctaUrl: postUrl,
+      templateId: process.env.SENDGRID_POST_COMMENT_TEMPLATE_ID,
+    });
+  }
+
+  /** Comment reply: notify parent comment author when someone replies */
+  static async sendCommentReplyNotification({
+    to,
+    firstName,
+    chapterName,
+    actorFirstName,
+    contentPreview,
+    postId,
+  }: {
+    to: string;
+    firstName: string;
+    chapterName: string;
+    actorFirstName: string;
+    contentPreview: string;
+    postId: string;
+  }): Promise<boolean> {
+    const baseUrl = getEmailBaseUrl();
+    const postUrl = `${baseUrl}/dashboard/post/${postId}`;
+    const title = 'New reply to your comment';
+    const body = contentPreview
+      ? `${actorFirstName} replied: "${contentPreview.slice(0, 80)}${contentPreview.length > 80 ? '...' : ''}"`
+      : `${actorFirstName} replied to your comment.`;
+    return this.sendGenericNotificationEmail({
+      to,
+      subject: `${actorFirstName} replied to your comment on Trailblaize`,
+      firstName,
+      title,
+      body,
+      ctaLabel: 'View post',
+      ctaUrl: postUrl,
+      templateId: process.env.SENDGRID_COMMENT_REPLY_TEMPLATE_ID,
+    });
+  }
+
+  /** Post like: notify post author when someone likes their post */
+  static async sendPostLikeNotification({
+    to,
+    firstName,
+    actorFirstName,
+    postId,
+  }: {
+    to: string;
+    firstName: string;
+    actorFirstName: string;
+    postId: string;
+  }): Promise<boolean> {
+    const baseUrl = getEmailBaseUrl();
+    const postUrl = `${baseUrl}/dashboard/post/${postId}`;
+    return this.sendGenericNotificationEmail({
+      to,
+      subject: `${actorFirstName} liked your post on Trailblaize`,
+      firstName,
+      title: 'Your post was liked',
+      body: `${actorFirstName} liked your post.`,
+      ctaLabel: 'View post',
+      ctaUrl: postUrl,
+      templateId: process.env.SENDGRID_POST_LIKE_TEMPLATE_ID,
+    });
+  }
+
+  /** Comment like: notify comment author when someone likes their comment */
+  static async sendCommentLikeNotification({
+    to,
+    firstName,
+    actorFirstName,
+    postId,
+  }: {
+    to: string;
+    firstName: string;
+    actorFirstName: string;
+    postId: string;
+  }): Promise<boolean> {
+    const baseUrl = getEmailBaseUrl();
+    const postUrl = `${baseUrl}/dashboard/post/${postId}`;
+    return this.sendGenericNotificationEmail({
+      to,
+      subject: `${actorFirstName} liked your comment on Trailblaize`,
+      firstName,
+      title: 'Your comment was liked',
+      body: `${actorFirstName} liked your comment.`,
+      ctaLabel: 'View post',
+      ctaUrl: postUrl,
+      templateId: process.env.SENDGRID_COMMENT_LIKE_TEMPLATE_ID,
+    });
+  }
+
+  /** Inactivity reminder: re-engage users who have not been active for 30+ days */
+  static async sendInactivityReminderEmail({
+    to,
+    firstName,
+    chapterName,
+  }: {
+    to: string;
+    firstName: string;
+    chapterName: string;
+  }): Promise<boolean> {
+    const baseUrl = getEmailBaseUrl();
+    const dashboardUrl = `${baseUrl}/dashboard`;
+    return this.sendGenericNotificationEmail({
+      to,
+      subject: "We haven't seen you in a while on Trailblaize",
+      firstName,
+      title: "We miss you",
+      body: `It's been a while since you've been on Trailblaize. Your ${chapterName} community is here when you're ready to catch up.`,
+      ctaLabel: 'Open Trailblaize',
+      ctaUrl: dashboardUrl,
+      templateId: process.env.SENDGRID_INACTIVITY_REMINDER_TEMPLATE_ID,
+    });
   }
 
   // Email Templates

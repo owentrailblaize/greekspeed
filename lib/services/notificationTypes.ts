@@ -19,6 +19,7 @@ export const NOTIFICATION_TYPES = [
   'comment_reply',
   'post_like',
   'comment_like',
+  'inactivity_reminder',
   'system_alert',
 ] as const;
 
@@ -36,6 +37,11 @@ export const EMAIL_EVENT_TYPES: readonly NotificationType[] = [
   'password_change',
   'welcome',
   'generic_notification',
+  'post_comment',
+  'comment_reply',
+  'post_like',
+  'comment_like',
+  'inactivity_reminder',
 ];
 
 /** Event types that support SMS notifications. */
