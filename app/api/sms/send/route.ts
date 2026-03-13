@@ -126,7 +126,6 @@ export async function POST(request: NextRequest) {
     // Format message with compliance text using SMSMessageFormatter
     // This ensures compliance text is never truncated and supports multi-part messages
     const senderPrefix = '[Trailblaize]';
-    const optOutText = ' Reply STOP to opt out.';
     const complianceText = ' Msg/data rates apply';
     
     // Check if message already has compliance text
@@ -148,7 +147,7 @@ export async function POST(request: NextRequest) {
       // Format with compliance text - formatter ensures compliance text is never truncated
       messageParts = SMSMessageFormatter.formatCompliantMessage(message, {
         senderPrefix,
-        optOutText,
+        optOutText: '',
         complianceText,
         // No maxParts limit - let Telnyx handle full message concatenation
       });

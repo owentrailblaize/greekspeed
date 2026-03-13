@@ -21,8 +21,8 @@ export interface SMSMessageParts {
 const DEFAULT_SENDER_PREFIX = 'Trailblaize: ';
 
 const COMPLIANCE = {
-  full: ' Reply STOP to opt out. HELP for help. Msg & data rates may apply.',
-  short: ' Reply STOP to opt out.',
+  full: ' Turn off sms alerts in app settings. Msg & data rates may apply.',
+  short: '',
   none: '',
 } as const;
 
