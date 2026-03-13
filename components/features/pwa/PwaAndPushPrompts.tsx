@@ -92,7 +92,6 @@ export function PwaAndPushPrompts({ userId }: PwaAndPushPromptsProps) {
       markInstallPromptDismissed(userId);
       if (fromOnboarding) setShownAfterOnboarding(userId);
     }
-    installDismissedThisSession.current = true;
     setShowInstallModal(false);
     setShowIosInstallModal(false);
   };
