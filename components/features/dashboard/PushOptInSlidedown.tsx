@@ -5,6 +5,7 @@ import { useOneSignalPush } from '@/lib/hooks/useOneSignalPush';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Bell } from 'lucide-react';
+import { usePwaInstallState } from '@/lib/hooks/usePwaInstallState';
 
 const DISMISSED_KEY = 'push-optin-dismissed';
 
@@ -25,6 +26,7 @@ export function PushOptInSlidedown({ userId, delayMs = 0, className }: PushOptIn
   const { isPushSupported, permission, isLoading, requestPermission } = useOneSignalPush(userId);
   const [visible, setVisible] = useState(false);
   const [delayed, setDelayed] = useState(delayMs > 0);
+  const { isInstalled, platform } = usePwaInstallState();
 
   useEffect(() => {
     if (delayMs <= 0) {
@@ -44,9 +46,10 @@ export function PushOptInSlidedown({ userId, delayMs = 0, className }: PushOptIn
       isPushSupported &&
       permission === 'default' &&
       !dismissed &&
-      !!userId;
+      !!userId &&
+      (platform !== 'ios' || isInstalled);
     setVisible(shouldShow);
-  }, [isLoading, delayed, isPushSupported, permission, userId]);
+  }, [isLoading, delayed, isPushSupported, permission, userId, platform, isInstalled]);
 
   const handleLater = () => {
     sessionStorage.setItem(DISMISSED_KEY, '1');

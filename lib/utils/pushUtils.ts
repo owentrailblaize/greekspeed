@@ -14,7 +14,7 @@ export function getDeviceType(): 'desktop' | 'mobile' {
 export function getPlatform(): 'desktop' | 'ios_pwa' | 'android' {
   if (typeof navigator === 'undefined') return 'desktop';
   const ua = navigator.userAgent.toLowerCase();
-  if (/iphone|ipad|ipod|mac/.test(ua)) return 'ios_pwa';
+  if (/iphone|ipad|ipod/.test(ua)) return 'ios_pwa';
   if (/android/.test(ua)) return 'android';
   return 'desktop';
 }
