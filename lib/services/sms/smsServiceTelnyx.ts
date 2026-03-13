@@ -291,7 +291,7 @@ export class SMSService {
               to: message.to,
               text: message.body,
               type: 'sms',
-              encoding: 'GSM7',
+              encoding: 'auto',
             };
 
             console.log(`📤 Sending to Telnyx REST API (Attempt ${attempt}/${this.MAX_RETRIES}):`, {

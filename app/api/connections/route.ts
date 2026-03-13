@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { EmailService } from '@/lib/services/emailService';
 import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
+import { buildPushPayload } from '@/lib/services/notificationPushPayload';
+import { sendPushToUser } from '@/lib/services/oneSignalPushService';
 
 // Configure function timeout for Vercel (60 seconds for Pro plan)
 export const maxDuration = 60;
@@ -106,7 +108,7 @@ export async function POST(request: NextRequest) {
     // Get requester profile information for email notification
     const { data: requesterProfile, error: requesterError } = await supabase
       .from('profiles')
-      .select('first_name, chapter_id')
+      .select('first_name, last_name, avatar_url, chapter_id')
       .eq('id', requesterId)
       .single();
 
@@ -146,6 +148,8 @@ export async function POST(request: NextRequest) {
             firstName: recipientProfile.first_name,
             chapterName: recipientProfile.chapter || 'Your Chapter',
             actorFirstName: requesterProfile.first_name,
+            actorLastName: requesterProfile.last_name ?? '',
+            actorAvatarUrl: requesterProfile.avatar_url ?? null,
             message: message,
             connectionId: connection.id
           }).catch(emailError => {
@@ -191,13 +195,15 @@ export async function POST(request: NextRequest) {
           // Import SMSNotificationService
           const { SMSNotificationService } = await import('@/lib/services/sms/smsNotificationService');
 
-          // Send SMS notification (don't await - fire and forget)
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trailblaize.net';
+          const connectionLink = `${baseUrl}/dashboard/notifications?connection=${connection.id}`;
           SMSNotificationService.sendConnectionRequestNotification(
             formattedPhone,
             recipientProfile.first_name || 'Member',
             requesterName,
             recipientProfile.id,
-            recipientProfile.chapter_id || ''
+            recipientProfile.chapter_id || '',
+            { link: connectionLink }
           )
             .then(success => {
               console.log('✅ Connection request SMS notification result:', {
@@ -217,6 +223,19 @@ export async function POST(request: NextRequest) {
             });
         }
       }
+
+      // Push: notify recipient of connection request
+      const pushPayload = buildPushPayload('connection_request', {
+        connectionId: connection.id,
+        actorFirstName: requesterProfile?.first_name ?? undefined,
+        actorFullName: requesterProfile?.last_name
+          ? `${requesterProfile.first_name} ${requesterProfile.last_name}`.trim()
+          : requesterProfile?.first_name ?? undefined,
+        chapterName: recipientProfile?.chapter ?? undefined,
+      });
+      sendPushToUser(recipientId, pushPayload).catch(pushErr => {
+        console.error('Failed to send connection request push:', pushErr);
+      });
     } catch (notificationError) {
       console.error('❌ Error in notification process:', notificationError);
       // Don't fail the connection creation if notifications fail

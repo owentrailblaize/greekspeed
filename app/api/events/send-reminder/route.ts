@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { EmailService } from '@/lib/services/emailService';
 import { canSendEmailNotification } from '@/lib/utils/checkEmailPreferences';
+import { buildPushPayload } from '@/lib/services/notificationPushPayload';
+import { sendPushToUser } from '@/lib/services/oneSignalPushService';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -100,14 +102,13 @@ export async function POST(request: NextRequest) {
       })
     );
 
-    // Prepare recipients
-    const recipients = allowedMembers
-      .filter((m): m is NonNullable<typeof m> => Boolean(m))
-      .map(member => ({
-        email: member.email,
-        firstName: member.first_name || 'Member',
-        chapterName: chapter?.name || 'Your Chapter'
-      }));
+    const allowedList = allowedMembers
+      .filter((m): m is NonNullable<typeof m> => Boolean(m));
+    const recipients = allowedList.map(member => ({
+      email: member.email,
+      firstName: member.first_name || 'Member',
+      chapterName: chapter?.name || 'Your Chapter'
+    }));
 
     // Calculate relative time
     const startDate = new Date(event.start_time);
@@ -143,6 +144,18 @@ export async function POST(request: NextRequest) {
       startAtRelative
     });
 
+    // Push: notify each recipient of event reminder
+    const pushPayload = buildPushPayload('event_reminder', {
+      eventId: event.id,
+      eventSlug: event.slug ?? null,
+      eventTitle: event.title,
+      startAtRelative,
+    });
+    for (const member of allowedList) {
+      sendPushToUser(member.id, pushPayload).catch(pushErr => {
+        console.error('Failed to send event reminder push to', member.id, pushErr);
+      });
+    }
 
     return NextResponse.json({
       success: true,

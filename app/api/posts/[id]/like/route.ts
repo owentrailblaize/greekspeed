@@ -29,10 +29,10 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
     }
 
-    // Check if post exists and user has access to it
+    // Check if post exists and user has access to it (include author_id for push)
     const { data: post, error: postError } = await supabase
       .from('posts')
-      .select('chapter_id')
+      .select('chapter_id, author_id')
       .eq('id', postId)
       .single();
 
@@ -124,6 +124,67 @@ export async function POST(
             updated_at: new Date().toISOString()
           })
           .eq('id', postId);
+      }
+
+      // Push and email: notify post author when someone else likes their post
+      if (post.author_id && post.author_id !== user.id) {
+        try {
+          const { data: likerProfile } = await supabase
+            .from('profiles')
+            .select('first_name')
+            .eq('id', user.id)
+            .single();
+          const { buildPushPayload } = await import('@/lib/services/notificationPushPayload');
+          const { sendPushToUser } = await import('@/lib/services/oneSignalPushService');
+          const payload = buildPushPayload('post_like', {
+            postId,
+            actorFirstName: likerProfile?.first_name ?? undefined,
+          });
+          await sendPushToUser(post.author_id, payload);
+        } catch (pushErr) {
+          console.error('Failed to send post like push:', pushErr);
+        }
+
+        const { data: authorProfile } = await supabase
+          .from('profiles')
+          .select('email, first_name, phone, sms_consent, chapter_id')
+          .eq('id', post.author_id)
+          .single();
+        const { data: likerProfile } = await supabase
+          .from('profiles')
+          .select('first_name')
+          .eq('id', user.id)
+          .single();
+        const actorFirstName = likerProfile?.first_name ?? 'Someone';
+
+        const { canSendEmailNotification } = await import('@/lib/utils/checkEmailPreferences');
+        const allowed = await canSendEmailNotification(post.author_id, 'post_like');
+        if (allowed && authorProfile?.email && authorProfile?.first_name) {
+          const { EmailService } = await import('@/lib/services/emailService');
+          EmailService.sendPostLikeNotification({
+            to: authorProfile.email,
+            firstName: authorProfile.first_name,
+            actorFirstName,
+            postId,
+          }).catch((err) => console.error('Failed to send post like email:', err));
+        }
+
+        if (authorProfile?.phone && authorProfile.sms_consent === true) {
+          const { SMSService } = await import('@/lib/services/sms/smsServiceTelnyx');
+          const { SMSNotificationService } = await import('@/lib/services/sms/smsNotificationService');
+          const formattedPhone = SMSService.formatPhoneNumber(authorProfile.phone);
+          if (SMSService.isValidPhoneNumber(authorProfile.phone)) {
+            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trailblaize.net';
+            SMSNotificationService.sendPostLikeNotification(
+              formattedPhone,
+              authorProfile.first_name ?? 'Member',
+              actorFirstName,
+              post.author_id,
+              authorProfile.chapter_id ?? '',
+              { postId, link: `${baseUrl}/dashboard/post/${postId}` }
+            ).catch((err) => console.error('Failed to send post like SMS:', err));
+          }
+        }
       }
 
       return NextResponse.json({ liked: true });
