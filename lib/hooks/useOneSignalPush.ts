@@ -85,6 +85,15 @@ export function useOneSignalPush(userId: string | undefined): UseOneSignalPushRe
     }
   }, [isLoading]);
 
+  // Persist "denied" so we do not re-prompt aggressively; manual re-enable via Settings
+  useEffect(() => {
+    if (permission === 'denied' && userId) {
+      import('@/lib/utils/pushPromptStorage').then(({ markPushPromptDenied }) =>
+        markPushPromptDenied(userId)
+      );
+    }
+  }, [permission, userId]);
+
   // Register device with our user when userId is available
   useEffect(() => {
     if (!userId) return;

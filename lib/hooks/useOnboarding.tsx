@@ -236,6 +236,12 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       // Refresh profile to get updated data
       await refreshProfile();
 
+      // Signal dashboard to show A2HS prompt (after onboarding completion)
+      if (typeof window !== 'undefined') {
+        const { setFromOnboarding } = await import('@/lib/utils/pwaPromptStorage');
+        setFromOnboarding();
+      }
+
       // Redirect to dashboard
       router.push('/dashboard');
     } catch (error) {

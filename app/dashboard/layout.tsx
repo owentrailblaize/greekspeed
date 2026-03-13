@@ -26,7 +26,7 @@ import { getPendingPrompt, clearPendingPrompt, queueProfileUpdatePrompt } from '
 import { useRouter } from 'next/navigation';
 import { ChapterFeaturesProvider } from '@/lib/contexts/ChapterFeaturesContext';
 import { OneSignalDashboardLoader } from '@/components/features/dashboard/OneSignalDashboardLoader';
-import { PushOptInSlidedown } from '@/components/features/dashboard/PushOptInSlidedown';
+import { PwaAndPushPrompts } from '@/components/features/pwa/PwaAndPushPrompts';
 
 export default function DashboardLayout({
   children,
@@ -53,9 +53,9 @@ export default function DashboardLayout({
     <ActiveChapterProvider>
       <ChapterFeaturesProvider>
         <OneSignalDashboardLoader userId={profile?.id} />
+        <PwaAndPushPrompts userId={profile?.id} />
         {/* min-h-screen allows content to grow so window can scroll; SocialFeed uses useWindowVirtualizer */}
         <div className="min-h-screen flex flex-col bg-gray-50">
-          <PushOptInSlidedown userId={profile?.id} delayMs={1500} />
           {/* Always show the header */}
           <DashboardHeader />
           

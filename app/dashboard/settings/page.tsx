@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useOneSignalPush } from '@/lib/hooks/useOneSignalPush';
+import { clearPushPromptCooldown } from '@/lib/utils/pushPromptStorage';
 import { ChangePasswordForm } from '@/components/features/settings/ChangePasswordForm';
 
 export default function SettingsPage() {
@@ -631,13 +632,23 @@ export default function SettingsPage() {
         )}
 
         {isPushSupported && !pushLoading && pushPermission === 'denied' && (
-          <div className="p-4 border rounded-xl bg-white">
-            <div className="flex-1">
-              <h4 className="font-medium text-gray-900">Push notifications blocked</h4>
-              <p className="text-sm text-gray-600">
-                Allow notifications in your browser or site settings to enable push alerts.
+          <div className="p-4 border rounded-xl bg-white space-y-3">
+            <div>
+              <h4 className="font-medium text-gray-900">Push notifications disabled</h4>
+              <p className="text-sm text-gray-600 mt-1">
+                To enable push alerts, allow notifications for this site in your browser or device settings (e.g. address bar lock icon, or Settings &gt; Site settings &gt; Notifications).
               </p>
             </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (profile?.id) clearPushPromptCooldown(profile.id);
+                requestPermission();
+              }}
+              className="rounded-full"
+            >
+              Try again / Enable notifications
+            </Button>
           </div>
         )}
       </div>

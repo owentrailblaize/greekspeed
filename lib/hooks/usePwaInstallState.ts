@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { getPwaPlatform, isStandalone } from '@/lib/utils/pwaInstallUtils';
-import type { PwaInstallState, PwaPlatform, BeforeInstallPromptEvent } from '@/types/pwa';
+import type { PwaInstallState, BeforeInstallPromptEvent } from '@/types/pwa';
 
 const DEFAULT_STATE: PwaInstallState = {
   isInstalled: false,
@@ -21,7 +21,7 @@ export function usePwaInstallState(): PwaInstallState & {
   deferredPrompt: BeforeInstallPromptEvent | null;
 } {
   const [state, setState] = useState<PwaInstallState>(DEFAULT_STATE);
-  const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -29,28 +29,24 @@ export function usePwaInstallState(): PwaInstallState & {
     const installed = isStandalone();
     const platform = getPwaPlatform();
 
-    const updateCanPrompt = (hasPromptEvent: boolean, currentPlatform: PwaPlatform) => {
-        setState((prev) => ({
+    const updateState = (hasPromptEvent: boolean) => {
+      setState((prev) => ({
         ...prev,
         isInstalled: installed,
-        platform: currentPlatform,
+        platform,
         canPromptInstall:
           !installed &&
-          (currentPlatform === 'ios' || hasPromptEvent),
+          (platform === 'ios' || hasPromptEvent),
       }));
     };
 
-    setState((prev) => ({
-      ...prev,
-      isInstalled: installed,
-      platform,
-      canPromptInstall: !installed && platform === 'ios',
-    }));
+    updateState(false);
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      deferredPromptRef.current = e as BeforeInstallPromptEvent;
-      updateCanPrompt(true, platform);
+      const promptEvent = e as BeforeInstallPromptEvent;
+      setDeferredPrompt(promptEvent);
+      updateState(true);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -62,6 +58,6 @@ export function usePwaInstallState(): PwaInstallState & {
 
   return {
     ...state,
-    deferredPrompt: deferredPromptRef.current,
+    deferredPrompt,
   };
 }
