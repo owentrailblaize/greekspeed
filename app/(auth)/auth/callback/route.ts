@@ -152,6 +152,14 @@ export async function GET(request: NextRequest) {
         console.error('Error checking for existing profile:', profileCheckError);
       }
 
+      // Resolve OAuth avatar: copy LinkedIn/Google URLs to our storage so we control the asset (OAuth URLs can expire)
+      let resolvedOAuthAvatarUrl: string | null = user.user_metadata?.picture || user.user_metadata?.avatar_url || null;
+      const { isOAuthAvatarUrl, uploadAvatarFromUrl } = await import('@/lib/services/avatarFromUrlService');
+      if (isOAuthAvatarUrl(resolvedOAuthAvatarUrl)) {
+        const stored = await uploadAvatarFromUrl(resolvedOAuthAvatarUrl, user.id, serverSupabase);
+        if (stored) resolvedOAuthAvatarUrl = stored;
+      }
+
       // If invitation token exists, handle invitation flow
       if (invitationToken) {
         try {
@@ -232,8 +240,8 @@ export async function GET(request: NextRequest) {
               ? `https://www.linkedin.com/in/${linkedinSub}`
               : null;
 
-            // Extract OAuth avatar (works for both LinkedIn and Google)
-            const oauthAvatar = user.user_metadata?.picture || user.user_metadata?.avatar_url || null;
+            // Use resolved OAuth avatar (may have been copied to our storage)
+            const oauthAvatar = resolvedOAuthAvatarUrl;
 
             if (isLinkedIn || isGoogle) {
               const updateData: any = {};
@@ -363,7 +371,7 @@ export async function GET(request: NextRequest) {
                       location: 'Not specified',
                       linkedin_url: linkedinUrl,
                       description: existingAlumni?.description ?? `Alumni from ${validation.chapter_name}`,
-                      avatar_url: existingAlumni?.avatar_url ?? (user.user_metadata?.picture || user.user_metadata?.avatar_url || null),
+                      avatar_url: existingAlumni?.avatar_url ?? resolvedOAuthAvatarUrl,
                       verified: existingAlumni?.verified ?? false,
                       is_actively_hiring: existingAlumni?.is_actively_hiring ?? false,
                       last_contact: existingAlumni?.last_contact ?? null,
@@ -409,7 +417,7 @@ export async function GET(request: NextRequest) {
                     role: role,
                     member_status: memberStatus,
                     linkedin_url: linkedinUrl || existingProfile.linkedin_url,
-                    avatar_url: user.user_metadata?.picture || existingProfile.avatar_url,
+                    avatar_url: resolvedOAuthAvatarUrl ?? existingProfile.avatar_url,
                     updated_at: new Date().toISOString()
                   })
                   .eq('id', user.id);
@@ -451,7 +459,7 @@ export async function GET(request: NextRequest) {
                     location: 'Not specified',
                     linkedin_url: linkedinUrl || existingProfile.linkedin_url,
                     description: existingAlumni?.description ?? `Alumni from ${validation.chapter_name}`,
-                    avatar_url: existingAlumni?.avatar_url ?? (user.user_metadata?.picture || existingProfile.avatar_url || null),
+                    avatar_url: existingAlumni?.avatar_url ?? (resolvedOAuthAvatarUrl ?? existingProfile.avatar_url ?? null),
                     verified: existingAlumni?.verified ?? false,
                     is_actively_hiring: existingAlumni?.is_actively_hiring ?? false,
                     last_contact: existingAlumni?.last_contact ?? null,
@@ -539,7 +547,7 @@ export async function GET(request: NextRequest) {
             username: username,
             profile_slug: profileSlug,
             linkedin_url: linkedinUrl,
-            avatar_url: user.user_metadata?.picture || user.user_metadata?.avatar_url || null,
+            avatar_url: resolvedOAuthAvatarUrl,
             chapter: null,  // Will be filled in profile completion
             role: null,     // Will be filled in profile completion
             created_at: new Date().toISOString(),
@@ -581,10 +589,9 @@ export async function GET(request: NextRequest) {
             }
           }
 
-          // Handle avatar for both LinkedIn and Google
-          const oauthAvatar = user.user_metadata?.picture || user.user_metadata?.avatar_url;
-          if (oauthAvatar && !existingProfile.avatar_url) {
-            updateData.avatar_url = oauthAvatar;
+          // Handle avatar for both LinkedIn and Google (use resolved URL, may be in our storage)
+          if (resolvedOAuthAvatarUrl && !existingProfile.avatar_url) {
+            updateData.avatar_url = resolvedOAuthAvatarUrl;
           }
 
           if (Object.keys(updateData).length > 0) {
