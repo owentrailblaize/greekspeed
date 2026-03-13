@@ -51,5 +51,10 @@ export const SMS_EVENT_TYPES: readonly NotificationType[] = [
   'connection_request',
   'connection_accepted',
   'new_message',
+  'post_comment',
+  'comment_reply',
+  'post_like',
+  'comment_like',
+  'inactivity_reminder',
 ];
 

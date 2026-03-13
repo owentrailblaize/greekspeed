@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     const { data: profiles, error } = await supabase
       .from('profiles')
-      .select('id, email, first_name, chapter, last_active_at, is_developer')
+      .select('id, email, first_name, chapter, chapter_id, phone, sms_consent, last_active_at, is_developer')
       .or(`last_active_at.lt.${cutoffIso},last_active_at.is.null`)
       .not('email', 'is', null)
       .neq('email', '')
@@ -39,26 +39,44 @@ export async function POST(request: NextRequest) {
     }
 
     let sent = 0;
+    let smsSent = 0;
     let skipped = 0;
+
+    const { SMSService } = await import('@/lib/services/sms/smsServiceTelnyx');
+    const { SMSNotificationService } = await import('@/lib/services/sms/smsNotificationService');
 
     for (const profile of profiles ?? []) {
       const allowed = await canSendEmailNotification(profile.id, 'inactivity_reminder');
       if (!allowed) {
         skipped += 1;
-        continue;
+      } else {
+        const chapterName = profile.chapter ?? 'chapter';
+        const ok = await EmailService.sendInactivityReminderEmail({
+          to: profile.email!,
+          firstName: profile.first_name ?? 'Member',
+          chapterName,
+        });
+        if (ok) sent += 1;
       }
-      const chapterName = profile.chapter ?? 'chapter';
-      const ok = await EmailService.sendInactivityReminderEmail({
-        to: profile.email!,
-        firstName: profile.first_name ?? 'Member',
-        chapterName,
-      });
-      if (ok) sent += 1;
+
+      if (profile.phone && profile.sms_consent === true) {
+        const formattedPhone = SMSService.formatPhoneNumber(profile.phone);
+        if (SMSService.isValidPhoneNumber(profile.phone)) {
+          const ok = await SMSNotificationService.sendInactivityReminderNotification(
+            formattedPhone,
+            profile.first_name ?? 'Member',
+            profile.id,
+            profile.chapter_id ?? ''
+          );
+          if (ok) smsSent += 1;
+        }
+      }
     }
 
     return NextResponse.json({
       success: true,
       sent,
+      smsSent,
       skipped,
       total: (profiles ?? []).length,
     });

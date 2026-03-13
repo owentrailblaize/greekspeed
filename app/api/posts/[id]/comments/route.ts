@@ -298,35 +298,67 @@ export async function POST(
         console.error('Failed to send comment push:', pushErr);
       });
 
+      const { data: recipientProfile } = await supabase
+        .from('profiles')
+        .select('id, email, first_name, chapter, chapter_id, phone, sms_consent')
+        .eq('id', notifyUserId)
+        .single();
+
+      const actorName = authorProfile?.first_name ?? 'Someone';
+
       // Email: post_comment or comment_reply (respect preferences)
       const allowed = await canSendEmailNotification(notifyUserId, eventType);
-      if (allowed) {
-        const { data: recipientProfile } = await supabase
-          .from('profiles')
-          .select('email, first_name, chapter')
-          .eq('id', notifyUserId)
-          .single();
-        if (recipientProfile?.email && recipientProfile?.first_name) {
-          const actorName = authorProfile?.first_name ?? 'Someone';
-          const chapterName = recipientProfile.chapter ?? 'Your chapter';
+      if (allowed && recipientProfile?.email && recipientProfile?.first_name) {
+        const chapterName = recipientProfile.chapter ?? 'Your chapter';
+        if (eventType === 'post_comment') {
+          EmailService.sendPostCommentNotification({
+            to: recipientProfile.email,
+            firstName: recipientProfile.first_name,
+            chapterName,
+            actorFirstName: actorName,
+            contentPreview: contentPreview || '',
+            postId,
+          }).catch((err) => console.error('Failed to send post comment email:', err));
+        } else {
+          EmailService.sendCommentReplyNotification({
+            to: recipientProfile.email,
+            firstName: recipientProfile.first_name,
+            chapterName,
+            actorFirstName: actorName,
+            contentPreview: contentPreview || '',
+            postId,
+          }).catch((err) => console.error('Failed to send comment reply email:', err));
+        }
+      }
+
+      // SMS: Option A - send when phone and sms_consent present (no per-type toggle)
+      if (recipientProfile?.phone && recipientProfile.sms_consent === true) {
+        const { SMSService } = await import('@/lib/services/sms/smsServiceTelnyx');
+        const { SMSNotificationService } = await import('@/lib/services/sms/smsNotificationService');
+        const formattedPhone = SMSService.formatPhoneNumber(recipientProfile.phone);
+        if (SMSService.isValidPhoneNumber(recipientProfile.phone)) {
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trailblaize.net';
+          const postUrl = `${baseUrl}/dashboard/post/${postId}`;
           if (eventType === 'post_comment') {
-            EmailService.sendPostCommentNotification({
-              to: recipientProfile.email,
-              firstName: recipientProfile.first_name,
-              chapterName,
-              actorFirstName: actorName,
-              contentPreview: contentPreview || '',
-              postId,
-            }).catch((err) => console.error('Failed to send post comment email:', err));
+            SMSNotificationService.sendPostCommentNotification(
+              formattedPhone,
+              recipientProfile.first_name ?? 'Member',
+              actorName,
+              contentPreview || undefined,
+              recipientProfile.id,
+              recipientProfile.chapter_id ?? '',
+              { postId, link: postUrl }
+            ).catch((err) => console.error('Failed to send post comment SMS:', err));
           } else {
-            EmailService.sendCommentReplyNotification({
-              to: recipientProfile.email,
-              firstName: recipientProfile.first_name,
-              chapterName,
-              actorFirstName: actorName,
-              contentPreview: contentPreview || '',
-              postId,
-            }).catch((err) => console.error('Failed to send comment reply email:', err));
+            SMSNotificationService.sendCommentReplyNotification(
+              formattedPhone,
+              recipientProfile.first_name ?? 'Member',
+              actorName,
+              contentPreview || undefined,
+              recipientProfile.id,
+              recipientProfile.chapter_id ?? '',
+              { postId, link: postUrl }
+            ).catch((err) => console.error('Failed to send comment reply SMS:', err));
           }
         }
       }

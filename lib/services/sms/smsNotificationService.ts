@@ -230,6 +230,178 @@ export class SMSNotificationService {
     return result.success;
   }
 
+  // Post comment: notify post author when someone comments (Option A: phone + sms_consent only)
+  static async sendPostCommentNotification(
+    phoneNumber: string,
+    userName: string,
+    actorName: string,
+    contentPreview: string | undefined,
+    userId: string,
+    chapterId: string,
+    options?: { postId: string; link?: string }
+  ): Promise<boolean> {
+    const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
+    const link = options?.link ?? `${BASE_URL}/dashboard/post/${options?.postId ?? ''}`;
+    const headline = `${toGsmSafe(actorName.slice(0, 30))} commented on your post`;
+    const detail = contentPreview ? toGsmSafe(contentPreview.slice(0, 50)) : 'View post';
+
+    const isFirst = !(await this.hasReceivedSmsBefore(userId));
+    const complianceLevel = isFirst ? 'full' : 'none';
+
+    const messageParts = SMSMessageFormatter.formatShortMessage(
+      headline,
+      detail,
+      'View',
+      link,
+      { complianceLevel }
+    );
+
+    const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
+    await this.logSMS(
+      { userId, chapterId, phoneNumber: formattedPhone, messageType: 'post_comment', messageContent: messageParts.fullMessage },
+      result.success,
+      result.messageId,
+      result.error
+    );
+    return result.success;
+  }
+
+  // Comment reply: notify parent comment author when someone replies
+  static async sendCommentReplyNotification(
+    phoneNumber: string,
+    userName: string,
+    actorName: string,
+    contentPreview: string | undefined,
+    userId: string,
+    chapterId: string,
+    options?: { postId: string; link?: string }
+  ): Promise<boolean> {
+    const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
+    const link = options?.link ?? `${BASE_URL}/dashboard/post/${options?.postId ?? ''}`;
+    const headline = `${toGsmSafe(actorName.slice(0, 30))} replied to your comment`;
+
+    const isFirst = !(await this.hasReceivedSmsBefore(userId));
+    const complianceLevel = isFirst ? 'full' : 'none';
+
+    const messageParts = SMSMessageFormatter.formatShortMessage(
+      headline,
+      'View post',
+      'View',
+      link,
+      { complianceLevel }
+    );
+
+    const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
+    await this.logSMS(
+      { userId, chapterId, phoneNumber: formattedPhone, messageType: 'comment_reply', messageContent: messageParts.fullMessage },
+      result.success,
+      result.messageId,
+      result.error
+    );
+    return result.success;
+  }
+
+  // Post like: notify post author when someone likes their post
+  static async sendPostLikeNotification(
+    phoneNumber: string,
+    userName: string,
+    actorName: string,
+    userId: string,
+    chapterId: string,
+    options?: { postId: string; link?: string }
+  ): Promise<boolean> {
+    const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
+    const link = options?.link ?? `${BASE_URL}/dashboard/post/${options?.postId ?? ''}`;
+    const headline = `${toGsmSafe(actorName.slice(0, 30))} liked your post`;
+
+    const isFirst = !(await this.hasReceivedSmsBefore(userId));
+    const complianceLevel = isFirst ? 'full' : 'none';
+
+    const messageParts = SMSMessageFormatter.formatShortMessage(
+      headline,
+      'View post',
+      'View',
+      link,
+      { complianceLevel }
+    );
+
+    const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
+    await this.logSMS(
+      { userId, chapterId, phoneNumber: formattedPhone, messageType: 'post_like', messageContent: messageParts.fullMessage },
+      result.success,
+      result.messageId,
+      result.error
+    );
+    return result.success;
+  }
+
+  // Comment like: notify comment author when someone likes their comment
+  static async sendCommentLikeNotification(
+    phoneNumber: string,
+    userName: string,
+    actorName: string,
+    userId: string,
+    chapterId: string,
+    options?: { postId: string; link?: string }
+  ): Promise<boolean> {
+    const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
+    const link = options?.link ?? `${BASE_URL}/dashboard/post/${options?.postId ?? ''}`;
+    const headline = `${toGsmSafe(actorName.slice(0, 30))} liked your comment`;
+
+    const isFirst = !(await this.hasReceivedSmsBefore(userId));
+    const complianceLevel = isFirst ? 'full' : 'none';
+
+    const messageParts = SMSMessageFormatter.formatShortMessage(
+      headline,
+      'View post',
+      'View',
+      link,
+      { complianceLevel }
+    );
+
+    const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
+    await this.logSMS(
+      { userId, chapterId, phoneNumber: formattedPhone, messageType: 'comment_like', messageContent: messageParts.fullMessage },
+      result.success,
+      result.messageId,
+      result.error
+    );
+    return result.success;
+  }
+
+  // Inactivity reminder: re-engage users who have not been active for 30+ days
+  static async sendInactivityReminderNotification(
+    phoneNumber: string,
+    userName: string,
+    userId: string,
+    chapterId: string,
+    options?: { link?: string }
+  ): Promise<boolean> {
+    const formattedPhone = SMSService.formatPhoneNumber(phoneNumber);
+    const link = options?.link ?? `${BASE_URL}/dashboard`;
+    const headline = 'We miss you on Trailblaize';
+
+    const isFirst = !(await this.hasReceivedSmsBefore(userId));
+    const complianceLevel = isFirst ? 'full' : 'none';
+
+    const messageParts = SMSMessageFormatter.formatShortMessage(
+      headline,
+      "Your chapter is here when you're ready.",
+      'Open',
+      link,
+      { complianceLevel }
+    );
+
+    const result = await SMSService.sendSMS({ to: formattedPhone, body: messageParts.fullMessage });
+    await this.logSMS(
+      { userId, chapterId, phoneNumber: formattedPhone, messageType: 'inactivity_reminder', messageContent: messageParts.fullMessage },
+      result.success,
+      result.messageId,
+      result.error
+    );
+    return result.success;
+  }
+
   /**
    * Batch check: returns the set of user IDs that have at least one 'sent' row in sms_notification_logs.
    * Used by the announcements route to split first-time vs returning recipients (one query instead of N).

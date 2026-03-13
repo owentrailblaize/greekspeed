@@ -7,7 +7,7 @@ import { EmailService } from '@/lib/services/emailService';
 import { SMSNotificationService } from '@/lib/services/sms/smsNotificationService';
 import { SMSService } from '@/lib/services/sms/smsServiceTelnyx';
 import { SMSMessageFormatter } from '@/lib/services/sms/smsMessageFormatter';
-import { NOTIFICATION_TYPES, type NotificationType, EMAIL_EVENT_TYPES } from '@/lib/services/notificationTypes';
+import { NOTIFICATION_TYPES, type NotificationType, EMAIL_EVENT_TYPES, SMS_EVENT_TYPES } from '@/lib/services/notificationTypes';
 
 const TEST_USER_ID = 'test-user-id';
 const TEST_CHAPTER_ID = 'test-chapter-id';
@@ -122,6 +122,62 @@ function buildSmsBodyForType(type: NotificationType): string {
         'Tap to reply',
         'Open',
         `${TEST_BASE_URL}/dashboard/messages`,
+        { complianceLevel: 'short' }
+      );
+      return parts.fullMessage;
+    }
+    case 'post_comment': {
+      const headline = `${SAMPLE.actorFirstName} commented on your post`;
+      const detail = SAMPLE.content.slice(0, 50).replace(/\s+/g, ' ').trim();
+      const parts = SMSMessageFormatter.formatShortMessage(
+        headline,
+        detail,
+        'View',
+        `${TEST_BASE_URL}/dashboard/post/${TEST_POST_ID}`,
+        { complianceLevel: 'short' }
+      );
+      return parts.fullMessage;
+    }
+    case 'comment_reply': {
+      const headline = `${SAMPLE.actorFirstName} replied to your comment`;
+      const parts = SMSMessageFormatter.formatShortMessage(
+        headline,
+        'View post',
+        'View',
+        `${TEST_BASE_URL}/dashboard/post/${TEST_POST_ID}`,
+        { complianceLevel: 'short' }
+      );
+      return parts.fullMessage;
+    }
+    case 'post_like': {
+      const headline = `${SAMPLE.actorFirstName} liked your post`;
+      const parts = SMSMessageFormatter.formatShortMessage(
+        headline,
+        'View post',
+        'View',
+        `${TEST_BASE_URL}/dashboard/post/${TEST_POST_ID}`,
+        { complianceLevel: 'short' }
+      );
+      return parts.fullMessage;
+    }
+    case 'comment_like': {
+      const headline = `${SAMPLE.actorFirstName} liked your comment`;
+      const parts = SMSMessageFormatter.formatShortMessage(
+        headline,
+        'View post',
+        'View',
+        `${TEST_BASE_URL}/dashboard/post/${TEST_POST_ID}`,
+        { complianceLevel: 'short' }
+      );
+      return parts.fullMessage;
+    }
+    case 'inactivity_reminder': {
+      const headline = 'We miss you on Trailblaize';
+      const parts = SMSMessageFormatter.formatShortMessage(
+        headline,
+        "Your chapter is here when you're ready.",
+        'Open',
+        `${TEST_BASE_URL}/dashboard`,
         { complianceLevel: 'short' }
       );
       return parts.fullMessage;
@@ -311,7 +367,7 @@ function hasEmail(type: NotificationType): boolean {
 }
 
 function hasSms(type: NotificationType): boolean {
-  return EMAIL_EVENT_TYPES.includes(type);
+  return SMS_EVENT_TYPES.includes(type);
 }
 
 export async function runNotificationTest(options: NotificationTestOptions): Promise<DryRunResult | SendResult> {
@@ -545,6 +601,56 @@ export async function runNotificationTest(options: NotificationTestOptions): Pro
               SAMPLE.firstName,
               SAMPLE.actorFirstName,
               SAMPLE.messagePreview,
+              TEST_USER_ID,
+              TEST_CHAPTER_ID
+            );
+            break;
+          case 'post_comment':
+            smsSent = await SMSNotificationService.sendPostCommentNotification(
+              formattedPhone,
+              SAMPLE.firstName,
+              SAMPLE.actorFirstName,
+              SAMPLE.content.slice(0, 80),
+              TEST_USER_ID,
+              TEST_CHAPTER_ID,
+              { postId: TEST_POST_ID }
+            );
+            break;
+          case 'comment_reply':
+            smsSent = await SMSNotificationService.sendCommentReplyNotification(
+              formattedPhone,
+              SAMPLE.firstName,
+              SAMPLE.actorFirstName,
+              SAMPLE.content.slice(0, 80),
+              TEST_USER_ID,
+              TEST_CHAPTER_ID,
+              { postId: TEST_POST_ID }
+            );
+            break;
+          case 'post_like':
+            smsSent = await SMSNotificationService.sendPostLikeNotification(
+              formattedPhone,
+              SAMPLE.firstName,
+              SAMPLE.actorFirstName,
+              TEST_USER_ID,
+              TEST_CHAPTER_ID,
+              { postId: TEST_POST_ID }
+            );
+            break;
+          case 'comment_like':
+            smsSent = await SMSNotificationService.sendCommentLikeNotification(
+              formattedPhone,
+              SAMPLE.firstName,
+              SAMPLE.actorFirstName,
+              TEST_USER_ID,
+              TEST_CHAPTER_ID,
+              { postId: TEST_POST_ID }
+            );
+            break;
+          case 'inactivity_reminder':
+            smsSent = await SMSNotificationService.sendInactivityReminderNotification(
+              formattedPhone,
+              SAMPLE.firstName,
               TEST_USER_ID,
               TEST_CHAPTER_ID
             );

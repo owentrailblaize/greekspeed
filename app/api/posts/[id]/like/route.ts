@@ -145,27 +145,44 @@ export async function POST(
           console.error('Failed to send post like push:', pushErr);
         }
 
+        const { data: authorProfile } = await supabase
+          .from('profiles')
+          .select('email, first_name, phone, sms_consent, chapter_id')
+          .eq('id', post.author_id)
+          .single();
+        const { data: likerProfile } = await supabase
+          .from('profiles')
+          .select('first_name')
+          .eq('id', user.id)
+          .single();
+        const actorFirstName = likerProfile?.first_name ?? 'Someone';
+
         const { canSendEmailNotification } = await import('@/lib/utils/checkEmailPreferences');
         const allowed = await canSendEmailNotification(post.author_id, 'post_like');
-        if (allowed) {
-          const { data: authorProfile } = await supabase
-            .from('profiles')
-            .select('email, first_name')
-            .eq('id', post.author_id)
-            .single();
-          const { data: likerProfile } = await supabase
-            .from('profiles')
-            .select('first_name')
-            .eq('id', user.id)
-            .single();
-          if (authorProfile?.email && authorProfile?.first_name) {
-            const { EmailService } = await import('@/lib/services/emailService');
-            EmailService.sendPostLikeNotification({
-              to: authorProfile.email,
-              firstName: authorProfile.first_name,
-              actorFirstName: likerProfile?.first_name ?? 'Someone',
-              postId,
-            }).catch((err) => console.error('Failed to send post like email:', err));
+        if (allowed && authorProfile?.email && authorProfile?.first_name) {
+          const { EmailService } = await import('@/lib/services/emailService');
+          EmailService.sendPostLikeNotification({
+            to: authorProfile.email,
+            firstName: authorProfile.first_name,
+            actorFirstName,
+            postId,
+          }).catch((err) => console.error('Failed to send post like email:', err));
+        }
+
+        if (authorProfile?.phone && authorProfile.sms_consent === true) {
+          const { SMSService } = await import('@/lib/services/sms/smsServiceTelnyx');
+          const { SMSNotificationService } = await import('@/lib/services/sms/smsNotificationService');
+          const formattedPhone = SMSService.formatPhoneNumber(authorProfile.phone);
+          if (SMSService.isValidPhoneNumber(authorProfile.phone)) {
+            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trailblaize.net';
+            SMSNotificationService.sendPostLikeNotification(
+              formattedPhone,
+              authorProfile.first_name ?? 'Member',
+              actorFirstName,
+              post.author_id,
+              authorProfile.chapter_id ?? '',
+              { postId, link: `${baseUrl}/dashboard/post/${postId}` }
+            ).catch((err) => console.error('Failed to send post like SMS:', err));
           }
         }
       }
