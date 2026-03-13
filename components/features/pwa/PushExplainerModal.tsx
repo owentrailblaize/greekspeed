@@ -44,12 +44,12 @@ const FooterButtons = ({
   onEnable: () => void;
   isLoading: boolean;
 }) => (
-  <div className="flex flex-row items-center justify-end gap-2">
+  <div className="flex flex-row items-stretch gap-3 w-full">
     <Button
       type="button"
       variant="ghost"
       onClick={onLater}
-      className="rounded-full"
+      className="flex-1 rounded-full"
     >
       Not now
     </Button>
@@ -57,7 +57,7 @@ const FooterButtons = ({
       type="button"
       onClick={onEnable}
       disabled={isLoading}
-      className="rounded-full"
+      className="flex-1 rounded-full"
     >
       {isLoading ? 'Enabling...' : 'Enable notifications'}
     </Button>
@@ -129,10 +129,10 @@ export function PushExplainerModal({
                 {titleContent}
               </Drawer.Title>
             </div>
-            <div className="flex-1 overflow-y-auto px-4 pb-4">
+            <div className="flex-1 overflow-y-auto px-4">
               <ExplainerContent />
             </div>
-            <div className="flex-shrink-0 p-4 pt-0 border-t border-gray-100">
+            <div className="flex-shrink-0 px-4 pt-4 pb-6 border-t border-gray-100">
               <FooterButtons onLater={handleLater} onEnable={handleEnable} isLoading={isLoading} />
             </div>
           </Drawer.Content>
