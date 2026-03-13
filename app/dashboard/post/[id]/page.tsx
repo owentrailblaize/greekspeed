@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/supabase/auth-context';
 import type { Post } from '@/types/posts';
 import { PostDetailClient } from '@/app/dashboard/post/[id]/PostDetailClient';
@@ -17,53 +18,52 @@ export default function PostDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { getAuthHeaders } = useAuth();
+  const queryClient = useQueryClient();
   const postId = typeof params.id === 'string' ? params.id : null;
 
-  const [post, setPost] = useState<Post | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [deletingPost, setDeletingPost] = useState<Post | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
-  const fetchPost = useCallback(async () => {
-    if (!postId) return;
-    setLoading(true);
-    setError(null);
-    try {
+  const {
+    data: post,
+    isLoading: loading,
+    isError,
+    error,
+  } = useQuery<Post, Error>({
+    queryKey: ['post', postId],
+    enabled: !!postId,
+    queryFn: async () => {
+      if (!postId) {
+        throw new Error('Post not found');
+      }
       const headers = getAuthHeaders();
       const res = await fetch(`/api/posts/${postId}`, { headers });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        if (res.status === 404) setError('Post not found');
-        else setError(data?.error ?? 'Failed to load post');
-        setPost(null);
-        return;
+        if (res.status === 404) {
+          throw new Error('Post not found');
+        }
+        throw new Error(data?.error ?? 'Failed to load post');
       }
-      const data = await res.json();
-      setPost(data);
-    } catch {
-      setError('Failed to load post');
-      setPost(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [postId, getAuthHeaders]);
-
-  useEffect(() => {
-    fetchPost();
-  }, [fetchPost]);
+      return res.json();
+    },
+  });
 
   const handleLike = useCallback(
     async (likedPostId: string) => {
-      if (!post || post.id !== likedPostId) return;
+      if (!postId || likedPostId !== postId) return;
 
-      const prevLiked = post.is_liked ?? false;
-      const prevCount = post.likes_count ?? 0;
+      const queryKey: [string, string | null] = ['post', postId];
+      const previous = queryClient.getQueryData<Post>(queryKey);
+      if (!previous) return;
 
-      setPost({
-        ...post,
+      const prevLiked = previous.is_liked ?? false;
+      const prevCount = previous.likes_count ?? 0;
+
+      queryClient.setQueryData<Post>(queryKey, {
+        ...previous,
         is_liked: !prevLiked,
         likes_count: prevLiked ? Math.max(0, prevCount - 1) : prevCount + 1,
       });
@@ -78,15 +78,11 @@ export default function PostDetailPage() {
           throw new Error(data?.error ?? 'Failed to update like');
         }
       } catch (err) {
-        setPost((prev) =>
-          prev?.id === likedPostId
-            ? { ...prev, is_liked: prevLiked, likes_count: prevCount }
-            : prev,
-        );
+        queryClient.setQueryData<Post>(queryKey, previous);
         toast.error(err instanceof Error ? err.message : 'Failed to update like');
       }
     },
-    [post, getAuthHeaders],
+    [getAuthHeaders, postId, queryClient],
   );
 
   const handleBack = useCallback(() => {
@@ -106,6 +102,7 @@ export default function PostDetailPage() {
         throw new Error(data?.error ?? 'Failed to delete post');
       }
       setDeletingPost(null);
+      queryClient.removeQueries({ queryKey: ['post', postId] });
       router.back();
     } catch (err) {
       console.error(err);
@@ -113,7 +110,7 @@ export default function PostDetailPage() {
     } finally {
       setIsDeleting(false);
     }
-  }, [postId, deletingPost, getAuthHeaders, router]);
+  }, [deletingPost, getAuthHeaders, postId, queryClient, router]);
 
   const handleSaveEdit = useCallback(
     async (content: string) => {
@@ -127,10 +124,13 @@ export default function PostDetailPage() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data?.error ?? 'Failed to update post');
       }
+      const updated = await res.json();
+      queryClient.setQueryData<Post>(['post', postId], (prev) =>
+        prev ? { ...prev, ...updated } : updated,
+      );
       setShowEditModal(false);
-      fetchPost();
     },
-    [postId, getAuthHeaders, fetchPost]
+    [getAuthHeaders, postId, queryClient]
   );
 
   const handleSubmitReport = useCallback(
@@ -162,15 +162,30 @@ export default function PostDetailPage() {
           throw new Error(data?.error ?? 'Failed to update bookmark');
         }
         const { bookmarked } = await res.json();
-        await fetchPost();
+        queryClient.setQueryData<Post>(['post', bookmarkPostId], (prev) =>
+          prev ? { ...prev, is_bookmarked: bookmarked } : prev,
+        );
         toast.success(bookmarked ? 'Post saved' : 'Removed from saved');
       } catch (err) {
         console.error(err);
         toast.error(err instanceof Error ? err.message : 'Failed to update bookmark');
       }
     },
-    [getAuthHeaders, fetchPost]
+    [getAuthHeaders, queryClient]
   );
+
+  const handleCommentAdded = useCallback(() => {
+    if (!postId) return;
+    const queryKey: [string, string | null] = ['post', postId];
+    queryClient.setQueryData<Post>(queryKey, (prev) =>
+      prev
+        ? {
+            ...prev,
+            comments_count: (prev.comments_count ?? 0) + 1,
+          }
+        : prev,
+    );
+  }, [postId, queryClient]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -204,11 +219,11 @@ export default function PostDetailPage() {
     );
   }
 
-  if (error || !post) {
+  if (isError || !post) {
     return (
       <div className="flex flex-col flex-1 min-h-0 bg-gray-50">
         <div className="max-w-2xl mx-auto w-full flex flex-col items-center justify-center min-h-[50vh] px-4">
-          <p className="text-slate-500 mb-4">{error ?? 'Post not found'}</p>
+          <p className="text-slate-500 mb-4">{error?.message ?? 'Post not found'}</p>
           <Button variant="outline" onClick={handleBack}>
             Back to feed
           </Button>
@@ -221,7 +236,7 @@ export default function PostDetailPage() {
     <PostDetailClient
       post={post}
       onLike={handleLike}
-      onCommentAdded={fetchPost}
+      onCommentAdded={handleCommentAdded}
       onBack={handleBack}
       onDelete={() => setDeletingPost(post)}
       onEdit={() => setShowEditModal(true)}
