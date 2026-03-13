@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Drawer } from 'vaul';
 import { Button } from '@/components/ui/button';
-import { Share2, Plus, Smartphone, ImageIcon } from 'lucide-react';
+import { Share2, Plus, Smartphone, ImageIcon, Share } from 'lucide-react';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 
 interface IosInstallModalProps {
@@ -21,25 +21,27 @@ interface IosInstallModalProps {
 }
 
 /** Placeholder for future "how to add to home screen" image (e.g. screenshot or illustration). */
-const INSTALL_GUIDE_IMAGE_PLACEHOLDER = null as string | null;
+const INSTALL_GUIDE_IMAGE_PLACEHOLDER = '/A2HS-Flow.jpeg';
 
 const InstallStepsContent = () => (
   <>
-    <p className="text-sm text-muted-foreground mb-3">To add this app to your home screen:</p>
+    <p className="text-sm text-muted-foreground mb-3">
+      To add this app to your home screen:
+    </p>
     <ol className="list-decimal list-inside space-y-2 text-sm text-left">
-      <li className="flex items-center gap-2">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100">
-          <Share2 className="h-4 w-4 text-gray-600" aria-hidden />
-        </span>
-        Tap the <strong>Share</strong> button (square with arrow) at the bottom of Safari
+      <li>
+        Tap the{" "}
+        <span className="inline-flex h-4 w-4 items-center justify-center align-middle">
+          <Share className="h-4 w-4 text-gray-600" aria-hidden />
+        </span>{" "}
+        button in the bottom bar
       </li>
-      <li className="flex items-center gap-2">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100">
-          <Plus className="h-4 w-4 text-gray-600" aria-hidden />
-        </span>
+      <li>
         Scroll and tap <strong>Add to Home Screen</strong>
       </li>
-      <li>Tap <strong>Add</strong> in the top-right to confirm</li>
+      <li>
+        Tap <strong>Add</strong> in the top-right to confirm
+      </li>
     </ol>
   </>
 );
