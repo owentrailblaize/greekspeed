@@ -156,15 +156,27 @@ export default function SignInPage() {
     router.push('/');
   };
 
-  // Show loading: auth loading, user redirecting, or mobile minimum overlay time (4s)
-  const showMobileOverlay = (authLoading || user) || (isMobile && !minOverlayTimeElapsed);
+  // Networking overlay: ONLY before sign-in screen (auth check or initial 6s). NEVER when user exists (post-login redirect).
+  const showMobileNetworkingOverlay = ((authLoading && !user) || (isMobile && !minOverlayTimeElapsed)) && isMobile;
+  // Simple spinner: when redirecting (user exists) or when auth loading on desktop
   const showDesktopSpinner = authLoading || user;
+  // On mobile when redirecting, show simple spinner (not networking)
+  const showMobileRedirectSpinner = user && isMobile;
 
-  if (showMobileOverlay || showDesktopSpinner) {
+  if (showMobileNetworkingOverlay || showDesktopSpinner || showMobileRedirectSpinner) {
     return (
       <>
         <div className="lg:hidden">
-          <MobileAuthLoadingOverlay />
+          {showMobileNetworkingOverlay ? (
+            <MobileAuthLoadingOverlay />
+          ) : (
+            <div className="min-h-screen flex items-center justify-center bg-white">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-brand-primary mx-auto mb-4" />
+                <p className="text-gray-600 font-medium">Redirecting...</p>
+              </div>
+            </div>
+          )}
         </div>
         <div className="hidden lg:flex min-h-screen items-center justify-center bg-white">
           <div className="text-center">
