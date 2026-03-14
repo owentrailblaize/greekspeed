@@ -125,7 +125,10 @@ export function PwaAndPushPrompts({ userId }: PwaAndPushPromptsProps) {
       />
       <PushExplainerModal
         open={showPushExplainer}
-        onOpenChange={setShowPushExplainer}
+        onOpenChange={(open) => {
+          setShowPushExplainer(open);
+          if (!open) handlePushDismiss();
+        }}
         onEnable={handlePushEnable}
         onDismiss={handlePushDismiss}
         isLoading={pushRequesting}
