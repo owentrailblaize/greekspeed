@@ -26,7 +26,7 @@ import { getPendingPrompt, clearPendingPrompt, queueProfileUpdatePrompt } from '
 import { useRouter } from 'next/navigation';
 import { ChapterFeaturesProvider } from '@/lib/contexts/ChapterFeaturesContext';
 import { OneSignalDashboardLoader } from '@/components/features/dashboard/OneSignalDashboardLoader';
-import { PwaAndPushPrompts } from '@/components/features/pwa/PwaAndPushPrompts';
+import { PwaPromptProvider } from '@/lib/contexts/PwaPromptContext';
 
 export default function DashboardLayout({
   children,
@@ -53,7 +53,7 @@ export default function DashboardLayout({
     <ActiveChapterProvider>
       <ChapterFeaturesProvider>
         <OneSignalDashboardLoader userId={profile?.id} />
-        <PwaAndPushPrompts userId={profile?.id} />
+        <PwaPromptProvider userId={profile?.id}>
         {/* min-h-screen allows content to grow so window can scroll; SocialFeed uses useWindowVirtualizer */}
         <div className="min-h-screen flex flex-col bg-gray-50">
           {/* Always show the header */}
@@ -76,6 +76,7 @@ export default function DashboardLayout({
             </main>
           </SubscriptionPaywall>
         </div>
+        </PwaPromptProvider>
       </ChapterFeaturesProvider>
     </ActiveChapterProvider>
   );
