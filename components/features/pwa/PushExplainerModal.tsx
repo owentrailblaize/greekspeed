@@ -39,10 +39,12 @@ const FooterButtons = ({
   onLater,
   onEnable,
   isLoading,
+  isMobile,
 }: {
   onLater: () => void;
   onEnable: () => void;
   isLoading: boolean;
+  isMobile: boolean;
 }) => (
   <div className="flex flex-row items-stretch gap-3 w-full">
     <Button
@@ -59,7 +61,7 @@ const FooterButtons = ({
       disabled={isLoading}
       className="flex-1 rounded-full"
     >
-      {isLoading ? 'Enabling...' : 'Enable notifications'}
+      {isLoading ? 'Enabling...' : isMobile ? 'Enable' : 'Enable notifications'}    
     </Button>
   </div>
 );
@@ -133,7 +135,12 @@ export function PushExplainerModal({
               <ExplainerContent />
             </div>
             <div className="flex-shrink-0 px-4 pt-4 pb-6 border-t border-gray-100">
-              <FooterButtons onLater={handleLater} onEnable={handleEnable} isLoading={isLoading} />
+              <FooterButtons 
+                onLater={handleLater} 
+                onEnable={handleEnable} 
+                isLoading={isLoading} 
+                isMobile={isMobile}
+              />
             </div>
           </Drawer.Content>
         </Drawer.Portal>
@@ -153,7 +160,12 @@ export function PushExplainerModal({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex flex-row justify-end gap-2">
-          <FooterButtons onLater={handleLater} onEnable={handleEnable} isLoading={isLoading} />
+          <FooterButtons 
+            onLater={handleLater} 
+            onEnable={handleEnable} 
+            isLoading={isLoading} 
+            isMobile={isMobile}
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>

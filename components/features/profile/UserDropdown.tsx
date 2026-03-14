@@ -9,6 +9,8 @@ import {
   ChevronRight,
   ChevronDown,
   Lock,
+  Smartphone,
+  BellRing,
 } from 'lucide-react';
 import { UserAvatar } from './UserAvatar';
 import {
@@ -20,6 +22,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { usePwaPrompt } from '@/lib/contexts/PwaPromptContext';
 
 interface UserDropdownProps {
   user: {
@@ -48,7 +51,12 @@ export function UserDropdown({
 }: UserDropdownProps) {
   const router = useRouter();
   const { profile } = useProfile();
+  const pwaPrompt = usePwaPrompt();
   const visibleMenuItems = MENU_ITEMS.filter((item) => !item.locked);
+
+  const hasPwaOptions =
+    pwaPrompt &&
+    (pwaPrompt.canShowInstallPrompt || pwaPrompt.canShowPushExplainer);
 
   const handleNavigate = (href: string) => {
     router.push(href);
@@ -121,6 +129,37 @@ export function UserDropdown({
             </DropdownMenuItem>
           );
         })}
+
+        {hasPwaOptions && (
+          <>
+            <DropdownMenuSeparator />
+            <div className="px-3 py-2">
+              <p className="mb-1.5 text-xs font-medium text-gray-500">
+                Get the most out of Trailblaize
+              </p>
+              <div className="space-y-0.5">
+                {pwaPrompt.canShowInstallPrompt && (
+                  <DropdownMenuItem
+                    onClick={() => pwaPrompt.showInstallPrompt()}
+                    className="gap-2 text-sm"
+                  >
+                    <Smartphone className="h-4 w-4" />
+                    Add to Home Screen
+                  </DropdownMenuItem>
+                )}
+                {pwaPrompt.canShowPushExplainer && (
+                  <DropdownMenuItem
+                    onClick={() => pwaPrompt.showPushExplainer()}
+                    className="gap-2 text-sm"
+                  >
+                    <BellRing className="h-4 w-4" />
+                    Enable notifications
+                  </DropdownMenuItem>
+                )}
+              </div>
+            </div>
+          </>
+        )}
 
         <DropdownMenuSeparator />
 
