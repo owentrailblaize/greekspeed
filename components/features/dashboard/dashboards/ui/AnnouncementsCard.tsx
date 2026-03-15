@@ -1,51 +1,37 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
+import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { X, MessageSquare, Clock, AlertTriangle, GraduationCap, Calendar, AlertCircle, TrendingUp, Minus, Check, Loader2, Eye } from 'lucide-react';
+import { MessageSquare, AlertTriangle, GraduationCap, Calendar, Check, Loader2, Eye } from 'lucide-react';
 import { useAnnouncements } from '@/lib/hooks/useAnnouncements';
-import { useProfile } from '@/lib/contexts/ProfileContext';
-import { Announcement, CreateAnnouncementData } from '@/types/announcements';
+import { useAnnouncementsContext } from '@/lib/contexts/AnnouncementsContext';
+import { Announcement } from '@/types/announcements';
 import { toast } from 'react-toastify';
 import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
+import { AnnouncementDetailDrawer } from './AnnouncementDetailDrawer';
+import { AlumniPagination } from '@/components/features/alumni/AlumniPagination';
 
 // Helper function to get icon and color based on announcement type
 const getAnnouncementTypeConfig = (type: string) => {
   switch (type) {
     case 'urgent':
-      return { icon: AlertTriangle, color: 'text-red-600', bgColor: 'bg-red-100' };
+      return { icon: AlertTriangle, color: 'text-gray-700', bgColor: 'bg-gradient-to-br from-gray-200 to-white' };
     case 'event':
-      return { icon: Calendar, color: 'text-brand-accent', bgColor: 'bg-accent-100' };
+      return { icon: Calendar, color: 'text-brand-accent', bgColor: 'bg-gradient-to-br from-accent-100 to-white' };
     case 'academic':
-      return { icon: GraduationCap, color: 'text-green-600', bgColor: 'bg-green-100' };
+      return { icon: GraduationCap, color: 'text-gray-600', bgColor: 'bg-gradient-to-br from-gray-100 to-white' };
     default:
-      return { icon: MessageSquare, color: 'text-purple-600', bgColor: 'bg-purple-100' };
-  }
-};
-
-// Update the priority helper function to return icons instead of text
-const getPriorityIcon = (priority: string) => {
-  switch (priority) {
-    case 'urgent':
-      return { icon: AlertTriangle, color: 'text-red-600' };
-    case 'high':
-      return { icon: TrendingUp, color: 'text-orange-600' };
-    case 'normal':
-      return { icon: Minus, color: 'text-brand-accent' };
-    case 'low':
-      return { icon: Minus, color: 'text-gray-600' };
-    default:
-      return { icon: Minus, color: 'text-gray-600' };
-  }
+      return { icon: MessageSquare, color: 'text-gray-600', bgColor: 'bg-gradient-to-br from-gray-100 to-white' };
+    }
 };
 
 // Helper function to format relative time
@@ -64,30 +50,71 @@ const formatRelativeTime = (dateString: string) => {
 };
 
 export function AnnouncementsCard() {
-  const { profile } = useProfile();
   const chapterId = useScopedChapterId();
-  const { announcements, loading, markAsRead, refresh } = useAnnouncements(chapterId);
+  const context = useAnnouncementsContext();
+  const hookData = useAnnouncements(context ? null : chapterId);
+  const data = context ?? hookData;
+  const { announcements, loading, markAsRead, refresh, pagination, fetchPageForModal } = data;
+
+  // Desktop only: View All modal is for desktop (lg) only
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const check = () => setIsDesktop(typeof window !== 'undefined' && window.innerWidth >= 1024);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   // Add state for tracking which announcement is being marked as read
   const [markingAsRead, setMarkingAsRead] = useState<string | null>(null);
-  // Add state for modal
+  // State for detail drawer
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
+  const [showDetailDrawer, setShowDetailDrawer] = useState(false);
+  // State for View All modal (desktop only, with pagination)
   const [isViewAllOpen, setIsViewAllOpen] = useState(false);
-  
-  // Limit announcements shown in sidebar (first 3)
-  const MAX_SIDEBAR_ANNOUNCEMENTS = 3;
-  const sidebarAnnouncements = announcements.slice(0, MAX_SIDEBAR_ANNOUNCEMENTS);
-  const hasMoreAnnouncements = announcements.length > MAX_SIDEBAR_ANNOUNCEMENTS;
+  const [modalPage, setModalPage] = useState(1);
+  const [modalAnnouncements, setModalAnnouncements] = useState<Announcement[]>([]);
+  const [modalPagination, setModalPagination] = useState(data.pagination);
+  const [modalLoading, setModalLoading] = useState(false);
 
-  // Update the handleMarkAsRead function
-  const handleMarkAsRead = async (announcementId: string) => {
+  // When View All modal opens, init to page 1 (main list)
+  useEffect(() => {
+    if (isViewAllOpen && modalPage === 1) {
+      setModalAnnouncements(announcements);
+      setModalPagination(pagination);
+    }
+  }, [isViewAllOpen, modalPage, announcements, pagination]);
+
+  const handleViewAllPageChange = async (page: number) => {
+    setModalPage(page);
+    if (page === 1) {
+      setModalAnnouncements(announcements);
+      setModalPagination(pagination);
+      return;
+    }
+    setModalLoading(true);
     try {
-      setMarkingAsRead(announcementId); // Set loading state
+      const res = await fetchPageForModal(page);
+      setModalAnnouncements(res.announcements);
+      setModalPagination(res.pagination);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  // Display up to 10 in card; View All modal is desktop-only with pagination (10 per page)
+  const DISPLAY_LIMIT = 10;
+  const displayAnnouncements = announcements.slice(0, DISPLAY_LIMIT);
+  const showViewAllButton = isDesktop && (pagination.total > 0 || announcements.length > 0);
+
+  const handleMarkAsRead = async (announcementId: string): Promise<void> => {
+    try {
+      setMarkingAsRead(announcementId);
       const success = await markAsRead(announcementId);
       if (success) {
-        // Show toast notification on desktop only
-        if (window.innerWidth >= 640) { // sm breakpoint
+        if (window.innerWidth >= 640) {
           toast.success('Announcement marked as read and removed from your list', {
-            position: "top-right",
+            position: 'top-right',
             autoClose: 3000,
             hideProgressBar: false,
             closeOnClick: true,
@@ -95,39 +122,62 @@ export function AnnouncementsCard() {
             draggable: true,
           });
         }
-        // The announcement will automatically be removed from the list
-        // since the hook now filters out read announcements
+      } else {
+        throw new Error('Failed to mark as read');
       }
     } catch (error) {
       console.error('Failed to mark announcement as read:', error);
-      // Show error toast on desktop
       if (window.innerWidth >= 640) {
         toast.error('Failed to mark announcement as read. Please try again.', {
-          position: "top-right",
+          position: 'top-right',
           autoClose: 3000,
         });
       }
+      throw error; // Re-throw so drawer stays open on failure
     } finally {
-      setMarkingAsRead(null); // Clear loading state
+      setMarkingAsRead(null);
     }
   };
 
-  // Render a single announcement item (reusable for sidebar and modal)
-  const renderAnnouncementItem = (announcement: Announcement, isInModal: boolean = false) => {
+  const openDetailDrawer = (announcement: Announcement) => {
+    setSelectedAnnouncement(announcement);
+    setShowDetailDrawer(true);
+  };
+
+  const closeDetailDrawer = () => {
+    setShowDetailDrawer(false);
+    setSelectedAnnouncement(null);
+  };
+
+  // Render a single announcement item (clickable to open detail drawer)
+  // isInModal: when true, full content shown and no line-clamp
+  const renderAnnouncementItem = (announcement: Announcement, isInModal = false) => {
     const typeConfig = getAnnouncementTypeConfig(announcement.announcement_type);
     const TypeIcon = typeConfig.icon;
-    
+
     return (
-      <div 
-        key={announcement.id} 
-        className={`p-3 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-sm transition-all duration-200 bg-white ${isInModal ? 'mb-3' : ''}`}
+      <div
+        key={announcement.id}
+        role="button"
+        tabIndex={0}
+        onClick={() => openDetailDrawer(announcement)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openDetailDrawer(announcement);
+          }
+        }}
+        className="p-3 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-sm transition-all duration-200 bg-white cursor-pointer"
+        aria-label={`View announcement: ${announcement.title}`}
       >
         <div className="flex items-start space-x-3">
           {/* Type icon */}
-          <div className={`w-10 h-10 ${typeConfig.bgColor} rounded-full flex items-center justify-center shrink-0`}>
+          <div
+            className={`w-10 h-10 ${typeConfig.bgColor} rounded-full flex items-center justify-center shrink-0`}
+          >
             <TypeIcon className={`h-5 w-5 ${typeConfig.color}`} />
           </div>
-          
+
           <div className="flex-1 min-w-0">
             {/* Header with title */}
             <div className="flex items-start justify-between mb-2">
@@ -135,12 +185,14 @@ export function AnnouncementsCard() {
                 {announcement.title}
               </h4>
             </div>
-            
+
             {/* Content */}
-            <p className={`text-xs text-gray-600 mb-3 ${isInModal ? '' : 'line-clamp-2'} break-words`}>
+            <p
+              className={`text-xs text-gray-600 mb-3 break-words ${isInModal ? '' : 'line-clamp-2'}`}
+            >
               {announcement.content}
             </p>
-            
+
             {/* Footer with sender, time, and action */}
             <div className="flex items-center justify-between pt-2 border-t border-gray-100">
               <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
@@ -151,13 +203,16 @@ export function AnnouncementsCard() {
                   {formatRelativeTime(announcement.created_at)}
                 </span>
               </div>
-              
-              <Button 
-                size="sm" 
+
+              <Button
+                size="sm"
                 variant="outline"
-                onClick={() => handleMarkAsRead(announcement.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleMarkAsRead(announcement.id);
+                }}
                 disabled={markingAsRead === announcement.id}
-                className="text-brand-primary border-brand-primary hover:bg-primary-50 h-6 px-2 shrink-0"
+                className="text-brand-primary border-brand-primary hover:bg-primary-50 h-6 w-6 p-0 rounded-full flex items-center justify-center shrink-0"
                 title="Mark as read"
               >
                 {markingAsRead === announcement.id ? (
@@ -219,10 +274,7 @@ export function AnnouncementsCard() {
       <Card className="bg-white shadow-sm border border-gray-200">
         <CardHeader className="pb-3 border-b border-gray-100">
           <CardTitle className="text-lg font-semibold flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <MessageSquare className="h-5 w-5 text-brand-primary" />
-              <span className="text-gray-900">Announcements</span>
-            </div>
+            <span className="text-gray-900">Announcements</span>
             {announcements.length > 0 && (
               <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                 {announcements.length}
@@ -230,37 +282,54 @@ export function AnnouncementsCard() {
             )}
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-3">
-          <div className="space-y-2.5">
-            {sidebarAnnouncements.map((announcement) => renderAnnouncementItem(announcement))}
+        <CardContent className="pt-3 flex flex-col">
+          {/* Scrollable list - max height ~320px = ~5-6 items at ~56px each */}
+          <div
+            className="overflow-y-auto overscroll-contain pr-1 -mr-1 space-y-2.5 min-h-0"
+            style={{ maxHeight: '320px' }}
+          >
+            {displayAnnouncements.map((announcement) =>
+              renderAnnouncementItem(announcement)
+            )}
           </div>
-          
-          {/* View All button if there are more announcements */}
-          {hasMoreAnnouncements && (
+
+          {/* View All - desktop only; opens modal with pagination (10 per page) */}
+          {showViewAllButton && (
             <div className="pt-3 border-t border-gray-200 mt-3">
-              <Button 
-                variant="outline" 
-                className="w-full text-slate-600 border-gray-400 hover:bg-primary-50 h-8"
-                onClick={() => setIsViewAllOpen(true)}
+              <Button
+                variant="outline"
+                className="w-full text-slate-600 border-gray-400 hover:bg-primary-50 h-8 rounded-full"
+                onClick={() => {
+                  setModalPage(1);
+                  setModalAnnouncements(announcements);
+                  setModalPagination(pagination);
+                  setIsViewAllOpen(true);
+                }}
               >
                 <Eye className="h-4 w-4 mr-2" />
-                View All ({announcements.length})
+                View All ({(pagination.total || announcements.length) || 0})
               </Button>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* View All Modal */}
-      <Dialog open={isViewAllOpen} onOpenChange={setIsViewAllOpen}>
+      {/* View All Modal - desktop only; scrollable list + pagination (10 per page) */}
+      <Dialog
+        open={isViewAllOpen}
+        onOpenChange={(open) => {
+          setIsViewAllOpen(open);
+          if (!open) setModalPage(1);
+        }}
+      >
         <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <MessageSquare className="h-5 w-5 text-brand-primary" />
               <span>All Announcements</span>
-              {announcements.length > 0 && (
+              {(modalPagination.total || modalAnnouncements.length) > 0 && (
                 <Badge variant="secondary" className="ml-2 bg-primary-100 text-primary-800">
-                  {announcements.length}
+                  {modalPagination.total || modalAnnouncements.length}
                 </Badge>
               )}
             </DialogTitle>
@@ -268,26 +337,60 @@ export function AnnouncementsCard() {
               View and manage all your chapter announcements
             </DialogDescription>
           </DialogHeader>
-          
-          {/* Scrollable announcements list in modal */}
-          <div className="flex-1 overflow-y-auto pr-2 mt-4">
-            <div className="space-y-3">
-              {announcements.map((announcement) => renderAnnouncementItem(announcement, true))}
-            </div>
+
+          {/* Scrollable announcements list */}
+          <div className="flex-1 overflow-y-auto pr-2 mt-4 min-h-0">
+            {modalLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {modalAnnouncements.map((announcement) =>
+                  renderAnnouncementItem(announcement, true)
+                )}
+              </div>
+            )}
           </div>
-          
-          {/* Footer with refresh button */}
-          <div className="pt-4 border-t border-gray-100 mt-4 flex justify-end">
-            <Button 
-              variant="outline" 
-              className="text-brand-primary border-brand-primary hover:bg-primary-50"
-              onClick={refresh}
-            >
-              Refresh Announcements
-            </Button>
+
+          {/* Footer - pagination (same as other pages) + refresh */}
+          <div className="pt-4 border-t border-gray-100 mt-4 flex flex-col gap-3">
+            {modalPagination.totalPages > 0 && (
+              <AlumniPagination
+                currentPage={modalPage}
+                totalPages={modalPagination.totalPages}
+                totalItems={modalPagination.total}
+                itemsPerPage={modalPagination.limit || 10}
+                onPageChange={handleViewAllPageChange}
+                itemLabel="announcements"
+              />
+            )}
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                className="text-brand-primary border-brand-primary hover:bg-primary-50"
+                onClick={() => {
+                  refresh();
+                  if (modalPage === 1) {
+                    setModalAnnouncements(announcements);
+                    setModalPagination(pagination);
+                  }
+                }}
+              >
+                Refresh Announcements
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      <AnnouncementDetailDrawer
+        announcement={selectedAnnouncement}
+        isOpen={showDetailDrawer}
+        onClose={closeDetailDrawer}
+        onMarkAsRead={handleMarkAsRead}
+        markingAsRead={markingAsRead}
+      />
     </>
   );
 }

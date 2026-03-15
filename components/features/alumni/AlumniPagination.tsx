@@ -7,6 +7,8 @@ interface AlumniPaginationProps {
   totalItems: number;
   itemsPerPage: number;
   onPageChange: (page: number) => void;
+  /** Optional label for the item type (e.g. "alumni", "announcements"). Default: "alumni" */
+  itemLabel?: string;
 }
 
 export function AlumniPagination({
@@ -14,7 +16,8 @@ export function AlumniPagination({
   totalPages,
   totalItems,
   itemsPerPage,
-  onPageChange
+  onPageChange,
+  itemLabel = 'alumni'
 }: AlumniPaginationProps) {
   // Calculate the range of items being displayed
   const startItem = (currentPage - 1) * itemsPerPage + 1;
@@ -25,7 +28,7 @@ export function AlumniPagination({
     return (
       <div className="flex flex-col items-center space-y-3 pt-4 border-t border-gray-200 mt-4">
         <div className="text-xs text-gray-600">
-          Showing {totalItems.toLocaleString()} alumni
+          Showing {totalItems.toLocaleString()} {itemLabel}
         </div>
       </div>
     );
@@ -129,7 +132,7 @@ export function AlumniPagination({
   return (
     <div className="flex flex-col items-center space-y-3 pt-4 border-t border-gray-200 mt-4">
       <div className="text-xs text-gray-600">
-        Showing {startItem} to {endItem} of {totalItems.toLocaleString()} alumni
+        Showing {startItem} to {endItem} of {totalItems.toLocaleString()} {itemLabel}
       </div>
       <div className="flex items-center space-x-2">
         <Button

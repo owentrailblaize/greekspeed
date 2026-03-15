@@ -9,6 +9,7 @@ import { Event } from '@/types/events';
 import { MyTasksCard } from './ui/MyTasksCard';
 import { UpcomingEventsCard } from './ui/UpcomingEventsCard';
 import { AnnouncementsCard } from './ui/AnnouncementsCard';
+import { AnnouncementsProvider } from '@/lib/contexts/AnnouncementsContext';
 import { DocsCompliancePanel } from './ui/DocsCompliancePanel';
 import { CompactCalendarCard } from './ui/CompactCalendarCard';
 import { MobileBottomNavigation, MobileTab } from './ui/MobileBottomNavigation';
@@ -192,6 +193,7 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
   };
 
   return (
+    <AnnouncementsProvider chapterId={chapterId}>
     <div className="min-h-screen bg-gray-50">
       {/* Main Content - Mobile-First Layout */}
       <div className="max-w-full mx-auto px-4 sm:px-6 py-4 sm:py-6 pb-24 sm:pb-6">
@@ -369,6 +371,7 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
         document.body
       )}
     </div>
+    </AnnouncementsProvider>
   );
 }
 

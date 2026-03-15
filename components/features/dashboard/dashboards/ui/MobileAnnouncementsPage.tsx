@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MessageSquare, Clock, AlertTriangle, GraduationCap, Calendar, AlertCircle, Check, Loader2, ListTodo } from 'lucide-react';
 import { useAnnouncements } from '@/lib/hooks/useAnnouncements';
+import { useAnnouncementsContext } from '@/lib/contexts/AnnouncementsContext';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { Announcement } from '@/types/announcements';
 import { Task, TaskStatus } from '@/types/operations';
@@ -18,16 +19,15 @@ import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 const getAnnouncementTypeConfig = (type: string) => {
   switch (type) {
     case 'urgent':
-      return { icon: AlertTriangle, color: 'text-red-600', bgColor: 'bg-red-100' };
+      return { icon: AlertTriangle, color: 'text-gray-700', bgColor: 'bg-gradient-to-br from-gray-200 to-white' };
     case 'event':
-      return { icon: Calendar, color: 'text-brand-accent', bgColor: 'bg-accent-100' };
+      return { icon: Calendar, color: 'text-brand-accent', bgColor: 'bg-gradient-to-br from-accent-100 to-white' };
     case 'academic':
-      return { icon: GraduationCap, color: 'text-green-600', bgColor: 'bg-green-100' };
+      return { icon: GraduationCap, color: 'text-gray-600', bgColor: 'bg-gradient-to-br from-gray-100 to-white' };
     default:
-      return { icon: MessageSquare, color: 'text-purple-600', bgColor: 'bg-purple-100' };
-  }
+      return { icon: MessageSquare, color: 'text-gray-600', bgColor: 'bg-gradient-to-br from-gray-100 to-white' };
+    }
 };
-
 
 // Helper function to format relative time
 const formatRelativeTime = (dateString: string) => {
@@ -47,7 +47,9 @@ const formatRelativeTime = (dateString: string) => {
 export function MobileAnnouncementsPage() {
   const { profile } = useProfile();
   const chapterId = useScopedChapterId();
-  const { announcements, loading: announcementsLoading, markAsRead } = useAnnouncements(chapterId);
+  const context = useAnnouncementsContext();
+  const hookData = useAnnouncements(context ? null : chapterId);
+  const { announcements, loading: announcementsLoading, markAsRead } = context ?? hookData;
   
   // Tab state
   const [activeTab, setActiveTab] = useState<'tasks' | 'news'>('tasks');
