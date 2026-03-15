@@ -116,7 +116,7 @@ export function useAnnouncements(chapterId: string | null) {
   }, [user, session]);
 
   const markAsRead = useCallback(async (announcementId: string) => {
-    if (!user) return;
+    if (!user) return false;
 
     try {
       const response = await fetch(`/api/announcements/${announcementId}/read`, {
