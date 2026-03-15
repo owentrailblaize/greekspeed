@@ -38,12 +38,14 @@ export function CreatePostModal({
   const [postType, setPostType] = useState<'text' | 'image' | 'text_image'>('text');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
+      setIsInputFocused(false);
       // Revoke all preview object URLs to free memory
       setPreviewUrls((current) => {
         current.forEach((url) => URL.revokeObjectURL(url));
@@ -278,6 +280,8 @@ export function CreatePostModal({
             setContent(nextValue);
             setPostType(determinePostType(nextValue, previewUrls.length));
           }}
+          onFocus={() => setIsInputFocused(true)}
+          onBlur={() => setIsInputFocused(false)}
           className="min-h-[120px] sm:min-h-[100px] resize-none rounded-2xl border border-transparent bg-slate-50/80 p-5 text-base sm:text-lg text-slate-800 placeholder:text-slate-400 focus:border-primary-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 transition"
         />
 
@@ -366,7 +370,7 @@ export function CreatePostModal({
     </>
   );
 
-  // Mobile: vault bottom drawer (header + body + footer with Post in footer)
+  // Mobile: vault bottom drawer; hide footer (Photo + Post) when input is focused to show more of the textarea above keyboard
   if (mounted && isMobile) {
     return (
       <Drawer.Root open={isOpen} onOpenChange={(open) => !open && onClose()} direction="bottom" modal dismissible>
@@ -378,7 +382,41 @@ export function CreatePostModal({
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-zinc-300 mt-3 mb-2" aria-hidden />
             {headerContent}
             {bodyContent}
-            <div className="pb-[env(safe-area-inset-bottom)]">{footerContent}</div>
+            {!isInputFocused && (
+              <div className="pb-[env(safe-area-inset-bottom)]">
+                <div className="shrink-0 border-t border-slate-200/70 bg-slate-50/70 p-4 sm:p-3 shadow-inner">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={imageFiles.length >= MAX_IMAGES || isSubmitting}
+                        className="h-11 sm:h-9 rounded-full border border-slate-200 bg-white/90 px-5 text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Image className="h-5 w-5 sm:h-4 sm:w-4 mr-2" />
+                        <span className="text-sm font-medium">Photo</span>
+                      </Button>
+                    </div>
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={!canSubmit}
+                      className="w-full sm:w-auto h-12 sm:h-10 rounded-full bg-brand-primary px-8 text-sm font-semibold tracking-wide text-white shadow-[0_18px_45px_-24px_rgba(30,64,175,0.9)] transition-all duration-200 hover:bg-brand-primary-hover hover:-translate-y-0.5 hover:shadow-[0_22px_55px_-28px_rgba(30,64,175,0.85)] disabled:translate-y-0 disabled:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSubmitting ? 'Posting…' : 'Post'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageUpload}
+              className="hidden"
+            />
           </Drawer.Content>
         </Drawer.Portal>
       </Drawer.Root>
