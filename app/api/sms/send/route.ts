@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
     // Format message with compliance text using SMSMessageFormatter
     // This ensures compliance text is never truncated and supports multi-part messages
     const senderPrefix = '[Trailblaize]';
-    const complianceText = ' Msg/data rates apply';
+    const complianceText = '';
     
     // Check if message already has compliance text
     const hasCompliance = message.includes('Reply STOP') || message.includes('[Trailblaize]');

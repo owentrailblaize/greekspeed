@@ -21,8 +21,8 @@ export interface SMSMessageParts {
 const DEFAULT_SENDER_PREFIX = 'Trailblaize: ';
 
 const COMPLIANCE = {
-  full: ' Turn off sms alerts in app settings. Msg & data rates may apply.',
-  short: '',
+  full: ' Turn off sms alerts in app settings.',
+  short: 'Turn off in app settings.',
   none: '',
 } as const;
 

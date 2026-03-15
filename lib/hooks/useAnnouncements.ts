@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/lib/supabase/auth-context';
-import { supabase } from '@/lib/supabase/client';
 import { Announcement, CreateAnnouncementData } from '@/types/announcements';
 
 export function useAnnouncements(chapterId: string | null) {
@@ -10,24 +9,30 @@ export function useAnnouncements(chapterId: string | null) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasDataRef = useRef(false);
+  const PAGE_SIZE = 10;
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 20,
+    limit: PAGE_SIZE,
     total: 0,
     totalPages: 0
   });
 
   const fetchAnnouncements = useCallback(async (page: number = 1) => {
     if (!chapterId || !user) return;
-    
-    try {
+
+    // Only show loading on initial load (no cached data). Silent refresh when we have data.
+    const isInitialLoad = !hasDataRef.current;
+    if (isInitialLoad) {
       setLoading(true);
-      setError(null);
-      
+    }
+    setError(null);
+
+    try {
       const params = new URLSearchParams({
         chapterId,
         page: page.toString(),
-        limit: '20'
+        limit: PAGE_SIZE.toString()
       });
       
       const response = await fetch(`/api/announcements?${params}`, {
@@ -48,6 +53,7 @@ export function useAnnouncements(chapterId: string | null) {
         return !announcement.is_read;
       });
       
+      hasDataRef.current = true;
       setAnnouncements(unreadAnnouncements || []);
       setPagination(data.pagination || {});
     } catch (err) {
@@ -55,7 +61,27 @@ export function useAnnouncements(chapterId: string | null) {
     } finally {
       setLoading(false);
     }
-  }, [chapterId, user, session]);
+  }, [chapterId, user?.id, session?.access_token]);
+
+  /** Fetch a specific page for the View All modal (does not update main list). Returns unread-only list. */
+  const fetchPageForModal = useCallback(async (page: number) => {
+    if (!chapterId || !user) return { announcements: [] as Announcement[], pagination: { page: 1, limit: PAGE_SIZE, total: 0, totalPages: 0 } };
+    const params = new URLSearchParams({
+      chapterId,
+      page: page.toString(),
+      limit: PAGE_SIZE.toString()
+    });
+    const response = await fetch(`/api/announcements?${params}`, {
+      headers: { 'Authorization': `Bearer ${session?.access_token}` }
+    });
+    if (!response.ok) throw new Error('Failed to fetch announcements');
+    const data = await response.json();
+    const unread = (data.announcements || []).filter((a: Announcement) => !a.is_read);
+    return {
+      announcements: unread,
+      pagination: data.pagination || { page: 1, limit: PAGE_SIZE, total: 0, totalPages: 0 }
+    };
+  }, [chapterId, user?.id, session?.access_token]);
 
   const createAnnouncement = useCallback(async (announcementData: CreateAnnouncementData) => {
     if (!user || !session) {
@@ -90,7 +116,7 @@ export function useAnnouncements(chapterId: string | null) {
   }, [user, session]);
 
   const markAsRead = useCallback(async (announcementId: string) => {
-    if (!user) return;
+    if (!user) return false;
 
     try {
       const response = await fetch(`/api/announcements/${announcementId}/read`, {
@@ -116,6 +142,11 @@ export function useAnnouncements(chapterId: string | null) {
     }
   }, [user, session]);
 
+  // Reset hasData when chapter changes so loading shows for new chapter
+  useEffect(() => {
+    hasDataRef.current = false;
+  }, [chapterId]);
+
   useEffect(() => {
     if (chapterId) {
       fetchAnnouncements(1);
@@ -128,6 +159,7 @@ export function useAnnouncements(chapterId: string | null) {
     error,
     pagination,
     fetchAnnouncements,
+    fetchPageForModal,
     createAnnouncement,
     markAsRead,
     refresh: () => fetchAnnouncements(1)

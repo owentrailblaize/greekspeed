@@ -205,15 +205,26 @@ export default function SignUpPage() {
 
   const isPhoneValid = phoneNumber === '' || isValidPhoneNumber(phoneNumber);
 
-  const showMobileOverlay =
-    (authLoading || oauthLoading || linkedInLoading || user) || (isMobile && !minOverlayTimeElapsed);
+  const showMobileNetworkingOverlay = ((authLoading && !user) || (isMobile && !minOverlayTimeElapsed)) && isMobile;
   const showDesktopSpinner = authLoading || oauthLoading || linkedInLoading || user;
+  const showMobileRedirectSpinner = (user || oauthLoading || linkedInLoading) && isMobile;
 
-  if (showMobileOverlay || showDesktopSpinner) {
+  if (showMobileNetworkingOverlay || showDesktopSpinner || showMobileRedirectSpinner) {
     return (
       <>
         <div className="lg:hidden">
-          <MobileAuthLoadingOverlay />
+          {showMobileNetworkingOverlay ? (
+            <MobileAuthLoadingOverlay />
+          ) : (
+            <div className="min-h-screen flex items-center justify-center bg-white">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-brand-primary mx-auto mb-4" />
+                <p className="text-gray-600 font-medium">
+                  {user ? 'Redirecting...' : 'Completing authentication...'}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
         <div className="hidden lg:flex min-h-screen items-center justify-center bg-white">
           <div className="text-center">

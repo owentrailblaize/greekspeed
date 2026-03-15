@@ -7,27 +7,28 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MessageSquare, Clock, AlertTriangle, GraduationCap, Calendar, AlertCircle, Check, Loader2, ListTodo } from 'lucide-react';
 import { useAnnouncements } from '@/lib/hooks/useAnnouncements';
+import { useAnnouncementsContext } from '@/lib/contexts/AnnouncementsContext';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { Announcement } from '@/types/announcements';
 import { Task, TaskStatus } from '@/types/operations';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'react-toastify';
 import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
+import { AnnouncementDetailDrawer } from './AnnouncementDetailDrawer';
 
 // Helper function to get icon and color based on announcement type
 const getAnnouncementTypeConfig = (type: string) => {
   switch (type) {
     case 'urgent':
-      return { icon: AlertTriangle, color: 'text-red-600', bgColor: 'bg-red-100' };
+      return { icon: AlertTriangle, color: 'text-gray-700', bgColor: 'bg-gradient-to-br from-gray-200 to-white' };
     case 'event':
-      return { icon: Calendar, color: 'text-brand-accent', bgColor: 'bg-accent-100' };
+      return { icon: Calendar, color: 'text-brand-accent', bgColor: 'bg-gradient-to-br from-accent-100 to-white' };
     case 'academic':
-      return { icon: GraduationCap, color: 'text-green-600', bgColor: 'bg-green-100' };
+      return { icon: GraduationCap, color: 'text-gray-600', bgColor: 'bg-gradient-to-br from-gray-100 to-white' };
     default:
-      return { icon: MessageSquare, color: 'text-purple-600', bgColor: 'bg-purple-100' };
-  }
+      return { icon: MessageSquare, color: 'text-gray-600', bgColor: 'bg-gradient-to-br from-gray-100 to-white' };
+    }
 };
-
 
 // Helper function to format relative time
 const formatRelativeTime = (dateString: string) => {
@@ -47,7 +48,9 @@ const formatRelativeTime = (dateString: string) => {
 export function MobileAnnouncementsPage() {
   const { profile } = useProfile();
   const chapterId = useScopedChapterId();
-  const { announcements, loading: announcementsLoading, markAsRead } = useAnnouncements(chapterId);
+  const context = useAnnouncementsContext();
+  const hookData = useAnnouncements(context ? null : chapterId);
+  const { announcements, loading: announcementsLoading, markAsRead } = context ?? hookData;
   
   // Tab state
   const [activeTab, setActiveTab] = useState<'tasks' | 'news'>('tasks');
@@ -59,6 +62,10 @@ export function MobileAnnouncementsPage() {
   
   // News/Announcements state
   const [newsTypeFilter, setNewsTypeFilter] = useState<'all' | 'urgent' | 'event' | 'academic' | 'general'>('all');
+  // Detail drawer (same as desktop/tablet)
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
+  const [showDetailDrawer, setShowDetailDrawer] = useState(false);
+  const [markingAsRead, setMarkingAsRead] = useState<string | null>(null);
 
   // Load tasks for the current user
   const loadMyTasks = async () => {
@@ -109,8 +116,9 @@ export function MobileAnnouncementsPage() {
     }
   }, [profile?.chapter_id, profile?.id, activeTab]);
 
-  const handleMarkAsRead = async (announcementId: string) => {
+  const handleMarkAsRead = async (announcementId: string): Promise<void> => {
     try {
+      setMarkingAsRead(announcementId);
       const success = await markAsRead(announcementId);
       if (success) {
         toast.success('Marked as read');
@@ -118,7 +126,19 @@ export function MobileAnnouncementsPage() {
     } catch (error) {
       console.error('Failed to mark announcement as read:', error);
       toast.error('Failed to mark as read');
+    } finally {
+      setMarkingAsRead(null);
     }
+  };
+
+  const openDetailDrawer = (announcement: Announcement) => {
+    setSelectedAnnouncement(announcement);
+    setShowDetailDrawer(true);
+  };
+
+  const closeDetailDrawer = () => {
+    setShowDetailDrawer(false);
+    setSelectedAnnouncement(null);
   };
 
   const handleMarkTaskComplete = async (taskId: string, currentStatus: TaskStatus) => {
@@ -217,15 +237,25 @@ export function MobileAnnouncementsPage() {
   return (
     <div className="min-h-screen bg-gray-50 pt-0 pb-20 px-4">
       <div className="max-w-md mx-auto">
-        {/* Tabs */}
+        {/* Tabs - minimal style, tight spacing under header */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="tasks" className="text-xs">Tasks</TabsTrigger>
-            <TabsTrigger value="news" className="text-xs">News</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 mb-2 h-11 bg-transparent p-0 rounded-none border-b border-gray-200">
+            <TabsTrigger
+              value="tasks"
+              className="text-sm font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none text-gray-500 data-[state=active]:bg-transparent bg-transparent"
+            >
+              Tasks
+            </TabsTrigger>
+            <TabsTrigger
+              value="news"
+              className="text-sm font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none text-gray-500 data-[state=active]:bg-transparent bg-transparent"
+            >
+              News
+            </TabsTrigger>
           </TabsList>
 
           {/* Tasks Tab */}
-          <TabsContent value="tasks" className="space-y-4">
+          <TabsContent value="tasks" className="space-y-4 mt-2">
             {tasksLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-slate-600" />
@@ -329,7 +359,7 @@ export function MobileAnnouncementsPage() {
           </TabsContent>
 
           {/* News Tab */}
-          <TabsContent value="news" className="space-y-4">
+          <TabsContent value="news" className="space-y-4 mt-2">
             {/* Filter Buttons */}
             <div className="-mx-4 px-4">
               <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -375,15 +405,28 @@ export function MobileAnnouncementsPage() {
                 {filteredAnnouncements.map((announcement) => {
                   const typeConfig = getAnnouncementTypeConfig(announcement.announcement_type);
                   const TypeIcon = typeConfig.icon;
-                  
+
                   return (
-                    <Card key={announcement.id} className="p-3 bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90">
+                    <Card
+                      key={announcement.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openDetailDrawer(announcement)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          openDetailDrawer(announcement);
+                        }
+                      }}
+                      className="p-3 bg-white/80 backdrop-blur-md border border-primary-100/50 shadow-lg shadow-navy-100/20 transition-all duration-300 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 cursor-pointer active:scale-[0.99]"
+                      aria-label={`View announcement: ${announcement.title}`}
+                    >
                       <div className="flex items-start space-x-3">
                         {/* Type icon */}
                         <div className={`w-8 h-8 ${typeConfig.bgColor} rounded-full flex items-center justify-center shrink-0`}>
                           <TypeIcon className={`h-4 w-4 ${typeConfig.color}`} />
                         </div>
-                        
+
                         <div className="flex-1 min-w-0">
                           {/* Header with title */}
                           <div className="flex items-start justify-between mb-2">
@@ -391,31 +434,20 @@ export function MobileAnnouncementsPage() {
                               {announcement.title}
                             </h4>
                           </div>
-                          
-                          {/* Content */}
+
+                          {/* Content preview */}
                           <p className="text-xs text-slate-700 mb-3 line-clamp-2 break-words">
                             {announcement.content}
                           </p>
-                          
-                          {/* Footer with sender and time */}
-                          <div className="flex flex-col space-y-2">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="text-xs text-slate-600 break-words">
-                                {announcement.sender?.full_name || 'Unknown'}
-                              </span>
-                              <span className="text-xs text-slate-500">
-                                {formatRelativeTime(announcement.created_at)}
-                              </span>
-                            </div>
-                            
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleMarkAsRead(announcement.id)}
-                              className="h-7 px-3 text-xs w-full rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
-                            >
-                              Mark Read
-                            </Button>
+
+                          {/* Footer with sender and time - tap card to open drawer for full content and Mark as read */}
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                            <span className="break-words">
+                              {announcement.sender?.full_name || 'Unknown'}
+                            </span>
+                            <span className="text-slate-500">
+                              {formatRelativeTime(announcement.created_at)}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -427,6 +459,21 @@ export function MobileAnnouncementsPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <AnnouncementDetailDrawer
+        announcement={selectedAnnouncement}
+        isOpen={showDetailDrawer}
+        onClose={closeDetailDrawer}
+        onMarkAsRead={async (id) => {
+          try {
+            await handleMarkAsRead(id);
+            closeDetailDrawer();
+          } catch {
+            // Error already handled in handleMarkAsRead; keep drawer open
+          }
+        }}
+        markingAsRead={markingAsRead}
+      />
     </div>
   );
 }
