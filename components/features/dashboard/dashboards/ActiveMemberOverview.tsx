@@ -196,8 +196,8 @@ function ActiveMemberOverviewContent({ initialFeed, fallbackChapterId }: ActiveM
     <AnnouncementsProvider chapterId={chapterId}>
     <div className="min-h-screen bg-gray-50">
       {/* Main Content - Mobile-First Layout */}
-      <div className="max-w-full mx-auto px-4 sm:px-6 py-4 sm:py-6 pb-24 sm:pb-6">
-        {/* Mobile Layout: Tab-based Navigation */}
+      <div className="max-w-full mx-auto px-4 sm:px-6 pt-2 pb-24 sm:py-6 sm:pb-6">
+        {/* Mobile Layout: Tab-based Navigation - pt-2 on mobile brings tabs closer to header */}
         <div className="sm:hidden">
           {renderMobileContent()}
         </div>

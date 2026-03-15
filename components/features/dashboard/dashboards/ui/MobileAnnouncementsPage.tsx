@@ -237,15 +237,25 @@ export function MobileAnnouncementsPage() {
   return (
     <div className="min-h-screen bg-gray-50 pt-0 pb-20 px-4">
       <div className="max-w-md mx-auto">
-        {/* Tabs */}
+        {/* Tabs - minimal style, tight spacing under header */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="tasks" className="text-xs">Tasks</TabsTrigger>
-            <TabsTrigger value="news" className="text-xs">News</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 mb-2 h-11 bg-transparent p-0 rounded-none border-b border-gray-200">
+            <TabsTrigger
+              value="tasks"
+              className="text-sm font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none text-gray-500 data-[state=active]:bg-transparent bg-transparent"
+            >
+              Tasks
+            </TabsTrigger>
+            <TabsTrigger
+              value="news"
+              className="text-sm font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none text-gray-500 data-[state=active]:bg-transparent bg-transparent"
+            >
+              News
+            </TabsTrigger>
           </TabsList>
 
           {/* Tasks Tab */}
-          <TabsContent value="tasks" className="space-y-4">
+          <TabsContent value="tasks" className="space-y-4 mt-2">
             {tasksLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-slate-600" />
@@ -349,7 +359,7 @@ export function MobileAnnouncementsPage() {
           </TabsContent>
 
           {/* News Tab */}
-          <TabsContent value="news" className="space-y-4">
+          <TabsContent value="news" className="space-y-4 mt-2">
             {/* Filter Buttons */}
             <div className="-mx-4 px-4">
               <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
