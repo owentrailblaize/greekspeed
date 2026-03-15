@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase/client';
-import { ArrowLeft, ArrowRight, Mail, Star } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Mail, Star, Eye, EyeOff } from 'lucide-react';
 import { LottiePlayer } from '@/components/ui/LottiePlayer';
 import { MobileAuthLoadingOverlay } from '@/components/features/splash/MobileAuthLoadingOverlay';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
@@ -22,6 +22,7 @@ export default function SignInPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [linkedInLoading, setLinkedInLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const { signIn, user, loading: authLoading } = useAuth();
   const router = useRouter();
   const isMobile = useIsMobile();
@@ -217,16 +218,23 @@ export default function SignInPage() {
                   className="h-11 border-gray-300 focus:border-brand-primary focus:ring-brand-primary"
                 />
               </div>
-              <div>
+              <div className="relative">
                 <Input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={loading || googleLoading || linkedInLoading}
-                  className="h-11 border-gray-300 focus:border-brand-primary focus:ring-brand-primary"
+                  className="h-11 pr-10 border-gray-300 focus:border-brand-primary focus:ring-brand-primary"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
               
               {/* Forgot Password Link */}
@@ -391,16 +399,23 @@ export default function SignInPage() {
                       className="h-11 border-gray-300 focus:border-brand-primary focus:ring-brand-primary"
                     />
                   </div>
-                  <div>
+                  <div className="relative">
                     <Input
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       placeholder="Password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       disabled={loading || googleLoading || linkedInLoading}
-                      className="h-11 border-gray-300 focus:border-brand-primary focus:ring-brand-primary"
+                      className="h-11 pr-10 border-gray-300 focus:border-brand-primary focus:ring-brand-primary"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
                   
                   {/* Forgot Password Link */}
