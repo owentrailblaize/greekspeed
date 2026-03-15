@@ -205,8 +205,8 @@ export default function SignUpPage() {
 
   const isPhoneValid = phoneNumber === '' || isValidPhoneNumber(phoneNumber);
 
-  const showMobileNetworkingOverlay = ((authLoading && !user) || (isMobile && !minOverlayTimeElapsed)) && isMobile;
-  const showDesktopSpinner = authLoading || oauthLoading || linkedInLoading || user;
+  const signingInOrRedirecting = loading || oauthLoading || linkedInLoading;
+  const showMobileNetworkingOverlay = ((authLoading && !user) || (isMobile && !minOverlayTimeElapsed)) && isMobile && !signingInOrRedirecting;
   const showMobileRedirectSpinner = (user || oauthLoading || linkedInLoading) && isMobile;
 
   if (showMobileNetworkingOverlay || showDesktopSpinner || showMobileRedirectSpinner) {

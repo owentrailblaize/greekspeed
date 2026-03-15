@@ -10,14 +10,42 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { APP_METADATA } from '@/lib/constants/metadata';
 
-// Favicon metadata - use PNG files for better quality
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.trailblaize.net';
+
+// Default metadata for the entire app; routes without their own metadata inherit this (share previews, SEO).
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://www.trailblaize.net'),
+  metadataBase: new URL(baseUrl),
+  title: {
+    default: APP_METADATA.title,
+    template: '%s | Trailblaize',
+  },
+  description: APP_METADATA.description,
+  openGraph: {
+    title: APP_METADATA.title,
+    description: APP_METADATA.description,
+    url: baseUrl,
+    siteName: APP_METADATA.siteName,
+    images: [
+      {
+        url: APP_METADATA.ogImagePath,
+        width: 1200,
+        height: 630,
+        alt: APP_METADATA.title,
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: APP_METADATA.title,
+    description: APP_METADATA.description,
+    images: [APP_METADATA.ogImagePath],
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
-      // Prioritize PNG files - browsers will use these for better quality
       { url: '/android-chrome-192x192.png', type: 'image/png', sizes: '192x192' },
       { url: '/android-chrome-512x512.png', type: 'image/png', sizes: '512x512' },
     ],
