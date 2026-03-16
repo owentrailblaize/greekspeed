@@ -6,7 +6,6 @@ import {
   Mail, 
   MessageSquare, 
   Building2, 
-  Lock,
   Users,
   X,
   Star,
@@ -21,7 +20,6 @@ import { useConnections } from "@/lib/contexts/ConnectionsContext";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { useState } from "react";
 import { useRouter } from 'next/navigation';
-import { cn } from "@/lib/utils";
 import { ShareProfileDrawer } from "@/components/features/messaging/ShareProfileDrawer";
 import { MobileMessagesDrawer } from "@/components/features/messaging/MobileMessagesDrawer";
 import { ConnectionRequestDialog } from "@/components/features/connections/ConnectionRequestDialog";
@@ -125,42 +123,6 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
     await sendConnectionRequest(userId, message);
   };
 
-  const canSendMessage = () => {
-    if (!user || user.id === userId) return false;
-    const status = getConnectionStatus(userId);
-    return status === 'accepted';
-  };
-
-  // Email and phone privacy settings - defined before canSendEmail()
-  const isEmailPublic = isAlumni ? (alumni.isEmailPublic !== false && alumni.is_email_public !== false) : true;
-  const isPhonePublic = isAlumni ? (alumni.isPhonePublic !== false && alumni.is_phone_public !== false) : true;
-
-  const canSendEmail = () => {
-    if (!user || user.id === userId) return false;
-    if (!profile.email) return false;
-    
-    // Get connection status
-    const status = getConnectionStatus(userId);
-    const isConnected = status === 'accepted';
-    
-    // Connected users can always email each other
-    if (isConnected) return true;
-    
-    // For alumni, check privacy settings if not connected
-    if (isAlumni) {
-      return isEmailPublic;
-    }
-    
-    // For regular users, email is available if it exists
-    return true;
-  };
-
-  const handleEmailClick = () => {
-    if (!profile.email || !canSendEmail()) return;
-    // Open default email client with mailto link
-    window.location.href = `mailto:${profile.email}?subject=Reaching out from Trailblaize`;
-  };
-
   const handleShareProfile = () => {
     if (!user) return;
     setShareDrawerOpen(true);
@@ -260,11 +222,11 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
       case 'accepted':
         return (
           <Button
-            className="w-full bg-green-50 text-green-700 border-green-300 rounded-full font-medium"
+            onClick={handleMessageClick}
+            className="w-full bg-green-50 text-green-700 border-green-300 rounded-full font-medium hover:bg-green-100 transition-colors"
             variant="outline"
-            disabled
           >
-            <Handshake className="h-4 w-4 mr-2" />
+            <MessageSquare className="h-4 w-4 mr-2" />
             Connected
           </Button>
         );
@@ -364,46 +326,9 @@ export function ProfileSummary({ profile, onClose }: ProfileSummaryProps) {
           )}
         </div>
 
-        {/* Connection Button */}
+        {/* Connection Button (when connected, opens messaging) */}
         <div className="mb-4">
           {renderConnectionButton()}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex space-x-2 pt-3 border-t border-gray-200">
-          <Button 
-            className={cn(
-              "flex-1 rounded-full",
-              canSendEmail()
-                ? "border-brand-primary text-brand-primary hover:bg-primary-50" 
-                : "text-gray-400 border-gray-200"
-            )}
-            variant={canSendEmail() ? "outline" : "ghost"}
-            size="sm" 
-            onClick={handleEmailClick}
-            disabled={!canSendEmail()}
-          >
-            <Mail className="h-4 w-4 mr-2" />
-            <span>Email</span>
-            {!canSendEmail() && <Lock className="h-3 w-3 ml-2 text-gray-400" />}
-          </Button>
-          
-          <Button 
-            className={cn(
-              "flex-1 rounded-full",
-              canSendMessage() 
-                ? "border-brand-primary text-brand-primary hover:bg-primary-50" 
-                : "text-gray-400 border-gray-200"
-            )}
-            variant={canSendMessage() ? "outline" : "ghost"}
-            size="sm" 
-            onClick={handleMessageClick}
-            disabled={!canSendMessage()}
-          >
-            <MessageSquare className="h-4 w-4 mr-2" />
-            <span>Message</span>
-            {!canSendMessage() && <Lock className="h-3 w-3 ml-2 text-gray-400" />}
-          </Button>
         </div>
       </div>
 
