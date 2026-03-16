@@ -248,6 +248,7 @@ export function AlumniProfileView({ profile, onClose, hideCloseButton = false }:
     }
   };
 
+  const isEmailPublic = alumni.isEmailPublic !== false && alumni.is_email_public !== false;
   const isPhonePublic = alumni.isPhonePublic !== false && alumni.is_phone_public !== false;
 
   return (
