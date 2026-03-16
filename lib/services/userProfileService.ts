@@ -309,6 +309,7 @@ export async function fetchUserProfileBySlug(slug: string): Promise<UnifiedUserP
       location: profileData.location,
       username: profileData.username || null,
       profile_slug: profileData.profile_slug || null,
+      created_at: profileData.created_at || null,
       user: {
         role: profileData.role,
         chapter_role: profileData.chapter_role,
