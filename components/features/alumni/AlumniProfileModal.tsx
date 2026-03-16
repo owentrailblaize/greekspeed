@@ -11,7 +11,6 @@ import {
   Handshake,
   Calendar,
   Users,
-  Lock,
   ArrowRight
 } from "lucide-react";
 import Link from 'next/link';
@@ -21,7 +20,6 @@ import { useConnections } from "@/lib/contexts/ConnectionsContext";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
-import { cn } from "@/lib/utils";
 import { trackActivity, ActivityTypes } from "@/lib/utils/activityUtils";
 import { createPortal } from 'react-dom';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
@@ -184,26 +182,6 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
     }
   };
 
-  const canSendMessage = () => {
-    if (!user || user.id === alumni.id) return false;
-    
-    const status = getConnectionStatus(alumni.id);
-    return status === 'accepted'; // Only allow messaging if connected
-  };
-
-  const isEmailPublic = alumni.isEmailPublic !== false && alumni.is_email_public !== false;
-  
-  const canSendEmail = () => {
-    if (!user || user.id === alumni.id) return false;
-    // Check if email exists and is public for alumni
-    return !!(alumni.email && isEmailPublic);
-  };
-
-  const handleEmailClick = () => {
-    if (!alumni.email || !canSendEmail()) return;
-    window.location.href = `mailto:${alumni.email}?subject=Reaching out from Trailblaize`;
-  };
-
   const handleShareProfile = () => {
     if (!user) return;
     setShareDrawerOpen(true);
@@ -316,11 +294,11 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
       case 'accepted':
         return (
           <Button
-            className="w-full bg-green-50 text-green-700 border-green-300 rounded-full font-medium"
+            onClick={handleMessageClick}
+            className="w-full bg-green-50 text-green-700 border-green-300 rounded-full font-medium hover:bg-green-100 transition-colors"
             variant="outline"
-            disabled
           >
-            <Handshake className="h-4 w-4 mr-2" />
+            <MessageSquare className="h-4 w-4 mr-2" />
             Connected
           </Button>
         );
@@ -518,49 +496,9 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
             </div>
           </div>
 
-          {/* Connection Button - Compact */}
+          {/* Connection Button - Compact (when connected, opens messaging) */}
           <div className="mb-4">
             {renderConnectionButton()}
-          </div>
-
-          {/* Action Buttons - Updated with messaging functionality */}
-          <div className="flex space-x-2 pt-3 border-t border-gray-200">
-            <Button 
-              className={cn(
-                "flex-1 rounded-full",
-                canSendEmail()
-                  ? "border-brand-primary text-brand-primary hover:bg-primary-50" 
-                  : "text-gray-400 border-gray-200"
-              )}
-              variant={canSendEmail() ? "outline" : "ghost"}
-              size="sm" 
-              onClick={handleEmailClick}
-              disabled={!canSendEmail()}
-            >
-              <Mail className="h-3 w-3 mr-2" />
-              <span className="hidden sm:inline">Send Email</span>
-              <span className="sm:hidden">Email</span>
-              {!canSendEmail() && <Lock className="h-3 w-3 ml-2 text-gray-400" />}
-            </Button>
-            
-            {/* ✅ Updated Send Message Button */}
-            <Button 
-              className={cn(
-                "flex-1 rounded-full",
-                canSendMessage() 
-                  ? "border-brand-primary text-brand-primary hover:bg-primary-50" 
-                  : "text-gray-400 border-gray-200"
-              )}
-              variant={canSendMessage() ? "outline" : "ghost"}
-              size="sm" 
-              onClick={handleMessageClick}
-              disabled={!canSendMessage()}
-            >
-              <MessageSquare className="h-3 w-3 mr-2" />
-              <span className="hidden sm:inline">Send Message</span>
-              <span className="sm:hidden">Message</span>
-              {!canSendMessage() && <Lock className="h-3 w-3 ml-2 text-gray-400" />}
-            </Button>
           </div>
         </div>
       </div>
