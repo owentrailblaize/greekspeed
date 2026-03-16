@@ -208,7 +208,8 @@ export default function SignUpPage() {
   const signingInOrRedirecting = loading || oauthLoading || linkedInLoading;
   const showMobileNetworkingOverlay = ((authLoading && !user) || (isMobile && !minOverlayTimeElapsed)) && isMobile && !signingInOrRedirecting;
   const showMobileRedirectSpinner = (user || oauthLoading || linkedInLoading) && isMobile;
-
+  const showDesktopSpinner = (user || oauthLoading || linkedInLoading) && !isMobile;
+  
   if (showMobileNetworkingOverlay || showDesktopSpinner || showMobileRedirectSpinner) {
     return (
       <>
