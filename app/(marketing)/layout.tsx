@@ -2,34 +2,32 @@ import Link from 'next/link';
 import { ReactNode } from 'react';
 import type { Metadata } from 'next';
 import { FooterNavigation, FooterSocialLinks } from '@/components/marketing/FooterNavigation';
+import { APP_METADATA } from '@/lib/constants/metadata';
 
-// Centralized metadata configuration
+// Centralized metadata configuration; openGraph.url aligned with root metadataBase for consistent share previews.
 export const metadata: Metadata = {
-  title: 'Trailblaize –  Alumni Relationship Management',
-  description:
-    'Trailblaize is the modern operating system for Greek organizations, powering alumni engagement, events, and chapter growth.',
+  title: APP_METADATA.title,
+  description: APP_METADATA.description,
   openGraph: {
-    title: 'Trailblaize – Alumni Relationship Management',
-    description:
-      'Trailblaize is the modern operating system for Greek organizations, powering alumni engagement, events, and chapter growth.',
-    url: 'https://trailblaize.net',
-    siteName: 'Trailblaize',
+    title: APP_METADATA.title,
+    description: APP_METADATA.description,
+    url: APP_METADATA.baseUrl,
+    siteName: APP_METADATA.siteName,
     images: [
       {
-        url: '/og/Trailblaize.png',
+        url: APP_METADATA.ogImagePath,
         width: 1200,
         height: 630,
-        alt: 'Trailblaize – Alumni Relationship Management',
+        alt: APP_METADATA.title,
       },
     ],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Trailblaize – Alumni Relationship Management',
-    description:
-      'Trailblaize is the modern operating system for Greek organizations, powering alumni engagement, events, and chapter growth.',
-    images: ['/og/Trailblaize.png'],
+    title: APP_METADATA.title,
+    description: APP_METADATA.description,
+    images: [APP_METADATA.ogImagePath],
   },
 };
 

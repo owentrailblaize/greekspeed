@@ -158,13 +158,12 @@ export default function SignInPage() {
   };
 
   // Networking overlay: ONLY before sign-in screen (auth check or initial 6s). NEVER when user exists (post-login redirect).
-  const showMobileNetworkingOverlay = ((authLoading && !user) || (isMobile && !minOverlayTimeElapsed)) && isMobile;
-  // Simple spinner: when redirecting (user exists) or when auth loading on desktop
-  const showDesktopSpinner = authLoading || user;
+  const signingInOrRedirecting = loading || googleLoading || linkedInLoading;
+  const showMobileNetworkingOverlay = ((authLoading && !user) || (isMobile && !minOverlayTimeElapsed)) && isMobile && !signingInOrRedirecting;
   // On mobile when redirecting, show simple spinner (not networking)
   const showMobileRedirectSpinner = user && isMobile;
 
-  if (showMobileNetworkingOverlay || showDesktopSpinner || showMobileRedirectSpinner) {
+  if (showMobileNetworkingOverlay || showMobileRedirectSpinner) {
     return (
       <>
         <div className="lg:hidden">

@@ -28,7 +28,7 @@ export function MobileAuthLoadingOverlay() {
 
   const overlay = (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden"
+      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden lg:hidden"
       style={{
         backgroundColor: SplashColors.light.background,
         height: '100dvh',
