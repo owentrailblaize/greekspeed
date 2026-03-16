@@ -9,5 +9,10 @@
         "eslint",
         "eslint-config-next",
         "@nivo/core"
+    ],
+    "ignore": [
+        "**/components/ui/**",
+        "**/types/**",
+        "**/components/features/**"
     ]
 }
