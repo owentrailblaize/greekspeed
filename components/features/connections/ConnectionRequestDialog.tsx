@@ -22,6 +22,8 @@ interface ConnectionRequestDialogProps {
   onSend: (message?: string) => Promise<void>;
   recipientName?: string;
   isLoading?: boolean;
+  /** When true, dialog uses higher z-index so it appears above nested modals (e.g. alumni profile modal). */
+  elevatedForNestedModal?: boolean;
 }
 
 export function ConnectionRequestDialog({
@@ -30,6 +32,7 @@ export function ConnectionRequestDialog({
   onSend,
   recipientName,
   isLoading = false,
+  elevatedForNestedModal = false,
 }: ConnectionRequestDialogProps) {
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -166,10 +169,14 @@ export function ConnectionRequestDialog({
     );
   }
 
-  // Desktop: Use Dialog
+  // Desktop: Use Dialog (z-[10002] so it appears above alumni profile modal at z-[10001])
+  const elevatedClass = elevatedForNestedModal ? 'z-[10002]' : undefined;
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent
+        className={elevatedClass ? `sm:max-w-[500px] ${elevatedClass}` : 'sm:max-w-[500px]'}
+        overlayClassName={elevatedClass}
+      >
         <DialogHeader>
           <DialogTitle>Send Connection Request</DialogTitle>
           <DialogDescription>
