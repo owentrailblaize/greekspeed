@@ -186,5 +186,3 @@ export function LinkedInPdfHelpModal({ isOpen, onClose }: LinkedInPdfHelpModalPr
     </Dialog>
   );
 }
-
-export default LinkedInPdfHelpModal;
