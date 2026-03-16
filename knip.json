@@ -1,0 +1,18 @@
+{
+    "$schema": "https://unpkg.com/knip@5/schema.json",
+    "entry": [
+        "public/OneSignalSDKWorker.js",
+        "scripts/**/*.js",
+        "scripts/**/*.ts"
+    ],
+    "ignoreDependencies": [
+        "eslint",
+        "eslint-config-next",
+        "@nivo/core"
+    ],
+    "ignore": [
+        "**/components/ui/**",
+        "**/types/**",
+        "**/components/features/**"
+    ]
+}

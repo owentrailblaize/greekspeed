@@ -460,5 +460,3 @@ export function ProfilePdfUploader({
     </div>
   );
 }
-
-export default ProfilePdfUploader;

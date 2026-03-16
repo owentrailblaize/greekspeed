@@ -618,5 +618,3 @@ export function ImportReviewForm({
     </form>
   );
 }
-
-export default ImportReviewForm;

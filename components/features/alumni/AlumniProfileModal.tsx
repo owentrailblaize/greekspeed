@@ -123,6 +123,13 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
     }
   }, [alumni?.id, isOpen, isMobile]);
 
+  // Reset connection loading when modal opens or alumni changes so Connect isn't stuck disabled
+  useEffect(() => {
+    if (isOpen && alumni) {
+      setConnectionLoading(false);
+    }
+  }, [isOpen, alumni?.id]);
+
   // Don't render modal on mobile
   if (!alumni || !isOpen || !mounted || isMobile) return null;
 
@@ -570,13 +577,14 @@ export function AlumniProfileModal({ alumni, isOpen, onClose }: AlumniProfileMod
         }}
       />
 
-      {/* Connection Request Dialog */}
+      {/* Connection Request Dialog - elevated so it appears above this modal */}
       <ConnectionRequestDialog
         isOpen={showConnectionDialog}
         onClose={() => setShowConnectionDialog(false)}
         onSend={handleSendConnectionRequest}
         recipientName={alumni.fullName}
         isLoading={connectionLoading}
+        elevatedForNestedModal
       />
     </div>,
     document.body

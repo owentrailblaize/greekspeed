@@ -168,7 +168,7 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
             onClick={(e) => handleMessageClick(e)}
             className="w-full text-white rounded-full font-medium h-8 sm:h-10 text-xs sm:text-sm flex items-center justify-center"
             style={{
-              background: 'linear-gradient(340deg, #e2e8f0 0%, #94a3b8 50%, #475569 100%)'
+              background: 'linear-gradient(340deg, rgba(228, 236, 255, 1) 0%, rgba(130, 130, 255, 0.95) 34%, rgba(35, 70, 224, 0.93) 85%)'
             }}
           >
             <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />

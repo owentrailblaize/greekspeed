@@ -8,7 +8,7 @@ interface AppQueryProviderProps {
   children: ReactNode;
 }
 
-export function AppQueryProvider({ children }: AppQueryProviderProps) {
+function AppQueryProvider({ children }: AppQueryProviderProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({

@@ -162,8 +162,10 @@ export default function SignInPage() {
   const showMobileNetworkingOverlay = ((authLoading && !user) || (isMobile && !minOverlayTimeElapsed)) && isMobile && !signingInOrRedirecting;
   // On mobile when redirecting, show simple spinner (not networking)
   const showMobileRedirectSpinner = user && isMobile;
+  // Desktop: show spinner when auth loading or when user exists (redirecting after OAuth)
+  const showDesktopSpinner = authLoading || user;
 
-  if (showMobileNetworkingOverlay || showMobileRedirectSpinner) {
+  if (showMobileNetworkingOverlay || showMobileRedirectSpinner || showDesktopSpinner) {
     return (
       <>
         <div className="lg:hidden">

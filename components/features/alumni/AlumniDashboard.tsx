@@ -221,10 +221,10 @@ export function AlumniDashboard() {
                       className={cn(
                         'text-sm font-medium px-3 py-2 rounded-full transition-all duration-200 flex items-center shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-200',
                         t.disabled 
-                          ? "opacity-60 cursor-not-allowed text-gray-400 bg-gray-50" 
+                          ? "opacity-60 cursor-not-allowed text-gray-400 bg-gray-50 border border-gray-200" 
                           : active === t.id 
-                            ? "bg-slate-200 text-white font-medium hover:bg-slate-100-hover hover:shadow-md" 
-                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm"
+                            ? "bg-white border-2 border-black text-slate-950 font-medium hover:bg-gray-50 hover:shadow-md" 
+                            : "bg-white border border-black text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm"
                         )}
                     >
                       {/* Mobile: Short text, Desktop: Full text */}
@@ -257,10 +257,10 @@ export function AlumniDashboard() {
               className={cn(
                 'text-sm font-medium px-4 py-2 rounded-full transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-200',
                 t.disabled 
-                  ? "opacity-60 cursor-not-allowed text-gray-400 bg-gray-50" 
+                  ? "opacity-60 cursor-not-allowed text-gray-400 bg-gray-50 border border-gray-200" 
                   : active === t.id 
-                    ? "bg-slate-100 text-slate-950 font-medium hover:bg-slate-100-hover hover:shadow-md" 
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm"
+                    ? "bg-white border-2 border-black text-slate-950 font-medium hover:bg-gray-50 hover:shadow-md" 
+                    : "bg-white border border-black text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm"
                 )}
             >
               {t.label}

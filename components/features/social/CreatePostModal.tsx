@@ -24,6 +24,9 @@ interface CreatePostModalProps {
 // Maximum number of images allowed per post
 const MAX_IMAGES = 10;
 
+// Set to true to use bottom drawer on mobile; false to use the same centered modal as desktop
+const USE_CREATE_POST_DRAWER_MOBILE = false;
+
 export function CreatePostModal({ 
   isOpen, 
   onClose, 
@@ -370,8 +373,8 @@ export function CreatePostModal({
     </>
   );
 
-  // Mobile: vault bottom drawer; hide footer (Photo + Post) when input is focused to show more of the textarea above keyboard
-  if (mounted && isMobile) {
+  // Mobile: vault bottom drawer (optional); hide footer when input focused. Set USE_CREATE_POST_DRAWER_MOBILE = true to re-enable.
+  if (mounted && isMobile && USE_CREATE_POST_DRAWER_MOBILE) {
     return (
       <Drawer.Root open={isOpen} onOpenChange={(open) => !open && onClose()} direction="bottom" modal dismissible>
         <Drawer.Portal>
