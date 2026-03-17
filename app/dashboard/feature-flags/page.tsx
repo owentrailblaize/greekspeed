@@ -165,7 +165,7 @@ export default function FeatureFlagsPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-          <p className="text-gray-600">You don't have access to feature flags management.</p>
+          <p className="text-gray-600">You don&apos;t have access to feature flags management.</p>
         </div>
       </div>
     );

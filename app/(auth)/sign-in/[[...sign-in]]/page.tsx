@@ -305,7 +305,7 @@ export default function SignInPage() {
 
             {/* Sign Up Link */}
             <div className="text-sm text-gray-600 mt-4 text-center">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link href="/sign-up" className="text-brand-primary hover:text-brand-primary-hover font-medium">
                 Sign Up
               </Link>
@@ -486,7 +486,7 @@ export default function SignInPage() {
 
                 {/* Sign Up Link */}
                 <div className="text-sm text-gray-600 mt-4">
-                  Don't have an account?{' '}
+                  Don&apos;t have an account?{' '}
                   <Link href="/sign-up" className="text-brand-primary hover:text-brand-primary-hover font-medium">
                     Sign Up
                   </Link>

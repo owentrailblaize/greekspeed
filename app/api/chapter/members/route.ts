@@ -260,7 +260,7 @@ export async function GET(request: NextRequest) {
     // Fetch last_active_at from profiles table if not in view
     // Get all member IDs to fetch activity data
     const memberIds = filteredMembers.map((m: any) => m.id).filter(Boolean);
-    let lastActiveMap = new Map<string, string | null>();
+    const lastActiveMap = new Map<string, string | null>();
     
     if (memberIds.length > 0) {
       const { data: profiles, error: profilesError } = await supabase

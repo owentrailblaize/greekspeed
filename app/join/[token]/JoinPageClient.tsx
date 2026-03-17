@@ -312,7 +312,7 @@ export default function JoinPageClient() {
           <CardContent className="space-y-2 pt-2">
             <div>
               <p className="text-gray-600 mb-2">
-                You've been invited to join {invitation.chapter_name} as an active member. 
+                You&apos;ve been invited to join {invitation.chapter_name} as an active member. 
                 Create your account to get started.
               </p>
             </div>

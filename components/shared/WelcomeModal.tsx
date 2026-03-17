@@ -123,7 +123,7 @@ export function WelcomeModal({ profile, onClose, onShareIntroduction, onEditProf
               Welcome to {profile?.chapter || 'Your Chapter'}!
             </CardTitle>
             <p className="text-center text-xs md:text-sm text-gray-600 mt-1">
-              We're excited to have you join our community. Here's what you can do:
+              We&apos;re excited to have you join our community. Here&apos;s what you can do:
             </p>
             <Button
               variant="ghost"

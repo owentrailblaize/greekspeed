@@ -306,7 +306,7 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-900">Join to RSVP</p>
-                <p className="text-xs text-gray-600 mt-0.5">See who's attending</p>
+                <p className="text-xs text-gray-600 mt-0.5">See who&apos;s attending</p>
               </div>
               <Link href="/sign-up">
                 <Button
@@ -403,7 +403,7 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
                 className="w-full flex items-center justify-between py-3 border-t border-gray-100"
               >
                 <h3 className="font-semibold text-gray-900 text-sm">
-                  Who's Going ({attendeeCounts.attending + attendeeCounts.maybe})
+                  Who&apos;s Going ({attendeeCounts.attending + attendeeCounts.maybe})
                 </h3>
                 {showAttendeeList ? (
                   <ChevronUp className="h-4 w-4 text-gray-400" />
@@ -672,7 +672,7 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
                         variant="outline"
                       >
                         <X className="h-4 w-4 mr-2" />
-                        Can't Go
+                        Can&apos;t Go
                       </Button>
                     </div>
                   </div>
@@ -682,7 +682,7 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
                       <Lock className="h-5 w-5 text-gray-400" />
                       <div>
                         <p className="font-medium text-gray-900">Want to RSVP?</p>
-                        <p className="text-sm text-gray-600">Sign in to RSVP and see who's attending</p>
+                        <p className="text-sm text-gray-600">Sign in to RSVP and see who&apos;s attending</p>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -748,7 +748,7 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
               {isLoggedIn && attendees.length > 0 && (
                 <div className="pt-6 border-t border-gray-100">
                   <h3 className="font-semibold text-gray-900 mb-4">
-                    Who's Going ({attendeeCounts.attending + attendeeCounts.maybe})
+                    Who&apos;s Going ({attendeeCounts.attending + attendeeCounts.maybe})
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                     {attendees.slice(0, 8).map((attendee) => (
@@ -869,7 +869,7 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
                       Join Trailblaize to connect
                     </h3>
                     <p className="text-gray-600 text-sm mb-4">
-                      RSVP to events, see who's attending, and connect with others.
+                      RSVP to events, see who&apos;s attending, and connect with others.
                     </p>
                     <div className="flex justify-center gap-3">
                       <Link href="/sign-in">

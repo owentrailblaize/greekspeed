@@ -215,7 +215,7 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
       }
       if (deferTimerId) clearTimeout(deferTimerId);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [user?.id]); // Only depend on user?.id, not fetchConnections
 
   const value = {

@@ -454,7 +454,7 @@ export function LogoUploader({
       {/* Help Text */}
       <p className="text-xs text-gray-500">
         Required: Horizontal logo (width &gt; height), dimensions {LOGO_CONSTRAINTS.RECOMMENDED_MIN_WIDTH}x{LOGO_CONSTRAINTS.RECOMMENDED_HEIGHT}px to {LOGO_CONSTRAINTS.RECOMMENDED_MAX_WIDTH}x{LOGO_CONSTRAINTS.RECOMMENDED_HEIGHT}px.
-        You'll be able to crop your logo after upload. SVG files are accepted without cropping.
+        You&apos;ll be able to crop your logo after upload. SVG files are accepted without cropping.
       </p>
 
       {/* Logo Cropper Modal */}

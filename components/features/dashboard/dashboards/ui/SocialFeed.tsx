@@ -478,7 +478,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
               {isFetchingNextPage ? (
                 <span className="text-xs text-gray-400">Loading...</span>
               ) : !hasNextPage && filteredPosts.length > 0 ? (
-                <span className="text-sm text-gray-400">You're all caught up.</span>
+                <span className="text-sm text-gray-400">You&apos;re all caught up.</span>
               ) : null}
             </div>
           </div>

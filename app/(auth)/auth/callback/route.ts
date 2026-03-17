@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 
   // Create response for cookie handling
   const cookieStore = await cookies();
-  let response = NextResponse.next();
+  const response = NextResponse.next();
 
   // Create Supabase client with cookie handling (NOT service role)
   const supabase = createServerClient(

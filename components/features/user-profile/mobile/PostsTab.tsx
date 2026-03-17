@@ -43,7 +43,7 @@ export function PostsTab({
             Sign in to engage
           </h3>
           <p className="text-gray-600 mb-6">
-            Create an account or sign in to view {profileName || 'this user'}'s posts and activity.
+            Create an account or sign in to view {profileName || 'this user'}&apos;s posts and activity.
           </p>
           <div className="flex gap-3 justify-center">
             <Link href="/sign-in">
@@ -110,7 +110,7 @@ export function PostsTab({
       <div className="flex items-center justify-center py-12 px-4">
         <div className="text-center">
           <p className="text-gray-500 text-lg mb-2">No posts yet</p>
-          <p className="text-gray-400 text-sm">Posts will appear here when they're shared</p>
+          <p className="text-gray-400 text-sm">Posts will appear here when they&apos;re shared</p>
         </div>
       </div>
     );

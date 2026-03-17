@@ -1280,7 +1280,7 @@ export function MobileAdminTasksPage() {
                         
                         // Calculate start and end indices for the window
                         let startIdx = Math.max(0, currentRecruitIndex - halfWindow);
-                        let endIdx = Math.min(totalRecruits, startIdx + maxVisibleDots);
+                        const endIdx = Math.min(totalRecruits, startIdx + maxVisibleDots);
                         
                         // Adjust start if we're near the end
                         if (endIdx - startIdx < maxVisibleDots) {

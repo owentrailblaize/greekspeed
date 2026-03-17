@@ -84,7 +84,7 @@ export async function GET(
     const canMessage = isOwnProfile || connectionStatus === 'accepted';
 
     // Filter profile data based on privacy and connection status
-    let filteredProfile = { ...profile };
+    const filteredProfile = { ...profile };
 
     // Hide email if not own profile and not connected
     if (!canSeeFullProfile) {

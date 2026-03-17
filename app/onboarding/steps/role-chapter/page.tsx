@@ -278,7 +278,7 @@ export default function RoleChapterPage() {
   const handleConfirmContinue = async () => {
     setLoading(true);
     try {
-      toast.success('Welcome! Let\'s continue setting up your profile.');
+      toast.success("Welcome! Let's continue setting up your profile.");
       await completeStep('role-chapter');
       // Don't reset loading - page is navigating away
     } catch (error) {

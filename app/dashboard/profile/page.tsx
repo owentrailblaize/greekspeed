@@ -632,7 +632,7 @@ export default function ProfilePage() {
                             <MessageCircle className="w-8 h-8 text-gray-400" />
                           </div>
                           <h3 className="text-xl font-bold text-gray-900 mb-1">No posts yet</h3>
-                          <p className="text-gray-500">When you post, they'll show up here.</p>
+                          <p className="text-gray-500">When you post, they&apos;ll show up here.</p>
                         </div>
                       )}
                     </>

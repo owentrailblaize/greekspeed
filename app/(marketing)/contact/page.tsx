@@ -109,13 +109,13 @@ export default function ContactPage() {
               <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Get in touch with Trailblaize</h2>
                 <p className="text-gray-600 mb-6">
-                  We'd love to show how Trailblaize can help your chapter thrive.
+                  We&apos;d love to show how Trailblaize can help your chapter thrive.
                 </p>
                 
                 {submitStatus === 'success' && (
                   <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                     <p className="text-green-800 font-medium">
-                      ✓ Thanks! We've sent a confirmation email to {email}. Our support team will reach out within 24 hours.
+                      ✓ Thanks! We&apos;ve sent a confirmation email to {email}. Our support team will reach out within 24 hours.
                     </p>
                   </div>
                 )}

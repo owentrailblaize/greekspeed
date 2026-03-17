@@ -1,5 +1,5 @@
-// @ts-ignore
-const Telnyx = require('telnyx');
+// @ts-expect-error - Telnyx SDK may have incomplete or incorrect type definitions
+import Telnyx from 'telnyx';
 
 // Lazy initialization to prevent build errors
 let telnyx: any = null;

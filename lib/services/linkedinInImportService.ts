@@ -7,6 +7,7 @@ import {
   ParsedLinkedInData,
   ImportConfidence,
 } from '@/types/profile-import';
+import pdfParse from 'pdf-parse/lib/pdf-parse';
 
 // ============================================================================
 // LinkedIn Import Service
@@ -42,7 +43,7 @@ export class LinkedInImportService {
    *                 For server-side API routes, pass the server client to bypass RLS.
    */
   constructor(client?: SupabaseClient) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     this.supabaseClient = (client || supabase) as SupabaseClient;
   }
 
@@ -402,9 +403,6 @@ export class LinkedInImportService {
    */
   async extractTextFromPdf(pdfBuffer: Buffer): Promise<ExtractionResult> {
     try {
-      // pdf-parse 1.1.1 has a simple API
-      const pdfParse = require('pdf-parse/lib/pdf-parse');
-
       const data = await pdfParse(pdfBuffer);
 
       return {

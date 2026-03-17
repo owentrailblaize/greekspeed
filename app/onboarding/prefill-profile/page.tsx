@@ -127,10 +127,10 @@ export default function PrefillProfilePage() {
               👋 Welcome, {firstName}!
             </h1>
             <p className="text-gray-600 text-base sm:text-lg">
-              Let's set up your alumni profile
+              Let&apos;s set up your alumni profile
             </p>
             <p className="text-gray-500 text-sm mt-1">
-              Choose how you'd like to prefill your information
+              Choose how you&apos;d like to prefill your information
             </p>
           </div>
 
@@ -196,7 +196,7 @@ export default function PrefillProfilePage() {
                       Upload Resume
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">
-                      PDF or DOCX • We'll extract your experience
+                      PDF or DOCX • We&apos;ll extract your experience
                     </p>
                   </div>
                   <ChevronRight className={`h-5 w-5 text-gray-400 flex-shrink-0 transition-transform ${selectedOption === 'resume' ? 'translate-x-1' : ''

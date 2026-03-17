@@ -43,7 +43,7 @@ export default function ManageConnectionsPage() {
   const filteredConnections = useMemo(() => {
     if (!connections || !user) return [];
 
-    let filtered = connections.filter(conn => {
+    const filtered = connections.filter(conn => {
       const partner = getConnectionPartner(conn);
       const matchesSearch = partner.name.toLowerCase().includes(searchTerm.toLowerCase());
       

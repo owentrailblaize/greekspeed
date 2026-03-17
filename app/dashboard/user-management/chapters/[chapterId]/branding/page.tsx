@@ -198,7 +198,7 @@ export default function ChapterBrandingPage() {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-4">
-              You don't have permission to manage branding for this chapter.
+              You don&apos;t have permission to manage branding for this chapter.
             </p>
             <Button onClick={() => router.push('/dashboard/user-management')} variant="outline">
               <ArrowLeft className="h-4 w-4 mr-2" />

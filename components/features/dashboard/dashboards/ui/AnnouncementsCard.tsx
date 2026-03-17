@@ -261,7 +261,7 @@ export function AnnouncementsCard() {
             <div className="text-center">
               <MessageSquare className="h-8 w-8 text-gray-400 mx-auto mb-2" />
               <p className="text-gray-500 text-sm">No new announcements</p>
-              <p className="text-gray-400 text-xs">You're all caught up!</p>
+              <p className="text-gray-400 text-xs">You&apos;re all caught up!</p>
             </div>
           </div>
         </CardContent>

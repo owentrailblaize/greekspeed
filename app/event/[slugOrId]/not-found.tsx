@@ -35,7 +35,7 @@ export default function EventNotFound() {
         <p className="text-sm text-gray-500 mt-8">
           Looking for chapter events?{' '}
           <Link href="/login" className="text-brand-primary hover:underline">
-            Sign in to view your chapter's events
+            Sign in to view your chapter&apos;s events
           </Link>
         </p>
       </div>
