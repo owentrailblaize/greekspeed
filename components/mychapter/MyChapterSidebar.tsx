@@ -301,7 +301,7 @@ export function MyChapterSidebar({ onNavigate, activeSection, searchTerm, onSear
                               variant="outline" 
                               size="sm" 
                               className="w-full rounded-full font-medium shadow-sm hover:shadow-md transition-all duration-200 border-primary-300 hover:bg-gray-50"
-                              onClick={() => router.push('/mychapter/recruitment')}
+                              onClick={() => router.push('/dashboard/admin?view=recruitment')}
                             >
                               <Settings className="h-4 w-4 mr-2" />
                               Manage Organization
