@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, CheckCircle, Crown, Settings, Clock, UserCheck, DollarSign, Calendar, BookOpen, Loader2 } from 'lucide-react';
+import { Users, CheckCircle, Crown, Settings, Clock, UserCheck, DollarSign, TrendingUp, Calendar, BookOpen, Loader2 } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useChapterBudget } from '@/lib/hooks/useChapterBudget';
 import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
@@ -28,7 +28,7 @@ import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 
 interface OverviewViewProps {
   selectedRole: string;
-  onFeatureChange?: (feature: 'members' | 'dues' | 'invitations' | 'events' | 'tasks' | 'overview') => void;
+  onFeatureChange?: (feature: 'members' | 'dues' | 'budget' | 'invitations' | 'events' | 'tasks' | 'overview') => void;
 }
 
 export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProps) {
@@ -425,10 +425,10 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
         onClick: () => setShowEventForm(true),
       }] : []),
       {
-        id: 'dues',
-        label: 'Dues',
-        icon: DollarSign,
-        onClick: () => onFeatureChange?.('dues'),
+        id: 'budget',
+        label: 'Budget',
+        icon: TrendingUp,
+        onClick: () => onFeatureChange?.('budget'),
       },
     ];
 

@@ -24,7 +24,8 @@ export interface UnifiedUserProfile {
   location?: string | null;
   username?: string | null;
   profile_slug?: string | null;
-  
+  created_at?: string | null;
+
   // Alumni-specific fields (optional)
   alumni?: {
     industry?: string;

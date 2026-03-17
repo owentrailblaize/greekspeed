@@ -62,7 +62,16 @@ export async function POST(
     const normalizedJobTitle = job_title?.trim() || 'Not specified';
     const normalizedLocation = location?.trim() || 'Not specified';
     const normalizedLinkedIn = linkedin_url?.trim() || null;
-    const normalizedPhone = body.phone?.trim() || null;
+
+    // Handle optional phone - normalize to digits, validate length (match active member API)
+    let phoneDigits: string | null = null;
+    if (body.phone?.trim()) {
+      phoneDigits = body.phone.replace(/\D/g, '');
+      if (phoneDigits.length !== 10) {
+        return NextResponse.json({ error: 'Phone number must be 10 digits' }, { status: 400 });
+      }
+    }
+
     const effectiveGradYear = graduation_year || new Date().getFullYear();
     const nowIso = new Date().toISOString();
 
@@ -136,7 +145,7 @@ export async function POST(
         last_name: normalizedLastName,
         username: username,
         profile_slug: profileSlug,
-        phone: normalizedPhone,
+        phone: phoneDigits || null,
         sms_consent: body.sms_consent || false,
         chapter_id: invitation.chapter_id,
         chapter: validation.chapter_name,
@@ -199,7 +208,7 @@ export async function POST(
       company: normalizedCompany,
       job_title: normalizedJobTitle,
       email: normalizedEmail,
-      phone: normalizedPhone,
+      phone: phoneDigits || null,
       location: normalizedLocation,
       linkedin_url: normalizedLinkedIn,
       description: existingAlumni?.description ?? `Alumni from ${validation.chapter_name}`,

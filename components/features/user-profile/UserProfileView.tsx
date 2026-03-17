@@ -43,8 +43,15 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
   const [connectionLoading, setConnectionLoading] = useState(false);
   const [shareDrawerOpen, setShareDrawerOpen] = useState(false);
   const [showConnectionDialog, setShowConnectionDialog] = useState(false);
+  const [bioExpanded, setBioExpanded] = useState(false);
 
   const userData = profile.user || {};
+  const BIO_DISPLAY_LIMIT = 200;
+  const bioText = profile.bio || '';
+  const bioOverLimit = bioText.length > BIO_DISPLAY_LIMIT;
+  const displayBioText = bioOverLimit && !bioExpanded
+    ? `${bioText.slice(0, BIO_DISPLAY_LIMIT)}...`
+    : bioText;
   const userId = profile.id;
 
   const handleConnectionAction = async (action: 'connect' | 'accept' | 'decline' | 'cancel') => {
@@ -295,11 +302,22 @@ export function UserProfileView({ profile, onClose, hideCloseButton = false }: U
             )}
           </div>
 
-          {/* Compact Description */}
-          {profile.bio && (
-            <p className="text-gray-600 text-center mb-4 text-sm leading-relaxed">
-              {profile.bio}
-            </p>
+          {/* Compact Description - with View more/less when long */}
+          {bioText && (
+            <div className="mb-4">
+              <p className="text-gray-600 text-center text-sm leading-relaxed whitespace-pre-wrap">
+                {displayBioText}
+              </p>
+              {bioOverLimit && (
+                <button
+                  type="button"
+                  onClick={() => setBioExpanded((prev) => !prev)}
+                  className="text-sm text-brand-primary hover:underline font-medium mt-1 block mx-auto"
+                >
+                  {bioExpanded ? 'View less' : 'View more'}
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

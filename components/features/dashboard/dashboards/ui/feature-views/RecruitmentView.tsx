@@ -16,8 +16,6 @@ import {
   UserPlus,
   Instagram,
   Phone,
-  ArrowLeft,
-  ArrowUpRight,
   Trash2,
   Upload
 } from 'lucide-react';
@@ -26,7 +24,6 @@ import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { useAuth } from '@/lib/supabase/auth-context';
 import type { Recruit, RecruitStage, UpdateRecruitRequest } from '@/types/recruitment';
 import { FeatureGuard } from '@/components/shared/FeatureGuard';
-import { useRouter, usePathname } from 'next/navigation';
 import { Textarea } from '@/components/ui/textarea';
 import { AddRecruitForm } from '@/components/features/recruitment/AddRecruitForm';
 import { BulkRecruitImport } from '@/components/features/recruitment/BulkRecruitImport';
@@ -129,8 +126,6 @@ function RecruitmentTableSkeleton() {
 }
 
 export function RecruitmentView() {
-  const router = useRouter();
-  const pathname = usePathname();
   const { profile } = useProfile();
   const chapterId = useScopedChapterId();
   const { getAuthHeaders } = useAuth();
@@ -157,9 +152,6 @@ export function RecruitmentView() {
   const [deletingRecruitId, setDeletingRecruitId] = useState<string | null>(null);
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [showAddRecruitModal, setShowAddRecruitModal] = useState(false);
-
-  // Check if we're on the standalone recruitment page
-  const isStandalonePage = pathname === '/mychapter/recruitment';
 
   // Fetch recruits from API
   const fetchRecruits = useCallback(async () => {
@@ -406,58 +398,30 @@ export function RecruitmentView() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            {/* Only show Back button on standalone page */}
-            {isStandalonePage && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.back()}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 mb-2 rounded-full"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Back</span>
-              </Button>
-            )}
             <h2 className="text-2xl font-bold text-gray-900">Recruitment CRM</h2>
             <p className="text-gray-600 mt-1">Manage and track potential recruits</p>
           </div>
           {/* Action buttons */}
           <div className="flex items-center space-x-2">
-            {/* Add Recruit button - available on standalone page */}
-            {isStandalonePage && (
-              <Button
-                size="sm"
-                onClick={() => setShowAddRecruitModal(true)}
-                className="flex items-center space-x-2 rounded-full bg-brand-primary hover:bg-brand-primary-hover"
-              >
-                <UserPlus className="h-4 w-4" />
-                <span>Add Recruit</span>
-              </Button>
-            )}
-            {/* Import button - available on standalone page */}
-            {isStandalonePage && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowBulkImport(true)}
-                className="flex items-center space-x-2 rounded-full"
-              >
-                <Upload className="h-4 w-4" />
-                <span>Import</span>
-              </Button>
-            )}
-            {/* View Full Page button when NOT on standalone page */}
-            {!isStandalonePage && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push('/mychapter/recruitment')}
-                className="flex items-center space-x-2 rounded-full"
-              >
-                <span>View Full Page</span>
-                <ArrowUpRight className="h-4 w-4" />
-              </Button>
-            )}
+            {/* Add Recruit  */}
+            <Button
+              size="sm"
+              onClick={() => setShowAddRecruitModal(true)}
+              className="flex items-center space-x-2 rounded-full bg-brand-primary hover:bg-brand-primary-hover"
+            >
+              <UserPlus className="h-4 w-4" />
+              <span>Add Recruit</span>
+            </Button>
+            {/* Import  */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowBulkImport(true)}
+              className="flex items-center space-x-2 rounded-full"
+            >
+              <Upload className="h-4 w-4" />
+              <span>Import</span>
+            </Button>
           </div>
         </div>
 
