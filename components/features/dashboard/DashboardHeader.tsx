@@ -79,7 +79,7 @@ export function DashboardHeader() {
 
   // Define navigation tabs with role-based access
   const navigationTabs = [
-    { href: '/dashboard', label: 'Overview', roles: ['admin', 'active_member', 'alumni'], locked: false },
+    { href: '/dashboard', label: 'Home', roles: ['admin', 'active_member', 'alumni'], locked: false },
     { href: '/dashboard/alumni', label: 'Alumni', roles: ['admin', 'active_member', 'alumni'], locked: false },
     { href: '/dashboard/dues', label: 'Dues', roles: ['active_member', 'admin'], locked: false },
     { href: '/dashboard/admin', label: 'Exec Admin', roles: ['admin'], locked: false },

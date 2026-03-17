@@ -62,8 +62,23 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
       newErrors.password = 'Password must be at least 6 characters';
     }
 
+    // Phone optional; if provided must be 10 digits
+    if (formData.phone?.trim()) {
+      const digits = formData.phone.replace(/\D/g, '');
+      if (digits.length !== 10) {
+        newErrors.phone = 'Please enter a complete 10-digit phone number';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const formatPhoneNumber = (value: string): string => {
+    const digits = value.replace(/\D/g, '').slice(0, 10);
+    if (digits.length <= 3) return digits ? `(${digits}` : '';
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -130,7 +145,8 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
   };
 
   const handleInputChange = (field: keyof AlumniJoinFormData, value: string | boolean | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    const nextValue = field === 'phone' ? formatPhoneNumber(String(value)) : value;
+    setFormData(prev => ({ ...prev, [field]: nextValue }));
 
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
@@ -218,6 +234,28 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
                   <p className="text-xs text-red-600 flex items-center space-x-1">
                     <AlertCircle className="h-3 w-3" />
                     <span>{errors.email}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Phone (optional) */}
+              <div className="space-y-1">
+                <Label htmlFor="phone" className="text-sm">Phone Number <span className="text-gray-500 font-normal">(Optional)</span></Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  placeholder="(555) 123-4567"
+                  className={`h-9 ${errors.phone ? 'border-red-500' : ''}`}
+                  maxLength={14}
+                  inputMode="numeric"
+                />
+                <p className="text-xs text-gray-500">Used for SMS notifications about chapter updates and events</p>
+                {errors.phone && (
+                  <p className="text-xs text-red-600 flex items-center space-x-1">
+                    <AlertCircle className="h-3 w-3" />
+                    <span>{errors.phone}</span>
                   </p>
                 )}
               </div>
