@@ -167,7 +167,7 @@ export function DuesStatusCard() {
             <div className="text-center py-4">
               <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
               <p className="text-green-600 font-medium text-sm">No dues assigned</p>
-              <p className="text-gray-500 text-xs">You're all set!</p>
+              <p className="text-gray-500 text-xs">You&apos;re all set!</p>
             </div>
           )}
 

@@ -6,7 +6,7 @@ import { generateSimplePassword } from '@/lib/utils/passwordGenerator';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    let { 
+    const { 
       email, 
       firstName, 
       lastName, 
@@ -39,9 +39,9 @@ export async function POST(request: NextRequest) {
         .trim()
         .slice(0, 50);
 
-    if (typeof chapter_role === 'string') {
-      chapter_role = sanitizeTitle(chapter_role || 'member') || 'member';
-    }
+    const sanitizedChapterRole = typeof chapter_role === 'string'
+      ? (sanitizeTitle(chapter_role || 'member') || 'member')
+      : 'member';
 
     // Create server-side Supabase client with service role key
     const supabase = createClient(
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
         chapter: chapterName, // Store the chapter name, not UUID
         chapter_id: chapterId, // Store the chapter ID separately
         role: role,
-        chapter_role: chapter_role,
+        chapter_role: sanitizedChapterRole,
         member_status: member_status,
         is_developer: is_developer,
         // REMOVE developer_permissions - column no longer exists
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
             chapter: chapterName, // Store the chapter name, not UUID
             chapter_id: chapterId, // Store the chapter ID separately
             role: role,
-            chapter_role: chapter_role,
+            chapter_role: sanitizedChapterRole,
             member_status: member_status,
             is_developer: is_developer,
             // REMOVE developer_permissions - column no longer exists

@@ -25,7 +25,7 @@ export default function PrivacyPolicyPage() {
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-12">
           <h2 className="text-lg font-bold text-gray-800 mb-2">Google API Disclosure</h2>
           <p className="text-gray-700">
-            Trailblaize's use of information received from Google APIs will adhere to{' '}
+            Trailblaize&apos;s use of information received from Google APIs will adhere to{' '}
             <a 
               href="https://developers.google.com/terms/api-services-user-data-policy" 
               target="_blank" 
@@ -41,7 +41,7 @@ export default function PrivacyPolicyPage() {
         {/* Policy Content - Plain Text */}
         <div className="space-y-2 text-gray-700 leading-relaxed">
           <p>
-            Trailblaize, Inc. ("Trailblaize," "we," "our," "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and protect your information, including phone numbers provided for messaging.
+            Trailblaize, Inc. (&quot;Trailblaize,&quot; &quot;we,&quot; &quot;our,&quot; &quot;us&quot;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and protect your information, including phone numbers provided for messaging.
           </p>
 
           <h2 className="text-2xl font-bold text-gray-900 pt-4 pb-2">Information We Collect</h2>
@@ -52,7 +52,7 @@ export default function PrivacyPolicyPage() {
           <h2 className="text-2xl font-bold text-gray-900 pt-4 pb-2">How We Use Your Information</h2>
           <p>We use your information to:</p>
           <ul className="list-disc list-inside space-y-1 pl-4">
-            <li>Provide access to Trailblaize's chapter management tools.</li>
+            <li>Provide access to Trailblaize&apos;s chapter management tools.</li>
             <li>Send chapter announcements and reminders via SMS and email.</li>
             <li>Respond to support requests.</li>
             <li>Improve the platform and develop new features.</li>

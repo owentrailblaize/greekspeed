@@ -215,7 +215,7 @@ export function CreateInviteModal({ invitation, onClose, onSubmit }: CreateInvit
               <div>
                 <h4 className="font-medium text-accent-900">One Account Per Email</h4>
                 <p className="text-sm text-accent-800 mt-1">
-                  Each email address can only create one account across the entire system. If someone tries to use an email that already has an account, they'll be prompted to sign in instead.
+                  Each email address can only create one account across the entire system. If someone tries to use an email that already has an account, they&apos;ll be prompted to sign in instead.
                 </p>
               </div>
             </div>

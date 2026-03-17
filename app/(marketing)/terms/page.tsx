@@ -25,7 +25,7 @@ export default function TermsOfServicePage() {
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-12">
           <h2 className="text-lg font-bold text-gray-800 mb-2">Google API Disclosure</h2>
           <p className="text-gray-700">
-            Trailblaize's use of information received from Google APIs will adhere to{' '}
+            Trailblaize&apos;s use of information received from Google APIs will adhere to{' '}
             <a 
               href="https://developers.google.com/terms/api-services-user-data-policy" 
               target="_blank" 
@@ -41,7 +41,7 @@ export default function TermsOfServicePage() {
         {/* Terms Content - Plain Text */}
         <div className="space-y-2 text-gray-700 leading-relaxed">
           <p>
-            These Terms and Conditions ("Terms") govern your use of Trailblaize, Inc.'s services ("Trailblaize," "we," "our," "us"). By creating an account or using Trailblaize, you agree to these Terms.
+            These Terms and Conditions (&quot;Terms&quot;) govern your use of Trailblaize, Inc.&apos;s services (&quot;Trailblaize,&quot; &quot;we,&quot; &quot;our,&quot; &quot;us&quot;). By creating an account or using Trailblaize, you agree to these Terms.
           </p>
 
           <h2 className="text-2xl font-bold text-gray-900 pt-4 pb-2">1. Use of Services</h2>
@@ -76,7 +76,7 @@ export default function TermsOfServicePage() {
 
           <h2 className="text-2xl font-bold text-gray-900 pt-4 pb-2">5. Limitation of Liability</h2>
           <p>
-            Trailblaize is provided "as is." To the fullest extent permitted by law, Trailblaize is not liable for damages arising from your use of the platform, including lost data, service interruptions, or unauthorized access.
+            Trailblaize is provided &quot;as is.&quot; To the fullest extent permitted by law, Trailblaize is not liable for damages arising from your use of the platform, including lost data, service interruptions, or unauthorized access.
           </p>
 
           <h2 className="text-2xl font-bold text-gray-900 pt-4 pb-2">6. Termination</h2>

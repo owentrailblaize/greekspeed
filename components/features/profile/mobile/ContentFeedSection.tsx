@@ -46,7 +46,7 @@ export function ContentFeedSection({
           <MessageCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
           <p className="text-lg font-medium text-gray-900 mb-1">No posts yet</p>
           <p className="text-sm text-gray-500">
-            You haven't shared any posts yet. Start sharing updates with your chapter!
+            You haven&apos;t shared any posts yet. Start sharing updates with your chapter!
           </p>
         </div>
       );

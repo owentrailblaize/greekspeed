@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     let customerId: string | null = null;
     
     try {
-      let { data: profile, error: profileError } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('stripe_customer_id')
         .eq('id', userId)

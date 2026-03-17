@@ -25,7 +25,7 @@ export default function SMSTermsPage() {
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-12">
           <h2 className="text-lg font-bold text-gray-800 mb-2">Google API Disclosure</h2>
           <p className="text-gray-700">
-            Trailblaize's use of information received from Google APIs will adhere to{' '}
+            Trailblaize&apos;s use of information received from Google APIs will adhere to{' '}
             <a 
               href="https://developers.google.com/terms/api-services-user-data-policy" 
               target="_blank" 
@@ -41,7 +41,7 @@ export default function SMSTermsPage() {
         {/* SMS Terms Content - Plain Text */}
         <div className="space-y-2 text-gray-700 leading-relaxed">
           <p>
-            These SMS Terms and Conditions ("SMS Terms") govern your participation in our optional SMS messaging program. 
+            These SMS Terms and Conditions (&quot;SMS Terms&quot;) govern your participation in our optional SMS messaging program. 
             <strong>SMS messaging is completely optional</strong> and separate from your account creation. 
             You can use Trailblaize services without opting in to SMS communications.
           </p>
@@ -77,14 +77,14 @@ export default function SMSTermsPage() {
           <ul className="list-disc list-inside space-y-1 pl-4">
             <li>Providing your phone number during account creation or profile setup</li>
             <li>Checking the SMS consent box when prompted</li>
-            <li>Responding "YES" to an opt-in message if applicable</li>
+            <li>Responding &quot;YES&quot; to an opt-in message if applicable</li>
           </ul>
 
           <h2 className="text-2xl font-bold text-gray-900 pt-4 pb-2">5. How to Opt-Out</h2>
           <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
             <p className="font-bold text-red-800 mb-2">Opt-Out Instructions</p>
             <ul className="list-disc list-inside ml-4 text-red-800 space-y-1">
-              <li><strong>Reply "STOP"</strong> to any message to unsubscribe from SMS communications</li>
+              <li><strong>Reply &quot;STOP&quot;</strong> to any message to unsubscribe from SMS communications</li>
               <li>You will receive a confirmation message confirming your opt-out</li>
               <li>You can also opt-out by contacting support@trailblaize.net</li>
               <li>Opting out will stop all SMS messages from Trailblaize</li>
@@ -96,7 +96,7 @@ export default function SMSTermsPage() {
             For assistance with our SMS messaging program:
           </p>
           <ul className="list-disc list-inside space-y-1 pl-4">
-            <li><strong>Reply "HELP"</strong> to any message for immediate assistance</li>
+            <li><strong>Reply &quot;HELP&quot;</strong> to any message for immediate assistance</li>
             <li>Email us at support@trailblaize.net</li>
             <li>Visit our contact page at trailblaize.net/contact</li>
           </ul>
@@ -123,7 +123,7 @@ export default function SMSTermsPage() {
             1111B South Governors Avenue<br />
             Dover, DE 19904<br />
             Email: <a href="mailto:support@trailblaize.net" className="text-brand-accent hover:underline">support@trailblaize.net</a><br />
-            SMS Support: Reply "HELP" to any message
+            SMS Support: Reply &quot;HELP&quot; to any message
           </p>
         </div>
       </div>

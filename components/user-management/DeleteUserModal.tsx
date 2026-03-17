@@ -48,7 +48,7 @@ export function DeleteUserModal({ isOpen, onClose, onConfirm, user, isDeleting }
               <Trash2 className="h-6 w-6 text-red-600" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Delete "{user.full_name || user.email}"?
+              Delete &quot;{user.full_name || user.email}&quot;?
             </h3>
             <p className="text-sm text-gray-600 mb-4">
               This action cannot be undone. This will permanently delete the user account and all associated data.

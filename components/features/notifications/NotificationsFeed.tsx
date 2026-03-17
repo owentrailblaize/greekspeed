@@ -309,7 +309,7 @@ export function NotificationsFeed({ variant = 'desktop', hideCard = false }: Not
                             </p>
                             {notification.metadata?.messagePreview && (
                               <p className={`text-gray-500 ${isMobile ? 'text-xs' : 'text-sm'} mt-1 truncate`}>
-                                "{notification.metadata.messagePreview}"
+                                &quot;{notification.metadata.messagePreview}&quot;
                               </p>
                             )}
                             <div className="flex items-center space-x-2 mt-1.5">

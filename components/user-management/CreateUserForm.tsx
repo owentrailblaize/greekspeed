@@ -379,7 +379,7 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
                         This user will have access to all developer permissions.
                       </p>
                       <p className="text-xs text-brand-accent mt-1">
-                        Role automatically set to "Admin / Executive" for developer access.
+                        Role automatically set to &quot;Admin / Executive&quot; for developer access.
                       </p>
                     </div>
                   </div>

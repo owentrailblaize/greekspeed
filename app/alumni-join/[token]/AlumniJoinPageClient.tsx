@@ -322,7 +322,7 @@ export default function AlumniJoinPageClient() {
           <CardContent className="space-y-2 pt-0">
             <div>
               <p className="text-gray-600 mb-4">
-                You've been invited to join {invitation.chapter_name} as an alumni member. 
+                You&apos;ve been invited to join {invitation.chapter_name} as an alumni member. 
                 Create your account to get started.
               </p>
             </div>

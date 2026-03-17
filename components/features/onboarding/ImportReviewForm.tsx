@@ -332,7 +332,7 @@ export function ImportReviewForm({
           Review Your Information
         </h2>
         <p className="text-gray-500 text-sm mt-1">
-          We've extracted this from your PDF. Please review and edit as needed.
+          We&apos;ve extracted this from your PDF. Please review and edit as needed.
         </p>
         {confidence?.overall === 'low' && (
           <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">

@@ -141,7 +141,7 @@ export default function SubscriptionPage() {
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              You don't have access to subscription management.
+              You don&apos;t have access to subscription management.
             </AlertDescription>
           </Alert>
         </div>
@@ -297,7 +297,7 @@ export default function SubscriptionPage() {
               <AlertTriangle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No Active Subscription</h3>
               <p className="text-gray-600 mb-4">
-                You don't have an active subscription. Subscribe to access premium features.
+                You don&apos;t have an active subscription. Subscribe to access premium features.
               </p>
               <Button onClick={() => window.location.href = '/dashboard'}>
                 Go to Dashboard

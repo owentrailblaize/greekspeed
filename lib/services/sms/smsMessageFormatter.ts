@@ -91,7 +91,7 @@ export class SMSMessageFormatter {
 
     const fullMessage = `${senderPrefix}${content}${complianceSuffix}`;
     const encoding = this.detectEncoding(fullMessage);
-    let estimatedParts = this.calculateParts(fullMessage);
+    const estimatedParts = this.calculateParts(fullMessage);
 
     if (maxParts && estimatedParts > maxParts) {
       const singleLimit = encoding === 'GSM-7' ? this.GSM_7_SINGLE : this.UCS_2_SINGLE;
@@ -175,7 +175,7 @@ export class SMSMessageFormatter {
 
     const fullMessage = `${titlePrefix}${content}${complianceSuffix}`;
     const encoding = this.detectEncoding(fullMessage);
-    let estimatedParts = this.calculateParts(fullMessage);
+    const estimatedParts = this.calculateParts(fullMessage);
 
     if (options.maxParts && estimatedParts > options.maxParts) {
       const singleLimit = encoding === 'GSM-7' ? this.GSM_7_SINGLE : this.UCS_2_SINGLE;
@@ -225,7 +225,7 @@ export class SMSMessageFormatter {
 
     const fullMessage = `${fullPrefix}${content}${complianceSuffix}`;
     const encoding = this.detectEncoding(fullMessage);
-    let estimatedParts = this.calculateParts(fullMessage);
+    const estimatedParts = this.calculateParts(fullMessage);
 
     if (options.maxParts && estimatedParts > options.maxParts) {
       const singleLimit = encoding === 'GSM-7' ? this.GSM_7_SINGLE : this.UCS_2_SINGLE;

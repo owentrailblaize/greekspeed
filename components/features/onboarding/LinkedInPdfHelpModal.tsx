@@ -105,7 +105,7 @@ export function LinkedInPdfHelpModal({ isOpen, onClose }: LinkedInPdfHelpModalPr
                 Desktop Required
               </h4>
               <p className="text-xs text-amber-700 mt-0.5">
-                LinkedIn's "Save to PDF" feature is only available on desktop browsers.
+                LinkedIn&apos;s &quot;Save to PDF&quot; feature is only available on desktop browsers.
                 Please open LinkedIn on a computer to download your profile PDF.
               </p>
             </div>

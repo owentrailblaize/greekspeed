@@ -108,7 +108,7 @@ export function UserGrowthDashboard() {
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
-          <p className="text-gray-600">You don't have access to this dashboard.</p>
+          <p className="text-gray-600">You don&apos;t have access to this dashboard.</p>
         </div>
       </div>
     );

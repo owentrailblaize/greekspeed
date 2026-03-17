@@ -30,9 +30,6 @@ export function ChapterSwitcher() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Only render for developer users
-  if (!isDeveloper) return null;
-
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -91,6 +88,9 @@ export function ChapterSwitcher() {
       setTimeout(() => searchInputRef.current?.focus(), 50);
     }
   }, [isOpen]);
+
+  // Only render for developer users (must be after all hooks)
+  if (!isDeveloper) return null;
 
   // Filter chapters by search query
   const filteredChapters = chapters.filter((chapter) => {

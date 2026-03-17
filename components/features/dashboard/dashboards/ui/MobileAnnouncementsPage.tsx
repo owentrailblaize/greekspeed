@@ -397,7 +397,7 @@ export function MobileAnnouncementsPage() {
                 <CardContent className="p-8 text-center">
                   <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-slate-700 text-lg mb-2">No new announcements</p>
-                  <p className="text-slate-600 text-sm">You're all caught up!</p>
+                  <p className="text-slate-600 text-sm">You&apos;re all caught up!</p>
                 </CardContent>
               </Card>
             ) : (
