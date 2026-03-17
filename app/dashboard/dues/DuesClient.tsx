@@ -191,40 +191,6 @@ export default function DuesClient() {
     }
   };
 
-  const handlePayDues = async (assignmentId: string, paymentPlan = false) => {
-    try {
-      setProcessingPayment(true);
-      
-      const response = await fetch('/api/dues/pay', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assignmentId, paymentPlan })
-      });
-
-      if (response.ok) {
-        const { url } = await response.json();
-        window.location.href = url;
-      } else {
-        console.error('Payment failed');
-      }
-    } catch (error) {
-      console.error('Error processing payment:', error);
-    } finally {
-      setProcessingPayment(false);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'paid': return 'bg-green-100 text-green-800';
-      case 'required': return 'bg-yellow-100 text-yellow-800';
-      case 'overdue': return 'bg-red-100 text-red-800';
-      case 'exempt': return 'bg-gray-100 text-gray-800';
-      case 'waived': return 'bg-accent-100 text-accent-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   // Update the outstanding balance calculation
   const currentAssignment = assignments.find(a => a.status !== 'paid' && a.status !== 'exempt' && a.status !== 'waived');
   const totalOutstanding = assignments.reduce((sum, a) => {
@@ -353,24 +319,6 @@ export default function DuesClient() {
                         <p className="text-sm text-gray-600">Payment plans available</p>
                       )}
                     </div>
-                    <div className="flex space-x-2">
-                      <Button 
-                        onClick={() => handlePayDues(currentAssignment.id, false)}
-                        disabled={processingPayment}
-                        className="bg-brand-primary hover:bg-brand-primary-hover"
-                      >
-                        <CreditCard className="h-4 w-4 mr-2" /> Pay Now
-                      </Button>
-                      {currentAssignment.cycle.allow_payment_plans && (
-                        <Button 
-                          onClick={() => handlePayDues(currentAssignment.id, true)}
-                          disabled={processingPayment}
-                          variant="outline"
-                        >
-                          <Calendar className="h-4 w-4 mr-2" /> Payment Plan
-                        </Button>
-                      )}
-                    </div>
                   </div>
                 ) : (
                   <div className="text-center text-green-600">
@@ -411,9 +359,9 @@ export default function DuesClient() {
                             <p className="text-sm text-gray-600">
                               {new Date(payment.created_at).toLocaleDateString()} • Credit Card
                             </p>
-                            {payment.stripe_payment_intent_id && (
+                            {payment.id && (
                               <p className="text-xs text-gray-500">
-                                Transaction: {payment.stripe_payment_intent_id.slice(-8)}
+                                Payment #{payment.id.slice(0, 8)}
                               </p>
                             )}
                           </div>
@@ -460,7 +408,7 @@ export default function DuesClient() {
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div>
                       <p className="font-medium">Payment Methods</p>
-                      <p className="text-sm text-gray-600">Credit/Debit Cards via Stripe</p>
+                      <p className="text-sm text-gray-600">Credit/Debit Cards</p>
                     </div>
                     <CreditCard className="h-5 w-5 text-brand-primary" />
                   </div>
@@ -571,24 +519,6 @@ export default function DuesClient() {
                     <p className="text-sm text-gray-600">Payment plans available</p>
                   )}
                 </div>
-                <div className="flex space-x-2">
-                  <Button 
-                    onClick={() => handlePayDues(currentAssignment.id, false)}
-                    disabled={processingPayment}
-                    className="bg-brand-primary hover:bg-brand-primary-hover"
-                  >
-                    <CreditCard className="h-4 w-4 mr-2" /> Pay Now
-                  </Button>
-                  {currentAssignment.cycle.allow_payment_plans && (
-                    <Button 
-                      onClick={() => handlePayDues(currentAssignment.id, true)}
-                      disabled={processingPayment}
-                      variant="outline"
-                    >
-                      <Calendar className="h-4 w-4 mr-2" /> Payment Plan
-                    </Button>
-                  )}
-                </div>
               </div>
             ) : (
               <div className="text-center text-green-600">
@@ -628,9 +558,9 @@ export default function DuesClient() {
                         <p className="text-sm text-gray-600">
                           {new Date(payment.created_at).toLocaleDateString()} • Credit Card
                         </p>
-                        {payment.stripe_payment_intent_id && (
+                        {payment.id && (
                           <p className="text-xs text-gray-500">
-                            Transaction: {payment.stripe_payment_intent_id.slice(-8)}
+                            Payment #{payment.id.slice(0, 8)}
                           </p>
                         )}
                       </div>
@@ -677,7 +607,7 @@ export default function DuesClient() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Payment Methods</p>
-                  <p className="text-sm text-gray-600">Credit/Debit Cards via Stripe</p>
+                  <p className="text-sm text-gray-600">Credit/Debit card</p>
                 </div>
                 <CreditCard className="h-5 w-5 text-brand-primary" />
               </div>
