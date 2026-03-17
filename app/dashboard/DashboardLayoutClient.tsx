@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import SubscriptionPaywall from '@/components/shared/SubscriptionPaywall';
 import { DashboardHeader } from '@/components/features/dashboard/DashboardHeader';
 import { useActivityTracking } from '@/lib/hooks/useActivityTracking';
 import { useOneSignalPush } from '@/lib/hooks/useOneSignalPush';
@@ -59,22 +58,19 @@ export default function DashboardLayoutClient({
           {/* Always show the header */}
           <DashboardHeader />
           
-          {/* Wrap the main content with SubscriptionPaywall */}
-          <SubscriptionPaywall>
-            <main className="flex-1 min-h-0 flex flex-col">
-              <ModalProvider>
-                <ProfileModalProvider>
-                  {children}
-                  
-                  {/* Global Edit Profile Modal - Rendered at layout level */}
-                  <EditProfileModalWrapper />
-                  
-                  {/* Global User Profile Modal - Rendered at layout level */}
-                  <UserProfileModalWrapper />
-                </ProfileModalProvider>
-              </ModalProvider>
-            </main>
-          </SubscriptionPaywall>
+          <main className="flex-1 min-h-0 flex flex-col">
+            <ModalProvider>
+              <ProfileModalProvider>
+                {children}
+                
+                {/* Global Edit Profile Modal - Rendered at layout level */}
+                <EditProfileModalWrapper />
+                
+                {/* Global User Profile Modal - Rendered at layout level */}
+                <UserProfileModalWrapper />
+              </ProfileModalProvider>
+            </ModalProvider>
+          </main>
         </div>
         </PwaPromptProvider>
       </ChapterFeaturesProvider>
