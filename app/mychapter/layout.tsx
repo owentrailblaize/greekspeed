@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import SubscriptionPaywall from '@/components/shared/SubscriptionPaywall';
 import { DashboardHeader } from '@/components/features/dashboard/DashboardHeader';
 import { useActivityTracking } from '@/lib/hooks/useActivityTracking';
 import { ModalProvider, useModal } from '@/lib/contexts/ModalContext';
@@ -25,17 +24,14 @@ export default function MyChapterLayout({
         {/* Always show the header */}
         <DashboardHeader />
         
-        {/* Wrap the main content with SubscriptionPaywall */}
-        <SubscriptionPaywall>
-          <main className="flex-1">
-            <ModalProvider>
-              {children}
-              
-              {/* Global Edit Profile Modal - Rendered at layout level */}
-              <EditProfileModalWrapper />
-            </ModalProvider>
-          </main>
-        </SubscriptionPaywall>
+        <main className="flex-1">
+          <ModalProvider>
+            {children}
+            
+            {/* Global Edit Profile Modal - Rendered at layout level */}
+            <EditProfileModalWrapper />
+          </ModalProvider>
+        </main>
       </div>
     </ChapterFeaturesProvider>
   );
