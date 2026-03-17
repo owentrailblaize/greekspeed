@@ -7,7 +7,7 @@ import { useActiveChapter } from '@/lib/contexts/ActiveChapterContext';
  * Returns the "effective" chapter id for the current UI.
  *
  * - Normal users: their own `profile.chapter_id`
- * - Developers:
+ * - Developers / Governance:
  *   - if they selected a chapter via ChapterSwitcher: `activeChapterId`
  *   - otherwise: `profile.chapter_id` (if any) or null
  *
@@ -18,7 +18,8 @@ export function useScopedChapterId(): string | null {
   const { profile, isDeveloper } = useProfile();
   const { activeChapterId } = useActiveChapter();
 
-  if (isDeveloper) {
+  const isGovernance = profile?.role === 'governance';
+  if (isDeveloper || isGovernance) {
     return activeChapterId ?? profile?.chapter_id ?? null;
   }
 

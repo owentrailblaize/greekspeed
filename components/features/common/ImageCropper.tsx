@@ -44,6 +44,8 @@ interface ImageCropperProps {
   onCropComplete: (croppedImageBlob: Blob) => void;
   /** Type of crop (avatar, banner, or logo) */
   cropType: CropType;
+  /** Use higher z-index so dialog appears above edit-profile drawer (z-[10005]) */
+  elevatedZIndex?: boolean;
 }
 
 /**
@@ -58,6 +60,7 @@ export function ImageCropper({
   onClose,
   onCropComplete,
   cropType,
+  elevatedZIndex = false,
 }: ImageCropperProps) {
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -332,7 +335,10 @@ export function ImageCropper({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <style dangerouslySetInnerHTML={{ __html: cropperStyles }} />
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0">
+      <DialogContent
+        className={elevatedZIndex ? 'max-w-4xl max-h-[90vh] flex flex-col p-0 z-[10005]' : 'max-w-4xl max-h-[90vh] flex flex-col p-0'}
+        overlayClassName={elevatedZIndex ? 'z-[10005]' : undefined}
+      >
         {/* Fixed Header */}
         <DialogHeader className="px-6 pt-6 pb-4 border-b flex-shrink-0">
           <DialogTitle>{constraints.title}</DialogTitle>

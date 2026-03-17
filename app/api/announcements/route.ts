@@ -156,12 +156,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not associated with a chapter' }, { status: 400 });
     }
 
-    // Check if user has permission to create announcements
     const allowedChapterRoles = ['president', 'vice_president', 'secretary', 'treasurer', 'executive_board'];
     const isSystemAdmin = profile.role === 'admin';
+    const isGovernance = profile.role === 'governance';
     const hasChapterRole = profile.chapter_role && allowedChapterRoles.includes(profile.chapter_role);
 
-    if (!isSystemAdmin && !hasChapterRole) {
+    if (!isSystemAdmin && !isGovernance && !hasChapterRole) {
       return NextResponse.json({ 
         error: 'Insufficient permissions. Only admins, presidents, vice presidents, secretaries, treasurers, and executive board members can create announcements.' 
       }, { status: 403 });

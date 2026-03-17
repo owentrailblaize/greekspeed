@@ -10,6 +10,7 @@ import type {
   BulkRecruitImportDuplicate 
 } from '@/types/recruitment';
 import { EXECUTIVE_ROLES } from '@/lib/permissions';
+import { getManagedChapterIds } from '@/lib/services/governanceService';
 
 // Helper function to validate phone number format
 function isValidPhoneNumber(phoneNumber: string): boolean {
@@ -203,13 +204,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Recruitment CRM feature is not enabled for this chapter' }, { status: 403 });
     }
 
-    // Permission check: Only allow exec roles (admin OR exec chapter_role)
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
     const isAdmin = profile.role === 'admin';
     const isExec = profile.chapter_role && EXECUTIVE_ROLES.includes(profile.chapter_role as any);
-    
-    if (!isAdmin && !isExec) {
-      return NextResponse.json({ 
-        error: 'Insufficient permissions. Only execs and admins can bulk import recruits.' 
+    const canImportAsGovernance = profile.role === 'governance' && managedChapterIds?.includes(profile.chapter_id!);
+
+    if (!isAdmin && !isExec && !canImportAsGovernance) {
+      return NextResponse.json({
+        error: 'Insufficient permissions. Only execs and admins can bulk import recruits.',
       }, { status: 403 });
     }
 

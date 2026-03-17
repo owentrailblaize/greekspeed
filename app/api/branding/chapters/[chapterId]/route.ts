@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
-import { canManageChapter } from '@/lib/permissions';
+import { canManageChapterForContext } from '@/lib/permissions';
 import { canAccessDeveloperPortal } from '@/lib/developerPermissions';
+import { getManagedChapterIds } from '@/lib/services/governanceService';
 import { isValidHexColor, normalizeHexColor } from '@/types/branding';
 import type { ChapterBranding } from '@/types/branding';
 
@@ -96,23 +97,14 @@ export async function GET(
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Check permissions: ALL developers can access any chapter, chapter admin can only access their own
     const isDeveloper = canAccessDeveloperPortal(profile);
-    const canManage = canManageChapter(profile.role as any, profile.chapter_role);
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+    const canManage = isDeveloper || canManageChapterForContext(profile, chapterId, managedChapterIds);
 
-    // Log permission check for debugging
-    console.log('🔍 Permission check:', {
-      userId: user.id,
-      isDeveloper,
-      canManage,
-      userChapterId: profile.chapter_id,
-      requestedChapterId: chapterId,
-      role: profile.role,
-      chapter_role: profile.chapter_role,
-    });
-
-    // Allow if: Developer OR (can manage chapter AND it's their own chapter)
-    if (!isDeveloper && (!canManage || profile.chapter_id !== chapterId)) {
+    if (!canManage) {
       console.error('❌ GET /api/branding/chapters/[chapterId]: Insufficient permissions');
       return NextResponse.json(
         { error: 'Insufficient permissions to access this chapter branding' },
@@ -177,11 +169,14 @@ export async function PUT(
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Check permissions: ALL developers can access any chapter
     const isDeveloper = canAccessDeveloperPortal(profile);
-    const canManage = canManageChapter(profile.role as any, profile.chapter_role);
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+    const canManage = isDeveloper || canManageChapterForContext(profile, chapterId, managedChapterIds);
 
-    if (!isDeveloper && (!canManage || profile.chapter_id !== chapterId)) {
+    if (!canManage) {
       console.error('❌ PUT /api/branding/chapters/[chapterId]: Insufficient permissions');
       return NextResponse.json(
         { error: 'Insufficient permissions to update this chapter branding' },
@@ -333,11 +328,14 @@ export async function POST(
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Check permissions: ALL developers can access any chapter
     const isDeveloper = canAccessDeveloperPortal(profile);
-    const canManage = canManageChapter(profile.role as any, profile.chapter_role);
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+    const canManage = isDeveloper || canManageChapterForContext(profile, chapterId, managedChapterIds);
 
-    if (!isDeveloper && (!canManage || profile.chapter_id !== chapterId)) {
+    if (!canManage) {
       console.error('❌ POST /api/branding/chapters/[chapterId]: Insufficient permissions');
       return NextResponse.json(
         { error: 'Insufficient permissions to create branding for this chapter' },
