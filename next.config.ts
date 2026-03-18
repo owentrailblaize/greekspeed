@@ -33,6 +33,12 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'api.trailblaize.net',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
     ],
   },
   env: {
