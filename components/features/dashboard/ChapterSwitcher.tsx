@@ -101,8 +101,17 @@ export function ChapterSwitcher() {
     }
   }, [isOpen]);
 
+  // For governance: show user's active (home) chapter first, then others
+  const orderedChapters =
+    isGovernance && profile?.chapter_id
+      ? [
+          ...chapters.filter((c) => c.id === profile.chapter_id),
+          ...chapters.filter((c) => c.id !== profile.chapter_id),
+        ]
+      : chapters;
+
   // Filter chapters by search query
-  const filteredChapters = chapters.filter((chapter) => {
+  const filteredChapters = orderedChapters.filter((chapter) => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
     return (
@@ -112,7 +121,7 @@ export function ChapterSwitcher() {
     );
   });
 
-  const selectedChapter = chapters.find((c) => c.id === activeChapterId);
+  const selectedChapter = orderedChapters.find((c) => c.id === activeChapterId);
   const displayLabel = selectedChapter
     ? selectedChapter.name
     : isGovernance

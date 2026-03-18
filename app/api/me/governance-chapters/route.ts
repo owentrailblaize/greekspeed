@@ -1,22 +1,27 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { getManagedChapterIds } from '@/lib/services/governanceService';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient();
 
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const token = authHeader.replace('Bearer ', '');
     const {
       data: { user },
-      error: authError
-    } = await supabase.auth.getUser();
+      error: authError,
+    } = await supabase.auth.getUser(token);
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, chapter_id')
       .eq('id', user.id)
       .single();
 
@@ -42,9 +47,20 @@ export async function GET() {
       return NextResponse.json({ chapterIds, chapters: [] });
     }
 
+    const homeChapterId = profile.chapter_id ?? null;
+    const list = (chapters ?? []).map((c) => ({ id: c.id, name: c.name }));
+    // User's active (home) chapter first, then the rest
+    const sorted =
+      homeChapterId != null
+        ? [
+            ...list.filter((c) => c.id === homeChapterId),
+            ...list.filter((c) => c.id !== homeChapterId),
+          ]
+        : list;
+
     return NextResponse.json({
       chapterIds,
-      chapters: (chapters ?? []).map((c) => ({ id: c.id, name: c.name }))
+      chapters: sorted,
     });
   } catch (error) {
     console.error('governance-chapters API error:', error);
