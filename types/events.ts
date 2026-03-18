@@ -81,3 +81,48 @@ export interface EventDisplay {
   formatted_date: string;
   formatted_time: string;
 }
+
+// QR check-in / event attendance (one row per member per event)
+export interface EventAttendance {
+  id: string;
+  event_id: string;
+  user_id: string;
+  checked_in_at: string;
+}
+
+/** Response from POST /api/events/[id]/check-in */
+export interface CheckInResponse {
+  data: {
+    checked_in_at: string;
+    already_checked_in?: boolean;
+  };
+}
+
+/** Single attendance row with profile for GET /api/events/[id]/attendance */
+export interface AttendanceWithProfile {
+  id: string;
+  event_id: string;
+  user_id: string;
+  checked_in_at: string;
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+}
+
+/** Response from GET /api/events/[id]/attendance */
+export interface AttendanceListResponse {
+  data: { attendance: AttendanceWithProfile[] };
+}
+
+/** Single row for GET /api/attendance/me (member's own history) */
+export interface MyAttendanceEntry {
+  event_id: string;
+  event_title: string;
+  event_start_time: string;
+  checked_in_at: string;
+}
+
+/** Response from GET /api/attendance/me */
+export interface MyAttendanceListResponse {
+  data: { attendance: MyAttendanceEntry[] };
+}

@@ -1,11 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Drawer } from 'vaul';
 import { X, MapPin, Clock, Users, HelpCircle, UserX, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Event, RSVPStatus } from '@/types/events';
 import { EventActionsMenu } from './EventActionsMenu';
+import { EventAttendanceBlock } from './EventAttendanceBlock';
+import { useProfile } from '@/lib/contexts/ProfileContext';
+import { EXECUTIVE_ROLES } from '@/lib/permissions';
 
 interface Attendee {
   user_id: string;
@@ -120,9 +124,16 @@ export function EventDetailModal({
   currentUserRsvp,
   onRsvpChange,
 }: EventDetailModalProps) {
+  const { profile } = useProfile();
   const [attendeeData, setAttendeeData] = useState<AttendeeData | null>(null);
   const [loadingAttendees, setLoadingAttendees] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  const isExec =
+    profile?.role === 'admin' ||
+    (profile?.chapter_role != null &&
+      EXECUTIVE_ROLES.includes(profile.chapter_role as (typeof EXECUTIVE_ROLES)[number]));
+  const showAttendance = isExec && event.status === 'published';
 
   // Detect mobile
   useEffect(() => {
@@ -300,6 +311,18 @@ export function EventDetailModal({
             </div>
           ) : null}
         </div>
+
+        {/* Check-in / Attendance (exec only, published events) */}
+        {showAttendance && (
+          <div className="pt-4 border-t border-gray-200">
+            <h3 className="text-sm font-medium text-gray-900 mb-3">Check-in</h3>
+            <EventAttendanceBlock
+              eventId={event.id}
+              eventTitle={event.title}
+              compact
+            />
+          </div>
+        )}
       </div>
 
       {/* Footer - RSVP Buttons */}
@@ -331,6 +354,14 @@ export function EventDetailModal({
             {isMobile ? 'No' : "Can't Go"}
           </Button>
         </div>
+        <p className="text-center mt-3">
+          <Link
+            href="/dashboard/attendance"
+            className="text-xs text-brand-primary hover:underline"
+          >
+            View my attendance
+          </Link>
+        </p>
       </div>
     </>
   );
