@@ -5,6 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 import { VALID_FEATURE_FLAGS } from '@/types/featureFlags';
 import type { ChapterFeatureFlags } from '@/types/featureFlags';
 import { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
+import { canManageChapterForContext } from '@/lib/permissions';
+import { getManagedChapterIds } from '@/lib/services/governanceService';
 
 // Helper to authenticate - supports both Bearer token and cookies
 async function authenticateRequest(request: NextRequest) {
@@ -73,19 +75,26 @@ export async function GET(
     
     const { user, supabase } = auth;
     
-    // Get user profile to check permissions
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, chapter_id, is_developer')
+      .select('role, chapter_id, chapter_role, is_developer')
       .eq('id', user.id)
       .single();
-    
+
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
-    
-    // Check access: user's chapter or admin/developer
-    if (profile.role !== 'admin' && !profile.is_developer && profile.chapter_id !== id) {
+
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+    const canAccess =
+      profile.role === 'admin' ||
+      profile.is_developer ||
+      canManageChapterForContext(profile, id, managedChapterIds);
+
+    if (!canAccess) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
     
@@ -130,19 +139,26 @@ export async function PATCH(
     
     const { user, supabase } = auth;
     
-    // Get user profile
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, is_developer')
+      .select('role, chapter_id, chapter_role, is_developer')
       .eq('id', user.id)
       .single();
-    
+
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
-    
-    // Only admins/developers can update flags
-    if (profile.role !== 'admin' && !profile.is_developer) {
+
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+    const canUpdate =
+      profile.role === 'admin' ||
+      profile.is_developer ||
+      canManageChapterForContext(profile, id, managedChapterIds);
+
+    if (!canUpdate) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
     

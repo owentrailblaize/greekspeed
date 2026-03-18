@@ -7,12 +7,17 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectItem } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { X } from 'lucide-react';
+import { useChapters } from '@/lib/hooks/useChapters';
+
+type SystemRoleOption = 'admin' | 'active_member' | 'alumni' | 'governance';
 
 interface User {
   id: string;
   role: string | null;
   chapter_role: string | null;
+  governance_chapter_ids?: string[];
 }
 
 interface EditUserModalProps {
@@ -23,17 +28,34 @@ interface EditUserModalProps {
 }
 
 export function EditUserModal({ isOpen, onClose, user, onSaved }: EditUserModalProps) {
-  const [role, setRole] = useState<'admin' | 'active_member' | 'alumni'>('active_member');
+  const [role, setRole] = useState<SystemRoleOption>('active_member');
   const [chapterRole, setChapterRole] = useState<string>('member');
+  const [governanceChapterIds, setGovernanceChapterIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [loadingUser, setLoadingUser] = useState(false);
+  const { chapters, loading: chaptersLoading } = useChapters();
 
+  // Fetch full user (including governance_chapter_ids) when modal opens
   useEffect(() => {
-    if (user) {
-      const r = (user.role as any) || 'active_member';
-      setRole(['admin', 'active_member', 'alumni'].includes(r) ? r : 'active_member');
-      setChapterRole(user.chapter_role || 'member');
-    }
-  }, [user]);
+    if (!isOpen || !user) return;
+    setLoadingUser(true);
+    fetch(`/api/developer/users?userId=${user.id}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('Failed to fetch user'))))
+      .then((data) => {
+        const u = data.user;
+        const r = (u?.role as string) || 'active_member';
+        setRole(['admin', 'active_member', 'alumni', 'governance'].includes(r) ? r as SystemRoleOption : 'active_member');
+        setChapterRole(u?.chapter_role || 'member');
+        setGovernanceChapterIds(Array.isArray(u?.governance_chapter_ids) ? u.governance_chapter_ids : []);
+      })
+      .catch(() => {
+        setRole((user.role as SystemRoleOption) || 'active_member');
+        setChapterRole(user.chapter_role || 'member');
+        setGovernanceChapterIds([]);
+      })
+      .finally(() => setLoadingUser(false));
+  }, [isOpen, user?.id]);
+
 
   // Prevent background scroll when open
   useEffect(() => {
@@ -45,15 +67,23 @@ export function EditUserModal({ isOpen, onClose, user, onSaved }: EditUserModalP
 
   if (!isOpen || !user) return null;
 
+  const toggleGovernanceChapter = (chapterId: string) => {
+    setGovernanceChapterIds((prev) =>
+      prev.includes(chapterId) ? prev.filter((id) => id !== chapterId) : [...prev, chapterId]
+    );
+  };
+
   const predefined = ['president','vice_president','secretary','treasurer','rush_chair','social_chair','philanthropy_chair','risk_management_chair','alumni_relations_chair','member','pledge'];
 
   const handleSave = async () => {
     try {
       setSaving(true);
+      const body: Record<string, unknown> = { role, chapter_role: chapterRole };
+      if (role === 'governance') body.governance_chapter_ids = governanceChapterIds;
       const resp = await fetch(`/api/developer/users?userId=${user.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role, chapter_role: chapterRole })
+        body: JSON.stringify(body)
       });
       if (!resp.ok) {
         const e = await resp.json();
@@ -87,12 +117,41 @@ export function EditUserModal({ isOpen, onClose, user, onSaved }: EditUserModalP
           <CardContent className="space-y-4">
             <div>
               <Label>System Role</Label>
-              <Select value={role} onValueChange={(v: any) => setRole(v)}>
+              <Select
+                value={role}
+                onValueChange={(v: string) => setRole(v as SystemRoleOption)}
+                disabled={loadingUser}
+              >
                 <SelectItem value="active_member">Active Member</SelectItem>
                 <SelectItem value="alumni">Alumni</SelectItem>
                 <SelectItem value="admin">Admin / Executive</SelectItem>
+                <SelectItem value="governance">Governance</SelectItem>
               </Select>
             </div>
+
+            {role === 'governance' && (
+              <div className="space-y-2">
+                <Label>Managed chapters</Label>
+                {chaptersLoading ? (
+                  <p className="text-sm text-muted-foreground">Loading chapters…</p>
+                ) : (
+                  <div className="border rounded-md p-3 max-h-48 overflow-y-auto space-y-2">
+                    {chapters.map((ch) => (
+                      <div key={ch.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`gov-${ch.id}`}
+                          checked={governanceChapterIds.includes(ch.id)}
+                          onCheckedChange={() => toggleGovernanceChapter(ch.id)}
+                        />
+                        <Label htmlFor={`gov-${ch.id}`} className="text-sm font-normal cursor-pointer">
+                          {ch.name}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
   
             <div>
               <Label>Chapter Role</Label>

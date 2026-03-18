@@ -1,8 +1,15 @@
 import { SystemRole, ChapterRole } from '@/types/profile';
 
+/** Minimal profile shape needed for context-aware permission checks (e.g. governance + chapterId). */
+export type ProfileForPermission = {
+  role: SystemRole | null;
+  chapter_id: string | null;
+  chapter_role: ChapterRole | null;
+};
+
 export const CHAPTER_ADMIN_ROLES: ChapterRole[] = [
   'president',
-  'vice_president', 
+  'vice_president',
   'treasurer',
   'secretary'
 ];
@@ -19,21 +26,56 @@ export const EXECUTIVE_ROLES: ChapterRole[] = [
 export function canManageChapter(userRole: SystemRole, userChapterRole: ChapterRole | null): boolean {
   // Super admins can manage everything
   if (userRole === 'admin') return true;
-  
+
   // Chapter admins can manage their chapter
   if (userChapterRole && CHAPTER_ADMIN_ROLES.includes(userChapterRole)) return true;
-  
+
   return false;
 }
 
 export function canManageMembers(userRole: SystemRole, userChapterRole: ChapterRole | null): boolean {
   // Super admins can manage all members
   if (userRole === 'admin') return true;
-  
+
   // Chapter admins can manage their chapter members
   if (userChapterRole && CHAPTER_ADMIN_ROLES.includes(userChapterRole)) return true;
-  
+
   return false;
+}
+
+/**
+ * Check if the user can manage the given chapter, including governance with a managed set.
+ * Use in API routes when you have profile, chapterId, and (for governance) managedChapterIds.
+ */
+export function canManageChapterForContext(
+  profile: ProfileForPermission | null,
+  chapterId: string,
+  managedChapterIds?: string[]
+): boolean {
+  if (!profile?.role) return false;
+  if (profile.role === 'admin') return true;
+  if (profile.role === 'governance') {
+    if (managedChapterIds == null) return false;
+    return managedChapterIds.includes(chapterId) || profile.chapter_id === chapterId;
+  }
+  return profile.chapter_id === chapterId && canManageChapter(profile.role, profile.chapter_role);
+}
+
+/**
+ * Check if the user can manage members of the given chapter, including governance with a managed set.
+ */
+export function canManageMembersForContext(
+  profile: ProfileForPermission | null,
+  chapterId: string,
+  managedChapterIds?: string[]
+): boolean {
+  if (!profile?.role) return false;
+  if (profile.role === 'admin') return true;
+  if (profile.role === 'governance') {
+    if (managedChapterIds == null) return false;
+    return managedChapterIds.includes(chapterId) || profile.chapter_id === chapterId;
+  }
+  return profile.chapter_id === chapterId && canManageMembers(profile.role, profile.chapter_role);
 }
 
 export function canViewChapterData(userRole: SystemRole, userChapterRole: ChapterRole | null): boolean {

@@ -4,7 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { isFeatureEnabled } from '@/types/featureFlags';
 import type { UpdateRecruitRequest, RecruitStage } from '@/types/recruitment';
-import { EXECUTIVE_ROLES } from '@/lib/permissions';
+import { canManageMembersForContext } from '@/lib/permissions';
+import { getManagedChapterIds } from '@/lib/services/governanceService';
 
 // Valid RecruitStage values
 const VALID_STAGES: RecruitStage[] = ['New', 'Contacted', 'Event Invite', 'Bid Given', 'Accepted', 'Declined'];
@@ -126,17 +127,6 @@ export async function PATCH(
       }, { status: 403 });
     }
 
-    // Permission check: Only allow exec roles (admin OR exec chapter_role)
-    const isAdmin = profile.role === 'admin';
-    const isExec = profile.chapter_role && EXECUTIVE_ROLES.includes(profile.chapter_role as any);
-    
-    if (!isAdmin && !isExec) {
-      return NextResponse.json({ 
-        error: 'Insufficient permissions. Only execs and admins can update recruits.' 
-      }, { status: 403 });
-    }
-
-    // Verify recruit exists and belongs to user's chapter
     const { data: existingRecruit, error: recruitError } = await supabase
       .from('recruits')
       .select('id, chapter_id, stage')
@@ -147,10 +137,19 @@ export async function PATCH(
       return NextResponse.json({ error: 'Recruit not found' }, { status: 404 });
     }
 
-    // Verify chapter scoping - ensure recruit belongs to user's chapter
-    if (existingRecruit.chapter_id !== profile.chapter_id) {
-      return NextResponse.json({ 
-        error: 'Forbidden. This recruit belongs to a different chapter.' 
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+    const canManage = canManageMembersForContext(
+      profile,
+      existingRecruit.chapter_id,
+      managedChapterIds
+    );
+
+    if (!canManage) {
+      return NextResponse.json({
+        error: 'Insufficient permissions or recruit belongs to a different chapter.',
       }, { status: 403 });
     }
 
@@ -323,17 +322,6 @@ export async function DELETE(
       }, { status: 403 });
     }
 
-    // Permission check: Only allow exec roles (admin OR exec chapter_role)
-    const isAdmin = profile.role === 'admin';
-    const isExec = profile.chapter_role && EXECUTIVE_ROLES.includes(profile.chapter_role as any);
-    
-    if (!isAdmin && !isExec) {
-      return NextResponse.json({ 
-        error: 'Insufficient permissions. Only execs and admins can delete recruits.' 
-      }, { status: 403 });
-    }
-
-    // Verify recruit exists and belongs to user's chapter
     const { data: existingRecruit, error: recruitError } = await supabase
       .from('recruits')
       .select('id, chapter_id')
@@ -344,12 +332,22 @@ export async function DELETE(
       return NextResponse.json({ error: 'Recruit not found' }, { status: 404 });
     }
 
-    // Verify chapter scoping - ensure recruit belongs to user's chapter
-    if (existingRecruit.chapter_id !== profile.chapter_id) {
-      return NextResponse.json({ 
-        error: 'Forbidden. This recruit belongs to a different chapter.' 
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+    const canManage = canManageMembersForContext(
+      profile,
+      existingRecruit.chapter_id,
+      managedChapterIds
+    );
+
+    if (!canManage) {
+      return NextResponse.json({
+        error: 'Insufficient permissions or recruit belongs to a different chapter.',
       }, { status: 403 });
     }
+
 
     // Delete recruit from database with chapter scoping
     const { error: deleteError } = await supabase

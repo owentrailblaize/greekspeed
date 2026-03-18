@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 import { isFeatureEnabled } from '@/types/featureFlags';
 import type { CreateRecruitRequest } from '@/types/recruitment';
 import { EXECUTIVE_ROLES } from '@/lib/permissions';
+import { getManagedChapterIds } from '@/lib/services/governanceService';
 import type { RecruitStage } from '@/types/recruitment';
 
 // Helper function to validate phone number format
@@ -101,21 +102,25 @@ export async function GET(request: NextRequest) {
 
     const isDeveloper = profile.is_developer === true;
     const isAdmin = profile.role === 'admin';
+    const isGovernance = profile.role === 'governance';
+    let managedChapterIds: string[] | undefined;
+    if (isGovernance) {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+    const canRequestChapter =
+      requestedChapterId &&
+      (isDeveloper ||
+        isAdmin ||
+        (isGovernance && managedChapterIds?.includes(requestedChapterId)));
+    const effectiveChapterId = canRequestChapter ? requestedChapterId! : profile.chapter_id;
 
-    // Determine the effective chapter scope for the request.
-    // - Normal users: forced to their own chapter_id
-    // - Developers/Admins: can specify `chapter_id` to "view as" another chapter
-    const effectiveChapterId =
-      requestedChapterId && (isDeveloper || isAdmin) ? requestedChapterId : profile.chapter_id;
-
-    if (requestedChapterId && !(isDeveloper || isAdmin)) {
+    if (requestedChapterId && !canRequestChapter) {
       return NextResponse.json(
         { error: 'Insufficient permissions to view another chapter' },
         { status: 403 },
       );
     }
 
-    // Ensure we have a chapter scope
     if (!effectiveChapterId) {
       return NextResponse.json({ error: 'User must belong to a chapter' }, { status: 400 });
     }
@@ -136,13 +141,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Recruitment CRM feature is not enabled for this chapter' }, { status: 403 });
     }
 
-    // Permission check: Only allow exec roles (admin OR exec chapter_role)
     const isExec = profile.chapter_role && EXECUTIVE_ROLES.includes(profile.chapter_role as any);
-    
-    // Developers are allowed to view recruits for QA/oversight.
-    if (!isDeveloper && !isAdmin && !isExec) {
-      return NextResponse.json({ 
-        error: 'Insufficient permissions. Only execs and admins can view recruits.' 
+    const canViewAsGovernance = isGovernance && managedChapterIds?.includes(effectiveChapterId);
+
+    if (!isDeveloper && !isAdmin && !isExec && !canViewAsGovernance) {
+      return NextResponse.json({
+        error: 'Insufficient permissions. Only execs and admins can view recruits.',
       }, { status: 403 });
     }
 
@@ -277,9 +281,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Recruitment CRM feature is not enabled for this chapter' }, { status: 403 });
     }
 
-    // Permission check: Allow active_member OR admin
-    if (profile.role !== 'active_member' && profile.role !== 'admin') {
-      return NextResponse.json({ error: 'Insufficient permissions. Only active members and admins can submit recruits.' }, { status: 403 });
+    if (profile.role !== 'active_member' && profile.role !== 'admin' && profile.role !== 'governance') {
+      return NextResponse.json({ error: 'Insufficient permissions. Only active members, admins, and governance can submit recruits.' }, { status: 403 });
     }
 
     // Parse and validate request body

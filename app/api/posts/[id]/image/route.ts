@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getManagedChapterIds } from '@/lib/services/governanceService';
 
 /**
  * GET /api/posts/[id]/image
@@ -54,11 +55,15 @@ export async function GET(
     }
 
     const isDeveloper = profile.is_developer === true;
-    if (!isDeveloper && profile.chapter_id !== post.chapter_id) {
-      return NextResponse.json(
-        { error: 'Insufficient permissions to view this post' },
-        { status: 403 }
-      );
+    const isOwnChapter = profile.chapter_id === post.chapter_id;
+    if (!isDeveloper && !isOwnChapter) {
+      const managedIds = await getManagedChapterIds(supabase, user.id);
+      if (!managedIds.length || !managedIds.includes(post.chapter_id)) {
+        return NextResponse.json(
+          { error: 'Insufficient permissions to view this post' },
+          { status: 403 }
+        );
+      }
     }
 
     const metadata = post.metadata as { image_urls?: string[] } | null | undefined;

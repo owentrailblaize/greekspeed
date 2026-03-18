@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { generateInvitationUrl } from '@/lib/utils/invitationUtils';
+import { canManageChapterForContext } from '@/lib/permissions';
+import { getManagedChapterIds } from '@/lib/services/governanceService';
 
 export async function PUT(
   request: NextRequest,
@@ -27,10 +29,9 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
     }
 
-    // Get user profile to verify admin role
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('chapter_id, role')
+      .select('chapter_id, role, chapter_role')
       .eq('id', user.id)
       .single();
 
@@ -38,12 +39,6 @@ export async function PUT(
       return NextResponse.json({ error: 'User not associated with a chapter' }, { status: 400 });
     }
 
-    // Only admins can update invitations
-    if (profile.role !== 'admin') {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
-    }
-
-    // Verify the invitation exists and belongs to the user's chapter
     const { data: existingInvitation, error: fetchError } = await supabase
       .from('invitations')
       .select('chapter_id')
@@ -54,8 +49,12 @@ export async function PUT(
       return NextResponse.json({ error: 'Invitation not found' }, { status: 404 });
     }
 
-    if (existingInvitation.chapter_id !== profile.chapter_id) {
-      return NextResponse.json({ error: 'Can only update invitations for your own chapter' }, { status: 403 });
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+    if (!canManageChapterForContext(profile, existingInvitation.chapter_id, managedChapterIds)) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
     // Update invitation
@@ -145,10 +144,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
     }
 
-    // Get user profile to verify admin role
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('chapter_id, role')
+      .select('chapter_id, role, chapter_role')
       .eq('id', user.id)
       .single();
 
@@ -156,12 +154,6 @@ export async function DELETE(
       return NextResponse.json({ error: 'User not associated with a chapter' }, { status: 400 });
     }
 
-    // Only admins can delete invitations
-    if (profile.role !== 'admin') {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
-    }
-
-    // Verify the invitation exists and belongs to the user's chapter
     const { data: existingInvitation, error: fetchError } = await supabase
       .from('invitations')
       .select('chapter_id')
@@ -172,8 +164,12 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invitation not found' }, { status: 404 });
     }
 
-    if (existingInvitation.chapter_id !== profile.chapter_id) {
-      return NextResponse.json({ error: 'Can only delete invitations for your own chapter' }, { status: 403 });
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+    if (!canManageChapterForContext(profile, existingInvitation.chapter_id, managedChapterIds)) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
     // Delete invitation (this will cascade delete invitation_usage records)

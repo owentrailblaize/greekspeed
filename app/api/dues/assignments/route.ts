@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { canManageChapter } from '@/lib/permissions';
+import { canManageChapterForContext } from '@/lib/permissions';
+import { getManagedChapterIds } from '@/lib/services/governanceService';
 
 // Create a session-aware Supabase client for API routes
 function createApiSupabaseClient(request: NextRequest) {
@@ -52,9 +53,15 @@ export async function GET(request: NextRequest) {
     const cycleId = searchParams.get('cycleId');
     const chapterId = searchParams.get('chapterId') || profile.chapter_id;
 
-    // Check permissions
-    if (!canManageChapter(profile.role as any, profile.chapter_role)) {
-      // GET: Insufficient permissions
+    if (!chapterId) {
+      return NextResponse.json({ error: 'Chapter context required' }, { status: 400 });
+    }
+
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+    if (!canManageChapterForContext(profile, chapterId, managedChapterIds)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
@@ -100,31 +107,52 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = createApiSupabaseClient(request);
-    
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role, chapter_id, chapter_role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    }
+
     const body = await request.json();
-    // Received request body
-    
     const { memberId, amount, status, notes, cycleId } = body;
 
-    // Enhanced validation with detailed logging
-    // Validating fields
-    
     if (!memberId) {
-      console.error('❌ Missing memberId');
       return NextResponse.json({ error: 'Member ID is required' }, { status: 400 });
     }
-    
     if (!amount || amount <= 0) {
-      console.error('❌ Invalid amount:', amount);
       return NextResponse.json({ error: 'Valid amount is required' }, { status: 400 });
     }
-    
     if (!cycleId) {
-      console.error('❌ Missing cycleId');
       return NextResponse.json({ error: 'Cycle ID is required' }, { status: 400 });
     }
 
-    // Validation passed, creating dues assignment
+    const { data: cycle, error: cycleError } = await supabase
+      .from('dues_cycles')
+      .select('chapter_id')
+      .eq('id', cycleId)
+      .single();
+
+    if (cycleError || !cycle?.chapter_id) {
+      return NextResponse.json({ error: 'Cycle not found' }, { status: 404 });
+    }
+
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+    if (!canManageChapterForContext(profile, cycle.chapter_id, managedChapterIds)) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+    }
 
     // Create the dues assignment
     const { data: assignment, error: assignmentError } = await supabase
@@ -273,29 +301,44 @@ export async function PATCH(request: NextRequest) {
       .single();
 
     if (profileError || !profile) {
-      // PATCH: Profile not found
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Check if user is treasurer
-    if (profile.chapter_role !== 'treasurer' && profile.role !== 'admin') {
-      // PATCH: Insufficient permissions - user is not treasurer or admin
-      return NextResponse.json({ error: 'Only treasurers can modify dues assignments' }, { status: 403 });
-    }
-
     const body = await request.json();
-    // PATCH: Received request body
-    
     const { assignmentId, status, amount_assessed, amount_due, notes } = body;
 
     if (!assignmentId) {
-      // PATCH: Missing assignmentId
       return NextResponse.json({ error: 'Assignment ID is required' }, { status: 400 });
     }
 
-    // PATCH: Updating assignment
+    const { data: assignmentRow, error: fetchAssignError } = await supabase
+      .from('dues_assignments')
+      .select('dues_cycle_id')
+      .eq('id', assignmentId)
+      .single();
 
-    // Update the dues assignment
+    if (fetchAssignError || !assignmentRow) {
+      return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });
+    }
+
+    const { data: cycleRow, error: cycleErr } = await supabase
+      .from('dues_cycles')
+      .select('chapter_id')
+      .eq('id', assignmentRow.dues_cycle_id)
+      .single();
+
+    if (cycleErr || !cycleRow?.chapter_id) {
+      return NextResponse.json({ error: 'Cycle not found' }, { status: 404 });
+    }
+
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+    if (!canManageChapterForContext(profile, cycleRow.chapter_id, managedChapterIds)) {
+      return NextResponse.json({ error: 'Only treasurers or chapter admins can modify dues assignments' }, { status: 403 });
+    }
+
     const { data: assignment, error } = await supabase
       .from('dues_assignments')
       .update({
@@ -314,9 +357,6 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to update dues assignment' }, { status: 500 });
     }
 
-    // PATCH: Assignment updated successfully
-
-    // Update the member's profile with new dues information
     if (assignment) {
       const { error: profileUpdateError } = await supabase
         .from('profiles')
@@ -329,12 +369,10 @@ export async function PATCH(request: NextRequest) {
 
       if (profileUpdateError) {
         console.error('⚠️ PATCH: Error updating member profile:', profileUpdateError);
-      } else {
-        // PATCH: Member profile updated successfully
       }
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: 'Dues assignment updated successfully',
       assignment
     });
@@ -443,39 +481,45 @@ export async function DELETE(request: NextRequest) {
       .single();
 
     if (profileError || !profile) {
-      // DELETE: Profile not found
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Check if user is treasurer
-    if (profile.chapter_role !== 'treasurer' && profile.role !== 'admin') {
-      // DELETE: Insufficient permissions - user is not treasurer or admin
-      return NextResponse.json({ error: 'Only treasurers can delete dues assignments' }, { status: 403 });
-    }
-
     const body = await request.json();
-    // DELETE: Received request body
-    
     const { assignmentId } = body;
 
     if (!assignmentId) {
-      // DELETE: Missing assignmentId
       return NextResponse.json({ error: 'Assignment ID is required' }, { status: 400 });
     }
 
-    // DELETE: Deleting assignment
-
-    // First, get the assignment to find the user_id
-    const { data: assignment, error: fetchError } = await supabase
+    const { data: assignmentRow, error: fetchAssignError } = await supabase
       .from('dues_assignments')
-      .select('user_id')
+      .select('user_id, dues_cycle_id')
       .eq('id', assignmentId)
       .single();
 
-    if (fetchError || !assignment) {
-      console.error('❌ DELETE: Assignment not found:', fetchError);
+    if (fetchAssignError || !assignmentRow) {
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });
     }
+
+    const { data: cycleRow, error: cycleErr } = await supabase
+      .from('dues_cycles')
+      .select('chapter_id')
+      .eq('id', assignmentRow.dues_cycle_id)
+      .single();
+
+    if (cycleErr || !cycleRow?.chapter_id) {
+      return NextResponse.json({ error: 'Cycle not found' }, { status: 404 });
+    }
+
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+    if (!canManageChapterForContext(profile, cycleRow.chapter_id, managedChapterIds)) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+    }
+
+    const assignment = { user_id: assignmentRow.user_id };
 
     // Delete the dues assignment
     const { error: deleteError } = await supabase

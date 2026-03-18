@@ -77,29 +77,36 @@ export function DashboardHeader() {
   const completionPercent = completion?.percentage ?? 0;
   const hasUnread = pendingConnections > 0; // Now based on actual pending connections
 
+  const isGovernance = userRole === 'governance';
+
   // Define navigation tabs with role-based access
   const navigationTabs = [
-    { href: '/dashboard', label: 'Home', roles: ['admin', 'active_member', 'alumni'], locked: false },
-    { href: '/dashboard/alumni', label: 'Alumni', roles: ['admin', 'active_member', 'alumni'], locked: false },
-    { href: '/dashboard/dues', label: 'Dues', roles: ['active_member', 'admin'], locked: false },
-    { href: '/dashboard/admin', label: 'Exec Admin', roles: ['admin'], locked: false },
+    { href: '/dashboard', label: 'Home', roles: ['admin', 'active_member', 'alumni', 'governance'], locked: false },
+    { href: '/dashboard/alumni', label: 'Alumni', roles: ['admin', 'active_member', 'alumni', 'governance'], locked: false },
+    { href: '/dashboard/dues', label: 'Dues', roles: ['active_member', 'admin', 'governance'], locked: false },
+    { href: '/dashboard/admin', label: 'Exec Admin', roles: ['admin', 'governance'], locked: false },
   ];
 
   // Filter tabs based on user role
   const visibleTabs = navigationTabs.filter(tab => {
-    // Developers viewing a chapter can see ALL tabs (full admin access)
-    if (profile?.is_developer && activeChapterId) {
-      // Still respect feature flags for financial tools
+    // Governance: always see all tabs (same as admin), with dues gated by feature flag
+    if (isGovernance) {
       if (tab.href === '/dashboard/dues') {
         return financialToolsEnabled && !flagLoading;
       }
-      return true; // Show all other tabs
+      return true;
+    }
+    // Developers viewing a chapter can see ALL tabs (full admin access for that context)
+    if (profile?.is_developer && activeChapterId) {
+      if (tab.href === '/dashboard/dues') {
+        return financialToolsEnabled && !flagLoading;
+      }
+      return true;
     }
 
-    // Non-developers: check role access
+    // Non-developer/non-governance: check role access
     const hasRoleAccess = tab.roles.includes(userRole || '');
 
-    // If it's the Dues tab, also check feature flag
     if (tab.href === '/dashboard/dues') {
       return hasRoleAccess && financialToolsEnabled && !flagLoading;
     }
@@ -162,8 +169,8 @@ export function DashboardHeader() {
             ))}
           </div>
 
-          {/* Chapter Switcher - Developer only (desktop: next to tabs) */}
-          {profile?.is_developer && (
+          {/* Chapter Switcher - Developer or Governance (desktop: next to tabs) */}
+          {(profile?.is_developer || isGovernance) && (
             <div className="hidden md:block">
               <ChapterSwitcher />
             </div>
@@ -172,8 +179,8 @@ export function DashboardHeader() {
 
         {/* Right side - Messages icon, Chapter Switcher (mobile), and User dropdown */}
         <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
-          {/* Chapter Switcher - Developer only (mobile: next to avatar) */}
-          {profile?.is_developer && (
+          {/* Chapter Switcher - Developer or Governance (mobile: next to avatar) */}
+          {(profile?.is_developer || isGovernance) && (
             <div className="md:hidden">
               <ChapterSwitcher />
             </div>
