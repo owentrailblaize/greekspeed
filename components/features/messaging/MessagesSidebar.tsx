@@ -315,7 +315,7 @@ export function MessagesSidebar({
       )}
 
       {/* Connections List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className={`flex-1 overflow-y-auto ${isMobile && isMainView ? 'pb-20' : ''}`}>
         {loading ? (
           <div className="flex items-center justify-center py-8">
             {sidebarCollapsed ? (
