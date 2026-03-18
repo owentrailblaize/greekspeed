@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
-import { canManageChapter } from '@/lib/permissions';
+import { canManageChapterForContext } from '@/lib/permissions';
+import { getManagedChapterIds } from '@/lib/services/governanceService';
 
 export async function GET(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient();
-    
-    // Get user session
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+      error: authError
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role, chapter_id, chapter_role')
@@ -26,8 +28,16 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const chapterId = searchParams.get('chapterId') || profile.chapter_id;
 
-    // Check permissions
-    if (!canManageChapter(profile.role as any, profile.chapter_role)) {
+    if (!chapterId) {
+      return NextResponse.json({ error: 'Chapter context required' }, { status: 400 });
+    }
+
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+
+    if (!canManageChapterForContext(profile, chapterId, managedChapterIds)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 

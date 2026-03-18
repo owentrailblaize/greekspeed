@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { updateTask, deleteTask } from '@/lib/services/taskService';
-import { canManageMembers } from '@/lib/permissions';
+import { canManageMembersForContext } from '@/lib/permissions';
+import { getManagedChapterIds } from '@/lib/services/governanceService';
+
+async function getTaskChapterId(supabase: any, taskId: string): Promise<string | null> {
+  const { data } = await supabase.from('tasks').select('chapter_id').eq('id', taskId).single();
+  return data?.chapter_id ?? null;
+}
 
 export async function PATCH(
   request: NextRequest,
@@ -10,16 +16,14 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    
+
     const supabase = createServerComponentClient({ cookies });
-    
-    // Get user session
+
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role, chapter_id, chapter_role')
@@ -30,14 +34,20 @@ export async function PATCH(
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Check permissions
-    if (!canManageMembers(profile.role as any, profile.chapter_role)) {
+    const taskChapterId = await getTaskChapterId(supabase, id);
+    if (!taskChapterId) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 });
+    }
+
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+    if (!canManageMembersForContext(profile, taskChapterId, managedChapterIds)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
     const body = await request.json();
-
-    // Update the task
     const task = await updateTask(id, body);
 
     return NextResponse.json(task);
@@ -53,16 +63,14 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    
+
     const supabase = createServerComponentClient({ cookies });
-    
-    // Get user session
+
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role, chapter_id, chapter_role')
@@ -73,12 +81,19 @@ export async function DELETE(
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Only admins and presidents can delete tasks
-    if (profile.role !== 'admin' && profile.chapter_role !== 'president') {
+    const taskChapterId = await getTaskChapterId(supabase, id);
+    if (!taskChapterId) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 });
+    }
+
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+    if (!canManageMembersForContext(profile, taskChapterId, managedChapterIds)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
-    // Delete the task
     await deleteTask(id);
 
     return NextResponse.json({ message: 'Task deleted successfully' });

@@ -15,7 +15,7 @@ import { ProfileUpdatePromptModal } from '@/components/features/profile/ProfileU
 import type { DetectedChange } from '@/components/features/profile/ProfileUpdatePromptModal';
 import { useAuth } from '@/lib/supabase/auth-context';
 import type { CreatePostRequest } from '@/types/posts';
-import { ActiveChapterProvider } from '@/lib/contexts/ActiveChapterContext';
+import { ActiveChapterProvider, useActiveChapter } from '@/lib/contexts/ActiveChapterContext';
 import {
   getProfileUpdatePrefs,
   saveProfileUpdatePrefs,
@@ -50,6 +50,7 @@ export default function DashboardLayoutClient({
 
   return (
     <ActiveChapterProvider>
+      <GovernanceActiveChapterDefault />
       <ChapterFeaturesProvider>
         <OneSignalDashboardLoader userId={profile?.id} />
         <PwaPromptProvider userId={profile?.id}>
@@ -76,6 +77,24 @@ export default function DashboardLayoutClient({
       </ChapterFeaturesProvider>
     </ActiveChapterProvider>
   );
+}
+
+/** Default active chapter to profile chapter for governance so they see their chapter on first load (like developer selecting a chapter). */
+function GovernanceActiveChapterDefault() {
+  const { profile } = useProfile();
+  const { activeChapterId, setActiveChapterId } = useActiveChapter();
+
+  useEffect(() => {
+    if (
+      profile?.role === 'governance' &&
+      profile?.chapter_id &&
+      activeChapterId === null
+    ) {
+      setActiveChapterId(profile.chapter_id);
+    }
+  }, [profile?.role, profile?.chapter_id, activeChapterId, setActiveChapterId]);
+
+  return null;
 }
 
 // Global Modal Wrapper Component

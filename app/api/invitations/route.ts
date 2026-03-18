@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
 import { generateInvitationToken, generateInvitationUrl } from '@/lib/utils/invitationUtils';
 import { CreateInvitationData } from '@/types/invitations';
+import { canManageChapterForContext } from '@/lib/permissions';
+import { getManagedChapterIds } from '@/lib/services/governanceService';
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,7 +11,6 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const chapterId = searchParams.get('chapter_id');
 
-    // Get authenticated user
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
@@ -17,15 +18,14 @@ export async function GET(request: NextRequest) {
 
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
+
     if (authError || !user) {
       return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
     }
 
-    // Get user profile to verify admin role
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('chapter_id, role')
+      .select('chapter_id, role, chapter_role')
       .eq('id', user.id)
       .single();
 
@@ -33,13 +33,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not associated with a chapter' }, { status: 400 });
     }
 
-    // Only admins can view invitations
-    if (profile.role !== 'admin') {
+    const targetChapterId = chapterId || profile.chapter_id;
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+    if (!canManageChapterForContext(profile, targetChapterId, managedChapterIds)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
-
-    // Use the authenticated user's chapter if no chapter_id provided
-    const targetChapterId = chapterId || profile.chapter_id;
 
     // Fetch invitations with usage data
     const { data: invitations, error } = await supabase
@@ -112,10 +113,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
     }
 
-    // Get user profile to verify admin role
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('chapter_id, role')
+      .select('chapter_id, role, chapter_role')
       .eq('id', user.id)
       .single();
 
@@ -123,14 +123,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not associated with a chapter' }, { status: 400 });
     }
 
-    // Only admins can create invitations
-    if (profile.role !== 'admin') {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
     }
-
-    // Validate that the user is creating invitations for their own chapter
-    if (chapter_id !== profile.chapter_id) {
-      return NextResponse.json({ error: 'Can only create invitations for your own chapter' }, { status: 403 });
+    if (!canManageChapterForContext(profile, chapter_id, managedChapterIds)) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
     // Generate unique token

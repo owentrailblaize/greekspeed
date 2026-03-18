@@ -1,4 +1,4 @@
-export type SystemRole = 'admin' | 'active_member' | 'alumni' | 'developer';
+export type SystemRole = 'admin' | 'active_member' | 'alumni' | 'developer' | 'governance';
 
 export type ChapterRole = 
   | 'president'
@@ -40,7 +40,7 @@ export interface Profile {
   last_name: string | null;
   chapter: string | null;
   chapter_id: string | null;
-  role: "admin" | "alumni" | "active_member" | null;
+  role: SystemRole | null;
   chapter_role: ChapterRole | null;
   member_status: MemberStatus | null;
   pledge_class?: string;
@@ -120,3 +120,8 @@ export interface ImportResult {
     error: string;
   }>;
 } 
+
+export interface GovernanceChapterRow {
+  chapter_id: string;
+  created_at?: string;
+}

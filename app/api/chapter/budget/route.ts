@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/client';
-import { canManageChapter } from '@/lib/permissions';
+import { canManageChapterForContext } from '@/lib/permissions';
+import { getManagedChapterIds } from '@/lib/services/governanceService';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -70,7 +71,6 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
     }
 
-    // Get user profile to check permissions
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role, chapter_id, chapter_role')
@@ -81,13 +81,12 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Check if user belongs to the chapter
-    if (profile.chapter_id !== chapter_id) {
-      return NextResponse.json({ error: 'Unauthorized: Chapter mismatch' }, { status: 403 });
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
     }
 
-    // Check permissions (Treasurer or President can edit)
-    if (!canManageChapter(profile.role as any, profile.chapter_role)) {
+    if (!canManageChapterForContext(profile, chapter_id, managedChapterIds)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 

@@ -30,31 +30,40 @@ export function ChapterSwitcher() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Only render for developer users
-  if (!isDeveloper) return null;
+  const isGovernance = profile?.role === 'governance';
+  const showSwitcher = isDeveloper || isGovernance;
+
+  if (!showSwitcher) return null;
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Fetch chapters on mount
+  // Fetch chapters: developer = all chapters from developer API; governance = managed only from /api/me/governance-chapters
   useEffect(() => {
-    if (!isDeveloper || !session?.access_token) return;
+    if (!showSwitcher || !session?.access_token) return;
 
     const fetchChapters = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/developer/chapters?page=1&limit=100', {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
-
-        if (!response.ok) throw new Error('Failed to fetch chapters');
-
-        const data = await response.json();
-        setChapters(data.chapters || []);
+        if (isGovernance) {
+          const response = await fetch('/api/me/governance-chapters', {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
+          if (!response.ok) throw new Error('Failed to fetch governance chapters');
+          const data = await response.json();
+          setChapters(data.chapters || []);
+        } else {
+          const response = await fetch('/api/developer/chapters?page=1&limit=100', {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          });
+          if (!response.ok) throw new Error('Failed to fetch chapters');
+          const data = await response.json();
+          setChapters(data.chapters || []);
+        }
       } catch (error) {
         console.error('ChapterSwitcher: Error fetching chapters:', error);
       } finally {
@@ -63,7 +72,7 @@ export function ChapterSwitcher() {
     };
 
     fetchChapters();
-  }, [isDeveloper, session?.access_token]);
+  }, [showSwitcher, isGovernance, session?.access_token]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -92,20 +101,32 @@ export function ChapterSwitcher() {
     }
   }, [isOpen]);
 
+  // For governance: show user's active (home) chapter first, then others
+  const orderedChapters =
+    isGovernance && profile?.chapter_id
+      ? [
+          ...chapters.filter((c) => c.id === profile.chapter_id),
+          ...chapters.filter((c) => c.id !== profile.chapter_id),
+        ]
+      : chapters;
+
   // Filter chapters by search query
-  const filteredChapters = chapters.filter((chapter) => {
+  const filteredChapters = orderedChapters.filter((chapter) => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
     return (
       chapter.name?.toLowerCase().includes(query) ||
       chapter.school?.toLowerCase().includes(query) ||
-      chapter.location?.toLowerCase().includes(query)
+      (chapter as Chapter & { location?: string }).location?.toLowerCase().includes(query)
     );
   });
 
-  // Get the currently selected chapter name
-  const selectedChapter = chapters.find((c) => c.id === activeChapterId);
-  const displayLabel = selectedChapter ? selectedChapter.name : 'Developer View';
+  const selectedChapter = orderedChapters.find((c) => c.id === activeChapterId);
+  const displayLabel = selectedChapter
+    ? selectedChapter.name
+    : isGovernance
+      ? 'Select chapter'
+      : 'Developer View';
 
   const handleSelect = (chapterId: string | null) => {
     setActiveChapterId(chapterId);
@@ -203,21 +224,23 @@ export function ChapterSwitcher() {
               </div>
             </div>
 
-            {/* "Developer View" option (deselect chapter) */}
-            <div className="py-1 border-b border-gray-100">
-              <button
-                onClick={() => handleSelect(null)}
-                className={cn(
-                  'w-full flex items-center px-3 py-2 text-sm transition-colors',
-                  !activeChapterId
-                    ? 'bg-brand-primary/5 text-brand-primary font-medium'
-                    : 'text-gray-700 hover:bg-gray-50'
-                )}
-              >
-                <Building2 className="h-4 w-4 mr-2.5 flex-shrink-0" />
-                <span>Developer Overview</span>
-              </button>
-            </div>
+            {/* "Developer Overview" option (deselect chapter) - developers only */}
+            {!isGovernance && (
+              <div className="py-1 border-b border-gray-100">
+                <button
+                  onClick={() => handleSelect(null)}
+                  className={cn(
+                    'w-full flex items-center px-3 py-2 text-sm transition-colors',
+                    !activeChapterId
+                      ? 'bg-brand-primary/5 text-brand-primary font-medium'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  )}
+                >
+                  <Building2 className="h-4 w-4 mr-2.5 flex-shrink-0" />
+                  <span>Developer Overview</span>
+                </button>
+              </div>
+            )}
 
             {/* Chapter list */}
             <div className="max-h-[280px] overflow-y-auto py-1">

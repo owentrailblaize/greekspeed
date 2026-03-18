@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { canAccessDeveloperPortal } from '@/lib/developerPermissions';
-import { canManageChapter } from '@/lib/permissions';
+import { canManageChapterForContext } from '@/lib/permissions';
+import { getManagedChapterIds } from '@/lib/services/governanceService';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -73,7 +74,6 @@ export async function POST(request: NextRequest) {
 
     const { user, supabase } = auth;
 
-    // Get user profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('id, role, chapter_id, chapter_role, is_developer')
@@ -84,21 +84,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Parse form data
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const chapterId = formData.get('chapterId') as string;
-    const variant = (formData.get('variant') as string) || 'primary'; // 'primary' or 'secondary'
+    const variant = (formData.get('variant') as string) || 'primary';
 
-    // Validate inputs
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
-
     if (!chapterId) {
       return NextResponse.json({ error: 'Chapter ID is required' }, { status: 400 });
     }
-
     if (variant !== 'primary' && variant !== 'secondary') {
       return NextResponse.json(
         { error: 'Variant must be "primary" or "secondary"' },
@@ -106,11 +102,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check permissions (developer can upload for any chapter, chapter admin only for their own)
     const isDeveloper = canAccessDeveloperPortal(profile);
-    const canManage = canManageChapter(profile.role as any, profile.chapter_role);
+    let managedChapterIds: string[] | undefined;
+    if (profile.role === 'governance') {
+      managedChapterIds = await getManagedChapterIds(supabase, user.id);
+    }
+    const canManage = isDeveloper || canManageChapterForContext(profile, chapterId, managedChapterIds);
 
-    if (!isDeveloper && (!canManage || profile.chapter_id !== chapterId)) {
+    if (!canManage) {
       return NextResponse.json(
         { error: 'Insufficient permissions to upload logo for this chapter' },
         { status: 403 }

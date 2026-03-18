@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { Drawer } from 'vaul';
 import { X, User, Mail, Building, Briefcase, HelpCircle, Image, Upload, Linkedin, MapPin, Phone, Home, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -636,8 +637,33 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
   const graduationYears = getGraduationYears();
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-      <div className={`bg-white ${isMobile ? 'rounded-t-2xl rounded-b-none w-full flex flex-col' : 'rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]'} ${isMobile ? 'max-h-[85dvh] mt-[15dvh] pb-[env(safe-area-inset-bottom)]' : ''}`}>
+    <Drawer.Root
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) handleClose();
+      }}
+      direction="bottom"
+      modal
+      dismissible
+    >
+      <Drawer.Portal>
+        <Drawer.Overlay className="fixed inset-0 z-[10002] bg-black/50 transition-opacity" />
+        <Drawer.Content
+          className={`
+            bg-white flex flex-col z-[10003]
+            fixed bottom-0 left-0 right-0
+            sm:left-1/2 sm:right-auto sm:max-w-2xl sm:w-full sm:-translate-x-1/2
+            max-h-[85dvh] sm:max-h-[90vh] min-h-[40dvh]
+            rounded-t-2xl sm:rounded-xl
+            shadow-2xl border border-gray-200 border-b-0 sm:border
+            outline-none p-0
+            ${isMobile ? 'pb-[env(safe-area-inset-bottom)]' : ''}
+          `}
+        >
+          {/* Drag handle - mobile only */}
+          <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-zinc-300 mt-3 mb-2 sm:hidden" aria-hidden />
+
+          <div className="flex flex-col flex-1 min-h-0 w-full">
         {/* Header - same as original */}
         <div className={`flex items-center justify-between border-b border-gray-200 flex-shrink-0 ${isMobile ? 'p-4' : 'p-6'}`}>
           <div className="flex items-center gap-3">
@@ -1123,7 +1149,9 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
             </Button>
           </div>
         </div>
-      </div>
-    </div>
+          </div>
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
   );
 }

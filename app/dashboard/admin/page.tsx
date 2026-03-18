@@ -18,8 +18,8 @@ function ExecAdminPage() {
 }
 
 export default function AdminPage() {
-  // Only allow admin
-  const { hasAccess, loading } = useRoleAccess(['admin']);
+  // Allow admin and governance (governance can switch chapters via Chapter Switcher)
+  const { hasAccess, loading } = useRoleAccess(['admin', 'governance']);
 
   if (loading) return <div>Loading...</div>;
   if (!hasAccess) return <div>Access denied. Admin access required.</div>;

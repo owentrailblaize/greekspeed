@@ -48,6 +48,12 @@ export function DashboardOverview({
   if (userRole === 'admin') {
     return <AdminOverview initialFeed={initialFeed} fallbackChapterId={fallbackChapterId} />;
   }
+
+  // Governance: same as admin, with chapter switcher (effective chapter = activeChapterId ?? profile chapter)
+  if (userRole === 'governance') {
+    const effectiveChapterId = activeChapterId ?? fallbackChapterId ?? undefined;
+    return <AdminOverview initialFeed={initialFeed} fallbackChapterId={effectiveChapterId} />;
+  }
   
   // Default dashboard for fallback - Show loading instead of placeholder
   if (!userRole) {

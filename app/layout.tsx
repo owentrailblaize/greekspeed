@@ -95,7 +95,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           </AppQueryProvider>
           <Analytics />
           <SpeedInsights />
-          {/* Desktop Toast Container */}
+          {/* Desktop Toast Container - z-index above modals so toasts stay clickable */}
           <ToastContainer
             position="top-right"
             autoClose={4000}
@@ -108,9 +108,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             pauseOnHover
             theme="light"
             className="hidden sm:block"
+            style={{ zIndex: 10004 }}
             toastClassName="!bg-white !shadow-lg !border !border-gray-200 !rounded-lg !p-4 !min-h-[60px]"
           />
-          {/* Mobile Toast Container */}
+          {/* Mobile Toast Container - z-index above modals so toasts stay clickable */}
           <ToastContainer
             position="top-right"
             autoClose={3000}
@@ -122,6 +123,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             pauseOnHover
             theme="light"
             className="block sm:hidden"
+            style={{ zIndex: 10004 }}
             toastClassName="!bg-white !shadow-lg !border !border-gray-200 !rounded-lg !p-4 !min-h-[60px]"
           />
         </body>
