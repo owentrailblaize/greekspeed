@@ -43,9 +43,10 @@ interface AdminOverviewProps {
 
 export function AdminOverview({ initialFeed, fallbackChapterId }: AdminOverviewProps) {
   const { profile, isDeveloper } = useProfile();
-  // Developers can "view as" another chapter via ActiveChapterContext, which is passed in as fallbackChapterId.
-  // In that case we intentionally prefer the fallbackChapterId over the profile's chapter_id.
-  const chapterId = (isDeveloper ? (fallbackChapterId ?? profile?.chapter_id) : (profile?.chapter_id ?? fallbackChapterId)) ?? null;
+  const isGovernance = profile?.role === 'governance';
+  // Developers and governance can "view as" another chapter via ChapterSwitcher (fallbackChapterId = effective chapter).
+  // Prefer fallbackChapterId so feed and sidebars reflect the selected chapter.
+  const chapterId = (isDeveloper || isGovernance ? (fallbackChapterId ?? profile?.chapter_id) : (profile?.chapter_id ?? fallbackChapterId)) ?? null;
   const [activeMobileTab, setActiveMobileTab] = useState('home');
   const [showQuickActionsModal, setShowQuickActionsModal] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);

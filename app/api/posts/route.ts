@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { fetchLinkPreviewsServer } from '@/lib/services/linkPreviewService';
+import { getManagedChapterIds } from '@/lib/services/governanceService';
 import { LinkPreview } from '@/types/posts';
 
 /** For slim first page: omit image URLs and set has_image so the client can load images on demand. */
@@ -64,13 +65,17 @@ export async function GET(request: NextRequest) {
     }
 
     const isDeveloper = profile.is_developer === true;
+    const isOwnChapter = profile.chapter_id === chapterId;
 
-    // Regular users can only view their own chapter's posts
-    if (!isDeveloper && profile.chapter_id !== chapterId) {
-      return NextResponse.json(
-        { error: 'Insufficient permissions to view another chapter' },
-        { status: 403 },
-      );
+    // Developers can view any chapter; others only own chapter or (if governance) managed chapters
+    if (!isDeveloper && !isOwnChapter) {
+      const managedIds = await getManagedChapterIds(supabase, user.id);
+      if (!managedIds.length || !managedIds.includes(chapterId)) {
+        return NextResponse.json(
+          { error: 'Insufficient permissions to view another chapter' },
+          { status: 403 },
+        );
+      }
     }
 
     // Calculate offset for pagination
