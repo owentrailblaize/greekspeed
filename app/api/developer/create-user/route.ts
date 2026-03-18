@@ -14,7 +14,8 @@ export async function POST(request: NextRequest) {
       role = 'active_member', 
       chapter_role = 'member',
       is_developer = false, 
-      member_status = 'active'
+      member_status = 'active',
+      governance_chapter_ids = [] as string[]
     } = body;
 
     // Validate required fields
@@ -24,12 +25,16 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Add role validation (restrict to admin, active_member, alumni)
-    if (!['admin', 'active_member', 'alumni'].includes(role)) {
+    // Role validation (admin, active_member, alumni, governance for developer tooling)
+    if (!['admin', 'active_member', 'alumni', 'governance'].includes(role)) {
       return NextResponse.json({ 
-        error: 'Invalid role. Only admin, active_member, or alumni are allowed.' 
+        error: 'Invalid role. Only admin, active_member, alumni, or governance are allowed.' 
       }, { status: 400 });
     }
+
+    const governanceChapterIds = Array.isArray(governance_chapter_ids)
+      ? governance_chapter_ids.filter((id): id is string => typeof id === 'string' && id.length > 0)
+      : [];
 
     // Sanitize free-text chapter_role
     const sanitizeTitle = (s: string) =>
@@ -202,6 +207,18 @@ export async function POST(request: NextRequest) {
       }
     } else {
       // New profile created
+    }
+
+    // If role is governance, insert managed chapters into governance_chapters
+    if (role === 'governance' && governanceChapterIds.length > 0) {
+      const rows = governanceChapterIds.map((cid) => ({
+        user_id: newUserAuth.user.id,
+        chapter_id: cid,
+      }));
+      const { error: gcError } = await supabase.from('governance_chapters').insert(rows);
+      if (gcError) {
+        console.error('❌ governance_chapters insert error:', gcError);
+      }
     }
 
     return NextResponse.json({ 

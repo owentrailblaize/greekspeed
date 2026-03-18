@@ -5,14 +5,39 @@ import { cascadeDeleteUser } from '@/lib/services/userDeletionService';
 
 export async function GET(request: NextRequest) {
   try {
-    // Create a new Supabase client with service role key
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Get query parameters for pagination
     const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    // Single user fetch (for edit modal: include governance_chapter_ids)
+    if (userId) {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (profileError || !profile) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
+
+      const userPayload: Record<string, unknown> = { ...profile };
+      if (profile.role === 'governance') {
+        const { data: rows } = await supabase
+          .from('governance_chapters')
+          .select('chapter_id')
+          .eq('user_id', userId);
+        userPayload.governance_chapter_ids = (rows ?? []).map((r: { chapter_id: string }) => r.chapter_id);
+      }
+
+      return NextResponse.json({ user: userPayload });
+    }
+
+    // List users
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '100');
     const offset = (page - 1) * limit;
@@ -23,7 +48,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('profiles')
       .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false});
+      .order('created_at', { ascending: false });
 
     if (chapterId) {
       query = query.eq('chapter_id', chapterId);
@@ -33,11 +58,11 @@ export async function GET(request: NextRequest) {
       const like = `%${q}%`;
       query = query.or(
         `email.ilike.${like},full_name.ilike.${like},role.ilike.${like},chapter.ilike.${like}`
-      )
+      );
     }
 
     if (role) {
-      query = query.eq('role',role);
+      query = query.eq('role', role);
     }
 
     const { data: users, error, count } = await query.range(offset, offset + limit - 1);
@@ -47,16 +72,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
     }
 
-    if (role) {
-      query = query.eq('role', role);
-    }
-
-    return NextResponse.json({ 
+    return NextResponse.json({
       users: users || [],
       total: count || 0,
       page,
       limit,
-      totalPages: Math.ceil((count || 0) / limit)
+      totalPages: Math.ceil((count || 0) / limit),
     });
   } catch (error) {
     console.error('Unexpected error:', error);
@@ -173,7 +194,7 @@ export async function PUT(request: NextRequest) {
     const update: Record<string, any> = {};
     for (const key of allowed) if (key in body) update[key] = body[key];
 
-    if (update.role && !['admin', 'active_member', 'alumni'].includes(update.role)) {
+    if (update.role && !['admin', 'active_member', 'alumni', 'governance'].includes(update.role)) {
       return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
     }
 
@@ -195,6 +216,18 @@ export async function PUT(request: NextRequest) {
       .single();
 
     if (error) return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
+
+    // Sync governance_chapters when role or governance_chapter_ids are provided
+    const governanceChapterIds = Array.isArray(body.governance_chapter_ids)
+      ? (body.governance_chapter_ids as string[]).filter((id): id is string => typeof id === 'string' && id.length > 0)
+      : [];
+    await supabase.from('governance_chapters').delete().eq('user_id', userId);
+    if (data.role === 'governance' && governanceChapterIds.length > 0) {
+      await supabase.from('governance_chapters').insert(
+        governanceChapterIds.map((chapter_id) => ({ user_id: userId, chapter_id }))
+      );
+    }
+
     return NextResponse.json({ user: data });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

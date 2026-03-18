@@ -30,9 +30,10 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
     firstName: '',
     lastName: '',
     chapter: chapterContext?.chapterId || '',
-    role: 'active_member' as 'admin' | 'active_member',
+    role: 'active_member' as 'admin' | 'active_member' | 'alumni' | 'governance',
     chapter_role: 'member' as string,
-    is_developer: false
+    is_developer: false,
+    governance_chapter_ids: [] as string[]
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -71,18 +72,22 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
         throw new Error('Email, firstName, lastName, and chapter are required');
       }
 
+      const body: Record<string, unknown> = {
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        chapter: formData.chapter,
+        role: formData.role,
+        chapter_role: formData.chapter_role,
+        is_developer: formData.is_developer,
+      };
+      if (formData.role === 'governance' && formData.governance_chapter_ids.length > 0) {
+        body.governance_chapter_ids = formData.governance_chapter_ids;
+      }
       const response = await fetch('/api/developer/create-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          chapter: formData.chapter,
-          role: formData.role,
-          chapter_role: formData.chapter_role,
-          is_developer: formData.is_developer,
-        })
+        body: JSON.stringify(body)
       });
 
       if (!response.ok) {
@@ -302,16 +307,19 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
               <Select 
                 value={formData.role} 
                 onValueChange={(value: string) => {
-                  const newRole = value as 'admin' | 'active_member';
+                  const newRole = value as 'admin' | 'active_member' | 'alumni' | 'governance';
                   setFormData({ 
                     ...formData, 
                     role: newRole,
-                    chapter_role: newRole === 'admin' ? 'president' : 'member'
+                    chapter_role: newRole === 'admin' ? 'president' : 'member',
+                    governance_chapter_ids: newRole === 'governance' ? formData.governance_chapter_ids : []
                   });
                 }}
               >
                 <SelectItem value="active_member">Active Member</SelectItem>
+                <SelectItem value="alumni">Alumni</SelectItem>
                 <SelectItem value="admin">Admin / Executive</SelectItem>
+                <SelectItem value="governance">Governance</SelectItem>
               </Select>
             </div>
             <div>
@@ -349,6 +357,36 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
               )}
             </div>
           </div>
+
+          {/* Managed chapters - only when role is Governance */}
+          {formData.role === 'governance' && (
+            <div className="space-y-2">
+              <Label>Managed chapters</Label>
+              {chaptersLoading ? (
+                <p className="text-sm text-muted-foreground">Loading chapters…</p>
+              ) : (
+                <div className="border rounded-md p-3 max-h-48 overflow-y-auto space-y-2">
+                  {chapters.map((ch) => (
+                    <div key={ch.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`create-gov-${ch.id}`}
+                        checked={formData.governance_chapter_ids.includes(ch.id)}
+                        onCheckedChange={(checked) => {
+                          const ids = checked
+                            ? [...formData.governance_chapter_ids, ch.id]
+                            : formData.governance_chapter_ids.filter((id) => id !== ch.id);
+                          setFormData({ ...formData, governance_chapter_ids: ids });
+                        }}
+                      />
+                      <Label htmlFor={`create-gov-${ch.id}`} className="text-sm font-normal cursor-pointer">
+                        {ch.name}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Developer Access - Only show if not chapter context */}
           {!chapterContext?.isChapterAdmin && (
