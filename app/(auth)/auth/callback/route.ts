@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { generateUniqueUsername, generateProfileSlug } from '@/lib/utils/usernameUtils';
 import { validateInvitationToken, recordInvitationUsage } from '@/lib/utils/invitationUtils';
 import { cookies } from 'next/headers';
+import { getSafeRedirect } from '@/lib/utils/safeRedirect';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -624,8 +625,9 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${requestUrl.origin}/onboarding`);
       } else {
         // Use redirect parameter if provided, otherwise default to dashboard
-        const finalRedirect = redirectTo 
-          ? `${requestUrl.origin}${redirectTo}` 
+        const safePath = getSafeRedirect(redirectTo);
+        const finalRedirect = safePath
+          ? `${requestUrl.origin}${safePath}`
           : `${requestUrl.origin}/dashboard`;
         return NextResponse.redirect(finalRedirect);
       }

@@ -12,6 +12,8 @@ import { ArrowLeft, ArrowRight, Mail, Star, Eye, EyeOff } from 'lucide-react';
 import { LottiePlayer } from '@/components/ui/LottiePlayer';
 import { MobileAuthLoadingOverlay } from '@/components/features/splash/MobileAuthLoadingOverlay';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
+import { useSearchParams } from 'next/navigation';
+import { getSafeRedirect } from '@/lib/utils/safeRedirect';
 
 const MOBILE_OVERLAY_MIN_MS = 6000;
 
@@ -27,6 +29,9 @@ export default function SignInPage() {
   const router = useRouter();
   const isMobile = useIsMobile();
   const [minOverlayTimeElapsed, setMinOverlayTimeElapsed] = useState(false);
+  const searchParams = useSearchParams();
+  const redirectParam = searchParams.get('redirect');
+  const safeRedirect = getSafeRedirect(redirectParam);
 
   useEffect(() => {
     const t = setTimeout(() => setMinOverlayTimeElapsed(true), MOBILE_OVERLAY_MIN_MS);
@@ -46,7 +51,7 @@ export default function SignInPage() {
             .single();
   
           if (profile?.onboarding_completed) {
-            router.push('/dashboard');
+            router.push(safeRedirect ?? '/dashboard');
           } else {
             router.push('/onboarding');
           }
@@ -57,7 +62,7 @@ export default function SignInPage() {
       };
       checkOnboarding();
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, safeRedirect]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,14 +78,15 @@ export default function SignInPage() {
       // Add a small delay to ensure auth state is updated
       setTimeout(async () => {
         try {
+          const { data: { user: currentUser } } = await supabase.auth.getUser();
           const { data: profile } = await supabase
             .from('profiles')
             .select('onboarding_completed')
-            .eq('id', user!.id)
+            .eq('id', currentUser?.id ?? '')
             .single();
       
           if (profile?.onboarding_completed) {
-            router.push('/dashboard');
+            router.push(safeRedirect ?? '/dashboard');
           } else {
             router.push('/onboarding');
           }
@@ -101,10 +107,13 @@ export default function SignInPage() {
       setGoogleLoading(true);
       setError('');
       
+      const callbackUrl = safeRedirect
+        ? `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(safeRedirect)}`
+        : `${window.location.origin}/auth/callback`;
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: callbackUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -129,10 +138,13 @@ export default function SignInPage() {
       setLinkedInLoading(true);
       setError('');
       
+      const callbackUrl = safeRedirect
+        ? `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(safeRedirect)}`
+        : `${window.location.origin}/auth/callback`;
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: callbackUrl,
           scopes: 'openid profile email',
         },
       });
