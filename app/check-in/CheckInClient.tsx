@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, Loader2, LogIn } from 'lucide-react';
+import { useAuth } from '@/lib/supabase/auth-context';
 
 interface CheckInClientProps {
   eventId: string;
@@ -11,12 +12,12 @@ interface CheckInClientProps {
 
 export function CheckInClient({ eventId }: CheckInClientProps) {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [eventTitle, setEventTitle] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkingIn, setCheckingIn] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [unauthorized, setUnauthorized] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -24,7 +25,6 @@ export function CheckInClient({ eventId }: CheckInClientProps) {
       try {
         const res = await fetch(`/api/events/${eventId}`);
         if (!res.ok) {
-          if (res.status === 401) setUnauthorized(true);
           if (!cancelled) setEventTitle(null);
           return;
         }
@@ -42,12 +42,10 @@ export function CheckInClient({ eventId }: CheckInClientProps) {
     };
   }, [eventId]);
 
-  useEffect(() => {
-    if (unauthorized) {
-      const returnTo = `/check-in?event=${encodeURIComponent(eventId)}`;
-      router.replace(`/sign-in?redirect=${encodeURIComponent(returnTo)}`);
-    }
-  }, [unauthorized, eventId, router]);
+  const goToSignIn = () => {
+    const returnTo = `/check-in?event=${encodeURIComponent(eventId)}`;
+    router.replace(`/sign-in?redirect=${encodeURIComponent(returnTo)}`);
+  };
 
   const handleCheckIn = async () => {
     setError(null);
@@ -60,7 +58,7 @@ export function CheckInClient({ eventId }: CheckInClientProps) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         if (res.status === 401) {
-          setUnauthorized(true);
+          goToSignIn();
           return;
         }
         setError(data.error || 'Check-in failed');
@@ -73,14 +71,6 @@ export function CheckInClient({ eventId }: CheckInClientProps) {
       setCheckingIn(false);
     }
   };
-
-  if (unauthorized) {
-    return (
-      <div className="min-h-[40vh] flex items-center justify-center p-4">
-        <p className="text-gray-500">Redirecting to sign in...</p>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
@@ -106,6 +96,19 @@ export function CheckInClient({ eventId }: CheckInClientProps) {
           <CheckCircle className="h-14 w-14 text-green-600" />
           <p className="text-lg font-medium text-gray-900">You&apos;re checked in!</p>
           <p className="text-sm text-gray-500">Thanks for attending.</p>
+        </div>
+      ) : !authLoading && !user ? (
+        <div className="flex flex-col items-center gap-4 w-full">
+          <p className="text-sm text-gray-600 text-center">
+            Sign in to check in for this event.
+          </p>
+          <Button
+            onClick={goToSignIn}
+            className="w-full h-12 text-base bg-brand-primary hover:bg-brand-primary-hover"
+          >
+            <LogIn className="h-5 w-5 mr-2" />
+            Sign in to check in
+          </Button>
         </div>
       ) : (
         <>
