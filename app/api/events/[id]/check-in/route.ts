@@ -8,9 +8,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-/** Allow check-in from 15 minutes before start until end_time */
-const CHECK_IN_WINDOW_MINUTES_BEFORE = 15;
-
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -77,25 +74,7 @@ export async function POST(
       );
     }
 
-    const now = new Date();
-    const start = new Date(event.start_time);
-    const end = new Date(event.end_time);
-    const windowStart = new Date(start.getTime() - CHECK_IN_WINDOW_MINUTES_BEFORE * 60 * 1000);
-
-    if (now < windowStart) {
-      return NextResponse.json(
-        { error: `Check-in opens 15 minutes before the event (${windowStart.toISOString()})` },
-        { status: 400 }
-      );
-    }
-    if (now > end) {
-      return NextResponse.json(
-        { error: 'Check-in has ended for this event' },
-        { status: 400 }
-      );
-    }
-
-    const checkedInAt = now.toISOString();
+    const checkedInAt = new Date().toISOString();
 
     const { data: existing } = await serviceSupabase
       .from('event_attendance')
