@@ -1,27 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Filter, X, ChevronRight, Settings, Search, Users, Building2, Globe } from "lucide-react";
+import { Filter, X, ChevronRight, Search, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlumniFilterBar } from "./AlumniFilterBar";
 import { AlumniTableView } from "./AlumniTableView";
 import { EnhancedAlumniCard } from "./EnhancedAlumniCard";
 import { AlumniToolbar } from "./AlumniToolbar";
-import { AlumniDetailSheet } from "./AlumniDetailSheet";
 import { Alumni } from "@/lib/alumniConstants";
-import { exportAlumniToCSV, exportSelectedAlumniToCSV } from "@/lib/csvExport";
+import { exportAlumniToCSV } from "@/lib/csvExport";
 import { AlumniProfileModal } from "./AlumniProfileModal";
 import { AlumniPagination } from "./AlumniPagination";
-import { AlumniSubHeader } from "./AlumniSubHeader";
 import { AlumniCardSkeletonGrid } from "./AlumniCardSkeleton";
-import { ViewToggle } from "@/components/shared/ViewToggle";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select, SelectItem } from "@/components/ui/select";
-import { graduationYears, industries, chapters, locations } from "@/lib/alumniConstants";
-import { US_STATES, getStateNameByCode } from "@/lib/usStates";
-import { useProfile } from "@/lib/contexts/ProfileContext";
 
 interface FilterState {
   searchTerm: string;
@@ -79,7 +70,6 @@ export function AlumniPipelineLayout({
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedAlumniDetail, setSelectedAlumniDetail] = useState<Alumni | null>(null);
-  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Set mobile-specific initial state
@@ -89,32 +79,6 @@ export function AlumniPipelineLayout({
       setSidebarCollapsed(true); // Start collapsed on mobile
     }
   }, []);
-
-  const handleBulkAction = (action: string) => {
-    switch (action) {
-      case 'export':
-        if (selectedAlumni.length > 0) {
-          const timestamp = new Date().toISOString().split('T')[0];
-          exportSelectedAlumniToCSV(alumni, selectedAlumni, `trailblaize-alumni-${timestamp}.csv`);
-        }
-        break;
-      case 'email':
-        // TODO: Implement email functionality
-        break;
-      case 'message':
-        // TODO: Implement message functionality
-        break;
-      case 'tag':
-        // TODO: Implement tag functionality
-        break;
-      default:
-        break;
-    }
-  };
-
-  const handleSaveSearch = () => {
-    // TODO: Implement save search functionality
-  };
 
   const handleExport = () => {
     const timestamp = new Date().toISOString().split('T')[0];
@@ -135,9 +99,6 @@ export function AlumniPipelineLayout({
     setIsModalOpen(false);
     setSelectedAlumniDetail(null);
   };
-
-  // Calculate stats
-  const totalAlumni = alumni.length;
 
   // Show all alumni without pagination
   const displayAlumni = alumni;
@@ -269,13 +230,9 @@ export function AlumniPipelineLayout({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Toolbar - Hidden on mobile */}
-        <div className="hidden md:block relative z-20">
+        {/* Toolbar */}
+        <div className="relative z-20">
           <AlumniToolbar
-            selectedCount={selectedAlumni.length}
-            totalCount={totalAlumni}
-            onBulkAction={handleBulkAction}
-            onSaveSearch={handleSaveSearch}
             onExport={handleExport}
           />
         </div>
