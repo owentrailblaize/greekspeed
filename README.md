@@ -1,3 +1,4 @@
+<!-- cursor was here -->
 # Trailblaize - Alum Networking Platform
 A comprehensive platform for Greek life chapter management, alumni networking, and dues administration built with Next.js and Supabase.
 
