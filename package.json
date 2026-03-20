@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "typecheck:watch": "tsc --noEmit --watch",
     "migrate:usernames": "tsx scripts/migrate-usernames.ts",
-    "test:notifications": "tsx scripts/test-notifications.ts"
+    "test:notifications": "tsx scripts/test-notifications.ts",
+    "test:crowded": "tsx scripts/test-crowded-api.ts"
   },
   "dependencies": {
     "@nivo/core": "^0.99.0",
