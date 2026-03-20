@@ -12,7 +12,7 @@ interface CheckInClientProps {
 
 export function CheckInClient({ eventId }: CheckInClientProps) {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, getAuthHeaders, loading: authLoading } = useAuth();
   const [eventTitle, setEventTitle] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkingIn, setCheckingIn] = useState(false);
@@ -51,9 +51,15 @@ export function CheckInClient({ eventId }: CheckInClientProps) {
     setError(null);
     setCheckingIn(true);
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      const authHeaders = getAuthHeaders();
+      if (authHeaders.Authorization) {
+        headers.Authorization = authHeaders.Authorization;
+      }
       const res = await fetch(`/api/events/${eventId}/check-in`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'include',
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {

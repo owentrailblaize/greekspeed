@@ -8,6 +8,29 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
+async function authenticateRequest(request: NextRequest) {
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.replace('Bearer ', '');
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (!error && user) return { user };
+  }
+  const cookieStore = await cookies();
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      get(name: string) {
+        return cookieStore.get(name)?.value;
+      },
+      set() {},
+      remove() {},
+    },
+  });
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) return null;
+  return { user };
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -15,23 +38,15 @@ export async function POST(
   try {
     const { id: eventId } = await params;
 
-    const cookieStore = await cookies();
-    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set() {},
-        remove() {},
-      },
-    });
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    const auth = await authenticateRequest(request);
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const { user } = auth;
 
-    const { data: profile, error: profileError } = await supabase
+    const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { data: profile, error: profileError } = await serviceSupabase
       .from('profiles')
       .select('id, chapter_id, member_status')
       .eq('id', user.id)
@@ -47,8 +62,6 @@ export async function POST(
         { status: 403 }
       );
     }
-
-    const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { data: event, error: eventError } = await serviceSupabase
       .from('events')

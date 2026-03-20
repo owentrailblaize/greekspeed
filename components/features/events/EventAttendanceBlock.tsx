@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
 import { Users, RefreshCw } from 'lucide-react';
+import { useAuth } from '@/lib/supabase/auth-context';
 import type { AttendanceWithProfile } from '@/types/events';
 
 interface EventAttendanceBlockProps {
@@ -18,6 +19,7 @@ export function EventAttendanceBlock({
   eventTitle,
   compact = false,
 }: EventAttendanceBlockProps) {
+  const { getAuthHeaders } = useAuth();
   const [checkInUrl, setCheckInUrl] = useState<string | null>(null);
   const [attendance, setAttendance] = useState<AttendanceWithProfile[]>([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
@@ -33,7 +35,15 @@ export function EventAttendanceBlock({
   const fetchAttendance = async () => {
     setLoadingAttendance(true);
     try {
-      const res = await fetch(`/api/events/${eventId}/attendance`);
+      const headers: Record<string, string> = {};
+      const authHeaders = getAuthHeaders();
+      if (authHeaders.Authorization) {
+        headers.Authorization = authHeaders.Authorization;
+      }
+      const res = await fetch(`/api/events/${eventId}/attendance`, {
+        headers,
+        credentials: 'include',
+      });
       if (res.ok) {
         const data = await res.json();
         setAttendance(data.data?.attendance ?? []);
