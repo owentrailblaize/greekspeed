@@ -78,6 +78,7 @@ flowchart TD
 For Cursor to implement effectively:
 **→ Use the [Linear Ticket Template](./LINEAR_TICKET_TEMPLATE.md) when creating issues.**
 
+
 ---
 
 ## Optional Per-Issue Overrides
