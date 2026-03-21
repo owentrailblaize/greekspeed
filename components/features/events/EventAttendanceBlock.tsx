@@ -9,6 +9,7 @@ import type { AttendanceWithProfile } from '@/types/events';
 
 interface EventAttendanceBlockProps {
   eventId: string;
+  chapterId: string;
   eventTitle?: string;
   /** When true, use a more compact layout (e.g. inside EventDetailModal) */
   compact?: boolean;
@@ -16,21 +17,52 @@ interface EventAttendanceBlockProps {
 
 export function EventAttendanceBlock({
   eventId,
+  chapterId,
   eventTitle,
   compact = false,
 }: EventAttendanceBlockProps) {
   const { getAuthHeaders } = useAuth();
-  const [checkInUrl, setCheckInUrl] = useState<string | null>(null);
+  const [qrValue, setQrValue] = useState<string | null>(null);
+  const [qrLoading, setQrLoading] = useState(true);
   const [attendance, setAttendance] = useState<AttendanceWithProfile[]>([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
 
   useEffect(() => {
-    setCheckInUrl(
-      typeof window !== 'undefined'
-        ? `${window.location.origin}/check-in?event=${encodeURIComponent(eventId)}`
-        : null
-    );
-  }, [eventId]);
+    if (!chapterId) {
+      setQrValue(null);
+      setQrLoading(false);
+      return;
+    }
+    let cancelled = false;
+    async function fetchQr() {
+      setQrLoading(true);
+      try {
+        const headers: Record<string, string> = {};
+        const authHeaders = getAuthHeaders();
+        if (authHeaders.Authorization) {
+          headers.Authorization = authHeaders.Authorization;
+        }
+        const res = await fetch(`/api/chapters/${chapterId}/check-in-qr`, {
+          headers,
+          credentials: 'include',
+        });
+        if (!cancelled && res.ok) {
+          const data = await res.json();
+          setQrValue(data.data?.qr_value ?? null);
+        } else if (!cancelled) {
+          setQrValue(null);
+        }
+      } catch {
+        if (!cancelled) setQrValue(null);
+      } finally {
+        if (!cancelled) setQrLoading(false);
+      }
+    }
+    fetchQr();
+    return () => {
+      cancelled = true;
+    };
+  }, [chapterId, getAuthHeaders]);
 
   const fetchAttendance = async () => {
     setLoadingAttendance(true);
@@ -73,7 +105,7 @@ export function EventAttendanceBlock({
     }
   };
 
-  if (!checkInUrl) {
+  if (qrLoading || !qrValue) {
     return (
       <div className="flex items-center justify-center p-4">
         <div className="h-32 w-32 bg-gray-100 rounded-lg animate-pulse" />
@@ -85,7 +117,7 @@ export function EventAttendanceBlock({
     <div className={compact ? 'space-y-3' : 'space-y-4'}>
       <div className={compact ? 'flex items-start gap-4' : 'flex flex-col items-center'}>
         <div className="flex-shrink-0 bg-white p-2 rounded-lg border border-gray-200">
-          <QRCodeSVG value={checkInUrl} size={compact ? 120 : 160} level="M" />
+          <QRCodeSVG value={qrValue} size={compact ? 120 : 160} level="M" />
         </div>
         <div className={compact ? 'flex-1 min-w-0' : 'text-center mt-2'}>
           <p className="text-sm text-gray-600">

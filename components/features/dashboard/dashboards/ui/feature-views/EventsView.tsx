@@ -547,6 +547,7 @@ export function EventsView() {
           {attendanceEvent && (
             <EventAttendanceBlock
               eventId={attendanceEvent.id}
+              chapterId={attendanceEvent.chapter_id}
               eventTitle={attendanceEvent.title}
             />
           )}

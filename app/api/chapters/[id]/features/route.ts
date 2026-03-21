@@ -89,12 +89,13 @@ export async function GET(
     if (profile.role === 'governance') {
       managedChapterIds = await getManagedChapterIds(supabase, user.id);
     }
-    const canAccess =
+    const isChapterMember = profile.chapter_id === id;
+    const canManage = 
       profile.role === 'admin' ||
-      profile.is_developer ||
+      profile.is_developer || 
       canManageChapterForContext(profile, id, managedChapterIds);
 
-    if (!canAccess) {
+    if (!canManage && !canManage) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
     
