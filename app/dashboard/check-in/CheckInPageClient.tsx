@@ -22,7 +22,7 @@ export function CheckInPageClient({ eventId }: CheckInPageClientProps) {
 
   return (
     <>
-      <div className="p-4 sm:p-6 pb-24 sm:pb-6 max-w-2xl mx-auto min-h-[calc(100dvh-8rem)] flex flex-col justify-center">
+      <div className="p-4 sm:p-6 pb-24 sm:pb-6 max-w-2xl mx-auto flex-1 flex flex-col min-h-0">
         <button
           onClick={handleBack}
           className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 mb-4"
@@ -30,7 +30,9 @@ export function CheckInPageClient({ eventId }: CheckInPageClientProps) {
           <ArrowLeft className="h-4 w-4" />
           Back to events
         </button>
-        <CheckInClient eventId={eventId} />
+        <div className="flex-1 flex flex-col justify-center">
+          <CheckInClient eventId={eventId} />
+        </div>
       </div>
       <MobileBottomNavigation />
     </>
