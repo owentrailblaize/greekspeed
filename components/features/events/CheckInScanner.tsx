@@ -46,7 +46,10 @@ export function CheckInScanner({
     const scanner = new Html5Qrcode(containerId);
     scannerRef.current = scanner;
 
-    scanner
+    // Delay start so container has layout (fixes iOS Safari black screen)
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        scanner
       .start(
         { facingMode: 'environment' },
         {
@@ -88,8 +91,11 @@ export function CheckInScanner({
         setErrorMessage(msg);
         onErrorRef.current?.(msg);
       });
+      });
+    });
 
     return () => {
+      cancelAnimationFrame(raf);
       if (scannerRef.current?.isScanning) {
         scannerRef.current.stop().catch(() => {});
       }
@@ -117,9 +123,9 @@ export function CheckInScanner({
         </Button>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center p-4">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 min-h-0">
         {status === 'starting' && (
-          <p className="text-white/80 mb-4">Starting camera...</p>
+          <p className="text-white/80 mb-4 flex-shrink-0">Starting camera...</p>
         )}
         {status === 'error' && (
           <div className="text-center max-w-sm">
@@ -132,10 +138,12 @@ export function CheckInScanner({
             </a>
           </div>
         )}
-        <div
-          id={containerId}
-          className={status === 'scanning' ? 'w-full max-w-sm' : 'hidden'}
-        />
+        {(status === 'starting' || status === 'scanning') && (
+          <div
+            id={containerId}
+            className="w-full max-w-sm min-h-[300px] max-h-[400px] flex-1 min-w-0 check-in-scanner-container"
+          />
+        )}
       </div>
     </div>
   );

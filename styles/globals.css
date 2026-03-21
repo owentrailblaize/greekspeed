@@ -32,6 +32,14 @@ textarea {
   font-size: 16px !important;
 }
 
+/* Check-in scanner: iOS Safari needs video to have explicit dimensions */
+[id^="check-in-scanner-"] video,
+.check-in-scanner-container video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
 /* Mobile-specific adjustments */
 @media (max-width: 768px) {
   /* Ensure form controls maintain 16px on mobile */
