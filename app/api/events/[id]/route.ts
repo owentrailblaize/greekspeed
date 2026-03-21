@@ -53,8 +53,8 @@ export async function PATCH(
       }
     }
 
-    // Filter out fields that shouldn't be updated directly (like send_sms which is not a DB column)
-    const { send_sms, created_by, created_at, ...allowedUpdateData } = updateData;
+    // Filter out fields that shouldn't be updated directly (send_sms, send_sms_to_alumni are not DB columns)
+    const { send_sms, send_sms_to_alumni, created_by, created_at, ...allowedUpdateData } = updateData;
 
     // Update the event
     const { data: updatedEvent, error } = await supabase
@@ -90,24 +90,27 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    // Delete the event (this will cascade to RSVPs)
+    // Archive (soft delete) instead of hard delete - preserves budget, attendance, RSVP history
     const { error } = await supabase
       .from('events')
-      .delete()
+      .update({
+        archived_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', id);
 
     if (error) {
-      console.error('Error deleting event:', error);
-      return NextResponse.json({ error: 'Failed to delete event' }, { status: 500 });
+      console.error('Error archiving event:', error);
+      return NextResponse.json({ error: 'Failed to archive event' }, { status: 500 });
     }
 
     return NextResponse.json({ 
       success: true,
-      message: 'Event deleted successfully' 
+      message: 'Event archived successfully' 
     });
 
   } catch (error) {
-    console.error('Error in delete event API:', error);
+    console.error('Error in archive event API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

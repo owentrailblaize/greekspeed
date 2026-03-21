@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
           status
         )
       `)
-      .eq('chapter_id', chapterId);
+      .eq('chapter_id', chapterId)
+      .is('archived_at', null);
 
     if (scope === 'upcoming') {
       const now = new Date().toISOString();

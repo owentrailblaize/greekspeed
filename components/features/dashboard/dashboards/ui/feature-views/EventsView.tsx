@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Calendar, Edit, Trash2, MapPin, Clock, Users, DollarSign, TrendingUp, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, QrCode } from 'lucide-react';
+import { Plus, Calendar, Edit, Archive, MapPin, Clock, Users, DollarSign, TrendingUp, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, QrCode } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { useEvents } from '@/lib/hooks/useEvents';
@@ -119,8 +119,13 @@ export function EventsView() {
   };
 
   const handleDeleteEvent = async (eventId: string) => {
-    if (confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
-      await deleteEvent(eventId);
+    if (confirm('Are you sure you want to archive this event? It will be removed from the main list but preserved for records.')) {
+      const success = await deleteEvent(eventId);
+      if (success) {
+        toast.success('Event archived successfully');
+      } else {
+        toast.error('Failed to archive event. Please try again.');
+      }
     }
   };
 
@@ -518,9 +523,10 @@ export function EventsView() {
                       size="sm" 
                       variant="outline"
                       onClick={() => handleDeleteEvent(event.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                      title="Archive event"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Archive className="h-4 w-4" />
                     </Button>
                   </div>
                       </TableCell>

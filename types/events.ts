@@ -16,6 +16,8 @@ export interface Event {
   updated_by: string;
   created_at: string;
   updated_at: string;
+  /** When set, event is archived (hidden from main views); preserves budget, attendance, RSVP history */
+  archived_at?: string | null;
   attendee_count?: number;
   maybe_count?: number;
   not_attending_count?: number;
