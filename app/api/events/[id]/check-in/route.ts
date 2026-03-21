@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
-import { CheckInResponse } from '@/types/events';
+import {
+  parseChapterCheckInQrPayload,
+  verifyChapterCheckInPayload,
+} from '@/lib/checkInQrToken';
+import type { CheckInResponse, EventCheckInRequestBody } from '@/types/events';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -85,6 +89,56 @@ export async function POST(
         { error: 'You are not a member of this event\'s chapter' },
         { status: 403 }
       );
+    }
+
+    let qrPayloadRaw: string | null = null;
+    try {
+      const body = (await request.json()) as EventCheckInRequestBody;
+      if (body && typeof body.qr_payload === 'string') {
+        const trimmed = body.qr_payload.trim();
+        if (trimmed) qrPayloadRaw = trimmed;
+      }
+    } catch {
+      // No/invalid JSON body — legacy POST (e.g. /check-in page)
+    }
+
+    if (qrPayloadRaw) {
+      const secret = process.env.CHECK_IN_QR_SECRET;
+      if (!secret || secret.length < 16) {
+        return NextResponse.json(
+          { error: 'QR check-in is not available' },
+          { status: 503 }
+        );
+      }
+      const parsed = parseChapterCheckInQrPayload(qrPayloadRaw);
+      if (!parsed) {
+        return NextResponse.json(
+          { error: 'Invalid check-in code' },
+          { status: 400 }
+        );
+      }
+      const maxAgeRaw = process.env.CHECK_IN_QR_MAX_AGE_SEC;
+      const maxAgeSec =
+        maxAgeRaw != null && maxAgeRaw !== ''
+          ? Number.parseInt(maxAgeRaw, 10)
+          : undefined;
+      const maxAge =
+        maxAgeSec != null && Number.isFinite(maxAgeSec) && maxAgeSec > 0
+          ? maxAgeSec
+          : undefined;
+
+      if (!verifyChapterCheckInPayload(parsed, secret, maxAge)) {
+        return NextResponse.json(
+          { error: 'Invalid or expired check-in code' },
+          { status: 400 }
+        );
+      }
+      if (parsed.c !== event.chapter_id) {
+        return NextResponse.json(
+          { error: 'This check-in code is not for this event\'s chapter' },
+          { status: 403 }
+        );
+      }
     }
 
     const checkedInAt = new Date().toISOString();

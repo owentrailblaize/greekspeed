@@ -90,6 +90,12 @@ export interface EventAttendance {
   checked_in_at: string;
 }
 
+/** Optional body for POST /api/events/[id]/check-in (in-app QR scan flow) */
+export interface EventCheckInRequestBody {
+  /** Raw string read from chapter check-in QR (JSON with c, i, s). */
+  qr_payload?: string;
+}
+
 /** Response from POST /api/events/[id]/check-in */
 export interface CheckInResponse {
   data: {
@@ -112,6 +118,18 @@ export interface AttendanceWithProfile {
 /** Response from GET /api/events/[id]/attendance */
 export interface AttendanceListResponse {
   data: { attendance: AttendanceWithProfile[] };
+}
+
+/**
+ * Response from GET /api/chapters/[id]/check-in-qr
+ * `qr_value` is the exact string to pass to QRCodeSVG (signed chapter payload).
+ */
+export interface ChapterCheckInQrResponse {
+  data: {
+    qr_value: string;
+    chapter_id: string;
+    issued_at: number;
+  };
 }
 
 /** Single row for GET /api/attendance/me (member's own history) */
