@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Button } from '@/components/ui/button';
-import { Users, RefreshCw } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { supabase } from '@/lib/supabase/client';
 import type { AttendanceWithProfile } from '@/types/events';
 
 interface EventAttendanceBlockProps {
@@ -64,7 +64,7 @@ export function EventAttendanceBlock({
     };
   }, [chapterId, getAuthHeaders]);
 
-  const fetchAttendance = async () => {
+  const fetchAttendance = useCallback(async () => {
     setLoadingAttendance(true);
     try {
       const headers: Record<string, string> = {};
@@ -87,11 +87,35 @@ export function EventAttendanceBlock({
     } finally {
       setLoadingAttendance(false);
     }
-  };
+  }, [eventId, getAuthHeaders]);
 
   useEffect(() => {
     if (eventId) void fetchAttendance();
-  }, [eventId]);
+  }, [eventId, fetchAttendance]);
+
+  useEffect(() => {
+    if (!eventId) return;
+
+    const channel = supabase
+      .channel(`event-attendance:${eventId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'event_attendance',
+          filter: `event_id=eq.${eventId}`,
+        },
+        () => {
+          fetchAttendance();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [eventId, fetchAttendance]);
 
   const formatTime = (iso: string) => {
     try {
@@ -132,17 +156,6 @@ export function EventAttendanceBlock({
             <Users className="h-4 w-4 text-brand-primary" />
             Checked in ({attendance.length})
           </h4>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={fetchAttendance}
-            disabled={loadingAttendance}
-            className="h-8 px-2"
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${loadingAttendance ? 'animate-spin' : ''}`}
-            />
-          </Button>
         </div>
         {loadingAttendance && attendance.length === 0 ? (
           <div className="py-4 flex justify-center">
