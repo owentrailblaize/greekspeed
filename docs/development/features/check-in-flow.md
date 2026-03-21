@@ -57,4 +57,4 @@ flowchart TD
 
 ## Fallback: Check in on web
 
-If the camera doesn’t work, members can use the **Having trouble? Check in on web** link. They’ll go to a simple page where they tap **Check in** to record attendance (no scan needed).
+If the camera doesn’t work, members can use the **Having trouble? Check in on web** link. They’ll go to `/dashboard/check-in?event={id}` where they can tap **Check in** to record attendance (no scan needed). The page shows the standard dashboard header and mobile bottom navigation, with a **Back to events** link to return.
