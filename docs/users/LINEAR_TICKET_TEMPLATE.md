@@ -79,13 +79,14 @@ Before assigning to Cursor, confirm:
 
 <!-- Optional fields below -->
 **Steps to reproduce:**
-1. Navigate to `/dashboard/attendance` on a mobile device
-2. Tap "Scan QR code"
-3. Observe camera does not auto-activate
+1. Open the app on a mobile device and go to Calendar or Events
+2. Tap an event to open the detail modal
+3. Tap "Check in" and observe camera behavior
 
 **Files relating:** 
+- `components/features/events/EventDetailModal.tsx`
+- `components/features/events/CheckInScanner.tsx`
 - `components/features/events/EventAttendanceBlock.tsx`
-- `app/dashboard/attendance/page.tsx`
 
 **Screenshots:**  
 [Attach image of current scan screen and desired improved screen below]

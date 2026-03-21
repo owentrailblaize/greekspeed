@@ -450,14 +450,6 @@ export function EventDetailModal({
             {isMobile ? 'No' : "Can't Go"}
           </Button>
         </div>
-        <p className="text-center mt-3">
-          <Link
-            href="/dashboard/attendance"
-            className="text-xs text-brand-primary hover:underline"
-          >
-            View my attendance
-          </Link>
-        </p>
       </div>
     </>
   );

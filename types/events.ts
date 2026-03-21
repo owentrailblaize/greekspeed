@@ -131,16 +131,3 @@ export interface ChapterCheckInQrResponse {
     issued_at: number;
   };
 }
-
-/** Single row for GET /api/attendance/me (member's own history) */
-export interface MyAttendanceEntry {
-  event_id: string;
-  event_title: string;
-  event_start_time: string;
-  checked_in_at: string;
-}
-
-/** Response from GET /api/attendance/me */
-export interface MyAttendanceListResponse {
-  data: { attendance: MyAttendanceEntry[] };
-}
