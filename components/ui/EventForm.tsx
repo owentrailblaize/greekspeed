@@ -208,7 +208,7 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
       isOpen === undefined 
         ? "max-w-2xl max-h-[90vh]" // Card-only mode
         : isMobile
-          ? "rounded-none shadow-none border-0 h-full min-h-0 min-w-0 bg-transparent" // Transparent background, let drawer handle it (like VendorForm)
+          ? "rounded-none shadow-none border-0 h-full min-h-0 bg-transparent" // Transparent background, let drawer handle it (like VendorForm)
           : "max-w-2xl max-h-[90vh] rounded-xl"
     )}>
       {/* Fixed Header */}
@@ -248,7 +248,7 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
           "p-4 sm:p-6",
           isMobile ? "p-4" : "pt-0"
         )}>
-          <form onSubmit={handleSubmit} id="event-form" className={cn("space-y-4", isMobile && "min-w-0 max-w-full overflow-x-hidden")}>
+          <form onSubmit={handleSubmit} id="event-form" className="space-y-4">
             {/* Title */}
             <div className="space-y-3 sm:space-y-2">
               <Label htmlFor="title" className="flex items-center space-x-2 text-base sm:text-sm">
