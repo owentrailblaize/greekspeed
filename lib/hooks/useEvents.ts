@@ -18,7 +18,9 @@ export function useEvents({ chapterId, scope = 'all' }: UseEventsOptions) {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=${scope}`);
+      const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=${scope}`, {
+        cache: 'no-store',
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch events');
       }

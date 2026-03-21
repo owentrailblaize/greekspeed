@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Calendar, Edit, Trash2, MapPin, Clock, Users, DollarSign, TrendingUp, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Calendar, Edit, Archive, MapPin, Clock, Users, DollarSign, TrendingUp, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, QrCode } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { useEvents } from '@/lib/hooks/useEvents';
@@ -16,6 +16,13 @@ import { CompactCalendarCard } from '../CompactCalendarCard';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-toastify';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { EventAttendanceBlock } from '@/components/features/events/EventAttendanceBlock';
 
 export function EventsView() {
   const { profile } = useProfile();
@@ -26,6 +33,7 @@ export function EventsView() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [attendanceEvent, setAttendanceEvent] = useState<Event | null>(null);
   const eventsPerPage = 6;
   
   const { 
@@ -111,8 +119,13 @@ export function EventsView() {
   };
 
   const handleDeleteEvent = async (eventId: string) => {
-    if (confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
-      await deleteEvent(eventId);
+    if (confirm('Are you sure you want to archive this event? It will be removed from the main list but preserved for records.')) {
+      const success = await deleteEvent(eventId);
+      if (success) {
+        toast.success('Event archived successfully');
+      } else {
+        toast.error('Failed to archive event. Please try again.');
+      }
     }
   };
 
@@ -196,10 +209,17 @@ export function EventsView() {
     }
   };
 
-  // Reset to page 1 when events change
+  // Only adjust page when current page no longer exists (e.g. archived last item on last page)
   useEffect(() => {
-    setCurrentPage(1);
-  }, [events.length]);
+    setCurrentPage(prev => {
+      const newTotalPages = Math.ceil(events.length / eventsPerPage);
+      if (newTotalPages === 0) return 1;
+      if (prev > newTotalPages) {
+        return newTotalPages; // Clamp to last valid page
+      }
+      return prev; // Stay on current page
+    });
+  }, [events.length, eventsPerPage]);
 
   return (
     <div className="space-y-6">
@@ -486,6 +506,17 @@ export function EventsView() {
                       </TableCell>
                       <TableCell className="text-right whitespace-nowrap">
                         <div className="flex justify-end space-x-2">
+                    {event.status === 'published' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setAttendanceEvent(event)}
+                        className="flex-shrink-0"
+                      >
+                        <QrCode className="h-4 w-4 mr-1" />
+                        Attendance
+                      </Button>
+                    )}
                     <Button 
                       size="sm" 
                       variant="outline"
@@ -499,9 +530,10 @@ export function EventsView() {
                       size="sm" 
                       variant="outline"
                       onClick={() => handleDeleteEvent(event.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                      title="Archive event"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Archive className="h-4 w-4" />
                     </Button>
                   </div>
                       </TableCell>
@@ -513,6 +545,27 @@ export function EventsView() {
           )}
               </CardContent>
             </Card>
+
+      {/* Attendance modal (QR + list) */}
+      <Dialog
+        open={!!attendanceEvent}
+        onOpenChange={(open) => !open && setAttendanceEvent(null)}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {attendanceEvent ? `${attendanceEvent.title} — Check-in` : 'Check-in'}
+            </DialogTitle>
+          </DialogHeader>
+          {attendanceEvent && (
+            <EventAttendanceBlock
+              eventId={attendanceEvent.id}
+              chapterId={attendanceEvent.chapter_id}
+              eventTitle={attendanceEvent.title}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Event Form Modal */}
       {showEventForm && typeof window !== 'undefined' && createPortal(

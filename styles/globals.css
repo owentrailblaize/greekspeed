@@ -32,6 +32,14 @@ textarea {
   font-size: 16px !important;
 }
 
+/* Check-in scanner: iOS Safari needs video to have explicit dimensions */
+[id^="check-in-scanner-"] video,
+.check-in-scanner-container video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
 /* Mobile-specific adjustments */
 @media (max-width: 768px) {
   /* Ensure form controls maintain 16px on mobile */
@@ -42,6 +50,16 @@ textarea {
   /* Override any Tailwind text-sm classes on form controls */
   .text-sm {
     font-size: 16px !important;
+  }
+
+  /* Fix Safari/iOS temporal input width overflow (WebKit #301648) */
+  input[type="datetime-local"],
+  input[type="date"],
+  input[type="time"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
   }
 }
 

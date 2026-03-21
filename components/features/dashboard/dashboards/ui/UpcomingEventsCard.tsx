@@ -56,9 +56,14 @@ export function UpcomingEventsCard({
   // ---- Filter parent-provided events to "upcoming" on the client ----
   const upcomingFromProps = useMemo(() => {
     if (!propEvents) return undefined;
-    const now = new Date().toISOString();
+    const now = new Date().toISOString()
     return propEvents
-      .filter(e => e.status === 'published' && e.start_time >= now)
+      .filter((e) => {
+        if (e.status !== 'published') return false;
+        const start = e.start_time;
+        const end = e.end_time ?? start;
+        return start >= now || (start <= now && end >= now);
+      })
       .sort((a, b) => a.start_time.localeCompare(b.start_time));
   }, [propEvents]);
 

@@ -1,11 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Drawer } from 'vaul';
-import { X, MapPin, Clock, Users, HelpCircle, UserX, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, MapPin, Clock, Users, HelpCircle, UserX, ChevronDown, ChevronUp, QrCode, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Event, RSVPStatus } from '@/types/events';
 import { EventActionsMenu } from './EventActionsMenu';
+import { EventAttendanceBlock } from './EventAttendanceBlock';
+import { CheckInScanner } from './CheckInScanner';
+import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useAuth } from '@/lib/supabase/auth-context';
+import { EXECUTIVE_ROLES } from '@/lib/permissions';
 
 interface Attendee {
   user_id: string;
@@ -120,9 +126,26 @@ export function EventDetailModal({
   currentUserRsvp,
   onRsvpChange,
 }: EventDetailModalProps) {
+  const { profile } = useProfile();
+  const { getAuthHeaders } = useAuth();
   const [attendeeData, setAttendeeData] = useState<AttendeeData | null>(null);
   const [loadingAttendees, setLoadingAttendees] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+  const [checkInSuccess, setCheckInSuccess] = useState(false);
+  const [checkInError, setCheckInError] = useState<string | null>(null);
+  const [checkingIn, setCheckingIn] = useState(false);
+
+  const now = Date.now();
+  const start = new Date(event.start_time).getTime();
+  const end = new Date(event.end_time).getTime();
+  const isOccurring = event.status === 'published' && now >= start && now <= end;
+
+  const isExec =
+    profile?.role === 'admin' ||
+    (profile?.chapter_role != null &&
+      EXECUTIVE_ROLES.includes(profile.chapter_role as (typeof EXECUTIVE_ROLES)[number]));
+  const showAttendance = isExec && event.status === 'published';
 
   // Detect mobile
   useEffect(() => {
@@ -180,6 +203,34 @@ export function EventDetailModal({
 
   const handleRsvp = (status: RSVPStatus) => {
     onRsvpChange(event.id, status);
+  };
+
+  const handleScanSuccess = async (qrPayload: string) => {
+    setShowScanner(false);
+    setCheckInError(null);
+    setCheckingIn(true);
+    try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      };
+      const res = await fetch(`/api/events/${event.id}/check-in`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({ qr_payload: qrPayload }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setCheckInSuccess(true);
+      } else {
+        setCheckInError(data.error || 'Check-in failed');
+      }
+    } catch {
+      setCheckInError('Something went wrong. Please try again.');
+    } finally {
+      setCheckingIn(false);
+    }
   };
 
   const getRsvpButtonClass = (status: RSVPStatus) => {
@@ -300,7 +351,75 @@ export function EventDetailModal({
             </div>
           ) : null}
         </div>
+
+        {/* Member check-in (mobile only, when event is occurring) */}
+        {isMobile && isOccurring && (
+          <div className="pt-4 border-t border-gray-200">
+            {checkInSuccess ? (
+              <div className="flex flex-col items-center gap-2 py-4">
+                <CheckCircle className="h-12 w-12 text-green-600" />
+                <p className="font-medium text-gray-900">You&apos;re checked in!</p>
+                <p className="text-sm text-gray-500">Thanks for attending.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Button
+                  onClick={() => {
+                    setCheckInError(null);
+                    setShowScanner(true);
+                  }}
+                  disabled={checkingIn}
+                  className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white rounded-full"
+                >
+                  {checkingIn ? (
+                    <>Checking in...</>
+                  ) : (
+                    <>
+                      <QrCode className="h-4 w-4 mr-2" />
+                      Check in
+                    </>
+                  )}
+                </Button>
+                {checkInError && (
+                  <p className="text-sm text-red-600 text-center">{checkInError}</p>
+                )}
+                <p className="text-xs text-gray-500 text-center">
+                  <Link
+                    href={`/dashboard/check-in?event=${encodeURIComponent(event.id)}`}
+                    className="text-brand-primary hover:underline"
+                  >
+                    Having trouble? Check in on web
+                  </Link>
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Check-in / Attendance (exec only, published events) */}
+        {showAttendance && (
+          <div className="pt-4 border-t border-gray-200">
+            <h3 className="text-sm font-medium text-gray-900 mb-3">Check-in</h3>
+            <EventAttendanceBlock
+              eventId={event.id}
+              chapterId={event.chapter_id}
+              eventTitle={event.title}
+              compact
+            />
+          </div>
+        )}
       </div>
+
+      {/* Scanner overlay */}
+      {showScanner && (
+        <CheckInScanner
+          eventId={event.id}
+          chapterId={event.chapter_id}
+          onSuccess={handleScanSuccess}
+          onCancel={() => setShowScanner(false)}
+          onError={setCheckInError}
+        />
+      )}
 
       {/* Footer - RSVP Buttons */}
       <div className={`flex-shrink-0 p-4 border-t border-gray-200 bg-gray-50 ${isMobile ? 'pb-[calc(1rem+env(safe-area-inset-bottom))]' : ''}`}>

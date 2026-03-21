@@ -164,9 +164,13 @@ export function MobileEventsVendorsPage() {
   };
 
   const handleDeleteEvent = async (eventId: string) => {
-    if (confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
-      await deleteEvent(eventId);
-      toast.success('Event deleted successfully!');
+    if (confirm('Are you sure you want to archive this event? It will be removed from the main list but preserved for records.')) {
+      const success = await deleteEvent(eventId);
+      if (success) {
+        toast.success('Event archived successfully!');
+      } else {
+        toast.error('Failed to archive event. Please try again.');
+      }
     }
   };
 
@@ -465,6 +469,7 @@ export function MobileEventsVendorsPage() {
                                 variant="ghost"
                                 onClick={() => handleDeleteEvent(event.id)}
                                 className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                title="Archive event"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>

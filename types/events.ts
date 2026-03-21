@@ -16,6 +16,8 @@ export interface Event {
   updated_by: string;
   created_at: string;
   updated_at: string;
+  /** When set, event is archived (hidden from main views); preserves budget, attendance, RSVP history */
+  archived_at?: string | null;
   attendee_count?: number;
   maybe_count?: number;
   not_attending_count?: number;
@@ -80,4 +82,54 @@ export interface EventDisplay {
   not_attending_count: number;
   formatted_date: string;
   formatted_time: string;
+}
+
+// QR check-in / event attendance (one row per member per event)
+export interface EventAttendance {
+  id: string;
+  event_id: string;
+  user_id: string;
+  checked_in_at: string;
+}
+
+/** Optional body for POST /api/events/[id]/check-in (in-app QR scan flow) */
+export interface EventCheckInRequestBody {
+  /** Raw string read from chapter check-in QR (JSON with c, i, s). */
+  qr_payload?: string;
+}
+
+/** Response from POST /api/events/[id]/check-in */
+export interface CheckInResponse {
+  data: {
+    checked_in_at: string;
+    already_checked_in?: boolean;
+  };
+}
+
+/** Single attendance row with profile for GET /api/events/[id]/attendance */
+export interface AttendanceWithProfile {
+  id: string;
+  event_id: string;
+  user_id: string;
+  checked_in_at: string;
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+}
+
+/** Response from GET /api/events/[id]/attendance */
+export interface AttendanceListResponse {
+  data: { attendance: AttendanceWithProfile[] };
+}
+
+/**
+ * Response from GET /api/chapters/[id]/check-in-qr
+ * `qr_value` is the exact string to pass to QRCodeSVG (signed chapter payload).
+ */
+export interface ChapterCheckInQrResponse {
+  data: {
+    qr_value: string;
+    chapter_id: string;
+    issued_at: number;
+  };
 }

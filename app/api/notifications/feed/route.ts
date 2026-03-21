@@ -250,6 +250,7 @@ export async function GET(request: NextRequest) {
           creator:profiles!created_by(id, full_name, first_name, last_name, avatar_url)
         `)
         .eq('chapter_id', profile.chapter_id)
+        .is('archived_at', null)
         .gte('start_at', new Date().toISOString())
         .lte('start_at', sevenDaysFromNow.toISOString())
         .order('start_at', { ascending: true })
@@ -297,6 +298,7 @@ export async function GET(request: NextRequest) {
           chapter_id
         `)
         .eq('chapter_id', profile.chapter_id)
+        .is('archived_at', null)
         .gte('start_at', new Date().toISOString())
         .lte('start_at', sevenDaysFromNow.toISOString())
         .order('start_at', { ascending: true })
