@@ -51,6 +51,16 @@ textarea {
   .text-sm {
     font-size: 16px !important;
   }
+
+  /* Fix Safari/iOS temporal input width overflow (WebKit #301648) */
+  input[type="datetime-local"],
+  input[type="date"],
+  input[type="time"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
 }
 
 .line-clamp-2 {

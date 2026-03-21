@@ -296,38 +296,33 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
             </div>
 
             {/* Date and Time - Stack on mobile, side-by-side on desktop */}
-            {/* Wrapper with overflow-hidden fixes Safari/iOS datetime-local width overflow (WebKit #301648) */}
             <div className={cn(
               "gap-4 min-w-0",
-              isMobile ? "space-y-4 min-w-0 overflow-hidden" : "space-y-4 sm:space-y-0 sm:grid sm:grid-cols-1 sm:md:grid-cols-2"
+              isMobile ? "space-y-4 min-w-0" : "space-y-4 sm:space-y-0 sm:grid sm:grid-cols-1 sm:md:grid-cols-2"
             )}>
-              <div className="space-y-3 sm:space-y-2 min-w-0 w-full overflow-hidden">
+              <div className="space-y-3 sm:space-y-2 min-w-0">
                 <Label htmlFor="start_time" className="text-base sm:text-sm">Start Date & Time *</Label>
-                <div className="w-full min-w-0 overflow-hidden">
-                  <Input
-                    id="start_time"
-                    type="datetime-local"
-                    value={formatDateTimeLocal(formData.start_time)}
-                    onChange={(e) => handleInputChange('start_time', e.target.value)}
-                    className={cn("h-12 sm:h-10 text-base sm:text-sm w-full max-w-full", errors.start_time && "border-red-500")}
-                  />
-                </div>
+                <Input
+                  id="start_time"
+                  type="datetime-local"
+                  value={formatDateTimeLocal(formData.start_time)}
+                  onChange={(e) => handleInputChange('start_time', e.target.value)}
+                  className={cn("h-12 sm:h-10 text-base sm:text-sm min-w-0 w-full max-w-full", errors.start_time && "border-red-500")}
+                />
                 {errors.start_time && (
                   <p className="text-sm text-red-500">{errors.start_time}</p>
                 )}
               </div>
 
-              <div className="space-y-3 sm:space-y-2 min-w-0 w-full overflow-hidden">
+              <div className="space-y-3 sm:space-y-2 min-w-0">
                 <Label htmlFor="end_time" className="text-base sm:text-sm">End Date & Time *</Label>
-                <div className="w-full min-w-0 overflow-hidden">
-                  <Input
-                    id="end_time"
-                    type="datetime-local"
-                    value={formatDateTimeLocal(formData.end_time)}
-                    onChange={(e) => handleInputChange('end_time', e.target.value)}
-                    className={cn("h-12 sm:h-10 text-base sm:text-sm w-full max-w-full", errors.end_time && "border-red-500")}
-                  />
-                </div>
+                <Input
+                  id="end_time"
+                  type="datetime-local"
+                  value={formatDateTimeLocal(formData.end_time)}
+                  onChange={(e) => handleInputChange('end_time', e.target.value)}
+                  className={cn("h-12 sm:h-10 text-base sm:text-sm min-w-0 w-full max-w-full", errors.end_time && "border-red-500")}
+                />
                 {errors.end_time && (
                   <p className="text-sm text-red-500">{errors.end_time}</p>
                 )}
