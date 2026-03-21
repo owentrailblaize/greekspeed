@@ -166,7 +166,16 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
     }
 
     try {
-      await onSubmit(formData);
+      const payload = {
+        ...formData,
+        start_time: formData.start_time
+          ? new Date(formData.start_time).toISOString()
+          : formData.start_time,
+        end_time: formData.end_time
+          ? new Date(formData.end_time).toISOString()
+          : formData.end_time,
+      };
+      await onSubmit(payload);
     } catch (error) {
       console.error('Error submitting form:', error);
     }
