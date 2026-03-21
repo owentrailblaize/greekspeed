@@ -11,28 +11,28 @@ interface CheckInClientProps {
   eventId: string;
 }
 
-function formatEventDate(startTime: string, endTime: string): string {
+function formatEventDate(startTime: string): string {
   const start = new Date(startTime);
-  const end = new Date(endTime);
-
-  const dateOptions: Intl.DateTimeFormatOptions = {
+  const options: Intl.DateTimeFormatOptions = {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   };
+  return start.toLocaleDateString('en-US', options);
+}
 
-  const timeOptions: Intl.DateTimeFormatOptions = {
+function formatEventTime(startTime: string, endTime: string): string {
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const options: Intl.DateTimeFormatOptions = {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
   };
-
-  const dateStr = start.toLocaleDateString('en-US', dateOptions);
-  const startTimeStr = start.toLocaleTimeString('en-US', timeOptions);
-  const endTimeStr = end.toLocaleTimeString('en-US', timeOptions);
-
-  return `${dateStr} | ${startTimeStr} - ${endTimeStr}`;
+  const startStr = start.toLocaleTimeString('en-US', options);
+  const endStr = end.toLocaleTimeString('en-US', options);
+  return `${startStr} - ${endStr}`;
 }
 
 export function CheckInClient({ eventId }: CheckInClientProps) {
@@ -136,9 +136,15 @@ export function CheckInClient({ eventId }: CheckInClientProps) {
             {eventTitle}
           </h1>
           {event.start_time && event.end_time && (
-            <div className="flex items-center gap-2 mt-3 text-sm text-gray-600">
-              <Clock className="h-4 w-4 flex-shrink-0 text-brand-primary" />
-              <span>{formatEventDate(event.start_time, event.end_time)}</span>
+            <div className="flex flex-col items-center gap-1 mt-3 text-sm text-gray-600">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 flex-shrink-0 text-brand-primary" />
+                <span>{formatEventDate(event.start_time)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 flex-shrink-0 text-brand-primary" />
+                <span>{formatEventTime(event.start_time, event.end_time)}</span>
+              </div>
             </div>
           )}
           {event.location && (
