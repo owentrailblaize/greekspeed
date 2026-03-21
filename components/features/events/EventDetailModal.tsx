@@ -369,7 +369,7 @@ export function EventDetailModal({
                     setShowScanner(true);
                   }}
                   disabled={checkingIn}
-                  className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white"
+                  className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white rounded-full"
                 >
                   {checkingIn ? (
                     <>Checking in...</>
