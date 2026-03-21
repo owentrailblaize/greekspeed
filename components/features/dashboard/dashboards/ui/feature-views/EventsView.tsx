@@ -209,10 +209,17 @@ export function EventsView() {
     }
   };
 
-  // Reset to page 1 when events change
+  // Only adjust page when current page no longer exists (e.g. archived last item on last page)
   useEffect(() => {
-    setCurrentPage(1);
-  }, [events.length]);
+    setCurrentPage(prev => {
+      const newTotalPages = Math.ceil(events.length / eventsPerPage);
+      if (newTotalPages === 0) return 1;
+      if (prev > newTotalPages) {
+        return newTotalPages; // Clamp to last valid page
+      }
+      return prev; // Stay on current page
+    });
+  }, [events.length, eventsPerPage]);
 
   return (
     <div className="space-y-6">
