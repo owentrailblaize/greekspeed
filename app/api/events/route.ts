@@ -31,9 +31,10 @@ export async function GET(request: NextRequest) {
       .eq('chapter_id', chapterId);
 
     if (scope === 'upcoming') {
+      const now = new Date().toISOString();
       query = query
         .eq('status', 'published')
-        .gte('start_time', new Date().toISOString())
+        .or(`start_time.gte.${now},and(start_time.lte.${now},end_time.gte.${now})`)
         .order('start_time', { ascending: true });
     } else {
       query = query.order('created_at', { ascending: false });
