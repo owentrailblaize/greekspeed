@@ -778,7 +778,7 @@ export function MobileEventsVendorsPage() {
             
             {/* Mobile: Bottom Drawer */}
             {isMobile && (
-              <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[80vh] mt-[50vh] rounded-t-2xl rounded-b-none overflow-hidden">
+              <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[80vh] mt-[50vh] rounded-t-2xl rounded-b-none overflow-hidden pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
                 <EventForm
                   event={editingEvent}
                   onSubmit={async (data) => {
@@ -843,7 +843,7 @@ export function MobileEventsVendorsPage() {
             
             {/* Mobile: Bottom Drawer */}
             {isMobile && (
-              <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[80vh] mt-[50vh] rounded-t-2xl rounded-b-none overflow-hidden">
+              <div className="relative bg-white shadow-xl w-full flex flex-col max-h-[80vh] mt-[50vh] rounded-t-2xl rounded-b-none overflow-hidden pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
                 <VendorForm
                   vendor={editingVendor}
                   onSubmit={async (data) => {
