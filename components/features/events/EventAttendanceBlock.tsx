@@ -80,9 +80,12 @@ export function EventAttendanceBlock({
         const data = await res.json();
         setAttendance(data.data?.attendance ?? []);
       } else {
+        const err = await res.json().catch(() => ({}));
+        console.error('[EventAttendanceBlock] Attendance fetch failed:', res.status, err);
         setAttendance([]);
       }
-    } catch {
+    } catch (err) {
+      console.error('[EventAttendanceBlock] Attendance fetch error:', err);
       setAttendance([]);
     } finally {
       setLoadingAttendance(false);
@@ -107,10 +110,13 @@ export function EventAttendanceBlock({
           filter: `event_id=eq.${eventId}`,
         },
         () => {
+          console.log('[EventAttendanceBlock] Realtime: INSERT received, refetching attendance');
           fetchAttendance();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('[EventAttendanceBlock] Realtime status:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
