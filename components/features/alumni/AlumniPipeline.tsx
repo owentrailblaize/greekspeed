@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { AlumniPipelineLayout } from "./AlumniPipelineLayout";
 import { AlumniSubHeader } from "./AlumniSubHeader";
 import { Alumni } from "@/lib/alumniConstants";
+import { exportAlumniToCSV } from "@/lib/csvExport";
 import { AlumniProfileModal } from "./AlumniProfileModal";
 import { useProfile } from "@/lib/contexts/ProfileContext";
 import { useAuth } from "@/lib/supabase/auth-context";
@@ -236,6 +237,11 @@ export function AlumniPipeline() {
     setSelectedAlumni([]);
   };
 
+  const handleExport = () => {
+    const timestamp = new Date().toISOString().split("T")[0];
+    exportAlumniToCSV(alumni, `alumni-export-${timestamp}.csv`);
+  };
+
   const handleFiltersChange = (newFilters: FilterState) => {
     setFilters(newFilters);
     // Don't call fetchAlumni here - let the useEffect handle it
@@ -273,17 +279,16 @@ export function AlumniPipeline() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Sticky Header - Hidden on mobile */}
-      <div className="hidden md:block">
-        <AlumniSubHeader
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          selectedCount={selectedAlumni.length}
-          totalCount={pagination.total}
-          onClearSelection={handleClearSelection}
-          userChapter={profile?.chapter}
-        />
-      </div>
+      {/* Sub-header: count, Export All, view toggle (desktop + mobile) */}
+      <AlumniSubHeader
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        selectedCount={selectedAlumni.length}
+        totalCount={pagination.total}
+        onClearSelection={handleClearSelection}
+        onExport={handleExport}
+        userChapter={profile?.chapter}
+      />
 
       {/* Main Layout */}
       <AlumniPipelineLayout

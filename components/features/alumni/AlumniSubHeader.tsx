@@ -1,8 +1,9 @@
 "use client";
 
-import { Users } from "lucide-react";
+import { Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ViewToggle } from "@/components/shared/ViewToggle";
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface AlumniSubHeaderProps {
   viewMode: 'table' | 'card';
@@ -10,42 +11,63 @@ interface AlumniSubHeaderProps {
   selectedCount: number;
   totalCount: number;
   onClearSelection: () => void;
-  userChapter?: string | null; // Add this prop
+  onExport: () => void;
+  userChapter?: string | null;
 }
+
+const exportButtonStyles =
+  "h-8 rounded-full px-3 sm:px-4 text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-300 border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900";
 
 export function AlumniSubHeader({
   viewMode,
   onViewModeChange,
   selectedCount,
   totalCount,
-  onClearSelection,
-  userChapter
+  onExport,
+  onClearSelection: _onClearSelection,
 }: AlumniSubHeaderProps) {
+  // Only show "X selected" when in table view (selection is relevant there)
+  const countText =
+    viewMode === "table"
+      ? `${totalCount} alumni • ${selectedCount} selected`
+      : `${totalCount} alumni`;
+  const mobileCountText =
+    viewMode === "table"
+      ? `${totalCount} alumni found • ${selectedCount} selected`
+      : `${totalCount} alumni found`;
+
   return (
     <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
-      {/* Mobile Layout - Row */}
+      {/* Mobile Layout */}
       <div className="sm:hidden flex items-center justify-between gap-3">
-        {/* Total count and selected count - smaller text */}
-        <p className="text-gray-600 text-xs flex-shrink-0">
-          {totalCount} alumni found • {selectedCount} selected
-        </p>
-        {/* View Toggle - aligned on same row */}
-        <div className="flex-shrink-0">
+        <p className="text-gray-600 text-xs flex-shrink-0">{mobileCountText}</p>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onExport}
+            className={cn("h-7 text-xs", exportButtonStyles)}
+          >
+            <Download className="h-3 w-3 mr-1.5" />
+            Export All
+          </Button>
           <ViewToggle viewMode={viewMode} onViewChange={onViewModeChange} />
         </div>
       </div>
 
-      {/* Desktop Layout - Row (preserved) */}
+      {/* Desktop Layout */}
       <div className="hidden sm:flex items-center justify-between">
-        {/* Left side - Title and Info */}
-        <div className="flex items-center space-x-2">
-          <p className="text-gray-600 text-sm">
-            {totalCount} alumni • {selectedCount} selected
-          </p>
-        </div>
-
-        {/* Right side - View Toggle */}
-        <div className="flex-shrink-0">
+        <p className="text-gray-600 text-sm">{countText}</p>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onExport}
+            className={exportButtonStyles}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export All
+          </Button>
           <ViewToggle viewMode={viewMode} onViewChange={onViewModeChange} />
         </div>
       </div>

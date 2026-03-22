@@ -7,9 +7,7 @@ import { Button } from "@/components/ui/button";
 import { AlumniFilterBar } from "./AlumniFilterBar";
 import { AlumniTableView } from "./AlumniTableView";
 import { EnhancedAlumniCard } from "./EnhancedAlumniCard";
-import { AlumniToolbar } from "./AlumniToolbar";
 import { Alumni } from "@/lib/alumniConstants";
-import { exportAlumniToCSV } from "@/lib/csvExport";
 import { AlumniProfileModal } from "./AlumniProfileModal";
 import { AlumniPagination } from "./AlumniPagination";
 import { AlumniCardSkeletonGrid } from "./AlumniCardSkeleton";
@@ -79,11 +77,6 @@ export function AlumniPipelineLayout({
       setSidebarCollapsed(true); // Start collapsed on mobile
     }
   }, []);
-
-  const handleExport = () => {
-    const timestamp = new Date().toISOString().split('T')[0];
-    exportAlumniToCSV(alumni, `alumni-export-${timestamp}.csv`);
-  };
 
   const handleAlumniClick = (alumni: Alumni) => {
     // Use the parent's handler if provided, otherwise use local state
@@ -230,13 +223,6 @@ export function AlumniPipelineLayout({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Toolbar */}
-        <div className="relative z-20">
-          <AlumniToolbar
-            onExport={handleExport}
-          />
-        </div>
-
         {/* Content with scrollable container */}
         <div className="flex-1 overflow-hidden relative z-10">
           {loading ? (
