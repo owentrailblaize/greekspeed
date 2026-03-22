@@ -16,6 +16,7 @@ import { ClickableAvatar } from '@/components/features/user-profile/ClickableAva
 import { ClickableUserName } from '@/components/features/user-profile/ClickableUserName';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useComments } from '@/lib/hooks/useComments';
+import { useCommentCount } from '@/lib/hooks/useCommentCount';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { Textarea } from '@/components/ui/textarea';
 import { PostImageGrid } from './PostImageGrid';
@@ -342,7 +343,7 @@ function PostCardInner({
 
   const commentsPreview = post.comments_preview ?? [];
   const hasComments = (post.comments_count ?? 0) > 0;
-  const commentCountLabel = hasComments ? 'View Comments' : 'Add Comment';
+  const liveCommentCount = useCommentCount(post.id, post.comments_count ?? 0);
 
   const commentsEnabled = hasComments
     ? commentInputFocused || isPostInView
@@ -747,7 +748,7 @@ function PostCardInner({
                 className="gap-2 rounded-full px-3 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
               >
                 <MessageCircle className="h-4 w-4 text-accent-500" />
-                <span>{commentCountLabel}</span>
+                <span>{liveCommentCount}</span>
               </Button>
             </div>
           </div>
@@ -1010,7 +1011,7 @@ function PostCardInner({
                 className="gap-2 rounded-full px-3 py-2 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
               >
                 <MessageCircle className="h-4 w-4 text-accent-500" />
-                <span className="whitespace-nowrap">{commentCountLabel}</span>
+                <span>{liveCommentCount}</span>
               </Button>
             </div>
           </div>
