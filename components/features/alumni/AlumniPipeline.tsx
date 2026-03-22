@@ -9,6 +9,7 @@ import { AlumniProfileModal } from "./AlumniProfileModal";
 import { useProfile } from "@/lib/contexts/ProfileContext";
 import { useAuth } from "@/lib/supabase/auth-context";
 import { useScopedChapterId } from "@/lib/hooks/useScopedChapterId";
+import { supabase } from "@/lib/supabase/client";
 
 interface FilterState {
   searchTerm: string;
@@ -26,6 +27,29 @@ interface PaginationState {
   totalPages: number;
   hasNextPage: boolean;
   hasPrevPage: boolean;
+}
+
+function calculateProfileCompletion(profile: Record<string, unknown>, alumniData: Record<string, unknown> | null) {
+  const requiredFields = ["first_name", "last_name", "chapter", "role"];
+  const optionalFields = ["bio", "phone", "location", "avatar_url"];
+  const alumniRequiredFields = ["industry", "company", "job_title"];
+  let allFields = [...requiredFields, ...optionalFields];
+  let completedFields = 0;
+  const isComplete = (v: unknown) =>
+    v != null && typeof v === "string" && v.trim() !== "" && v.trim() !== "Not specified";
+  requiredFields.forEach((f) => {
+    if (isComplete(profile[f])) completedFields++;
+  });
+  optionalFields.forEach((f) => {
+    if (isComplete(profile[f])) completedFields++;
+  });
+  if (profile.role === "alumni" && alumniData) {
+    allFields = [...allFields, ...alumniRequiredFields];
+    alumniRequiredFields.forEach((f) => {
+      if (isComplete(alumniData[f])) completedFields++;
+    });
+  }
+  return { percentage: Math.round((completedFields / allFields.length) * 100) };
 }
 
 export function AlumniPipeline() {
@@ -56,6 +80,40 @@ export function AlumniPipeline() {
   const [debouncedFilters, setDebouncedFilters] = useState<FilterState>(filters);
   const [selectedAlumniForModal, setSelectedAlumniForModal] = useState<Alumni | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [profileCompletionPercentage, setProfileCompletionPercentage] = useState<number | null>(null);
+
+  // Check profile completion for pill (when profile loads)
+  useEffect(() => {
+    if (!profile?.id) {
+      setProfileCompletionPercentage(null);
+      return;
+    }
+    let cancelled = false;
+    const checkCompletion = async () => {
+      try {
+        let alumniData = null;
+        if (profile.role === "alumni") {
+          const { data } = await supabase
+            .from("alumni")
+            .select("industry, company, job_title, phone, location")
+            .eq("user_id", profile.id)
+            .single();
+          alumniData = data;
+        }
+        const completion = calculateProfileCompletion(
+          profile as unknown as Record<string, unknown>,
+          alumniData as Record<string, unknown> | null
+        );
+        if (!cancelled) setProfileCompletionPercentage(completion.percentage);
+      } catch {
+        if (!cancelled) setProfileCompletionPercentage(null);
+      }
+    };
+    checkCompletion();
+    return () => {
+      cancelled = true;
+    };
+  }, [profile]);
 
   // Force card view on mobile devices
   useEffect(() => {
@@ -279,7 +337,7 @@ export function AlumniPipeline() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Sub-header: count, Export All, view toggle (desktop + mobile) */}
+      {/* Sub-header: count, profile pill (if incomplete), Export All, view toggle (desktop + mobile) */}
       <AlumniSubHeader
         viewMode={viewMode}
         onViewModeChange={setViewMode}
@@ -288,6 +346,7 @@ export function AlumniPipeline() {
         onClearSelection={handleClearSelection}
         onExport={handleExport}
         userChapter={profile?.chapter}
+        profileCompletionPercentage={profileCompletionPercentage}
       />
 
       {/* Main Layout */}

@@ -1,6 +1,7 @@
 "use client";
 
-import { Download } from "lucide-react";
+import Link from "next/link";
+import { Download, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ViewToggle } from "@/components/shared/ViewToggle";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,7 @@ interface AlumniSubHeaderProps {
   onClearSelection: () => void;
   onExport: () => void;
   userChapter?: string | null;
+  profileCompletionPercentage?: number | null;
 }
 
 const exportButtonStyles =
@@ -25,6 +27,7 @@ export function AlumniSubHeader({
   totalCount,
   onExport,
   onClearSelection: _onClearSelection,
+  profileCompletionPercentage,
 }: AlumniSubHeaderProps) {
   // Only show "X selected" when in table view (selection is relevant there)
   const countText =
@@ -36,17 +39,33 @@ export function AlumniSubHeader({
       ? `${totalCount} alumni found • ${selectedCount} selected`
       : `${totalCount} alumni found`;
 
+  const showProfilePill =
+    profileCompletionPercentage != null && profileCompletionPercentage < 80;
+
+  const profilePill = showProfilePill ? (
+    <Link
+      href="/dashboard/profile"
+      className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-800 transition-colors hover:bg-sky-100 hover:text-sky-900 flex-shrink-0 sm:gap-2 sm:px-3.5 sm:py-1.5 sm:text-sm"
+    >
+      <UserCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+      <span>Complete your profile ({profileCompletionPercentage}%)</span>
+    </Link>
+  ) : null;
+
   return (
     <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
-      {/* Mobile Layout */}
-      <div className="sm:hidden flex items-center justify-between gap-3">
-        <p className="text-gray-600 text-xs flex-shrink-0">{mobileCountText}</p>
-        <div className="flex items-center gap-2 flex-shrink-0">
+      {/* Mobile Layout: Two rows - Row 1: count + pill | Row 2: Export + toggle */}
+      <div className="sm:hidden flex flex-col gap-3">
+        <div className="flex items-center gap-2 flex-nowrap min-w-0">
+          <p className="text-gray-600 text-xs whitespace-nowrap flex-shrink-0">{mobileCountText}</p>
+          {profilePill}
+        </div>
+        <div className="flex items-center gap-2 flex-nowrap">
           <Button
             variant="outline"
             size="sm"
             onClick={onExport}
-            className={cn("h-7 text-xs", exportButtonStyles)}
+            className={cn("h-7 text-xs flex-shrink-0", exportButtonStyles)}
           >
             <Download className="h-3 w-3 mr-1.5" />
             Export All
@@ -56,8 +75,11 @@ export function AlumniSubHeader({
       </div>
 
       {/* Desktop Layout */}
-      <div className="hidden sm:flex items-center justify-between">
-        <p className="text-gray-600 text-sm">{countText}</p>
+      <div className="hidden sm:flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <p className="text-gray-600 text-sm flex-shrink-0">{countText}</p>
+          {profilePill}
+        </div>
         <div className="flex items-center gap-3 flex-shrink-0">
           <Button
             variant="outline"
