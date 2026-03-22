@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
   // Extract invitation token and type from query params
   const invitationToken = requestUrl.searchParams.get('invitation_token');
   let invitationType = requestUrl.searchParams.get('invitation_type'); // 'active_member' or 'alumni'
+  const signupRole = requestUrl.searchParams.get('signup_role'); // 'alumni' for public sign-up page
 
   console.log('OAuth callback received:', {
     hasCode: !!code,
@@ -506,6 +507,8 @@ export async function GET(request: NextRequest) {
       }
 
       // ALWAYS ensure profile exists (fallback for missing invitation token or errors)
+      const isPublicAlumniSignup = signupRole === 'alumni';
+
       if (!existingProfile) {
         console.log('Creating basic profile for user (no invitation or fallback):', user.id);
 
@@ -531,6 +534,7 @@ export async function GET(request: NextRequest) {
         // Extract first and last name for username generation
         const firstName = user.user_metadata?.given_name || user.user_metadata?.first_name || '';
         const lastName = user.user_metadata?.family_name || user.user_metadata?.last_name || '';
+        const fullName = user.user_metadata?.full_name || user.user_metadata?.name || defaultName;
 
         // Generate username for OAuth user
         const username = await generateUniqueUsername(serverSupabase, firstName, lastName, user.id);
@@ -542,15 +546,16 @@ export async function GET(request: NextRequest) {
           .insert({
             id: user.id,
             email: user.email,
-            full_name: user.user_metadata?.full_name || user.user_metadata?.name || defaultName,
+            full_name: fullName,
             first_name: firstName,
             last_name: lastName,
             username: username,
             profile_slug: profileSlug,
             linkedin_url: linkedinUrl,
             avatar_url: resolvedOAuthAvatarUrl,
-            chapter: null,  // Will be filled in profile completion
-            role: null,     // Will be filled in profile completion
+            chapter: null,
+            role: isPublicAlumniSignup ? 'alumni' : null,
+            member_status: isPublicAlumniSignup ? 'alumni' : null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           });
@@ -563,12 +568,52 @@ export async function GET(request: NextRequest) {
             details: profileError.details,
             hint: profileError.hint
           });
-          // Even if profile creation fails, redirect to sign-in with error
           return NextResponse.redirect(
             `${requestUrl.origin}/sign-in?error=${encodeURIComponent('Profile creation failed. Please contact support.')}`
           );
         }
         console.log('Basic profile created successfully for user:', user.id);
+
+        if (isPublicAlumniSignup) {
+          try {
+            const nowIso = new Date().toISOString();
+            const { error: alumniError } = await serverSupabase
+              .from('alumni')
+              .upsert({
+                user_id: user.id,
+                first_name: firstName,
+                last_name: lastName,
+                full_name: fullName,
+                email: user.email || '',
+                chapter: null,
+                chapter_id: null,
+                industry: 'Not specified',
+                graduation_year: new Date().getFullYear(),
+                company: 'Not specified',
+                job_title: 'Not specified',
+                phone: null,
+                location: 'Not specified',
+                linkedin_url: linkedinUrl,
+                description: 'Alumni',
+                avatar_url: resolvedOAuthAvatarUrl,
+                verified: false,
+                is_actively_hiring: false,
+                last_contact: null,
+                tags: null,
+                mutual_connections: [],
+                created_at: nowIso,
+                updated_at: nowIso
+              }, { onConflict: 'user_id' });
+
+            if (alumniError) {
+              console.error('Alumni record creation error (public signup):', alumniError);
+            } else {
+              console.log('Alumni record created for public OAuth signup:', user.id);
+            }
+          } catch (alumniError) {
+            console.error('Alumni record creation exception (public signup):', alumniError);
+          }
+        }
       } else {
         // Update existing profile with OAuth data if available
         const provider = user.app_metadata?.provider || user.user_metadata?.provider || 'unknown';
@@ -593,6 +638,12 @@ export async function GET(request: NextRequest) {
           // Handle avatar for both LinkedIn and Google (use resolved URL, may be in our storage)
           if (resolvedOAuthAvatarUrl && !existingProfile.avatar_url) {
             updateData.avatar_url = resolvedOAuthAvatarUrl;
+          }
+
+          // Auto-assign alumni role for public sign-up page OAuth if not already set
+          if (isPublicAlumniSignup && !existingProfile.role) {
+            updateData.role = 'alumni';
+            updateData.member_status = 'alumni';
           }
 
           if (Object.keys(updateData).length > 0) {
