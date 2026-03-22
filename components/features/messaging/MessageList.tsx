@@ -378,7 +378,7 @@ export function MessageList({
   }
 
   return (
-    <div className="h-full overflow-y-auto overflow-x-hidden p-4">
+    <div className="h-full overflow-y-auto overflow-x-hidden overscroll-contain p-4">
       {/* Load more button */}
       {hasMore && (
         <div className="flex justify-center mb-4">
