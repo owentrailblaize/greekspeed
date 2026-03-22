@@ -144,7 +144,7 @@ export function ConnectionSelector({
       </div>
 
       {/* Suggested Section */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overscroll-contain">
         {sortedConnections.length === 0 ? (
           <div className="text-center py-8 px-4">
             {searchQuery ? (

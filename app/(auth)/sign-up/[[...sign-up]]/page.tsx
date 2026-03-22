@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectItem } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Star, Mail, Info, Users, ArrowLeft, Linkedin } from 'lucide-react';
+import { Mail, Info, Users, ArrowLeft, Linkedin } from 'lucide-react';
 import { LottiePlayer } from '@/components/ui/LottiePlayer';
 import { MobileAuthLoadingOverlay } from '@/components/features/splash/MobileAuthLoadingOverlay';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
@@ -20,18 +20,12 @@ import { useChapters } from '@/lib/hooks/useChapters';
 import { Chapter } from '@/types/chapter';
 import { Checkbox } from '@/components/ui/checkbox';
 
-// User roles for the dropdown - Only Alumni allowed for public signup
-const userRoles = [
-  { value: 'alumni', label: 'Alumni' }
-];
-
 export default function SignUpPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [chapter, setChapter] = useState('');
-  const [role, setRole] = useState<'Alumni' | ''>('');
   // Phone number opt-in / opt-out
   const [phoneNumber, setPhoneNumber] = useState('');
   const [smsConsent, setSmsConsent] = useState(false);
@@ -87,7 +81,7 @@ export default function SignUpPage() {
     setError('');
     setSuccess('');
 
-    if (!email || !password || !firstName || !lastName || !chapter || !role) {
+    if (!email || !password || !firstName || !lastName || !chapter) {
       setError('All fields are required');
       setLoading(false);
       return;
@@ -99,9 +93,9 @@ export default function SignUpPage() {
         firstName,
         lastName,
         chapter,
-        role,
-        phone: phoneNumber, // Add phone number to the signUp payload
-        smsConsent: smsConsent // Add SMS consent to the signUp payload
+        role: 'Alumni',
+        phone: phoneNumber,
+        smsConsent: smsConsent
       });
       setSuccess('Account created successfully! Redirecting to onboarding...');
       
@@ -120,11 +114,10 @@ export default function SignUpPage() {
       setLoading(true);
       setError('');
       
-      // Fix: Use the correct callback URL
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`, // Use the callback route
+          redirectTo: `${window.location.origin}/auth/callback?signup_role=alumni`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -152,7 +145,7 @@ export default function SignUpPage() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?signup_role=alumni`,
           scopes: 'openid profile email',
         },
       });
@@ -481,26 +474,6 @@ export default function SignUpPage() {
                         )}
                       </div>
 
-                      {/* Role Selection - Compact */}
-                      <div className="space-y-1">
-                        <Label htmlFor="role" className="text-xs font-medium text-gray-700">Role</Label>
-                        <Select 
-                          value={role} 
-                          onValueChange={(value: string) => setRole(value as 'Alumni')}
-                          disableDynamicPositioning={true}
-                        >
-                          <SelectItem value="">Select your role</SelectItem>
-                          {userRoles.map((userRole) => (
-                            <SelectItem key={userRole.value} value={userRole.value}>
-                              {userRole.label}
-                            </SelectItem>
-                          ))}
-                        </Select>
-                        <p className="text-xs text-gray-500">
-                          Alumni accounts can access the alumni network and connect with other graduates.
-                        </p>
-                      </div>
-
                       {/* Error and Success Messages - Compact */}
                       {error && (
                         <div className="text-red-500 text-xs bg-red-50 border border-red-200 rounded-lg p-2">{error}</div>
@@ -810,26 +783,6 @@ export default function SignUpPage() {
                           {chapters.length === 0 && !chaptersLoading && (
                             <p className="text-yellow-500 text-xs">No chapters available. Please contact support.</p>
                           )}
-                        </div>
-
-                        {/* Role Selection - Compact */}
-                        <div className="space-y-1">
-                          <Label htmlFor="role" className="text-xs font-medium text-gray-700">Role</Label>
-                          <Select 
-                            value={role} 
-                            onValueChange={(value: string) => setRole(value as 'Alumni')}
-                            disableDynamicPositioning={true}
-                          >
-                            <SelectItem value="">Select your role</SelectItem>
-                            {userRoles.map((userRole) => (
-                              <SelectItem key={userRole.value} value={userRole.value}>
-                                {userRole.label}
-                              </SelectItem>
-                            ))}
-                          </Select>
-                          <p className="text-xs text-gray-500">
-                            Alumni accounts can access the alumni network and connect with other graduates.
-                          </p>
                         </div>
 
                         {/* Error and Success Messages - Compact */}
