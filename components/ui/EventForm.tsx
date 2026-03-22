@@ -430,13 +430,13 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
       {/* Fixed Action Buttons */}
       {isMobile ? (
         <div className="flex-shrink-0 border-t border-gray-200 bg-white p-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-row space-x-3">
             <Button
               type="button"
               variant="outline"
               onClick={onCancel}
               disabled={loading}
-              className="w-full rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
+              className="flex-1 rounded-full bg-white/80 backdrop-blur-md border border-brand-primary/50 shadow-lg shadow-navy-100/20 hover:shadow-xl hover:shadow-navy-100/30 hover:bg-white/90 text-brand-primary-hover hover:text-primary-900 transition-all duration-300"
             >
               Cancel
             </Button>
@@ -444,7 +444,7 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
               type="submit"
               form="event-form"
               disabled={loading}
-              className="w-full rounded-full bg-brand-primary text-white hover:bg-brand-primary-hover shadow-lg shadow-navy-100/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 rounded-full bg-brand-primary text-white hover:bg-brand-primary-hover shadow-lg shadow-navy-100/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="flex items-center space-x-2">
