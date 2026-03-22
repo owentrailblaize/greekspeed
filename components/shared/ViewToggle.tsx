@@ -9,14 +9,14 @@ interface ViewToggleProps {
 
 export function ViewToggle({ viewMode, onViewChange }: ViewToggleProps) {
   return (
-    <div className="flex items-center space-x-1 bg-gray-100 p-1 rounded-lg">
+    <div className="flex items-center space-x-1 bg-gray-100 p-1 rounded-full">
       {/* Cards Button - Now First (Left) */}
       <Button
         variant="ghost"
         size="sm"
         onClick={() => onViewChange('card')}
         className={cn(
-          "flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md transition-all duration-200",
+          "flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all duration-200",
           viewMode === 'card'
             ? "bg-white text-brand-primary shadow-sm"
             : "text-gray-600 hover:text-gray-900"
@@ -32,7 +32,7 @@ export function ViewToggle({ viewMode, onViewChange }: ViewToggleProps) {
         size="sm"
         onClick={() => onViewChange('table')}
         className={cn(
-          "flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md transition-all duration-200",
+          "flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all duration-200",
           viewMode === 'table'
             ? "bg-white text-brand-primary shadow-sm"
             : "text-gray-600 hover:text-gray-900"
