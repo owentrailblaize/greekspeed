@@ -60,7 +60,7 @@ export function AlumniSubHeader({
           <p className="text-gray-600 text-xs whitespace-nowrap flex-shrink-0">{mobileCountText}</p>
           {profilePill}
         </div>
-        <div className="flex items-center gap-2 flex-nowrap">
+        <div className="flex items-center gap-2 flex-nowrap justify-end">
           <Button
             variant="outline"
             size="sm"
