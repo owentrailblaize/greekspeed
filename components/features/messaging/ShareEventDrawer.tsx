@@ -9,6 +9,7 @@ import { MessageList } from './MessageList';
 import { MessageInputWithEventLink } from './MessageInputWithEventLink';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { useMessages } from '@/lib/hooks/useMessages';
+import { useVisualViewportHeight } from '@/lib/hooks/useVisualViewportHeight';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { UserAvatar } from '@/components/features/profile/UserAvatar';
 import { ClickableAvatar } from '@/components/features/user-profile/ClickableAvatar';
@@ -46,6 +47,20 @@ export function ShareEventDrawer({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Track visual viewport for keyboard-aware positioning on mobile
+  const { height: visualHeight, offsetTop } = useVisualViewportHeight();
+  const [innerHeight, setInnerHeight] = useState(
+    typeof window !== 'undefined' ? window.innerHeight : 768
+  );
+  useEffect(() => {
+    setInnerHeight(window.innerHeight);
+  }, []);
+  const keyboardOpen = isMobile && selectedConnectionId && visualHeight < innerHeight;
+  const maxHeightPx = keyboardOpen ? visualHeight - 40 : undefined;
+  const bottomPx = keyboardOpen
+    ? innerHeight - (offsetTop + visualHeight)
+    : undefined;
 
   const {
     messages,
@@ -164,12 +179,23 @@ export function ShareEventDrawer({
             bg-white flex flex-col rounded-t-[10px] z-[10003]
             fixed bottom-0
             ${isMobile
-              ? 'left-0 right-0 max-h-[60dvh]'
+              ? 'left-0 right-0 h-[85dvh] max-h-[85dvh]'
               : 'right-4 left-auto w-[450px] h-[600px] max-h-[calc(100vh-2rem)] rounded-lg'
             }
             shadow-2xl border border-gray-200
             outline-none p-0
           `}
+          style={
+            isMobile && (maxHeightPx !== undefined || bottomPx !== undefined)
+              ? {
+                  ...(maxHeightPx !== undefined && {
+                    maxHeight: `${maxHeightPx}px`,
+                    height: `${maxHeightPx}px`,
+                  }),
+                  ...(bottomPx !== undefined && { bottom: `${bottomPx}px` }),
+                }
+              : undefined
+          }
         >
           {/* Mobile drag handle */}
           {isMobile && (
@@ -292,7 +318,7 @@ export function ShareEventDrawer({
                 )}
 
                 {/* Messages List */}
-                <div className="flex-1 min-h-0 overflow-hidden">
+                <div className="flex-1 min-h-0 overflow-hidden overscroll-contain">
                   <MessageList
                     messages={messages}
                     loading={messagesLoading}
