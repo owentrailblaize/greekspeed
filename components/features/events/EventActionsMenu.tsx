@@ -32,6 +32,7 @@ interface EventActionsMenuProps {
   };
   onClose?: () => void;
   hideOnMobile?: boolean;
+  nestedDrawer?: boolean;
 }
 
 function CalendarSubmenu({ event }: { event: EventActionsMenuProps['event'] }) {
@@ -105,7 +106,7 @@ function CalendarSubmenu({ event }: { event: EventActionsMenuProps['event'] }) {
   );
 }
 
-export function EventActionsMenu({ event, onClose, hideOnMobile = false }: EventActionsMenuProps) {
+export function EventActionsMenu({ event, onClose, hideOnMobile = false, nestedDrawer = false }: EventActionsMenuProps) {
   const [showCalendarSubmenu, setShowCalendarSubmenu] = useState(false);
   const [shareDrawerOpen, setShareDrawerOpen] = useState(false);
 
@@ -189,6 +190,7 @@ export function EventActionsMenu({ event, onClose, hideOnMobile = false }: Event
           location: event.location,
           start_time: event.start_time,
         }}
+        nested={nestedDrawer}
       />
     </>
   );

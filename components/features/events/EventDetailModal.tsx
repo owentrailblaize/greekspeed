@@ -269,7 +269,7 @@ export function EventDetailModal({
           </h2>
         </div>
         <div className="flex items-center gap-2">
-          <EventActionsMenu event={event} />
+          <EventActionsMenu event={event} nestedDrawer />
           <button
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded-full transition-colors"
