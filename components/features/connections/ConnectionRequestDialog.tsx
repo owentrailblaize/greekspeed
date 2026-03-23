@@ -149,6 +149,7 @@ export function ConnectionRequestDialog({
               ? {
                   ...(maxHeightPx !== undefined && {
                     maxHeight: `${maxHeightPx}px`,
+                    height: `${maxHeightPx}px`,
                   }),
                   ...(bottomPx !== undefined && { bottom: `${bottomPx}px` }),
                 }
@@ -184,9 +185,13 @@ export function ConnectionRequestDialog({
             </div>
           </div>
 
-          {/* Content - Scrollable */}
+          {/* Scrollable content - only the message input */}
           <div className="flex-1 overflow-y-auto px-4 py-4 min-h-0">
             {messageInput}
+          </div>
+
+          {/* Buttons - fixed footer, always visible */}
+          <div className="flex-shrink-0 border-t border-gray-200 px-4 py-4 bg-white">
             {buttons}
           </div>
         </Drawer.Content>
