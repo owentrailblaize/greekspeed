@@ -24,6 +24,7 @@ export default function UserProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('posts');
+  const [redirectingToPublicProfile, setRedirectingToPublicProfile] = useState(false);
 
   useEffect(() => {
     if (!userId) {
@@ -33,10 +34,12 @@ export default function UserProfilePage() {
     }
 
     async function loadProfile() {
+      let isRedirecting = false;
       try {
         setLoading(true);
         setError(null);
-        
+        setRedirectingToPublicProfile(false);
+
         // First, check if profile has a slug for redirect
         const { data: profileData } = await supabase
           .from('profiles')
@@ -47,13 +50,15 @@ export default function UserProfilePage() {
         // If profile has a slug, redirect to the clean URL
         if (profileData?.profile_slug || profileData?.username) {
           const slug = profileData.profile_slug || profileData.username;
+          isRedirecting = true;
+          setRedirectingToPublicProfile(true);
           router.replace(`/profile/${slug}`, { scroll: false });
           return;
         }
 
         // Otherwise, load profile normally (backward compatibility)
         const fetchedProfile = await fetchUserProfile(userId);
-        
+
         if (fetchedProfile) {
           setProfile(fetchedProfile);
           setError(null); // Clear any previous errors
@@ -65,7 +70,9 @@ export default function UserProfilePage() {
         console.error('Error loading profile:', err);
         setError('Failed to load profile');
       } finally {
-        setLoading(false);
+        if (!isRedirecting) {
+          setLoading(false);
+        }
       }
     }
 
@@ -78,8 +85,8 @@ export default function UserProfilePage() {
 
   const isOwnProfile = user?.id === userId;
 
-  // Loading state with skeleton loader
-  if (loading) {
+  // Loading state with skeleton loader (include redirect to prevent error flash)
+  if (loading || redirectingToPublicProfile) {
     return (
       <div className="min-h-screen bg-white sm:hidden pb-20">
         {/* Banner skeleton */}
@@ -130,8 +137,8 @@ export default function UserProfilePage() {
     );
   }
 
-  // Error state - only show AFTER loading completes
-  if (!loading && (error || !profile)) {
+  // Error state - only show AFTER loading completes (never during redirect)
+  if (!loading && !redirectingToPublicProfile && (error || !profile)) {
     return (
       <div className="min-h-screen bg-white sm:hidden pb-20">
         {/* Error state with back button */}
