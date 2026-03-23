@@ -19,7 +19,7 @@ import { useFormPersistence } from '@/lib/hooks/useFormPersistence';
 import { useModal } from '@/lib/contexts/ModalContext';
 import { useProfileUpdateDetection } from '@/lib/hooks/useProfileUpdateDetection';
 import type { DetectedChange } from './ProfileUpdatePromptModal';
-import Link from 'next/link';
+import { cn } from '@/lib/utils';
 import { getGraduationYears, industries, majors, minors } from '@/lib/alumniConstants';
 import { UsernameInput } from './UsernameInput';
 import { generateProfileSlug } from '@/lib/utils/usernameUtils';
