@@ -1,19 +1,70 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
 import { generateUniqueUsername, generateProfileSlug } from '@/lib/utils/usernameUtils';
 import { cascadeDeleteUser } from '@/lib/services/userDeletionService';
 
+async function authenticateRequest(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.replace('Bearer ', '');
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (!error && user) {
+      return {
+        user,
+        supabase: createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY!),
+      };
+    }
+  }
+
+  try {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set() {},
+        remove() {},
+      },
+    });
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) return null;
+    return {
+      user,
+      supabase: createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY!),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const auth = await authenticateRequest(request);
+    if (!auth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { user, supabase } = auth;
+
+    const { data: callerProfile } = await supabase
+      .from('profiles')
+      .select('is_developer')
+      .eq('id', user.id)
+      .single();
+
+    const isDeveloper = callerProfile?.is_developer === true;
 
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
-    // Single user fetch (for edit modal: include governance_chapter_ids)
+    // Single user fetch (for edit modal: include governance_chapter_ids only for developers)
     if (userId) {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -26,7 +77,8 @@ export async function GET(request: NextRequest) {
       }
 
       const userPayload: Record<string, unknown> = { ...profile };
-      if (profile.role === 'governance') {
+      // Only include governance_chapter_ids when caller is a developer
+      if (profile.role === 'governance' && isDeveloper) {
         const { data: rows } = await supabase
           .from('governance_chapters')
           .select('chapter_id')
@@ -150,18 +202,19 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const auth = await authenticateRequest(request);
+    if (!auth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { supabase } = auth;
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
     if (!userId) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
-
-    // Service-role client — required for admin.deleteUser & cross-table deletes
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     const result = await cascadeDeleteUser(supabase, userId);
 
@@ -180,15 +233,41 @@ export async function DELETE(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await authenticateRequest(request);
+    if (!auth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { user, supabase } = auth;
+
+    const { data: callerProfile } = await supabase
+      .from('profiles')
+      .select('is_developer')
+      .eq('id', user.id)
+      .single();
+
+    const isDeveloper = callerProfile?.is_developer === true;
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     if (!userId) return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
 
     const body = await request.json();
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+
+    // Only developers can assign governance role or governance_chapter_ids
+    const requestedRole = body.role;
+    const governanceChapterIds = Array.isArray(body.governance_chapter_ids)
+      ? body.governance_chapter_ids.filter((id: unknown): id is string => typeof id === 'string' && id.length > 0)
+      : [];
+    if (
+      (requestedRole === 'governance' || governanceChapterIds.length > 0) &&
+      !isDeveloper
+    ) {
+      return NextResponse.json(
+        { error: 'Only developers can assign governance roles' },
+        { status: 403 }
+      );
+    }
 
     const allowed = ['role', 'chapter_role', 'member_status', 'chapter_id'];
     const update: Record<string, any> = {};
@@ -218,9 +297,6 @@ export async function PUT(request: NextRequest) {
     if (error) return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
 
     // Sync governance_chapters when role or governance_chapter_ids are provided
-    const governanceChapterIds = Array.isArray(body.governance_chapter_ids)
-      ? (body.governance_chapter_ids as string[]).filter((id): id is string => typeof id === 'string' && id.length > 0)
-      : [];
     await supabase.from('governance_chapters').delete().eq('user_id', userId);
     if (data.role === 'governance' && governanceChapterIds.length > 0) {
       await supabase.from('governance_chapters').insert(

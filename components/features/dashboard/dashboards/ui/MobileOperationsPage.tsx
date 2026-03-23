@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useAuth } from '@/lib/supabase/auth-context';
 import { useChapterBudget } from '@/lib/hooks/useChapterBudget';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -65,6 +66,7 @@ interface DuesAssignment {
 
 export function MobileOperationsPage() {
   const { profile } = useProfile();
+  const { session, getAuthHeaders } = useAuth();
   const chapterId = useScopedChapterId();
   const { enabled: financialToolsEnabled } = useFeatureFlag('financial_tools_enabled');
   const { enabled: eventsManagementEnabled } = useFeatureFlag('events_management_enabled');
@@ -128,10 +130,10 @@ export function MobileOperationsPage() {
 
   // Load members
   useEffect(() => {
-    if (chapterId && activeTab === 'members') {
+    if (chapterId && activeTab === 'members' && session) {
       fetchUsers();
     }
-  }, [chapterId, activeTab, searchDebounced]);
+  }, [chapterId, activeTab, searchDebounced, session]);
 
   // Load dues
   useEffect(() => {
@@ -156,13 +158,16 @@ export function MobileOperationsPage() {
   }, [activeTab, financialToolsEnabled]);
 
   const fetchUsers = async () => {
-    if (!chapterId) return;
+    if (!chapterId || !session) return;
     
     try {
       setMembersLoading(true);
       const q = searchDebounced ? `&q=${encodeURIComponent(searchDebounced)}` : '';
+      const headers = getAuthHeaders();
       
-      const response = await fetch(`/api/developer/users?page=1&limit=1000&chapterId=${encodeURIComponent(chapterId)}${q}`);
+      const response = await fetch(`/api/developer/users?page=1&limit=1000&chapterId=${encodeURIComponent(chapterId)}${q}`, {
+        headers,
+      });
       
       if (!response.ok) {
         throw new Error('Failed to fetch users');
@@ -294,6 +299,7 @@ export function MobileOperationsPage() {
     try {
       const response = await fetch(`/api/developer/users?userId=${userToDelete.id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {

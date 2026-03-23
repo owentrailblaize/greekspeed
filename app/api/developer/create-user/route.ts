@@ -1,10 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
 import { generateUniqueUsername, generateProfileSlug } from '@/lib/utils/usernameUtils';
 import { generateSimplePassword } from '@/lib/utils/passwordGenerator';
 
+async function authenticateRequest(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.replace('Bearer ', '');
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (!error && user) {
+      return {
+        user,
+        supabase: createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY!),
+      };
+    }
+  }
+
+  try {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set() {},
+        remove() {},
+      },
+    });
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) return null;
+    return {
+      user,
+      supabase: createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY!),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
+    const auth = await authenticateRequest(request);
+    if (!auth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { user, supabase } = auth;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_developer')
+      .eq('id', user.id)
+      .single();
+
     const body = await request.json();
     let { 
       email, 
@@ -25,16 +79,28 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    const isDeveloper = profile?.is_developer === true;
+
+    // Only developers can assign governance role or is_developer flag
+    if (role === 'governance' || is_developer) {
+      if (!isDeveloper) {
+        return NextResponse.json(
+          { error: 'Only developers can assign governance roles or developer access' },
+          { status: 403 }
+        );
+      }
+    }
+
+    const governanceChapterIds = Array.isArray(governance_chapter_ids)
+      ? governance_chapter_ids.filter((id): id is string => typeof id === 'string' && id.length > 0)
+      : [];
+
     // Role validation (admin, active_member, alumni, governance for developer tooling)
     if (!['admin', 'active_member', 'alumni', 'governance'].includes(role)) {
       return NextResponse.json({ 
         error: 'Invalid role. Only admin, active_member, alumni, or governance are allowed.' 
       }, { status: 400 });
     }
-
-    const governanceChapterIds = Array.isArray(governance_chapter_ids)
-      ? governance_chapter_ids.filter((id): id is string => typeof id === 'string' && id.length > 0)
-      : [];
 
     // Sanitize free-text chapter_role
     const sanitizeTitle = (s: string) =>
@@ -48,13 +114,7 @@ export async function POST(request: NextRequest) {
       chapter_role = sanitizeTitle(chapter_role || 'member') || 'member';
     }
 
-    // Create server-side Supabase client with service role key
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
-    // Resolve chapter ID to chapter name
+    // Resolve chapter ID to chapter name (supabase from auth has service role)
     let chapterName = chapter;
     let chapterId = chapter;
     

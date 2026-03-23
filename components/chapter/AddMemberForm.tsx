@@ -35,6 +35,7 @@ export function AddMemberForm({ onClose, onSuccess, chapterContext }: AddMemberF
       onClose={onClose}
       onSuccess={onSuccess}
       chapterContext={chapterContext}
+      isDeveloper={profile?.is_developer === true}
     />
   );
 }

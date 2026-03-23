@@ -10,6 +10,8 @@ import { Select, SelectItem } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { X } from 'lucide-react';
 import { useChapters } from '@/lib/hooks/useChapters';
+import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useAuth } from '@/lib/supabase/auth-context';
 
 type SystemRoleOption = 'admin' | 'active_member' | 'alumni' | 'governance';
 
@@ -28,6 +30,8 @@ interface EditUserModalProps {
 }
 
 export function EditUserModal({ isOpen, onClose, user, onSaved }: EditUserModalProps) {
+  const { isDeveloper } = useProfile();
+  const { session, getAuthHeaders } = useAuth();
   const [role, setRole] = useState<SystemRoleOption>('active_member');
   const [chapterRole, setChapterRole] = useState<string>('member');
   const [governanceChapterIds, setGovernanceChapterIds] = useState<string[]>([]);
@@ -37,9 +41,11 @@ export function EditUserModal({ isOpen, onClose, user, onSaved }: EditUserModalP
 
   // Fetch full user (including governance_chapter_ids) when modal opens
   useEffect(() => {
-    if (!isOpen || !user) return;
+    if (!isOpen || !user || !session) return;
     setLoadingUser(true);
-    fetch(`/api/developer/users?userId=${user.id}`)
+    fetch(`/api/developer/users?userId=${user.id}`, {
+      headers: getAuthHeaders(),
+    })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error('Failed to fetch user'))))
       .then((data) => {
         const u = data.user;
@@ -54,7 +60,7 @@ export function EditUserModal({ isOpen, onClose, user, onSaved }: EditUserModalP
         setGovernanceChapterIds([]);
       })
       .finally(() => setLoadingUser(false));
-  }, [isOpen, user?.id]);
+  }, [isOpen, user?.id, session]);
 
 
   // Prevent background scroll when open
@@ -82,7 +88,10 @@ export function EditUserModal({ isOpen, onClose, user, onSaved }: EditUserModalP
       if (role === 'governance') body.governance_chapter_ids = governanceChapterIds;
       const resp = await fetch(`/api/developer/users?userId=${user.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify(body)
       });
       if (!resp.ok) {
@@ -125,11 +134,14 @@ export function EditUserModal({ isOpen, onClose, user, onSaved }: EditUserModalP
                 <SelectItem value="active_member">Active Member</SelectItem>
                 <SelectItem value="alumni">Alumni</SelectItem>
                 <SelectItem value="admin">Admin / Executive</SelectItem>
-                <SelectItem value="governance">Governance</SelectItem>
+                {/* Only developers can assign governance; show for display when user is already governance */}
+                {(isDeveloper || role === 'governance') && (
+                  <SelectItem value="governance">Governance</SelectItem>
+                )}
               </Select>
             </div>
 
-            {role === 'governance' && (
+            {role === 'governance' && isDeveloper && (
               <div className="space-y-2">
                 <Label>Managed chapters</Label>
                 {chaptersLoading ? (

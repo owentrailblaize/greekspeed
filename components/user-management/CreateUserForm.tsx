@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectItem } from '@/components/ui/select';
 import { X } from 'lucide-react';
 import { useChapters } from '@/lib/hooks/useChapters';
+import { useAuth } from '@/lib/supabase/auth-context';
 import { DEVELOPER_PERMISSIONS } from '@/lib/developerPermissions';
 import { DeveloperPermission } from '@/types/profile';
 import { cn } from '@/lib/utils';
@@ -22,9 +23,12 @@ interface CreateUserFormProps {
     chapterName: string;
     isChapterAdmin?: boolean;
   };
+  /** Only developers can assign governance role; hide option for non-developers */
+  isDeveloper?: boolean;
 }
 
-export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUserFormProps) {
+export function CreateUserForm({ onClose, onSuccess, chapterContext, isDeveloper = false }: CreateUserFormProps) {
+  const { getAuthHeaders } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     firstName: '',
@@ -86,7 +90,10 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
       }
       const response = await fetch('/api/developer/create-user', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify(body)
       });
 
@@ -319,7 +326,7 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
                 <SelectItem value="active_member">Active Member</SelectItem>
                 <SelectItem value="alumni">Alumni</SelectItem>
                 <SelectItem value="admin">Admin / Executive</SelectItem>
-                <SelectItem value="governance">Governance</SelectItem>
+                {isDeveloper && <SelectItem value="governance">Governance</SelectItem>}
               </Select>
             </div>
             <div>
@@ -358,8 +365,8 @@ export function CreateUserForm({ onClose, onSuccess, chapterContext }: CreateUse
             </div>
           </div>
 
-          {/* Managed chapters - only when role is Governance */}
-          {formData.role === 'governance' && (
+          {/* Managed chapters - only when role is Governance and caller is developer */}
+          {formData.role === 'governance' && isDeveloper && (
             <div className="space-y-2">
               <Label>Managed chapters</Label>
               {chaptersLoading ? (
