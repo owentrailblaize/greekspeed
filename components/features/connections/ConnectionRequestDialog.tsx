@@ -128,7 +128,12 @@ export function ConnectionRequestDialog({
       fixed={isMobile}
     >
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-[10002] bg-black/40 transition-opacity" />
+        <Drawer.Overlay
+          className="fixed inset-0 z-[10002] bg-black/40 transition-opacity"
+          onPointerDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        />
         {/* 500px centered via left + margin (no transform) so vaul's translateY animation doesn't conflict or jump. */}
         <Drawer.Content
           className="
@@ -149,6 +154,9 @@ export function ConnectionRequestDialog({
                 }
               : undefined
           }
+          onPointerDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Drag handle */}
           <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-zinc-300 mt-3 mb-4" />
