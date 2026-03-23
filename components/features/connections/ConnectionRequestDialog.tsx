@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Drawer } from 'vaul';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
+import { useVisualViewportHeight } from '@/lib/hooks/useVisualViewportHeight';
 import { X } from 'lucide-react';
 
 interface ConnectionRequestDialogProps {
@@ -29,6 +30,19 @@ export function ConnectionRequestDialog({
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const isMobile = useIsMobile();
+
+  // Keyboard-aware sizing for iOS Safari when textarea is focused
+  const { height: visualHeight, offsetTop } = useVisualViewportHeight();
+  const [innerHeight, setInnerHeight] = useState(
+    typeof window !== 'undefined' ? window.innerHeight : 768
+  );
+  useEffect(() => {
+    setInnerHeight(window.innerHeight);
+  }, []);
+  const keyboardLikelyOpen = isMobile && visualHeight < innerHeight;
+  const maxHeightPx = keyboardLikelyOpen ? visualHeight - 80 : undefined;
+  const bottomPx =
+    keyboardLikelyOpen ? innerHeight - (offsetTop + visualHeight) : undefined;
 
   const handleSend = async () => {
     setIsSending(true);
@@ -111,6 +125,7 @@ export function ConnectionRequestDialog({
       direction="bottom"
       modal={true}
       dismissible={true}
+      fixed={isMobile}
     >
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-[10002] bg-black/40 transition-opacity" />
@@ -124,6 +139,16 @@ export function ConnectionRequestDialog({
             shadow-2xl border border-gray-200
             outline-none p-0
           "
+          style={
+            maxHeightPx !== undefined || bottomPx !== undefined
+              ? {
+                  ...(maxHeightPx !== undefined && {
+                    maxHeight: `${maxHeightPx}px`,
+                  }),
+                  ...(bottomPx !== undefined && { bottom: `${bottomPx}px` }),
+                }
+              : undefined
+          }
         >
           {/* Drag handle */}
           <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-zinc-300 mt-3 mb-4" />
