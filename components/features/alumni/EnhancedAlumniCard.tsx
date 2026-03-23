@@ -6,7 +6,7 @@ import { MessageCircle, UserPlus, Shield, Building2, MapPin, GraduationCap, Cloc
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
 import { useConnections } from "@/lib/contexts/ConnectionsContext";
 import { useAuth } from "@/lib/supabase/auth-context";
-import { useState, memo } from "react";
+import { useState, memo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ClickableField } from '@/components/shared/ClickableField';
 import { ActivityIndicator } from '@/components/shared/ActivityIndicator';
@@ -50,6 +50,7 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
   } = useConnections();
   const [connectionLoading, setConnectionLoading] = useState(false);
   const [showConnectionDialog, setShowConnectionDialog] = useState(false);
+  const suppressCardClickUntilRef = useRef(0);
 
   // Use mutual connections from alumni prop (already calculated by API)
   const mutualConnections = alumni.mutualConnections || [];
@@ -106,6 +107,11 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
 
   const handleSendConnectionRequest = async (message?: string) => {
     await sendConnectionRequest(alumni.id, message);
+  };
+
+  const handleCloseConnectionDialog = () => {
+    suppressCardClickUntilRef.current = Date.now() + 350;
+    setShowConnectionDialog(false);
   };
 
   const renderConnectionButton = () => {
@@ -200,6 +206,8 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
   };
 
   const handleCardClick = () => {
+    if (showConnectionDialog) return;
+    if (Date.now() < suppressCardClickUntilRef.current) return;
     if (onClick) {
       onClick(alumni);
     }
@@ -372,7 +380,7 @@ function EnhancedAlumniCardComponent({ alumni, onClick }: EnhancedAlumniCardProp
       </CardContent>
       <ConnectionRequestDialog
         isOpen={showConnectionDialog}
-        onClose={() => setShowConnectionDialog(false)}
+        onClose={handleCloseConnectionDialog}
         onSend={handleSendConnectionRequest}
         recipientName={alumni.fullName}
         isLoading={connectionLoading}

@@ -940,8 +940,7 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
               <div className={isMobile ? 'space-y-3' : 'space-y-4'}>
                 <div>
                   <Label htmlFor="phone" className="flex items-center gap-2">
-                    Phone
-                    <Badge variant="secondary" className="text-xs hidden sm:inline-flex">Optional</Badge>
+                    Phone *
                   </Label>
                   <Input
                     id="phone"

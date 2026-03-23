@@ -62,8 +62,10 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
       newErrors.password = 'Password must be at least 6 characters';
     }
 
-    // Phone optional; if provided must be 10 digits
-    if (formData.phone?.trim()) {
+    // Phone required; must be 10 digits
+    if (!formData.phone?.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else {
       const digits = formData.phone.replace(/\D/g, '');
       if (digits.length !== 10) {
         newErrors.phone = 'Please enter a complete 10-digit phone number';
@@ -238,9 +240,9 @@ export function AlumniJoinForm({ invitation, onSuccess, onCancel }: AlumniJoinFo
                 )}
               </div>
 
-              {/* Phone (optional) */}
+              {/* Phone (required) */}
               <div className="space-y-1">
-                <Label htmlFor="phone" className="text-sm">Phone Number <span className="text-gray-500 font-normal">(Optional)</span></Label>
+                <Label htmlFor="phone" className="text-sm">Phone Number *</Label>
                 <Input
                   id="phone"
                   type="tel"

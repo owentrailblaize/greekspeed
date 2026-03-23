@@ -598,7 +598,7 @@ export default function ProfileBasicsPage() {
                     <div className="space-y-2">
                       <Label htmlFor="phone" className="flex items-center gap-2">
                         <Phone className="h-4 w-4 text-gray-400" />
-                        Phone (Optional)
+                        Phone *
                       </Label>
                       <Input
                         id="phone"

@@ -128,7 +128,12 @@ export function ConnectionRequestDialog({
       fixed={isMobile}
     >
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-[10002] bg-black/40 transition-opacity" />
+        <Drawer.Overlay
+          className="fixed inset-0 z-[10002] bg-black/40 transition-opacity"
+          onPointerDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        />
         {/* 500px centered via left + margin (no transform) so vaul's translateY animation doesn't conflict or jump. */}
         <Drawer.Content
           className="
@@ -144,11 +149,15 @@ export function ConnectionRequestDialog({
               ? {
                   ...(maxHeightPx !== undefined && {
                     maxHeight: `${maxHeightPx}px`,
+                    height: `${maxHeightPx}px`,
                   }),
                   ...(bottomPx !== undefined && { bottom: `${bottomPx}px` }),
                 }
               : undefined
           }
+          onPointerDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Drag handle */}
           <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-zinc-300 mt-3 mb-4" />
@@ -176,9 +185,13 @@ export function ConnectionRequestDialog({
             </div>
           </div>
 
-          {/* Content - Scrollable */}
+          {/* Scrollable content - only the message input */}
           <div className="flex-1 overflow-y-auto px-4 py-4 min-h-0">
             {messageInput}
+          </div>
+
+          {/* Buttons - fixed footer, always visible */}
+          <div className="flex-shrink-0 border-t border-gray-200 px-4 py-4 bg-white">
             {buttons}
           </div>
         </Drawer.Content>

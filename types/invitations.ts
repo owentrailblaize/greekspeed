@@ -90,7 +90,7 @@ export interface AlumniJoinFormData {
   full_name: string;
   first_name?: string;
   last_name?: string;
-  phone?: string;
+  phone: string;
   sms_consent?: boolean;
   // Alumni-specific fields
   industry: string;

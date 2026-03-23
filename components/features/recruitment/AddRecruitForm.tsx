@@ -307,7 +307,7 @@ export function AddRecruitForm({ onSuccess, onCancel, variant = 'inline' }: AddR
           )}>
             {/* Phone Number Field */}
             <div className="space-y-2">
-              <Label htmlFor="phone_number" className="text-base">Phone Number (Optional)</Label>
+              <Label htmlFor="phone_number" className="text-base">Phone Number *</Label>
               <Input
                 id="phone_number"
                 type="tel"
