@@ -17,25 +17,41 @@ export async function GET(request: NextRequest) {
     const now = new Date();
     const startDate = activityWindow ? new Date(now.getTime() - activityWindow * 24 * 60 * 60 * 1000) : null;
 
-    // Fetch all profiles in date range
-    let profilesQuery = supabase
-      .from('profiles')
-      .select('id, role, created_at, chapter_id');
+    // Fetch all profiles in date range (paginate to avoid Supabase 1000-row limit)
+    const PAGE_SIZE = 1000;
+    let allProfiles: Array<{ id: string; role: string | null; created_at: string; chapter_id: string | null }> = [];
+    let from = 0;
+    let hasMore = true;
 
-    if (chapterId) {
-      profilesQuery = profilesQuery.eq('chapter_id', chapterId);
+    while (hasMore) {
+      let profilesQuery = supabase
+        .from('profiles')
+        .select('id, role, created_at, chapter_id')
+        .order('created_at', { ascending: true })
+        .range(from, from + PAGE_SIZE - 1);
+
+      if (chapterId) {
+        profilesQuery = profilesQuery.eq('chapter_id', chapterId);
+      }
+
+      if (startDate) {
+        profilesQuery = profilesQuery.gte('created_at', startDate.toISOString());
+      }
+
+      const { data: pageData, error } = await profilesQuery;
+
+      if (error) {
+        console.error('Error fetching profiles for chart:', error);
+        return NextResponse.json({ error: 'Failed to fetch chart data' }, { status: 500 });
+      }
+
+      if (!pageData || pageData.length === 0) break;
+      allProfiles = allProfiles.concat(pageData);
+      hasMore = pageData.length === PAGE_SIZE;
+      from += PAGE_SIZE;
     }
 
-    if (startDate) {
-      profilesQuery = profilesQuery.gte('created_at', startDate.toISOString());
-    }
-
-    const { data: profiles, error } = await profilesQuery;
-
-    if (error) {
-      console.error('Error fetching profiles for chart:', error);
-      return NextResponse.json({ error: 'Failed to fetch chart data' }, { status: 500 });
-    }
+    const profiles = allProfiles;
 
     // Group by date and calculate metrics using simplified role-based queries
     const dateMap = new Map<string, {
