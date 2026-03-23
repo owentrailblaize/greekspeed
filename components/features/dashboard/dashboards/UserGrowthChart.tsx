@@ -309,7 +309,7 @@ export const UserGrowthChart = memo(function UserGrowthChart({ filters }: UserGr
             </div>
           )}
           legends={
-            dimensions.width >= 480
+            dimensions.width >= 768
               ? [
                   {
                     anchor: 'top',
