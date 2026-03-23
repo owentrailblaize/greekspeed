@@ -31,6 +31,7 @@ import {
 import { toast } from 'react-toastify';
 import { cn } from '@/lib/utils';
 import { SearchableSelect } from '@/components/ui/SearchableSelect';
+import { BIO_MAX_LENGTH } from '@/lib/constants/profileConstants';
 
 // ============================================================================
 // Constants
@@ -301,6 +302,11 @@ export default function ProfileBasicsPage() {
       if (!formData.major?.trim()) newErrors.major = 'Major is required for active members';
     }
 
+    // Bio length validation (TRA-491)
+    if (formData.bio && formData.bio.length > BIO_MAX_LENGTH) {
+      newErrors.bio = `Bio must be ${BIO_MAX_LENGTH} characters or fewer. Currently ${formData.bio.length} characters.`;
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -341,7 +347,7 @@ export default function ProfileBasicsPage() {
       }
 
       // Add bio and hometown for all roles (if provided)
-      if (formData.bio) updateData.bio = formData.bio;
+      if (formData.bio) updateData.bio = formData.bio.trim() || null;
       if (formData.hometown) updateData.hometown = formData.hometown;
 
       const { error: profileError } = await supabase
@@ -579,8 +585,12 @@ export default function ProfileBasicsPage() {
                       onChange={(e) => handleChange('bio', e.target.value)}
                       placeholder="Tell us a bit about yourself..."
                       rows={4}
-                      className="resize-none"
+                      maxLength={BIO_MAX_LENGTH}
+                      className={cn("resize-none", errors.bio && "border-red-500")}
                     />
+                    <p className={cn("text-xs", errors.bio ? "text-red-500" : "text-gray-500")}>
+                      {errors.bio || `${formData.bio.length}/${BIO_MAX_LENGTH} characters`}
+                    </p>
                   </div>
 
                   {/* Phone & Location */}

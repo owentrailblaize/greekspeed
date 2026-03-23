@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Search, Eye, Edit, Trash2 } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useAuth } from '@/lib/supabase/auth-context';
 import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { execColumns } from '@/components/user-management/columns';
 import { ViewUserModal } from '@/components/user-management/ViewUserModal';
@@ -45,6 +46,7 @@ interface User {
 
 export function MembersView() {
   const { profile } = useProfile();
+  const { session, getAuthHeaders } = useAuth();
   const chapterId = useScopedChapterId();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,10 +85,10 @@ export function MembersView() {
 
   // Fetch all users for the chapter, then filter client-side
   useEffect(() => {
-    if (chapterId) {
+    if (chapterId && session) {
       fetchUsers();
     }
-  }, [chapterId, searchDebounced]);
+  }, [chapterId, searchDebounced, session]);
 
   // Re-paginate when page changes
   useEffect(() => {
@@ -99,14 +101,17 @@ export function MembersView() {
   }, [currentPage, allFilteredUsers, pageSize]);
 
   const fetchUsers = async () => {
-    if (!chapterId) return;
+    if (!chapterId || !session) return;
     
     try {
       setLoading(true);
       const q = searchDebounced ? `&q=${encodeURIComponent(searchDebounced)}` : '';
+      const headers = getAuthHeaders();
       
       // Fetch all users for the chapter (no role filter)
-      const response = await fetch(`/api/developer/users?page=1&limit=1000&chapterId=${encodeURIComponent(chapterId)}${q}`);
+      const response = await fetch(`/api/developer/users?page=1&limit=1000&chapterId=${encodeURIComponent(chapterId)}${q}`, {
+        headers,
+      });
       
       if (!response.ok) {
         throw new Error('Failed to fetch users');
@@ -181,6 +186,7 @@ export function MembersView() {
       
       const response = await fetch(`/api/developer/users?userId=${userToDelete.id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {

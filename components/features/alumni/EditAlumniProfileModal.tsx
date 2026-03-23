@@ -22,6 +22,8 @@ import { queueProfileUpdatePrompt } from '@/lib/utils/profileUpdatePromptQueue';
 import { Select, SelectItem } from '@/components/ui/select';
 import { UsernameInput } from '@/components/features/profile/UsernameInput';
 import { generateProfileSlug } from '@/lib/utils/usernameUtils';
+import { BIO_MAX_LENGTH } from '@/lib/constants/profileConstants';
+import { cn } from '@/lib/utils';
 
 interface EditAlumniProfileModalProps {
   isOpen: boolean;
@@ -454,6 +456,9 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
     }
     if (formData.linkedin_url && !validateLinkedInURL(formData.linkedin_url)) {
       newErrors.linkedin_url = 'Please enter a valid LinkedIn URL';
+    }
+    if (formData.description && formData.description.length > BIO_MAX_LENGTH) {
+      newErrors.description = `Bio must be ${BIO_MAX_LENGTH} characters or fewer. Currently ${formData.description.length} characters.`;
     }
 
     // Validate username if provided
@@ -1070,8 +1075,12 @@ export function EditAlumniProfileModal({ isOpen, onClose, profile, onUpdate, var
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     placeholder="Tell us about yourself..."
                     rows={isMobile ? 3 : 4}
-                    className="mt-1"
+                    maxLength={BIO_MAX_LENGTH}
+                    className={cn("mt-1", errors.description && "border-red-500")}
                   />
+                  <p className={cn("text-xs mt-1", errors.description ? "text-red-500" : "text-gray-500")}>
+                    {errors.description || `${formData.description.length}/${BIO_MAX_LENGTH} characters`}
+                  </p>
                 </div>
               </div>
             </div>

@@ -13,6 +13,8 @@ import { ViewUserModal } from './ViewUserModal';
 import { getRoleDisplayName } from '@/lib/permissions';
 import { EditUserModal } from './EditUserModal';
 import { Select, SelectItem } from '@/components/ui/select';
+import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useAuth } from '@/lib/supabase/auth-context';
 
 interface User {
   id: string;
@@ -49,6 +51,8 @@ export function UsersTab({
   chapterId?: string;
   chapterContext?: { chapterId: string; chapterName: string; isChapterAdmin?: boolean };
 } = {}) {
+  const { isDeveloper } = useProfile();
+  const { session, getAuthHeaders } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -73,8 +77,8 @@ export function UsersTab({
   useEffect(() => { setCurrentPage(1); }, [roleFilter]);
   
   useEffect(() => {
-    fetchUsers();
-  }, [currentPage, searchDebounced, roleFilter]);
+    if (session) fetchUsers();
+  }, [currentPage, searchDebounced, roleFilter, session]);
 
   useEffect(() => {
     const t = setTimeout(() => setSearchDebounced(searchTerm.trim()), 300);
@@ -87,12 +91,15 @@ export function UsersTab({
   },[searchDebounced]);
 
   const fetchUsers = async () => {
+    if (!session) return;
     try {
       setLoading(true);
       const q = searchDebounced ? `&q=${encodeURIComponent(searchDebounced)}` : '';
       const role = roleFilter !== 'all' ? `&role=${encodeURIComponent(roleFilter)}` : '';
       const url = `/api/developer/users?page=${currentPage}&limit=${pageSize}${chapterId ? `&chapterId=${encodeURIComponent(chapterId)}` : ''}${q}${role}`;
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: getAuthHeaders(),
+      });
       if (!response.ok) {
         const err = await response.text();
         throw new Error(`Failed to fetch users (${response.status}): ${err}`);
@@ -146,6 +153,7 @@ export function UsersTab({
       
       const response = await fetch(`/api/developer/users?userId=${userToDelete.id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -306,6 +314,7 @@ export function UsersTab({
           onClose={() => setShowCreateForm(false)} 
           onSuccess={fetchUsers} 
           chapterContext={chapterContext}
+          isDeveloper={isDeveloper}
         />
       )}
 

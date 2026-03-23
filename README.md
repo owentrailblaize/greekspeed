@@ -210,15 +210,6 @@ This codebase is optimized for AI-assisted development. Key resources:
 - **`docs/CODE_STYLE.md`** - Code style and patterns
 - **`docs/DATABASE_SCHEMA.md`** - Database schema, relationships, and query patterns
 - **`docs/COMPONENT_STYLING.md`** - Component structure, styling patterns, and reusable components
-- **`docs/WORKFLOW.md`** - Development workflow, repository sync process, and agent change syncing
-
-### Important: Repository Sync
-
-This project uses a dual-repository setup:
-- **greekspeed** (this repo) - Primary development repository
-- **trailblaize-web-app** - Organization repository (Cursor-Linear integration)
-
-**For AI Agent Work**: Open `trailblaize-web-app` directory when working with Cursor/Linear agents, then sync changes back to `greekspeed` using the process in `docs/WORKFLOW.md`.
 
 When making changes:
 1. Review existing patterns in similar files
@@ -226,7 +217,6 @@ When making changes:
 3. Maintain type safety
 4. Test thoroughly
 5. Update documentation if needed
-6. **If working with agents**: Sync changes back to greekspeed (see `docs/WORKFLOW.md`)
 
 ## Support
 For development questions or issues, refer to the project documentation or contact the development team.

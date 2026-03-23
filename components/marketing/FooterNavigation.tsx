@@ -68,7 +68,7 @@ export function FooterSocialLinks() {
         <Linkedin className="w-5 h-5" />
       </a>
       <a 
-        href="https://twitter.com/trailblaize" 
+        href="https://x.com/TrailblaizeUS" 
         target="_blank" 
         rel="noopener noreferrer"
         className="transition-colors"
