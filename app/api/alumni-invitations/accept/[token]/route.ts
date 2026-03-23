@@ -63,13 +63,13 @@ export async function POST(
     const normalizedLocation = location?.trim() || 'Not specified';
     const normalizedLinkedIn = linkedin_url?.trim() || null;
 
-    // Handle optional phone - normalize to digits, validate length (match active member API)
-    let phoneDigits: string | null = null;
-    if (body.phone?.trim()) {
-      phoneDigits = body.phone.replace(/\D/g, '');
-      if (phoneDigits.length !== 10) {
-        return NextResponse.json({ error: 'Phone number must be 10 digits' }, { status: 400 });
-      }
+    // Phone required; must be 10 digits
+    if (!body.phone?.trim()) {
+      return NextResponse.json({ error: 'Phone number is required' }, { status: 400 });
+    }
+    const phoneDigits = body.phone.replace(/\D/g, '');
+    if (phoneDigits.length !== 10) {
+      return NextResponse.json({ error: 'Phone number must be 10 digits' }, { status: 400 });
     }
 
     const effectiveGradYear = graduation_year || new Date().getFullYear();

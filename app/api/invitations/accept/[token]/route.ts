@@ -29,13 +29,13 @@ export async function POST(
       return NextResponse.json({ error: 'Name is required' }, { status: 400 });
     }
 
-    // Handle optional phone - validate format only if provided
-    let phoneDigits = '';
-    if (phone && phone.trim()) {
-      phoneDigits = phone.replace(/\D/g, '');
-      if (phoneDigits.length !== 10 && phoneDigits.length !== 0) {
-        return NextResponse.json({ error: 'Phone number must be 10 digits' }, { status: 400 });
-      }
+    // Phone required; must be 10 digits
+    if (!phone || !phone.trim()) {
+      return NextResponse.json({ error: 'Phone number is required' }, { status: 400 });
+    }
+    const phoneDigits = phone.replace(/\D/g, '');
+    if (phoneDigits.length !== 10) {
+      return NextResponse.json({ error: 'Phone number must be 10 digits' }, { status: 400 });
     }
 
     // Handle graduation_year - use default if not provided

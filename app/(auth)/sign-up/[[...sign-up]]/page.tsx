@@ -81,8 +81,9 @@ export default function SignUpPage() {
     setError('');
     setSuccess('');
 
-    if (!email || !password || !firstName || !lastName || !chapter) {
-      setError('All fields are required');
+    const isValidPhone = phoneNumber && phoneNumber.replace(/\D/g, '').length === 10;
+    if (!email || !password || !firstName || !lastName || !chapter || !phoneNumber || !isValidPhone) {
+      setError(phoneNumber && !isValidPhone ? 'Please enter a complete 10-digit phone number' : 'All fields are required');
       setLoading(false);
       return;
     }
@@ -398,7 +399,7 @@ export default function SignUpPage() {
                       {/* Phone Number Field - Compact */}
                       <div className="space-y-1">
                         <Label htmlFor="phone" className="text-xs font-medium text-gray-700">
-                          Phone Number <span className="text-gray-500 font-normal">(Optional)</span>
+                          Phone Number *
                         </Label>
                         <Input
                           id="phone"
@@ -709,7 +710,7 @@ export default function SignUpPage() {
                         {/* Phone Number Field - Compact */}
                         <div className="space-y-1">
                           <Label htmlFor="phone" className="text-xs font-medium text-gray-700">
-                            Phone Number <span className="text-gray-500 font-normal">(Optional)</span>
+                            Phone Number *
                           </Label>
                           <Input
                             id="phone"
