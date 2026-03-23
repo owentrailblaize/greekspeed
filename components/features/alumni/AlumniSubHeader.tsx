@@ -54,21 +54,25 @@ export function AlumniSubHeader({
 
   return (
     <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
-      {/* Mobile Layout: count + pill on left, Export on right (card view forced on mobile) */}
-      <div className="sm:hidden flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 flex-nowrap min-w-0">
+      {/* Mobile Layout: Row 1 = count + Export; Row 2 = profile pill (avoids overflow) */}
+      <div className="sm:hidden flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-2">
           <p className="text-gray-600 text-xs whitespace-nowrap flex-shrink-0">{mobileCountText}</p>
-          {profilePill}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onExport}
+            className={cn("h-7 text-xs flex-shrink-0", exportButtonStyles)}
+          >
+            <Download className="h-3 w-3 mr-1.5" />
+            Export All
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onExport}
-          className={cn("h-7 text-xs flex-shrink-0", exportButtonStyles)}
-        >
-          <Download className="h-3 w-3 mr-1.5" />
-          Export All
-        </Button>
+        {profilePill && (
+          <div className="flex justify-start">
+            {profilePill}
+          </div>
+        )}
       </div>
 
       {/* Desktop Layout */}
