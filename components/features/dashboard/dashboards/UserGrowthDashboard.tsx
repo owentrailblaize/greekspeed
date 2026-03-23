@@ -228,7 +228,7 @@ export function UserGrowthDashboard() {
               <CardHeader className="flex-shrink-0 pb-3 border-b">
                 <div className="space-y-1">
                   <CardTitle className="text-xl font-semibold">User Growth Over Time</CardTitle>
-                  <p className="text-sm text-gray-500">Monthly active users vs Total users trend</p>
+                  <p className="text-sm text-gray-500">Cumulative users over time by role</p>
                 </div>
                 <div className="mt-3">
                   <UserGrowthFilters filters={filters} onFiltersChange={setFilters} />
@@ -302,7 +302,7 @@ export function UserGrowthDashboard() {
               <CardHeader className="flex-shrink-0 pb-3 border-b">
                 <div className="space-y-1">
                   <CardTitle className="text-xl font-semibold">User Growth Over Time</CardTitle>
-                  <p className="text-sm text-gray-500">Monthly active users vs Total users trend</p>
+                  <p className="text-sm text-gray-500">Cumulative users over time by role</p>
                 </div>
                 <div className="mt-3">
                   <UserGrowthFilters filters={filters} onFiltersChange={setFilters} />

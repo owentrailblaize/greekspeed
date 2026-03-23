@@ -213,37 +213,130 @@ export const UserGrowthChart = memo(function UserGrowthChart({ filters }: UserGr
             tickSize: 5,
             tickPadding: 5,
           }}
-          pointSize={6}
+          pointSize={10}
           pointColor={{ theme: 'background' }}
           pointBorderWidth={2}
           pointBorderColor={{ from: 'serieColor' }}
           pointLabelYOffset={-12}
-          useMesh={false}
-          legends={[
-            {
-              anchor: 'top',
-              direction: 'row',
-              justify: false,
-              translateX: 0,
-              translateY: -30,
-              itemsSpacing: 20,
-              itemDirection: 'left-to-right',
-              itemWidth: 100,
-              itemHeight: 20,
-              itemOpacity: 0.85,
-              symbolSize: 10,
-              symbolShape: 'circle',
-              effects: [
-                {
-                  on: 'hover',
-                  style: {
-                    itemBackground: 'rgba(0, 0, 0, .03)',
-                    itemOpacity: 1,
+          useMesh={true}
+          enableSlices="x"
+          sliceTooltip={({ slice }) => {
+            const SERIES_ORDER = ['Total Users', 'Alumni Users', 'Member Users', 'Admin Users'];
+            const getSeriesLabel = (point: { seriesId?: string; serieId?: string; id?: string }) =>
+              String(point.seriesId ?? point.serieId ?? point.id ?? '').replace(/\.[^.]*$/, '') || 'Unknown';
+            const sortedPoints = [...(slice.points ?? [])].sort((a, b) => {
+              const aLabel = getSeriesLabel(a);
+              const bLabel = getSeriesLabel(b);
+              return SERIES_ORDER.indexOf(aLabel) - SERIES_ORDER.indexOf(bLabel);
+            });
+            return (
+              <div
+                style={{
+                  background: 'white',
+                  color: '#374151',
+                  fontSize: 12,
+                  borderRadius: '6px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  padding: '12px 16px',
+                  border: '1px solid #e5e7eb',
+                  minWidth: 180,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: '#6b7280',
+                    marginBottom: 8,
+                    borderBottom: '1px solid #e5e7eb',
+                    paddingBottom: 6,
+                  }}
+                >
+                  {typeof slice.points[0]?.data?.x === 'string'
+                    ? new Date(slice.points[0].data.x).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })
+                    : slice.points[0]?.data?.xFormatted}
+                </div>
+                {sortedPoints.map((point) => {
+                  const label = getSeriesLabel(point);
+                  return (
+                    <div
+                      key={point.id}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                        alignItems: 'center',
+                        marginTop: 6,
+                      }}
+                    >
+<span style={{ color: point.seriesColor, flexShrink: 0 }}>●</span>
+<span style={{ flex: 1, minWidth: 100, color: '#374151' }}>{label}</span>
+                      <span style={{ fontWeight: 600, flexShrink: 0 }}>
+                        {Number(point.data.y).toLocaleString()}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          }}
+          tooltip={({ point }) => (
+            <div
+              style={{
+                background: 'white',
+                color: '#374151',
+                fontSize: 12,
+                borderRadius: '6px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                padding: '10px 14px',
+                border: '1px solid #e5e7eb',
+              }}
+            >
+              <strong>{point.seriesId}</strong>
+              <div style={{ marginTop: 4, color: '#6b7280', fontSize: 11 }}>
+                {new Date(point.data.x).toLocaleDateString(undefined, {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </div>
+              <div style={{ marginTop: 4, fontWeight: 600 }}>
+                {Number(point.data.y).toLocaleString()} users
+              </div>
+            </div>
+          )}
+          legends={
+            dimensions.width >= 768
+              ? [
+                  {
+                    anchor: 'top',
+                    direction: 'row',
+                    justify: false,
+                    translateX: 0,
+                    translateY: -30,
+                    itemsSpacing: 20,
+                    itemDirection: 'left-to-right',
+                    itemWidth: 100,
+                    itemHeight: 20,
+                    itemOpacity: 0.85,
+                    symbolSize: 10,
+                    symbolShape: 'circle',
+                    effects: [
+                      {
+                        on: 'hover',
+                        style: {
+                          itemBackground: 'rgba(0, 0, 0, .03)',
+                          itemOpacity: 1,
+                        },
+                      },
+                    ],
                   },
-                },
-              ],
-            },
-          ]}
+                ]
+              : []
+          }
           theme={{
             axis: {
               domain: {
@@ -300,7 +393,7 @@ export const UserGrowthChart = memo(function UserGrowthChart({ filters }: UserGr
           enablePoints={true}
           enablePointLabel={false}
           animate={false}
-          isInteractive={false}
+          isInteractive={true}
         />
       </div>
     </div>
