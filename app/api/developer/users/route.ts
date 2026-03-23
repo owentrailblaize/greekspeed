@@ -300,7 +300,7 @@ export async function PUT(request: NextRequest) {
     await supabase.from('governance_chapters').delete().eq('user_id', userId);
     if (data.role === 'governance' && governanceChapterIds.length > 0) {
       await supabase.from('governance_chapters').insert(
-        governanceChapterIds.map((chapter_id) => ({ user_id: userId, chapter_id }))
+        governanceChapterIds.map((chapter_id: string) => ({ user_id: userId, chapter_id }))
       );
     }
 
