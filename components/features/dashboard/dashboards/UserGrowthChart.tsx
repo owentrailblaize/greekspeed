@@ -222,8 +222,8 @@ export const UserGrowthChart = memo(function UserGrowthChart({ filters }: UserGr
           enableSlices="x"
           sliceTooltip={({ slice }) => {
             const SERIES_ORDER = ['Total Users', 'Alumni Users', 'Member Users', 'Admin Users'];
-            const getSeriesLabel = (point: { serieId?: string; id?: string }) =>
-              String(point.serieId ?? point.id ?? '').replace(/\.[^.]*$/, '') || 'Unknown';
+            const getSeriesLabel = (point: { seriesId?: string; serieId?: string; id?: string }) =>
+              String(point.seriesId ?? point.serieId ?? point.id ?? '').replace(/\.[^.]*$/, '') || 'Unknown';
             const sortedPoints = [...(slice.points ?? [])].sort((a, b) => {
               const aLabel = getSeriesLabel(a);
               const bLabel = getSeriesLabel(b);
@@ -272,8 +272,8 @@ export const UserGrowthChart = memo(function UserGrowthChart({ filters }: UserGr
                         marginTop: 6,
                       }}
                     >
-                      <span style={{ color: point.serieColor, flexShrink: 0 }}>●</span>
-                      <span style={{ flex: 1, minWidth: 100, color: '#374151' }}>{label}</span>
+<span style={{ color: point.seriesColor, flexShrink: 0 }}>●</span>
+<span style={{ flex: 1, minWidth: 100, color: '#374151' }}>{label}</span>
                       <span style={{ fontWeight: 600, flexShrink: 0 }}>
                         {Number(point.data.y).toLocaleString()}
                       </span>
@@ -295,7 +295,7 @@ export const UserGrowthChart = memo(function UserGrowthChart({ filters }: UserGr
                 border: '1px solid #e5e7eb',
               }}
             >
-              <strong>{point.serieId}</strong>
+              <strong>{point.seriesId}</strong>
               <div style={{ marginTop: 4, color: '#6b7280', fontSize: 11 }}>
                 {new Date(point.data.x).toLocaleDateString(undefined, {
                   month: 'short',
@@ -308,31 +308,35 @@ export const UserGrowthChart = memo(function UserGrowthChart({ filters }: UserGr
               </div>
             </div>
           )}
-          legends={[
-            {
-              anchor: 'top',
-              direction: 'row',
-              justify: false,
-              translateX: 0,
-              translateY: -30,
-              itemsSpacing: 20,
-              itemDirection: 'left-to-right',
-              itemWidth: 100,
-              itemHeight: 20,
-              itemOpacity: 0.85,
-              symbolSize: 10,
-              symbolShape: 'circle',
-              effects: [
-                {
-                  on: 'hover',
-                  style: {
-                    itemBackground: 'rgba(0, 0, 0, .03)',
-                    itemOpacity: 1,
+          legends={
+            dimensions.width >= 480
+              ? [
+                  {
+                    anchor: 'top',
+                    direction: 'row',
+                    justify: false,
+                    translateX: 0,
+                    translateY: -30,
+                    itemsSpacing: 20,
+                    itemDirection: 'left-to-right',
+                    itemWidth: 100,
+                    itemHeight: 20,
+                    itemOpacity: 0.85,
+                    symbolSize: 10,
+                    symbolShape: 'circle',
+                    effects: [
+                      {
+                        on: 'hover',
+                        style: {
+                          itemBackground: 'rgba(0, 0, 0, .03)',
+                          itemOpacity: 1,
+                        },
+                      },
+                    ],
                   },
-                },
-              ],
-            },
-          ]}
+                ]
+              : []
+          }
           theme={{
             axis: {
               domain: {
