@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase/client';
 import { Profile, ProfileFormData, ProfileCompletion } from '@/types/profile';
 import { generateProfileSlug } from '@/lib/utils/usernameUtils';
 import { invalidateProfileCache } from './userProfileService';
+import { BIO_MAX_LENGTH } from '@/lib/constants/profileConstants';
 
 export class ProfileService {
   // Get current user's profile
@@ -80,6 +81,14 @@ export class ProfileService {
           delete updateData[key];
         }
       });
+
+      // Validate bio length (TRA-491: matches DB constraint)
+      if (updateData.bio !== undefined && updateData.bio !== null) {
+        const bioLength = String(updateData.bio).length;
+        if (bioLength > BIO_MAX_LENGTH) {
+          throw new Error(`Bio must be ${BIO_MAX_LENGTH} characters or fewer. Currently ${bioLength} characters.`);
+        }
+      }
 
       // Updating profile with data
 

@@ -25,6 +25,7 @@ import { UsernameInput } from './UsernameInput';
 import { generateProfileSlug } from '@/lib/utils/usernameUtils';
 import { ImageCropper, type CropType } from '@/components/features/common/ImageCropper';
 import { SearchableSelect } from '@/components/ui/SearchableSelect';
+import { BIO_MAX_LENGTH } from '@/lib/constants/profileConstants';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -502,6 +503,9 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
     }
     if (formData.linkedin_url && !validateLinkedInURL(formData.linkedin_url)) {
       newErrors.linkedin_url = 'Please enter a valid LinkedIn URL';
+    }
+    if (formData.bio && formData.bio.length > BIO_MAX_LENGTH) {
+      newErrors.bio = `Bio must be ${BIO_MAX_LENGTH} characters or fewer. Currently ${formData.bio.length} characters.`;
     }
 
     // Validate username if provided
@@ -1291,8 +1295,14 @@ export function EditProfileModal({ isOpen, onClose, profile, onUpdate, variant =
                   onChange={(e) => handleInputChange('bio', e.target.value)}
                   placeholder="Tell us about yourself..."
                   rows={isMobile ? 3 : 4}
-                  className="mt-1"
+                  maxLength={BIO_MAX_LENGTH}
+                  className={cn("mt-1", errors.bio && "border-red-500")}
                 />
+                <div className="flex justify-between items-center mt-1">
+                  <p className={cn("text-xs", errors.bio ? "text-red-500" : "text-gray-500")}>
+                    {errors.bio || `${formData.bio.length}/${BIO_MAX_LENGTH} characters`}
+                  </p>
+                </div>
               </div>
             </div>
 

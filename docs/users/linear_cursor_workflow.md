@@ -6,47 +6,11 @@ This document describes how Linear and Cursor Cloud Agents work together for aut
 
 ## Flow Overview
 
-```mermaid
-flowchart TD
-    subgraph OpenClaw["OpenClaw (Orchestrator)"]
-        A[Create Linear ticket]
-        B[Set clear title & description]
-        C[Assign to Cursor]
-    end
-
-    subgraph Linear["Linear"]
-        D[(Issue in Backlog/Ready)]
-        E[Issue assigned to Cursor]
-    end
-
-    subgraph Cursor["Cursor Cloud Agent"]
-        F[Agent receives assignment]
-        G[Clones Trailblaizedevelopment/greekspeed]
-        H[Branches from develop]
-        I[Implements changes]
-        J[Opens PR into develop]
-        K[Updates Linear with result]
-    end
-
-    subgraph GitHub["GitHub"]
-        L[(Trailblaizedevelopment/greekspeed)]
-        M[cursor/TRA-xxx-branch]
-        N[Pull Request → develop]
-    end
-
-    A --> D
-    B --> D
-    C --> E
-    E --> F
-    F --> G
-    G --> H
-    H --> M
-    I --> M
-    M --> N
-    J --> N
-    N --> K
-    K --> E
-```
+<img 
+  src="https://h75rfbucofdbpxc3.public.blob.vercel-storage.com/OpenClaw%20Ticket%20Creation-2026-03-23-133641.png" 
+  alt="Linear ↔ Cursor Workflow Diagram showing ticket flow between OpenClaw, Linear, Cursor Cloud Agent, and GitHub"
+  style="max-width: 100%; border-radius: 0.75rem; border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin: 1.5rem 0;"
+/>
 
 ---
 
@@ -123,22 +87,3 @@ Cursor creates branches like: `cursor/TRA-158-add-edit-posts`
 5. Merge `develop` → `main` deploys to `trailblaize.net`
 
 ---
-
-```mermaid
-flowchart TD
-    A[OPENCLAW (Orchestrator)]
-    B[LINEAR]
-    C[CURSOR (Code Executor)]
-    D[HUMAN]
-
-    A -->|Create tickets, Triage, Assign| B
-    B -->|Backlog → Agent Ready → Assigned to Cursor → In Review → Done| C
-    C -->|Clone repo, Branch, Implement, Commit, Push, PR| D
-    D -->|Review PR, Merge to develop,<br/>Staging deploy,<br/>Merge to main for prod| D
-
-    %% Optional: comments (not rendered nodes)
-    %% A: • Create tickets from specs/ideas<br/>• Triage: add AC, add agent-ready label<br/>• Assign to Cursor → Cursor Cloud Agent starts<br/>• Monitor PRs, optionally update Linear state
-    %% B: Linear workflow states
-    %% C: • Clone Trailblaizedevelopment/greekspeed<br/>• Branch cursor/TRA-xxx-description from develop<br/>• Implement, commit, push<br/>• Open PR → develop, comment in Linear
-    %% D: • Review PR, merge to develop<br/>• Staging auto-deploys<br/>• Merge develop → main for production
-```
