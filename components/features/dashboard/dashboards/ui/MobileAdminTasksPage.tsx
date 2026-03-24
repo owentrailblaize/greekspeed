@@ -726,13 +726,13 @@ export function MobileAdminTasksPage() {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
           <TabsList className={cn(
-            "grid w-full mb-4",
+            "grid w-full mb-2 h-11 bg-transparent p-0 rounded-none border-b border-gray-200",
             recruitmentCrmEnabled ? "grid-cols-3" : "grid-cols-2"
           )}>
-            <TabsTrigger value="tasks" className="text-xs">Tasks</TabsTrigger>
-            <TabsTrigger value="docs" className="text-xs">Docs</TabsTrigger>
+            <TabsTrigger value="tasks" className="text-sm font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none text-gray-500 data-[state=active]:bg-transparent bg-transparent">Tasks</TabsTrigger>
+            <TabsTrigger value="docs" className="text-sm font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none text-gray-500 data-[state=active]:bg-transparent bg-transparent">Docs</TabsTrigger>
             {recruitmentCrmEnabled && (
-              <TabsTrigger value="recruits" className="text-xs">Recruits</TabsTrigger>
+              <TabsTrigger value="recruits" className="text-sm font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none text-gray-500 data-[state=active]:bg-transparent bg-transparent">Recruits</TabsTrigger>
             )}
           </TabsList>
 

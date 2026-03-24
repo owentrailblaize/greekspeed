@@ -334,13 +334,13 @@ export function MobileOperationsPage() {
       <div className="max-w-md mx-auto">
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-          <TabsList className={`grid w-full mb-4 ${financialToolsEnabled ? 'grid-cols-3' : 'grid-cols-2'}`}>
-            <TabsTrigger value="members" className="text-xs">Members</TabsTrigger>
+          <TabsList className={`grid w-full mb-2 h-11 bg-transparent p-0 rounded-none border-b border-gray-200 ${financialToolsEnabled ? 'grid-cols-3' : 'grid-cols-2'}`}>
+            <TabsTrigger value="members" className="text-sm font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none text-gray-500 data-[state=active]:bg-transparent bg-transparent">Members</TabsTrigger>
             {/* Budget is always available for chapter-level planning */}
-            <TabsTrigger value="budget" className="text-xs">Budget</TabsTrigger>
+            <TabsTrigger value="budget" className="text-sm font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none text-gray-500 data-[state=active]:bg-transparent bg-transparent">Budget</TabsTrigger>
             {/* Dues remains gated behind financial tools */}
             {financialToolsEnabled && (
-              <TabsTrigger value="dues" className="text-xs">Dues</TabsTrigger>
+              <TabsTrigger value="dues" className="text-sm font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none text-gray-500 data-[state=active]:bg-transparent bg-transparent">Dues</TabsTrigger>
             )}
           </TabsList>
 
