@@ -233,9 +233,9 @@ export default function ProfileBasicsPage() {
     }
   };
 
-  // Phone number validation
+  // Phone number validation (required - empty is invalid)
   const isValidPhoneNumber = (phone: string): boolean => {
-    if (!phone || phone.trim().length === 0) return true; // Optional field
+    if (!phone || phone.trim().length === 0) return false;
     const digits = phone.replace(/\D/g, '');
     return digits.length === 10;
   };
@@ -292,8 +292,10 @@ export default function ProfileBasicsPage() {
       if (!formData.industry) newErrors.industry = 'Industry is required for alumni';
     }
 
-    // Phone number validation for all roles (optional, but must be valid if provided)
-    if (formData.phone && !isValidPhoneNumber(formData.phone)) {
+    // Phone required; must be 10 digits
+    if (!formData.phone?.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!isValidPhoneNumber(formData.phone)) {
       newErrors.phone = 'Please enter a valid 10-digit phone number';
     }
 

@@ -10,8 +10,7 @@ import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { CHAPTER_ADMIN_ROLES, getRoleDisplayName } from '@/lib/permissions';
 import { Loader2 } from "lucide-react";
-import { ViewUserModal } from "@/components/user-management/ViewUserModal";
-import { ChapterMemberData } from "@/types/chapter";
+import { useProfileModal } from "@/lib/contexts/ProfileModalContext";
 
 interface MyChapterContentProps {
   onNavigate: (section: string) => void;
@@ -23,6 +22,7 @@ export function MyChapterContent({ onNavigate, activeSection, searchTerm }: MyCh
   
   // Get current user's profile and chapter
   const { profile, loading: profileLoading } = useProfile();
+  const { openUserProfile } = useProfileModal();
   const chapterId = useScopedChapterId();
   
   // Fetch chapter members based on user's chapter, excluding alumni
@@ -31,52 +31,8 @@ export function MyChapterContent({ onNavigate, activeSection, searchTerm }: MyCh
   // Role checking
   const { hasChapterRoleAccess } = useChapterRoleAccess(CHAPTER_ADMIN_ROLES);
 
-  // Modal state for viewing user profile
-  const [selectedUser, setSelectedUser] = useState<ChapterMemberData | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
   // Show loading state while profile or members are loading
   const isLoading = profileLoading || membersLoading;
-
-  // Handle card click to open user modal
-  const handleCardClick = (memberId: string) => {
-    const memberData = members.find(m => m.id === memberId);
-    if (memberData) {
-      setSelectedUser(memberData);
-      setIsModalOpen(true);
-    }
-  };
-
-  // Convert ChapterMemberData to User type for ViewUserModal
-  const convertToUser = (member: ChapterMemberData) => {
-    return {
-      id: member.id,
-      email: member.email || '',
-      full_name: member.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Unknown',
-      first_name: member.first_name,
-      last_name: member.last_name,
-      chapter: member.chapter || null,
-      role: member.role || null,
-      created_at: member.created_at || new Date().toISOString(),
-      updated_at: member.updated_at || new Date().toISOString(),
-      bio: member.bio || null,
-      phone: member.phone || null,
-      location: member.location || null,
-      avatar_url: member.avatar_url || null,
-      chapter_role: member.chapter_role || null,
-      member_status: member.member_status || null,
-      pledge_class: member.pledge_class || null,
-      grad_year: member.grad_year || null,
-      major: member.major || null,
-      minor: member.minor || null,
-      hometown: member.hometown || null,
-      gpa: member.gpa || null,
-      chapter_id: member.chapter_id || null,
-      is_developer: false, // Not available in ChapterMemberData
-      developer_permissions: [], // Not available in ChapterMemberData
-      access_level: null // Not available in ChapterMemberData
-    };
-  };
 
   // Update the transformation logic to handle null values better
   const transformedMembers: ChapterMember[] = members.map(member => {
@@ -191,7 +147,7 @@ export function MyChapterContent({ onNavigate, activeSection, searchTerm }: MyCh
                   <LinkedInStyleChapterCard 
                     key={member.id} 
                     member={member}
-                    onClick={() => handleCardClick(member.id)}
+                    onClick={() => openUserProfile(member.id)}
                   />
                 ))}
               </div>
@@ -210,7 +166,7 @@ export function MyChapterContent({ onNavigate, activeSection, searchTerm }: MyCh
                   <LinkedInStyleChapterCard 
                     key={member.id} 
                     member={member}
-                    onClick={() => handleCardClick(member.id)}
+                    onClick={() => openUserProfile(member.id)}
                   />
                 ))}
               </div>
@@ -225,17 +181,6 @@ export function MyChapterContent({ onNavigate, activeSection, searchTerm }: MyCh
             </div>
           )}
 
-          {/* User Profile Modal */}
-          {selectedUser && (
-            <ViewUserModal
-              isOpen={isModalOpen}
-              onClose={() => {
-                setIsModalOpen(false);
-                setSelectedUser(null);
-              }}
-              user={convertToUser(selectedUser)}
-            />
-          )}
         </div>
       </div>
     );
@@ -251,7 +196,7 @@ export function MyChapterContent({ onNavigate, activeSection, searchTerm }: MyCh
               <LinkedInStyleChapterCard 
                 key={member.id} 
                 member={member}
-                onClick={() => handleCardClick(member.id)}
+                onClick={() => openUserProfile(member.id)}
               />
             ))}
           </div>
@@ -262,17 +207,6 @@ export function MyChapterContent({ onNavigate, activeSection, searchTerm }: MyCh
           </div>
         )}
       </div>
-      {/* User Profile Modal */}
-      {selectedUser && (
-        <ViewUserModal
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedUser(null);
-          }}
-          user={convertToUser(selectedUser)}
-        />
-      )}
     </div>
   );
 } 

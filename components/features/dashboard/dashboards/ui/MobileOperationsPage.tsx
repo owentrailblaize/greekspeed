@@ -7,11 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useProfileModal } from '@/lib/contexts/ProfileModalContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useChapterBudget } from '@/lib/hooks/useChapterBudget';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ViewUserModal } from '@/components/user-management/ViewUserModal';
 import { EditUserModal } from '@/components/user-management/EditUserModal';
 import { DeleteUserModal } from '@/components/user-management/DeleteUserModal';
 import { AddMemberForm } from '@/components/chapter/AddMemberForm';
@@ -66,6 +66,7 @@ interface DuesAssignment {
 
 export function MobileOperationsPage() {
   const { profile } = useProfile();
+  const { openUserProfile } = useProfileModal();
   const { session, getAuthHeaders } = useAuth();
   const chapterId = useScopedChapterId();
   const { enabled: financialToolsEnabled } = useFeatureFlag('financial_tools_enabled');
@@ -96,8 +97,6 @@ export function MobileOperationsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const membersPerPage = 6;
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
-  const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [userToView, setUserToView] = useState<User | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -278,11 +277,6 @@ export function MobileOperationsPage() {
   }, [assignments]);
 
   // Modal handlers
-  const openViewModal = (user: User) => {
-    setUserToView(user);
-    setViewModalOpen(true);
-  };
-
   const openEditModal = (user: User) => {
     setUserToEdit(user);
     setEditModalOpen(true);
@@ -340,13 +334,13 @@ export function MobileOperationsPage() {
       <div className="max-w-md mx-auto">
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-          <TabsList className={`grid w-full mb-4 ${financialToolsEnabled ? 'grid-cols-3' : 'grid-cols-2'}`}>
-            <TabsTrigger value="members" className="text-xs">Members</TabsTrigger>
+          <TabsList className={`grid w-full mb-2 h-11 bg-transparent p-0 rounded-none border-b border-gray-200 ${financialToolsEnabled ? 'grid-cols-3' : 'grid-cols-2'}`}>
+            <TabsTrigger value="members" className="text-sm font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none text-gray-500 data-[state=active]:bg-transparent bg-transparent">Members</TabsTrigger>
             {/* Budget is always available for chapter-level planning */}
-            <TabsTrigger value="budget" className="text-xs">Budget</TabsTrigger>
+            <TabsTrigger value="budget" className="text-sm font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none text-gray-500 data-[state=active]:bg-transparent bg-transparent">Budget</TabsTrigger>
             {/* Dues remains gated behind financial tools */}
             {financialToolsEnabled && (
-              <TabsTrigger value="dues" className="text-xs">Dues</TabsTrigger>
+              <TabsTrigger value="dues" className="text-sm font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none text-gray-500 data-[state=active]:bg-transparent bg-transparent">Dues</TabsTrigger>
             )}
           </TabsList>
 
@@ -438,7 +432,7 @@ export function MobileOperationsPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => openViewModal(user)}
+                            onClick={() => openUserProfile(user.id)}
                             className="h-8 w-8 p-0 text-brand-primary-hover hover:text-primary-900 hover:bg-primary-50"
                           >
                             <Eye className="h-4 w-4" />
@@ -821,15 +815,6 @@ export function MobileOperationsPage() {
               isChapterAdmin: true
             }}
           />
-        )}
-
-        {viewModalOpen && typeof window !== 'undefined' && userToView && createPortal(
-          <ViewUserModal
-            isOpen={viewModalOpen}
-            onClose={() => setViewModalOpen(false)}
-            user={userToView as any}
-          />,
-          document.body
         )}
 
         {editModalOpen && typeof window !== 'undefined' && (
