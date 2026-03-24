@@ -123,9 +123,8 @@ export default function SignInPage() {
         persistOAuthPostLoginRedirect(safeRedirect);
       }
 
-      const callbackUrl = safeRedirect
-        ? `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(safeRedirect)}`
-        : `${window.location.origin}/auth/callback`;
+      // Bare callback URL so Supabase can append ?code=&state= without clashing with redirect_to query.
+      const callbackUrl = `${window.location.origin}/auth/callback`;
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -158,9 +157,7 @@ export default function SignInPage() {
         persistOAuthPostLoginRedirect(safeRedirect);
       }
 
-      const callbackUrl = safeRedirect
-        ? `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(safeRedirect)}`
-        : `${window.location.origin}/auth/callback`;
+      const callbackUrl = `${window.location.origin}/auth/callback`;
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {

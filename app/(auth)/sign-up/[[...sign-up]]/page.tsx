@@ -14,8 +14,18 @@ import { LottiePlayer } from '@/components/ui/LottiePlayer';
 import { MobileAuthLoadingOverlay } from '@/components/features/splash/MobileAuthLoadingOverlay';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { supabase } from '@/lib/supabase/client';
+import {
+  OAUTH_SIGNUP_ROLE_COOKIE,
+  OAUTH_POST_LOGIN_REDIRECT_MAX_AGE_SEC,
+} from '@/lib/utils/oauthPostLoginRedirect';
 
 const MOBILE_OVERLAY_MIN_MS = 6000;
+
+function persistOAuthSignupRoleAlumni() {
+  if (typeof window === 'undefined') return;
+  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `${OAUTH_SIGNUP_ROLE_COOKIE}=alumni; Path=/; Max-Age=${OAUTH_POST_LOGIN_REDIRECT_MAX_AGE_SEC}; SameSite=Lax${secure}`;
+}
 import { useChapters } from '@/lib/hooks/useChapters';
 import { Chapter } from '@/types/chapter';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -114,11 +124,13 @@ export default function SignUpPage() {
     try {
       setLoading(true);
       setError('');
-      
+
+      persistOAuthSignupRoleAlumni();
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?signup_role=alumni`,
+          redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -142,11 +154,13 @@ export default function SignUpPage() {
     try {
       setLinkedInLoading(true);
       setError('');
-      
+
+      persistOAuthSignupRoleAlumni();
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?signup_role=alumni`,
+          redirectTo: `${window.location.origin}/auth/callback`,
           scopes: 'openid profile email',
         },
       });

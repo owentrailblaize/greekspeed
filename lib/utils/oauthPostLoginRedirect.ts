@@ -5,6 +5,9 @@ import { getSafeRedirect } from '@/lib/utils/safeRedirect';
 export const OAUTH_POST_LOGIN_REDIRECT_COOKIE = 'oauth_post_login_redirect';
 export const OAUTH_POST_LOGIN_REDIRECT_MAX_AGE_SEC = 600;
 
+/** Public sign-up page sets `alumni` so `/auth/callback` stays a bare URL for PKCE `?code=`. */
+export const OAUTH_SIGNUP_ROLE_COOKIE = 'oauth_signup_role';
+
 /**
  * Prefer `redirect_to` on the callback URL (Supabase); fall back to the short-lived cookie
  * set before `signInWithOAuth` so the return path survives provider redirects.
@@ -27,6 +30,15 @@ export function resolvePostOAuthSafeRedirect(
 
 export function clearOauthPostLoginRedirectCookieOn(res: NextResponse): void {
   res.cookies.set(OAUTH_POST_LOGIN_REDIRECT_COOKIE, '', {
+    path: '/',
+    maxAge: 0,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+  });
+}
+
+export function clearOauthSignupRoleCookieOn(res: NextResponse): void {
+  res.cookies.set(OAUTH_SIGNUP_ROLE_COOKIE, '', {
     path: '/',
     maxAge: 0,
     sameSite: 'lax',

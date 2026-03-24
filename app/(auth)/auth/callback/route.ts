@@ -3,10 +3,13 @@ import { createServerClient } from '@supabase/ssr';
 import { generateUniqueUsername, generateProfileSlug } from '@/lib/utils/usernameUtils';
 import { validateInvitationToken, recordInvitationUsage } from '@/lib/utils/invitationUtils';
 import { cookies } from 'next/headers';
+import { getSafeRedirect } from '@/lib/utils/safeRedirect';
 import {
   OAUTH_POST_LOGIN_REDIRECT_COOKIE,
+  OAUTH_SIGNUP_ROLE_COOKIE,
   resolvePostOAuthSafeRedirect,
   clearOauthPostLoginRedirectCookieOn,
+  clearOauthSignupRoleCookieOn,
 } from '@/lib/utils/oauthPostLoginRedirect';
 
 export async function GET(request: NextRequest) {
@@ -22,7 +25,6 @@ export async function GET(request: NextRequest) {
   // Extract invitation token and type from query params
   const invitationToken = requestUrl.searchParams.get('invitation_token');
   let invitationType = requestUrl.searchParams.get('invitation_type'); // 'active_member' or 'alumni'
-  const signupRole = requestUrl.searchParams.get('signup_role'); // 'alumni' for public sign-up page
 
   console.log('OAuth callback received:', {
     hasCode: !!code,
@@ -49,13 +51,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${requestUrl.origin}${redirectPath}`);
     }
 
+    // Preserve return path (e.g. check-in) if Supabase echoed redirect_to but code is missing/misrouted
+    const safeFallback = getSafeRedirect(redirectTo);
+    if (safeFallback) {
+      return NextResponse.redirect(
+        `${requestUrl.origin}/sign-in?redirect=${encodeURIComponent(safeFallback)}`
+      );
+    }
     // Otherwise redirect to sign-in to let client-side handle hash fragments
-    // The sign-in page will process the hash and redirect appropriately
     return NextResponse.redirect(`${requestUrl.origin}/sign-in`);
   }
 
   // Create response for cookie handling
   const cookieStore = await cookies();
+  const signupRole =
+    requestUrl.searchParams.get('signup_role') ||
+    cookieStore.get(OAUTH_SIGNUP_ROLE_COOKIE)?.value ||
+    null; // 'alumni' for public sign-up page (query or cookie)
+
   let response = NextResponse.next();
 
   // Create Supabase client with cookie handling (NOT service role)
@@ -681,7 +694,11 @@ export async function GET(request: NextRequest) {
 
       // Redirect based on profile/onboarding completeness
       if (isIncomplete || !onboardingComplete) {
-        return NextResponse.redirect(`${requestUrl.origin}/onboarding`);
+        const onboardingRes = NextResponse.redirect(
+          `${requestUrl.origin}/onboarding`
+        );
+        clearOauthSignupRoleCookieOn(onboardingRes);
+        return onboardingRes;
       } else {
         // Query `redirect_to` (Supabase) or cookie set on sign-in before OAuth
         const safePath = resolvePostOAuthSafeRedirect(
@@ -693,6 +710,7 @@ export async function GET(request: NextRequest) {
           : `${requestUrl.origin}/dashboard`;
         const redirectRes = NextResponse.redirect(finalRedirect);
         clearOauthPostLoginRedirectCookieOn(redirectRes);
+        clearOauthSignupRoleCookieOn(redirectRes);
         return redirectRes;
       }
     } catch (error) {
