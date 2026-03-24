@@ -117,7 +117,7 @@ export function ConnectionRequestDialog({
     </div>
   );
 
-  // Always use elevated z-index so drawer appears above any modal (AlumniProfileModal z-[10001], ViewUserModal z-[9999], etc.)
+  // Always use elevated z-index so drawer appears above any modal (AlumniProfileModal z-[10001], UserProfileModal z-[10000], etc.)
   return (
     <Drawer.Root
       open={isOpen}

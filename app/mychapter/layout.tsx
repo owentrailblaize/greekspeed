@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { DashboardHeader } from '@/components/features/dashboard/DashboardHeader';
 import { useActivityTracking } from '@/lib/hooks/useActivityTracking';
 import { ModalProvider, useModal } from '@/lib/contexts/ModalContext';
+import { ProfileModalProvider, useProfileModal } from '@/lib/contexts/ProfileModalContext';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { EditProfileModal } from '@/components/features/profile/EditProfileModal';
 import { EditAlumniProfileModal } from '@/components/features/alumni/EditAlumniProfileModal';
+import { UserProfileModal } from '@/components/features/user-profile/UserProfileModal';
 import { ProfileService } from '@/lib/services/profileService';
 import { ChapterFeaturesProvider } from '@/lib/contexts/ChapterFeaturesContext';
 
@@ -26,10 +28,15 @@ export default function MyChapterLayout({
         
         <main className="flex-1">
           <ModalProvider>
-            {children}
-            
-            {/* Global Edit Profile Modal - Rendered at layout level */}
-            <EditProfileModalWrapper />
+            <ProfileModalProvider>
+              {children}
+              
+              {/* Global Edit Profile Modal - Rendered at layout level */}
+              <EditProfileModalWrapper />
+              
+              {/* Global User Profile Modal - for member card clicks */}
+              <UserProfileModalWrapper />
+            </ProfileModalProvider>
           </ModalProvider>
         </main>
       </div>
@@ -92,6 +99,20 @@ function EditProfileModalWrapper() {
       profile={profile}
       onUpdate={handleProfileUpdate}
       variant={isMobile ? 'mobile' : 'desktop'}
+    />
+  );
+}
+
+function UserProfileModalWrapper() {
+  const { isProfileModalOpen, currentProfile, loading, error, closeUserProfile } = useProfileModal();
+
+  return (
+    <UserProfileModal
+      profile={currentProfile}
+      isOpen={isProfileModalOpen}
+      onClose={closeUserProfile}
+      loading={loading}
+      error={error}
     />
   );
 }

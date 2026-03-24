@@ -9,11 +9,11 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
 import { CreateUserForm } from './CreateUserForm';
 import { DeleteUserModal } from './DeleteUserModal';
-import { ViewUserModal } from './ViewUserModal';
 import { getRoleDisplayName } from '@/lib/permissions';
 import { EditUserModal } from './EditUserModal';
 import { Select, SelectItem } from '@/components/ui/select';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useProfileModal } from '@/lib/contexts/ProfileModalContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 
 interface User {
@@ -52,6 +52,7 @@ export function UsersTab({
   chapterContext?: { chapterId: string; chapterName: string; isChapterAdmin?: boolean };
 } = {}) {
   const { isDeveloper } = useProfile();
+  const { openUserProfile } = useProfileModal();
   const { session, getAuthHeaders } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,8 +61,6 @@ export function UsersTab({
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [userToView, setUserToView] = useState<User | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   
@@ -123,16 +122,6 @@ export function UsersTab({
   const closeDeleteModal = () => {
     setDeleteModalOpen(false);
     setUserToDelete(null);
-  };
-
-  const openViewModal = (user: User) => {
-    setUserToView(user);
-    setViewModalOpen(true);
-  };
-
-  const closeViewModal = () => {
-    setViewModalOpen(false);
-    setUserToView(null);
   };
 
   const openEditModal = (user: User) => {
@@ -251,7 +240,7 @@ export function UsersTab({
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => openViewModal(user)}
+              onClick={() => openUserProfile(user.id)}
               className="hover:bg-accent-50 hover:text-brand-accent"
             >
               <Eye className="h-4 w-4" />
@@ -325,13 +314,6 @@ export function UsersTab({
         onConfirm={handleDeleteUser}
         user={userToDelete}
         isDeleting={deletingUserId === userToDelete?.id}
-      />
-
-      {/* View User Modal */}
-      <ViewUserModal
-        isOpen={viewModalOpen}
-        onClose={closeViewModal}
-        user={userToView}
       />
 
       {/* Edit User Modal */}

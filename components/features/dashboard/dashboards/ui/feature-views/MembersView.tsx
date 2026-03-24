@@ -6,10 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Search, Eye, Edit, Trash2 } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
+import { useProfileModal } from '@/lib/contexts/ProfileModalContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { execColumns } from '@/components/user-management/columns';
-import { ViewUserModal } from '@/components/user-management/ViewUserModal';
 import { EditUserModal } from '@/components/user-management/EditUserModal';
 import { DeleteUserModal } from '@/components/user-management/DeleteUserModal';
 import { AddMemberForm } from '@/components/chapter/AddMemberForm';
@@ -46,6 +46,7 @@ interface User {
 
 export function MembersView() {
   const { profile } = useProfile();
+  const { openUserProfile } = useProfileModal();
   const { session, getAuthHeaders } = useAuth();
   const chapterId = useScopedChapterId();
   const [users, setUsers] = useState<User[]>([]);
@@ -61,8 +62,6 @@ export function MembersView() {
 
   // Modal state
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
-  const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [userToView, setUserToView] = useState<User | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -148,16 +147,6 @@ export function MembersView() {
   };
 
   // Modal handlers
-  const openViewModal = (user: User) => {
-    setUserToView(user);
-    setViewModalOpen(true);
-  };
-
-  const closeViewModal = () => {
-    setViewModalOpen(false);
-    setUserToView(null);
-  };
-
   const openEditModal = (user: User) => {
     setUserToEdit(user);
     setEditModalOpen(true);
@@ -290,7 +279,7 @@ export function MembersView() {
                                     <Button 
                                       variant="outline" 
                                       size="sm"
-                                      onClick={() => openViewModal(u)}
+                                      onClick={() => openUserProfile(u.id)}
                                       className="hover:bg-accent-50 hover:text-brand-accent"
                                       title="View user details"
                                     >
@@ -374,16 +363,6 @@ export function MembersView() {
             isChapterAdmin: true
           }}
         />
-      )}
-
-      {/* View User Modal */}
-      {viewModalOpen && typeof window !== 'undefined' && userToView && createPortal(
-        <ViewUserModal
-          isOpen={viewModalOpen}
-          onClose={closeViewModal}
-          user={userToView as any}
-        />,
-        document.body
       )}
 
       {/* Edit User Modal */}
