@@ -142,7 +142,7 @@ export interface ChapterCheckInQrResponse {
 /**
  * Response from GET /api/events/[id]/check-in-qr (exec-only).
  * `qr_value` — in-app scan (JSON chapter payload).
- * `check_in_url` — absolute https URL with `?event=&t=` for native camera / print.
+ * `check_in_url` — absolute https URL `/check-in?event=&t=` for native camera / print (public layout).
  */
 export interface EventCheckInQrResponse {
   data: {

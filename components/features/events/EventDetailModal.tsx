@@ -385,7 +385,7 @@ export function EventDetailModal({
                 )}
                 <p className="text-xs text-gray-500 text-center">
                   <Link
-                    href={`/dashboard/check-in?event=${encodeURIComponent(event.id)}`}
+                    href={`/check-in?event=${encodeURIComponent(event.id)}`}
                     className="text-brand-primary hover:underline"
                   >
                     Having trouble? Check in on web

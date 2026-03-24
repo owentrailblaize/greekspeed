@@ -7,18 +7,29 @@ import { CheckCircle, Loader2, LogIn, Calendar, MapPin, Clock } from 'lucide-rea
 import { useAuth } from '@/lib/supabase/auth-context';
 import type { Event } from '@/types/events';
 
+/** `public` = `/check-in` (camera QR, no dashboard chrome). `dashboard` = in-app fallback. */
+export type CheckInReturnPathBase = 'public' | 'dashboard';
+
 interface CheckInClientProps {
   eventId: string;
   /** When set (camera / printed QR link), sent as `url_check_in_token` on POST. */
   urlCheckInToken?: string;
+  /** Base path for post–sign-in return and 401 recovery. Default `dashboard`. */
+  returnPathBase?: CheckInReturnPathBase;
 }
 
-function buildCheckInReturnPath(eventId: string, urlCheckInToken?: string): string {
+function buildCheckInReturnPath(
+  eventId: string,
+  urlCheckInToken: string | undefined,
+  returnPathBase: CheckInReturnPathBase
+): string {
+  const base =
+    returnPathBase === 'public' ? '/check-in' : '/dashboard/check-in';
   const eventQ = encodeURIComponent(eventId);
   if (urlCheckInToken) {
-    return `/dashboard/check-in?event=${eventQ}&t=${encodeURIComponent(urlCheckInToken)}`;
+    return `${base}?event=${eventQ}&t=${encodeURIComponent(urlCheckInToken)}`;
   }
-  return `/dashboard/check-in?event=${eventQ}`;
+  return `${base}?event=${eventQ}`;
 }
 
 function formatEventDate(startTime: string): string {
@@ -48,6 +59,7 @@ function formatEventTime(startTime: string, endTime: string): string {
 export function CheckInClient({
   eventId,
   urlCheckInToken,
+  returnPathBase = 'dashboard',
 }: CheckInClientProps) {
   const router = useRouter();
   const { user, getAuthHeaders, loading: authLoading } = useAuth();
@@ -81,7 +93,11 @@ export function CheckInClient({
   }, [eventId]);
 
   const goToSignIn = () => {
-    const returnTo = buildCheckInReturnPath(eventId, urlCheckInToken);
+    const returnTo = buildCheckInReturnPath(
+      eventId,
+      urlCheckInToken,
+      returnPathBase
+    );
     router.replace(`/sign-in?redirect=${encodeURIComponent(returnTo)}`);
   };
 
@@ -201,7 +217,9 @@ export function CheckInClient({
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-gray-500 text-center">
-              Scan the QR code or tap below to check in.
+              {returnPathBase === 'public'
+                ? 'Tap below to complete check-in.'
+                : 'Scan the QR code or tap below to check in.'}
             </p>
             <Button
               onClick={handleCheckIn}

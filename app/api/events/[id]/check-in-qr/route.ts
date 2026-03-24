@@ -147,7 +147,7 @@ export async function GET(
 
     const urlPayload = createEventCheckInUrlPayload(eventId, chapterId, secret);
     const t = serializeEventCheckInUrlToken(urlPayload);
-    const check_in_url = `${baseUrl}/dashboard/check-in?event=${encodeURIComponent(eventId)}&t=${encodeURIComponent(t)}`;
+    const check_in_url = `${baseUrl}/check-in?event=${encodeURIComponent(eventId)}&t=${encodeURIComponent(t)}`;
 
     return NextResponse.json<EventCheckInQrResponse>({
       data: {

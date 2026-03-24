@@ -131,7 +131,7 @@ export function CheckInScanner({
           <div className="text-center max-w-sm">
             <p className="text-red-400 mb-4">{errorMessage}</p>
             <a
-              href={`/dashboard/check-in?event=${encodeURIComponent(eventId)}`}
+              href={`/check-in?event=${encodeURIComponent(eventId)}`}
               className="text-brand-primary underline"
             >
               Check in on web
