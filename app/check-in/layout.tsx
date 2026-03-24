@@ -24,7 +24,7 @@ export default function PublicCheckInLayout({ children }: { children: ReactNode 
             alt="Trailblaize"
             width={180}
             height={48}
-            className="h-9 w-auto max-w-[min(200px,55vw)] object-contain object-left"
+            className="h-28 w-auto object-contain"
             priority
           />
         </Link>
