@@ -5,7 +5,10 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Users } from 'lucide-react';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { supabase } from '@/lib/supabase/client';
-import type { AttendanceWithProfile } from '@/types/events';
+import type {
+  AttendanceWithProfile,
+  EventCheckInQrResponse,
+} from '@/types/events';
 
 interface EventAttendanceBlockProps {
   eventId: string;
@@ -22,38 +25,61 @@ export function EventAttendanceBlock({
   compact = false,
 }: EventAttendanceBlockProps) {
   const { getAuthHeaders } = useAuth();
-  const [qrValue, setQrValue] = useState<string | null>(null);
+  const [qrPayload, setQrPayload] = useState<string | null>(null);
+  const [checkInUrl, setCheckInUrl] = useState<string | null>(null);
   const [qrLoading, setQrLoading] = useState(true);
+  const [qrError, setQrError] = useState<string | null>(null);
   const [attendance, setAttendance] = useState<AttendanceWithProfile[]>([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
 
   useEffect(() => {
-    if (!chapterId) {
-      setQrValue(null);
+    if (!eventId) {
+      setQrPayload(null);
+      setCheckInUrl(null);
+      setQrError(null);
       setQrLoading(false);
       return;
     }
     let cancelled = false;
     async function fetchQr() {
       setQrLoading(true);
+      setQrError(null);
       try {
         const headers: Record<string, string> = {};
         const authHeaders = getAuthHeaders();
         if (authHeaders.Authorization) {
           headers.Authorization = authHeaders.Authorization;
         }
-        const res = await fetch(`/api/chapters/${chapterId}/check-in-qr`, {
+        const res = await fetch(`/api/events/${eventId}/check-in-qr`, {
           headers,
           credentials: 'include',
         });
-        if (!cancelled && res.ok) {
-          const data = await res.json();
-          setQrValue(data.data?.qr_value ?? null);
+        const raw = (await res.json()) as
+          | EventCheckInQrResponse
+          | { error?: string };
+        if (!cancelled && res.ok && 'data' in raw && raw.data) {
+          const v = raw.data.qr_value?.trim();
+          const u = raw.data.check_in_url?.trim();
+          setQrPayload(v || null);
+          setCheckInUrl(u || null);
+          if (!v || !u) {
+            setQrError('Check-in codes were incomplete. Try again.');
+          }
         } else if (!cancelled) {
-          setQrValue(null);
+          setQrPayload(null);
+          setCheckInUrl(null);
+          const msg =
+            typeof raw === 'object' && raw && 'error' in raw && raw.error
+              ? String(raw.error)
+              : 'Could not load check-in codes';
+          setQrError(msg);
         }
       } catch {
-        if (!cancelled) setQrValue(null);
+        if (!cancelled) {
+          setQrPayload(null);
+          setCheckInUrl(null);
+          setQrError('Could not load check-in codes');
+        }
       } finally {
         if (!cancelled) setQrLoading(false);
       }
@@ -62,7 +88,7 @@ export function EventAttendanceBlock({
     return () => {
       cancelled = true;
     };
-  }, [chapterId, getAuthHeaders]);
+  }, [eventId, getAuthHeaders]);
 
   const fetchAttendance = useCallback(async () => {
     setLoadingAttendance(true);
@@ -129,7 +155,7 @@ export function EventAttendanceBlock({
     }
   };
 
-  if (qrLoading || !qrValue) {
+  if (qrLoading) {
     return (
       <div className="flex items-center justify-center p-4">
         <div className="h-32 w-32 bg-gray-100 rounded-lg animate-pulse" />
@@ -137,15 +163,52 @@ export function EventAttendanceBlock({
     );
   }
 
+  if (qrError || !qrPayload || !checkInUrl) {
+    return (
+      <div className="p-4">
+        <p className="text-sm text-red-600 text-center">
+          {qrError || 'Check-in codes are unavailable.'}
+        </p>
+      </div>
+    );
+  }
+
+  const appQrSize = compact ? 112 : 152;
+  const cameraQrSize = compact ? 112 : 152;
+
   return (
     <div className={compact ? 'space-y-3' : 'space-y-4'}>
-      <div className={compact ? 'flex items-start gap-4' : 'flex flex-col items-center'}>
-        <div className="flex-shrink-0 bg-white p-2 rounded-lg border border-gray-200">
-          <QRCodeSVG value={qrValue} size={compact ? 120 : 160} level="M" />
+      <div
+        className={
+          compact
+            ? 'flex flex-wrap gap-4 items-start'
+            : 'grid grid-cols-1 sm:grid-cols-2 gap-6'
+        }
+      >
+        <div className="flex flex-col items-center flex-1 min-w-0">
+          <p className="text-xs font-medium text-gray-800 mb-1.5 text-center">
+            In Trailblaize app
+          </p>
+          <div className="bg-white p-2 rounded-lg border border-gray-200">
+            <QRCodeSVG value={qrPayload} size={appQrSize} level="M" />
+          </div>
+          <p className="text-xs text-gray-500 mt-2 text-center max-w-[11rem]">
+            Open this event, tap Check in, then scan this code.
+          </p>
         </div>
-        <div className={compact ? 'flex-1 min-w-0' : 'text-center mt-2'}>
-          <p className="text-sm text-gray-600">
-            Members scan this code to check in.
+        <div className="flex flex-col items-center flex-1 min-w-0">
+          <p className="text-xs font-medium text-gray-800 mb-1.5 text-center">
+            Phone camera
+          </p>
+          <div className="bg-white p-2 rounded-lg border border-gray-200">
+            <QRCodeSVG
+              value={checkInUrl}
+              size={cameraQrSize}
+              level="L"
+            />
+          </div>
+          <p className="text-xs text-gray-500 mt-2 text-center max-w-[11rem]">
+            Scan with the Camera app to open web check-in.
           </p>
         </div>
       </div>

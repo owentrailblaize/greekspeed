@@ -9,6 +9,16 @@ import type { Event } from '@/types/events';
 
 interface CheckInClientProps {
   eventId: string;
+  /** When set (camera / printed QR link), sent as `url_check_in_token` on POST. */
+  urlCheckInToken?: string;
+}
+
+function buildCheckInReturnPath(eventId: string, urlCheckInToken?: string): string {
+  const eventQ = encodeURIComponent(eventId);
+  if (urlCheckInToken) {
+    return `/dashboard/check-in?event=${eventQ}&t=${encodeURIComponent(urlCheckInToken)}`;
+  }
+  return `/dashboard/check-in?event=${eventQ}`;
 }
 
 function formatEventDate(startTime: string): string {
@@ -35,7 +45,10 @@ function formatEventTime(startTime: string, endTime: string): string {
   return `${startStr} - ${endStr}`;
 }
 
-export function CheckInClient({ eventId }: CheckInClientProps) {
+export function CheckInClient({
+  eventId,
+  urlCheckInToken,
+}: CheckInClientProps) {
   const router = useRouter();
   const { user, getAuthHeaders, loading: authLoading } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
@@ -68,7 +81,7 @@ export function CheckInClient({ eventId }: CheckInClientProps) {
   }, [eventId]);
 
   const goToSignIn = () => {
-    const returnTo = `/dashboard/check-in?event=${encodeURIComponent(eventId)}`;
+    const returnTo = buildCheckInReturnPath(eventId, urlCheckInToken);
     router.replace(`/sign-in?redirect=${encodeURIComponent(returnTo)}`);
   };
 
@@ -81,10 +94,15 @@ export function CheckInClient({ eventId }: CheckInClientProps) {
       if (authHeaders.Authorization) {
         headers.Authorization = authHeaders.Authorization;
       }
+      const body =
+        urlCheckInToken != null && urlCheckInToken !== ''
+          ? JSON.stringify({ url_check_in_token: urlCheckInToken })
+          : undefined;
       const res = await fetch(`/api/events/${eventId}/check-in`, {
         method: 'POST',
         headers,
         credentials: 'include',
+        body,
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {

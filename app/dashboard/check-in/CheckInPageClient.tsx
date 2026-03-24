@@ -7,9 +7,14 @@ import { ArrowLeft } from 'lucide-react';
 
 interface CheckInPageClientProps {
   eventId: string;
+  /** Signed camera-link token (`t` query param); forwarded to check-in POST. */
+  urlCheckInToken?: string;
 }
 
-export function CheckInPageClient({ eventId }: CheckInPageClientProps) {
+export function CheckInPageClient({
+  eventId,
+  urlCheckInToken,
+}: CheckInPageClientProps) {
   const router = useRouter();
 
   const handleBack = () => {
@@ -31,7 +36,10 @@ export function CheckInPageClient({ eventId }: CheckInPageClientProps) {
           Back to events
         </button>
         <div className="flex-1 flex flex-col justify-center">
-          <CheckInClient eventId={eventId} />
+          <CheckInClient
+            eventId={eventId}
+            urlCheckInToken={urlCheckInToken}
+          />
         </div>
       </div>
       <MobileBottomNavigation />

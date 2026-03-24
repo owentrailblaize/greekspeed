@@ -96,6 +96,11 @@ export interface EventAttendance {
 export interface EventCheckInRequestBody {
   /** Raw string read from chapter check-in QR (JSON with c, i, s). */
   qr_payload?: string;
+  /**
+   * Serialized event check-in URL token (`t` query param from camera / web link).
+   * Do not send alongside `qr_payload`; the API returns 400 if both are set.
+   */
+  url_check_in_token?: string;
 }
 
 /** Response from POST /api/events/[id]/check-in */
@@ -130,6 +135,22 @@ export interface ChapterCheckInQrResponse {
   data: {
     qr_value: string;
     chapter_id: string;
+    issued_at: number;
+  };
+}
+
+/**
+ * Response from GET /api/events/[id]/check-in-qr (exec-only).
+ * `qr_value` — in-app scan (JSON chapter payload).
+ * `check_in_url` — absolute https URL with `?event=&t=` for native camera / print.
+ */
+export interface EventCheckInQrResponse {
+  data: {
+    qr_value: string;
+    check_in_url: string;
+    event_id: string;
+    chapter_id: string;
+    /** Unix seconds (event URL token `i`; used for camera link TTL in TRA-514). */
     issued_at: number;
   };
 }
