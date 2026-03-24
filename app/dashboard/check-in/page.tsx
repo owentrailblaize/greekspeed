@@ -1,12 +1,13 @@
 import { CheckInPageClient } from './CheckInPageClient';
 
 interface PageProps {
-  searchParams: Promise<{ event?: string }>;
+  searchParams: Promise<{ event?: string; t?: string }>;
 }
 
 export default async function CheckInPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const eventId = params.event?.trim();
+  const urlCheckInToken = params.t?.trim() || undefined;
 
   if (!eventId) {
     return (
@@ -19,5 +20,7 @@ export default async function CheckInPage({ searchParams }: PageProps) {
     );
   }
 
-  return <CheckInPageClient eventId={eventId} />;
+  return (
+    <CheckInPageClient eventId={eventId} urlCheckInToken={urlCheckInToken} />
+  );
 }

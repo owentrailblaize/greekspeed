@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 
 interface PageProps {
-  searchParams: Promise<{ event?: string }>;
+  searchParams: Promise<{ event?: string; t?: string }>;
 }
 
 /**
@@ -11,6 +11,10 @@ interface PageProps {
 export default async function CheckInRedirectPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const eventId = params.event?.trim();
-  const query = eventId ? `?event=${encodeURIComponent(eventId)}` : '';
+  const t = params.t?.trim();
+  const qs = new URLSearchParams();
+  if (eventId) qs.set('event', eventId);
+  if (t) qs.set('t', t);
+  const query = qs.toString() ? `?${qs.toString()}` : '';
   redirect(`/dashboard/check-in${query}`);
 }
