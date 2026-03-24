@@ -14,17 +14,17 @@ export const metadata: Metadata = {
 export default function PublicCheckInLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <header className="flex-shrink-0 border-b border-gray-100 px-4 py-4 sm:px-6">
+            <header className="flex flex-shrink-0 items-center justify-center border-b border-gray-100 px-4 py-2 sm:px-6 sm:py-2.5">
         <Link
           href="/"
-          className="inline-flex items-center rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+          className="inline-flex items-center leading-none rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           <Image
             src="/logo.png"
             alt="Trailblaize"
-            width={180}
-            height={48}
-            className="h-28 w-auto object-contain"
+            width={200}
+            height={56}
+            className="h-10 w-auto object-contain sm:h-12"
             priority
           />
         </Link>
