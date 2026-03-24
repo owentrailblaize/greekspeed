@@ -22,9 +22,7 @@ export default function PublicCheckInLayout({ children }: { children: ReactNode 
           <Image
             src="/logo.png"
             alt="Trailblaize"
-            width={200}
-            height={56}
-            className="h-10 w-auto object-contain sm:h-12"
+            className="h-28 w-auto object-contain"
             priority
           />
         </Link>
