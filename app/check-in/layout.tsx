@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
@@ -16,9 +17,16 @@ export default function PublicCheckInLayout({ children }: { children: ReactNode 
       <header className="flex-shrink-0 border-b border-gray-100 px-4 py-4 sm:px-6">
         <Link
           href="/"
-          className="text-lg font-semibold text-gray-900 tracking-tight hover:text-gray-700"
+          className="inline-flex items-center rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
-          Trailblaize
+          <Image
+            src="/logo.png"
+            alt="Trailblaize"
+            width={180}
+            height={48}
+            className="h-9 w-auto max-w-[min(200px,55vw)] object-contain object-left"
+            priority
+          />
         </Link>
       </header>
       <main className="flex-1 flex flex-col items-center w-full max-w-lg mx-auto px-4 py-8 sm:py-10">

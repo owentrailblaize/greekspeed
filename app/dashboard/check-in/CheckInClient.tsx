@@ -3,7 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Loader2, LogIn, Calendar, MapPin, Clock } from 'lucide-react';
+import {
+  ArrowLeft,
+  CheckCircle,
+  Loader2,
+  LogIn,
+  Calendar,
+  MapPin,
+  Clock,
+} from 'lucide-react';
 import { useAuth } from '@/lib/supabase/auth-context';
 import type { Event } from '@/types/events';
 
@@ -148,8 +156,17 @@ export function CheckInClient({
   // No event found
   if (!event) {
     return (
-      <div className="w-full max-w-sm">
-        <p className="text-center text-gray-500 pt-6">Event not found.</p>
+      <div className="w-full max-w-sm flex flex-col items-center gap-4 pt-6">
+        <p className="text-center text-gray-500">Event not found.</p>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full h-12 rounded-full border-gray-300"
+          onClick={() => router.push('/')}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to home
+        </Button>
       </div>
     );
   }
@@ -196,13 +213,20 @@ export function CheckInClient({
       </div>
       <div className="pt-2 pb-6">
         {success ? (
-          <div className="flex flex-col items-center gap-3 text-center py-4">
+          <div className="flex flex-col items-center gap-4 text-center py-4">
             <CheckCircle className="h-14 w-14 text-green-600" />
             <p className="text-lg font-medium text-gray-900">You&apos;re checked in!</p>
             <p className="text-sm text-gray-500">Thanks for attending.</p>
+            <Button
+              type="button"
+              className="w-full h-12 text-base bg-brand-primary hover:bg-brand-primary-hover rounded-full"
+              onClick={() => router.push('/dashboard')}
+            >
+              Go to dashboard
+            </Button>
           </div>
         ) : !authLoading && !user ? (
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-3 w-full">
             <p className="text-sm text-gray-600 text-center">
               Sign in to check in for this event.
             </p>
@@ -212,6 +236,15 @@ export function CheckInClient({
             >
               <LogIn className="h-5 w-5 mr-2" />
               Sign in to check in
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-12 text-base rounded-full border-gray-300"
+              onClick={() => router.push('/')}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to home
             </Button>
           </div>
         ) : (
@@ -234,6 +267,16 @@ export function CheckInClient({
               ) : (
                 'Check in'
               )}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-12 text-base rounded-full border-gray-300"
+              onClick={() => router.push('/dashboard')}
+              disabled={checkingIn || authLoading}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to dashboard
             </Button>
             {error && (
               <p className="text-sm text-red-600 text-center">{error}</p>
