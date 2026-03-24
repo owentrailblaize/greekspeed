@@ -353,9 +353,9 @@ export function MobileCalendarPage() {
       <div className="max-w-md mx-auto">
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="calendar" className="text-xs">Calendar</TabsTrigger>
-            <TabsTrigger value="events" className="text-xs">Events</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 mb-2 h-11 bg-transparent p-0 rounded-none border-b border-gray-200">
+            <TabsTrigger value="calendar" className="text-sm font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none text-gray-500 data-[state=active]:bg-transparent bg-transparent">Calendar</TabsTrigger>
+            <TabsTrigger value="events" className="text-sm font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none text-gray-500 data-[state=active]:bg-transparent bg-transparent">Events</TabsTrigger>
           </TabsList>
 
           {/* Calendar Tab */}

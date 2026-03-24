@@ -328,12 +328,12 @@ export function MobileEventsVendorsPage() {
       <div className="max-w-md mx-auto">
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-          <TabsList className={`grid w-full mb-4 ${eventsManagementEnabled ? 'grid-cols-3' : 'grid-cols-2'}`}>
+          <TabsList className={`grid w-full mb-2 h-11 bg-transparent p-0 rounded-none border-b border-gray-200 ${eventsManagementEnabled ? 'grid-cols-3' : 'grid-cols-2'}`}>
             {eventsManagementEnabled && (
-              <TabsTrigger value="events" className="text-xs">Events</TabsTrigger>
+              <TabsTrigger value="events" className="text-sm font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none text-gray-500 data-[state=active]:bg-transparent bg-transparent">Events</TabsTrigger>
             )}
-            <TabsTrigger value="vendors" className="text-xs">Vendors</TabsTrigger>
-            <TabsTrigger value="invitations" className="text-xs">Invites</TabsTrigger>
+            <TabsTrigger value="vendors" className="text-sm font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none text-gray-500 data-[state=active]:bg-transparent bg-transparent">Vendors</TabsTrigger>
+            <TabsTrigger value="invitations" className="text-sm font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:text-brand-primary data-[state=active]:shadow-none text-gray-500 data-[state=active]:bg-transparent bg-transparent">Invites</TabsTrigger>
           </TabsList>
 
           {/* Events Tab - Only render if flag is enabled */}
