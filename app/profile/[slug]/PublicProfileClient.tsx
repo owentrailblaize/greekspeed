@@ -264,8 +264,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
       <>
         {/* Mobile Loading */}
         <div className="min-h-screen bg-white sm:hidden pb-20">
-          {/* Add MarketingHeader for non-authenticated users */}
-          {!isLoggedIn && <MarketingHeader hideNavigation={true} />}
+          {isLoggedIn ? <DashboardHeader /> : <MarketingHeader hideNavigation={true} />}
           
           <div className="flex items-center justify-center h-screen">
             <div className="text-center">
@@ -306,8 +305,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
     <>
       {/* Mobile Layout */}
       <div className="min-h-screen bg-white sm:hidden pb-20">
-        {/* Add MarketingHeader for non-authenticated users */}
-        {!isLoggedIn && <MarketingHeader hideNavigation={true} />}
+        {isLoggedIn ? <DashboardHeader /> : <MarketingHeader hideNavigation={true} />}
         
         {/* Header with Back and Share buttons */}
         <div className="relative">
@@ -396,7 +394,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
             label: tab.label,
             disabled: tab.requiresAuth && !isLoggedIn
           }))}
-          stickyTop="0"
+          stickyTop={isLoggedIn ? '56px' : '0'}
         />
 
       {/* Scrollable Content Area */}
