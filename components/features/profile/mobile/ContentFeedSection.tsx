@@ -53,7 +53,7 @@ export function ContentFeedSection({
     }
 
     return (
-      <div className="divide-y divide-gray-100">
+      <div className="px-4 pb-4">
         {posts.map((post) => (
           <PostCard
             key={post.id}

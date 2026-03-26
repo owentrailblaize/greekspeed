@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -192,6 +192,12 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     overscan: 8,
     scrollToFn: () => null,
   });
+
+  const invalidateFeedRowHeights = useCallback(() => {
+    requestAnimationFrame(() => {
+      rowVirtualizer.measure();
+    });
+  }, [rowVirtualizer]);
 
   const handleCreatePost = async (postData: CreatePostRequest) => {
     try {
@@ -530,8 +536,9 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
                       isExpanded={expandedPostId === post.id}
                       onToggleExpand={() => {
                         setExpandedPostId((prev) => (prev === post.id ? null : post.id));
-                        requestAnimationFrame(() => rowVirtualizer.measure());
+                        invalidateFeedRowHeights();
                       }}
+                      onLayoutInvalidate={invalidateFeedRowHeights}
                     />
                   </div>
                 );
