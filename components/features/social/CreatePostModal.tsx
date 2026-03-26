@@ -1,62 +1,84 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Drawer } from 'vaul';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { X, Image } from 'lucide-react';
-import { CreatePostRequest } from '@/types/posts';
-import ImageWithFallback from "@/components/figma/ImageWithFallback";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { X, Image, MoreHorizontal, Trash2 } from 'lucide-react';
+import type { CreatePostRequest, Post } from '@/types/posts';
+import ImageWithFallback from '@/components/figma/ImageWithFallback';
+import { LinkPreviewCard } from '@/components/features/social/LinkPreviewCard';
 import { PostImageService } from '@/lib/services/postImageService';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
+import { cn } from '@/lib/utils';
 
-interface CreatePostModalProps {
+export interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (postData: CreatePostRequest) => Promise<void>;
   userAvatar?: string;
   userName?: string;
+  /** Create flow */
+  onSubmit?: (postData: CreatePostRequest) => Promise<void>;
+  /** Edit flow */
+  editPost?: Post | null;
+  /** Resolved URLs for read-only image strip (parent may fetch for slim-feed posts). */
+  existingImageUrls?: string[];
+  onSaveEdit?: (content: string) => Promise<void>;
+  /** Opens delete flow from edit header ⋯ menu */
+  onEditDelete?: () => void;
 }
 
-// Maximum number of images allowed per post
 const MAX_IMAGES = 10;
 
-// Set to true to use bottom drawer on mobile; false to use the same centered modal as desktop
+/** Set true to use bottom drawer on mobile; edit mode uses same header/footer logic. */
 const USE_CREATE_POST_DRAWER_MOBILE = false;
 
-export function CreatePostModal({ 
-  isOpen, 
-  onClose, 
-  onSubmit, 
-  userAvatar, 
-  userName 
+export function CreatePostModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  userAvatar,
+  userName,
+  editPost,
+  existingImageUrls = [],
+  onSaveEdit,
+  onEditDelete,
 }: CreatePostModalProps) {
   const { user } = useAuth();
+  const isEditMode = Boolean(editPost);
+
   const [content, setContent] = useState('');
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [postType, setPostType] = useState<'text' | 'image' | 'text_image'>('text');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Reset state when modal closes
+  const sanitizeContent = (value: string) =>
+    value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+  const sanitizedContent = sanitizeContent(content);
+
   useEffect(() => {
     if (!isOpen) {
       setIsInputFocused(false);
-      // Revoke all preview object URLs to free memory
       setPreviewUrls((current) => {
         current.forEach((url) => URL.revokeObjectURL(url));
         return [];
       });
       setContent('');
       setImageFiles([]);
-      setPostType('text');
       setUploadError(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -64,8 +86,11 @@ export function CreatePostModal({
     }
   }, [isOpen]);
 
-  const sanitizeContent = (value: string) =>
-    value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  useEffect(() => {
+    if (isOpen && editPost) {
+      setContent(sanitizeContent(editPost.content ?? ''));
+    }
+  }, [isOpen, editPost?.id, editPost?.content]);
 
   const determinePostType = (nextContent: string, nextImageCount: number) => {
     const trimmedContent = nextContent.trim();
@@ -75,36 +100,28 @@ export function CreatePostModal({
     return 'text';
   };
 
-  const sanitizedContent = sanitizeContent(content);
-
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (isEditMode) return;
     const files = event.target.files;
     if (!files || files.length === 0) {
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
     setUploadError(null);
-
-    // Check if adding these files would exceed the limit
     const fileArray = Array.from(files);
     const remainingSlots = MAX_IMAGES - imageFiles.length;
-    
+
     if (fileArray.length > remainingSlots) {
-      setUploadError(`You can only add up to ${MAX_IMAGES} images. You have ${imageFiles.length} image(s) and tried to add ${fileArray.length}. Please select ${remainingSlots} or fewer.`);
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      setUploadError(
+        `You can only add up to ${MAX_IMAGES} images. You have ${imageFiles.length} image(s) and tried to add ${fileArray.length}. Please select ${remainingSlots} or fewer.`,
+      );
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
-    // Validate file types and sizes
     const validFiles: File[] = [];
-    const maxFileSize = 10 * 1024 * 1024; // 10MB per file
+    const maxFileSize = 10 * 1024 * 1024;
 
     for (const file of fileArray) {
       if (!file.type.startsWith('image/')) {
@@ -119,66 +136,29 @@ export function CreatePostModal({
     }
 
     if (validFiles.length === 0) {
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
-    // Store File objects and create lightweight object URLs for previews
     const newPreviews = validFiles.map((f) => URL.createObjectURL(f));
     setImageFiles((prev) => [...prev, ...validFiles]);
-    setPreviewUrls((prev) => {
-      const updated = [...prev, ...newPreviews];
-      setPostType(determinePostType(sanitizedContent, updated.length));
-      return updated;
-    });
+    setPreviewUrls((prev) => [...prev, ...newPreviews]);
 
-    // Reset file input to allow re-uploading the same files
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleRemoveImage = (indexToRemove: number) => {
-    // Revoke the object URL to free memory
     URL.revokeObjectURL(previewUrls[indexToRemove]);
-    
     const newFiles = imageFiles.filter((_, i) => i !== indexToRemove);
     const newPreviews = previewUrls.filter((_, i) => i !== indexToRemove);
     setImageFiles(newFiles);
     setPreviewUrls(newPreviews);
-    setPostType(determinePostType(sanitizedContent, newPreviews.length));
     setUploadError(null);
-    
-    // Reset file input to ensure clean state
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleEmojiSelect = (emoji: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart ?? content.length;
-    const end = textarea.selectionEnd ?? content.length;
-    const nextContent = sanitizeContent(
-      content.slice(0, start) + emoji + content.slice(end)
-    );
-
-    setContent(nextContent);
-    setPostType(determinePostType(nextContent, previewUrls.length));
-
-    requestAnimationFrame(() => {
-      textarea.focus();
-      const cursorPosition = start + emoji.length;
-      textarea.setSelectionRange(cursorPosition, cursorPosition);
-    });
-  };
-
-  const handleSubmit = async () => {
+  const handleCreateSubmit = async () => {
+    if (isEditMode || !onSubmit) return;
     const sanitized = sanitizeContent(content);
     if (!sanitized.trim() && imageFiles.length === 0) return;
     if (!user) {
@@ -188,32 +168,31 @@ export function CreatePostModal({
 
     setIsSubmitting(true);
     setUploadError(null);
-    
+
     try {
-      // 1. Upload images to Supabase Storage first
       let uploadedUrls: string[] = [];
       if (imageFiles.length > 0) {
         try {
           uploadedUrls = await PostImageService.uploadImages(imageFiles, user.id);
-        } catch (uploadErr: any) {
-          setUploadError(uploadErr.message || 'Failed to upload images. Please try again.');
+        } catch (uploadErr: unknown) {
+          const message =
+            uploadErr instanceof Error ? uploadErr.message : 'Failed to upload images. Please try again.';
+          setUploadError(message);
           setIsSubmitting(false);
           return;
         }
       }
 
-      // 2. Create post with public URLs (lightweight JSON)
       await onSubmit({
         content: sanitized,
         post_type: determinePostType(sanitized, uploadedUrls.length),
-        image_url: uploadedUrls[0] || undefined, // First image for backward compatibility
+        image_url: uploadedUrls[0] || undefined,
         metadata: {
           image_urls: uploadedUrls.length > 0 ? uploadedUrls : undefined,
-          image_count: uploadedUrls.length
-        }
+          image_count: uploadedUrls.length,
+        },
       });
-      
-      // State will be reset by useEffect when modal closes
+
       onClose();
     } catch (error) {
       console.error('Failed to create post:', error);
@@ -223,7 +202,34 @@ export function CreatePostModal({
     }
   };
 
-  const canSubmit = (sanitizedContent.trim() || imageFiles.length > 0) && !isSubmitting;
+  const handleEditSave = async () => {
+    if (!isEditMode || !editPost || !onSaveEdit) return;
+    const trimmed = sanitizeContent(content).trim();
+    if (editPost.post_type === 'text' && !trimmed) return;
+
+    setIsSubmitting(true);
+    setUploadError(null);
+    try {
+      await onSaveEdit(trimmed);
+      onClose();
+    } catch (error) {
+      console.error('Failed to update post:', error);
+      setUploadError(error instanceof Error ? error.message : 'Failed to update post.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const canSubmitCreate =
+    (sanitizedContent.trim() || previewUrls.length > 0) && !isSubmitting;
+  const canSubmitEdit = useMemo(() => {
+    if (!isEditMode || !editPost) return false;
+    const trimmed = sanitizedContent.trim();
+    if (editPost.post_type === 'text' && !trimmed) return false;
+    return !isSubmitting;
+  }, [isEditMode, editPost, sanitizedContent, isSubmitting]);
+
+  const linkPreviewsEdit = editPost?.metadata?.link_previews;
 
   const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
@@ -231,61 +237,132 @@ export function CreatePostModal({
     setMounted(true);
   }, []);
 
-  // Shared content: header (title + user), scrollable body (input + images), footer (Photo + Post)
-  const headerContent = (
-    <>
-      <div className="shrink-0 p-6 sm:p-8 pb-4 sm:pb-4 border-b border-slate-200/50">
-        <div className="flex flex-row items-start justify-between pb-2">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight text-slate-900">
-              Create a post
-            </h2>
-            <p className="text-sm text-slate-400 mt-1">
-              Share an update with your chapter
-            </p>
-          </div>
+  const renderComposerIdentity = (options?: { compact?: boolean }) => {
+    const compact = options?.compact ?? false;
+    return (
+      <div
+        className={cn(
+          'flex gap-3 sm:gap-3',
+          compact ? 'items-center' : 'items-start mt-4',
+        )}
+      >
+        <div className="w-12 h-12 sm:w-11 sm:h-11 bg-primary-100/70 rounded-full flex items-center justify-center text-brand-primary-hover text-base sm:text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+          {userAvatar ? (
+            <ImageWithFallback
+              src={userAvatar}
+              alt={userName || 'User'}
+              width={48}
+              height={48}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            userName?.charAt(0) || 'U'
+          )}
         </div>
-
-        <div className="flex items-start gap-4 sm:gap-3 mt-4">
-          <div className="w-12 h-12 sm:w-11 sm:h-11 bg-primary-100/70 rounded-full flex items-center justify-center text-brand-primary-hover text-base sm:text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
-            {userAvatar ? (
-              <ImageWithFallback
-                src={userAvatar}
-                alt={userName || 'User'}
-                width={48}
-                height={48}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              userName?.charAt(0) || 'U'
+        <div className={cn('flex-1 min-w-0', compact && 'flex items-center')}>
+          <p
+            className={cn(
+              'text-slate-900',
+              compact
+                ? 'text-lg sm:text-xl font-semibold leading-none'
+                : 'font-medium text-base sm:text-sm',
             )}
-          </div>
-          <div className="flex-1">
-            <p className="font-medium text-slate-900 text-base sm:text-sm">{userName || 'You'}</p>
+          >
+            {userName || 'You'}
+          </p>
+          {!isEditMode && !compact && (
             <Badge className="mt-2 inline-flex items-center rounded-full border border-slate-200/80 bg-slate-100/70 px-3 py-1 text-xs font-medium text-slate-600">
               Post to Chapter
             </Badge>
-          </div>
+          )}
         </div>
       </div>
-    </>
+    );
+  };
+
+  const editThreadsHeader = (
+    <div className="shrink-0 border-b border-slate-200/50">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 py-2 sm:py-2.5 pl-4 sm:pl-6 pr-11 sm:pr-14">
+        <Button
+          type="button"
+          variant="ghost"
+          className="justify-self-start h-9 px-2 text-slate-600 hover:text-slate-900"
+          onClick={onClose}
+          disabled={isSubmitting}
+        >
+          Cancel
+        </Button>
+        <h2 className="text-center text-base font-semibold tracking-tight text-slate-900">
+          Edit post
+        </h2>
+        <div className="justify-self-end flex items-center justify-end min-w-[2.5rem]">
+          {onEditDelete ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 w-9 shrink-0 rounded-full p-0 text-slate-600"
+                  aria-label="More options"
+                  disabled={isSubmitting}
+                >
+                  <MoreHorizontal className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[10rem]">
+                <DropdownMenuItem
+                  onClick={() => {
+                    onEditDelete();
+                  }}
+                  className="gap-2 text-red-600 focus:text-red-600"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete post
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <span className="w-9" aria-hidden />
+          )}
+        </div>
+      </div>
+      <div className="px-6 sm:px-8 pb-2 pt-0">
+        {renderComposerIdentity({ compact: true })}
+      </div>
+    </div>
+  );
+
+  const createHeaderBlock = (
+    <div className="shrink-0 p-6 sm:p-8 pb-4 sm:pb-4 border-b border-slate-200/50">
+      <div className="pb-2">
+        <h2 className="text-xl font-semibold tracking-tight text-slate-900">Create a post</h2>
+        <p className="text-sm text-slate-400 mt-1">Share an update with your chapter</p>
+      </div>
+      {renderComposerIdentity()}
+    </div>
   );
 
   const bodyContent = (
-    <div className="flex-1 overflow-y-auto min-h-0 px-6 sm:px-8 py-4 sm:py-6">
+    <div
+      className={cn(
+        'flex-1 overflow-y-auto min-h-0 px-6 sm:px-8',
+        isEditMode ? 'pt-2 pb-4 sm:pt-3 sm:pb-6' : 'py-4 sm:py-6',
+      )}
+    >
       <div className="space-y-4 sm:space-y-3">
         <Textarea
           ref={textareaRef}
-          placeholder="What do you want to talk about?"
+          placeholder={isEditMode ? undefined : 'What do you want to talk about?'}
           value={content}
           onChange={(e) => {
             const nextValue = sanitizeContent(e.target.value);
             setContent(nextValue);
-            setPostType(determinePostType(nextValue, previewUrls.length));
           }}
           onFocus={() => setIsInputFocused(true)}
           onBlur={() => setIsInputFocused(false)}
           className="min-h-[120px] sm:min-h-[100px] resize-none rounded-2xl border border-transparent bg-slate-50/80 p-5 text-base sm:text-lg text-slate-800 placeholder:text-slate-400 focus:border-primary-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 transition"
+          disabled={isSubmitting}
         />
 
         {uploadError && (
@@ -294,7 +371,40 @@ export function CreatePostModal({
           </div>
         )}
 
-        {previewUrls.length > 0 && (
+        {isEditMode &&
+          Array.isArray(linkPreviewsEdit) &&
+          linkPreviewsEdit.length > 0 && (
+            <div className="space-y-3">
+              {linkPreviewsEdit.map((preview, idx) => (
+                <LinkPreviewCard key={`${preview.url}-${idx}`} preview={preview} />
+              ))}
+            </div>
+          )}
+
+        {isEditMode && existingImageUrls.length > 0 && (
+          <div className="relative shrink-0">
+            <div
+              className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent"
+              style={{ maxHeight: '200px', WebkitOverflowScrolling: 'touch' }}
+            >
+              {existingImageUrls.map((url, index) => (
+                <div
+                  key={`${url}-${index}`}
+                  className="relative shrink-0 w-28 h-28 sm:w-32 sm:h-32 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt={`Post image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!isEditMode && previewUrls.length > 0 && (
           <div className="relative shrink-0">
             <div
               className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent"
@@ -308,6 +418,7 @@ export function CreatePostModal({
                   key={index}
                   className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100"
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={url}
                     alt={`Post image ${index + 1}`}
@@ -326,7 +437,8 @@ export function CreatePostModal({
             </div>
             {previewUrls.length < MAX_IMAGES && (
               <p className="text-xs text-slate-500 mt-2">
-                {previewUrls.length} of {MAX_IMAGES} images ({MAX_IMAGES - previewUrls.length} remaining)
+                {previewUrls.length} of {MAX_IMAGES} images ({MAX_IMAGES - previewUrls.length}{' '}
+                remaining)
               </p>
             )}
           </div>
@@ -335,31 +447,29 @@ export function CreatePostModal({
     </div>
   );
 
-  const footerContent = (
-    <>
-      <div className="shrink-0 border-t border-slate-200/70 bg-slate-50/70 p-4 sm:p-3 shadow-inner">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={imageFiles.length >= MAX_IMAGES || isSubmitting}
-              className="h-11 sm:h-9 rounded-full border border-slate-200 bg-white/90 px-5 text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Image className="h-5 w-5 sm:h-4 sm:w-4 mr-2" />
-              <span className="text-sm font-medium">Photo</span>
-            </Button>
-          </div>
-
+  const footerCreate = (
+    <div className="shrink-0 border-t border-slate-200/70 bg-slate-50/70 p-4 sm:p-3 shadow-inner">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Button
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            className="w-full sm:w-auto h-12 sm:h-10 rounded-full bg-brand-primary px-8 text-sm font-semibold tracking-wide text-white shadow-[0_18px_45px_-24px_rgba(30,64,175,0.9)] transition-all duration-200 hover:bg-brand-primary-hover hover:-translate-y-0.5 hover:shadow-[0_22px_55px_-28px_rgba(30,64,175,0.85)] disabled:translate-y-0 disabled:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="ghost"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={imageFiles.length >= MAX_IMAGES || isSubmitting}
+            className="h-11 sm:h-9 rounded-full border border-slate-200 bg-white/90 px-5 text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Posting…' : 'Post'}
+            <Image className="h-5 w-5 sm:h-4 mr-2" />
+            <span className="text-sm font-medium">Photo</span>
           </Button>
         </div>
+
+        <Button
+          onClick={handleCreateSubmit}
+          disabled={!canSubmitCreate}
+          className="w-full sm:w-auto h-12 sm:h-10 rounded-full bg-brand-primary px-8 text-sm font-semibold tracking-wide text-white shadow-[0_18px_45px_-24px_rgba(30,64,175,0.9)] transition-all duration-200 hover:bg-brand-primary-hover hover:-translate-y-0.5 hover:shadow-[0_22px_55px_-28px_rgba(30,64,175,0.85)] disabled:translate-y-0 disabled:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? 'Posting…' : 'Post'}
+        </Button>
       </div>
 
       <input
@@ -370,106 +480,83 @@ export function CreatePostModal({
         onChange={handleImageUpload}
         className="hidden"
       />
-    </>
+    </div>
   );
 
-  // Mobile: vault bottom drawer (optional); hide footer when input focused. Set USE_CREATE_POST_DRAWER_MOBILE = true to re-enable.
+  const footerEdit = (
+    <div className="shrink-0 border-t border-slate-200/70 bg-slate-50/70 p-4 sm:p-3 shadow-inner">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-end gap-3">
+        <Button
+          type="button"
+          onClick={handleEditSave}
+          disabled={!canSubmitEdit}
+          className="w-full sm:w-auto h-12 sm:h-10 rounded-full bg-brand-primary px-8 text-sm font-semibold tracking-wide text-white shadow-[0_18px_45px_-24px_rgba(30,64,175,0.9)] transition-all duration-200 hover:bg-brand-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? 'Saving…' : 'Done'}
+        </Button>
+      </div>
+    </div>
+  );
+
+  const showDrawerFooter = isEditMode || !isInputFocused;
+
   if (mounted && isMobile && USE_CREATE_POST_DRAWER_MOBILE) {
     return (
       <Drawer.Root open={isOpen} onOpenChange={(open) => !open && onClose()} direction="bottom" modal dismissible>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 z-[9999] bg-black/40 transition-opacity" />
-          <Drawer.Content
-            className="bg-white flex flex-col z-[10000] fixed bottom-0 left-0 right-0 max-h-[85dvh] rounded-t-[20px] shadow-2xl border border-gray-200 outline-none"
-          >
+          <Drawer.Content className="bg-white flex flex-col z-[10000] fixed bottom-0 left-0 right-0 max-h-[85dvh] rounded-t-[20px] shadow-2xl border border-gray-200 outline-none">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-zinc-300 mt-3 mb-2" aria-hidden />
-            {headerContent}
+            {isEditMode ? editThreadsHeader : createHeaderBlock}
             {bodyContent}
-            {!isInputFocused && (
-              <div className="pb-[env(safe-area-inset-bottom)]">
-                <div className="shrink-0 border-t border-slate-200/70 bg-slate-50/70 p-4 sm:p-3 shadow-inner">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-3">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={imageFiles.length >= MAX_IMAGES || isSubmitting}
-                        className="h-11 sm:h-9 rounded-full border border-slate-200 bg-white/90 px-5 text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <Image className="h-5 w-5 sm:h-4 sm:w-4 mr-2" />
-                        <span className="text-sm font-medium">Photo</span>
-                      </Button>
-                    </div>
-                    <Button
-                      onClick={handleSubmit}
-                      disabled={!canSubmit}
-                      className="w-full sm:w-auto h-12 sm:h-10 rounded-full bg-brand-primary px-8 text-sm font-semibold tracking-wide text-white shadow-[0_18px_45px_-24px_rgba(30,64,175,0.9)] transition-all duration-200 hover:bg-brand-primary-hover hover:-translate-y-0.5 hover:shadow-[0_22px_55px_-28px_rgba(30,64,175,0.85)] disabled:translate-y-0 disabled:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSubmitting ? 'Posting…' : 'Post'}
-                    </Button>
-                  </div>
-                </div>
-              </div>
+            {showDrawerFooter && (isEditMode ? footerEdit : footerCreate)}
+            {!isEditMode && (
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
+                className="hidden"
+              />
             )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleImageUpload}
-              className="hidden"
-            />
           </Drawer.Content>
         </Drawer.Portal>
       </Drawer.Root>
     );
   }
 
-  // Desktop: centered dialog (unchanged)
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className="sm:max-w-[600px] max-w-[85vw] max-h-[90vh] sm:max-h-[80vh] overflow-hidden border border-slate-200/80 bg-white/95 backdrop-blur-sm shadow-[0_28px_90px_-40px_rgba(15,23,42,0.55)] sm:rounded-3xl rounded-2xl p-0 flex flex-col"
       >
-        <div className="shrink-0 p-6 sm:p-8 pb-4 sm:pb-4 border-b border-slate-200/50">
-          <DialogHeader className="flex flex-row items-start justify-between pb-2">
-            <div>
-              <DialogTitle className="text-xl font-semibold tracking-tight text-slate-900">
-                Create a post
-              </DialogTitle>
-              <p className="text-sm text-slate-400 mt-1">
-                Share an update with your chapter
-              </p>
-            </div>
+        {isEditMode && (
+          <DialogHeader className="sr-only">
+            <DialogTitle>Edit post</DialogTitle>
           </DialogHeader>
-
-          <div className="flex items-start gap-4 sm:gap-3 mt-4">
-            <div className="w-12 h-12 sm:w-11 sm:h-11 bg-primary-100/70 rounded-full flex items-center justify-center text-brand-primary-hover text-base sm:text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
-              {userAvatar ? (
-                <ImageWithFallback
-                  src={userAvatar}
-                  alt={userName || 'User'}
-                  width={48}
-                  height={48}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                userName?.charAt(0) || 'U'
-              )}
+        )}
+        {isEditMode ? (
+          <>
+            {editThreadsHeader}
+            {bodyContent}
+            {footerEdit}
+          </>
+        ) : (
+          <>
+            <div className="shrink-0 p-6 sm:p-8 pb-4 sm:pb-4 border-b border-slate-200/50">
+              <DialogHeader className="pb-2 text-left">
+                <DialogTitle className="text-xl font-semibold tracking-tight text-slate-900">
+                  Create a post
+                </DialogTitle>
+                <p className="text-sm text-slate-400 mt-1">Share an update with your chapter</p>
+              </DialogHeader>
+              {renderComposerIdentity()}
             </div>
-            <div className="flex-1">
-              <p className="font-medium text-slate-900 text-base sm:text-sm">{userName || 'You'}</p>
-              <Badge className="mt-2 inline-flex items-center rounded-full border border-slate-200/80 bg-slate-100/70 px-3 py-1 text-xs font-medium text-slate-600">
-                Post to Chapter
-              </Badge>
-            </div>
-          </div>
-        </div>
-
-        {bodyContent}
-
-        {footerContent}
+            {bodyContent}
+            {footerCreate}
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

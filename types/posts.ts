@@ -103,10 +103,9 @@ export interface CreatePostRequest {
   };
 }
 
+/** Body for PATCH /api/posts/[id] — content-only edits (server keeps image_url / metadata intact). */
 export interface UpdatePostRequest {
-  content?: string;
-  image_url?: string;
-  metadata?: Record<string, any>;
+  content: string;
 }
 
 export interface CreateCommentRequest {

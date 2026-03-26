@@ -7,9 +7,10 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import type { Post } from '@/types/posts';
 import { PostDetailClient } from '@/app/dashboard/post/[id]/PostDetailClient';
 import { Button } from '@/components/ui/button';
+import { CreatePostModal } from '@/components/features/social/CreatePostModal';
 import { DeletePostModal } from '@/components/features/social/DeletePostModal';
-import { EditPostModal } from '@/components/features/social/EditPostModal';
 import { ReportPostModal } from '@/components/features/social/ReportPostModal';
+import { getExistingImageUrlsFromPost } from '@/lib/utils/postComposer';
 import { NetworkingSpotlightCard } from '@/components/features/dashboard/dashboards/ui/NetworkingSpotlightCard';
 import { MobileBottomNavigation } from '@/components/features/dashboard/dashboards/ui/MobileBottomNavigation';
 import { toast } from 'react-toastify';
@@ -25,6 +26,7 @@ export default function PostDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [editDetailImageUrls, setEditDetailImageUrls] = useState<string[]>([]);
 
   const {
     data: post,
@@ -128,10 +130,48 @@ export default function PostDetailPage() {
       queryClient.setQueryData<Post>(['post', postId], (prev) =>
         prev ? { ...prev, ...updated } : updated,
       );
-      setShowEditModal(false);
     },
     [getAuthHeaders, postId, queryClient]
   );
+
+  useEffect(() => {
+    if (!showEditModal || !post) {
+      setEditDetailImageUrls([]);
+      return;
+    }
+    const immediate = getExistingImageUrlsFromPost(post);
+    if (immediate.length > 0) {
+      setEditDetailImageUrls(immediate);
+      return;
+    }
+    if (!post.has_image) {
+      setEditDetailImageUrls([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/posts/${post.id}/image`, {
+          headers: getAuthHeaders(),
+        });
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const urls =
+          Array.isArray(data.image_urls) && data.image_urls.length > 0
+            ? data.image_urls
+            : data.image_url
+              ? [data.image_url]
+              : [];
+        setEditDetailImageUrls(urls);
+      } catch {
+        if (!cancelled) setEditDetailImageUrls([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [showEditModal, post, getAuthHeaders]);
 
   const handleSubmitReport = useCallback(
     async (reportedPostId: string, reason: string) => {
@@ -282,11 +322,18 @@ export default function PostDetailPage() {
       post={deletingPost}
       isDeleting={isDeleting}
     />
-    <EditPostModal
+    <CreatePostModal
       isOpen={showEditModal}
       onClose={() => setShowEditModal(false)}
-      post={post}
-      onSave={handleSaveEdit}
+      editPost={post}
+      existingImageUrls={editDetailImageUrls}
+      onSaveEdit={handleSaveEdit}
+      onEditDelete={() => {
+        setShowEditModal(false);
+        setDeletingPost(post);
+      }}
+      userAvatar={post.author?.avatar_url ?? undefined}
+      userName={post.author?.full_name ?? undefined}
     />
     <ReportPostModal
       isOpen={showReportModal}

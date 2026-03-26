@@ -11,8 +11,9 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { cn } from '@/lib/utils';
 import { CreatePostModal } from '@/components/features/social/CreatePostModal';
-import { EditPostModal } from '@/components/features/social/EditPostModal';
+import { DeletePostModal } from '@/components/features/social/DeletePostModal';
 import { ReportPostModal } from '@/components/features/social/ReportPostModal';
+import { getExistingImageUrlsFromPost } from '@/lib/utils/postComposer';
 import { PostCard } from '@/components/features/social/PostCard';
 import type { Post, CreatePostRequest, PostsResponse } from '@/types/posts';
 import ImageWithFallback from '@/components/figma/ImageWithFallback';
@@ -100,6 +101,10 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
   } = usePosts(chapterId, { initialData });
   const { profile } = useProfile();
   const { user, getAuthHeaders } = useAuth();
+
+  const [editComposerImageUrls, setEditComposerImageUrls] = useState<string[]>([]);
+  const [deleteModalPost, setDeleteModalPost] = useState<Post | null>(null);
+  const [isDeletingFromFeedModal, setIsDeletingFromFeedModal] = useState(false);
   const { connections } = useConnections();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
@@ -226,6 +231,66 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     if (!editingPost) return;
     await updatePost(editingPost.id, { content });
     setEditingPost(null);
+  };
+
+  useEffect(() => {
+    if (!editingPost) {
+      setEditComposerImageUrls([]);
+      return;
+    }
+    const immediate = getExistingImageUrlsFromPost(editingPost);
+    if (immediate.length > 0) {
+      setEditComposerImageUrls(immediate);
+      return;
+    }
+    if (!editingPost.has_image) {
+      setEditComposerImageUrls([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/posts/${editingPost.id}/image`, {
+          headers: getAuthHeaders(),
+        });
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const urls =
+          Array.isArray(data.image_urls) && data.image_urls.length > 0
+            ? data.image_urls
+            : data.image_url
+              ? [data.image_url]
+              : [];
+        setEditComposerImageUrls(urls);
+      } catch {
+        if (!cancelled) setEditComposerImageUrls([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editingPost, getAuthHeaders]);
+
+  const handleEditDeleteFromComposer = () => {
+    if (!editingPost) return;
+    const toDelete = editingPost;
+    setEditingPost(null);
+    setDeleteModalPost(toDelete);
+  };
+
+  const handleConfirmDeleteFromFeedModal = async () => {
+    if (!deleteModalPost) return;
+    setIsDeletingFromFeedModal(true);
+    try {
+      await deletePost(deleteModalPost.id);
+      setDeleteModalPost(null);
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete post');
+    } finally {
+      setIsDeletingFromFeedModal(false);
+    }
   };
 
   const handleReportPost = (postId: string) => {
@@ -524,18 +589,26 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
       </div>
 
       <CreatePostModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        isOpen={isCreateModalOpen || !!editingPost}
+        onClose={() => {
+          if (editingPost) setEditingPost(null);
+          else setIsCreateModalOpen(false);
+        }}
         onSubmit={handleCreatePost}
+        editPost={editingPost}
+        existingImageUrls={editComposerImageUrls}
+        onSaveEdit={handleSaveEdit}
+        onEditDelete={editingPost ? handleEditDeleteFromComposer : undefined}
         userAvatar={profile?.avatar_url || undefined}
         userName={profile?.full_name || undefined}
       />
 
-      <EditPostModal
-        isOpen={!!editingPost}
-        onClose={() => setEditingPost(null)}
-        post={editingPost}
-        onSave={handleSaveEdit}
+      <DeletePostModal
+        isOpen={!!deleteModalPost}
+        onClose={() => setDeleteModalPost(null)}
+        onConfirm={handleConfirmDeleteFromFeedModal}
+        post={deleteModalPost}
+        isDeleting={isDeletingFromFeedModal}
       />
 
       <ReportPostModal

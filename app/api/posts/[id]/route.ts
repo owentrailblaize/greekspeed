@@ -190,7 +190,7 @@ export async function DELETE(
 
 /**
  * PATCH /api/posts/[id]
- * Update post content/metadata. Author only.
+ * Update post body text only (author only). Does not accept client metadata — avoids wiping image_urls etc.
  */
 export async function PATCH(
   request: NextRequest,
@@ -220,32 +220,38 @@ export async function PATCH(
     }
 
     const body = await request.json().catch(() => ({}));
-    const { content, metadata } = body;
-    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    if (typeof content === 'string') updates.content = content;
-    if (metadata !== undefined && metadata !== null) updates.metadata = metadata;
+    const { content } = body;
 
-    if (Object.keys(updates).length <= 1) {
-      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
+    if (typeof content !== 'string') {
+      return NextResponse.json({ error: 'content (string) is required' }, { status: 400 });
     }
 
-    const { data: post, error: postError } = await supabase
+    const trimmed = content.trim();
+
+    const { data: existing, error: postError } = await supabase
       .from('posts')
-      .select('id, author_id, chapter_id')
+      .select('id, author_id, chapter_id, post_type')
       .eq('id', postId)
       .single();
 
-    if (postError || !post) {
+    if (postError || !existing) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    if (post.author_id !== user.id) {
+    if (existing.author_id !== user.id) {
       return NextResponse.json({ error: 'You can only edit your own posts' }, { status: 403 });
+    }
+
+    if (existing.post_type === 'text' && !trimmed) {
+      return NextResponse.json({ error: 'Content cannot be empty' }, { status: 400 });
     }
 
     const { data: updated, error: updateError } = await supabase
       .from('posts')
-      .update(updates)
+      .update({
+        content: trimmed,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', postId)
       .select()
       .single();
