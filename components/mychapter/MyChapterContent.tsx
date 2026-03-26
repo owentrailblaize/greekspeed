@@ -11,7 +11,7 @@ import { useProfile } from '@/lib/contexts/ProfileContext';
 import { CHAPTER_ADMIN_ROLES, getRoleDisplayName } from '@/lib/permissions';
 import { Loader2 } from "lucide-react";
 import { useProfileModal } from "@/lib/contexts/ProfileModalContext";
-import { sortChapterMembersByCompleteness } from '@/lib/utils/profileCompleteness';
+import { calculateChapterMemberCompleteness, sortChapterMembersByCompleteness } from '@/lib/utils/profileCompleteness';
 
 interface MyChapterContentProps {
   onNavigate: (section: string) => void;
@@ -77,18 +77,16 @@ export function MyChapterContent({ onNavigate, activeSection, searchTerm }: MyCh
 
   // Sort officers: role hierarchy first, then profile completeness within the
   // same tier (richer profiles surface before sparse ones). Activity fields
-  // (last_active_at) are explicitly excluded — see sortChapterMembersByCompleteness.
-  const completenessSortedOfficers = sortChapterMembersByCompleteness(officers);
-  const sortedOfficers = completenessSortedOfficers.sort((a, b) => {
-    const positionPriority: Record<string, number> = {
-      'President': 1,
-      'Vice President': 2,
-      'Treasurer': 3,
-      'Social Chair': 4,
-      'Secretary': 5,
-      'Rush Chair': 6,
-    };
-
+  // (last_active_at) are explicitly excluded.
+  const positionPriority: Record<string, number> = {
+    'President': 1,
+    'Vice President': 2,
+    'Treasurer': 3,
+    'Social Chair': 4,
+    'Secretary': 5,
+    'Rush Chair': 6,
+  };
+  const sortedOfficers = [...officers].sort((a, b) => {
     const aPriority = positionPriority[a.position || ''] || 999;
     const bPriority = positionPriority[b.position || ''] || 999;
 
@@ -96,9 +94,21 @@ export function MyChapterContent({ onNavigate, activeSection, searchTerm }: MyCh
       return aPriority - bPriority;
     }
 
-    // Within the same role tier, completeness ordering is already applied by
-    // sortChapterMembersByCompleteness — a stable sort preserves that order.
-    return 0;
+    // Same role tier — use completeness score directly so avatars and richer
+    // fields always surface first, with the same tie-breakers as general members.
+    const aScore = calculateChapterMemberCompleteness(a);
+    const bScore = calculateChapterMemberCompleteness(b);
+    if (aScore !== bScore) return bScore - aScore;
+
+    const aHasAvatar = a.avatar ? 1 : 0;
+    const bHasAvatar = b.avatar ? 1 : 0;
+    if (aHasAvatar !== bHasAvatar) return bHasAvatar - aHasAvatar;
+
+    if (a.mutualConnectionsCount !== b.mutualConnectionsCount) {
+      return b.mutualConnectionsCount - a.mutualConnectionsCount;
+    }
+
+    return a.name.localeCompare(b.name);
   });
 
   // General members sorted by profile completeness (richest first).
