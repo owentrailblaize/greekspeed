@@ -313,6 +313,15 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
     }
   };
 
+  const handleCommentActionClick = useCallback(() => {
+    const input = textareaRef.current;
+    if (!input) return;
+    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    input.focus({ preventScroll: true });
+    const len = input.value.length;
+    input.setSelectionRange(len, len);
+  }, []);
+
   const handleCommentInputFocus = useCallback(() => {
     if (!embedded || !isMobile) return;
     const scrollEl = scrollContentRef.current;
@@ -1009,6 +1018,7 @@ export function CommentModal({ isOpen, onClose, post, onLike, onCommentAdded, on
                   <Button 
                     variant="ghost" 
                     size="sm" 
+                    onClick={handleCommentActionClick}
                     className="h-9 rounded-full px-4 bg-accent-50/80 text-accent-500 border border-transparent hover:bg-accent-100 shadow-sm transition"
                   >
                     <MessageCircle className={`h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2`} />

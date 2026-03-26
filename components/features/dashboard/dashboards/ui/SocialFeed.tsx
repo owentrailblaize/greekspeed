@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -192,6 +192,12 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     overscan: 8,
     scrollToFn: () => null,
   });
+
+  const invalidateFeedRowHeights = useCallback(() => {
+    requestAnimationFrame(() => {
+      rowVirtualizer.measure();
+    });
+  }, [rowVirtualizer]);
 
   const handleCreatePost = async (postData: CreatePostRequest) => {
     try {
@@ -495,7 +501,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
             )}
           </div>
         ) : (
-          <div className="relative">
+          <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
             <div
               className="relative w-full"
               style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
@@ -508,7 +514,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
                   <div
                     key={post.id}
                     data-index={virtualRow.index}
-                    className="absolute left-0 right-0 pb-3 sm:pb-6"
+                    className="absolute left-0 right-0"
                     style={{
                       transform: `translateY(${virtualRow.start}px)`,
                       width: '100%',
@@ -528,10 +534,13 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
                       onBookmark={handleBookmark}
                       onCommentAdded={handleCommentAdded}
                       isExpanded={expandedPostId === post.id}
+                      variant="feed"
+                      showDivider={virtualRow.index < filteredPosts.length - 1}
                       onToggleExpand={() => {
                         setExpandedPostId((prev) => (prev === post.id ? null : post.id));
-                        requestAnimationFrame(() => rowVirtualizer.measure());
+                        invalidateFeedRowHeights();
                       }}
+                      onLayoutInvalidate={invalidateFeedRowHeights}
                     />
                   </div>
                 );

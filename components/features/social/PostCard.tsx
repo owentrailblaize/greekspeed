@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useMemo, useState, useCallback, useEffect, useRef } from 'react';
+import { memo, useMemo, useState, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
@@ -20,6 +20,7 @@ import { useCommentCount } from '@/lib/hooks/useCommentCount';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { Textarea } from '@/components/ui/textarea';
 import { PostImageGrid } from './PostImageGrid';
+import { cn } from '@/lib/utils';
 
 /* -----------------------------------------------------------------------
  * 9a: Lazy-load heavy modals via next/dynamic.
@@ -140,7 +141,10 @@ interface PostCardProps {
   onCommentAdded?: () => void;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
-  variant?: 'default' | 'profile';
+  variant?: 'default' | 'profile' | 'feed';
+  showDivider?: boolean;
+  /** e.g. virtualized feed row remeasure when inline comment composer opens/closes */
+  onLayoutInvalidate?: () => void;
 }
 
 function PostCardInner({
@@ -154,6 +158,8 @@ function PostCardInner({
   isExpanded: isExpandedProp,
   onToggleExpand,
   variant = 'default',
+  showDivider = false,
+  onLayoutInvalidate,
 }: PostCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -333,25 +339,30 @@ function PostCardInner({
     );
   };
 
-  const [commentInputFocused, setCommentInputFocused] = useState(false);
-  const [isPostInView, setIsPostInView] = useState(false);
-  const commentBlurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showCommentComposer, setShowCommentComposer] = useState(false);
+  const commentComposerMobileRef = useRef<HTMLDivElement | null>(null);
+  const commentComposerDesktopRef = useRef<HTMLDivElement | null>(null);
+  const inlineCommentTextareaMobileRef = useRef<HTMLTextAreaElement | null>(null);
+  const inlineCommentTextareaDesktopRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const isInsideCommentComposer = useCallback((node: Node | null) => {
+    if (!node) return false;
+    return (
+      !!commentComposerMobileRef.current?.contains(node) ||
+      !!commentComposerDesktopRef.current?.contains(node)
+    );
+  }, []);
   const postCardRef = useRef<HTMLDivElement | null>(null);
   const [showHeartOverlay, setShowHeartOverlay] = useState(false);
   const singleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTapTimeRef = useRef<number>(0);
 
   const commentsPreview = post.comments_preview ?? [];
-  const hasComments = (post.comments_count ?? 0) > 0;
   const liveCommentCount = useCommentCount(post.id, post.comments_count ?? 0);
 
-  const commentsEnabled = hasComments
-    ? commentInputFocused || isPostInView
-    : commentInputFocused;
-
   const { comments: commentsFromHook, loading: commentsLoading, createComment } = useComments(post.id, {
-    enabled: commentsEnabled,
-    limit: commentInputFocused ? 4 : 2,
+    enabled: showCommentComposer,
+    limit: 4,
   });
 
   const previewCommentsFromHook = useMemo(() => {
@@ -359,43 +370,49 @@ function PostCardInner({
     const sorted = [...commentsFromHook].sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
-    return sorted.slice(0, commentInputFocused ? 4 : 2);
-  }, [commentInputFocused, commentsFromHook]);
+    return sorted.slice(0, 4);
+  }, [commentsFromHook]);
 
   useEffect(() => {
     return () => {
-      if (commentBlurTimeoutRef.current) clearTimeout(commentBlurTimeoutRef.current);
       if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current);
     };
   }, []);
 
   useEffect(() => {
-    const el = postCardRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (entry) setIsPostInView(entry.isIntersecting);
-      },
-      { rootMargin: '50px', threshold: 0 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+    if (!showCommentComposer) return;
+    const onPointerDown = (ev: PointerEvent) => {
+      if (!isInsideCommentComposer(ev.target as Node)) {
+        setShowCommentComposer(false);
+      }
+    };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    return () => document.removeEventListener('pointerdown', onPointerDown, true);
+  }, [showCommentComposer, isInsideCommentComposer]);
 
-  const handleCommentInputFocus = useCallback(() => {
-    if (commentBlurTimeoutRef.current) {
-      clearTimeout(commentBlurTimeoutRef.current);
-      commentBlurTimeoutRef.current = null;
-    }
-    setCommentInputFocused(true);
-  }, []);
+  useEffect(() => {
+    if (!showCommentComposer) return;
+    const id = requestAnimationFrame(() => {
+      const desktop = typeof window !== 'undefined' && window.matchMedia('(min-width: 640px)').matches;
+      if (desktop) {
+        inlineCommentTextareaDesktopRef.current?.focus();
+      } else {
+        inlineCommentTextareaMobileRef.current?.focus();
+      }
+    });
+    return () => cancelAnimationFrame(id);
+  }, [showCommentComposer]);
 
-  const handleCommentInputBlur = useCallback(() => {
-    commentBlurTimeoutRef.current = setTimeout(() => {
-      setCommentInputFocused(false);
-      commentBlurTimeoutRef.current = null;
-    }, 300);
+  const prevShowCommentComposer = useRef(showCommentComposer);
+  useLayoutEffect(() => {
+    if (prevShowCommentComposer.current === showCommentComposer) return;
+    prevShowCommentComposer.current = showCommentComposer;
+    onLayoutInvalidate?.();
+  }, [showCommentComposer, onLayoutInvalidate]);
+
+  const toggleCommentComposer = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowCommentComposer((v) => !v);
   }, []);
 
   const formatTimestamp = (timestamp: string) => {
@@ -554,6 +571,12 @@ function PostCardInner({
   const handleCardClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     if (target.closest('button, a, [role="button"], img')) return;
+    if (showCommentComposer) {
+      if (!isInsideCommentComposer(target)) {
+        setShowCommentComposer(false);
+      }
+      return;
+    }
     openPostView();
   };
 
@@ -561,6 +584,12 @@ function PostCardInner({
     (e: React.MouseEvent) => {
       const target = e.target as HTMLElement;
       if (target.closest('button, a, [role="button"], img, textarea, form, input')) return;
+      if (showCommentComposer) {
+        if (!isInsideCommentComposer(target)) {
+          setShowCommentComposer(false);
+        }
+        return;
+      }
       if (!isMobile) {
         openPostView();
         return;
@@ -587,17 +616,27 @@ function PostCardInner({
         singleTapTimerRef.current = null;
       }, 350);
     },
-    [isMobile, post.id, onLike, openPostView],
+    [isMobile, post.id, onLike, openPostView, showCommentComposer],
   );
+
+  const isFeedVariant = variant === 'feed';
+  const cardShellClass = isFeedVariant
+    ? 'p-4 sm:p-5'
+    : 'rounded-2xl border border-gray-200 bg-white shadow-sm p-4 sm:p-5';
+  const feedDividerClass = isFeedVariant && showDivider ? 'border-b border-gray-200/80' : '';
+
+  const commentComposerSectionIdMobile = `post-${post.id}-inline-comment-composer-mobile`;
+  const commentComposerSectionIdDesktop = `post-${post.id}-inline-comment-composer-desktop`;
 
   return (
     <div ref={postCardRef}>
-      {/* Mobile Layout - Cardless Feed */}
-      <div className="sm:hidden">
-        <div
-          className="relative px-4 py-4 border-b border-gray-200/80 cursor-pointer"
-          onClick={isMobile ? handleMobileCardTap : handleCardClick}
-        >
+      {/* Mobile Layout — LinkedIn-style post card */}
+      <div className={cn('sm:hidden', isFeedVariant ? 'mb-0' : 'mb-3 sm:mb-0')}>
+        <div className={cn(cardShellClass, feedDividerClass)}>
+          <div
+            className="relative cursor-pointer"
+            onClick={isMobile ? handleMobileCardTap : handleCardClick}
+          >
           {/* Post Header */}
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-3">
@@ -651,22 +690,24 @@ function PostCardInner({
             </div>
           </div>
 
-          {/* Post Content - cardless when image-only (edge-to-edge) */}
+          {/* Post Content — image-only media inset inside card (p-4 on shell) */}
           <div className="mb-3">
             {isImageOnly ? (
               <>
                 {resolvedImageUrls.length === 0 ? (
                   <div
-                    className="w-full aspect-[4/3] bg-gray-100 animate-pulse"
+                    className="w-full aspect-[4/3] bg-gray-100 animate-pulse rounded-xl"
                     style={{ maxHeight: '24rem' }}
                     aria-label="Image loading"
                   />
                 ) : (
-                  <PostImageGrid
-                    imageUrls={resolvedImageUrls}
-                    onImageClick={handleImageClick}
-                    multiImageSizes="(max-width: 640px) 100vw, 700px"
-                  />
+                  <div className="overflow-hidden rounded-xl">
+                    <PostImageGrid
+                      imageUrls={resolvedImageUrls}
+                      onImageClick={handleImageClick}
+                      multiImageSizes="(max-width: 640px) 100vw, 700px"
+                    />
+                  </div>
                 )}
               </>
             ) : (
@@ -710,114 +751,131 @@ function PostCardInner({
             )}
           </div>
 
-          {/* Post Actions */}
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100/50">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleLikeClick();
-                }}
-                className={`gap-2 rounded-full px-3 text-sm transition ${
-                  post.is_liked
-                    ? 'bg-rose-50 text-rose-500 hover:bg-rose-100'
-                    : 'text-gray-500 hover:bg-gray-100'
-                }`}
-              >
-                <motion.span
-                  className="inline-flex"
-                  initial={false}
-                  animate={{ scale: post.is_liked ? [1, 1.25, 1] : 1 }}
-                  transition={{ duration: 0.25 }}
+          <div ref={commentComposerMobileRef}>
+            {/* Post Actions */}
+            <div className="flex items-center justify-between pt-2 border-t border-gray-100/50">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLikeClick();
+                  }}
+                  className={`gap-2 rounded-full px-3 text-sm transition ${
+                    post.is_liked
+                      ? 'bg-rose-50 text-rose-500 hover:bg-rose-100'
+                      : 'text-gray-500 hover:bg-gray-100'
+                  }`}
                 >
-                  <Heart
-                    className={`h-4 w-4 ${post.is_liked ? 'fill-current' : ''}`}
-                  />
-                </motion.span>
-                <span>{post.likes_count}</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openPostView();
-                }}
-                className="gap-2 rounded-full px-3 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
-              >
-                <MessageCircle className="h-4 w-4 text-accent-500" />
-                <span>{liveCommentCount}</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Inline comment input - row keeps avatar aligned with input; comments block is sibling below */}
-          <div
-            className="flex flex-col gap-2 pt-3 border-t border-gray-100/50"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-end gap-3">
-              <div className="h-8 w-8 rounded-full bg-primary-100/80 flex items-center justify-center text-brand-primary-hover text-xs font-semibold shrink-0 overflow-hidden ring-2 ring-white">
-                {profile?.avatar_url ? (
-                  <Image
-                    src={profile.avatar_url}
-                    alt={profile.full_name || 'You'}
-                    width={32}
-                    height={32}
-                    className="h-full w-full rounded-full object-cover"
-                    sizes="32px"
-                  />
-                ) : (
-                  (profile?.first_name?.charAt(0) || '?')
-                )}
-              </div>
-              <form
-                className="flex-1 min-w-0"
-                onSubmit={handleSubmitInlineComment}
-              >
-                <div className="flex items-end gap-2">
-                  <Textarea
-                    placeholder="Write a comment..."
-                    value={inlineComment}
-                    onChange={(e) => setInlineComment(e.target.value)}
-                    onFocus={handleCommentInputFocus}
-                    onBlur={handleCommentInputBlur}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSubmitInlineComment();
-                      }
-                    }}
-                    className="min-h-[36px] max-h-[100px] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-brand-primary/20"
-                    rows={1}
-                  />
-                  <Button
-                    type="submit"
-                    size="sm"
-                    disabled={!inlineComment.trim() || isSubmittingComment}
-                    className="h-9 w-9 rounded-full p-0 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50"
-                    aria-label="Send comment"
+                  <motion.span
+                    className="inline-flex"
+                    initial={false}
+                    animate={{ scale: post.is_liked ? [1, 1.25, 1] : 1 }}
+                    transition={{ duration: 0.25 }}
                   >
-                    {isSubmittingComment ? (
-                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </form>
+                    <Heart
+                      className={`h-4 w-4 ${post.is_liked ? 'fill-current' : ''}`}
+                    />
+                  </motion.span>
+                  <span>{post.likes_count}</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  type="button"
+                  onClick={toggleCommentComposer}
+                  aria-expanded={showCommentComposer}
+                  aria-controls={commentComposerSectionIdMobile}
+                  className="gap-2 rounded-full px-3 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
+                >
+                  <MessageCircle className="h-4 w-4 text-accent-500" />
+                  <span>{liveCommentCount}</span>
+                </Button>
+              </div>
             </div>
-            {(commentsLoading || previewCommentsFromHook.length > 0) && (
-              <div className="min-h-[24px]" onClick={(e) => e.stopPropagation()}>
-                {commentsLoading ? (
-                  <div className="flex items-center gap-2 py-2">
-                    <div className="h-4 w-4 border-2 border-gray-300 border-t-brand-primary rounded-full animate-spin" />
-                    <span className="text-xs text-gray-500">Loading comments...</span>
+
+            {showCommentComposer && (
+              <div
+                id={commentComposerSectionIdMobile}
+                className="flex flex-col gap-2 pt-3 border-t border-gray-100/50"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-end gap-3">
+                  <div className="h-8 w-8 rounded-full bg-primary-100/80 flex items-center justify-center text-brand-primary-hover text-xs font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+                    {profile?.avatar_url ? (
+                      <Image
+                        src={profile.avatar_url}
+                        alt={profile.full_name || 'You'}
+                        width={32}
+                        height={32}
+                        className="h-full w-full rounded-full object-cover"
+                        sizes="32px"
+                      />
+                    ) : (
+                      (profile?.first_name?.charAt(0) || '?')
+                    )}
                   </div>
-                ) : (
-                  renderCommentsPreviewList(previewCommentsFromHook)
+                  <form
+                    className="flex-1 min-w-0"
+                    onSubmit={handleSubmitInlineComment}
+                  >
+                    <div className="flex items-end gap-2">
+                      <Textarea
+                        ref={inlineCommentTextareaMobileRef}
+                        placeholder="Write a comment..."
+                        value={inlineComment}
+                        onChange={(e) => setInlineComment(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSubmitInlineComment();
+                          }
+                        }}
+                        className="min-h-[36px] max-h-[100px] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-brand-primary/20"
+                        rows={1}
+                      />
+                      <Button
+                        type="submit"
+                        size="sm"
+                        disabled={!inlineComment.trim() || isSubmittingComment}
+                        className="h-9 w-9 rounded-full p-0 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50"
+                        aria-label="Send comment"
+                      >
+                        {isSubmittingComment ? (
+                          <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+                {(commentsLoading || previewCommentsFromHook.length > 0) && (
+                  <div className="min-h-[24px]" onClick={(e) => e.stopPropagation()}>
+                    {commentsLoading ? (
+                      <div className="flex items-center gap-2 py-2">
+                        <div className="h-4 w-4 border-2 border-gray-300 border-t-brand-primary rounded-full animate-spin" />
+                        <span className="text-xs text-gray-500">Loading comments...</span>
+                      </div>
+                    ) : (
+                      renderCommentsPreviewList(previewCommentsFromHook)
+                    )}
+                  </div>
+                )}
+                {liveCommentCount > previewCommentsFromHook.length && (
+                  <button
+                    type="button"
+                    className="text-left text-xs font-medium text-brand-primary hover:text-brand-primary-hover pt-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowCommentComposer(false);
+                      openPostView();
+                    }}
+                  >
+                    View all {liveCommentCount} comment{liveCommentCount === 1 ? '' : 's'}
+                  </button>
                 )}
               </div>
             )}
@@ -843,17 +901,21 @@ function PostCardInner({
               </motion.div>
             </div>
           )}
+          </div>
         </div>
       </div>
 
-      {/* Desktop Layout - Cardless Design */}
+      {/* Desktop Layout — LinkedIn-style post card */}
       <div
-        className={`relative hidden sm:block py-4 sm:py-5 border-b border-gray-200/90 cursor-pointer ${
-          variant === 'profile' ? 'px-6' : ''
-        }`}
-        onClick={handleCardClick}
+        className={cn(
+          'hidden sm:block',
+          isFeedVariant ? 'mb-0' : 'mb-4',
+          variant === 'profile' ? 'px-2 sm:px-6' : '',
+        )}
       >
-        <div className="space-y-4">
+        <div className={cn(cardShellClass, feedDividerClass)}>
+          <div className="relative cursor-pointer" onClick={handleCardClick}>
+            <div className="space-y-4">
           {/* Post Header */}
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-3">
@@ -911,28 +973,33 @@ function PostCardInner({
             </div>
           </div>
 
-          {/* Post Content - cardless when image-only (edge-to-edge) */}
+          {/* Post Content — image-only inset inside card; text posts keep inner panel */}
           <div className="space-y-3">
             {isImageOnly ? (
               resolvedImageUrls.length === 0 ? (
                 <div
-                  className="w-full aspect-[4/3] bg-gray-100 animate-pulse rounded-2xl"
+                  className="w-full aspect-[4/3] bg-gray-100 animate-pulse rounded-xl"
                   style={{ maxHeight: '24rem' }}
                   aria-label="Image loading"
                 />
               ) : (
-                <PostImageGrid
-                  imageUrls={resolvedImageUrls}
-                  onImageClick={handleImageClick}
-                  multiImageSizes="(max-width: 640px) 100vw, 700px"
-                />
+                <div className="overflow-hidden rounded-xl">
+                  <PostImageGrid
+                    imageUrls={resolvedImageUrls}
+                    onImageClick={handleImageClick}
+                    multiImageSizes="(max-width: 640px) 100vw, 700px"
+                  />
+                </div>
               )
             ) : (
-              <div className={`space-y-3 ${
-                variant === 'profile'
-                  ? 'px-1'
-                  : 'rounded-2xl bg-gray-50/30 border border-gray-200/80 p-4 sm:p-5'
-              }`}>
+              <div
+                className={cn(
+                  'space-y-3',
+                  variant === 'profile'
+                    ? 'px-0'
+                    : 'rounded-2xl bg-gray-50/30 border border-gray-200/80 p-4 sm:p-5',
+                )}
+              >
                 {renderPostContent(
                   'text-gray-700 text-base sm:text-[0.95rem] leading-relaxed',
                   'text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors',
@@ -972,141 +1039,160 @@ function PostCardInner({
             )}
           </div>
 
-          {/* Post Actions */}
-          <div className="flex items-center justify-between pt-3 border-t border-gray-100/50">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleLikeClick();
-                  if (!post.is_liked) setShowHeartOverlay(true);
-                }}
-                className={`gap-2 rounded-full px-3 py-2 text-sm transition ${
-                  post.is_liked
-                    ? 'bg-rose-50 text-rose-500 hover:bg-rose-100'
-                    : 'text-gray-500 hover:bg-gray-100'
-                }`}
-              >
-                <motion.span
-                  className="inline-flex"
-                  initial={false}
-                  animate={{ scale: post.is_liked ? [1, 1.25, 1] : 1 }}
-                  transition={{ duration: 0.25 }}
+          <div ref={commentComposerDesktopRef}>
+            {/* Post Actions */}
+            <div className="flex items-center justify-between pt-3 border-t border-gray-100/50">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLikeClick();
+                    if (!post.is_liked) setShowHeartOverlay(true);
+                  }}
+                  className={`gap-2 rounded-full px-3 py-2 text-sm transition ${
+                    post.is_liked
+                      ? 'bg-rose-50 text-rose-500 hover:bg-rose-100'
+                      : 'text-gray-500 hover:bg-gray-100'
+                  }`}
                 >
-                  <Heart
-                    className={`h-4 w-4 ${post.is_liked ? 'fill-current' : ''}`}
-                  />
-                </motion.span>
-                <span>{post.likes_count}</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openPostView();
-                }}
-                className="gap-2 rounded-full px-3 py-2 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
-              >
-                <MessageCircle className="h-4 w-4 text-accent-500" />
-                <span>{liveCommentCount}</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Inline comment input - row keeps avatar aligned with input; comments block is sibling below */}
-          <div
-            className="flex flex-col gap-2 pt-3 border-t border-gray-100/50"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-end gap-3">
-              <div className="h-9 w-9 rounded-full bg-primary-100/80 flex items-center justify-center text-brand-primary-hover text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
-                {profile?.avatar_url ? (
-                  <Image
-                    src={profile.avatar_url}
-                    alt={profile.full_name || 'You'}
-                    width={36}
-                    height={36}
-                    className="h-full w-full rounded-full object-cover"
-                    sizes="36px"
-                  />
-                ) : (
-                  (profile?.first_name?.charAt(0) || '?')
-                )}
-              </div>
-              <form
-                className="flex-1 min-w-0"
-                onSubmit={handleSubmitInlineComment}
-              >
-                <div className="flex items-end gap-2">
-                  <Textarea
-                    placeholder="Write a comment..."
-                    value={inlineComment}
-                    onChange={(e) => setInlineComment(e.target.value)}
-                    onFocus={handleCommentInputFocus}
-                    onBlur={handleCommentInputBlur}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSubmitInlineComment();
-                      }
-                    }}
-                    className="min-h-[40px] max-h-[120px] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-brand-primary/20"
-                    rows={1}
-                  />
-                  <Button
-                    type="submit"
-                    size="sm"
-                    disabled={!inlineComment.trim() || isSubmittingComment}
-                    className="h-9 w-9 rounded-full p-0 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50"
-                    aria-label="Send comment"
+                  <motion.span
+                    className="inline-flex"
+                    initial={false}
+                    animate={{ scale: post.is_liked ? [1, 1.25, 1] : 1 }}
+                    transition={{ duration: 0.25 }}
                   >
-                    {isSubmittingComment ? (
-                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </form>
+                    <Heart
+                      className={`h-4 w-4 ${post.is_liked ? 'fill-current' : ''}`}
+                    />
+                  </motion.span>
+                  <span>{post.likes_count}</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  type="button"
+                  onClick={toggleCommentComposer}
+                  aria-expanded={showCommentComposer}
+                  aria-controls={commentComposerSectionIdDesktop}
+                  className="gap-2 rounded-full px-3 py-2 text-sm text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
+                >
+                  <MessageCircle className="h-4 w-4 text-accent-500" />
+                  <span>{liveCommentCount}</span>
+                </Button>
+              </div>
             </div>
-            {(commentsLoading || previewCommentsFromHook.length > 0) && (
-              <div className="min-h-[24px]" onClick={(e) => e.stopPropagation()}>
-                {commentsLoading ? (
-                  <div className="flex items-center gap-2 py-2">
-                    <div className="h-4 w-4 border-2 border-gray-300 border-t-brand-primary rounded-full animate-spin" />
-                    <span className="text-xs text-gray-500">Loading comments...</span>
+
+            {showCommentComposer && (
+              <div
+                id={commentComposerSectionIdDesktop}
+                className="flex flex-col gap-2 pt-3 border-t border-gray-100/50"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-end gap-3">
+                  <div className="h-9 w-9 rounded-full bg-primary-100/80 flex items-center justify-center text-brand-primary-hover text-sm font-semibold shrink-0 overflow-hidden ring-2 ring-white">
+                    {profile?.avatar_url ? (
+                      <Image
+                        src={profile.avatar_url}
+                        alt={profile.full_name || 'You'}
+                        width={36}
+                        height={36}
+                        className="h-full w-full rounded-full object-cover"
+                        sizes="36px"
+                      />
+                    ) : (
+                      (profile?.first_name?.charAt(0) || '?')
+                    )}
                   </div>
-                ) : (
-                  renderCommentsPreviewList(previewCommentsFromHook)
+                  <form
+                    className="flex-1 min-w-0"
+                    onSubmit={handleSubmitInlineComment}
+                  >
+                    <div className="flex items-end gap-2">
+                      <Textarea
+                        ref={inlineCommentTextareaDesktopRef}
+                        placeholder="Write a comment..."
+                        value={inlineComment}
+                        onChange={(e) => setInlineComment(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSubmitInlineComment();
+                          }
+                        }}
+                        className="min-h-[40px] max-h-[120px] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-brand-primary/20"
+                        rows={1}
+                      />
+                      <Button
+                        type="submit"
+                        size="sm"
+                        disabled={!inlineComment.trim() || isSubmittingComment}
+                        className="h-9 w-9 rounded-full p-0 shrink-0 bg-brand-primary text-white hover:bg-brand-primary-hover disabled:opacity-50"
+                        aria-label="Send comment"
+                      >
+                        {isSubmittingComment ? (
+                          <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+                {(commentsLoading || previewCommentsFromHook.length > 0) && (
+                  <div className="min-h-[24px]" onClick={(e) => e.stopPropagation()}>
+                    {commentsLoading ? (
+                      <div className="flex items-center gap-2 py-2">
+                        <div className="h-4 w-4 border-2 border-gray-300 border-t-brand-primary rounded-full animate-spin" />
+                        <span className="text-xs text-gray-500">Loading comments...</span>
+                      </div>
+                    ) : (
+                      renderCommentsPreviewList(previewCommentsFromHook)
+                    )}
+                  </div>
+                )}
+                {liveCommentCount > previewCommentsFromHook.length && (
+                  <button
+                    type="button"
+                    className="text-left text-xs font-medium text-brand-primary hover:text-brand-primary-hover pt-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowCommentComposer(false);
+                      openPostView();
+                    }}
+                  >
+                    View all {liveCommentCount} comment{liveCommentCount === 1 ? '' : 's'}
+                  </button>
                 )}
               </div>
             )}
           </div>
-        </div>
+            </div>
 
-        {/* Desktop like heart overlay */}
-        {showHeartOverlay && (
-          <div
-            className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
-            aria-hidden
-          >
-            <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: [0, 1.2, 1.2], opacity: [0, 1, 0] }}
-              transition={{
-                duration: 0.8,
-                times: [0, 0.25, 1],
-              }}
-              onAnimationComplete={() => setShowHeartOverlay(false)}
-              className="flex items-center justify-center"
-            >
-              <Heart className="h-24 w-24 fill-rose-500 text-rose-500 drop-shadow-lg" />
-            </motion.div>
+            {/* Desktop like heart overlay */}
+            {showHeartOverlay && (
+              <div
+                className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+                aria-hidden
+              >
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: [0, 1.2, 1.2], opacity: [0, 1, 0] }}
+                  transition={{
+                    duration: 0.8,
+                    times: [0, 0.25, 1],
+                  }}
+                  onAnimationComplete={() => setShowHeartOverlay(false)}
+                  className="flex items-center justify-center"
+                >
+                  <Heart className="h-24 w-24 fill-rose-500 text-rose-500 drop-shadow-lg" />
+                </motion.div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* 9a: Image Lightbox — only mounted when an image is clicked */}
@@ -1145,12 +1231,18 @@ function arePostCardPropsEqual(
   next: PostCardProps,
 ): boolean {
   // Fast path — same object references
-  if (prev.post === next.post && prev.isExpanded === next.isExpanded && prev.variant === next.variant) {
+  if (
+    prev.post === next.post &&
+    prev.isExpanded === next.isExpanded &&
+    prev.variant === next.variant &&
+    prev.showDivider === next.showDivider
+  ) {
     return true;
   }
 
   if (prev.isExpanded !== next.isExpanded) return false;
   if (prev.variant !== next.variant) return false;
+  if (prev.showDivider !== next.showDivider) return false;
 
   // Compare the post fields that drive visual output
   const p = prev.post;
