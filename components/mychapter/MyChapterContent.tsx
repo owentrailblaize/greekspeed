@@ -11,6 +11,7 @@ import { useProfile } from '@/lib/contexts/ProfileContext';
 import { CHAPTER_ADMIN_ROLES, getRoleDisplayName } from '@/lib/permissions';
 import { Loader2 } from "lucide-react";
 import { useProfileModal } from "@/lib/contexts/ProfileModalContext";
+import { sortChapterMembersByCompleteness } from '@/lib/utils/profileCompleteness';
 
 interface MyChapterContentProps {
   onNavigate: (section: string) => void;
@@ -74,9 +75,11 @@ export function MyChapterContent({ onNavigate, activeSection, searchTerm }: MyCh
     (member.position && leadershipTitles.includes(member.position))
   );
 
-  // Sort officers by leadership hierarchy
-  const sortedOfficers = officers.sort((a, b) => {
-    // Define the priority order for leadership positions
+  // Sort officers: role hierarchy first, then profile completeness within the
+  // same tier (richer profiles surface before sparse ones). Activity fields
+  // (last_active_at) are explicitly excluded — see sortChapterMembersByCompleteness.
+  const completenessSortedOfficers = sortChapterMembersByCompleteness(officers);
+  const sortedOfficers = completenessSortedOfficers.sort((a, b) => {
     const positionPriority: Record<string, number> = {
       'President': 1,
       'Vice President': 2,
@@ -84,23 +87,25 @@ export function MyChapterContent({ onNavigate, activeSection, searchTerm }: MyCh
       'Social Chair': 4,
       'Secretary': 5,
       'Rush Chair': 6,
-      // Any other positions will be sorted alphabetically after the priority positions
     };
 
     const aPriority = positionPriority[a.position || ''] || 999;
     const bPriority = positionPriority[b.position || ''] || 999;
 
-    // If priorities are different, sort by priority
     if (aPriority !== bPriority) {
       return aPriority - bPriority;
     }
 
-    // If same priority or both are non-priority positions, sort alphabetically by name
-    return a.name.localeCompare(b.name);
+    // Within the same role tier, completeness ordering is already applied by
+    // sortChapterMembersByCompleteness — a stable sort preserves that order.
+    return 0;
   });
 
-  const generalMembers = filteredMembers.filter(member => 
-    !(member.verified || (member.position && leadershipTitles.includes(member.position)))
+  // General members sorted by profile completeness (richest first).
+  const generalMembers = sortChapterMembersByCompleteness(
+    filteredMembers.filter(member =>
+      !(member.verified || (member.position && leadershipTitles.includes(member.position)))
+    )
   );
 
   // Filter members based on active section
