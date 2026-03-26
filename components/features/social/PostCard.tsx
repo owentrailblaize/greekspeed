@@ -141,7 +141,8 @@ interface PostCardProps {
   onCommentAdded?: () => void;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
-  variant?: 'default' | 'profile';
+  variant?: 'default' | 'profile' | 'feed';
+  showDivider?: boolean;
   /** e.g. virtualized feed row remeasure when inline comment composer opens/closes */
   onLayoutInvalidate?: () => void;
 }
@@ -157,6 +158,7 @@ function PostCardInner({
   isExpanded: isExpandedProp,
   onToggleExpand,
   variant = 'default',
+  showDivider = false,
   onLayoutInvalidate,
 }: PostCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -617,8 +619,11 @@ function PostCardInner({
     [isMobile, post.id, onLike, openPostView, showCommentComposer],
   );
 
-  const cardShellClass =
-    'rounded-2xl border border-gray-200 bg-white shadow-sm p-4 sm:p-5';
+  const isFeedVariant = variant === 'feed';
+  const cardShellClass = isFeedVariant
+    ? 'p-4 sm:p-5'
+    : 'rounded-2xl border border-gray-200 bg-white shadow-sm p-4 sm:p-5';
+  const feedDividerClass = isFeedVariant && showDivider ? 'border-b border-gray-200/80' : '';
 
   const commentComposerSectionIdMobile = `post-${post.id}-inline-comment-composer-mobile`;
   const commentComposerSectionIdDesktop = `post-${post.id}-inline-comment-composer-desktop`;
@@ -626,8 +631,8 @@ function PostCardInner({
   return (
     <div ref={postCardRef}>
       {/* Mobile Layout — LinkedIn-style post card */}
-      <div className="sm:hidden mb-3 sm:mb-0">
-        <div className={cardShellClass}>
+      <div className={cn('sm:hidden', isFeedVariant ? 'mb-0' : 'mb-3 sm:mb-0')}>
+        <div className={cn(cardShellClass, feedDividerClass)}>
           <div
             className="relative cursor-pointer"
             onClick={isMobile ? handleMobileCardTap : handleCardClick}
@@ -903,11 +908,12 @@ function PostCardInner({
       {/* Desktop Layout — LinkedIn-style post card */}
       <div
         className={cn(
-          'hidden sm:block mb-4',
+          'hidden sm:block',
+          isFeedVariant ? 'mb-0' : 'mb-4',
           variant === 'profile' ? 'px-2 sm:px-6' : '',
         )}
       >
-        <div className={cardShellClass}>
+        <div className={cn(cardShellClass, feedDividerClass)}>
           <div className="relative cursor-pointer" onClick={handleCardClick}>
             <div className="space-y-4">
           {/* Post Header */}
@@ -1225,12 +1231,18 @@ function arePostCardPropsEqual(
   next: PostCardProps,
 ): boolean {
   // Fast path — same object references
-  if (prev.post === next.post && prev.isExpanded === next.isExpanded && prev.variant === next.variant) {
+  if (
+    prev.post === next.post &&
+    prev.isExpanded === next.isExpanded &&
+    prev.variant === next.variant &&
+    prev.showDivider === next.showDivider
+  ) {
     return true;
   }
 
   if (prev.isExpanded !== next.isExpanded) return false;
   if (prev.variant !== next.variant) return false;
+  if (prev.showDivider !== next.showDivider) return false;
 
   // Compare the post fields that drive visual output
   const p = prev.post;
