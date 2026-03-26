@@ -1,5 +1,6 @@
 import { Alumni } from '@/lib/alumniConstants';
 import { Profile } from '@/types/profile';
+import { ChapterMember } from '@/types/chapter';
 
 export interface ProfileCompletenessScore {
   totalScore: number;
@@ -352,4 +353,76 @@ export function getPriorityColor(priority: 'high' | 'medium' | 'low'): string {
     case 'medium': return 'text-yellow-600';
     case 'low': return 'text-red-600';
   }
+}
+
+/**
+ * Calculate profile completeness for a ChapterMember (Active Members view).
+ *
+ * Scoring mirrors the *intent* of `calculateAlumniCompleteness` — surface
+ * information-dense profiles first — but maps to the fields available on the
+ * `ChapterMember` type (i.e. the transformed shape used by
+ * `LinkedInStyleChapterCard`).
+ *
+ * Field → weight mapping:
+ *   avatar            15  (visual presence is the strongest signal on the card)
+ *   major             12  (academic badge shown on card)
+ *   year (grad year)  10  (badge shown on card)
+ *   description/bio    8  (real bio vs "Chapter Member" placeholder)
+ *   position           5  (leadership title — already used for officer sort)
+ *   mutualConnections  5  (connections section of card)
+ *   name quality       5  (non-placeholder name)
+ *
+ * Total possible: 60
+ *
+ * Activity fields (`last_active_at`) are explicitly excluded.
+ */
+export function calculateChapterMemberCompleteness(member: ChapterMember): number {
+  let score = 0;
+
+  if (isValidField(member.avatar)) score += 15;
+  if (isValidField(member.major)) score += 12;
+  if (isValidField(member.year)) score += 10;
+
+  const hasRealBio =
+    isValidField(member.description) &&
+    member.description !== 'Chapter Member';
+  if (hasRealBio) score += 8;
+
+  if (isValidField(member.position)) score += 5;
+  if (member.mutualConnectionsCount > 0) score += 5;
+
+  const hasRealName =
+    isValidField(member.name) && member.name !== 'Unknown Member';
+  if (hasRealName) score += 5;
+
+  return score;
+}
+
+/**
+ * Sort an array of ChapterMembers by profile completeness (richest first).
+ *
+ * Tie-breakers (same intent as `AlumniTableView`):
+ *   1. Avatar present beats no avatar
+ *   2. Higher mutual-connection count
+ *   3. Alphabetical name
+ *
+ * This utility is shared between the "All members" view and filtered section
+ * views so desktop and mobile stay in sync.
+ */
+export function sortChapterMembersByCompleteness<T extends ChapterMember>(members: T[]): T[] {
+  return [...members].sort((a, b) => {
+    const aScore = calculateChapterMemberCompleteness(a);
+    const bScore = calculateChapterMemberCompleteness(b);
+    if (aScore !== bScore) return bScore - aScore;
+
+    const aHasAvatar = isValidField(a.avatar) ? 1 : 0;
+    const bHasAvatar = isValidField(b.avatar) ? 1 : 0;
+    if (aHasAvatar !== bHasAvatar) return bHasAvatar - aHasAvatar;
+
+    if (a.mutualConnectionsCount !== b.mutualConnectionsCount) {
+      return b.mutualConnectionsCount - a.mutualConnectionsCount;
+    }
+
+    return a.name.localeCompare(b.name);
+  });
 }
