@@ -161,7 +161,13 @@ export function AlumniOverview({ initialFeed, fallbackChapterId }: AlumniOvervie
               "min-h-screen bg-gray-50 pb-20",
               activeMobileTab === 'network' ? 'px-0' : 'px-4'
             )}>
-              <div className={activeMobileTab === 'network' ? '' : 'max-w-md mx-auto'}>
+              <div
+                className={
+                  activeMobileTab === 'network' || activeMobileTab === 'home'
+                    ? ''
+                    : 'max-w-md mx-auto'
+                }
+              >
                 {renderMobileContent()}
               </div>
             </div>

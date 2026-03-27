@@ -623,7 +623,10 @@ function PostCardInner({
   const cardShellClass = isFeedVariant
     ? 'p-4 sm:p-5'
     : 'rounded-2xl border border-gray-200 bg-white shadow-sm p-4 sm:p-5';
+  /** Desktop feed: divider only between rows (carded list inside one shell). */
   const feedDividerClass = isFeedVariant && showDivider ? 'border-b border-gray-200/80' : '';
+  /** Mobile feed: hairline under every row (full-width list; outer shell has no card). */
+  const feedMobileRowDividerClass = isFeedVariant ? 'border-b border-gray-200/80' : '';
 
   const commentComposerSectionIdMobile = `post-${post.id}-inline-comment-composer-mobile`;
   const commentComposerSectionIdDesktop = `post-${post.id}-inline-comment-composer-desktop`;
@@ -632,7 +635,7 @@ function PostCardInner({
     <div ref={postCardRef}>
       {/* Mobile Layout — LinkedIn-style post card */}
       <div className={cn('sm:hidden', isFeedVariant ? 'mb-0' : 'mb-3 sm:mb-0')}>
-        <div className={cn(cardShellClass, feedDividerClass)}>
+        <div className={cn(cardShellClass, isFeedVariant ? feedMobileRowDividerClass : feedDividerClass)}>
           <div
             className="relative cursor-pointer"
             onClick={isMobile ? handleMobileCardTap : handleCardClick}

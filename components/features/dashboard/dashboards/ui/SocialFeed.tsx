@@ -359,8 +359,8 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
 
   return (
     <>
-      <div 
-        className="space-y-2 sm:space-y-5 max-w-2xl mx-auto"
+      <div
+        className="space-y-2 sm:space-y-5 w-[calc(100%+2rem)] -mx-4 max-w-none sm:mx-auto sm:w-full sm:max-w-2xl"
         style={{
           // Use mergedPosts for minHeight calculation to ensure proper layout
           minHeight: mergedPosts.length > 0
@@ -501,7 +501,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
             )}
           </div>
         ) : (
-          <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="relative overflow-hidden rounded-none border-0 bg-white shadow-none border-t border-gray-200 sm:rounded-2xl sm:border sm:border-gray-200 sm:shadow-sm">
             <div
               className="relative w-full"
               style={{ height: `${rowVirtualizer.getTotalSize()}px` }}

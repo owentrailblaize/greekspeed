@@ -42,22 +42,22 @@ export default async function DashboardPage() {
         get(name: string) {
           return cookieStore.get(name)?.value;
         },
-        set(name: string, value: string, options: any) {
-          cookieStore.set({ name, value, ...(options ?? {}) });
-        },
-        remove(name: string, options: any) {
-          cookieStore.delete({ name, ...(options ?? {}) });
-        },
+        // Next.js 15: cookie writes are not allowed in Server Components (only in
+        // Route Handlers / Server Actions). Session refresh runs in middleware.
+        set() {},
+        remove() {},
       },
     },
   );
 
+  // Prefer getUser() over getSession() in RSC: validates JWT without triggering a
+  // second refresh alongside middleware (reduces 429 / refresh_token_already_used).
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
 
-  if (!session) {
-    return <DashboardPageClient />;
+  if (!authUser) {
+    return <DashboardPageClient serverAuthenticated={false} />;
   }
 
   // Fetch the FULL profile — used both for server rendering gates AND
@@ -65,7 +65,7 @@ export default async function DashboardPage() {
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')  // Was: specific fields only
-    .eq('id', session.user.id)
+    .eq('id', authUser.id)
     .maybeSingle();
 
   // Cast to Profile (Supabase returns matching shape from SELECT *)
@@ -117,7 +117,7 @@ export default async function DashboardPage() {
         supabase
           .from('post_likes')
           .select('post_id')
-          .eq('user_id', session.user.id),
+          .eq('user_id', authUser.id),
 
         supabase
           .from('posts')
@@ -141,7 +141,7 @@ export default async function DashboardPage() {
             ...post,
             author,
             is_liked: likedPostIds.has(post.id),
-            is_author: post.author_id === session.user.id,
+            is_author: post.author_id === authUser.id,
             likes_count: post.likes_count ?? 0,
             comments_count: post.comments_count ?? 0,
             shares_count: post.shares_count ?? 0,
@@ -191,6 +191,7 @@ export default async function DashboardPage() {
 
   return (
     <DashboardPageClient
+      serverAuthenticated
       initialFeed={initialFeed ?? undefined}
       fallbackChapterId={profile?.chapter_id ?? null}
       serverProfile={serverProfile}
