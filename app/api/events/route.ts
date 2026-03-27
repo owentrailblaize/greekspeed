@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { EmailService } from '@/lib/services/emailService';
+import { compareEventsByStartAsc, normalizeEventTimeField } from '@/lib/utils/eventScheduleDisplay';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -33,10 +33,14 @@ export async function GET(request: NextRequest) {
 
     if (scope === 'upcoming') {
       const now = new Date().toISOString();
+      // Published events: TBD-time (null start), not yet started, or currently in progress
       query = query
         .eq('status', 'published')
-        .or(`start_time.gte.${now},and(start_time.lte.${now},end_time.gte.${now})`)
-        .order('start_time', { ascending: true });
+        .or(
+          `and(start_time.is.null,or(end_time.is.null,end_time.gte.${now})),start_time.gte.${now},and(start_time.lte.${now},end_time.gte.${now})`
+        )
+        .order('start_time', { ascending: true, nullsFirst: false })
+        .order('created_at', { ascending: false });
     } else {
       query = query.order('created_at', { ascending: false });
     }
@@ -72,6 +76,10 @@ export async function GET(request: NextRequest) {
       };
     }) || [];
 
+    if (scope === 'upcoming') {
+      eventsWithCounts.sort(compareEventsByStartAsc);
+    }
+
     return NextResponse.json(eventsWithCounts, {
       headers: {
         'Cache-Control': 'private, max-age=60, stale-while-revalidate=120',
@@ -86,26 +94,29 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const eventData = await request.json();
-    
-    // Validate required fields
-    const requiredFields = ['title', 'start_time', 'end_time', 'chapter_id'];
-    for (const field of requiredFields) {
-      if (!eventData[field]) {
-        return NextResponse.json({ error: `${field} is required` }, { status: 400 });
-      }
+
+    if (!eventData.title?.trim()) {
+      return NextResponse.json({ error: 'title is required' }, { status: 400 });
+    }
+    if (!eventData.chapter_id) {
+      return NextResponse.json({ error: 'chapter_id is required' }, { status: 400 });
     }
 
-    // Validate time logic
-    if (new Date(eventData.end_time) <= new Date(eventData.start_time)) {
+    const startTime = normalizeEventTimeField(eventData.start_time);
+    const endTime = normalizeEventTimeField(eventData.end_time);
+
+    if (startTime && endTime && new Date(endTime) <= new Date(startTime)) {
       return NextResponse.json({ error: 'End time must be after start time' }, { status: 400 });
     }
 
     // Extract send_sms and send_sms_to_alumni flags (they're not database columns, just notification flags)
     const { send_sms, send_sms_to_alumni, ...dbEventData } = eventData;
-    
+
     // Create the event
     const insertData = {
       ...dbEventData,
+      start_time: startTime,
+      end_time: endTime,
       status: dbEventData.status || 'published',
       created_by: dbEventData.created_by || 'system', // Will be updated when we add proper auth
       updated_by: dbEventData.updated_by || 'system'

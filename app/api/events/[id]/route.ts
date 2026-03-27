@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { normalizeEventTimeField } from '@/lib/utils/eventScheduleDisplay';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -46,9 +47,13 @@ export async function PATCH(
     const { id } = await params;
     const updateData = await request.json();
 
-    // Validate time logic if updating times
-    if (updateData.start_time && updateData.end_time) {
-      if (new Date(updateData.end_time) <= new Date(updateData.start_time)) {
+    const startPatch =
+      'start_time' in updateData ? normalizeEventTimeField(updateData.start_time) : undefined;
+    const endPatch =
+      'end_time' in updateData ? normalizeEventTimeField(updateData.end_time) : undefined;
+
+    if (startPatch != null && endPatch != null) {
+      if (new Date(endPatch) <= new Date(startPatch)) {
         return NextResponse.json({ error: 'End time must be after start time' }, { status: 400 });
       }
     }
@@ -56,11 +61,15 @@ export async function PATCH(
     // Filter out fields that shouldn't be updated directly (send_sms, send_sms_to_alumni are not DB columns)
     const { send_sms, send_sms_to_alumni, created_by, created_at, ...allowedUpdateData } = updateData;
 
+    const merged: Record<string, unknown> = { ...allowedUpdateData };
+    if ('start_time' in updateData) merged.start_time = startPatch;
+    if ('end_time' in updateData) merged.end_time = endPatch;
+
     // Update the event
     const { data: updatedEvent, error } = await supabase
       .from('events')
       .update({
-        ...allowedUpdateData,
+        ...merged,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)

@@ -1,17 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+// import Link from 'next/link';
 import { Drawer } from 'vaul';
-import { X, MapPin, Clock, Users, HelpCircle, UserX, ChevronDown, ChevronUp, QrCode, CheckCircle } from 'lucide-react';
+import { X, MapPin, Clock, Users, HelpCircle, UserX, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Event, RSVPStatus } from '@/types/events';
 import { EventActionsMenu } from './EventActionsMenu';
-import { EventAttendanceBlock } from './EventAttendanceBlock';
-import { CheckInScanner } from './CheckInScanner';
-import { useProfile } from '@/lib/contexts/ProfileContext';
-import { useAuth } from '@/lib/supabase/auth-context';
-import { EXECUTIVE_ROLES } from '@/lib/permissions';
+// import { EventAttendanceBlock } from './EventAttendanceBlock';
+// import { CheckInScanner } from './CheckInScanner';
+// import { useProfile } from '@/lib/contexts/ProfileContext';
+// import { useAuth } from '@/lib/supabase/auth-context';
+// import { EXECUTIVE_ROLES } from '@/lib/permissions';
+import {
+  formatEventDetailSchedule,
+  isRsvpWindowOpen,
+  // isValidIsoDateTime,
+} from '@/lib/utils/eventScheduleDisplay';
 
 interface Attendee {
   user_id: string;
@@ -126,26 +131,32 @@ export function EventDetailModal({
   currentUserRsvp,
   onRsvpChange,
 }: EventDetailModalProps) {
-  const { profile } = useProfile();
-  const { getAuthHeaders } = useAuth();
+  // const { profile } = useProfile();
+  // const { getAuthHeaders } = useAuth();
   const [attendeeData, setAttendeeData] = useState<AttendeeData | null>(null);
   const [loadingAttendees, setLoadingAttendees] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [showScanner, setShowScanner] = useState(false);
-  const [checkInSuccess, setCheckInSuccess] = useState(false);
-  const [checkInError, setCheckInError] = useState<string | null>(null);
-  const [checkingIn, setCheckingIn] = useState(false);
+  // Event check-in UI (temporarily hidden)
+  // const [showScanner, setShowScanner] = useState(false);
+  // const [checkInSuccess, setCheckInSuccess] = useState(false);
+  // const [checkInError, setCheckInError] = useState<string | null>(null);
+  // const [checkingIn, setCheckingIn] = useState(false);
 
-  const now = Date.now();
-  const start = new Date(event.start_time).getTime();
-  const end = new Date(event.end_time).getTime();
-  const isOccurring = event.status === 'published' && now >= start && now <= end;
+  // const now = Date.now();
+  // const isOccurring =
+  //   event.status === 'published' &&
+  //   isValidIsoDateTime(event.start_time) &&
+  //   isValidIsoDateTime(event.end_time) &&
+  //   now >= new Date(event.start_time!).getTime() &&
+  //   now <= new Date(event.end_time!).getTime();
 
-  const isExec =
-    profile?.role === 'admin' ||
-    (profile?.chapter_role != null &&
-      EXECUTIVE_ROLES.includes(profile.chapter_role as (typeof EXECUTIVE_ROLES)[number]));
-  const showAttendance = isExec && event.status === 'published';
+  const rsvpOpen = isRsvpWindowOpen(event);
+
+  // const isExec =
+  //   profile?.role === 'admin' ||
+  //   (profile?.chapter_role != null &&
+  //     EXECUTIVE_ROLES.includes(profile.chapter_role as (typeof EXECUTIVE_ROLES)[number]));
+  // const showAttendance = isExec && event.status === 'published';
 
   // Detect mobile
   useEffect(() => {
@@ -177,61 +188,38 @@ export function EventDetailModal({
     }
   };
 
-  const formatEventDate = (startTime: string, endTime: string): string => {
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-
-    const dateOptions: Intl.DateTimeFormatOptions = {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    };
-
-    const timeOptions: Intl.DateTimeFormatOptions = {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    };
-
-    const dateStr = start.toLocaleDateString('en-US', dateOptions);
-    const startTimeStr = start.toLocaleTimeString('en-US', timeOptions);
-    const endTimeStr = end.toLocaleTimeString('en-US', timeOptions);
-
-    return `${dateStr} | ${startTimeStr} - ${endTimeStr}`;
-  };
-
   const handleRsvp = (status: RSVPStatus) => {
     onRsvpChange(event.id, status);
   };
 
-  const handleScanSuccess = async (qrPayload: string) => {
-    setShowScanner(false);
-    setCheckInError(null);
-    setCheckingIn(true);
-    try {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders(),
-      };
-      const res = await fetch(`/api/events/${event.id}/check-in`, {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify({ qr_payload: qrPayload }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) {
-        setCheckInSuccess(true);
-      } else {
-        setCheckInError(data.error || 'Check-in failed');
-      }
-    } catch {
-      setCheckInError('Something went wrong. Please try again.');
-    } finally {
-      setCheckingIn(false);
-    }
-  };
+  // Event check-in UI (temporarily hidden)
+  // const handleScanSuccess = async (qrPayload: string) => {
+  //   setShowScanner(false);
+  //   setCheckInError(null);
+  //   setCheckingIn(true);
+  //   try {
+  //     const headers: Record<string, string> = {
+  //       'Content-Type': 'application/json',
+  //       ...getAuthHeaders(),
+  //     };
+  //     const res = await fetch(`/api/events/${event.id}/check-in`, {
+  //       method: 'POST',
+  //       headers,
+  //       credentials: 'include',
+  //       body: JSON.stringify({ qr_payload: qrPayload }),
+  //     });
+  //     const data = await res.json().catch(() => ({}));
+  //     if (res.ok) {
+  //       setCheckInSuccess(true);
+  //     } else {
+  //       setCheckInError(data.error || 'Check-in failed');
+  //     }
+  //   } catch {
+  //     setCheckInError('Something went wrong. Please try again.');
+  //   } finally {
+  //     setCheckingIn(false);
+  //   }
+  // };
 
   const getRsvpButtonClass = (status: RSVPStatus) => {
     const isActive = currentUserRsvp === status;
@@ -284,7 +272,7 @@ export function EventDetailModal({
         {/* Date & Time */}
         <div className="flex items-start gap-3 text-sm text-gray-600">
           <Clock className="h-5 w-5 text-brand-primary flex-shrink-0 mt-0.5" />
-          <span>{formatEventDate(event.start_time, event.end_time)}</span>
+          <span>{formatEventDetailSchedule(event.start_time, event.end_time)}</span>
         </div>
 
         {/* Location */}
@@ -352,7 +340,7 @@ export function EventDetailModal({
           ) : null}
         </div>
 
-        {/* Member check-in (mobile only, when event is occurring) */}
+        {/* Member check-in (mobile only, when event is occurring) — temporarily hidden
         {isMobile && isOccurring && (
           <div className="pt-4 border-t border-gray-200">
             {checkInSuccess ? (
@@ -385,7 +373,7 @@ export function EventDetailModal({
                 )}
                 <p className="text-xs text-gray-500 text-center">
                   <Link
-                    href={`/dashboard/check-in?event=${encodeURIComponent(event.id)}`}
+                    href={`/check-in?event=${encodeURIComponent(event.id)}`}
                     className="text-brand-primary hover:underline"
                   >
                     Having trouble? Check in on web
@@ -395,8 +383,9 @@ export function EventDetailModal({
             )}
           </div>
         )}
+        */}
 
-        {/* Check-in / Attendance (exec only, published events) */}
+        {/* Check-in / Attendance (exec only, published events) — temporarily hidden
         {showAttendance && (
           <div className="pt-4 border-t border-gray-200">
             <h3 className="text-sm font-medium text-gray-900 mb-3">Check-in</h3>
@@ -408,9 +397,10 @@ export function EventDetailModal({
             />
           </div>
         )}
+        */}
       </div>
 
-      {/* Scanner overlay */}
+      {/* Scanner overlay — temporarily hidden
       {showScanner && (
         <CheckInScanner
           eventId={event.id}
@@ -420,13 +410,18 @@ export function EventDetailModal({
           onError={setCheckInError}
         />
       )}
+      */}
 
       {/* Footer - RSVP Buttons */}
       <div className={`flex-shrink-0 p-4 border-t border-gray-200 bg-gray-50 ${isMobile ? 'pb-[calc(1rem+env(safe-area-inset-bottom))]' : ''}`}>
         <p className="text-xs text-gray-500 mb-3 text-center">Your Response</p>
+        {!rsvpOpen && (
+          <p className="text-xs text-amber-700 text-center mb-2">RSVP is closed for this event.</p>
+        )}
         <div className="flex gap-2">
           <Button
             onClick={() => handleRsvp('attending')}
+            disabled={!rsvpOpen}
             className={`flex-1 ${isMobile ? 'h-9 text-xs' : 'h-10'} border rounded-full transition-all ${getRsvpButtonClass('attending')}`}
             variant="outline"
           >
@@ -435,6 +430,7 @@ export function EventDetailModal({
           </Button>
           <Button
             onClick={() => handleRsvp('maybe')}
+            disabled={!rsvpOpen}
             className={`flex-1 ${isMobile ? 'h-9 text-xs' : 'h-10'} border rounded-full transition-all ${getRsvpButtonClass('maybe')}`}
             variant="outline"
           >
@@ -443,6 +439,7 @@ export function EventDetailModal({
           </Button>
           <Button
             onClick={() => handleRsvp('not_attending')}
+            disabled={!rsvpOpen}
             className={`flex-1 ${isMobile ? 'h-9 text-xs' : 'h-10'} border rounded-full transition-all ${getRsvpButtonClass('not_attending')}`}
             variant="outline"
           >

@@ -8,6 +8,7 @@ import { Calendar, MapPin, Users, Edit, Eye, X } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { Event } from '@/types/events';
 import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
+import { EVENT_TIME_TBD, isValidIsoDateTime } from '@/lib/utils/eventScheduleDisplay';
 
 export function EventsPanel() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -47,13 +48,14 @@ export function EventsPanel() {
     fetchEvents();
   }, [chapterId]);
 
-  const formatDate = (isoString: string) => {
+  const formatDate = (isoString: string | null) => {
+    if (!isoString || !isValidIsoDateTime(isoString)) return EVENT_TIME_TBD;
     const date = new Date(isoString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
       day: 'numeric',
       hour: 'numeric',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 

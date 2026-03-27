@@ -6,11 +6,27 @@ import {
   parseChapterCheckInQrPayload,
   verifyChapterCheckInPayload,
 } from '@/lib/checkInQrToken';
+import { verifySerializedEventCheckInUrlToken } from '@/lib/eventCheckInUrlToken';
 import type { CheckInResponse, EventCheckInRequestBody } from '@/types/events';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+/** TTL for URL token; prefers EVENT_CHECK_IN_URL_MAX_AGE_SEC, then CHECK_IN_QR_MAX_AGE_SEC. */
+function resolveUrlCheckInTokenMaxAgeSec(): number | undefined {
+  const urlRaw = process.env.EVENT_CHECK_IN_URL_MAX_AGE_SEC;
+  if (urlRaw != null && urlRaw !== '') {
+    const n = Number.parseInt(urlRaw, 10);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  const qrRaw = process.env.CHECK_IN_QR_MAX_AGE_SEC;
+  if (qrRaw != null && qrRaw !== '') {
+    const n = Number.parseInt(qrRaw, 10);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return undefined;
+}
 
 async function authenticateRequest(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
@@ -92,18 +108,67 @@ export async function POST(
     }
 
     let qrPayloadRaw: string | null = null;
+    let urlCheckInTokenRaw: string | null = null;
     try {
       const body = (await request.json()) as EventCheckInRequestBody;
-      if (body && typeof body.qr_payload === 'string') {
-        const trimmed = body.qr_payload.trim();
-        if (trimmed) qrPayloadRaw = trimmed;
+      if (body) {
+        if (typeof body.qr_payload === 'string') {
+          const trimmed = body.qr_payload.trim();
+          if (trimmed) qrPayloadRaw = trimmed;
+        }
+        if (typeof body.url_check_in_token === 'string') {
+          const trimmed = body.url_check_in_token.trim();
+          if (trimmed) urlCheckInTokenRaw = trimmed;
+        }
       }
     } catch {
       // No/invalid JSON body — legacy POST (e.g. /check-in page)
     }
 
+    if (qrPayloadRaw && urlCheckInTokenRaw) {
+      return NextResponse.json(
+        {
+          error:
+            'Send only one of qr_payload (in-app scan) or url_check_in_token (camera link)',
+        },
+        { status: 400 }
+      );
+    }
+
+    const secret = process.env.CHECK_IN_QR_SECRET;
+    if (urlCheckInTokenRaw) {
+      if (!secret || secret.length < 16) {
+        return NextResponse.json(
+          { error: 'QR check-in is not available' },
+          { status: 503 }
+        );
+      }
+      const urlPayload = verifySerializedEventCheckInUrlToken(
+        urlCheckInTokenRaw,
+        secret,
+        resolveUrlCheckInTokenMaxAgeSec()
+      );
+      if (!urlPayload) {
+        return NextResponse.json(
+          { error: 'Invalid or expired check-in link' },
+          { status: 400 }
+        );
+      }
+      if (urlPayload.e !== eventId) {
+        return NextResponse.json(
+          { error: 'This check-in link is for a different event' },
+          { status: 400 }
+        );
+      }
+      if (urlPayload.c !== event.chapter_id) {
+        return NextResponse.json(
+          { error: 'This check-in link is not valid for this event' },
+          { status: 403 }
+        );
+      }
+    }
+
     if (qrPayloadRaw) {
-      const secret = process.env.CHECK_IN_QR_SECRET;
       if (!secret || secret.length < 16) {
         return NextResponse.json(
           { error: 'QR check-in is not available' },

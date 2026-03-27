@@ -15,7 +15,7 @@ interface MessageInputWithEventLinkProps {
     id: string;
     title: string;
     location?: string;
-    start_time: string;
+    start_time: string | null;
   };
   onEventLinkRemove?: () => void;
 }
@@ -39,7 +39,8 @@ export function MessageInputWithEventLink({
   const MAX_HEIGHT_DESKTOP = 250; // Increased from 150 (more reasonable for long messages)
 
   // Format date for display
-  const formatEventDate = (dateString: string) => {
+  const formatEventDate = (dateString: string | null) => {
+    if (!dateString) return 'Time TBD';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       weekday: 'short',

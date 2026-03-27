@@ -25,12 +25,15 @@ export interface ServerProfile {
 }
 
 type DashboardPageClientProps = {
+  /** Server RSC confirmed a valid user — do not send user to /sign-in if client getSession lags or hits 429. */
+  serverAuthenticated?: boolean;
   initialFeed?: SocialFeedInitialData | null;
   fallbackChapterId?: string | null;
   serverProfile?: Profile | null;
 };
 
 export default function DashboardPageClient({
+  serverAuthenticated = false,
   initialFeed,
   fallbackChapterId,
   serverProfile,
@@ -85,7 +88,9 @@ export default function DashboardPageClient({
   useEffect(() => {
     if (authLoading || profileLoading) return;
 
-    if (!user) {
+    // Client session can be null briefly after OAuth, or fail with rate limits / refresh races
+    // while httpOnly cookies + RSC are still valid — only redirect when server did not confirm auth.
+    if (!user && !serverAuthenticated) {
       router.push('/sign-in');
       return;
     }
@@ -111,7 +116,7 @@ export default function DashboardPageClient({
         return () => clearTimeout(timeoutId);
       }
     }
-  }, [authLoading, profileLoading, user, profile, isDeveloper, isOAuthUser, router]);
+  }, [authLoading, profileLoading, user, profile, isDeveloper, isOAuthUser, router, serverAuthenticated]);
 
   // ---------------------------------------------------------------------------
   // RENDER GATES — only show spinner when we have NO server data AND client is
@@ -128,8 +133,8 @@ export default function DashboardPageClient({
     );
   }
 
-  // After context is ready and there's no user at all, bail
-  if (!user && !hasServerData) {
+  // After context is ready and there's no user at all, bail (unless RSC already authenticated)
+  if (!user && !hasServerData && !serverAuthenticated) {
     return null;
   }
 

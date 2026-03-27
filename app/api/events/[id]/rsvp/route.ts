@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { isRsvpWindowOpen } from '@/lib/utils/eventScheduleDisplay';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -25,7 +26,7 @@ export async function POST(
     // Check if event exists and is published
     const { data: event } = await supabase
       .from('events')
-      .select('id, chapter_id, start_time, status')
+      .select('id, chapter_id, start_time, end_time, status')
       .eq('id', id) // Use awaited id
       .single();
 
@@ -37,8 +38,7 @@ export async function POST(
       return NextResponse.json({ error: 'Event is not published' }, { status: 400 });
     }
 
-    // Check if RSVP window is still open
-    if (new Date() >= new Date(event.start_time)) {
+    if (!isRsvpWindowOpen(event)) {
       return NextResponse.json({ error: 'RSVP is closed for this event' }, { status: 400 });
     }
 

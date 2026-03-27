@@ -724,7 +724,9 @@ export function MobileOperationsPage() {
                               <div className="flex-1 min-w-0">
                                 <h4 className="font-medium text-sm truncate text-slate-900">{event.title}</h4>
                                 <p className="text-xs text-slate-700">
-                                  {new Date(event.start_time).toLocaleDateString()}
+                                  {event.start_time
+                                    ? new Date(event.start_time).toLocaleDateString()
+                                    : 'Time TBD'}
                                 </p>
                               </div>
                               <div className="text-right ml-2">

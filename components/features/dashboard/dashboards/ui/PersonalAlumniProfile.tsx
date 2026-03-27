@@ -626,7 +626,7 @@ export function PersonalAlumniProfile({ variant = 'desktop' }: PersonalAlumniPro
             <Button 
               onClick={handleEditProfile}
               variant="outline" 
-              className="w-full text-brand-primary border-brand-primary hover:bg-primary-50"
+              className="w-full text-brand-primary border-brand-primary hover:bg-primary-50 rounded-full"
               size="sm"
             >
               <Edit3 className="h-4 w-4 mr-2" />

@@ -49,7 +49,9 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
   const [connectionLoading, setConnectionLoading] = useState(false);
   const [dismissedModal, setDismissedModal] = useState(false);
   const [showConnectionDialog, setShowConnectionDialog] = useState(false);
-  const [upcomingEvents, setUpcomingEvents] = useState<Array<{ id: string; title: string; start_time: string; location?: string }>>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<
+    Array<{ id: string; title: string; start_time: string | null; end_time?: string | null; location?: string }>
+  >([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
@@ -264,8 +266,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
       <>
         {/* Mobile Loading */}
         <div className="min-h-screen bg-white sm:hidden pb-20">
-          {/* Add MarketingHeader for non-authenticated users */}
-          {!isLoggedIn && <MarketingHeader hideNavigation={true} />}
+          {isLoggedIn ? <DashboardHeader /> : <MarketingHeader hideNavigation={true} />}
           
           <div className="flex items-center justify-center h-screen">
             <div className="text-center">
@@ -306,8 +307,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
     <>
       {/* Mobile Layout */}
       <div className="min-h-screen bg-white sm:hidden pb-20">
-        {/* Add MarketingHeader for non-authenticated users */}
-        {!isLoggedIn && <MarketingHeader hideNavigation={true} />}
+        {isLoggedIn ? <DashboardHeader /> : <MarketingHeader hideNavigation={true} />}
         
         {/* Header with Back and Share buttons */}
         <div className="relative">
@@ -396,7 +396,7 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
             label: tab.label,
             disabled: tab.requiresAuth && !isLoggedIn
           }))}
-          stickyTop="0"
+          stickyTop={isLoggedIn ? '56px' : '0'}
         />
 
       {/* Scrollable Content Area */}
@@ -857,7 +857,16 @@ export function PublicProfileClient({ slug, initialProfile }: PublicProfileClien
                           <h4 className="text-sm font-medium text-gray-900 mb-1 line-clamp-1">{event.title}</h4>
                           <div className="flex items-center gap-2 text-xs text-gray-500">
                             <Clock className="w-3 h-3" />
-                            <span>{new Date(event.start_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+                            <span>
+                              {event.start_time
+                                ? new Date(event.start_time).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                  })
+                                : 'Time TBD'}
+                            </span>
                           </div>
                           {event.location && (
                             <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">

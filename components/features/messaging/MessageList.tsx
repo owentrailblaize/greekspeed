@@ -172,7 +172,8 @@ export function MessageList({
   };
 
   // Format date for event display
-  const formatEventDate = (dateString: string) => {
+  const formatEventDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Time TBD';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       weekday: 'short',

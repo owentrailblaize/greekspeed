@@ -15,6 +15,7 @@ import {
   generateGoogleCalendarUrl,
   generateOutlookCalendarUrl,
   downloadICSFile,
+  eventHasCalendarTimes,
 } from '@/lib/utils/calendarUtils';
 import { copyEventLinkToClipboard } from '@/lib/utils/eventLinkUtils';
 import { toast } from 'react-toastify';
@@ -27,8 +28,8 @@ interface EventActionsMenuProps {
     title: string;
     description?: string;
     location?: string;
-    start_time: string;
-    end_time: string;
+    start_time: string | null;
+    end_time: string | null;
   };
   onClose?: () => void;
   hideOnMobile?: boolean;
@@ -108,6 +109,7 @@ function CalendarSubmenu({ event }: { event: EventActionsMenuProps['event'] }) {
 export function EventActionsMenu({ event, onClose, hideOnMobile = false }: EventActionsMenuProps) {
   const [showCalendarSubmenu, setShowCalendarSubmenu] = useState(false);
   const [shareDrawerOpen, setShareDrawerOpen] = useState(false);
+  const canAddToCalendar = eventHasCalendarTimes(event);
 
   const handleCopyLink = async () => {
     const success = await copyEventLinkToClipboard(event.id, null, { ref: 'copy' });
@@ -138,32 +140,38 @@ export function EventActionsMenu({ event, onClose, hideOnMobile = false }: Event
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            {/* Add to Calendar with submenu */}
-            <div className="relative">
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowCalendarSubmenu((prev) => !prev);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
+            {/* Add to Calendar with submenu — requires both start and end times */}
+            {canAddToCalendar ? (
+              <div className="relative">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setShowCalendarSubmenu((prev) => !prev);
-                  }
-                }}
-                className={cn(
-                  'relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors',
-                  'hover:bg-gray-100 focus:bg-gray-100 focus:outline-none'
-                )}
-              >
-                <Calendar className="h-4 w-4" />
-                <span className="flex-1">Add to Calendar</span>
-                <ExternalLink className="h-3 w-3 text-gray-400" />
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setShowCalendarSubmenu((prev) => !prev);
+                    }
+                  }}
+                  className={cn(
+                    'relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors',
+                    'hover:bg-gray-100 focus:bg-gray-100 focus:outline-none'
+                  )}
+                >
+                  <Calendar className="h-4 w-4" />
+                  <span className="flex-1">Add to Calendar</span>
+                  <ExternalLink className="h-3 w-3 text-gray-400" />
+                </div>
+                {showCalendarSubmenu && <CalendarSubmenu event={event} />}
               </div>
-              {showCalendarSubmenu && <CalendarSubmenu event={event} />}
-            </div>
+            ) : (
+              <div className="px-3 py-2.5 text-xs text-gray-500">
+                Add start &amp; end times to use calendar export
+              </div>
+            )}
 
             <DropdownMenuSeparator />
 

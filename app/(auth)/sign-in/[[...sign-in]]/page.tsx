@@ -14,8 +14,20 @@ import { MobileAuthLoadingOverlay } from '@/components/features/splash/MobileAut
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { useSearchParams } from 'next/navigation';
 import { getSafeRedirect } from '@/lib/utils/safeRedirect';
+import {
+  OAUTH_POST_LOGIN_REDIRECT_COOKIE,
+  OAUTH_POST_LOGIN_REDIRECT_MAX_AGE_SEC,
+} from '@/lib/utils/oauthPostLoginRedirect';
 
 const MOBILE_OVERLAY_MIN_MS = 6000;
+
+/** Survives OAuth round-trip when Supabase does not echo `redirect_to` on `/auth/callback`. */
+function persistOAuthPostLoginRedirect(safePath: string) {
+  if (typeof window === 'undefined') return;
+  const value = encodeURIComponent(safePath);
+  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `${OAUTH_POST_LOGIN_REDIRECT_COOKIE}=${value}; Path=/; Max-Age=${OAUTH_POST_LOGIN_REDIRECT_MAX_AGE_SEC}; SameSite=Lax${secure}`;
+}
 
 export default function SignInPage() {
   const [email, setEmail] = useState('');
@@ -106,10 +118,13 @@ export default function SignInPage() {
     try {
       setGoogleLoading(true);
       setError('');
-      
-      const callbackUrl = safeRedirect
-        ? `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(safeRedirect)}`
-        : `${window.location.origin}/auth/callback`;
+
+      if (safeRedirect) {
+        persistOAuthPostLoginRedirect(safeRedirect);
+      }
+
+      // Bare callback URL so Supabase can append ?code=&state= without clashing with redirect_to query.
+      const callbackUrl = `${window.location.origin}/auth/callback`;
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -137,10 +152,12 @@ export default function SignInPage() {
     try {
       setLinkedInLoading(true);
       setError('');
-      
-      const callbackUrl = safeRedirect
-        ? `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(safeRedirect)}`
-        : `${window.location.origin}/auth/callback`;
+
+      if (safeRedirect) {
+        persistOAuthPostLoginRedirect(safeRedirect);
+      }
+
+      const callbackUrl = `${window.location.origin}/auth/callback`;
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {

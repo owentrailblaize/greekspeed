@@ -23,7 +23,7 @@ interface ShareEventDrawerProps {
     id: string;
     title: string;
     location?: string;
-    start_time: string;
+    start_time: string | null;
   };
 }
 
@@ -144,7 +144,8 @@ export function ShareEventDrawer({
   };
 
   // Format date for display
-  const formatEventDate = (dateString: string) => {
+  const formatEventDate = (dateString: string | null) => {
+    if (!dateString) return 'Time TBD';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       weekday: 'short',

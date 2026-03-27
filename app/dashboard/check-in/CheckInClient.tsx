@@ -3,12 +3,41 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Loader2, LogIn, Calendar, MapPin, Clock } from 'lucide-react';
+import {
+  ArrowLeft,
+  CheckCircle,
+  Loader2,
+  LogIn,
+  Calendar,
+  MapPin,
+  Clock,
+} from 'lucide-react';
 import { useAuth } from '@/lib/supabase/auth-context';
 import type { Event } from '@/types/events';
 
+/** `public` = `/check-in` (camera QR, no dashboard chrome). `dashboard` = in-app fallback. */
+export type CheckInReturnPathBase = 'public' | 'dashboard';
+
 interface CheckInClientProps {
   eventId: string;
+  /** When set (camera / printed QR link), sent as `url_check_in_token` on POST. */
+  urlCheckInToken?: string;
+  /** Base path for post–sign-in return and 401 recovery. Default `dashboard`. */
+  returnPathBase?: CheckInReturnPathBase;
+}
+
+function buildCheckInReturnPath(
+  eventId: string,
+  urlCheckInToken: string | undefined,
+  returnPathBase: CheckInReturnPathBase
+): string {
+  const base =
+    returnPathBase === 'public' ? '/check-in' : '/dashboard/check-in';
+  const eventQ = encodeURIComponent(eventId);
+  if (urlCheckInToken) {
+    return `${base}?event=${eventQ}&t=${encodeURIComponent(urlCheckInToken)}`;
+  }
+  return `${base}?event=${eventQ}`;
 }
 
 function formatEventDate(startTime: string): string {
@@ -35,7 +64,11 @@ function formatEventTime(startTime: string, endTime: string): string {
   return `${startStr} - ${endStr}`;
 }
 
-export function CheckInClient({ eventId }: CheckInClientProps) {
+export function CheckInClient({
+  eventId,
+  urlCheckInToken,
+  returnPathBase = 'dashboard',
+}: CheckInClientProps) {
   const router = useRouter();
   const { user, getAuthHeaders, loading: authLoading } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
@@ -68,7 +101,11 @@ export function CheckInClient({ eventId }: CheckInClientProps) {
   }, [eventId]);
 
   const goToSignIn = () => {
-    const returnTo = `/dashboard/check-in?event=${encodeURIComponent(eventId)}`;
+    const returnTo = buildCheckInReturnPath(
+      eventId,
+      urlCheckInToken,
+      returnPathBase
+    );
     router.replace(`/sign-in?redirect=${encodeURIComponent(returnTo)}`);
   };
 
@@ -81,10 +118,15 @@ export function CheckInClient({ eventId }: CheckInClientProps) {
       if (authHeaders.Authorization) {
         headers.Authorization = authHeaders.Authorization;
       }
+      const body =
+        urlCheckInToken != null && urlCheckInToken !== ''
+          ? JSON.stringify({ url_check_in_token: urlCheckInToken })
+          : undefined;
       const res = await fetch(`/api/events/${eventId}/check-in`, {
         method: 'POST',
         headers,
         credentials: 'include',
+        body,
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -114,8 +156,17 @@ export function CheckInClient({ eventId }: CheckInClientProps) {
   // No event found
   if (!event) {
     return (
-      <div className="w-full max-w-sm">
-        <p className="text-center text-gray-500 pt-6">Event not found.</p>
+      <div className="w-full max-w-sm flex flex-col items-center gap-4 pt-6">
+        <p className="text-center text-gray-500">Event not found.</p>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full h-12 rounded-full border-gray-300"
+          onClick={() => router.push('/')}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to home
+        </Button>
       </div>
     );
   }
@@ -162,13 +213,20 @@ export function CheckInClient({ eventId }: CheckInClientProps) {
       </div>
       <div className="pt-2 pb-6">
         {success ? (
-          <div className="flex flex-col items-center gap-3 text-center py-4">
+          <div className="flex flex-col items-center gap-4 text-center py-4">
             <CheckCircle className="h-14 w-14 text-green-600" />
             <p className="text-lg font-medium text-gray-900">You&apos;re checked in!</p>
             <p className="text-sm text-gray-500">Thanks for attending.</p>
+            <Button
+              type="button"
+              className="w-full h-12 text-base bg-brand-primary hover:bg-brand-primary-hover rounded-full"
+              onClick={() => router.push('/dashboard')}
+            >
+              Go to dashboard
+            </Button>
           </div>
         ) : !authLoading && !user ? (
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-3 w-full">
             <p className="text-sm text-gray-600 text-center">
               Sign in to check in for this event.
             </p>
@@ -179,11 +237,22 @@ export function CheckInClient({ eventId }: CheckInClientProps) {
               <LogIn className="h-5 w-5 mr-2" />
               Sign in to check in
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-12 text-base rounded-full border-gray-300"
+              onClick={() => router.push('/')}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to home
+            </Button>
           </div>
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-gray-500 text-center">
-              Scan the QR code or tap below to check in.
+              {returnPathBase === 'public'
+                ? 'Tap below to complete check-in.'
+                : 'Scan the QR code or tap below to check in.'}
             </p>
             <Button
               onClick={handleCheckIn}
@@ -198,6 +267,16 @@ export function CheckInClient({ eventId }: CheckInClientProps) {
               ) : (
                 'Check in'
               )}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-12 text-base rounded-full border-gray-300"
+              onClick={() => router.push('/dashboard')}
+              disabled={checkingIn || authLoading}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to dashboard
             </Button>
             {error && (
               <p className="text-sm text-red-600 text-center">{error}</p>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,8 +11,9 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import { useConnections } from '@/lib/contexts/ConnectionsContext';
 import { cn } from '@/lib/utils';
 import { CreatePostModal } from '@/components/features/social/CreatePostModal';
-import { EditPostModal } from '@/components/features/social/EditPostModal';
+import { DeletePostModal } from '@/components/features/social/DeletePostModal';
 import { ReportPostModal } from '@/components/features/social/ReportPostModal';
+import { getExistingImageUrlsFromPost } from '@/lib/utils/postComposer';
 import { PostCard } from '@/components/features/social/PostCard';
 import type { Post, CreatePostRequest, PostsResponse } from '@/types/posts';
 import ImageWithFallback from '@/components/figma/ImageWithFallback';
@@ -100,6 +101,10 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
   } = usePosts(chapterId, { initialData });
   const { profile } = useProfile();
   const { user, getAuthHeaders } = useAuth();
+
+  const [editComposerImageUrls, setEditComposerImageUrls] = useState<string[]>([]);
+  const [deleteModalPost, setDeleteModalPost] = useState<Post | null>(null);
+  const [isDeletingFromFeedModal, setIsDeletingFromFeedModal] = useState(false);
   const { connections } = useConnections();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
@@ -188,6 +193,12 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     scrollToFn: () => null,
   });
 
+  const invalidateFeedRowHeights = useCallback(() => {
+    requestAnimationFrame(() => {
+      rowVirtualizer.measure();
+    });
+  }, [rowVirtualizer]);
+
   const handleCreatePost = async (postData: CreatePostRequest) => {
     try {
       await createPost(postData);
@@ -226,6 +237,66 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
     if (!editingPost) return;
     await updatePost(editingPost.id, { content });
     setEditingPost(null);
+  };
+
+  useEffect(() => {
+    if (!editingPost) {
+      setEditComposerImageUrls([]);
+      return;
+    }
+    const immediate = getExistingImageUrlsFromPost(editingPost);
+    if (immediate.length > 0) {
+      setEditComposerImageUrls(immediate);
+      return;
+    }
+    if (!editingPost.has_image) {
+      setEditComposerImageUrls([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/posts/${editingPost.id}/image`, {
+          headers: getAuthHeaders(),
+        });
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const urls =
+          Array.isArray(data.image_urls) && data.image_urls.length > 0
+            ? data.image_urls
+            : data.image_url
+              ? [data.image_url]
+              : [];
+        setEditComposerImageUrls(urls);
+      } catch {
+        if (!cancelled) setEditComposerImageUrls([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editingPost, getAuthHeaders]);
+
+  const handleEditDeleteFromComposer = () => {
+    if (!editingPost) return;
+    const toDelete = editingPost;
+    setEditingPost(null);
+    setDeleteModalPost(toDelete);
+  };
+
+  const handleConfirmDeleteFromFeedModal = async () => {
+    if (!deleteModalPost) return;
+    setIsDeletingFromFeedModal(true);
+    try {
+      await deletePost(deleteModalPost.id);
+      setDeleteModalPost(null);
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete post');
+    } finally {
+      setIsDeletingFromFeedModal(false);
+    }
   };
 
   const handleReportPost = (postId: string) => {
@@ -288,8 +359,8 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
 
   return (
     <>
-      <div 
-        className="space-y-2 sm:space-y-5 max-w-2xl mx-auto"
+      <div
+        className="space-y-2 sm:space-y-5 w-[calc(100%+2rem)] -mx-4 max-w-none sm:mx-auto sm:w-full sm:max-w-2xl"
         style={{
           // Use mergedPosts for minHeight calculation to ensure proper layout
           minHeight: mergedPosts.length > 0
@@ -430,7 +501,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
             )}
           </div>
         ) : (
-          <div className="relative">
+          <div className="relative overflow-hidden rounded-none border-0 bg-white shadow-none border-t border-gray-200 sm:rounded-2xl sm:border sm:border-gray-200 sm:shadow-sm">
             <div
               className="relative w-full"
               style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
@@ -443,7 +514,7 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
                   <div
                     key={post.id}
                     data-index={virtualRow.index}
-                    className="absolute left-0 right-0 pb-3 sm:pb-6"
+                    className="absolute left-0 right-0"
                     style={{
                       transform: `translateY(${virtualRow.start}px)`,
                       width: '100%',
@@ -463,10 +534,13 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
                       onBookmark={handleBookmark}
                       onCommentAdded={handleCommentAdded}
                       isExpanded={expandedPostId === post.id}
+                      variant="feed"
+                      showDivider={virtualRow.index < filteredPosts.length - 1}
                       onToggleExpand={() => {
                         setExpandedPostId((prev) => (prev === post.id ? null : post.id));
-                        requestAnimationFrame(() => rowVirtualizer.measure());
+                        invalidateFeedRowHeights();
                       }}
+                      onLayoutInvalidate={invalidateFeedRowHeights}
                     />
                   </div>
                 );
@@ -524,18 +598,26 @@ export function SocialFeed({ chapterId, initialData }: SocialFeedProps) {
       </div>
 
       <CreatePostModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        isOpen={isCreateModalOpen || !!editingPost}
+        onClose={() => {
+          if (editingPost) setEditingPost(null);
+          else setIsCreateModalOpen(false);
+        }}
         onSubmit={handleCreatePost}
+        editPost={editingPost}
+        existingImageUrls={editComposerImageUrls}
+        onSaveEdit={handleSaveEdit}
+        onEditDelete={editingPost ? handleEditDeleteFromComposer : undefined}
         userAvatar={profile?.avatar_url || undefined}
         userName={profile?.full_name || undefined}
       />
 
-      <EditPostModal
-        isOpen={!!editingPost}
-        onClose={() => setEditingPost(null)}
-        post={editingPost}
-        onSave={handleSaveEdit}
+      <DeletePostModal
+        isOpen={!!deleteModalPost}
+        onClose={() => setDeleteModalPost(null)}
+        onConfirm={handleConfirmDeleteFromFeedModal}
+        post={deleteModalPost}
+        isDeleting={isDeletingFromFeedModal}
       />
 
       <ReportPostModal

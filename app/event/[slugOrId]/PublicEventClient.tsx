@@ -27,8 +27,14 @@ import { Event, RSVPStatus } from '@/types/events';
 import {
   generateGoogleCalendarUrl,
   generateOutlookCalendarUrl,
-  downloadICSFile
+  downloadICSFile,
+  eventHasCalendarTimes,
 } from '@/lib/utils/calendarUtils';
+import {
+  formatEventDetailSchedule,
+  isEventPastBySchedule,
+  isRsvpWindowOpen,
+} from '@/lib/utils/eventScheduleDisplay';
 import { copyEventLinkToClipboard } from '@/lib/utils/eventLinkUtils';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -137,25 +143,6 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
-
   const handleCopyLink = async () => {
     const success = await copyEventLinkToClipboard(event.id, null, { ref: 'public_page' });
     if (success) {
@@ -189,16 +176,19 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
   };
 
   const handleAddToGoogleCalendar = () => {
+    if (!eventHasCalendarTimes(event)) return;
     const url = generateGoogleCalendarUrl(event);
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const handleAddToOutlookCalendar = () => {
+    if (!eventHasCalendarTimes(event)) return;
     const url = generateOutlookCalendarUrl(event);
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const handleDownloadICS = () => {
+    if (!eventHasCalendarTimes(event)) return;
     downloadICSFile(event);
     toast.success('Calendar file downloaded');
   };
@@ -207,7 +197,9 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
     router.back();
   };
 
-  const isPastEvent = new Date(event.end_time) < new Date();
+  const isPastEvent = isEventPastBySchedule(event);
+  const rsvpWindowOpen = isRsvpWindowOpen(event);
+  const showCalendarExport = eventHasCalendarTimes(event);
 
   const getRsvpButtonClass = (status: RSVPStatus) => {
     const isActive = userRsvp === status;
@@ -324,10 +316,13 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
         {isLoggedIn && !isPastEvent && (
           <div className="px-4 py-4 bg-white border-b border-gray-100">
             <p className="text-xs text-gray-500 mb-3 text-center font-medium">Your Response</p>
+            {!rsvpWindowOpen && (
+              <p className="text-xs text-amber-700 text-center mb-2">RSVP is closed for this event.</p>
+            )}
             <div className="flex gap-2">
               <Button
                 onClick={() => handleRsvp('attending')}
-                disabled={rsvpLoading}
+                disabled={rsvpLoading || !rsvpWindowOpen}
                 className={`flex-1 h-10 border rounded-full transition-all text-sm ${getRsvpButtonClass('attending')}`}
                 variant="outline"
               >
@@ -336,7 +331,7 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
               </Button>
               <Button
                 onClick={() => handleRsvp('maybe')}
-                disabled={rsvpLoading}
+                disabled={rsvpLoading || !rsvpWindowOpen}
                 className={`flex-1 h-10 border rounded-full transition-all text-sm ${getRsvpButtonClass('maybe')}`}
                 variant="outline"
               >
@@ -345,7 +340,7 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
               </Button>
               <Button
                 onClick={() => handleRsvp('not_attending')}
-                disabled={rsvpLoading}
+                disabled={rsvpLoading || !rsvpWindowOpen}
                 className={`flex-1 h-10 border rounded-full transition-all text-sm ${getRsvpButtonClass('not_attending')}`}
                 variant="outline"
               >
@@ -365,9 +360,8 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 text-sm">Date & Time</h3>
-              <p className="text-gray-600 text-sm">{formatDate(event.start_time)}</p>
-              <p className="text-gray-500 text-xs">
-                {formatTime(event.start_time)} - {formatTime(event.end_time)}
+              <p className="text-gray-600 text-sm whitespace-pre-wrap">
+                {formatEventDetailSchedule(event.start_time, event.end_time)}
               </p>
             </div>
           </div>
@@ -456,7 +450,7 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
           )}
 
           {/* Calendar Actions */}
-          {!isPastEvent && (
+          {!isPastEvent && showCalendarExport && (
             <div className="pt-4 border-t border-gray-100">
               <h3 className="font-semibold text-gray-900 text-sm mb-3">Add to calendar</h3>
               <div className="flex flex-wrap gap-2">
@@ -646,10 +640,13 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
                 {isLoggedIn ? (
                   <div>
                     <p className="text-xs text-gray-500 mb-3 font-medium">Your Response</p>
+                    {!rsvpWindowOpen && (
+                      <p className="text-xs text-amber-700 mb-2">RSVP is closed for this event.</p>
+                    )}
                     <div className="flex gap-3">
                       <Button
                         onClick={() => handleRsvp('attending')}
-                        disabled={rsvpLoading}
+                        disabled={rsvpLoading || !rsvpWindowOpen}
                         className={`flex-1 h-11 border rounded-full transition-all ${getRsvpButtonClass('attending')}`}
                         variant="outline"
                       >
@@ -658,7 +655,7 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
                       </Button>
                       <Button
                         onClick={() => handleRsvp('maybe')}
-                        disabled={rsvpLoading}
+                        disabled={rsvpLoading || !rsvpWindowOpen}
                         className={`flex-1 h-11 border rounded-full transition-all ${getRsvpButtonClass('maybe')}`}
                         variant="outline"
                       >
@@ -667,7 +664,7 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
                       </Button>
                       <Button
                         onClick={() => handleRsvp('not_attending')}
-                        disabled={rsvpLoading}
+                        disabled={rsvpLoading || !rsvpWindowOpen}
                         className={`flex-1 h-11 border rounded-full transition-all ${getRsvpButtonClass('not_attending')}`}
                         variant="outline"
                       >
@@ -713,9 +710,8 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">Date & Time</h3>
-                    <p className="text-gray-600">{formatDate(event.start_time)}</p>
-                    <p className="text-gray-500 text-sm">
-                      {formatTime(event.start_time)} - {formatTime(event.end_time)}
+                    <p className="text-gray-600 whitespace-pre-wrap">
+                      {formatEventDetailSchedule(event.start_time, event.end_time)}
                     </p>
                   </div>
                 </div>
@@ -791,6 +787,7 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
                 <div className="pt-6 border-t border-gray-100">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     {/* Calendar Actions */}
+                    {showCalendarExport && (
                     <div>
                       <p className="text-sm font-medium text-gray-700 mb-3">Add to calendar</p>
                       <div className="flex flex-wrap gap-2">
@@ -823,6 +820,7 @@ export function PublicEventClient({ event, attendeeCounts: initialCounts }: Publ
                         </Button>
                       </div>
                     </div>
+                    )}
 
                     {/* Share Actions */}
                     <div>

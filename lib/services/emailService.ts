@@ -52,8 +52,8 @@ export interface EventNotificationEmail {
   eventTitle: string;
   eventDescription?: string;
   eventLocation?: string;
-  eventStartTime: string;
-  eventEndTime: string;
+  eventStartTime: string | null;
+  eventEndTime: string | null;
   eventId: string;
 }
 
@@ -254,10 +254,6 @@ export class EmailService {
         eventPath
       );
   
-      // Format the start time for display
-      const startDate = new Date(eventStartTime);
-      const endDate = new Date(eventEndTime);
-      
       const formatDateTime = (date: Date) => {
         return date.toLocaleDateString('en-US', {
           weekday: 'long',
@@ -269,7 +265,10 @@ export class EmailService {
           timeZoneName: 'short'
         });
       };
-  
+
+      const startHuman = eventStartTime ? formatDateTime(new Date(eventStartTime)) : 'Time TBD';
+      const endHuman = eventEndTime ? formatDateTime(new Date(eventEndTime)) : 'Time TBD';
+
       const msg = {
         to,
         from: {
@@ -284,8 +283,8 @@ export class EmailService {
               title: eventTitle,
               description: eventDescription || '',
               location: eventLocation || '',
-              start_at_human: formatDateTime(startDate),
-              end_at_human: formatDateTime(endDate),
+              start_at_human: startHuman,
+              end_at_human: endHuman,
               event_id: eventId
             }
           },
@@ -337,8 +336,8 @@ export class EmailService {
       eventTitle: string;
       eventDescription?: string;
       eventLocation?: string;
-      eventStartTime: string;
-      eventEndTime: string;
+      eventStartTime: string | null;
+      eventEndTime: string | null;
       eventId: string;
     }
   ): Promise<{ successful: number; failed: number }> {
@@ -1061,8 +1060,8 @@ export class EmailService {
       eventTitle: string;
       eventDescription?: string;
       eventLocation?: string;
-      eventStartTime: string;
-      eventEndTime: string;
+      eventStartTime: string | null;
+      eventEndTime: string | null;
       eventId: string;
       startAtRelative?: string;
     }
@@ -1105,15 +1104,12 @@ export class EmailService {
     eventTitle: string;
     eventDescription?: string;
     eventLocation?: string;
-    eventStartTime: string;
-    eventEndTime: string;
+    eventStartTime: string | null;
+    eventEndTime: string | null;
     eventId: string;
     startAtRelative?: string;
   }): Promise<boolean> {
     try {
-      const startDate = new Date(eventStartTime);
-      const endDate = new Date(eventEndTime);
-      
       const formatDateTime = (date: Date) => {
         return date.toLocaleDateString('en-US', {
           weekday: 'long',
@@ -1125,6 +1121,8 @@ export class EmailService {
           timeZoneName: 'short'
         });
       };
+
+      const startHuman = eventStartTime ? formatDateTime(new Date(eventStartTime)) : 'Time TBD';
 
       const msg = {
         to,
@@ -1146,8 +1144,10 @@ export class EmailService {
               title: eventTitle,
               description: eventDescription || '',
               location: eventLocation || '',
-              start_at_human: formatDateTime(startDate),
-              start_at_relative: startAtRelative || this.getRelativeTime(startDate)
+              start_at_human: startHuman,
+              start_at_relative:
+                startAtRelative ||
+                (eventStartTime ? this.getRelativeTime(new Date(eventStartTime)) : 'Time TBD')
             }
           },
           cta: {
