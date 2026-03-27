@@ -265,6 +265,7 @@ function MobileBottomNavigationImpl({
 
   // Determine layout: 5 tabs = grid (alumni), otherwise FAB layout (admin/active_member)
   const useGridLayout = tabs.length === 5;
+  const shouldUsePyramidToolsLayout = toolsOptions.length >= 3 && toolsOptions.length % 2 === 1;
 
   // Close tools menu when clicking outside
   useEffect(() => {
@@ -520,7 +521,7 @@ function MobileBottomNavigationImpl({
         </div>
       </div>
 
-      {/* Tools Popup Menu - Original FAB style with pyramid shape */}
+      {/* Tools Popup Menu - Pyramid for odd 3+ actions, flat row for 2 actions */}
       {hasToolsFAB && (
         <AnimatePresence>
           {isToolsMenuOpen && buttonPosition && (
@@ -534,10 +535,10 @@ function MobileBottomNavigationImpl({
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="relative flex items-end gap-3">
+              <div className={`relative flex items-end ${shouldUsePyramidToolsLayout ? 'gap-3' : 'gap-4'}`}>
                 {toolsOptions.map((option, index) => {
                   const Icon = option.icon;
-                  const isCenter = index === Math.floor(toolsOptions.length / 2);
+                  const isCenter = shouldUsePyramidToolsLayout && index === Math.floor(toolsOptions.length / 2);
                   
                   return (
                     <motion.button
