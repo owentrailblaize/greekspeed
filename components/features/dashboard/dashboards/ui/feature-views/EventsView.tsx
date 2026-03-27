@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Calendar, Edit, Archive, MapPin, Clock, Users, DollarSign, TrendingUp, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, QrCode } from 'lucide-react';
+import { Plus, Calendar, Edit, Archive, MapPin, Clock, Users, DollarSign, TrendingUp, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { useEvents } from '@/lib/hooks/useEvents';
@@ -16,13 +16,13 @@ import { CompactCalendarCard } from '../CompactCalendarCard';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-toastify';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { EventAttendanceBlock } from '@/components/features/events/EventAttendanceBlock';
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogHeader,
+//   DialogTitle,
+// } from '@/components/ui/dialog';
+// import { EventAttendanceBlock } from '@/components/features/events/EventAttendanceBlock';
 import {
   compareEventsByStartAsc,
   compareEventsByStartDesc,
@@ -39,7 +39,8 @@ export function EventsView() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [attendanceEvent, setAttendanceEvent] = useState<Event | null>(null);
+  // Event attendance UI (temporarily hidden)
+  // const [attendanceEvent, setAttendanceEvent] = useState<Event | null>(null);
   const eventsPerPage = 6;
   
   const { 
@@ -510,6 +511,7 @@ export function EventsView() {
                       </TableCell>
                       <TableCell className="text-right whitespace-nowrap">
                         <div className="flex justify-end space-x-2">
+                    {/* Event attendance UI (temporarily hidden)
                     {event.status === 'published' && (
                       <Button
                         size="sm"
@@ -521,6 +523,7 @@ export function EventsView() {
                         Attendance
                       </Button>
                     )}
+                    */}
                     <Button 
                       size="sm" 
                       variant="outline"
@@ -550,7 +553,7 @@ export function EventsView() {
               </CardContent>
             </Card>
 
-      {/* Attendance modal (QR + list) */}
+      {/* Attendance modal (QR + list) — temporarily hidden
       <Dialog
         open={!!attendanceEvent}
         onOpenChange={(open) => !open && setAttendanceEvent(null)}
@@ -570,6 +573,7 @@ export function EventsView() {
           )}
         </DialogContent>
       </Dialog>
+      */}
 
       {/* Event Form Modal */}
       {showEventForm && typeof window !== 'undefined' && createPortal(
