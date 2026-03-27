@@ -36,10 +36,9 @@ export function ReportPostModal({ isOpen, onClose, post, onSubmit }: ReportPostM
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px] max-w-[95vw] p-4 sm:p-6">
+      <DialogContent className="sm:max-w-[425px] max-w-[95vw] p-4 sm:p-6 rounded-3xl border border-gray-200">
         <DialogHeader className="pb-4">
           <DialogTitle className="flex items-center gap-2 text-lg">
-            <Flag className="h-5 w-5 text-amber-500" />
             Report post
           </DialogTitle>
         </DialogHeader>
@@ -55,10 +54,19 @@ export function ReportPostModal({ isOpen, onClose, post, onSubmit }: ReportPostM
             disabled={isSubmitting}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+            <Button
+              variant="outline"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="rounded-full px-6"
+            >
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={isSubmitting}>
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="rounded-full px-6"
+            >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
                   <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
