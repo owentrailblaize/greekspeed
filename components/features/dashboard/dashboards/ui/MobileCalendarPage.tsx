@@ -9,7 +9,7 @@ import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, Users, HelpCircle, 
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { Event, RSVPStatus } from '@/types/events';
-import { parseRawTime } from '@/lib/utils/timezoneUtils';
+import { formatEventCardSchedule, isValidIsoDateTime } from '@/lib/utils/eventScheduleDisplay';
 import { toast } from 'react-toastify';
 import { useFeatureRedirect } from '@/lib/hooks/useFeatureRedirect';
 import { EventDetailModal } from '@/components/features/events/EventDetailModal';
@@ -146,11 +146,14 @@ export function MobileCalendarPage() {
   };
 
   const getEventsForDate = (date: Date) => {
-    return events.filter(event => {
-      const eventDate = new Date(event.start_time);
-      return eventDate.getDate() === date.getDate() &&
-             eventDate.getMonth() === date.getMonth() &&
-             eventDate.getFullYear() === date.getFullYear();
+    return events.filter((event) => {
+      if (!isValidIsoDateTime(event.start_time)) return false;
+      const eventDate = new Date(event.start_time!);
+      return (
+        eventDate.getDate() === date.getDate() &&
+        eventDate.getMonth() === date.getMonth() &&
+        eventDate.getFullYear() === date.getFullYear()
+      );
     });
   };
 
@@ -434,7 +437,7 @@ export function MobileCalendarPage() {
                         <div className="space-y-1 text-xs text-slate-700">
                           <div className="flex items-center space-x-2">
                             <Clock className="h-3 w-3" />
-                            <span className="break-words">{parseRawTime(event.start_time)}</span>
+                            <span className="break-words">{formatEventCardSchedule(event.start_time, event.end_time)}</span>
                           </div>
                           <div className="flex items-center space-x-2">
                             <MapPin className="h-3 w-3" />

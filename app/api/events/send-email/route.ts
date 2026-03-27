@@ -197,16 +197,17 @@ export async function POST(request: NextRequest) {
           });
 
           if (validSMSMembers.length > 0) {
-            // Format event date for SMS message
-            const eventDate = new Date(event.start_time);
-            const formattedDate = eventDate.toLocaleDateString('en-US', {
-              weekday: 'short',
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-              hour: 'numeric',
-              minute: '2-digit'
-            });
+            // Format event date for SMS message (untimed events → "Time TBD")
+            const formattedDate = event.start_time
+              ? new Date(event.start_time).toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })
+              : 'Time TBD';
 
             // Determine if we should use test mode (same logic as email)
             const isSandbox = SMSService.isInSandboxMode();
@@ -344,16 +345,16 @@ export async function POST(request: NextRequest) {
           });
 
           if (validAlumni.length > 0) {
-            // Format event date for SMS message
-            const eventDate = new Date(event.start_time);
-            const formattedDate = eventDate.toLocaleDateString('en-US', {
-              weekday: 'short',
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-              hour: 'numeric',
-              minute: '2-digit'
-            });
+            const formattedDate = event.start_time
+              ? new Date(event.start_time).toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })
+              : 'Time TBD';
 
             // Determine if we should use test mode
             const isSandbox = SMSService.isInSandboxMode();

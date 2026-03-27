@@ -1,13 +1,22 @@
 /**
  * Calendar utilities for generating calendar URLs and ICS files
  */
+import { isValidIsoDateTime } from '@/lib/utils/eventScheduleDisplay';
 
-interface CalendarEvent {
+export interface CalendarEvent {
   title: string;
   description?: string;
   location?: string;
-  start_time: string;
-  end_time: string;
+  start_time: string | null;
+  end_time: string | null;
+}
+
+/** Both start and end are required for Google/Outlook/ICS export */
+export function eventHasCalendarTimes(event: {
+  start_time: string | null;
+  end_time: string | null;
+}): boolean {
+  return isValidIsoDateTime(event.start_time) && isValidIsoDateTime(event.end_time);
 }
 
 /**
@@ -30,10 +39,13 @@ function formatICSDate(dateString: string): string {
  * Generate Google Calendar URL
  */
 export function generateGoogleCalendarUrl(event: CalendarEvent): string {
+  if (!eventHasCalendarTimes(event)) {
+    throw new Error('Event must have start and end times to add to calendar');
+  }
   const params = new URLSearchParams({
     action: 'TEMPLATE',
     text: event.title,
-    dates: `${formatGoogleCalendarDate(event.start_time)}/${formatGoogleCalendarDate(event.end_time)}`,
+    dates: `${formatGoogleCalendarDate(event.start_time!)}/${formatGoogleCalendarDate(event.end_time!)}`,
     details: event.description || '',
     location: event.location || '',
   });
@@ -44,8 +56,11 @@ export function generateGoogleCalendarUrl(event: CalendarEvent): string {
  * Generate Outlook Calendar URL
  */
 export function generateOutlookCalendarUrl(event: CalendarEvent): string {
-  const startDate = new Date(event.start_time);
-  const endDate = new Date(event.end_time);
+  if (!eventHasCalendarTimes(event)) {
+    throw new Error('Event must have start and end times to add to calendar');
+  }
+  const startDate = new Date(event.start_time!);
+  const endDate = new Date(event.end_time!);
   
   const params = new URLSearchParams({
     path: '/calendar/action/compose',
@@ -84,8 +99,8 @@ export function generateICSContent(event: CalendarEvent): string {
     'BEGIN:VEVENT',
     `UID:${uid}`,
     `DTSTAMP:${now}`,
-    `DTSTART:${formatICSDate(event.start_time)}`,
-    `DTEND:${formatICSDate(event.end_time)}`,
+    `DTSTART:${formatICSDate(event.start_time!)}`,
+    `DTEND:${formatICSDate(event.end_time!)}`,
     `SUMMARY:${escapeICS(event.title)}`,
   ];
 

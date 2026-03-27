@@ -951,12 +951,14 @@ export default function ProfilePage() {
                           <div className="flex items-center gap-2 text-xs text-gray-500">
                             <Clock className="w-3 h-3" />
                             <span>
-                              {new Date(event.start_time).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: 'numeric',
-                                minute: '2-digit'
-                              })}
+                              {event.start_time
+                                ? new Date(event.start_time).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                  })
+                                : 'Time TBD'}
                             </span>
                           </div>
                           {event.location && (

@@ -24,6 +24,11 @@ import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
 import { useSearchParams } from 'next/navigation';
 import { EventActionsMenu } from '@/components/features/events/EventActionsMenu';
 import { EventDetailModal } from '@/components/features/events/EventDetailModal';
+import {
+  compareEventsByStartDesc,
+  EVENT_TIME_TBD,
+  isValidIsoDateTime,
+} from '@/lib/utils/eventScheduleDisplay';
 
 export function MobileEventsVendorsPage() {
   const { profile } = useProfile();
@@ -249,22 +254,21 @@ export function MobileEventsVendorsPage() {
     };
   }, [events, startingBudget]);
 
-  const formatEventDate = (isoString: string): string => {
+  const formatEventDate = (isoString: string | null): string => {
+    if (!isoString || !isValidIsoDateTime(isoString)) return EVENT_TIME_TBD;
     const date = new Date(isoString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
       day: 'numeric',
       year: 'numeric',
       hour: 'numeric',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
   // Sort events by date (newest first)
   const sortedEvents = useMemo(() => {
-    return [...events].sort((a, b) => 
-      new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
-    );
+    return [...events].sort(compareEventsByStartDesc);
   }, [events]);
 
   // Paginate events

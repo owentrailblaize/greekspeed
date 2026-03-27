@@ -7,8 +7,8 @@ export interface Event {
   title: string;
   description?: string;
   location?: string;
-  start_time: string;
-  end_time: string;
+  start_time: string | null;
+  end_time: string | null;
   status: EventStatus;
   budget_label?: string;
   budget_amount?: number;
@@ -43,8 +43,8 @@ export interface CreateEventRequest {
   title: string;
   description?: string;
   location?: string;
-  start_time: string;
-  end_time: string;
+  start_time?: string | null;
+  end_time?: string | null;
   budget_label?: string;
   budget_amount?: number;
   send_sms?: boolean;
@@ -72,8 +72,8 @@ export interface EventDisplay {
   title: string;
   description?: string;
   location?: string;
-  start_time: string;
-  end_time: string;
+  start_time: string | null;
+  end_time: string | null;
   status: EventStatus;
   budget_label?: string;
   budget_amount?: number;

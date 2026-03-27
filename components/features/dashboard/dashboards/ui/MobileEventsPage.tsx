@@ -7,7 +7,7 @@ import { Calendar, MapPin, Clock, Users, HelpCircle, X, Filter, Loader2, MoreVer
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { Event, RSVPStatus } from '@/types/events';
-import { parseRawTime } from '@/lib/utils/timezoneUtils';
+import { formatEventCardSchedule } from '@/lib/utils/eventScheduleDisplay';
 import { useFeatureRedirect } from '@/lib/hooks/useFeatureRedirect';
 import { EventDetailModal } from '@/components/features/events/EventDetailModal';
 import { EventActionsMenu } from '@/components/features/events/EventActionsMenu';
@@ -266,7 +266,7 @@ export function MobileEventsPage() {
                 <div className="space-y-1 text-xs text-gray-600 mb-3">
                   <div className="flex items-center space-x-2">
                     <Clock className="h-3 w-3" />
-                    <span className="break-words">{parseRawTime(event.start_time)}</span>
+                    <span className="break-words">{formatEventCardSchedule(event.start_time, event.end_time)}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <MapPin className="h-3 w-3" />

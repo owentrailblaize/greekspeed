@@ -12,6 +12,11 @@ import { CheckInScanner } from './CheckInScanner';
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { EXECUTIVE_ROLES } from '@/lib/permissions';
+import {
+  formatEventDetailSchedule,
+  isRsvpWindowOpen,
+  isValidIsoDateTime,
+} from '@/lib/utils/eventScheduleDisplay';
 
 interface Attendee {
   user_id: string;
@@ -137,9 +142,14 @@ export function EventDetailModal({
   const [checkingIn, setCheckingIn] = useState(false);
 
   const now = Date.now();
-  const start = new Date(event.start_time).getTime();
-  const end = new Date(event.end_time).getTime();
-  const isOccurring = event.status === 'published' && now >= start && now <= end;
+  const isOccurring =
+    event.status === 'published' &&
+    isValidIsoDateTime(event.start_time) &&
+    isValidIsoDateTime(event.end_time) &&
+    now >= new Date(event.start_time!).getTime() &&
+    now <= new Date(event.end_time!).getTime();
+
+  const rsvpOpen = isRsvpWindowOpen(event);
 
   const isExec =
     profile?.role === 'admin' ||
@@ -175,30 +185,6 @@ export function EventDetailModal({
     } finally {
       setLoadingAttendees(false);
     }
-  };
-
-  const formatEventDate = (startTime: string, endTime: string): string => {
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-
-    const dateOptions: Intl.DateTimeFormatOptions = {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    };
-
-    const timeOptions: Intl.DateTimeFormatOptions = {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    };
-
-    const dateStr = start.toLocaleDateString('en-US', dateOptions);
-    const startTimeStr = start.toLocaleTimeString('en-US', timeOptions);
-    const endTimeStr = end.toLocaleTimeString('en-US', timeOptions);
-
-    return `${dateStr} | ${startTimeStr} - ${endTimeStr}`;
   };
 
   const handleRsvp = (status: RSVPStatus) => {
@@ -284,7 +270,7 @@ export function EventDetailModal({
         {/* Date & Time */}
         <div className="flex items-start gap-3 text-sm text-gray-600">
           <Clock className="h-5 w-5 text-brand-primary flex-shrink-0 mt-0.5" />
-          <span>{formatEventDate(event.start_time, event.end_time)}</span>
+          <span>{formatEventDetailSchedule(event.start_time, event.end_time)}</span>
         </div>
 
         {/* Location */}
@@ -424,9 +410,13 @@ export function EventDetailModal({
       {/* Footer - RSVP Buttons */}
       <div className={`flex-shrink-0 p-4 border-t border-gray-200 bg-gray-50 ${isMobile ? 'pb-[calc(1rem+env(safe-area-inset-bottom))]' : ''}`}>
         <p className="text-xs text-gray-500 mb-3 text-center">Your Response</p>
+        {!rsvpOpen && (
+          <p className="text-xs text-amber-700 text-center mb-2">RSVP is closed for this event.</p>
+        )}
         <div className="flex gap-2">
           <Button
             onClick={() => handleRsvp('attending')}
+            disabled={!rsvpOpen}
             className={`flex-1 ${isMobile ? 'h-9 text-xs' : 'h-10'} border rounded-full transition-all ${getRsvpButtonClass('attending')}`}
             variant="outline"
           >
@@ -435,6 +425,7 @@ export function EventDetailModal({
           </Button>
           <Button
             onClick={() => handleRsvp('maybe')}
+            disabled={!rsvpOpen}
             className={`flex-1 ${isMobile ? 'h-9 text-xs' : 'h-10'} border rounded-full transition-all ${getRsvpButtonClass('maybe')}`}
             variant="outline"
           >
@@ -443,6 +434,7 @@ export function EventDetailModal({
           </Button>
           <Button
             onClick={() => handleRsvp('not_attending')}
+            disabled={!rsvpOpen}
             className={`flex-1 ${isMobile ? 'h-9 text-xs' : 'h-10'} border rounded-full transition-all ${getRsvpButtonClass('not_attending')}`}
             variant="outline"
           >

@@ -6,7 +6,7 @@ import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, Users } from 'lucid
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { Event } from '@/types/events';
-import { parseRawTime } from '@/lib/utils/timezoneUtils';
+import { formatEventCardSchedule, isValidIsoDateTime } from '@/lib/utils/eventScheduleDisplay';
 
 interface CompactCalendarCardProps {
   /** Pre-fetched events from parent — skips internal fetch */
@@ -126,11 +126,14 @@ export function CompactCalendarCard({
   };
 
   const getEventsForDate = (date: Date) => {
-    return events.filter(event => {
-      const eventDate = new Date(event.start_time);
-      return eventDate.getDate() === date.getDate() &&
+    return events.filter((event) => {
+      if (!isValidIsoDateTime(event.start_time)) return false;
+      const eventDate = new Date(event.start_time!);
+      return (
+        eventDate.getDate() === date.getDate() &&
         eventDate.getMonth() === date.getMonth() &&
-        eventDate.getFullYear() === date.getFullYear();
+        eventDate.getFullYear() === date.getFullYear()
+      );
     });
   };
 
@@ -294,7 +297,7 @@ export function CompactCalendarCard({
             <div className="space-y-1 text-xs text-gray-600">
               <div className="flex items-center space-x-2">
                 <Clock className="h-3 w-3" />
-                <span>{parseRawTime(hoveredEvent.start_time)}</span>
+                <span>{formatEventCardSchedule(hoveredEvent.start_time, hoveredEvent.end_time)}</span>
               </div>
               {hoveredEvent.location && (
                 <div className="flex items-center space-x-2">

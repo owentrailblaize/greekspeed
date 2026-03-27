@@ -110,26 +110,27 @@ export async function POST(request: NextRequest) {
       chapterName: chapter?.name || 'Your Chapter'
     }));
 
-    // Calculate relative time
-    const startDate = new Date(event.start_time);
-    const now = new Date();
-    const diffMs = startDate.getTime() - now.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-    
-    let startAtRelative = '';
-    if (diffDays === 0) {
-      if (diffHours <= 0) {
-        startAtRelative = 'now';
-      } else if (diffHours === 1) {
-        startAtRelative = 'in 1 hour';
+    let startAtRelative = 'Time TBD';
+    if (event.start_time) {
+      const startDate = new Date(event.start_time);
+      const now = new Date();
+      const diffMs = startDate.getTime() - now.getTime();
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffHours / 24);
+
+      if (diffDays === 0) {
+        if (diffHours <= 0) {
+          startAtRelative = 'now';
+        } else if (diffHours === 1) {
+          startAtRelative = 'in 1 hour';
+        } else {
+          startAtRelative = `in ${diffHours} hours`;
+        }
+      } else if (diffDays === 1) {
+        startAtRelative = 'tomorrow';
       } else {
-        startAtRelative = `in ${diffHours} hours`;
+        startAtRelative = `in ${diffDays} days`;
       }
-    } else if (diffDays === 1) {
-      startAtRelative = 'tomorrow';
-    } else {
-      startAtRelative = `in ${diffDays} days`;
     }
 
 

@@ -7,7 +7,11 @@ import { Calendar, MapPin, Clock, Users, HelpCircle, X, ChevronLeft, ChevronRigh
 import { useProfile } from '@/lib/contexts/ProfileContext';
 import { useScopedChapterId } from '@/lib/hooks/useScopedChapterId';
 import { Event, RSVPStatus } from '@/types/events';
-import { parseRawTime } from '@/lib/utils/timezoneUtils';
+import {
+  compareEventsByStartAsc,
+  formatEventCardSchedule,
+  isPublishedEventUpcoming,
+} from '@/lib/utils/eventScheduleDisplay';
 import { EventDetailModal } from '@/components/features/events/EventDetailModal';
 import { EventActionsMenu } from '@/components/features/events/EventActionsMenu';
 
@@ -56,15 +60,10 @@ export function UpcomingEventsCard({
   // ---- Filter parent-provided events to "upcoming" on the client ----
   const upcomingFromProps = useMemo(() => {
     if (!propEvents) return undefined;
-    const now = new Date().toISOString()
+    const now = new Date().toISOString();
     return propEvents
-      .filter((e) => {
-        if (e.status !== 'published') return false;
-        const start = e.start_time;
-        const end = e.end_time ?? start;
-        return start >= now || (start <= now && end >= now);
-      })
-      .sort((a, b) => a.start_time.localeCompare(b.start_time));
+      .filter((e) => isPublishedEventUpcoming(e, now))
+      .sort(compareEventsByStartAsc);
   }, [propEvents]);
 
   // ---- Fallback: self-fetch only if no events were passed as props ----
@@ -199,8 +198,8 @@ export function UpcomingEventsCard({
     return 'outline';
   };
 
-  const formatEventDateTime = (isoString: string): string => {
-    return parseRawTime(isoString);
+  const formatEventDateTime = (ev: Event): string => {
+    return formatEventCardSchedule(ev.start_time, ev.end_time);
   };
 
   const handlePreviousPage = () => {
@@ -320,7 +319,7 @@ export function UpcomingEventsCard({
                   <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 mb-2">
                     <div className="flex items-center space-x-1.5">
                       <Clock className="h-3.5 w-3.5 text-brand-primary flex-shrink-0" />
-                      <span className="break-words">{formatEventDateTime(event.start_time)}</span>
+                      <span className="break-words">{formatEventDateTime(event)}</span>
                     </div>
                     <div className="flex items-center space-x-1.5">
                       <MapPin className="h-3.5 w-3.5 text-brand-primary flex-shrink-0" />
@@ -466,7 +465,7 @@ export function UpcomingEventsCard({
                   <div className="space-y-1.5 text-xs text-gray-600 mb-3">
                     <div className="flex items-start space-x-2">
                       <Clock className="h-3.5 w-3.5 mt-0.5 text-brand-primary flex-shrink-0" />
-                      <span className="break-words">{formatEventDateTime(event.start_time)}</span>
+                      <span className="break-words">{formatEventDateTime(event)}</span>
                     </div>
                     <div className="flex items-start space-x-2">
                       <MapPin className="h-3.5 w-3.5 mt-0.5 text-brand-primary flex-shrink-0" />

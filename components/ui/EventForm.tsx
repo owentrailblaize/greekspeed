@@ -53,8 +53,8 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
         title: event.title,
         description: event.description || '',
         location: event.location || '',
-        start_time: event.start_time,
-        end_time: event.end_time,
+        start_time: event.start_time ?? '',
+        end_time: event.end_time ?? '',
         budget_label: event.budget_label || '',
         budget_amount: event.budget_amount || undefined,
         send_sms: false,
@@ -136,14 +136,6 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
       newErrors.title = 'Title is required';
     }
 
-    if (!formData.start_time) {
-      newErrors.start_time = 'Start time is required';
-    }
-
-    if (!formData.end_time) {
-      newErrors.end_time = 'End time is required';
-    }
-
     if (formData.start_time && formData.end_time) {
       if (new Date(formData.end_time) <= new Date(formData.start_time)) {
         newErrors.end_time = 'End time must be after start time';
@@ -170,10 +162,10 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
         ...formData,
         start_time: formData.start_time
           ? new Date(formData.start_time).toISOString()
-          : formData.start_time,
+          : null,
         end_time: formData.end_time
           ? new Date(formData.end_time).toISOString()
-          : formData.end_time,
+          : null,
       };
       await onSubmit(payload);
     } catch (error) {
@@ -190,7 +182,7 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
     }
   };
 
-  const formatDateTimeLocal = (isoString: string): string => {
+  const formatDateTimeLocal = (isoString: string | null | undefined): string => {
     if (!isoString) return '';
     const date = new Date(isoString);
     const year = date.getFullYear();
@@ -301,7 +293,7 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
               isMobile ? "space-y-4 min-w-0" : "space-y-4 sm:space-y-0 sm:grid sm:grid-cols-1 sm:md:grid-cols-2"
             )}>
               <div className="space-y-3 sm:space-y-2 min-w-0">
-                <Label htmlFor="start_time" className="text-base sm:text-sm">Start Date & Time *</Label>
+                <Label htmlFor="start_time" className="text-base sm:text-sm">Start Date & Time (optional)</Label>
                 <Input
                   id="start_time"
                   type="datetime-local"
@@ -315,7 +307,7 @@ export function EventForm({ event, onSubmit, onCancel, loading = false, isOpen =
               </div>
 
               <div className="space-y-3 sm:space-y-2 min-w-0">
-                <Label htmlFor="end_time" className="text-base sm:text-sm">End Date & Time *</Label>
+                <Label htmlFor="end_time" className="text-base sm:text-sm">End Date & Time (optional)</Label>
                 <Input
                   id="end_time"
                   type="datetime-local"

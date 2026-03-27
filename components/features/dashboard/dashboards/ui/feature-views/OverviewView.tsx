@@ -25,6 +25,7 @@ import { EventForm } from '@/components/ui/EventForm';
 import { useEvents } from '@/lib/hooks/useEvents';
 import { CreateEventRequest, UpdateEventRequest } from '@/types/events';
 import { useFeatureFlag } from '@/lib/hooks/useFeatureFlag';
+import { isPublishedEventUpcoming } from '@/lib/utils/eventScheduleDisplay';
 
 interface OverviewViewProps {
   selectedRole: string;
@@ -254,7 +255,10 @@ export function OverviewView({ selectedRole, onFeatureChange }: OverviewViewProp
         const response = await fetch(`/api/events?chapter_id=${chapterId}&scope=all`);
         if (response.ok) {
           const events = await response.json();
-          const upcoming = events.filter((e: any) => new Date(e.start_time) >= new Date() && e.status === 'published');
+          const nowIso = new Date().toISOString();
+          const upcoming = events.filter(
+            (e: any) => e.status === 'published' && isPublishedEventUpcoming(e, nowIso)
+          );
           setUpcomingEvents(upcoming.length);
           
           const eventsWithBudget = events.filter((e: any) => e.budget_amount && parseFloat(String(e.budget_amount)) > 0);

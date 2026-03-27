@@ -23,6 +23,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { EventAttendanceBlock } from '@/components/features/events/EventAttendanceBlock';
+import {
+  compareEventsByStartAsc,
+  compareEventsByStartDesc,
+  EVENT_TIME_TBD,
+  isValidIsoDateTime,
+} from '@/lib/utils/eventScheduleDisplay';
 
 export function EventsView() {
   const { profile } = useProfile();
@@ -129,14 +135,15 @@ export function EventsView() {
     }
   };
 
-  const formatEventDate = (isoString: string): string => {
+  const formatEventDate = (isoString: string | null): string => {
+    if (!isoString || !isValidIsoDateTime(isoString)) return EVENT_TIME_TBD;
     const date = new Date(isoString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
       day: 'numeric',
       year: 'numeric',
       hour: 'numeric',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -146,10 +153,7 @@ export function EventsView() {
     const eventsCopy = [...events];
     
     if (!sortColumn) {
-      // Default: sort by date (newest first)
-      return eventsCopy.sort((a, b) => 
-        new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
-      );
+      return eventsCopy.sort(compareEventsByStartDesc);
     }
 
     return eventsCopy.sort((a, b) => {
@@ -160,7 +164,7 @@ export function EventsView() {
           comparison = a.title.localeCompare(b.title);
           break;
         case 'date':
-          comparison = new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+          comparison = compareEventsByStartAsc(a, b);
           break;
         case 'location':
           const locationA = a.location || '';
