@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Trash2, X } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { Post } from '@/types/posts';
 
 interface DeletePostModalProps {
@@ -31,7 +30,7 @@ export function DeletePostModal({ isOpen, onClose, onConfirm, post, isDeleting }
             <div className="w-12 h-12 sm:w-8 sm:h-8 bg-red-100 rounded-full flex items-center justify-center text-red-600 shrink-0">
               <Trash2 className="h-6 w-6 sm:h-4 sm:w-4" />
             </div>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <h3 className="font-medium text-gray-900 mb-2 sm:mb-1 text-lg sm:text-base">
                 Are you sure you want to delete this post?
               </h3>
@@ -52,33 +51,33 @@ export function DeletePostModal({ isOpen, onClose, onConfirm, post, isDeleting }
             </div>
           </div>
 
-          <div className="flex flex-row items-center justify-end space-x-3 pt-4">
+          <DialogFooter className="gap-3 pt-4 sm:gap-0 sm:space-x-3">
             <Button
               variant="outline"
               onClick={onClose}
               disabled={isDeleting}
-              className="border-gray-300 text-gray-700 hover:bg-gray-50 h-12 sm:h-10 w-full sm:w-auto rounded-full font-medium transition"
+              className="min-w-0 border-gray-300 text-gray-700 hover:bg-gray-50 h-12 sm:h-10 w-full sm:w-auto sm:flex-initial rounded-full font-medium transition"
             >
               <span className="text-base sm:text-sm">Cancel</span>
             </Button>
             <Button
               onClick={onConfirm}
               disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 text-white h-12 sm:h-10 w-full sm:w-auto rounded-full font-medium transition"
+              className="min-w-0 bg-red-600 hover:bg-red-700 text-white h-12 sm:h-10 w-full sm:w-auto sm:flex-initial rounded-full font-medium transition"
             >
               {isDeleting ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-5 h-5 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="flex min-w-0 items-center justify-center gap-2">
+                  <div className="h-5 w-5 shrink-0 border-2 border-white border-t-transparent rounded-full animate-spin sm:h-4 sm:w-4" />
                   <span className="text-base sm:text-sm">Deleting...</span>
                 </div>
               ) : (
-                <div className="flex items-center space-x-2">
-                  <Trash2 className="h-5 w-5 sm:h-4 sm:w-4" />
+                <div className="flex min-w-0 items-center justify-center gap-2">
+                  <Trash2 className="h-5 w-5 shrink-0 sm:h-4 sm:w-4" />
                   <span className="text-base sm:text-sm">Delete Post</span>
                 </div>
               )}
             </Button>
-          </div>
+          </DialogFooter>
         </div>
       </DialogContent>
     </Dialog>
